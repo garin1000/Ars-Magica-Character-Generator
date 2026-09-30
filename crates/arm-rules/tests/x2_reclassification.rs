@@ -430,8 +430,26 @@ fn bracketed_verbatim_body(lines: &[String], start: u32, end: u32) -> String {
 /// separator a single citation's own multiple paragraphs already use — so a
 /// composed entry reads as one seamless multi-paragraph description. Only
 /// `virtue.the_gift` is on this table for now; X2b-h may add more.
-const COMPOSED_DESCRIPTIONS: &[(&str, &[(u32, u32)])] =
-    &[("virtue.the_gift", &[(3967, 3970), (2868, 2870)])];
+///
+/// X2d (2026-09-30), D70: `virtue.true_faith`'s shipped description composes
+/// its own entry citation (ArMDE:5169-5172) with the whole "### True Faith"
+/// prose section (ArMDE:17603-17617) that entry's own text points readers to
+/// ("For more about True Faith, see page 419"). Unlike `virtue.the_gift`'s
+/// second range, this one is not a single paragraph clipped to a section
+/// heading — it is the entire section, so its range starts at the `###`
+/// heading itself (17603) and runs to 17617, the section's own last content
+/// line, one line before the trailing blank (17618) that separates it from
+/// the next section, "### Relics" (17619). [`bracketed_verbatim_body`]'s
+/// `start + 2` skip still lands correctly past the heading and its blank
+/// line onto the first real paragraph (17605), and its existing
+/// blank-line-flush loop already handles the section's several paragraphs
+/// (including the bolded "TRUE FAITH MAGIC RESISTANCE" line, which
+/// [`normalize_markdown`] strips to plain text like any other emphasis) —
+/// no new extraction logic needed, only a wider range.
+const COMPOSED_DESCRIPTIONS: &[(&str, &[(u32, u32)])] = &[
+    ("virtue.the_gift", &[(3967, 3970), (2868, 2870)]),
+    ("virtue.true_faith", &[(5169, 5172), (17603, 17617)]),
+];
 
 /// The shared scope-tracking list the verbatim-fidelity guard
 /// (`x2_shipped_descriptions_match_their_cited_passage_verbatim`) iterates.
@@ -594,6 +612,60 @@ const X2_VERBATIM_SCOPE: &[&str] = &[
     "virtue.schooled_in_crime",
     "virtue.secondary_insight",
     "virtue.see_in_darkness",
+    // X2d (`tmp/x2-worklist.md` § 1 rows 154-203, `tmp/x2d-verdicts.md`), 44 ids
+    // with a description obligation — shamash, sofer (owned by X5's prereq
+    // work; no X2 description), templar_servant (stays narrative, no rule
+    // stated), templar_prestige, templar_specialist (fully computed, no
+    // residue) and voice_of_the_land (D8, but its summary already carries the
+    // whole passage verbatim — no separate description, the flaw.missing_ear
+    // precedent) are deliberately not here, matching earlier slices' own
+    // precedent. true_faith (D70) IS here: its description composes its own
+    // entry with the "### True Faith" section (ArMDE:17603-17617) via
+    // COMPOSED_DESCRIPTIONS, resolving F-330's earlier deferral.
+    "virtue.senior_bard",
+    "virtue.senior_clergy",
+    "virtue.sense_holiness_and_unholiness",
+    "virtue.shadchan",
+    "virtue.sharp_ears",
+    "virtue.side_effect",
+    "virtue.simple_student",
+    "virtue.skilled_smuggler",
+    "virtue.skinchanger",
+    "virtue.skinchanger_dove",
+    "virtue.social_contacts",
+    "virtue.special_circumstances",
+    "virtue.spell_improvisation",
+    "virtue.spiritual_pact",
+    "virtue.strong_angelic_heritage",
+    "virtue.strong_faerie_blood",
+    "virtue.strong_willed",
+    "virtue.study_bonus",
+    "virtue.subtle_magic",
+    "virtue.sufi",
+    "virtue.supernatural_beauty",
+    "virtue.tainted_treasure",
+    "virtue.templar_administrator",
+    "virtue.templar_commander",
+    "virtue.templar_confrere_or_consoeur",
+    "virtue.templar_office_holder",
+    "virtue.temporal_influence",
+    "virtue.tethered_magic",
+    "virtue.town_magistrate",
+    "virtue.troupe_upbringing",
+    "virtue.true_faith",
+    "virtue.true_love_pc",
+    "virtue.turb_trained",
+    "virtue.unaffected_by_the_gift",
+    "virtue.unaging",
+    "virtue.unbound_tongue",
+    "virtue.university_grammar_teacher",
+    "virtue.variable_power",
+    "virtue.venus_blessing",
+    "virtue.verditius_magic",
+    "virtue.wanderer",
+    "virtue.wisdom_from_ignorance",
+    "virtue.wise_one",
+    "virtue.withstand_casting",
 ];
 
 /// D5/D46: a shipped `description` is a rule's only carrier once the entry
@@ -1553,6 +1625,787 @@ fn secondary_insight_states_its_affinity_exclusion() {
         offenders.is_empty(),
         "X2c (tmp/x2c-verdicts.md), F-259: virtue.secondary_insight's description must state the \
          Affinity exclusion in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+// ---------------------------------------------------------------------------
+// X2d (`tmp/x2-worklist.md` § 1 rows 154-203, ArMDE:4904-5282) — see
+// `tmp/x2d-verdicts.md` for the full per-entry citation and rationale this file
+// intentionally does not re-derive inline.
+// ---------------------------------------------------------------------------
+
+/// X2d: entries that compute nothing today, whose passage no existing pending
+/// list carries, and that D8/D50/D60 require to become `uncomputed_rule` with
+/// their rule written into `description` in both locales. `(id, why)` — see
+/// `tmp/x2d-verdicts.md` for the full reading.
+const X2D_RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
+    (
+        "virtue.tethered_magic",
+        "a whole Hermetic spell mechanic (tether control to another caster or an object; the \
+         Arcane-Connection side effect) under `narrative`, 0 effects, ArMDE:5141-5144",
+    ),
+    (
+        "virtue.unaffected_by_the_gift",
+        "D8 capability: immunity to the negative social effects of others' Gift/Magical Air, \
+         \"even a Blatant Gift\", ArMDE:5183-5186",
+    ),
+    (
+        "virtue.unbound_tongue",
+        "D8 capability, and the summary drops half of it: ArMDE:5193's second sentence (\"If he \
+         is a magus, he may use his voice as normal to cast spells\") while transformed is not in \
+         the summary at all",
+    ),
+    (
+        "virtue.voice_of_the_land",
+        "D8 capability: speaks with creatures of an associated environment and is not perceived \
+         as threat or prey, ArMDE:5219-5222 — the summary already states the whole passage \
+         verbatim, so no new description text is owed (flaw.missing_ear precedent)",
+    ),
+    (
+        "virtue.wanderer",
+        "D50: \"The Wealthy Major Virtue and Poor Major Flaw affect you normally\" (ArMDE:5225) \
+         is a real clarification a player would get wrong by assuming this Social Status \
+         excludes them, the same shape as virtue.templar_confrere_or_consoeur",
+    ),
+];
+
+#[test]
+fn x2d_entries_reclassify_to_uncomputed_rule_with_a_description() {
+    let rs = load_ruleset();
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+
+    let mut offenders = Vec::new();
+    for (id, why) in X2D_RECLASSIFY_WITH_DESCRIPTION {
+        let classification = classification_of(&rs, id);
+        if classification != Classification::UncomputedRule {
+            offenders.push(format!(
+                "{id}: classified {classification:?}, expected UncomputedRule ({why})"
+            ));
+        }
+        for (lang, loc) in [("en", &loc_en), ("de", &loc_de)] {
+            if displayed_text(loc, id).is_none() {
+                offenders.push(format!(
+                    "{lang}/{id}: no displayed rules text at all ({why})"
+                ));
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md): these entries must reclassify to `uncomputed_rule` and carry \
+         a description in every locale — a Phase 2 data change, not yet landed:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// D50/Q-66 (`docs/vf-audit/decisions.md` D50's own worked example): ArMDE:4928
+/// "your sensitivity may overwhelm you" in a strong divine/infernal aura is
+/// computed nowhere. Overturns the entry's own `COMPUTED_ENTRY_COVERS_WHOLE_
+/// PASSAGE` certification (`uncomputed_clauses.rs`) — D67 permits
+/// `uncomputed_rule` despite the `ability_score_grant` effect staying.
+#[test]
+fn sense_holiness_and_unholiness_reclassifies_and_states_its_overwhelm_clause() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.sense_holiness_and_unholiness"),
+        Classification::UncomputedRule,
+        "D50/Q-66: ArMDE:4928's overwhelm clause reaches the player nowhere; \
+         virtue.sense_holiness_and_unholiness must reclassify to uncomputed_rule"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        ("en", &loc_en, "may overwhelm you"),
+        ("de", &loc_de, "überwältigen"),
+    ] {
+        let text = displayed_text(loc, "virtue.sense_holiness_and_unholiness").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.sense_holiness_and_unholiness: displayed text {text:?} does not \
+                 state the overwhelm clause (ArMDE:4926-4929)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), D50/Q-66: virtue.sense_holiness_and_unholiness's description \
+         must state the overwhelm clause in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// D20 (`docs/vf-audit/decisions.md`): one of the five "number missing"
+/// surfaced-only entries, mitigated because its `description` already states
+/// the +3 in both locales — but D20 still moves all 19 to `uncomputed_rule`
+/// unconditionally. The effect kind/rank fix (if any) is a different slice's
+/// concern; this test only pins the classification and that the existing
+/// description survives.
+#[test]
+fn special_circumstances_reclassifies_to_uncomputed_rule() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.special_circumstances"),
+        Classification::UncomputedRule,
+        "D20: virtue.special_circumstances is one of the 19 surfaced-only entries that must \
+         reclassify to uncomputed_rule regardless of whether the number already reaches the \
+         player"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    for (lang, loc) in [("en", &loc_en), ("de", &loc_de)] {
+        let text = displayed_text(loc, "virtue.special_circumstances").unwrap_or_default();
+        assert!(
+            text.contains("+3"),
+            "{lang}/virtue.special_circumstances: the existing description ({text:?}) must \
+             survive the reclassification"
+        );
+    }
+}
+
+/// D20: `virtue.spell_improvisation`'s Casting-Total bonus reaches the player
+/// only as a bare `special_casting_mod` label; the non-stacking rule
+/// (ArMDE:5004-5005) reaches nobody at all.
+#[test]
+fn spell_improvisation_reclassifies_and_states_its_bonus_rules() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.spell_improvisation"),
+        Classification::UncomputedRule,
+        "D20: virtue.spell_improvisation's Casting Total bonus and its non-stacking rule reach \
+         the player nowhere under a bare special_casting_mod kind"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "does not stack with other bonuses to his Casting Total",
+        ),
+        (
+            "de",
+            &loc_de,
+            "lässt sich nicht mit anderen Boni auf die Zaubersumme stapeln",
+        ),
+    ] {
+        let text = displayed_text(loc, "virtue.spell_improvisation").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.spell_improvisation: displayed text {text:?} does not state the \
+                 non-stacking rule (ArMDE:5002-5005)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), D20: virtue.spell_improvisation's description must state the \
+         non-stacking rule in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// D50 re-test (`tmp/x2-worklist.md` row 177) OVERTURNS the entry's own
+/// `NO_RULE_DESPITE_TOKEN` certification (`uncomputed_clauses.rs`): the
+/// curse's specific consequences are exactly D50's "guaranteed storyguide
+/// intervention" shape (its own common_sense worked example), not "pure
+/// story consequence" as the pre-D50 reading held.
+#[test]
+fn tainted_treasure_reclassifies_and_states_its_curse() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.tainted_treasure"),
+        Classification::UncomputedRule,
+        "D50: ArMDE:5097-5108's curse consequences are a real, storyguide-enforced rule; \
+         virtue.tainted_treasure must reclassify to uncomputed_rule"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        ("en", &loc_en, "the curse moves to these items"),
+        ("de", &loc_de, "geht der Fluch auf diese über"),
+    ] {
+        let text = displayed_text(loc, "virtue.tainted_treasure").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.tainted_treasure: displayed text {text:?} does not state the \
+                 curse-transfer clause (ArMDE:5097-5108)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), D50: virtue.tainted_treasure's description must state the \
+         curse-transfer clause in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-267/F-268: virtue.shadchan's own summary already states its role and its
+/// 50-XP grant, so the coarse screen never flagged the Social-Status
+/// compatibility override ("this Virtue is compatible with any other Minor or
+/// Free Social Status Virtue", ArMDE:4936) or the community-scoping of the
+/// Area Lore half of the XP pool. `classification` stays `creation_effect`.
+#[test]
+fn shadchan_states_its_compatibility_and_community_scope() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.shadchan"),
+        Classification::CreationEffect,
+        "F-267/F-268: the 50 XP grant is genuinely computed; only the compatibility override is \
+         missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "compatible with any other Minor or Free Social Status Virtue",
+        ),
+        (
+            "de",
+            &loc_de,
+            "mit jeder anderen Kleinen oder Freien Sozialen Status-Tugend vereinbar",
+        ),
+    ] {
+        let text = displayed_text(loc, "virtue.shadchan").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.shadchan: displayed text {text:?} does not state the \
+                 compatibility override (ArMDE:4934-4939)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), F-267/F-268: virtue.shadchan's description must state the \
+         compatibility override in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-300: virtue.study_bonus's own summary already states its two +2 bonuses
+/// (signed numbers), so the coarse screen never flagged the eight-row
+/// Art-Score-to-environment table (ArMDE:5058-5071) that determines which
+/// environments qualify. `classification` stays `in_play_effect`.
+#[test]
+fn study_bonus_states_its_environment_table() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.study_bonus"),
+        Classification::InPlayEffect,
+        "F-300: the two +2 bonuses are genuinely computed; only the environment table is \
+         missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "Your current Art score determines the magnitude of the surroundings",
+        ),
+        (
+            "de",
+            &loc_de,
+            "Dein aktueller Kunstwert bestimmt die Magnitude der Umgebung",
+        ),
+    ] {
+        let text = displayed_text(loc, "virtue.study_bonus").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.study_bonus: displayed text {text:?} does not state the \
+                 environment-table rule (ArMDE:5056-5072)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), F-300: virtue.study_bonus's description must state the \
+         environment-table rule in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-311: virtue.templar_administrator's own summary already states its role,
+/// so the coarse screen never flagged the Status-substitution rule, the
+/// male-only restriction (the same D5/F-123 reading that overturned
+/// virtue.jurist/virtue.knight, X2b), or "no additional time".
+/// `classification` stays `creation_effect`.
+#[test]
+fn templar_administrator_states_its_status_substitution_and_restrictions() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.templar_administrator"),
+        Classification::CreationEffect,
+        "F-311: the Academic authorization is genuinely computed; the Status-substitution rule \
+         and the male-only restriction are missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "can replace the Brother-Knight, Brother-Sergeant, and Brother-Priest Status Virtues",
+        ),
+        ("en", &loc_en, "only available to male characters"),
+        (
+            "de",
+            &loc_de,
+            "kann die Sozialer-Status-Tugenden Bruder-Ritter, Bruder-Sergeant und \
+             Bruder-Priester ersetzen",
+        ),
+        (
+            "de",
+            &loc_de,
+            "steht nur männlichen Charakteren zur Verfügung",
+        ),
+    ] {
+        let text = displayed_text(loc, "virtue.templar_administrator").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.templar_administrator: displayed text {text:?} does not state \
+                 {needle:?} (ArMDE:5109-5112)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), F-311: virtue.templar_administrator's description must state \
+         the Status-substitution rule and the male-only restriction in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-313: virtue.templar_commander's own summary already states its
+/// Reputation grant, so the coarse screen never flagged the
+/// taxation/tithe/service-fee/judicial powers or the crusading obligation.
+/// `classification` stays `creation_effect`.
+#[test]
+fn templar_commander_states_its_taxation_and_judicial_powers() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.templar_commander"),
+        Classification::CreationEffect,
+        "F-313: the Reputation and Temporal Influence/Brother-Knight grants are genuinely \
+         computed; the taxation/judicial powers are missing, which does not change the \
+         classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        ("en", &loc_en, "levy taxes and tithes"),
+        ("de", &loc_de, "Steuern und Zehnten"),
+    ] {
+        let text = displayed_text(loc, "virtue.templar_commander").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.templar_commander: displayed text {text:?} does not state the \
+                 taxation/judicial powers (ArMDE:5113-5116)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), F-313: virtue.templar_commander's description must state the \
+         taxation/judicial powers in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-315: virtue.templar_office_holder's own summary already states its
+/// Reputation grant, so the coarse screen never flagged the Templar-Status
+/// compatibility override, stated twice (any Templar Status Virtue; the
+/// Temporal Influence Minor Virtue). `classification` stays `creation_effect`.
+#[test]
+fn templar_office_holder_states_its_compatibility_overrides() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.templar_office_holder"),
+        Classification::CreationEffect,
+        "F-315: the Reputation grant is genuinely computed; the compatibility overrides are \
+         missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "compatible with the Temporal Influence Minor Virtue",
+        ),
+        (
+            "de",
+            &loc_de,
+            "mit der Kleinen Tugend Zeitlicher Einfluss vereinbar",
+        ),
+    ] {
+        let text = displayed_text(loc, "virtue.templar_office_holder").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.templar_office_holder: displayed text {text:?} does not state the \
+                 compatibility override (ArMDE:5121-5124)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), F-315: virtue.templar_office_holder's description must state \
+         the compatibility override in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// D62 (`docs/vf-audit/decisions.md`: seasons are not modelled, so a
+/// seasonal-commitment clause becomes text): virtue.town_magistrate's own
+/// summary already trips the coarse mechanical-token screen for an unrelated
+/// reason (verified: adding this entry to `PENDING_DROPPED_CLAUSE` produces a
+/// false "gap already closed" failure), so this dedicated test is the only
+/// carrier for ArMDE:5151's "occupies the character for two seasons each
+/// year, but he is free for the remaining two seasons". `classification`
+/// stays `creation_effect`.
+#[test]
+fn town_magistrate_states_its_seasonal_commitment() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.town_magistrate"),
+        Classification::CreationEffect,
+        "the Academic authorization is genuinely computed; the seasonal-commitment clause is \
+         missing, which does not change the classification (D62: seasons stay text)"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        ("en", &loc_en, "free for the remaining two seasons"),
+        (
+            "de",
+            &loc_de,
+            "die restlichen zwei Quartale steht er jedoch frei",
+        ),
+    ] {
+        let text = displayed_text(loc, "virtue.town_magistrate").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.town_magistrate: displayed text {text:?} does not state the \
+                 seasonal-commitment clause (ArMDE:5149-5152)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), D62: virtue.town_magistrate's description must state the \
+         seasonal-commitment clause in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-346's residual half: virtue.university_grammar_teacher's classification
+/// was already fixed to `creation_effect` before this slice, but the
+/// certification's own "should have a score in Teaching is soft" reading
+/// missed ArMDE:5197's separate, HARD obligation: "They must teach two
+/// seasons out of the year." `classification` stays `creation_effect`.
+#[test]
+fn university_grammar_teacher_states_its_teaching_obligation() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.university_grammar_teacher"),
+        Classification::CreationEffect,
+        "the Latin/Artes Liberales authorization is genuinely computed; the two-season teaching \
+         obligation is missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        ("en", &loc_en, "must teach two seasons out of the year"),
+        ("de", &loc_de, "muss zwei Quartale im Jahr unterrichten"),
+    ] {
+        let text = displayed_text(loc, "virtue.university_grammar_teacher").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.university_grammar_teacher: displayed text {text:?} does not \
+                 state the teaching obligation (ArMDE:5195-5198)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md): virtue.university_grammar_teacher's description must state \
+         the two-season teaching obligation in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-303: virtue.sufi's own summary already states its role, so the coarse
+/// screen never flagged ArMDE:5079's "you should choose an appropriate Minor
+/// Story Flaw, such as Mentor, which does not yield any points for buying
+/// Virtues" — an exception to the normal Flaw-for-points exchange.
+/// `classification` stays `creation_effect`.
+#[test]
+fn sufi_states_its_no_points_story_flaw_rule() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.sufi"),
+        Classification::CreationEffect,
+        "F-303: the Academic/Arcane authorization is genuinely computed; the no-points Story \
+         Flaw rule is missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "does not yield any points for buying Virtues",
+        ),
+        (
+            "de",
+            &loc_de,
+            "keine Punkte für den Erwerb von Tugenden einbringt",
+        ),
+    ] {
+        let text = displayed_text(loc, "virtue.sufi").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.sufi: displayed text {text:?} does not state the no-points Story \
+                 Flaw rule (ArMDE:5077-5084)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), F-303: virtue.sufi's description must state the no-points \
+         Story Flaw rule in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-332: virtue.unaging's own summary ("do not suffer the effects of age" /
+/// "leidest nicht ... des Alterns") already trips the coarse mechanical-token
+/// screen by accident (the S2 "do not suffer"/"leidest nicht" idiom, added for
+/// virtue.gentle_gift — verified: adding this entry to
+/// `PENDING_DROPPED_CLAUSE` produces a false "gap already closed" failure), so
+/// this dedicated test is the only carrier for the crisis clause and the
+/// Decrepitude-4/5 waiver. `classification` stays `in_play_effect`.
+#[test]
+fn unaging_states_its_crisis_and_decrepitude_exceptions() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.unaging"),
+        Classification::InPlayEffect,
+        "the two aging_mod exemptions are genuinely computed; the crisis clause and the \
+         Decrepitude-4/5 waiver are missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        ("en", &loc_en, "you die as normal when you reach five"),
+        (
+            "de",
+            &loc_de,
+            "stirbst aber wie üblich, wenn du fünf erreichst",
+        ),
+    ] {
+        let text = displayed_text(loc, "virtue.unaging").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.unaging: displayed text {text:?} does not state the \
+                 Decrepitude-4/5 waiver (ArMDE:5187-5190)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), F-332: virtue.unaging's description must state the \
+         Decrepitude-4/5 waiver in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-350's residual half: virtue.wise_one's exclusive-choice gate is genuinely
+/// fully computed (F-349), but the certification missed the Wealthy/Poor
+/// normal-interaction clarification and the male-and-female eligibility note.
+/// `classification` stays `creation_effect`.
+#[test]
+fn wise_one_states_its_wealthy_poor_and_sex_inclusive_clauses() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.wise_one"),
+        Classification::CreationEffect,
+        "F-349/F-350: the exclusive Arcane/Academic authorization is genuinely computed; the \
+         Wealthy/Poor clarification and the sex-inclusive note are missing, which does not \
+         change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "Wealthy Virtue and Poor Flaw affect you normally",
+        ),
+        ("en", &loc_en, "available to male and female characters"),
+        (
+            "de",
+            &loc_de,
+            "Die Große Tugend Wohlstand und der Große Fehler Arm betreffen dich normal",
+        ),
+        (
+            "de",
+            &loc_de,
+            "steht männlichen und weiblichen Charakteren zur Verfügung",
+        ),
+    ] {
+        let text = displayed_text(loc, "virtue.wise_one").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.wise_one: displayed text {text:?} does not state {needle:?} \
+                 (ArMDE:5257-5260)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), F-350: virtue.wise_one's description must state the \
+         Wealthy/Poor clarification and the sex-inclusive note in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-301: virtue.subtle_magic's own summary already states its no-gestures
+/// permission, so the coarse screen never flagged ArMDE:5075's "You gain no
+/// benefits from using normal gestures but gain the normal benefit for
+/// exaggerated gestures". `classification` stays `in_play_effect`.
+#[test]
+fn subtle_magic_states_its_gesture_exclusion() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.subtle_magic"),
+        Classification::InPlayEffect,
+        "F-301: the no-penalty-without-gestures rule is genuinely computed; the \
+         normal/exaggerated-gesture clause is missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "gain the normal benefit for exaggerated gestures",
+        ),
+        (
+            "de",
+            &loc_de,
+            "erhältst aber weiterhin den normalen Bonus für übertriebene Gesten",
+        ),
+    ] {
+        let text = displayed_text(loc, "virtue.subtle_magic").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.subtle_magic: displayed text {text:?} does not state the \
+                 exaggerated-gesture clause (ArMDE:5073-5076)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), F-301: virtue.subtle_magic's description must state the \
+         exaggerated-gesture clause in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// F-353: virtue.withstand_casting's own summary already states its own core
+/// mechanic (a signed-shaped "1 less Fatigue level"), so the coarse screen
+/// never flagged the 22-line passage's other rules. Not added to
+/// `PENDING_DROPPED_CLAUSE` (untested against the false-positive risk
+/// `town_magistrate`/`unaging` hit; a dedicated test is the safer carrier).
+/// This test pins the Vulnerable-Casting ordering rule (ArMDE:5269).
+/// `classification` stays `in_play_effect`.
+#[test]
+fn withstand_casting_states_its_vulnerable_casting_ordering() {
+    let rs = load_ruleset();
+    assert_eq!(
+        classification_of(&rs, "virtue.withstand_casting"),
+        Classification::InPlayEffect,
+        "the Fatigue-loss reduction is genuinely computed; the Vulnerable-Casting ordering rule \
+         is missing, which does not change the classification"
+    );
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for (lang, loc, needle) in [
+        (
+            "en",
+            &loc_en,
+            "apply the extra loss from Vulnerability first",
+        ),
+        (
+            "de",
+            &loc_de,
+            "wende zuerst den zusätzlichen Verlust durch Anfälligkeit an",
+        ),
+    ] {
+        let text = displayed_text(loc, "virtue.withstand_casting").unwrap_or_default();
+        if !text.contains(needle) {
+            offenders.push(format!(
+                "{lang}/virtue.withstand_casting: displayed text {text:?} does not state the \
+                 Vulnerable-Casting ordering rule (ArMDE:5261-5282)"
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "X2d (tmp/x2d-verdicts.md), F-353: virtue.withstand_casting's description must state the \
+         Vulnerable-Casting ordering rule in both locales:\n{}",
         offenders.join("\n")
     );
 }

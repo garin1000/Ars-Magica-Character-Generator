@@ -2661,7 +2661,8 @@
   },
   "virtue.sense_holiness_and_unholiness": {
     "name": "Sense Holiness and Unholiness",
-    "summary": "Feel the presence of good and evil. Confers the Sense Holiness and Unholiness Ability."
+    "summary": "Feel the presence of good and evil. Confers the Sense Holiness and Unholiness Ability.",
+    "description": "You are able to feel the presence of good and evil. In auras of particularly strong divine or infernal influence, your sensitivity may overwhelm you. Choosing this Virtue confers the Ability Sense Holiness and Unholiness 1 (page 170)."
   },
   "virtue.sense_passions": {
     "name": "Sense Passions",
@@ -2669,7 +2670,8 @@
   },
   "virtue.shadchan": {
     "name": "Shadchan",
-    "summary": "The shadchan is a marriage arranger, trusted by prospective parents to find the best matrimonial match for their sons and daughters."
+    "summary": "The shadchan is a marriage arranger, trusted by prospective parents to find the best matrimonial match for their sons and daughters.",
+    "description": "The shadchan is a marriage arranger, trusted by prospective parents to find the best matrimonial match for their sons and daughters. The shadchan will ensure a match of backgrounds, wealth, education, and character. They are able to do this by forging relationships with all the families in the community, and because of this the shadchan should be both honest and a good judge of character. The role of shadchan is open to both men and women alike and this Virtue is compatible with any other Minor or Free Social Status Virtue.\n\nThe shadchan receives an extra 50 experience points to be spent on social Abilities and an Area Lore appropriate for their community."
   },
   "virtue.shamash": {
     "name": "Shamash",
@@ -2681,11 +2683,13 @@
   },
   "virtue.sharp_ears": {
     "name": "Sharp Ears",
-    "summary": "You hear better than most."
+    "summary": "You hear better than most.",
+    "description": "You hear better than most. You get a +3 bonus to all rolls involving hearing."
   },
   "virtue.side_effect": {
     "name": "Side Effect",
-    "summary": "Your magic has some incidental feature that is generally useful, though occasionally annoying."
+    "summary": "Your magic has some incidental feature that is generally useful, though occasionally annoying.",
+    "description": "Your magic has some incidental feature that is generally useful, though occasionally annoying. The intensity of the side effect increases with the level of the spell. Examples include a commanding presence when casting that translates into a temporary +1 Presence bonus for a short time after casting, or a calm state of mind derived from casting which allows a bonus on Concentration rolls for a short time after casting."
   },
   "virtue.simple_student": {
     "name": "Simple Student",
@@ -2697,20 +2701,24 @@
   },
   "virtue.skilled_smuggler": {
     "name": "Skilled Smuggler",
-    "summary": "The character can hide one item on his person, and attempts to find it suffer a -9 penalty on Awareness rolls."
+    "summary": "The character can hide one item on his person, and attempts to find it suffer a -9 penalty on Awareness rolls.",
+    "description": "The character can hide one item on his person, and attempts to find it suffer a -9 penalty on Awareness rolls. The item cannot be larger than a dagger, and the character may swap which items are hidden with a few minutes of work. Wealthy characters often procure collapsible tools to use in conjunction with this Virtue."
   },
   "virtue.skinchanger": {
     "name": "Skinchanger",
-    "summary": "You have a magical cloak, animal skin or similar item made from an animal."
+    "summary": "You have a magical cloak, animal skin or similar item made from an animal.",
+    "description": "You have a magical cloak, animal skin or similar item made from an animal. While in physical contact with it, you may transform into the form of the animal represented by the item. The transformation takes one full round, and you retain both intelligence and sentience while in animal form. Clothing and possessions (save the animal item) do not transform, and you may be seen as a transformed human with InAn or InCo, or similar spells. If the item is stolen, the new owner has an Arcane Connection to you, and you may not transform until the item is retrieved. If the item is destroyed, you can make a new one over the course of a season. although the method varies depending on what the item is. Skinchangers may transform into any non-magical animal between Size -10 (robin) and Size +2 (bear). The character has the normal physical characteristics of the animal, except that +3 is added to the character's Soak score (in animal form only)."
   },
   "virtue.skinchanger_dove": {
     "name": "Skinchanger (Dove)",
-    "summary": "This is a more powerful variant of the Minor Virtue above."
+    "summary": "This is a more powerful variant of the Minor Virtue above.",
+    "description": "This is a more powerful variant of the Minor Virtue above.\n\nThe character does not need to carry a bundle of feathers to use as a skinchanger's cloak. She can, over the course of a week, prepare any artistic representation of a feather, or a single real feather, to act instead of a bundle of feathers. She may have several feathers prepared at one time, and may use feathers prepared by any other character with this Virtue. Most own several small pins or brooches, and in the city where such characters are active, they have hidden additional pins in accessible places, like the baths. Characters may also use little pieces of stone with feathers engraved on them, which they swallow. These lodge in the crop of the dove form, and can be regurgitated into the mouth at will.\n\nThe character's garments and equipment change into feathers when she shifts shape, so she appears modestly clothed when the transformation ends. This also allows her to carry tools and weapons in dove shape, although they cannot be used until the human shape is resumed.\n\nThe character has the statistics of a common dove when in animal form, save that her Soak is +3 higher than usual.\n\nThis Virtue is particularly associated with an all-female magical tradition called the Daughters of Four Fathers, found in north Africa (see Between Sand & Sea, page 107)."
   },
   "virtue.social_contacts": {
     "name": "Social Contacts ({social_group})",
     "name_unfilled": "Social Contacts",
-    "summary": "You have a broad range of acquaintances in a specific social circle (specified when this Virtue is purchased), accumulated over years of travel and socializing."
+    "summary": "You have a broad range of acquaintances in a specific social circle (specified when this Virtue is purchased), accumulated over years of travel and socializing.",
+    "description": "You have a broad range of acquaintances in a specific social circle (specified when this Virtue is purchased), accumulated over years of travel and socializing. Almost everywhere you go, you meet someone you know, or can get in touch with someone who can help you. Whenever you are somewhere new, you can contact someone on a simple Presence roll against an Ease Factor of 6. The storyguide may modify this target number upward for very small areas or areas where it is extremely unlikely that you would know someone. You may purchase this Virtue more than once, each time specifying a different social group."
   },
   "virtue.sofer": {
     "name": "Sofer",
@@ -2723,7 +2731,8 @@
   },
   "virtue.spell_improvisation": {
     "name": "Spell Improvisation",
-    "summary": "The magus may add the magnitude of a Formulaic spell he knows as a bonus to his Casting Total when Spontaneously casting a spell that is similar to it (see Similar Spells, page 260)."
+    "summary": "The magus may add the magnitude of a Formulaic spell he knows as a bonus to his Casting Total when Spontaneously casting a spell that is similar to it (see Similar Spells, page 260).",
+    "description": "The magus may add the magnitude of a Formulaic spell he knows as a bonus to his Casting Total when Spontaneously casting a spell that is similar to it (see Similar Spells, page 260). This includes fast-casting a spell that is the same as or very similar to one of his Formulaic spells, though he does not get this bonus if he has the Fast Cast Ability for a mastered spell, since in that case you add his Mastery Ability instead. This bonus does not stack with other bonuses to his Casting Total, nor does it stack with itself if the magus happens to know several similar spells."
   },
   "virtue.spirit_votary": {
     "name": "Spirit Votary",
@@ -2731,7 +2740,8 @@
   },
   "virtue.spiritual_pact": {
     "name": "Spiritual Pact",
-    "summary": "A pact with a powerful Magical spirit that grants access to its power."
+    "summary": "A pact with a powerful Magical spirit that grants access to its power.",
+    "description": "The character has made a pact or agreement with a powerful Magical spirit, and in return for loyal service, is granted access to that spirit's power. The pact serves as an Arcane Connection to the character of indefinite duration, which the spirit can use to make itself aware of the current location and state of health of its servant.\n\nThe character can channel the power of the spirit by spending a Confidence Point. Make a Presence + Magic Lore + stress die roll: this is the amount of Magic Might Pool that the character acquires from his spiritual master. The Might points acquired are always less than the current Might points of the spirit, regardless of the roll's result. On a botch, the character loses all current Confidence points. This action is equivalent to spellcasting with regard to the concentration it requires. The character can spend these Might points on any of the spirit's powers. Penetration is calculated in the usual way for magical creatures using the initial Might Pool in place of Magic Might, and including the character's Penetration Ability, if any.\n\nThe character using this power does not have a Might score, just a Might pool. He does not gain Magic Resistance from the use of this power, nor does he leave behind vis if he is slain. He cannot be affected by Vim spells (or similar magics) that target the Might score of supernatural creatures. Without a Might score, the pool does not replenish; once the character has spent all of his Might points this power ends. All powers used have their duration lapse when the character uses his last point of Might Pool. If this power is evoked again while the character still possesses Might Pool, then the new points gained replace the points left over; the two pools do not add. The points acquired by the character are lost from the spirit's Might pool and cannot be returned by the character, but the spirit regenerates the spent points as normal.\n\nWhile the connection to the spirit is active, there is some visual manifestation of this, which makes it clear that some supernatural effect is taking place. For example, if contacting a fertility spirit, fruits and grains might spring from around the character's footsteps. While in contact with a war spirit, a character might appear to be clothed in ghostly armor. When the character is actively channeling the spirit, he acts as an Arcane Connection to the spirit of indefinite duration, although this connection lapses when the Might Pool is exhausted.\n\nThe storyguide should decide upon the powers of the spirit. With the agreement of the troupe, this Virtue could be used to channel the power from a spirit of a different Supernatural Realm; or from a group of closely related spirits, such as a small pantheon of pagan \"gods,\" but care should be taken not to grant the character too much flexibility with this one Virtue. A character can only have a single pact."
   },
   "virtue.strong_angelic_heritage": {
     "name": "Strong Angelic Heritage",
@@ -2743,7 +2753,8 @@
   },
   "virtue.strong_willed": {
     "name": "Strong-Willed",
-    "summary": "You cannot easily be coerced into activities, beliefs, or feelings."
+    "summary": "You cannot easily be coerced into activities, beliefs, or feelings.",
+    "description": "You cannot easily be coerced into activities, beliefs, or feelings. You get +3 on any roll which may require strength of will."
   },
   "virtue.student_of_realm": {
     "name": "Student of {realm}",
@@ -2751,15 +2762,18 @@
   },
   "virtue.study_bonus": {
     "name": "Study Bonus",
-    "summary": "When given the opportunity to study an Art from books or raw vis in the presence of the Form or Technique, your surroundings give you new insights into your studies."
+    "summary": "When given the opportunity to study an Art from books or raw vis in the presence of the Form or Technique, your surroundings give you new insights into your studies.",
+    "description": "When given the opportunity to study an Art from books or raw vis in the presence of the Form or Technique, your surroundings give you new insights into your studies. Add two to die rolls to study from vis, or two to the Quality of any text you study from. Your current Art score determines the magnitude of the surroundings you require to get the bonus. See the table for some guidelines.\n\nStudy Bonus Examples\n\n| Art Score | Minimum Presence of Art  | | --------- | ------------------------ | | 0         | A candle flame (Ignem), a magic aura (Vim), a dying insect (Perdo) | | 5         | A pond (Aquam), a painting (Imaginem), a caterpillar and butterfly (Muto) | | 10        | A breezy place in the open air (Auram), a live animal at least the size of a cat (Animal), half a dozen plants at different stages of growth (Creo) | | 15        | An area of bare natural rock, such as a mountainside (Terram), a human corpse to dissect (Corpus), at least one book on each of a dozen mundane subjects (Intellego)  | | 20        | In a forest (Herbam), at a gathering of scholars (Mentem), at a law court (Rego) | | 25        | In a boat on a large body of water (Aquam), in a strong (6+) magic aura (Vim), in a hospital full of people dying of pestilence (Perdo) | | 30        | In the middle of a large fire (Ignem), in a building covered with elaborate figured decoration in many media, where music is constantly played (Imaginem), in the presence of a magical shapeshifter whose transformations you can control (Muto). | | 35        | Flying in the middle of a hurricane (Auram), while dissecting several magical animals (Animal), while surrounded by scrying devices showing every detail of the country for miles around (Intellego) |"
   },
   "virtue.subtle_magic": {
     "name": "Subtle Magic",
-    "summary": "You may cast spells without using gestures at no penalty."
+    "summary": "You may cast spells without using gestures at no penalty.",
+    "description": "You may cast spells without using gestures at no penalty. You gain no benefits from using normal gestures but gain the normal benefit for exaggerated gestures."
   },
   "virtue.sufi": {
     "name": "Sufi",
-    "summary": "You are a Muslim mystic, seeking a closer union with God through asceticism and rituals."
+    "summary": "You are a Muslim mystic, seeking a closer union with God through asceticism and rituals.",
+    "description": "You are a Muslim mystic, seeking a closer union with God through asceticism and rituals. You are a member of a tariga of Sufis led by a shaykh. While the group supports you in times of need, your shaykh expects equal commitment from you to him or her and the other members: you should choose an appropriate Minor Story Flaw, such as Mentor, which does not yield any points for buying Virtues. See Realms of Power: The Divine Revised Edition, page 116, for details of the supernatural powers wielded by some Sufis. It is also possible to be an entirely mundane Sufi, in which case you should take this Virtue as a Social Status Virtue.\n\nMost Muslims treat you with respect for your pious lifestyle. You may purchase the Abilities Theology: Islam, Islamic Law, and Dominion Lore at character creation.\n\nThis Virtue may be taken by both male and female characters, either as a Minor Social Status Virtue or a Minor Supernatural Virtue."
   },
   "virtue.summon_animals": {
     "name": "Summon Animals",
@@ -2767,27 +2781,33 @@
   },
   "virtue.supernatural_beauty": {
     "name": "Supernatural Beauty",
-    "summary": "The character possesses that style of mystical beauty that, when threatened, calls royal power, folk magic, and heroism to its defense."
+    "summary": "The character possesses that style of mystical beauty that, when threatened, calls royal power, folk magic, and heroism to its defense.",
+    "description": "The character possesses that style of mystical beauty that, when threatened, calls royal power, folk magic, and heroism to its defense. A player may use this Virtue, once per story, to ask a storyguide to insert a fortunate coincidence, of the storyguide's choice, into a scene. The troupe may veto the use of the Virtue in any situation where supernatural aid seems profoundly unlikely. Characters with this Virtue are frequently assisted by passing knights of chivalrous inclination, often find magic weapons, and frequently have their jailers, or their jailers' daughters, fall in love with them.\n\nFaeries frequently assist characters with this Virtue. Faeries understand the classic forms of aid that beauty evokes in stories, and so many of the magical steeds and wandering princes the character encounters are actually faeries, watching the story unfold from the inside.\n\nA character lacking a positive Presence score may not have this Virtue."
   },
   "virtue.tainted_treasure": {
     "name": "Tainted Treasure",
-    "summary": "The character has inherited or acquired a vast amount of treasure, but it is cursed to cause harm."
+    "summary": "The character has inherited or acquired a vast amount of treasure, but it is cursed to cause harm.",
+    "description": "The character has inherited or acquired a vast amount of treasure, but it is cursed to cause harm. This treasure might come from an ancestor who made a deal with demons, or tricked them out of money. It might have been stolen from one of the secret caches that demons maintain, so that they have wealth nearby to tempt humans. A tainted person who rebels, and swaps the Tragic Life Flaw for the Plagued by Supernatural Entity Flaw, might be tempted to retain some of the valuable props provided for their role. The treasure is sufficient that the character could transform it into a source of the Wealthy Virtue. As examples, the character could buy a ship and become a trader, or buy land in a city and become a landlord.\n\nThe difficulty is that the wealth is cursed, so it lacks the natural increase in bounty that is a gift from God. If traded for other items of value, the curse moves to these items. Any venture into which it is invested will, eventually, fail. Any building it is used to purchase will, eventually, burn down. If it is used for a nonsinful purpose, the treasure destroys itself: gold given to charity turns to sand, ships used to ferry supplies to the starving steer themselves onto rocks.\n\nThe wealth may be used to purchase the services of people, who, because they have souls, choose their own fates. The limitation that the wealth only allows itself to be spent sinfully remains, however, so it is likely to be given to amoral, covetous, envious, dangerous people.\n\nThe Knights Templar\n\nThe Poor Knights of the Temple of Solomon, the Knights Templar, are an extremely important and influential order in Mythic Europe. Women cannot pay a fine, with the Paid Rights Virtue, to take a role in the order that is restricted to men. For full details, see Chapter 7 of The Church."
   },
   "virtue.templar_administrator": {
     "name": "Templar Administrator",
-    "summary": "The character is technically a brother-knight or brothersergeant for the Poor Knights of the Temple of Solomon, but is really an administrator for the order's many holdings and activities."
+    "summary": "The character is technically a brother-knight or brothersergeant for the Poor Knights of the Temple of Solomon, but is really an administrator for the order's many holdings and activities.",
+    "description": "The character is technically a brother-knight or brothersergeant for the Poor Knights of the Temple of Solomon, but is really an administrator for the order's many holdings and activities. While he has sworn the Templar oath and vows, and lives a monastic life, his many duties mean he is likely to never see active combat. He is answerable only to his superiors in the order and to the pope. He may have considerable influence and access to enormous resources, but no additional time. You may take Academic Abilities during character creation. This Virtue can replace the Brother-Knight, Brother-Sergeant, and Brother-Priest Status Virtues. This Virtue is only available to male characters."
   },
   "virtue.templar_commander": {
     "name": "Templar Commander",
-    "summary": "The character is a commander within the Poor Knights of the Temple of Solomon and has authority over all aspects of the order in a province or preceptory."
+    "summary": "The character is a commander within the Poor Knights of the Temple of Solomon and has authority over all aspects of the order in a province or preceptory.",
+    "description": "The character is a commander within the Poor Knights of the Temple of Solomon and has authority over all aspects of the order in a province or preceptory. This Virtue also grants the Temporal Influence Minor Virtue, as the character has the ear of any important nobles or clergymen in the area. He also has access to the considerable wealth of the Templars, including any funds, lands, and resources, although he has no extra time. He may levy taxes and tithes over the lands he controls as if he were a landed noble or bishop, and charge service fees on monies he lends, and he may even act as a judge for minor lay crimes committed on his lands. Because of his high position, he is a wellknown figure and has a Reputation of level 3 in his area. He is expected to support the order's crusading efforts if he is in the West, and if he lives in the East he is expected to participate directly. Should the grand master die and the character lives in the East, he has the right to participate in choosing a new grand master. This Virtue includes the effects of the Brother-Knight Virtue, and likewise can only be taken by male characters."
   },
   "virtue.templar_confrere_or_consoeur": {
     "name": "Templar Confrere or Consoeur",
-    "summary": "The character is an associate member of the Poor Knights of the Temple of Solomon, and has taken one or two of the Templar vows."
+    "summary": "The character is an associate member of the Poor Knights of the Temple of Solomon, and has taken one or two of the Templar vows.",
+    "description": "The character is an associate member of the Poor Knights of the Temple of Solomon, and has taken one or two of the Templar vows. His membership is generally temporary (although it need not be), and he may possess other Social Status Virtues or Flaws to reflect his true station, such as Clerk, Knight, Landed Noble, Peasant, or even Hermetic Magus. His former outside status affects his treatment in the order — knights and nobles receive more respect than commoners. Women may also become associate members (consoeurs), although they are housed separately from the men. Associates are governed by the same rule as full members, although they have fewer rights. Some associates may hold important positions within a particular Templar commandery, especially if they possess a valuable skill."
   },
   "virtue.templar_office_holder": {
     "name": "Templar Office Holder",
-    "summary": "The character holds a position within the local hierarchy of the Poor Knights of the Temple of Solomon, such as the deputy commander, marshal, or infirmarer."
+    "summary": "The character holds a position within the local hierarchy of the Poor Knights of the Temple of Solomon, such as the deputy commander, marshal, or infirmarer.",
+    "description": "The character holds a position within the local hierarchy of the Poor Knights of the Temple of Solomon, such as the deputy commander, marshal, or infirmarer. He may give orders to brothers in his region, is accorded the considerable respect due to his position, and has the power to enforce the rule and its various laws, although he answers to the local commander. Because of his high position, he is a well-known figure and has a Reputation of level 2 in his region. You may take this Virtue with any of the Templar Status Virtues, as your character may be a senior brothersergeant or senior Templar chaplain. This Virtue is compatible with the Temporal Influence Minor Virtue. If you take this virtue with the Templar Commander Major Virtue, then your character holds one of the few exalted ranks within the Templars, such as grand commander or grand marshal, or a rank that has authority over the Eastern or Western region of the order, in which case you likely reside in Acre, Paris, or London."
   },
   "virtue.templar_prestige": {
     "name": "Templar Prestige",
@@ -2803,11 +2823,13 @@
   },
   "virtue.temporal_influence": {
     "name": "Temporal Influence",
-    "summary": "Through blood or a position of trust, you enjoy some political weight in society."
+    "summary": "Through blood or a position of trust, you enjoy some political weight in society.",
+    "description": "Through blood or a position of trust, you enjoy some political weight in society. You have the ear of a leader and may yourself lead common folk at times, if they respect your position. The more influence you have, the more responsibility, and the harder it is to work unopposed with magi. Grogs may not take this Virtue."
   },
   "virtue.tethered_magic": {
     "name": "Tethered Magic",
-    "summary": "You can pass control of your non-Ritual spells to others, just as if they were the caster, \"tethering\" the magic to them for the spell's duration."
+    "summary": "You can pass control of your non-Ritual spells to others, just as if they were the caster, \"tethering\" the magic to them for the spell's duration.",
+    "description": "You can pass control of your non-Ritual spells to others, just as if they were the caster, \"tethering\" the magic to them for the spell's duration. You may also tether a spell to an object, which can then transfer the spell to an appropriate target when it comes into range. This can even be done whenever you activate an effect in a magic item. However, a side effect of this sort of magic is that all of your spells and the effects of any magic items you activate are Arcane Connections to you."
   },
   "virtue.the_enigma": {
     "name": "The Enigma",
@@ -2824,7 +2846,8 @@
   },
   "virtue.town_magistrate": {
     "name": "Town Magistrate",
-    "summary": "The character has a position of judicial responsibility in a town, with a small staff of minor officials (up to five individuals)."
+    "summary": "The character has a position of judicial responsibility in a town, with a small staff of minor officials (up to five individuals).",
+    "description": "The character has a position of judicial responsibility in a town, with a small staff of minor officials (up to five individuals). The character must be a citizen of the town, have a score of at least 3 in the Civil and Canon Law (or Common Law) Ability, and is paid a wage or gains special privileges in return for his services. Being a magistrate occupies the character for two seasons each year, but he is free for the remaining two seasons. Academic Abilities may be bought for the character, during character generation."
   },
   "virtue.trained_assassin": {
     "name": "Trained Assassin",
@@ -2836,15 +2859,18 @@
   },
   "virtue.troupe_upbringing": {
     "name": "Troupe Upbringing",
-    "summary": "You were raised among a group of entertainers, spending much of your childhood traveling from town to town."
+    "summary": "You were raised among a group of entertainers, spending much of your childhood traveling from town to town.",
+    "description": "You were raised among a group of entertainers, spending much of your childhood traveling from town to town. Rolls involving Abilities in a selected area (which you should have approved by the storyguide) receive a +2 modifier. Examples might include tumbling and acrobatics, knife throwing and juggling, or storytelling and acting."
   },
   "virtue.true_faith": {
     "name": "True Faith",
-    "summary": "Through piety and holy devotion you have faith that can move mountains."
+    "summary": "Through piety and holy devotion you have faith that can move mountains.",
+    "description": "Through piety and holy devotion you have faith that can move mountains. You have a True Faith score of 1 and can gain more. For more about True Faith, see page 419.\n\nThose who give up mundane pursuits entirely and selflessly dedicate themselves to leading holy lives benefit from True Faith. True Faith is measured in Faith Points, which represent a person's connection to God. Those with True Faith may be Jewish, Christian, or Muslim, and, it seems, need not be wholly orthodox.\n\nTrue Faith, like Confidence, has a Score and Points. Taking the True Faith Major Virtue grants you a True Faith Score of 1, and a single Faith Point. Only by possessing the True Faith Major Virtue may a character have a True Faith score. Any character may possess any number of Faith Points (gained through the sacraments, a pilgrimage, or other holy endeavors) that once spent, do not return.\n\nYou may spend Faith Points like Confidence Points (and may spend as many Faith Points at once as your True Faith Score), as long as you are acting in accordance with God's will. If you do not possess a True Faith Score, then you may only spend one Faith Point at a time.\n\nA character with Faith Points but no True Faith Score does not benefit from Magic Resistance. A character with a True Faith Score gains Magic Resistance equal to this score multiplied by ten.\n\nTRUE FAITH MAGIC RESISTANCE: True Faith Score X 10\n\nEach dawn, you regain a number of Faith Points up to your True Faith Score, although if you already have more Faith Points than your True Faith Score, you do not gain additional Points.\n\nFor more details on True Faith, see Realms of Power: The Divine Revised Edition, page 56."
   },
   "virtue.true_love_pc": {
     "name": "True Love (PC)",
-    "summary": "You have found the one person meant for you in all of creation, and the bond between the two of you cannot be sundered."
+    "summary": "You have found the one person meant for you in all of creation, and the bond between the two of you cannot be sundered.",
+    "description": "You have found the one person meant for you in all of creation, and the bond between the two of you cannot be sundered. Whenever you are suffering, in danger, or dejected, the thought of your love gives you strength to persevere. Thus, you may add +3 to appropriate Personality Trait rolls, and add additional bonuses as allowed by the storyguide (never in excess of +3) to activities that will return you to your love, or save her life. In dire need, she may even come to rescue you. On the other hand, you are tied to your lover, to whom you must return frequently. If you do not, you may suffer penalties to most actions requiring spirit due to melancholy. If any enchantment keeps you from your true love's side, the power of your devotion can probably break it. Your True Love is another player character, who must also have this Virtue. True Love is never one-sided.\n\nThis Virtue may be renamed 'True Friend' to cover equally close attachments which are not romantic."
   },
   "virtue.turb_trained": {
     "name": "Turb Trained",
@@ -2852,24 +2878,29 @@
   },
   "virtue.unaffected_by_the_gift": {
     "name": "Unaffected by The Gift",
-    "summary": "The character is not affected by the negative effects of The Gift or Magical Air in others."
+    "summary": "The character is not affected by the negative effects of The Gift or Magical Air in others.",
+    "description": "The character is not affected by the negative effects of The Gift or Magical Air in others. Even a Blatant Gift does not especially bother the character."
   },
   "virtue.unaging": {
     "name": "Unaging",
-    "summary": "You do not suffer the effects of age."
+    "summary": "You do not suffer the effects of age.",
+    "description": "You do not suffer the effects of age. In game terms, your aging points do not decrease your Characteristics, only building up to give you Decrepitude points. If a crisis is not potentially fatal, you suffer no ill-effects. You may die from terminal and potentially fatal crises, according to the normal rules. You are not enfeebled when you reach four Decrepitude points, but you die as normal when you reach five. You may choose your apparent age freely, although if you are basically human it should be less than or equal to your actual age."
   },
   "virtue.unbound_tongue": {
     "name": "Unbound Tongue",
-    "summary": "Whenever the character is transformed into a non-human form (whether by spell, magic item, curse, or a heartbeast) he may speak any human languages he knows with no impediment."
+    "summary": "Whenever the character is transformed into a non-human form (whether by spell, magic item, curse, or a heartbeast) he may speak any human languages he knows with no impediment.",
+    "description": "Whenever the character is transformed into a non-human form (whether by spell, magic item, curse, or a heartbeast) he may speak any human languages he knows with no impediment. If he is a magus, he may use his voice as normal to cast spells."
   },
   "virtue.university_grammar_teacher": {
     "name": "University Grammar Teacher",
-    "summary": "The character is employed by a university to teach its younger members grammar."
+    "summary": "The character is employed by a university to teach its younger members grammar.",
+    "description": "The character is employed by a university to teach its younger members grammar. The character can be of any age or gender. They may purchase the Academic Abilities: Latin and Artes Liberales at character generation, and should have a score in Teaching. They must teach two seasons out of the year."
   },
   "virtue.variable_power": {
     "name": "Variable Power ({power})",
     "name_unfilled": "Variable Power",
-    "summary": "One of the character's magic powers (Greater, Lesser, Personal, or Ritual) becomes more powerful over time, based on either (age / 10), (Might Score / 5), Warping Score, or his score in an appropriate Ability."
+    "summary": "One of the character's magic powers (Greater, Lesser, Personal, or Ritual) becomes more powerful over time, based on either (age / 10), (Might Score / 5), Warping Score, or his score in an appropriate Ability.",
+    "description": "One of the character's magic powers (Greater, Lesser, Personal, or Ritual) becomes more powerful over time, based on either (age / 10), (Might Score / 5), Warping Score, or his score in an appropriate Ability. (Age and Warping should not be allowed as variables if the character is immune to their effects.) For example, an effect that allows the character to change his shape into an animal might be associated with a special Ability, and his score in that Ability would determine how many different animals he could become.\n\nGenerally speaking, a single power can have its effect level increased by five, or include another effect of the same level that is similar the original, for each level of variance. For a character with Variable Powers based on his age, for example, this would mean the effectiveness of one of his powers would be increased by a total of five magnitudes after he has lived for 50 years.\n\nThis Virtue may be taken more than once, if the character has more than one power, but it only applies once to a single power."
   },
   "virtue.venditor": {
     "name": "Venditor",
@@ -2877,11 +2908,13 @@
   },
   "virtue.venus_blessing": {
     "name": "Venus' Blessing",
-    "summary": "People are often attracted to you."
+    "summary": "People are often attracted to you.",
+    "description": "People are often attracted to you. You get +3 on Communication and Presence rolls with sexually compatible characters in appropriate situations. At times you can put this to good use. At other times it's an annoyance."
   },
   "virtue.verditius_magic": {
     "name": "Verditius Magic",
-    "summary": "Initiation into the Outer Mystery of House Verditius, enabling the casting of enchantments through craft."
+    "summary": "Initiation into the Outer Mystery of House Verditius, enabling the casting of enchantments through craft.",
+    "description": "You have been initiated into the Outer Mystery of Verditius Magic (see page 240), and thus are a member of House Verditius. Note that all Verditius magi gain this Virtue for free at character creation."
   },
   "virtue.voice_of_the_land": {
     "name": "Voice of the {land}",
@@ -2889,7 +2922,8 @@
   },
   "virtue.wanderer": {
     "name": "Wanderer",
-    "summary": "You are not tied to any community, and survive by doing casual work of some sort."
+    "summary": "You are not tied to any community, and survive by doing casual work of some sort.",
+    "description": "You are not tied to any community, and survive by doing casual work of some sort. The Wealthy Major Virtue and Poor Major Flaw affect you normally, although if you are Wealthy you are supported by someone or some institution. Your supporter does not question your activities in any way, however."
   },
   "virtue.warrior": {
     "name": "Warrior",
@@ -2918,14 +2952,17 @@
   },
   "virtue.wisdom_from_ignorance": {
     "name": "Wisdom from Ignorance",
-    "summary": "One school of Sufis found in Egypt is particularly interested in calligraphy, and the aesthetics of the enigma."
+    "summary": "One school of Sufis found in Egypt is particularly interested in calligraphy, and the aesthetics of the enigma.",
+    "description": "One school of Sufis found in Egypt is particularly interested in calligraphy, and the aesthetics of the enigma. By this, they mean that pondering texts which have been structured as meaningful, but which the viewer cannot read, can be used as a form of meditation which brings enlightenment. They are able to use books as sources of training provided they are unable to read the language they are written in.\n\nThe sufis use this ability to gain understanding of spiritual matters, so players should create Ability books normally, and when sufis use this Virtue, switch the Ability learned from the book to Theology Organisation Lore: Sufis or similarly uplifting subjects. A sufi using this Virtue may occasionally gain experience in materially practical Abilities, but this only occurs in the context of overcoming specific challenges on spiritual journeys. Directly applicable learning like this is considered a miracle by the sufi, and troupes should police this like any other miracle."
   },
   "virtue.wise_one": {
     "name": "Wise One",
-    "summary": "A mystic, seer, or healer of good standing in the community."
+    "summary": "A mystic, seer, or healer of good standing in the community.",
+    "description": "You belong to a broad class that includes mystics, seers, healers, and the like. You are probably magical, and will probably want to purchase a Virtue that gives you some sort of supernatural ability. You are well regarded in the community, although your presence may cause fear as well as awe or respect. If you lack such good standing, though, you are most likely a wanderer or an outcast. You may take either Arcane or Academic Abilities, but not both, at character creation. The Wealthy Virtue and Poor Flaw affect you normally. This Virtue is available to male and female characters."
   },
   "virtue.withstand_casting": {
     "name": "Withstand Casting",
-    "summary": "If a magus has this Virtue, then whenever he is about to lose Fatigue from casting a spell, he loses 1 less Fatigue level than normal, with a minimum of 1 Fatigue level — but if the spell would have been cast without Fatigue loss, then he still loses no Fatigue."
+    "summary": "If a magus has this Virtue, then whenever he is about to lose Fatigue from casting a spell, he loses 1 less Fatigue level than normal, with a minimum of 1 Fatigue level — but if the spell would have been cast without Fatigue loss, then he still loses no Fatigue.",
+    "description": "If a magus has this Virtue, then whenever he is about to lose Fatigue from casting a spell, he loses 1 less Fatigue level than normal, with a minimum of 1 Fatigue level — but if the spell would have been cast without Fatigue loss, then he still loses no Fatigue.\n\nA magus may take the Virtue more than once, and withstand 1 Fatigue level for each level of the Virtue, although the minimum Fatigue loss remains. If he has Withstand Casting (3), he may withstand up to 3 Fatigue levels lost, with a minimum of 1 level lost.\n\nThe Virtue decreases the severity of the Fatigue lost in the exact manner of the existing Fatigue loss. Thus, if the magus casts a Formulaic spell, the Fatigue is short-term Fatigue, easily recovered, and if he runs out of Fatigue levels he is rendered unconscious, loss of extra Fatigue levels results in him being unconscious for one hour for each overflowing level, and the respite of Withstand Casting lessens this. If, on the other hand, he casts a Ritual spell, then the Fatigue is long-term Fatigue, and losing more Fatigue than he has remaining causes wounds the respite of Withstand Casting reduces the severity of wounds, and this may result in him taking no wounds (with the minimum Fatigue lost rendering him unconscious).\n\nYou may not start your character with both Vulnerable Casting and Withstand Casting. However, she may acquire both in the course of play (Withstand Casting from Initiation rituals or beneficial Twilight effects; Vulnerable Casting from Ordeals or bad Twilight effects). If this occurs, apply the extra loss from Vulnerability first, then withstand the increased loss.\n\nSome Virtues, such as Life Boost and Life-Linked Spontaneous Magic, actually use the magus's life-force to power the spell: the lost Fatigue powers the spell, and without that loss, no power boost is possible. While a magus may choose to apply Withstand Casting to such a spell, if he does then he loses the benefits from withstood levels.\n\nExample: Vita, a maga with Life-Linked Spontaneous Magic, aims to cast a level 20 spell, but falls short and only generates a level 16 result. She will lose 2 Fatigue levels (1 for spontaneous casting, 1 for the shortfall in Life-Linked Magic).\n\nAlthough she has Vulnerable Casting (1) (from past Twilight experiences) so suffers an extra Fatigue level loss, she also has Withstand Casting (3) (from Initiations), and can use this to withstand the Fatigue lost to the Vulnerable Casting.\n\nShe has another 2 levels of Withstand Casting, but if she eliminates the Life-Linked loss, the shell will fail (and she will still suffer any remaining Fatigue loss). She cannot Withstand the base Spontaneous casting Fatigue.\n\nIt is, however, useful to have the Withstand Casting Virtue even with Life- Linked Spontaneous Magic, in case that shortfall is extreme; for example, if the magus botches and the Casting Total is reduced to zero.\n\nExample: Some time later, Vita tries again, hoping to cast another level 20 spell. However, she botches, and her Casting Total is zero. She would normally lose 6 Fatigue levels (1 for spontaneous casting, plus 1 for Vulnerable Casting, plus 4 for the shortfall in Casting Total), but she can withstand 3 Fatigue levels lost, and only suffers a net loss of 3 Fatigue levels. The spell fails, but she is still conscious."
   }
 }

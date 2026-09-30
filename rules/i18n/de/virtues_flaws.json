@@ -2663,7 +2663,8 @@
   },
   "virtue.sense_holiness_and_unholiness": {
     "name": "Gespür für Heiliges und Unheiliges",
-    "summary": "Spüre die Gegenwart von Gut und Böse. Verleiht die gleichnamige Fähigkeit."
+    "summary": "Spüre die Gegenwart von Gut und Böse. Verleiht die gleichnamige Fähigkeit.",
+    "description": "Du kannst die Anwesenheit von Gut und Böse spüren. In Auren von besonders starkem göttlichem oder infernalen Einfluss kann Deine Sensibilität Dich überwältigen. Die Wahl dieser Tugend verleiht die Fertigkeit Gespür für Heiliges und Unheiliges 1 (Seite 170)."
   },
   "virtue.sense_passions": {
     "name": "Gespür für Leidenschaft",
@@ -2671,7 +2672,8 @@
   },
   "virtue.shadchan": {
     "name": "Schadchen",
-    "summary": "Der Schadchen ist ein Heiratsvermittler, dem von den zukünftigen Eltern vertraut wird, die beste eheliche Verbindung für ihre Söhne und Töchter zu finden."
+    "summary": "Der Schadchen ist ein Heiratsvermittler, dem von den zukünftigen Eltern vertraut wird, die beste eheliche Verbindung für ihre Söhne und Töchter zu finden.",
+    "description": "Der Schadchen ist ein Heiratsvermittler, dem von den zukünftigen Eltern vertraut wird, die beste eheliche Verbindung für ihre Söhne und Töchter zu finden. Der Schadchen stellt sicher, dass Hintergrund, Reichtum, Bildung und Charakter zueinanderpassen. Er ist dazu in der Lage, indem er Beziehungen zu allen Familien in der Gemeinschaft aufbaut, und deshalb sollte der Schadchen sowohl ehrlich als auch ein guter Menschenkenner sein. Die Rolle des Schadchens steht sowohl Männern als auch Frauen offen, und diese Tugend ist mit jeder anderen Kleinen oder Freien Sozialen Status-Tugend vereinbar.\n\nDer Schadchen erhält 50 zusätzliche Erfahrungspunkte für soziale Fertigkeiten und eine für seine Gemeinschaft geeignete Gebietskunde."
   },
   "virtue.shamash": {
     "name": "Schamasch",
@@ -2683,11 +2685,13 @@
   },
   "virtue.sharp_ears": {
     "name": "Scharfe Ohren",
-    "summary": "Du hörst besser als die meisten Menschen."
+    "summary": "Du hörst besser als die meisten Menschen.",
+    "description": "Du hörst besser als die meisten Menschen. Du erhältst einen Bonus von +3 auf alle Würfe, die das Hören beinhalten."
   },
   "virtue.side_effect": {
     "name": "Nebeneffekt",
-    "summary": "Deine Magie hat ein beiläufiges Merkmal, das im Allgemeinen nützlich, gelegentlich aber lästig ist."
+    "summary": "Deine Magie hat ein beiläufiges Merkmal, das im Allgemeinen nützlich, gelegentlich aber lästig ist.",
+    "description": "Deine Magie hat ein beiläufiges Merkmal, das im Allgemeinen nützlich, gelegentlich aber lästig ist. Die Intensität des Nebeneffekts steigt mit der Stufe des Zaubers. Beispiele sind eine gebietende Präsenz beim Zaubern, die sich in einen vorübergehenden Präsenzbonus von +1 für kurze Zeit nach dem Zaubern übersetzt, oder ein ruhiger Geisteszustand nach dem Zaubern, der für kurze Zeit nach dem Wirken einen Bonus auf Konzentrationswürfe erlaubt."
   },
   "virtue.simple_student": {
     "name": "Einfacher Student",
@@ -2699,20 +2703,24 @@
   },
   "virtue.skilled_smuggler": {
     "name": "Erfahrener Schmugler",
-    "summary": "Der Charakter kann einen Gegenstand an seiner Person verbergen, und Versuche, ihn zu finden, erleiden einen Abzug von -9 auf Wahrnehmungswürfe."
+    "summary": "Der Charakter kann einen Gegenstand an seiner Person verbergen, und Versuche, ihn zu finden, erleiden einen Abzug von -9 auf Wahrnehmungswürfe.",
+    "description": "Der Charakter kann einen Gegenstand an seiner Person verbergen, und Versuche, ihn zu finden, erleiden einen Abzug von -9 auf Wahrnehmungswürfe. Der Gegenstand darf nicht größer als ein Dolch sein, und der Charakter kann mit wenigen Minuten Arbeit wechseln, welche Gegenstände verborgen sind. Wohlhabende Charaktere beschaffen sich oft zusammenlegbare Werkzeuge, die sie in Verbindung mit dieser Tugend einsetzen."
   },
   "virtue.skinchanger": {
     "name": "Tierwandler",
-    "summary": "Du besitzt einen magischen Umhang, eine Tierhaut oder einen ähnlichen Gegenstand aus einem Tier."
+    "summary": "Du besitzt einen magischen Umhang, eine Tierhaut oder einen ähnlichen Gegenstand aus einem Tier.",
+    "description": "Du besitzt einen magischen Umhang, eine Tierhaut oder einen ähnlichen Gegenstand aus einem Tier. Während Du physischen Kontakt damit hast, kannst Du Dich in die Gestalt des durch den Gegenstand dargestellten Tieres verwandeln. Die Verwandlung dauert eine volle Runde, und Du behältst sowohl Intelligenz als auch Bewusstsein in Tiergestalt. Kleidung und Besitztümer (außer dem Tiergegenstand) werden nicht verwandelt, und Du kannst mit InAn- oder InCo-Zaubern oder ähnlichen Sprüchen als verwandelter Mensch erkannt werden. Wenn der Gegenstand gestohlen wird, hat der neue Besitzer eine Arkane Verbindung zu Dir, und Du kannst Dich nicht verwandeln, bis der Gegenstand zurückgewonnen ist. Wenn der Gegenstand zerstört wird, kannst Du im Laufe eines Quartals einen neuen anfertigen, obwohl die Methode je nach Art des Gegenstands variiert. Tierwandler können sich in jedes nicht-magische Tier zwischen Größe -10 (Rotkehlchen) und Größe +2 (Bär) verwandeln. Der Charakter hat die normalen körperlichen Eigenschaften des Tieres, außer dass seiner Absorption (nur in Tiergestalt) +3 hinzugefügt wird."
   },
   "virtue.skinchanger_dove": {
     "name": "Tierwandler (Taube)",
-    "summary": "Dies ist eine mächtigere Variante der Kleinen Tugend oben."
+    "summary": "Dies ist eine mächtigere Variante der Kleinen Tugend oben.",
+    "description": "Dies ist eine mächtigere Variante der Kleinen Tugend oben.\n\nDer Charakter muss kein Federbündel als Tierwandler-Umhang bei sich tragen. Sie kann im Laufe einer Woche jede künstlerische Darstellung einer Feder oder eine einzelne echte Feder vorbereiten, die stattdessen als Federbündel fungiert. Sie kann mehrere vorbereitete Federn gleichzeitig besitzen und von jedem anderen Charakter mit dieser Tugend vorbereitete Federn verwenden. Die meisten besitzen mehrere kleine Nadeln oder Broschen, und in der Stadt, in der solche Charaktere aktiv sind, haben sie zusätzliche Nadeln an zugänglichen Orten versteckt, wie etwa in Bädern. Charaktere können auch kleine Steinchen mit eingravierten Federn verwenden, die sie schlucken. Diese bleiben im Kropf der Taubengestalt und können nach Belieben in den Mund zurückgewürgt werden.\n\nDie Kleidung und Ausrüstung des Charakters verwandelt sich beim Gestaltwechsel in Federn, sodass sie beim Ende der Verwandlung bescheiden bekleidet erscheint. Dies erlaubt es ihr auch, Werkzeuge und Waffen in Taubengestalt bei sich zu tragen, obwohl diese erst nach Rückkehr zur Menschengestalt eingesetzt werden können.\n\nDer Charakter besitzt in Tiergestalt die Werte einer gewöhnlichen Taube, außer dass ihre Absorption um +3 höher ist als üblich.\n\nDiese Tugend ist besonders mit einer rein weiblichen magischen Tradition namens Töchter der Vier Väter verbunden, die in Nordafrika beheimatet ist (siehe Between Sand & Sea, Seite 107)."
   },
   "virtue.social_contacts": {
     "name": "Soziale Kontakte ({social_group})",
     "name_unfilled": "Soziale Kontakte",
-    "summary": "Du verfügst über ein breites Netzwerk an Bekannten in einem bestimmten gesellschaftlichen Umfeld (das beim Erwerb dieser Tugend festgelegt wird), das du dir über Jahre des Reisens und der Geselligkeit aufgebaut hast."
+    "summary": "Du verfügst über ein breites Netzwerk an Bekannten in einem bestimmten gesellschaftlichen Umfeld (das beim Erwerb dieser Tugend festgelegt wird), das du dir über Jahre des Reisens und der Geselligkeit aufgebaut hast.",
+    "description": "Du verfügst über ein breites Netzwerk an Bekannten in einem bestimmten gesellschaftlichen Umfeld (das beim Erwerb dieser Tugend festgelegt wird), das du dir über Jahre des Reisens und der Geselligkeit aufgebaut hast. Fast überall, wohin du gehst, triffst du jemanden, den du kennst, oder kannst jemanden kontaktieren, der dir helfen kann. Wann immer du dich an einem neuen Ort befindest, kannst du mit einem einfachen Präsenz-Wurf gegen einen Schwierigkeitsgrad von 6 jemanden ausfindig machen. Der Spielleiter kann diesen Zielwert nach oben anpassen, wenn das Gebiet sehr klein ist oder es äußerst unwahrscheinlich ist, dass du dort jemanden kennen würdest. Du kannst diese Tugend mehrfach erwerben und dabei jedes Mal einen anderen gesellschaftlichen Kreis festlegen."
   },
   "virtue.sofer": {
     "name": "Sofer",
@@ -2725,7 +2733,8 @@
   },
   "virtue.spell_improvisation": {
     "name": "Zauberimprovisation",
-    "summary": "Der Magus kann die Magnitude eines formulaischen Zaubers, den er kennt, als Bonus auf seine Zaubersumme addieren, wenn er spontan einen ähnlichen Zauber wirkt (siehe Ähnliche Zauber, Seite 260)."
+    "summary": "Der Magus kann die Magnitude eines formulaischen Zaubers, den er kennt, als Bonus auf seine Zaubersumme addieren, wenn er spontan einen ähnlichen Zauber wirkt (siehe Ähnliche Zauber, Seite 260).",
+    "description": "Der Magus kann die Magnitude eines formulaischen Zaubers, den er kennt, als Bonus auf seine Zaubersumme addieren, wenn er spontan einen ähnlichen Zauber wirkt (siehe Ähnliche Zauber, Seite 260). Dies gilt auch für das Schnellzaubern eines Zaubers, der einem seiner formulaischen Zauber gleich oder sehr ähnlich ist – allerdings erhält er diesen Bonus nicht, wenn er die Schnellzauber-Fertigkeit für einen gemeisterten Zauber besitzt, da in diesem Fall stattdessen sein Fertigkeitswert in der Zaubermeisterschaft addiert wird. Dieser Bonus lässt sich nicht mit anderen Boni auf die Zaubersumme stapeln und lässt sich auch nicht mit sich selbst stapeln, falls der Magus zufällig mehrere ähnliche Zauber kennt."
   },
   "virtue.spirit_votary": {
     "name": "Geistverehrer",
@@ -2733,7 +2742,8 @@
   },
   "virtue.spiritual_pact": {
     "name": "Geistiger Pakt",
-    "summary": "Ein Pakt mit einem mächtigen magischen Geist, der Zugang zu dessen Macht gewährt."
+    "summary": "Ein Pakt mit einem mächtigen magischen Geist, der Zugang zu dessen Macht gewährt.",
+    "description": "Der Charakter hat einen Pakt oder eine Vereinbarung mit einem mächtigen magischen Geist geschlossen und erhält im Gegenzug für treue Dienste Zugang zu den Kräften dieses Geistes. Der Pakt dient dem Geist als Arkane Verbindung zum Charakter von unbegrenzter Dauer, mit deren Hilfe sich der Geist über den aktuellen Aufenthaltsort und den Gesundheitszustand seines Dieners im Klaren sein kann.\n\nDer Charakter kann die Kraft des Geistes kanalisieren, indem er einen Selbstvertrauenspunkt ausgibt. Würfle Präsenz + Magiekunde + Stresswürfel: Das Ergebnis entspricht dem Betrag des magischen Machtwert-Vorrats, den der Charakter von seinem geistlichen Meister erhält. Die erlangten Machtpunkte sind stets geringer als die aktuellen Machtpunkte des Geistes, unabhängig vom Würfelergebnis. Bei einem Patzer verliert der Charakter alle aktuellen Selbstvertrauenspunkte. Diese Handlung entspricht dem Zaubern hinsichtlich der erforderlichen Konzentration. Der Charakter kann diese Machtpunkte für beliebige Kräfte des Geistes aufwenden. Die Penetration wird auf die übliche Weise für magische Kreaturen berechnet, wobei der anfängliche Machtwert-Vorrat anstelle des magischen Machtwerts verwendet wird und die Penetrations-Fertigkeit des Charakters – falls vorhanden – einbezogen wird.\n\nDer Charakter, der diese Kraft einsetzt, hat keinen Machtwert, sondern nur einen Machtwert-Vorrat. Er erlangt durch den Einsatz dieser Kraft keine Magieresistenz und hinterlässt auch keine Vis, wenn er getötet wird. Er kann nicht von Vim-Zaubern (oder ähnlicher Magie) betroffen werden, die den Machtwert übernatürlicher Wesen als Ziel nehmen. Ohne einen Machtwert füllt sich der Vorrat nicht auf; sobald der Charakter alle Machtpunkte verbraucht hat, endet diese Kraft. Alle eingesetzten Kräfte laufen in ihrer Dauer ab, wenn der Charakter seinen letzten Machtpunkt des Vorrats verbraucht. Wird diese Kraft erneut aktiviert, während der Charakter noch über einen Machtwert-Vorrat verfügt, ersetzen die neu erlangten Punkte die verbliebenen Punkte; die beiden Vorräte addieren sich nicht. Die vom Charakter erlangten Punkte gehen dem Machtwert-Vorrat des Geistes verloren und können vom Charakter nicht zurückgegeben werden, aber der Geist regeneriert die verbrauchten Punkte wie üblich.\n\nWährend die Verbindung zum Geist aktiv ist, gibt es eine sichtbare Manifestation davon, die deutlich macht, dass ein übernatürlicher Effekt stattfindet. Steht der Charakter beispielsweise in Verbindung mit einem Fruchtbarkeitsgeist, könnten Früchte und Getreide um seine Fußspuren herum sprießen. Während er in Verbindung mit einem Kriegsgeist steht, könnte der Charakter aussehen, als wäre er in geisterhafte Rüstung gekleidet. Wenn der Charakter den Geist aktiv kanalisiert, dient er dem Geist als Arkane Verbindung von unbegrenzter Dauer, wenngleich diese Verbindung erlischt, wenn der Machtwert-Vorrat erschöpft ist.\n\nDer Spielleiter sollte die Kräfte des Geistes festlegen. Mit Zustimmung der Spieltruppe könnte diese Tugend dazu verwendet werden, die Kraft eines Geistes einer anderen übernatürlichen Sphäre zu kanalisieren; oder die Kraft einer Gruppe eng verwandter Geister, etwa eines kleinen Pantheons heidnischer „Götter\" – es ist jedoch darauf zu achten, dem Charakter durch diese eine Tugend nicht zu viel Flexibilität zu gewähren. Ein Charakter kann nur einen einzigen Pakt haben."
   },
   "virtue.strong_angelic_heritage": {
     "name": "Starkes Engelserbe",
@@ -2745,7 +2755,8 @@
   },
   "virtue.strong_willed": {
     "name": "Willensstark",
-    "summary": "Du lässt dich nicht leicht zu Handlungen, Überzeugungen oder Gefühlen zwingen."
+    "summary": "Du lässt dich nicht leicht zu Handlungen, Überzeugungen oder Gefühlen zwingen.",
+    "description": "Du lässt dich nicht leicht zu Handlungen, Überzeugungen oder Gefühlen zwingen. Du erhältst +3 auf jeden Wurf, der Willenskraft erfordern könnte."
   },
   "virtue.student_of_realm": {
     "name": "Student einer Sphäre, {realm}",
@@ -2754,15 +2765,18 @@
   },
   "virtue.study_bonus": {
     "name": "Studierbonus",
-    "summary": "Wenn du die Gelegenheit erhältst, eine Kunst aus Büchern oder rohem Vis in Anwesenheit der betreffenden Form oder Technik zu studieren, verleiht dir deine Umgebung neue Einsichten in dein Studium."
+    "summary": "Wenn du die Gelegenheit erhältst, eine Kunst aus Büchern oder rohem Vis in Anwesenheit der betreffenden Form oder Technik zu studieren, verleiht dir deine Umgebung neue Einsichten in dein Studium.",
+    "description": "Wenn du die Gelegenheit erhältst, eine Kunst aus Büchern oder rohem Vis in Anwesenheit der betreffenden Form oder Technik zu studieren, verleiht dir deine Umgebung neue Einsichten in dein Studium. Addiere zwei auf Würfelwürfe zum Studieren aus Vis, oder zwei zur Qualität eines beliebigen Textes, aus dem du studierst. Dein aktueller Kunstwert bestimmt die Magnitude der Umgebung, die du benötigst, um den Bonus zu erhalten. Siehe die Tabelle für einige Beispiele.\n\nStudierbonus – Beispiele\n\n| Kunstwert | Mindestpräsenz der Kunst | | --------- | ------------------------ | | 0         | Eine Kerzenflamme (Ignem), eine magische Aura (Vim), ein sterbendes Insekt (Perdo) | | 5         | Ein Teich (Aquam), ein Gemälde (Imaginem), eine Raupe und ein Schmetterling (Muto) | | 10        | Ein windiger Ort im Freien (Auram), ein lebendes Tier mindestens in der Größe einer Katze (Animal), ein halbes Dutzend Pflanzen in verschiedenen Wachstumsstadien (Creo) | | 15        | Eine Fläche nackten natürlichen Gesteins, etwa ein Berghang (Terram), eine menschliche Leiche zum Sezieren (Corpus), mindestens ein Buch zu jedem von einem Dutzend weltlicher Themen (Intellego) | | 20        | In einem Wald (Herbam), bei einer Versammlung von Gelehrten (Mentem), an einem Gericht (Rego) | | 25        | Auf einem Boot auf einem großen Gewässer (Aquam), in einer starken (6+) magischen Aura (Vim), in einem Krankenhaus voller an Pest Sterbender (Perdo) | | 30        | Inmitten eines großen Feuers (Ignem), in einem Gebäude, das mit aufwendiger figürlicher Dekoration in vielen Medien bedeckt ist und in dem ständig Musik gespielt wird (Imaginem), in Gegenwart eines magischen Gestaltwandlers, dessen Verwandlungen du kontrollieren kannst (Muto) | | 35        | Fliegend inmitten eines Hurrikans (Auram), beim Sezieren mehrerer magischer Tiere (Animal), umgeben von Ausspähvorrichtungen, die jedes Detail des Landes meilenweit zeigen (Intellego) |"
   },
   "virtue.subtle_magic": {
     "name": "Subtile Magie",
-    "summary": "Du kannst Zauber ohne Gesten wirken, ohne einen Malus zu erleiden."
+    "summary": "Du kannst Zauber ohne Gesten wirken, ohne einen Malus zu erleiden.",
+    "description": "Du kannst Zauber ohne Gesten wirken, ohne einen Malus zu erleiden. Du profitierst nicht mehr von normalen Gesten, erhältst aber weiterhin den normalen Bonus für übertriebene Gesten."
   },
   "virtue.sufi": {
     "name": "Sufi",
-    "summary": "Du bist ein muslimischer Mystiker, der durch Askese und Rituale eine engere Vereinigung mit Gott anstrebt."
+    "summary": "Du bist ein muslimischer Mystiker, der durch Askese und Rituale eine engere Vereinigung mit Gott anstrebt.",
+    "description": "Du bist ein muslimischer Mystiker, der durch Askese und Rituale eine engere Vereinigung mit Gott anstrebt. Du bist Mitglied einer Tariga von Sufis, die von einem Scheich angeführt wird. Während die Gruppe dich in Zeiten der Not unterstützt, erwartet dein Scheich von dir ein gleichwertiges Engagement gegenüber ihm oder ihr und den anderen Mitgliedern: Wähle einen passenden Kleinen Geschichte-Fehler, etwa Mentor, der keine Punkte für den Erwerb von Tugenden einbringt. Einzelheiten zu den übernatürlichen Kräften einiger Sufis findest du in Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), Seite 116. Es ist auch möglich, ein vollständig weltlicher Sufi zu sein; in diesem Fall solltest du diese Tugend als Sozialer-Status-Tugend wählen.\n\nDie meisten Muslime begegnen dir mit Respekt für deinen frommen Lebensstil. Du kannst die Fertigkeiten Theologie: Islam, Islamisches Recht und Dominiumkunde bei der Charaktererschaffung erwerben.\n\nDiese Tugend kann von männlichen wie von weiblichen Charakteren gewählt werden, entweder als Kleine Sozialer-Status-Tugend oder als Kleine Übernatürliche Tugend."
   },
   "virtue.summon_animals": {
     "name": "Tiere rufen",
@@ -2770,27 +2784,33 @@
   },
   "virtue.supernatural_beauty": {
     "name": "Übernatürliche Schönheit",
-    "summary": "Der Charakter besitzt jene Art von mystischer Schönheit, die, wenn sie bedroht wird, königliche Macht, Volksmagie und Heldentum zu ihrer Verteidigung auf den Plan ruft."
+    "summary": "Der Charakter besitzt jene Art von mystischer Schönheit, die, wenn sie bedroht wird, königliche Macht, Volksmagie und Heldentum zu ihrer Verteidigung auf den Plan ruft.",
+    "description": "Der Charakter besitzt jene Art von mystischer Schönheit, die, wenn sie bedroht wird, königliche Macht, Volksmagie und Heldentum zu ihrer Verteidigung auf den Plan ruft. Ein Spieler kann diese Tugend einmal pro Geschichte einsetzen, um einen Spielleiter zu bitten, einen glücklichen Zufall nach Wahl des Spielleiters in eine Szene einzufügen. Die Spieltruppe kann den Einsatz der Tugend in jeder Situation ablehnen, in der übernatürliche Hilfe ausgesprochen unwahrscheinlich erscheint. Charaktere mit dieser Tugend werden häufig von vorbeiziehenden Rittern mit ritterlicher Gesinnung unterstützt, finden oft magische Waffen und erleben es häufig, dass ihre Kerkermeister oder deren Töchter sich in sie verlieben.\n\nFeen unterstützen Charaktere mit dieser Tugend oft. Feen verstehen die klassischen Formen der Hilfe, die Schönheit in Geschichten hervorruft, und so sind viele der Zauberpferde und wandernden Prinzen, denen der Charakter begegnet, tatsächlich Feen, die das Geschehen von innen beobachten.\n\nEin Charakter ohne einen positiven Präsenzwert kann diese Tugend nicht besitzen."
   },
   "virtue.tainted_treasure": {
     "name": "Verfluchter Schatz",
-    "summary": "Der Charakter hat eine riesige Menge Schatz geerbt oder erworben, doch dieser ist verflucht, Schaden anzurichten."
+    "summary": "Der Charakter hat eine riesige Menge Schatz geerbt oder erworben, doch dieser ist verflucht, Schaden anzurichten.",
+    "description": "Der Charakter hat eine riesige Menge Schatz geerbt oder erworben, doch dieser ist verflucht, Schaden anzurichten. Dieser Schatz könnte von einem Vorfahren stammen, der einen Handel mit Dämonen einging oder sie um Geld betrog. Vielleicht wurde er auch aus einem der geheimen Verstecke gestohlen, die Dämonen unterhalten, damit Reichtum in der Nähe ist, um Menschen zu verführen. Eine verdorbene Person, die sich auflehnt und den Fehler Tragisches Leben gegen den Fehler Von übernatürlicher Wesenheit verfolgt tauscht, könnte versucht sein, einige der wertvollen Requisiten beizubehalten, die für ihre Rolle bereitgestellt wurden. Der Schatz ist ausreichend, dass der Charakter ihn in eine Quelle der Tugend Wohlstand verwandeln könnte. Als Beispiele könnte der Charakter ein Schiff kaufen und Händler werden oder Land in einer Stadt kaufen und Vermieter werden.\n\nDie Schwierigkeit besteht darin, dass der Reichtum verflucht ist und daher nicht den natürlichen Anstieg an Gütern aufweist, der eine Gabe Gottes darstellt. Wird er gegen andere Wertgegenstände eingetauscht, geht der Fluch auf diese über. Jedes Unternehmen, in das er investiert wird, wird schließlich scheitern. Jedes Gebäude, das damit gekauft wird, wird schließlich abbrennen. Wird er für einen nicht-sündhaften Zweck verwendet, zerstört der Schatz sich selbst: Gold, das für wohltätige Zwecke gespendet wird, verwandelt sich in Sand, Schiffe, die Vorräte zu den Hungernden befördern, steuern sich selbst auf Felsen zu.\n\nDer Reichtum kann dazu verwendet werden, die Dienste von Menschen zu erkaufen, die, weil sie Seelen haben, ihr eigenes Schicksal wählen. Die Einschränkung, dass der Reichtum sich selbst nur für sündhafte Zwecke ausgeben lässt, bleibt jedoch bestehen, sodass er wahrscheinlich an amoralische, habgierige, neidische, gefährliche Menschen weitergegeben wird.\n\nDie Tempelritter\n\nDie Armen Ritter Christi und des Tempels zu Salomon, die Tempelritter, sind ein äußerst wichtiger und einflussreicher Orden im Mythischen Europa. Frauen können sich nicht durch die Tugend Erkaufte Rechte von der Zahlung einer Buße freikaufen, um eine Rolle im Orden zu übernehmen, die Männern vorbehalten ist. Ausführliche Einzelheiten finden sich in Kapitel 7 von Die Kirche."
   },
   "virtue.templar_administrator": {
     "name": "Templerverwalter",
-    "summary": "Der Charakter ist technisch gesehen ein Bruder-Ritter oder Bruder-Sergeant der Armen Ritter Christi und des Tempels zu Salomon, fungiert jedoch in Wirklichkeit als Verwalter für die vielen Besitzungen und Aktivitäten des Ordens."
+    "summary": "Der Charakter ist technisch gesehen ein Bruder-Ritter oder Bruder-Sergeant der Armen Ritter Christi und des Tempels zu Salomon, fungiert jedoch in Wirklichkeit als Verwalter für die vielen Besitzungen und Aktivitäten des Ordens.",
+    "description": "Der Charakter ist technisch gesehen ein Bruder-Ritter oder Bruder-Sergeant der Armen Ritter Christi und des Tempels zu Salomon, fungiert jedoch in Wirklichkeit als Verwalter für die vielen Besitzungen und Aktivitäten des Ordens. Obwohl er den Templereid und die Gelübde abgelegt hat und ein klösterliches Leben führt, bedeuten seine zahlreichen Pflichten, dass er wahrscheinlich nie aktiv im Kampf eingesetzt wird. Er ist nur seinen Vorgesetzten im Orden und dem Papst gegenüber verantwortlich. Er kann erheblichen Einfluss haben und Zugang zu enormen Ressourcen besitzen, hat jedoch keine zusätzliche freie Zeit. Du kannst bei der Charaktererschaffung Akademische Fertigkeiten wählen. Diese Tugend kann die Sozialer-Status-Tugenden Bruder-Ritter, Bruder-Sergeant und Bruder-Priester ersetzen. Diese Tugend steht nur männlichen Charakteren zur Verfügung."
   },
   "virtue.templar_commander": {
     "name": "Templerkommandeur",
-    "summary": "Der Charakter ist ein Kommandeur der Armen Ritter Christi und des Tempels zu Salomon und hat Autorität über alle Aspekte des Ordens in einer Provinz oder Komturei."
+    "summary": "Der Charakter ist ein Kommandeur der Armen Ritter Christi und des Tempels zu Salomon und hat Autorität über alle Aspekte des Ordens in einer Provinz oder Komturei.",
+    "description": "Der Charakter ist ein Kommandeur der Armen Ritter Christi und des Tempels zu Salomon und hat Autorität über alle Aspekte des Ordens in einer Provinz oder Komturei. Diese Tugend verleiht außerdem die Kleine Tugend Zeitlicher Einfluss, da der Charakter das Ohr wichtiger Adliger oder Geistlicher in der Region hat. Er hat auch Zugang zum beträchtlichen Reichtum der Tempelritter, einschließlich aller Mittel, Ländereien und Ressourcen, obwohl er keine zusätzliche freie Zeit hat. Er kann Steuern und Zehnten über die Ländereien erheben, die er kontrolliert, als wäre er ein Landadliger oder Bischof, Servicegebühren für Geldleihen erheben und sogar als Richter für geringfügige Laiendelikte auf seinen Ländereien fungieren. Aufgrund seiner hohen Stellung ist er eine allgemein bekannte Person und besitzt eine Reputation der Stufe 3 in seinem Gebiet. Er wird erwartet, die Kreuzzugsbemühungen des Ordens zu unterstützen, wenn er im Westen lebt, und wenn er im Osten lebt, wird von ihm direkte Teilnahme erwartet. Sollte der Großmeister sterben und der Charakter im Osten leben, hat er das Recht, an der Wahl eines neuen Großmeisters teilzunehmen. Diese Tugend beinhaltet die Wirkungen der Tugend Bruder-Ritter und kann ebenfalls nur von männlichen Charakteren gewählt werden."
   },
   "virtue.templar_confrere_or_consoeur": {
     "name": "Tempelritter-Konfrater oder Konsoeur",
-    "summary": "Der Charakter ist ein assoziiertes Mitglied der Armen Ritter Christi und des Tempels zu Salomon und hat ein oder zwei der Tempelrittergelübde abgelegt."
+    "summary": "Der Charakter ist ein assoziiertes Mitglied der Armen Ritter Christi und des Tempels zu Salomon und hat ein oder zwei der Tempelrittergelübde abgelegt.",
+    "description": "Der Charakter ist ein assoziiertes Mitglied der Armen Ritter Christi und des Tempels zu Salomon und hat ein oder zwei der Tempelrittergelübde abgelegt. Seine Mitgliedschaft ist im Allgemeinen vorübergehend (muss es aber nicht sein), und er kann andere Sozialer-Status-Tugenden oder -Fehler besitzen, die seinen wahren Stand widerspiegeln, etwa Kleriker, Ritter, Landadliger, Bauer oder sogar Hermetischer Magus. Sein früherer Stand außerhalb des Ordens beeinflusst seine Behandlung im Orden – Ritter und Adlige genießen mehr Respekt als Bürgerliche. Frauen können ebenfalls assoziierte Mitglieder werden (Konsoeurs), werden jedoch getrennt von den Männern untergebracht. Assoziierte Mitglieder unterliegen derselben Regel wie Vollmitglieder, haben jedoch weniger Rechte. Einige assoziierte Mitglieder können wichtige Positionen in einer bestimmten Tempelritter-Komturei bekleiden, insbesondere wenn sie über eine wertvolle Fähigkeit verfügen."
   },
   "virtue.templar_office_holder": {
     "name": "Templerstelleninhaber",
-    "summary": "Der Charakter bekleidet eine Position in der lokalen Hierarchie der Armen Ritter Christi und des Tempels zu Salomon, etwa als stellvertretender Kommandeur, Marschall oder Krankenmeister."
+    "summary": "Der Charakter bekleidet eine Position in der lokalen Hierarchie der Armen Ritter Christi und des Tempels zu Salomon, etwa als stellvertretender Kommandeur, Marschall oder Krankenmeister.",
+    "description": "Der Charakter bekleidet eine Position in der lokalen Hierarchie der Armen Ritter Christi und des Tempels zu Salomon, etwa als stellvertretender Kommandeur, Marschall oder Krankenmeister. Er kann Brüdern in seiner Region Befehle erteilen, genießt den beträchtlichen Respekt, der seiner Position zukommt, und hat die Befugnis, die Ordensregel und ihre verschiedenen Gesetze durchzusetzen, obwohl er dem lokalen Kommandeur gegenüber weisungsgebunden ist. Aufgrund seiner hohen Stellung ist er eine allgemein bekannte Person und besitzt eine Reputation der Stufe 2 in seiner Region. Du kannst diese Tugend zusammen mit einer der anderen Tempelritter-Sozialer-Status-Tugenden wählen, da dein Charakter ein erfahrener Bruder-Sergeant oder erfahrener Tempelritter-Kaplan sein kann. Diese Tugend ist mit der Kleinen Tugend Zeitlicher Einfluss vereinbar. Wenn du diese Tugend zusammen mit der Großen Tugend Templerkommandeur wählst, bekleidet dein Charakter einen der wenigen erhabenen Ränge unter den Tempelrittern, etwa als Großkommandeur oder Großmarschall, oder einen Rang, der Autorität über die östliche oder westliche Region des Ordens hat – in diesem Fall wirst du wahrscheinlich in Akkon, Paris oder London wohnen."
   },
   "virtue.templar_prestige": {
     "name": "Templerrang",
@@ -2806,11 +2826,13 @@
   },
   "virtue.temporal_influence": {
     "name": "Zeitlicher Einfluss",
-    "summary": "Durch Geburt oder eine Vertrauensstellung genießt du einiges politisches Gewicht in der Gesellschaft."
+    "summary": "Durch Geburt oder eine Vertrauensstellung genießt du einiges politisches Gewicht in der Gesellschaft.",
+    "description": "Durch Geburt oder eine Vertrauensstellung genießt du einiges politisches Gewicht in der Gesellschaft. Du hast das Ohr eines Anführers und kannst gelegentlich selbst einfache Leute führen, wenn diese deine Stellung respektieren. Je mehr Einfluss du hast, desto mehr Verantwortung trägst du, und desto schwieriger ist es, ungehindert mit Magi zusammenzuarbeiten. Grogs können diese Tugend nicht wählen."
   },
   "virtue.tethered_magic": {
     "name": "Gefesselte Magie",
-    "summary": "Du kannst die Kontrolle über deine Nicht-Ritual-Zauber an andere weitergeben, so als wären sie der Wirkende, und die Magie für die Dauer des Zaubers an sie „fesseln\"."
+    "summary": "Du kannst die Kontrolle über deine Nicht-Ritual-Zauber an andere weitergeben, so als wären sie der Wirkende, und die Magie für die Dauer des Zaubers an sie „fesseln\".",
+    "description": "Du kannst die Kontrolle über deine Nicht-Ritual-Zauber an andere weitergeben, so als wären sie der Wirkende, und die Magie für die Dauer des Zaubers an sie „fesseln\". Du kannst einen Zauber auch an ein Objekt fesseln, das den Zauber dann auf ein geeignetes Ziel übertragen kann, sobald es in Reichweite kommt. Dies kann sogar geschehen, wenn du einen Effekt in einem magischen Artefakt aktivierst. Ein Nebeneffekt dieser Art von Magie ist jedoch, dass alle deine Zauber und die Effekte aller magischen Artefakte, die du aktivierst, Arkane Verbindungen zu dir sind."
   },
   "virtue.the_enigma": {
     "name": "Das Enigma",
@@ -2827,7 +2849,8 @@
   },
   "virtue.town_magistrate": {
     "name": "Stadtrichter",
-    "summary": "Der Charakter hat eine richterliche Verantwortungsposition in einer Stadt mit einem kleinen Stab von untergeordneten Beamten (bis zu fünf Personen)."
+    "summary": "Der Charakter hat eine richterliche Verantwortungsposition in einer Stadt mit einem kleinen Stab von untergeordneten Beamten (bis zu fünf Personen).",
+    "description": "Der Charakter hat eine richterliche Verantwortungsposition in einer Stadt mit einem kleinen Stab von untergeordneten Beamten (bis zu fünf Personen). Der Charakter muss Bürger der Stadt sein, einen Wert von mindestens 3 in der Fertigkeit Zivil- und Kanonisches Recht (oder Gewohnheitsrecht) besitzen und erhält als Gegenleistung für seine Dienste einen Lohn oder besondere Privilegien. Das Amt des Richters beansprucht den Charakter für zwei Quartale pro Jahr, die restlichen zwei Quartale steht er jedoch frei zur Verfügung. Akademische Fertigkeiten können bei der Charaktererschaffung für den Charakter erworben werden."
   },
   "virtue.trained_assassin": {
     "name": "Ausgebildeter Attentäter",
@@ -2839,15 +2862,18 @@
   },
   "virtue.troupe_upbringing": {
     "name": "Zirkuserziehung",
-    "summary": "Du wurdest in einer Gruppe von Unterhaltungskünstlern aufgezogen und verbrachtest einen Großteil deiner Kindheit damit, von Stadt zu Stadt zu reisen."
+    "summary": "Du wurdest in einer Gruppe von Unterhaltungskünstlern aufgezogen und verbrachtest einen Großteil deiner Kindheit damit, von Stadt zu Stadt zu reisen.",
+    "description": "Du wurdest in einer Gruppe von Unterhaltungskünstlern aufgezogen und verbrachtest einen Großteil deiner Kindheit damit, von Stadt zu Stadt zu reisen. Würfe auf Fertigkeiten in einem ausgewählten Bereich (der vom Spielleiter genehmigt werden sollte) erhalten einen Bonus von +2. Beispiele wären Akrobatik und Bodenturnen, Messerwurf und Jonglieren, oder Geschichtenerzählen und Schauspielerei."
   },
   "virtue.true_faith": {
     "name": "Wahrer Glaube",
-    "summary": "Durch Frömmigkeit und heilige Hingabe hast du einen Glauben, der Berge versetzt."
+    "summary": "Durch Frömmigkeit und heilige Hingabe hast du einen Glauben, der Berge versetzt.",
+    "description": "Durch Frömmigkeit und heilige Hingabe hast du einen Glauben, der Berge versetzt. Du hast einen Wert von 1 im Wahren Glauben und kannst weitere erlangen. Mehr über den Wahren Glauben findest du auf Seite 419.\n\nWer weltliche Belange vollständig aufgibt und sein Leben selbstlos einem heiligen Lebenswandel widmet, kommt in den Genuss des Wahren Glaubens. Wahrer Glaube wird in Glaubenspunkten gemessen, die die Verbindung einer Person zu Gott darstellen. Jene mit Wahrem Glauben können Juden, Christen oder Muslime sein und müssen dabei, so scheint es, nicht vollständig rechtgläubig sein.\n\nWahrer Glaube hat, wie Selbstvertrauen, sowohl einen Wert als auch Punkte. Die Große Tugend Wahrer Glaube verleiht einen Wahrer-Glaube-Wert von 1 und einen einzelnen Glaubenspunkt. Nur wer die Große Tugend Wahrer Glaube besitzt, kann einen Wahrer-Glaube-Wert haben. Jeder Charakter kann eine beliebige Anzahl von Glaubenspunkten besitzen (gewonnen durch Sakramente, eine Pilgerreise oder andere fromme Taten); einmal ausgegeben, kehren sie nicht zurück.\n\nGlaubenspunkte dürfen wie Selbstvertrauenspunkte ausgegeben werden (und es dürfen dabei so viele Glaubenspunkte auf einmal eingesetzt werden, wie der Wahrer-Glaube-Wert beträgt), solange man im Einklang mit Gottes Willen handelt. Wer keinen Wahrer-Glaube-Wert besitzt, darf jeweils nur einen Glaubenspunkt auf einmal einsetzen.\n\nEin Charakter mit Glaubenspunkten, aber ohne Wahrer-Glaube-Wert, erhält keine Magieresistenz. Ein Charakter mit einem Wahrer-Glaube-Wert erhält Magieresistenz in Höhe dieses Wertes multipliziert mit zehn.\n\nMAGIERESISTENZ DURCH WAHREN GLAUBEN: Wahrer-Glaube-Wert × 10\n\nMit jedem Morgengrauen werden Glaubenspunkte bis zur Höhe des Wahrer-Glaube-Wertes aufgefrischt. Wer bereits mehr Glaubenspunkte hat als sein Wahrer-Glaube-Wert beträgt, erhält keine zusätzlichen Punkte.\n\nWeitere Einzelheiten zum Wahren Glauben finden sich in Sphären der Macht: Das Göttliche (Überarbeitete Ausgabe), Seite 56."
   },
   "virtue.true_love_pc": {
     "name": "Wahre Liebe (SC)",
-    "summary": "Du hast die eine Person gefunden, die in der gesamten Schöpfung für dich bestimmt ist, und die Bindung zwischen euch kann nicht getrennt werden."
+    "summary": "Du hast die eine Person gefunden, die in der gesamten Schöpfung für dich bestimmt ist, und die Bindung zwischen euch kann nicht getrennt werden.",
+    "description": "Du hast die eine Person gefunden, die in der gesamten Schöpfung für dich bestimmt ist, und die Bindung zwischen euch kann nicht getrennt werden. Wann immer du leidest, in Gefahr bist oder niedergeschlagen bist, gibt dir der Gedanke an deine Liebe die Kraft, durchzuhalten. Du kannst daher +3 auf passende Persönlichkeitseigenschaft-Würfe addieren und zusätzliche Boni, die der Spielleiter erlaubt (niemals mehr als +3 insgesamt), auf Handlungen, die dich zu deiner Liebe zurückführen oder ihr Leben retten. In äußerster Not mag sie sogar kommen, um dich zu retten. Andererseits bist du an deine Geliebte gebunden, zu der du häufig zurückkehren musst. Tust du das nicht, können dir bei den meisten Handlungen, die Willenskraft erfordern, Malus-Punkte durch Melancholie entstehen. Wenn irgendeine Verzauberung dich von der Seite deiner wahren Liebe fernhält, kann die Kraft deiner Hingabe sie wahrscheinlich brechen. Deine Wahre Liebe ist ein anderer Spielercharakter, der ebenfalls diese Tugend besitzen muss. Wahre Liebe ist niemals einseitig.\n\nDiese Tugend kann in „Wahrer Freund\" umbenannt werden, um gleichermaßen enge Bindungen zu umfassen, die nicht romantischer Natur sind."
   },
   "virtue.turb_trained": {
     "name": "Turba-Ausgebildet",
@@ -2855,24 +2881,29 @@
   },
   "virtue.unaffected_by_the_gift": {
     "name": "Unbeeindruckt von der Gabe",
-    "summary": "Der Charakter ist von den negativen Auswirkungen der Gabe oder des Magischen Flairs anderer nicht betroffen."
+    "summary": "Der Charakter ist von den negativen Auswirkungen der Gabe oder des Magischen Flairs anderer nicht betroffen.",
+    "description": "Der Charakter ist von den negativen Auswirkungen der Gabe oder des Magischen Flairs anderer nicht betroffen. Selbst eine Auffällige Gabe stört den Charakter nicht sonderlich."
   },
   "virtue.unaging": {
     "name": "Nicht alternd",
-    "summary": "Du leidest nicht unter den Auswirkungen des Alterns."
+    "summary": "Du leidest nicht unter den Auswirkungen des Alterns.",
+    "description": "Du leidest nicht unter den Auswirkungen des Alterns. Im Spielsinne verringern deine Alterungspunkte nicht deine Eigenschaften, sondern häufen sich nur an, um dir Gebrechlichkeitspunkte zu verleihen. Wenn eine Krise nicht potenziell tödlich ist, erleidest du keine nachteiligen Folgen. Du kannst an terminalen und potenziell tödlichen Krisen nach den normalen Regeln sterben. Du wirst nicht hinfällig, wenn du vier Gebrechlichkeitspunkte erreichst, stirbst aber wie üblich, wenn du fünf erreichst. Du kannst dein scheinbares Alter frei wählen, obwohl es, wenn du grundsätzlich menschlich bist, kleiner oder gleich deinem tatsächlichen Alter sein sollte."
   },
   "virtue.unbound_tongue": {
     "name": "Ungebundene Zunge",
-    "summary": "Wann immer der Charakter in eine nicht-menschliche Form verwandelt wird (ob durch Zauber, magisches Artefakt, Fluch oder ein Herztier), kann er alle menschlichen Sprachen, die er kennt, ohne Einschränkung sprechen."
+    "summary": "Wann immer der Charakter in eine nicht-menschliche Form verwandelt wird (ob durch Zauber, magisches Artefakt, Fluch oder ein Herztier), kann er alle menschlichen Sprachen, die er kennt, ohne Einschränkung sprechen.",
+    "description": "Wann immer der Charakter in eine nicht-menschliche Form verwandelt wird (ob durch Zauber, magisches Artefakt, Fluch oder ein Herztier), kann er alle menschlichen Sprachen, die er kennt, ohne Einschränkung sprechen. Ist er ein Magus, kann er seine Stimme wie gewohnt zum Zaubern einsetzen."
   },
   "virtue.university_grammar_teacher": {
     "name": "Universitätsgrammatiklehrer",
-    "summary": "Der Charakter ist von einer Universität angestellt, um deren jüngeren Mitgliedern Grammatik zu unterrichten."
+    "summary": "Der Charakter ist von einer Universität angestellt, um deren jüngeren Mitgliedern Grammatik zu unterrichten.",
+    "description": "Der Charakter ist von einer Universität angestellt, um deren jüngeren Mitgliedern Grammatik zu unterrichten. Der Charakter kann jeden Alters und Geschlechts sein. Er kann bei der Charaktererschaffung die Akademischen Fertigkeiten Latein und Artes Liberales erwerben und sollte einen Wert in der Fertigkeit Unterrichten besitzen. Er muss zwei Quartale im Jahr unterrichten."
   },
   "virtue.variable_power": {
     "name": "Variable Kraft ({power})",
     "name_unfilled": "Variable Kraft",
-    "summary": "Eine der magischen Kräfte des Charakters (Groß, Gering, Persönlich oder Ritual) wird im Laufe der Zeit stärker, basierend auf entweder (Alter / 10), (Machtwert / 5), dem Verzerrungswert oder seinem Wert in einer passenden Fertigkeit."
+    "summary": "Eine der magischen Kräfte des Charakters (Groß, Gering, Persönlich oder Ritual) wird im Laufe der Zeit stärker, basierend auf entweder (Alter / 10), (Machtwert / 5), dem Verzerrungswert oder seinem Wert in einer passenden Fertigkeit.",
+    "description": "Eine der magischen Kräfte des Charakters (Groß, Gering, Persönlich oder Ritual) wird im Laufe der Zeit stärker, basierend auf entweder (Alter / 10), (Machtwert / 5), dem Verzerrungswert oder seinem Wert in einer passenden Fertigkeit. (Alter und Verzerrung sollten nicht als Variablen erlaubt werden, wenn der Charakter immun gegen ihre Auswirkungen ist.) Eine Kraft, die dem Charakter beispielsweise erlaubt, seine Gestalt in ein Tier zu verwandeln, könnte mit einer besonderen Fertigkeit verknüpft sein, und sein Wert in dieser Fertigkeit würde bestimmen, in wie viele verschiedene Tiere er sich verwandeln kann.\n\nIm Allgemeinen kann eine einzelne Kraft ihre Effektstufe um fünf erhöhen oder einen weiteren Effekt derselben Stufe umfassen, der dem ursprünglichen ähnlich ist, und zwar für jede Variationsstufe. Bei einem Charakter mit Variablen Kräften, die auf seinem Alter basieren, würde dies beispielsweise bedeuten, dass die Effektivität einer seiner Kräfte nach 50 Lebensjahren um insgesamt fünf Magnituden gesteigert wird.\n\nDiese Tugend kann mehrfach gewählt werden, wenn der Charakter mehr als eine Kraft besitzt, gilt jedoch nur einmal für eine einzelne Kraft."
   },
   "virtue.venditor": {
     "name": "Venditor",
@@ -2880,11 +2911,13 @@
   },
   "virtue.venus_blessing": {
     "name": "Venussegen",
-    "summary": "Menschen fühlen sich oft zu dir hingezogen."
+    "summary": "Menschen fühlen sich oft zu dir hingezogen.",
+    "description": "Menschen fühlen sich oft zu dir hingezogen. Du erhältst +3 auf Kommunikations- und Präsenz-Würfe mit Charakteren, die sexuell kompatibel sind, in passenden Situationen. Manchmal kannst du dies sinnvoll nutzen. Zu anderen Zeiten ist es lästig."
   },
   "virtue.verditius_magic": {
     "name": "Verditius-Magie",
-    "summary": "Einweihung in das Äußere Mysterium des Hauses Verditius, das das Wirken von Verzauberungen durch Handwerk ermöglicht."
+    "summary": "Einweihung in das Äußere Mysterium des Hauses Verditius, das das Wirken von Verzauberungen durch Handwerk ermöglicht.",
+    "description": "Du wurdest in das Äußere Mysterium der Verditius-Magie eingeweiht (siehe Seite 240) und bist damit Mitglied des Hauses Verditius. Beachte, dass alle Verditius-Magi diese Tugend bei der Charaktererschaffung kostenlos erhalten."
   },
   "virtue.voice_of_the_land": {
     "name": "Stimme des {land}",
@@ -2892,7 +2925,8 @@
   },
   "virtue.wanderer": {
     "name": "Wanderer",
-    "summary": "Du bist an keine Gemeinschaft gebunden und lebst von gelegentlichen Arbeiten irgendwelcher Art."
+    "summary": "Du bist an keine Gemeinschaft gebunden und lebst von gelegentlichen Arbeiten irgendwelcher Art.",
+    "description": "Du bist an keine Gemeinschaft gebunden und lebst von gelegentlichen Arbeiten irgendwelcher Art. Die Große Tugend Wohlstand und der Große Fehler Arm betreffen dich normal, obwohl du, falls du wohlhabend bist, von jemandem oder einer Institution unterstützt wirst. Dein Unterstützer stellt deine Aktivitäten jedoch in keiner Weise in Frage."
   },
   "virtue.warrior": {
     "name": "Krieger",
@@ -2921,14 +2955,17 @@
   },
   "virtue.wisdom_from_ignorance": {
     "name": "Weisheit aus Unwissen",
-    "summary": "Eine in Ägypten beheimatete Sufi-Schule interessiert sich besonders für Kalligraphie und die Ästhetik des Enigmas."
+    "summary": "Eine in Ägypten beheimatete Sufi-Schule interessiert sich besonders für Kalligraphie und die Ästhetik des Enigmas.",
+    "description": "Eine in Ägypten beheimatete Sufi-Schule interessiert sich besonders für Kalligraphie und die Ästhetik des Enigmas. Darunter verstehen sie, dass das Betrachten von Texten, die bedeutungsvoll gestaltet sind, die der Betrachtende jedoch nicht lesen kann, als eine Form der Meditation genutzt werden kann, die Erleuchtung bringt. Sie können Bücher als Quellen für das Üben nutzen, vorausgesetzt, sie können die Sprache, in der sie geschrieben sind, nicht lesen.\n\nDie Sufis nutzen diese Fähigkeit, um ein Verständnis für geistliche Angelegenheiten zu erlangen, daher sollten Spieler Fähigkeitsbücher ganz normal erstellen, und wenn Sufis diese Tugend nutzen, die aus dem Buch erlernte Fertigkeit auf Theologie Organisationskunde: Sufis oder ähnlich erhebende Themen umstellen. Ein Sufi, der diese Tugend nutzt, kann gelegentlich Erfahrung in materiell praktischen Fertigkeiten gewinnen, aber dies geschieht nur im Zusammenhang mit der Überwindung spezifischer Herausforderungen auf geistlichen Reisen. Direkt anwendbares Lernen dieser Art gilt für den Sufi als Wunder, und Spieltruppen sollten dies wie jedes andere Wunder beaufsichtigen."
   },
   "virtue.wise_one": {
     "name": "Weise Frau / Weiser Mann",
-    "summary": "Ein Mystiker, Seher oder Heiler von gutem Ansehen in der Gemeinschaft."
+    "summary": "Ein Mystiker, Seher oder Heiler von gutem Ansehen in der Gemeinschaft.",
+    "description": "Du gehörst einer breiten Gesellschaftsklasse an, die Mystiker, Seher, Heiler und ähnliche Personen umfasst. Du bist wahrscheinlich magisch begabt und wirst wahrscheinlich eine Tugend erwerben wollen, die dir irgendeine Art übernatürlicher Fähigkeit verleiht. Du bist in der Gemeinschaft angesehen, obwohl deine Anwesenheit auch Furcht sowie Ehrfurcht oder Respekt hervorrufen kann. Wenn dir ein solches Ansehen fehlt, bist du höchstwahrscheinlich ein Wanderer oder Ausgestoßener. Du kannst bei der Charaktererschaffung entweder Arkane oder Akademische Fertigkeiten wählen, aber nicht beides. Die Große Tugend Wohlstand und der Große Fehler Arm betreffen dich normal. Diese Tugend steht männlichen und weiblichen Charakteren zur Verfügung."
   },
   "virtue.withstand_casting": {
     "name": "Zaubern aushalten",
-    "summary": "Wenn ein Magus diese Tugend besitzt, verliert er, wann immer er durch das Zaubern eines Spruchs eine Erschöpfungsstufe zu verlieren droht, eine Erschöpfungsstufe weniger als üblich, mit einem Minimum von 1 Erschöpfungsstufe – wenn der Zauber jedoch ohne Erschöpfungsverlust gewirkt worden wäre, erleidet er trotzdem keinen Erschöpfungsverlust."
+    "summary": "Wenn ein Magus diese Tugend besitzt, verliert er, wann immer er durch das Zaubern eines Spruchs eine Erschöpfungsstufe zu verlieren droht, eine Erschöpfungsstufe weniger als üblich, mit einem Minimum von 1 Erschöpfungsstufe – wenn der Zauber jedoch ohne Erschöpfungsverlust gewirkt worden wäre, erleidet er trotzdem keinen Erschöpfungsverlust.",
+    "description": "Wenn ein Magus diese Tugend besitzt, verliert er, wann immer er durch das Zaubern eines Spruchs eine Erschöpfungsstufe zu verlieren droht, eine Erschöpfungsstufe weniger als üblich, mit einem Minimum von 1 Erschöpfungsstufe – wenn der Zauber jedoch ohne Erschöpfungsverlust gewirkt worden wäre, erleidet er trotzdem keinen Erschöpfungsverlust.\n\nEin Magus kann diese Tugend mehrfach wählen und widersteht für jede Stufe der Tugend 1 Erschöpfungsstufe, wobei der Mindestverlust an Erschöpfung bestehen bleibt. Hat er Magie widerstehen (3), kann er bis zu 3 Erschöpfungsstufen widerstehen, erleidet jedoch mindestens 1 Stufe Verlust.\n\nDie Tugend verringert den Schweregrad des Erschöpfungsverlusts auf genau dieselbe Weise wie der bestehende Erschöpfungsverlust. Wirkt der Magus also einen formulaischen Zauber, ist die Erschöpfung kurzfristig und leicht zu erholen, und wenn ihm die Erschöpfungsstufen ausgehen, wird er bewusstlos – wobei der Verlust zusätzlicher Erschöpfungsstufen dazu führt, dass er für jede überschüssige Stufe eine Stunde lang bewusstlos ist, und die Erleichterung durch Magie widerstehen dieses vermindert. Wirkt er hingegen einen Ritualzauber, ist die Erschöpfung langfristiger Natur, und der Verlust von mehr Erschöpfung als er besitzt, verursacht Wunden; die Erleichterung durch Magie widerstehen verringert den Schweregrad dieser Wunden, was dazu führen kann, dass er gar keine Wunden erleidet (wobei der Mindest-Erschöpfungsverlust ihn bewusstlos werden lässt).\n\nDu kannst deinen Charakter nicht mit sowohl Anfälligem Zaubern als auch Magie widerstehen beginnen. Sie kann jedoch im Verlauf des Spiels beides erwerben (Magie widerstehen durch Einweihungsrituale oder günstige Zwielicht-Effekte; Anfälliges Zaubern durch Proben oder ungünstige Zwielicht-Effekte). Tritt dies ein, wende zuerst den zusätzlichen Verlust durch Anfälligkeit an und widerstehe dann dem erhöhten Verlust.\n\nEinige Tugenden, wie Lebensstärkung und Lebensgebundene Spontane Magie, nutzen tatsächlich die Lebenskraft des Magus, um den Zauber zu versorgen: Der verlorene Erschöpfungsverlust versorgt den Zauber, und ohne diesen Verlust ist keine Kraftverstärkung möglich. Während ein Magus Magie widerstehen auch auf einen solchen Zauber anwenden kann, verliert er, wenn er dies tut, die Vorteile der widerstehend verlorenen Stufen.\n\nBeispiel: Vita, eine Maga mit Lebensgebundener Spontaner Magie, möchte einen Zauber der Stufe 20 wirken, verfehlt das Ziel jedoch und erzielt nur ein Ergebnis der Stufe 16. Sie verliert 2 Erschöpfungsstufen (1 für spontanes Zaubern, 1 für den Fehlbetrag bei der Lebensgebundenen Magie).\n\nObwohl sie Anfälliges Zaubern (1) besitzt (aus vergangenen Zwielicht-Erfahrungen) und daher eine zusätzliche Erschöpfungsstufe verliert, hat sie außerdem Magie widerstehen (3) (aus Einweihungen) und kann dieses nutzen, um dem Verlust durch das Anfällige Zaubern zu widerstehen.\n\nSie hat noch 2 Stufen Magie widerstehen übrig, aber wenn sie den Verlust durch die Lebensgebundene Magie aufhebt, wird der Zauber scheitern (und sie erleidet trotzdem den verbleibenden Erschöpfungsverlust). Sie kann dem Basis-Erschöpfungsverlust durch das Spontane Zaubern nicht widerstehen.\n\nEs ist jedoch sinnvoll, die Tugend Magie widerstehen auch bei Lebensgebundener Spontaner Magie zu besitzen, falls der Fehlbetrag extrem ist; zum Beispiel, wenn der Magus einen Patzer würfelt und die Zaubersumme auf null sinkt.\n\nBeispiel: Einige Zeit später versucht Vita es erneut und hofft, einen weiteren Zauber der Stufe 20 zu wirken. Sie würfelt jedoch einen Patzer, und ihre Zaubersumme beträgt null. Sie würde normalerweise 6 Erschöpfungsstufen verlieren (1 für spontanes Zaubern, plus 1 für Anfälliges Zaubern, plus 4 für den Fehlbetrag bei der Zaubersumme), aber sie kann 3 Erschöpfungsstufen widerstehen und erleidet nur einen Nettoverlust von 3 Erschöpfungsstufen. Der Zauber scheitert, aber sie ist noch bei Bewusstsein."
   }
 }

@@ -2433,25 +2433,27 @@ const PENDING_D67_CLASSIFICATION: &[(&str, &str)] = &[
     // bother capability; magical_mount: the required companion Major Story
     // Flaw; male_guild_sponsor: the female-only restriction). `every_vf_is_classified`
     // bites each directly now. See tmp/x2b-verdicts.md.
-    (
-        "virtue.verditius_magic",
-        "narrative, but declares prerequisites — D67 counts that as computed",
-    ),
-    // virtue.side_effect, virtue.tethered_magic: X3a (D12/D68) adds the
-    // hermetically_trained prerequisite every Hermetic entry now carries, which
-    // D67 counts as computed even though each still states a genuinely
-    // uncomputed clause (Side Effect's open-ended troupe-defined bonus; Tethered
-    // Magic's Arcane Connection side effect) — neither fits `uncomputed_rule`'s
-    // own mechanical-token screen (`tests/uncomputed_clauses.rs`), so they stay
-    // `narrative` and pending here instead.
-    (
-        "virtue.side_effect",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
-    (
-        "virtue.tethered_magic",
-        "narrative, but declares prerequisites — D68 counts that as computed",
-    ),
+    // virtue.verditius_magic: gap closed in Phase 2 (X2d reclassified it to
+    // uncomputed_rule with a description stating the free-grant clause) and
+    // removed from this list.
+    // virtue.side_effect: gap closed in Phase 2 (its description now states the
+    // +1 Presence / Concentration example, a real mechanical token) and removed
+    // from this list.
+    // virtue.tethered_magic: X2d Phase 2 (2026-09-29) reclassified this entry
+    // from `narrative` to `uncomputed_rule` (per its own Phase 1 table
+    // X2D_RECLASSIFY_WITH_DESCRIPTION in x2_reclassification.rs), so the D67
+    // guard's "narrative, but declares prerequisites" reading no longer
+    // applies and the row was removed. `uncomputed_clauses.rs`'s
+    // `every_uncomputed_rule_entry_states_its_rule_in_every_locale` briefly
+    // stayed red for this entry because its description's "are Arcane
+    // Connections to you" did not fit any existing S2 idiom family; X2d
+    // Phase 2 (2026-09-30) closed the gap with a narrowly-scoped idiom
+    // (family "arcane connection side effect", `S2_IDIOMS` in
+    // uncomputed_clauses.rs) rather than reverting the classification — the
+    // passage (ArMDE:5141-5144) genuinely states a rule the engine does not
+    // compute (every spell/item-effect the character casts becomes an
+    // Arcane Connection to them), so `uncomputed_rule` is the correct
+    // reading, not `narrative`.
     // X3b/X3c (D12/D68): the same Phase 2 gate-data pass adds a
     // hermetically_trained/order_member prerequisite to every remaining
     // `narrative`-classified Hermetic Flaw, which D67 counts as computed even
@@ -6545,6 +6547,7 @@ fn church_upbringing_ships_the_earmark_effect_shape() {
                 },
             ],
             from_normal_budget: true,
+            abilities_param: None,
         }),
         "flaw.church_upbringing's effects do not match ArMDE:5791: {:?}",
         item.effects

@@ -407,6 +407,30 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::De,
         family: "capability",
     },
+    // X2d: `virtue.unaffected_by_the_gift`'s "is not affected by"/"nicht
+    // betroffen" and `virtue.unbound_tongue`'s "with no impediment"/"ohne
+    // Einschränkung" are D8 capability grants (immunity, permission) with no
+    // signed number to carry them.
+    S2Idiom {
+        pattern: r"\bnot affected by",
+        language: Language::En,
+        family: "capability",
+    },
+    S2Idiom {
+        pattern: r"\bnicht betroffen",
+        language: Language::De,
+        family: "capability",
+    },
+    S2Idiom {
+        pattern: r"\bwith no impediment",
+        language: Language::En,
+        family: "capability",
+    },
+    S2Idiom {
+        pattern: r"\bohne einschränkung",
+        language: Language::De,
+        family: "capability",
+    },
     // --- Family 1 (Prohibition) + family 3 (Absolutes beyond "cannot die")
     // Consolidated: German negation is discontinuous (D19), so the general
     // fix is one bounded-gap pattern binding a modal verb to a later
@@ -1269,6 +1293,82 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::De,
         family: "bare imperative modifier",
     },
+    // X2d (2026-09-30): four idioms added while closing out
+    // `every_uncomputed_rule_entry_states_its_rule_in_every_locale`'s last
+    // five offenders (`tmp/x2d-handover.md`). Each verified against a real
+    // hit via `every_s2_idiom_has_a_real_hit_in_its_own_language`, and the
+    // whole suite re-run afterward per D19 obligation 3.
+    S2Idiom {
+        // virtue.sense_holiness_and_unholiness (ArMDE:4928, DE): "kann Deine
+        // Sensibilität Dich überwältigen" — a positive (non-negated) modal
+        // capability-with-consequence, the mirror shape of DE_MODAL_NICHT
+        // but without "nicht". Also verified against a second real hit,
+        // ArMDE:7721 (the Sense Holiness and Unholiness Ability's own text):
+        // "kann dein Gespür dich überwältigen".
+        pattern: r"\bkann\b[^.]{0,40}?\büberwältigen\b",
+        language: Language::De,
+        family: "overwhelm capability",
+    },
+    S2Idiom {
+        // virtue.wanderer (ArMDE:5223-5226): "The Wealthy Major Virtue and
+        // Poor Major Flaw affect you normally" — states that the two
+        // background-wealth V/F apply unmodified rather than being
+        // suppressed by this Virtue's own background, which is itself the
+        // rule (absent it, a storyguide could reasonably read the entry as
+        // excluding them). Checked catalogue-wide before adding (`grep -n
+        // "affect you normally"` against the EN source): 12 entries carry
+        // this exact clause, not just virtue.wanderer — the others are
+        // filed as newly-swept in PENDING_MECHANICAL_CLASSIFICATION
+        // (virtue.craftsman/gentleman/merchant/peasant, `narrative`) and
+        // PENDING_DROPPED_CLAUSE (virtue.clerk/failed_apprentice/priest/
+        // troubadour, `creation_effect`); virtue.knight, virtue.notary and
+        // virtue.wise_one already state a mechanical rule in both locales'
+        // shipped `description` (notary's DE text ships the full passage —
+        // "still trip the screen" verification, run after this table was
+        // drafted, confirmed it and not just an assumption) and need no row.
+        pattern: r"\baffect you normally\b",
+        language: Language::En,
+        family: "wealthy/poor unaffected",
+    },
+    S2Idiom {
+        // The DE phrasing knight/troubadour/wanderer/wise_one share: "Die
+        // (Große) Tugend Wohl(hab|stan)d und der (Große) Fehler Arm
+        // betreffen dich normal". Other entries in the same 12-strong EN
+        // family use a different German verb ("wirken sich normal auf dich
+        // aus") that this pattern deliberately does NOT match — widening to
+        // catch it too risked also sweeping virtue.nuntius's third-person
+        // "wirken sich normal auf ihn aus" and possibly others not yet
+        // audited, so those entries' DE gaps are filed on the pending lists
+        // above instead of chased with a broader idiom.
+        pattern: r"\bbetreffen dich normal\b",
+        language: Language::De,
+        family: "wealthy/poor unaffected",
+    },
+    S2Idiom {
+        // virtue.tethered_magic (ArMDE:5143): "all of your spells and the
+        // effects of any magic items you activate are Arcane Connections to
+        // you" — the rule is the Arcane Connection itself, a real and severe
+        // side effect, not flavour. Narrowly scoped to this exact
+        // construction rather than the far more common "Arcane Connection to"
+        // (33 hits catalogue-wide): checked, "are Arcane Connections? to
+        // you" has exactly two real hits, this entry and flaw.fettered_magic
+        // (ArMDE:6114-6117, "You cannot take this with the Virtue Tethered
+        // Magic, as the Virtue already includes this effect") — see the
+        // newly-swept-entries note this slice files for that second hit.
+        pattern: r"\bare arcane connections? to you\b",
+        language: Language::En,
+        family: "arcane connection side effect",
+    },
+    S2Idiom {
+        // virtue.voice_of_the_land (ArMDE:5221): "the character is not
+        // normally perceived as either a threat or a prey object by these
+        // creatures" — a real, if qualitative, in-fiction consequence
+        // (creatures do not treat the character as game or a predator),
+        // stated nowhere else in the catalogue (`grep -c "prey object"` = 1).
+        pattern: r"\bprey object\b",
+        language: Language::En,
+        family: "capability limiter",
+    },
 ];
 
 /// [`S2_IDIOMS`], compiled once.
@@ -1594,13 +1694,16 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     // compatibility shape X2b already reclassified for
     // virtue.male_guild_sponsor. Reclassifies to uncomputed_rule; see
     // tmp/x2c-verdicts.md.
-    (
-        "virtue.tainted_treasure",
-        "ArMDE:5097-5108 states no PC-facing number — the treasure's curse (ventures fail, \
-         buildings burn) is pure story consequence, and the one concrete mechanical path it \
-         names (\"transform it into a source of the Wealthy Virtue\") is Wealthy's own already-\
-         computed later_life_xp_rate, not a new clause.",
-    ),
+    // virtue.tainted_treasure: OVERTURNED (X2d) — this reading pre-dates D50.
+    // Re-read against D50's actual test ("would a player/storyguide get it
+    // wrong without knowing it"): the curse's specific consequences (trading
+    // moves the curse; a non-sinful use destroys the treasure; ventures/
+    // buildings eventually fail/burn) are exactly the kind of "guaranteed
+    // storyguide intervention" D50's common_sense example names — a
+    // storyguide who does not know the treasure self-destructs on a charitable
+    // gift will run it wrong. Reclassifies to uncomputed_rule; see
+    // tmp/x2d-verdicts.md. (F-309's source.lines/sidebar defect is a separate,
+    // unrelated finding — not this slice's to fix.)
     // --- X2a fix-round additions (2026-09-29): the new "capability"/
     // "prohibition/absolutes" idioms above newly sweep this one. (Its sibling
     // flaw.painful_magic is NOT narrative — in_play_effect — so it cannot live
@@ -1853,11 +1956,11 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
         "\"restricted to\" idiom (added for virtue.male_guild_sponsor): \"This Flaw is generally \
          restricted to magi of House Verditius\", ArMDE:6955-6958",
     ),
-    (
-        "virtue.templar_confrere_or_consoeur",
-        "\"need not\" idiom: \"His membership is generally temporary (although it need not be)\", \
-         ArMDE:5117-5120",
-    ),
+    // virtue.templar_confrere_or_consoeur: resolved (X2d) — reclassifies to
+    // uncomputed_rule; the "need not" idiom hit was a false trigger, but a real
+    // clause survives it ("he may possess other Social Status Virtues or
+    // Flaws", "women may also become associate members", fewer rights than
+    // full members). See tmp/x2d-verdicts.md.
     // virtue.amorphous_major/_minor, virtue.covenfolk: resolved (X2a) — the
     // capability clause reclassifies to uncomputed_rule (amorphous) or the
     // entry's own incompatible_with turns out to cover the whole passage
@@ -1887,78 +1990,13 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // virtue.performance_magic, virtue.piercing_gaze,
     // virtue.reserves_of_strength, virtue.ripper: resolved (X2c) — all nine
     // reclassify narrative -> uncomputed_rule, see tmp/x2c-verdicts.md.
-    (
-        "virtue.sharp_ears",
-        "signed number: \"+3 bonus to all rolls involving hearing\", ArMDE:4950-4953",
-    ),
-    (
-        "virtue.side_effect",
-        "signed number (open-ended, player-chosen): \"+1 Presence bonus\", \"a bonus on \
-         Concentration rolls\", ArMDE:4954-4957",
-    ),
-    (
-        "virtue.skilled_smuggler",
-        "signed number: \"a -9 penalty on Awareness rolls\", ArMDE:4968-4971",
-    ),
-    (
-        "virtue.skinchanger",
-        "signed number + range: \"+3 is added to the character's Soak score\", \"Size -10... to \
-         Size +2\", ArMDE:4972-4975",
-    ),
-    (
-        "virtue.skinchanger_dove",
-        "signed number: \"Soak is +3 higher than usual\", ArMDE:4976-4987",
-    ),
-    (
-        "virtue.social_contacts",
-        "target number: \"a simple Presence roll against an Ease Factor of 6\", \
-         ArMDE:4988-4991",
-    ),
-    (
-        "virtue.spiritual_pact",
-        "formula: \"Presence + Magic Lore + stress die\" for a Might Pool, ArMDE:5010-5021",
-    ),
-    (
-        "virtue.strong_willed",
-        "signed number: \"+3 on any roll which may require strength of will\", ArMDE:5048-5051",
-    ),
-    (
-        "virtue.supernatural_beauty",
-        "capability (open-ended, GM-adjudicated): \"once per story\" insert a fortunate \
-         coincidence, ArMDE:5089-5096",
-    ),
-    (
-        "virtue.temporal_influence",
-        "eligibility: \"Grogs may not take this Virtue\", ArMDE:5137-5140",
-    ),
-    (
-        "virtue.troupe_upbringing",
-        "signed number: \"receive a +2 modifier\", ArMDE:5165-5168",
-    ),
-    (
-        "virtue.true_love_pc",
-        "signed number: \"add +3 to appropriate Personality Trait rolls\", ArMDE:5173-5178",
-    ),
-    (
-        "virtue.variable_power",
-        "formula: power level scaling by \"(age / 10)\", \"(Might Score / 5)\", \
-         ArMDE:5199-5206",
-    ),
-    (
-        "virtue.venus_blessing",
-        "signed number: \"+3 on Communication and Presence rolls\", ArMDE:5211-5214",
-    ),
-    (
-        "virtue.verditius_magic",
-        "capability: \"enabling the casting of enchantments through craft\" carries no effect \
-         at all, unlike its sibling Outer-Mystery entries (Faerie Magic, Heartbeast, The \
-         Enigma), ArMDE:5215-5217",
-    ),
-    (
-        "virtue.wisdom_from_ignorance",
-        "capability: books as a training source \"provided they are unable to read the \
-         language\", ArMDE:5251-5256",
-    ),
+    // virtue.sharp_ears, virtue.side_effect, virtue.skilled_smuggler,
+    // virtue.skinchanger, virtue.skinchanger_dove, virtue.social_contacts,
+    // virtue.spiritual_pact, virtue.strong_willed, virtue.supernatural_beauty,
+    // virtue.temporal_influence, virtue.troupe_upbringing, virtue.true_love_pc,
+    // virtue.variable_power, virtue.venus_blessing, virtue.verditius_magic,
+    // virtue.wisdom_from_ignorance: resolved (X2d) — all sixteen reclassify
+    // narrative -> uncomputed_rule, see tmp/x2d-verdicts.md.
     // --- Corrected disposition (post-S4 review): these two were briefly
     // parked in NO_RULE_DESPITE_TOKEN, which is wrong — that list certifies
     // "narrative is correct", and D46 (docs/vf-audit/decisions.md) rules the
@@ -1991,6 +2029,32 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // uncomputed_rule (ArMDE:4287-4290, "You can only choose an illness, not an
     // injury or other misfortune" is a real restriction the summary does not
     // carry), see tmp/x2b-verdicts.md.
+    // --- X2d fix-round additions (2026-09-30): the new "wealthy/poor
+    // unaffected" idiom (added to close virtue.wanderer's own screen miss)
+    // newly sweeps four more `narrative` entries whose passage states the
+    // identical "Wealthy/Poor affect(s) you normally" clause. None was on
+    // X2d's own worklist (rows 154-203); each is a genuine dropped clause for
+    // a later X2 slice, not fixed here.
+    (
+        "virtue.craftsman",
+        "\"The Wealthy Major Virtue and Poor Major Flaw affect you normally\", \
+         ArMDE:3621-3624 — `narrative`, no description carrying it",
+    ),
+    (
+        "virtue.gentleman",
+        "\"The Wealthy Virtue and Poor Flaw affect you normally\", ArMDE:3959-3962 — \
+         `narrative`, no description carrying it",
+    ),
+    (
+        "virtue.merchant",
+        "\"The Wealthy Major Virtue and Poor Major Flaw affect you normally\", \
+         ArMDE:4506-4509 — `narrative`, no description carrying it",
+    ),
+    (
+        "virtue.peasant",
+        "\"The Wealthy Major Virtue and Poor Major Flaw affect you normally\", \
+         ArMDE:4620-4623 — `narrative`, no description carrying it",
+    ),
 ];
 
 /// D5's first obligation (`docs/vf-audit/decisions.md`): a `creation_effect` or
@@ -2185,35 +2249,34 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
         "single clause (\"may select\" Academic Abilities), fully computed via \
          ability_authorization (X1/D43).",
     ),
-    (
-        "virtue.town_magistrate",
-        "operative clause (\"Academic Abilities may be bought\") is computed via \
-         ability_authorization (X1/D43); the Ability-3 (Civil and Canon Law) prerequisite is a \
-         separate, unencoded `prereq`-kind finding (F-322) the screen does not itself detect.",
-    ),
-    (
-        "virtue.sufi",
-        "operative clause (\"may purchase\" Theology: Islam, Islamic Law, Dominion Lore) is \
-         computed via ability_authorization (X1/D43, id-form); the no-points Story Flaw \
-         mechanic (F-303) is a separate, untracked finding, not this row's concern.",
-    ),
-    (
-        "virtue.templar_administrator",
-        "operative clause (\"may take\" Academic Abilities) is computed via \
-         ability_authorization (X1/D43); the Status-substitution rule and male-only note are \
-         flavor.",
-    ),
+    // virtue.town_magistrate: moved to PENDING_DROPPED_CLAUSE (X2d) — the
+    // Ability-3 prerequisite (F-322) is correctly out of this screen's reach
+    // (a `prereq`-kind finding), but D62 (seasons are not modelled, so a
+    // seasonal-commitment clause becomes text) applies to ArMDE:5151's "occupies
+    // the character for two seasons each year, but he is free for the
+    // remaining two seasons" — a real clause this certification did not
+    // account for. See tmp/x2d-verdicts.md.
+    // virtue.sufi: moved to PENDING_DROPPED_CLAUSE (X2d) — F-303 (a live
+    // finding) disagrees with "not this row's concern": the no-points Story
+    // Flaw rule is exactly the kind of uncomputed clause D5 obliges onto
+    // `description`, regardless of whether a different finding first raised
+    // it. See tmp/x2d-verdicts.md.
+    // virtue.templar_administrator: moved to PENDING_DROPPED_CLAUSE (X2d) —
+    // F-311 (a live finding) disagrees with "flavor": the Status-substitution
+    // rule, the male-only restriction, and "no additional time" are each a
+    // real clause reaching the player nowhere, on the same D5/F-123 reading
+    // that overturned virtue.jurist/virtue.knight (X2b) and
+    // virtue.mamluk/mazdean_priest/notary (X2c). See tmp/x2d-verdicts.md.
     (
         "virtue.troubadour",
         "operative clause (\"may take\" Academic skills) is computed via ability_authorization \
          (X1/D43); the Wealthy/Poor advisory note and companion Virtue suggestions are flavor.",
     ),
-    (
-        "virtue.university_grammar_teacher",
-        "single clause (\"may purchase\" Latin and Artes Liberales), fully computed via \
-         ability_authorization (X1/D43, id-form); \"should have a score in Teaching\" is a soft \
-         recommendation (\"should\", not \"must\").",
-    ),
+    // virtue.university_grammar_teacher: moved to PENDING_DROPPED_CLAUSE
+    // (X2d) — this certification correctly reads "should have a score in
+    // Teaching" as soft, but misses ArMDE:5197's own separate, hard
+    // obligation: "They must teach two seasons out of the year." See
+    // tmp/x2d-verdicts.md.
     (
         "flaw.black_sheep",
         "single clause (bad Reputation at level 2), fully computed via grants_reputation. \
@@ -2514,16 +2577,14 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
         "single clause (confers the Second Sight Ability at 1), fully computed via \
          ability_score_grant.",
     ),
-    (
-        "virtue.sense_holiness_and_unholiness",
-        "single clause (confers the Sense Holiness and Unholiness Ability at 1), fully \
-         computed via ability_score_grant.",
-    ),
-    (
-        "virtue.shadchan",
-        "single clause (50 XP on named social Abilities), fully computed via \
-         restricted_ability_xp.",
-    ),
+    // virtue.sense_holiness_and_unholiness: OVERTURNED (X2d) — this
+    // certification missed ArMDE:4928's "your sensitivity may overwhelm you"
+    // in a strong divine/infernal aura, D50's own worked example (Q-66). D67
+    // applies: reclassifies to uncomputed_rule despite the ability_score_grant
+    // effect staying. See tmp/x2d-verdicts.md.
+    // virtue.shadchan: moved to PENDING_DROPPED_CLAUSE (X2d) — F-267/F-268 are
+    // live findings this certification did not account for. See
+    // tmp/x2d-verdicts.md.
     (
         "virtue.spirit_votary",
         "the Second Sight grant is computed via grants_selection; the two-Virtue-points-per-\
@@ -2531,13 +2592,12 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          virtue_points_per_flaw_point field, not this entry's job (D46's \"computed on a \
          profile\" shape).",
     ),
-    (
-        "virtue.study_bonus",
-        "both stated bonuses (+2 vis roll, +2 text Quality) are computed via two \
-         advancement_mod effects; the Art-Score-to-minimum-Presence table is an in-play \
-         gating condition on when the bonus applies, the same D4 shape as flaw.creative_block's \
-         \"unless using a Lab Text\".",
-    ),
+    // virtue.study_bonus: moved to PENDING_DROPPED_CLAUSE (X2d) — F-300 (a
+    // live finding) disagrees with this row's "gating condition, not a
+    // dropped rule" reading: the eight-row Art-Score table is itself
+    // information the player needs (what counts as a qualifying
+    // environment), not merely a condition the engine evaluates. See
+    // tmp/x2d-verdicts.md.
     (
         "virtue.custos",
         "single clause (one restricted Ability group, exclusive choice), fully computed via a \
@@ -2545,16 +2605,16 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          unmodelled incompatibility this screen does not recognize as a mechanical token either \
          way.",
     ),
-    (
-        "virtue.templar_commander",
-        "both stated clauses (Reputation 3, the Temporal Influence + Brother-Knight grant) are \
-         computed via grants_reputation and grants_selection; the wealth/tax/judge powers are \
-         flavor with no number of their own.",
-    ),
-    (
-        "virtue.templar_office_holder",
-        "single clause (Reputation of level 2), fully computed via grants_reputation.",
-    ),
+    // virtue.templar_commander: moved to PENDING_DROPPED_CLAUSE (X2d) — F-313
+    // (a live finding) disagrees with "flavor with no number": the
+    // taxation/tithe/service-fee/judge powers and the crusading obligation
+    // are real, actionable clauses reaching the player nowhere. See
+    // tmp/x2d-verdicts.md.
+    // virtue.templar_office_holder: moved to PENDING_DROPPED_CLAUSE (X2d) —
+    // F-315 (a live finding): the Templar-Status compatibility override is
+    // stated twice (compatible with any Templar Status Virtue; compatible
+    // with Temporal Influence) and encoded on neither side. See
+    // tmp/x2d-verdicts.md.
     (
         "virtue.templar_prestige",
         "single clause (Reputation of level 4), fully computed via grants_reputation.",
@@ -2566,11 +2626,12 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          gates (Phase 2 C1's open-set reading of \"such as Academic or Martial\" — see \
          RULES.md).",
     ),
-    (
-        "virtue.unaging",
-        "both stated aging exemptions are computed via two aging_mod effects (no_aging, \
-         no_apparent_aging), the same kind already relied on for virtue.bee_king.",
-    ),
+    // virtue.unaging: moved to PENDING_DROPPED_CLAUSE (X2d) — F-332 (a live
+    // finding): the crisis clause ("if a crisis is not potentially fatal, you
+    // suffer no ill-effects... may die from terminal and potentially fatal
+    // crises") and the Decrepitude-4/5 waiver reach the player nowhere as
+    // text, whatever the aging_mod pair's engine-side semantics already
+    // handle. See tmp/x2d-verdicts.md.
     (
         "virtue.venditor",
         "single clause (50 XP on named social Abilities), fully computed via \
@@ -2583,11 +2644,12 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          flaw.poor); the displayed text is silent on any token this screen recognizes — a \
          screen vocabulary gap, not a dropped rule.",
     ),
-    (
-        "virtue.wise_one",
-        "single clause (either Arcane or Academic, not both), fully computed via an exclusive-\
-         choice-gated ability_authorization (Phase 2 C1, W2/F-349).",
-    ),
+    // virtue.wise_one: moved to PENDING_DROPPED_CLAUSE (X2d) — the exclusive-
+    // choice gate is genuinely fully computed (F-349's own concern), but
+    // F-350 (a live finding) names three further clauses this certification
+    // did not account for: the Wealthy/Poor normal-interaction clarification,
+    // the male-and-female eligibility note, and the fear/awe/respect standing
+    // description. See tmp/x2d-verdicts.md.
 ];
 
 /// D5's first obligation: a `creation_effect`/`in_play_effect` entry whose
@@ -2911,9 +2973,10 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     ),
     (
         "virtue.senior_clergy",
-        "orphan: \"may purchase Academic Abilities\" has no ability_authorization effect — only \
-         the two Reputations are computed (authorization family, X1-adjacent), \
-         ArMDE:4910-4921",
+        "orphan (X2d corrected this reading — the Academic-Abilities claim is stale: X1 already \
+         added it): the Wealthy/Poor choice note and the Abbess-only/not-ordained women's \
+         restriction have no effect at all — only the two Reputations and the Academic \
+         authorization are computed, ArMDE:4910-4921",
     ),
     (
         "virtue.strong_angelic_heritage",
@@ -2928,6 +2991,15 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
          bonus list all have no effect — only the Second Sight grant and the -3 Aging-roll are \
          computed, ArMDE:5032-5047",
     ),
+    // --- X2d (tmp/x2d-verdicts.md, 2026-09-29): ten rows moved here from
+    // COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE — each certification missed a real,
+    // live-finding-backed residue. virtue.shadchan's gap was closed in Phase 2
+    // (description now states the compatibility override) and removed from
+    // this list.
+    // virtue.study_bonus, virtue.templar_administrator, virtue.templar_commander,
+    // virtue.templar_office_holder, virtue.university_grammar_teacher, virtue.sufi,
+    // and virtue.wise_one: all had their gaps closed in Phase 2 (each now carries
+    // a description stating its residue) and were removed from this list.
     // --- X2c Phase 2 fix-round (2026-09-29): the new "eligibility" idiom
     // ("only available to ... characters") this slice added to catch its own
     // mamluk/mazdean_priest/rabbi finding newly sweeps these two entries too
@@ -2945,6 +3017,34 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
          Virtues of the Nizaris\" (an eligibility restriction on another Virtue, not a \
          sex-eligibility one) reaches the player nowhere — the 50 XP grant is genuinely \
          computed, ArMDE:5153-5156",
+    ),
+    // --- X2d fix-round (2026-09-30): the new "wealthy/poor unaffected" idiom
+    // (added to close virtue.wanderer's own screen miss) newly sweeps these
+    // four `creation_effect` entries too — none on X2d's own worklist (rows
+    // 154-203), each a genuine dropped clause for a later X2 slice.
+    (
+        "virtue.clerk",
+        "orphan: \"The Wealthy Virtue and Poor Flaw affect you normally\" reaches the player \
+         nowhere — the Academic Abilities authorization is genuinely computed, \
+         ArMDE:3571-3574",
+    ),
+    (
+        "virtue.failed_apprentice",
+        "orphan: \"The Wealthy Virtue and Poor Flaw affect you normally\" reaches the player \
+         nowhere — the Academic/Arcane/Martial Abilities authorization is genuinely computed, \
+         ArMDE:3843-3846",
+    ),
+    (
+        "virtue.priest",
+        "orphan: \"the Wealthy Virtue and Poor Flaw affect you normally\" reaches the player \
+         nowhere — the Academic Abilities authorization is genuinely computed, \
+         ArMDE:4796-4805",
+    ),
+    (
+        "virtue.troubadour",
+        "orphan: \"The Wealthy Virtue and Poor Flaw affect you normally\" reaches the player \
+         nowhere — the Academic Abilities authorization is genuinely computed, \
+         ArMDE:5157-5164",
     ),
 ];
 
