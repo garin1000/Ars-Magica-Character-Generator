@@ -828,6 +828,21 @@ presumption of correctness.
 
 ---
 
+## D80 — X6c's three open points (`tmp/x6c-verdicts.md`)
+
+**Norbert, 2026-10-01.**
+1. **Rector/Proctor takes no parameter.** A master leads his faculty and a
+   student leads his nation (ArMDE:6673). The required university Social Status
+   Virtue already says which he is, and the description states the rule.
+2. **Demonic Familiar's role is free text.** The book's list is only examples
+   (ArMDE:5930).
+3. **Fida'i and Lasiq get an OPTIONAL "cover social status".** It applies only
+   while "far from home on a mission" (ArMDE:4235; the Fida'i is covered by
+   "As for a fida'i"). It is never reported missing. This is the one exception
+   to D70's "every new parameter is required".
+
+---
+
 ## D79 — Potent Magic gets its own "in field" marker; F-256 is text
 
 **Norbert, 2026-10-01** (`docs/vf-audit/design-x7-relic-and-ct-mirror.md`).
