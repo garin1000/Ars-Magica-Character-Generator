@@ -147,6 +147,7 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "circumstance", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "aging_mod", "kind": "aging_roll", "amount": 0 }],
     "source": { "anchor": "baneful-circumstances", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5687, 5690] }
   },
@@ -603,6 +604,11 @@
     "entity_kinds": ["character"],
     "parameters": [
       {
+        "key": "section",
+        "type": "ref",
+        "domain": "text"
+      },
+      {
         "key": "taken_as",
         "type": "ref",
         "domain": "category",
@@ -700,6 +706,7 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
+    "parameters": [{ "key": "circumstance", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "special_casting_mod", "kind": "circumstantial" }],
     "source": { "anchor": "deleterious-circumstances", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5917, 5920] }
   },
@@ -719,6 +726,7 @@
     "categories": ["story"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "role", "type": "ref", "domain": "text" }],
     "source": { "anchor": "demonic-familiar", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5926, 5931] }
   },
   {
@@ -972,6 +980,7 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
+    "parameters": [{ "key": "condition", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "special_casting_mod", "kind": "circumstantial" }],
     "source": { "anchor": "environmental-magic-condition", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6020, 6023] }
   },
@@ -982,6 +991,7 @@
     "categories": ["general"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "feature", "type": "ref", "domain": "text" }],
     "source": { "anchor": "environmental-sensitivity", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6024, 6027] }
   },
   {
@@ -1804,6 +1814,7 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "predator", "type": "ref", "domain": "text" }],
     "incompatible_with": ["virtue.blood_of_the_nephilim"],
     "source": { "anchor": "lycanthrope", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6370, 6377] }
   },
@@ -2036,6 +2047,7 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
+    "parameters": [{ "key": "action", "type": "ref", "domain": "text" }],
     "source": { "anchor": "necessary-condition", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6476, 6479] }
   },
   {
@@ -2442,6 +2454,7 @@
     "categories": ["personality"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "kind", "type": "ref", "domain": "text" }],
     "source": { "anchor": "poor-memory", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6622, 6625] }
   },
   {
@@ -2674,6 +2687,7 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
+    "parameters": [{ "key": "condition", "type": "ref", "domain": "text" }],
     "source": { "anchor": "restriction", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6691, 6694] }
   },
   {
@@ -2943,6 +2957,7 @@
     "categories": ["story"],
     "classification": "narrative",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "kind", "type": "ref", "domain": "text" }],
     "source": { "anchor": "supernatural-nuisance", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6799, 6802] }
   },
   {
@@ -3723,6 +3738,8 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "rank", "type": "ref", "domain": "enumerated",
+      "values": ["rank.major_figure", "rank.minor_official"] }],
     "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
     "source": { "anchor": "alim", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3380, 3383] }
   },
@@ -3742,7 +3759,8 @@
     "categories": ["general"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "being", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "being", "type": "ref", "domain": "enumerated",
+      "values": ["being.animals", "being.faeries", "being.magical_creatures"] }],
     "source": { "anchor": "alluring-to-beings", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3388, 3395] }
   },
   {
@@ -4238,6 +4256,8 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
+    "parameters": [{ "key": "cycle", "type": "ref", "domain": "enumerated",
+      "values": ["cycle.lunar", "cycle.seasonal", "cycle.solar"] }],
     "effects": [{ "type": "lab_total_mod", "amount": 3, "scope": "never_at_creation" }],
     "source": { "anchor": "cyclic-magic-positive", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3635, 3638] }
   },
@@ -4345,7 +4365,8 @@
       { "kind": "ability_min", "value": { "ability": "ability.dead_language", "score": 5 } }
     ] },
     "incompatible_with": ["flaw.failed_student"],
-    "parameters": [{ "key": "faculty", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "faculty", "type": "ref", "domain": "enumerated",
+      "values": ["faculty.law", "faculty.medicine", "faculty.theology"] }],
     "effects": [
       { "type": "grants_reputation", "kind": "academic", "score": 3 },
       { "type": "restricted_ability_xp", "amount": 300, "categories": ["academic"] }
@@ -4798,6 +4819,8 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "cover", "type": "ref", "domain": "item",
+      "require_categories": ["social_status"], "required": false }],
     "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "fidai", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3877, 3882] }
   },
@@ -4842,7 +4865,7 @@
     "categories": ["supernatural"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
-    "max_per_target": 255,
+    "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
     "max_total": 255,
     "effects": [{ "type": "focus_points", "amount": 25 }],
     "source": { "anchor": "focus-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3895, 3906] }
@@ -5073,6 +5096,7 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "disease", "type": "ref", "domain": "text" }],
     "source": { "anchor": "greater-purifying-touch", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4027, 4030] }
   },
   {
@@ -5268,6 +5292,8 @@
     "categories": ["general"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "form", "type": "ref", "domain": "enumerated",
+      "values": ["form.distracting_prop", "form.forgettable"] }],
     "source": { "anchor": "indescribable-face", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4107, 4114] }
   },
   {
@@ -5482,6 +5508,8 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "cover", "type": "ref", "domain": "item",
+      "require_categories": ["social_status"], "required": false }],
     "effects": [{ "type": "ability_authorization", "categories": ["martial"] }],
     "source": { "anchor": "lasiq", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4233, 4236] }
   },
@@ -5540,6 +5568,8 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "benediction", "type": "ref", "domain": "enumerated",
+      "values": ["benediction.custom", "benediction.gift_of_the_gab", "benediction.green_fingers", "benediction.pricking_thumbs", "benediction.unusually_fecund"] }],
     "source": { "anchor": "lesser-benediction", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4253, 4274] }
   },
   {
@@ -5549,6 +5579,7 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "hazard", "type": "ref", "domain": "text" }],
     "source": { "anchor": "lesser-immunity", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4275, 4278] }
   },
   {
@@ -5570,6 +5601,7 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "illness", "type": "ref", "domain": "text" }],
     "source": { "anchor": "lesser-purifying-touch", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4287, 4290] }
   },
   {
@@ -6215,6 +6247,7 @@
     "categories": ["social_status"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "right", "type": "ref", "domain": "text" }],
     "source": { "anchor": "paid-rights", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4606, 4615] }
   },
   {
@@ -7102,6 +7135,7 @@
     "categories": ["social_status"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "position", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "grants_reputation", "kind": "local", "score": 2 }],
     "source": { "anchor": "templar-office-holder", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5121, 5124] }
   },
@@ -7242,6 +7276,7 @@
     "categories": ["general"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "parameters": [{ "key": "area", "type": "ref", "domain": "text" }],
     "source": { "anchor": "troupe-upbringing", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5165, 5168] }
   },
   {

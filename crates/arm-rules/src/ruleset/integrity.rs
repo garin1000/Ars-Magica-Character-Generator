@@ -194,6 +194,21 @@ impl Ruleset {
                 }
             }
 
+            // D80: `required: false` and `required_if` are two different
+            // ways of saying "not always required" — declaring both on the
+            // SAME parameter is an authoring contradiction, since one of them
+            // would be silently ignored (`required: false` wins unconditionally
+            // in `validation::selections::validate_selection_parameters`).
+            for param in &item.parameters {
+                if !param.required && param.required_if.is_some() {
+                    errors.push(format!(
+                        "{id}: parameter '{}' declares both required: false and \
+                         required_if — pick one",
+                        param.key
+                    ));
+                }
+            }
+
             validate_source_range(&item.source, &format!("{id}"), errors);
         }
     }

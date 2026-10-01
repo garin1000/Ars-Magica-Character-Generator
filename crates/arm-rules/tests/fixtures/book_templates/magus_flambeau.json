@@ -11,7 +11,10 @@
       "ref": "flaw.enemies"
     },
     {
-      "ref": "flaw.necessary_condition"
+      "ref": "flaw.necessary_condition",
+      "params": {
+        "action": "spinning around three times"
+      }
     },
     {
       "ref": "flaw.wrathful_major"

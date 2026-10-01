@@ -1122,6 +1122,34 @@ pub struct ParameterDef {
     /// `multi_ref`, and rejects `0` (no selection could ever satisfy it).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub exact_count: Option<u8>,
+    /// Whether an absent value for this parameter is reported as
+    /// [`crate::validation::ValidationIssue::CODE_MISSING_PARAM`] at all.
+    /// `true` (the default) is every parameter shipped before this field
+    /// existed: unconditionally required, relaxed only by
+    /// [`Self::required_if`]'s CONDITIONAL exemption.
+    ///
+    /// `false` is the one documented exception (D80,
+    /// `docs/vf-audit/decisions.md`): Fida'i/Lasiq's "cover social status"
+    /// applies only while the character is away from home on a mission
+    /// (ArMDE:4235, "As for a fida'i..."), a fact the engine has no way to
+    /// know — so the choice is recorded WHEN MADE and never forced.
+    /// `docs/vf-audit/design-x6-parameters.md` §3 already ruled out
+    /// repurposing [`Self::required_if`] for severity, and a gate pointing at
+    /// a key the item never declares would fail the SAME load-time check
+    /// [`Self::required_if`]'s own gate does — so this is a genuinely new,
+    /// minimal field, not a reuse of an existing one wearing a trick value.
+    ///
+    /// Unlike [`Self::required_if`], this is unconditional: it is not
+    /// relaxed or tightened by any other parameter's value, and it is not
+    /// itself gated. Load-time integrity rejects `required: false` combined
+    /// with a `required_if` gate on the SAME parameter — the two are
+    /// contradictory ways of saying "sometimes required", and declaring both
+    /// would leave one of them silently ignored.
+    #[serde(
+        default = "default_required",
+        skip_serializing_if = "is_default_required"
+    )]
+    pub required: bool,
 }
 
 impl ParameterDef {
@@ -1145,6 +1173,7 @@ impl ParameterDef {
             exclude_if: None,
             required_if: None,
             exact_count: None,
+            required: default_required(),
         }
     }
 
@@ -1167,6 +1196,7 @@ impl ParameterDef {
             exclude_if: None,
             required_if: None,
             exact_count: None,
+            required: default_required(),
         }
     }
 }
@@ -3876,6 +3906,17 @@ pub(crate) fn default_max_per_value() -> u8 {
 
 pub(crate) fn is_default_max_per_value(value: &u8) -> bool {
     *value == default_max_per_value()
+}
+
+/// The default for [`ParameterDef::required`]: a declared parameter is
+/// required unless the item explicitly opts out (D80 — Fida'i/Lasiq's "cover
+/// social status" is the one documented exception).
+pub(crate) fn default_required() -> bool {
+    true
+}
+
+pub(crate) fn is_default_required(value: &bool) -> bool {
+    *value == default_required()
 }
 
 /// `skip_serializing_if` for [`CharacteristicDeltaCap`] — every entry shipped

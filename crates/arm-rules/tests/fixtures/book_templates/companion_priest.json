@@ -23,7 +23,10 @@
       "ref": "virtue.inspirational"
     },
     {
-      "ref": "virtue.lesser_immunity"
+      "ref": "virtue.lesser_immunity",
+      "params": {
+        "hazard": "drowning"
+      }
     },
     {
       "ref": "virtue.priest"

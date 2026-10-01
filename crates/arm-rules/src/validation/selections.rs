@@ -1264,6 +1264,17 @@ pub(crate) fn validate_selection_parameters(
             required.remove(param.key.as_str());
         }
     }
+    // D80: `required: false` is UNCONDITIONAL — unlike `required_if` above,
+    // it is not itself gated on anything. Fida'i/Lasiq's "cover social
+    // status" is the one documented exception to "every parameter is
+    // required" (applies only while away from home on a mission, a fact the
+    // engine cannot observe), so the key stays legal to fill (still in
+    // `expected`) but never joins `required`.
+    for param in &item.parameters {
+        if !param.required {
+            required.remove(param.key.as_str());
+        }
+    }
     // The realm `association` override is legal (see above) but, unlike every
     // declared parameter, is NEVER required — D70 Q-X6-5 resolves an unset
     // one through the concept/Magic fallback rather than erroring.

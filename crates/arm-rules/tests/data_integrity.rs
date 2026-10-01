@@ -8705,10 +8705,15 @@ fn the_gift_category_check_still_fires_for_a_two_category_flaw() {
 /// [`TEXT_TARGET_PARAM_ITEMS`] instead — the parameter is precisely what
 /// closes the "identical copies" inversion this list's own doc comment
 /// describes.
+///
+/// `virtue.focus_power` moved out the same way (X6c, `tmp/x6c-verdicts.md`):
+/// D9 records its narrow thematic scope (ArMDE:3895-3906, "like a magical
+/// focus... a specialty that is smaller than a single Hermetic Form"), so it
+/// now carries its own `focus` free-text parameter and belongs in
+/// [`TEXT_TARGET_PARAM_ITEMS`] instead.
 const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.demonic_might", 3665),
     ("virtue.demonic_powers", 3669),
-    ("virtue.focus_power", 3903),
     ("virtue.greater_power", 4021),
     ("virtue.improved_characteristics", 4105),
     ("virtue.lesser_power", 4283),
@@ -8744,6 +8749,10 @@ const TEXT_TARGET_PARAM_ITEMS: &[(&str, &str, u32)] = &[
     // even if more than one set of circumstances applies" (ArMDE:5000, X6b,
     // F-541/F-287) — the parameter distinguishes copies by circumstance.
     ("virtue.special_circumstances", "circumstance", 5000),
+    // "This Virtue may be taken more than once, and the points gained may be
+    // combined" (ArMDE:3903, X6c) — the parameter records D9's narrow
+    // thematic scope per copy.
+    ("virtue.focus_power", "focus", 3903),
 ];
 
 /// Items whose descriptor states a ceiling of exactly two copies, paired with

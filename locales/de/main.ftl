@@ -1144,6 +1144,36 @@ param-label-field = Fachgebiet
 # Der Umstand bei Besonderen Umständen (ArMDE:4998-5001, F-541/F-287).
 param-label-circumstance = Umstand
 
+# X6c's label-only parameters (`tmp/x6c-verdicts.md`) — keine treibt eine
+# berechnete Regel an; D9 verlangt dennoch, die Wahl für den Charakterbogen
+# und den Export festzuhalten.
+# Die geheilte Krankheit bei Große Reinigende Berührung (ArMDE:4027-4030).
+param-label-disease = Krankheit
+# Die geheilte Krankheit bei Mindere Reinigende Berührung (ArMDE:4287-4290).
+param-label-illness = Krankheit
+# Die Segnung bei Kleiner Segnung, eines von vier benannten Beispielen oder
+# eine eigene Angabe (ArMDE:4253-4274).
+param-label-benediction = Segnung
+# Die erforderliche Handlung beim Zaubern bei Notwendiger Bedingung
+# (ArMDE:6476-6479).
+param-label-action = Handlung
+# Die Art des störenden Wesens bei Übernatürlicher Plage, und die Art des
+# Vergessenen bei Schlechtem Gedächtnis (ArMDE:6799-6802, :6622-6625).
+param-label-kind = Art
+# Der betroffene Abschnitt der weltlichen Gesellschaft bei Verleumdungsfluch,
+# zusätzlich zu dessen bestehender `taken_as`-Kategoriewahl (ArMDE:5881-5884).
+param-label-section = Abschnitt
+# Die Raubtiergestalt bei Lykanthrop (ArMDE:6370-6377).
+param-label-predator = Raubtier
+# Das erkaufte Recht bei Erkaufte Rechte (ArMDE:4606-4615).
+param-label-right = Recht
+# Der optionale vorgetäuschte Soziale Status bei Fida'i/Lasiq — der EINE
+# Parameter, den D80 niemals verpflichtend macht (ArMDE:3877-3882,
+# :4233-4236).
+param-label-cover = Vorgetäuschter Sozialer Status
+# Die bekleidete Position bei Templerstelleninhaber (ArMDE:5121-5124).
+param-label-position = Position
+
 # C5b: Die Mehrfachauswahl-Checkliste (ein `multi_ref`-Parameter, D9 Teil 3)
 # zeigt diesen Hinweis statt einer unerklärten leeren Liste, wenn es nichts
 # zur Auswahl gibt — z. B. Verderbte Zauber, bevor der Charakter Zauber

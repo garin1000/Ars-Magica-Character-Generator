@@ -26,7 +26,10 @@
       }
     },
     {
-      "ref": "virtue.cyclic_magic_positive"
+      "ref": "virtue.cyclic_magic_positive",
+      "params": {
+        "cycle": "cycle.solar"
+      }
     },
     {
       "ref": "virtue.hermetic_magus"

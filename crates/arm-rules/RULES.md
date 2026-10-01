@@ -1178,7 +1178,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1701).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1712).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1269,7 +1269,7 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2174, shared by
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2189, shared by
   `validate_prereq_refs` :2064 and `validate_effect_refs` :2547) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
@@ -1277,7 +1277,7 @@ reason: a category condition would license itself.
   prerequisites/effects and claim the catalogue as it stands). Every
   `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
   rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
-  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :736).
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :751).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -11997,6 +11997,117 @@ type at once.
 (`prereq_not_met`, `incompatible`).
 
 **CLAUDE.md:** the `Prereq` quick-reference block gains `CharacterType(Id)`.
+
+---
+
+## X6c — the label-only parameters + 2 of 3 retypes (`tmp/x6c-verdicts.md`, D80)
+
+Data only, same convention as X6b: one behavioral test per entry against the
+SHIPPED `rules/core/*.json`, in `crates/arm-rules/tests/x6c_label_parameters.rs`.
+None of these drives a computed rule (D9 still records the choice for the
+sheet/export). D80 settled the file's three open questions (Rector takes no
+parameter; Demonic Familiar's role is free text; Fida'i/Lasiq's cover status
+is optional) — see `d80_optional_parameter.rs` for the one genuine engine
+addition this slice needed: `ParameterDef::required: bool` (default `true`),
+consumed by `validation::selections::validate_selection_parameters`'s
+required-set computation and guarded at load by
+`ruleset::integrity.rs` (rejects `required: false` combined with
+`required_if` on the same parameter).
+
+- **Required `text` parameters (18), each purely a recorded label with no
+  catalogue to resolve against:** `virtue.greater_purifying_touch` → `disease`
+  (ArMDE:4027-4030); `virtue.lesser_purifying_touch` → `illness`
+  (ArMDE:4287-4290); `virtue.lesser_immunity` → `hazard` (ArMDE:4275-4278);
+  `virtue.troupe_upbringing` → `area` (ArMDE:5165-5168); `virtue.focus_power` →
+  `focus` (ArMDE:3895-3906); `flaw.baneful_circumstances` → `circumstance`
+  (ArMDE:5687-5690); `flaw.deleterious_circumstances` → `circumstance`
+  (ArMDE:5917-5920); `flaw.environmental_magic_condition` → `condition`
+  (ArMDE:6020-6023); `flaw.environmental_sensitivity` → `feature`
+  (ArMDE:6024-6027); `flaw.restriction` → `condition` (ArMDE:6691-6694);
+  `flaw.necessary_condition` → `action` (ArMDE:6476-6479);
+  `flaw.supernatural_nuisance` → `kind` (ArMDE:6799-6802); `flaw.poor_memory` →
+  `kind` (ArMDE:6622-6625); `flaw.lycanthrope` → `predator` (ArMDE:6370-6377);
+  `virtue.paid_rights` → `right` (ArMDE:4606-4615); `virtue.templar_office_holder`
+  → `position` (ArMDE:5121-5124); `flaw.curse_of_slander` → `section`
+  (ArMDE:5881-5884), ADDITIVE alongside its already-shipped `taken_as` category
+  parameter — unchanged; `flaw.demonic_familiar` → `role` (ArMDE:5926-5931,
+  D80.2: "at the storyguide's discretion... SUCH AS a warder, teacher, or
+  paramour" is open-ended, not the closed 4-value enumeration the scope note
+  first proposed).
+- **Enumerated label parameters (4), each a genuinely closed set the book
+  states:** `virtue.lesser_benediction` → `benediction` E+custom
+  {`custom`, `gift_of_the_gab`, `green_fingers`, `pricking_thumbs`,
+  `unusually_fecund`} (ArMDE:4253-4274 sidebar — four named examples, "should
+  be comparable to other Minor Virtues" keeps it open); `virtue.indescribable_face`
+  → `form` {`distracting_prop`, `forgettable`}, closed at exactly two
+  (ArMDE:4107-4114: "select which form... his character has"); `virtue.alim` →
+  `rank` {`major_figure`, `minor_official`} (ArMDE:3380-3383 — the named
+  examples mu'adhdhin/imam/mufti/qadi are "such as", so stay out of the enum);
+  `virtue.cyclic_magic_positive` → `cycle` {`lunar`, `seasonal`, `solar`},
+  reusing the SAME three values `flaw.cyclic_magic_negative` already shipped
+  (ArMDE:3635-3638 vs. :5893-5896) — the virtue carried no parameter at all
+  before this slice.
+- **`flaw.rector` — D80.1, no parameter at all.** ArMDE:6673: "the
+  representative leader of his faculty or nation... depending on whether he
+  is a master or a student. ... The character must have a Social Status
+  Virtue dictating his place within the university" — that required
+  prerequisite Virtue already decides faculty vs nation, so there is nothing
+  left for a parameter to record. No data change; its `summary` in both
+  locales already states the rule verbatim (confirmed, not edited), and D67
+  keeps `creation_effect` correct (the `prerequisites` constraint is itself
+  engine-enforced).
+- **`virtue.fidai` / `virtue.lasiq` — D80.3, one OPTIONAL `item` parameter.**
+  `cover` (`domain: item`, `require_categories: ["social_status"]`,
+  `required: false`) — ArMDE:3881, :4235: "pretending to have some other social
+  status, which you should choose" names an actual Social Status Virtue/Flaw,
+  not free text, and `require_categories` narrows to exactly that without a
+  new mechanism. `required: false` is the ONE exception to D70's "every new
+  parameter is required": the cover applies only while away from home on a
+  mission, a fact the engine cannot observe, so it is never reported missing.
+- **Retypes, text → enumerated (2 of 3 landed):**
+  `virtue.alluring_to_beings`'s `being` (ArMDE:3388-3395 — "one of three
+  classes of beings: mundane animals, faeries, or magical beings") now
+  resolves against the SAME `being.animals`/`being.faeries`/
+  `being.magical_creatures` values `flaw.offensive_to_beings` et al. already
+  ship — zero new i18n. `virtue.doctor_in_faculty`'s `faculty`
+  (ArMDE:3683-3692 — "in medicine, civil or canon law, or theology") now
+  resolves against `faculty.law`/`faculty.medicine`/`faculty.theology`,
+  mirroring the Academic Abilities the book ties each faculty to
+  (`ability.civil_and_canon_law`, `ability.medicine`,
+  `ability.theology_christian`/`_islam`/`_judaism` — the faculty parameter
+  itself stays a 3-way axis, not split by creed). Old free text in either
+  fails `unknown_param_value`, never migrated (Q-X6-4/D70), no schema bump.
+- **`virtue.academic_concentration_subject`'s retype — BLOCKED, discovered in
+  Phase 2, not landed.** Its `subject` parameter (still `domain: text`) is
+  read by `Effect::AbilityRollModParam { param: "subject", .. }`, whose
+  `param` field `ruleset::integrity.rs` hardcodes to require
+  `ParameterDomain::Text`. `derived.rs::surfaced_modifiers` passes that value
+  straight into `SurfacedModifier::detail`, and
+  `ui/src/lib/components/DerivedSurfacedModifiersSection.svelte::detailLabel`
+  renders `detail` VERBATIM for the `ability_roll` family whenever
+  `m.ability` is `None` — only the fixed-target `AbilityRollMod` sibling
+  resolves through `abilityLabel`. Retyping `subject` to enumerated would
+  make an old save's raw value (e.g. `"subject.grammar"`) reach the player as
+  a literal slug, the exact anti-pattern CLAUDE.md forbids ("a raw ID or enum
+  value must never be rendered directly as a user-facing label"), unless the
+  Svelte component also gains an enumerated-value resolution path — a UI
+  change outside this Rust-engine slice, and one that touches a file another
+  concurrent slice was editing the same day. The seven Artes Liberales
+  subjects (Trivium: Grammar, Logic, Rhetoric; Quadrivium: Arithmetic,
+  Geometry, Astronomy, Music — ArMDE:7310) are otherwise exactly stated and
+  ready to land once the UI side is designed; the test is
+  `#[ignore]`-marked with the reason, not deleted.
+
+**Fluent (`locales/{en,de}/main.ftl`):** 10 new `param-label-*` keys —
+`disease`, `illness`, `benediction`, `action`, `kind`, `section`, `predator`,
+`right`, `cover`, `position`. 13 others (`being`, `faculty`, `hazard`, `form`,
+`area`, `focus`, `cycle`, `circumstance`, `condition`, `feature`, `role`,
+`rank`, `subject`) are reused as-is.
+
+**Rules-i18n (`rules/i18n/{en,de}/virtues_flaws.json`):** `name` entries added
+for `benediction.*` (5), `faculty.*` (3), `form.*` (2), `rank.major_figure`/
+`rank.minor_official` (2, inserted into the existing `rank.*` block). No new
+entries for `being.*` (fully reused) or for `subject.*` (blocked, not landed).
 
 ---
 

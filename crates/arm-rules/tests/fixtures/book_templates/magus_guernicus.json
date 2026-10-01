@@ -11,7 +11,10 @@
       "ref": "flaw.curse_of_venus"
     },
     {
-      "ref": "flaw.restriction"
+      "ref": "flaw.restriction",
+      "params": {
+        "condition": "touching the earth directly"
+      }
     },
     {
       "ref": "virtue.affinity_art",

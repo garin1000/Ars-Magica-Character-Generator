@@ -26,6 +26,21 @@
   "being.mundane_humans": {
     "name": "Mundane Humans"
   },
+  "benediction.custom": {
+    "name": "Other"
+  },
+  "benediction.gift_of_the_gab": {
+    "name": "Gift of the Gab"
+  },
+  "benediction.green_fingers": {
+    "name": "Green Fingers"
+  },
+  "benediction.pricking_thumbs": {
+    "name": "Pricking Thumbs"
+  },
+  "benediction.unusually_fecund": {
+    "name": "Unusually Fecund"
+  },
   "bloodline.custom": {
     "name": "Other"
   },
@@ -49,6 +64,15 @@
   },
   "cycle.solar": {
     "name": "Solar"
+  },
+  "faculty.law": {
+    "name": "Civil or Canon Law"
+  },
+  "faculty.medicine": {
+    "name": "Medicine"
+  },
+  "faculty.theology": {
+    "name": "Theology"
   },
   "feature.custom": {
     "name": "Other"
@@ -1659,6 +1683,12 @@
   "affliction.weak_taste": {
     "name": "Weak Taste"
   },
+  "form.distracting_prop": {
+    "name": "A Distracting Prop"
+  },
+  "form.forgettable": {
+    "name": "Simply Forgettable"
+  },
   "heritage.bee_king": {
     "name": "Blood of the Bee King"
   },
@@ -1715,6 +1745,12 @@
   },
   "rank.legatus_missus": {
     "name": "Legatus Missus"
+  },
+  "rank.major_figure": {
+    "name": "A Major Figure"
+  },
+  "rank.minor_official": {
+    "name": "A Minor Official"
   },
   "rank.pope": {
     "name": "Pope"

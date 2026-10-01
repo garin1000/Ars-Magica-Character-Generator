@@ -26,6 +26,21 @@
   "being.mundane_humans": {
     "name": "Sterbliche Menschen"
   },
+  "benediction.custom": {
+    "name": "Andere"
+  },
+  "benediction.gift_of_the_gab": {
+    "name": "Redegewandtheit"
+  },
+  "benediction.green_fingers": {
+    "name": "Grüner Daumen"
+  },
+  "benediction.pricking_thumbs": {
+    "name": "Kribbelnde Daumen"
+  },
+  "benediction.unusually_fecund": {
+    "name": "Ungewöhnlich fruchtbar"
+  },
   "bloodline.custom": {
     "name": "Andere"
   },
@@ -49,6 +64,15 @@
   },
   "cycle.solar": {
     "name": "Solar"
+  },
+  "faculty.law": {
+    "name": "Zivil- oder Kanonisches Recht"
+  },
+  "faculty.medicine": {
+    "name": "Medizin"
+  },
+  "faculty.theology": {
+    "name": "Theologie"
   },
   "feature.custom": {
     "name": "Andere"
@@ -1661,6 +1685,12 @@
   "affliction.weak_taste": {
     "name": "Schwacher Geschmack"
   },
+  "form.distracting_prop": {
+    "name": "Ein ablenkendes Requisit"
+  },
+  "form.forgettable": {
+    "name": "Schlicht vergesslich"
+  },
   "heritage.bee_king": {
     "name": "Blut des Bienenkönigs"
   },
@@ -1717,6 +1747,12 @@
   },
   "rank.legatus_missus": {
     "name": "Legatus missus"
+  },
+  "rank.major_figure": {
+    "name": "Eine bedeutende Persönlichkeit"
+  },
+  "rank.minor_official": {
+    "name": "Ein kleiner Amtsträger"
   },
   "rank.pope": {
     "name": "Papst"

@@ -1078,6 +1078,33 @@ param-label-field = Field
 # Special Circumstances' circumstance (ArMDE:4998-5001, F-541/F-287).
 param-label-circumstance = Circumstance
 
+# X6c's label-only parameters (`tmp/x6c-verdicts.md`) — none drive a
+# computed rule; D9 still records the choice for the sheet/export.
+# Greater Purifying Touch's cured disease (ArMDE:4027-4030).
+param-label-disease = Disease
+# Lesser Purifying Touch's healed illness (ArMDE:4287-4290).
+param-label-illness = Illness
+# Lesser Benediction's blessing, one of four named examples or custom
+# (ArMDE:4253-4274).
+param-label-benediction = Benediction
+# Necessary Condition's required action while casting (ArMDE:6476-6479).
+param-label-action = Action
+# Supernatural Nuisance's kind of interfering entity, and Poor Memory's kind
+# of forgotten thing (ArMDE:6799-6802, :6622-6625).
+param-label-kind = Kind
+# Curse of Slander's targeted section of mundane society, additive to its
+# existing `taken_as` category choice (ArMDE:5881-5884).
+param-label-section = Section
+# Lycanthrope's predator form (ArMDE:6370-6377).
+param-label-predator = Predator
+# Paid Rights' purchased right (ArMDE:4606-4615).
+param-label-right = Right
+# Fida'i/Lasiq's optional cover social status — the ONE parameter D80 makes
+# never required (ArMDE:3877-3882, :4233-4236).
+param-label-cover = Cover Social Status
+# Templar Office Holder's held position (ArMDE:5121-5124).
+param-label-position = Position
+
 # C5b: the multi-select checklist (a `multi_ref` parameter, D9 part 3) shown
 # instead of a bare, unexplained empty list when there is nothing to choose
 # from — e.g. Corrupted Spells before the character has learned any spells.

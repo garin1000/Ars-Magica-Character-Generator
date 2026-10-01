@@ -175,7 +175,10 @@
   "house": "house.ex_miscellanea",
   "house_choices": {
     "ex_misc_major_flaw": {
-      "ref": "flaw.necessary_condition"
+      "ref": "flaw.necessary_condition",
+      "params": {
+        "action": "spinning around three times"
+      }
     },
     "ex_misc_major_virtue": {
       "ref": "virtue.giant_blood"
