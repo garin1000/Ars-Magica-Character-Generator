@@ -1231,7 +1231,7 @@ describe('ParameterPicker required_if gate (B4/Q-51)', () => {
 });
 
 // qa review iteration 7: the enumerated domain's `disabled={full(used, value)
-// || blocked.has(value)}` and its `title` (ParameterPicker.svelte:673-674) had
+// || blocked.has(value)}` and its `title` (`ParameterPicker.svelte::blockedValues`) had
 // no render-level test, unlike every sibling `full(used, value)` assertion
 // above — so a wiring bug (store.ruleset?.ruleset.point_items[selection.ref]
 // lookup, the exceptIndex, store.entity.selections possibly undefined) could
