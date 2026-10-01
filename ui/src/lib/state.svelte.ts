@@ -197,7 +197,7 @@ function newEntity(
     entity_kind: 'character',
     type_id: typeId,
     selections: [],
-    characteristics: {} as Record<Characteristic, number>,
+    characteristics: {},
     characteristic_descriptions: {},
     ability_scores: [],
     xp_pool: 0,
@@ -1127,7 +1127,7 @@ class AppStore {
 
   /** Set or clear a Characteristic score (score 0 removes the explicit entry). */
   setCharacteristic(characteristic: Characteristic, score: number): void {
-    const chars = { ...(this.entity.characteristics ?? {}) } as Record<Characteristic, number>;
+    const chars = { ...(this.entity.characteristics ?? {}) };
     const value = clampInt(score, I8_MIN, I8_MAX);
     if (value === 0) {
       delete chars[characteristic];

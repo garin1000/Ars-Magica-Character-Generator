@@ -1207,6 +1207,63 @@ export function incompatibleRefs(
 }
 
 /**
+ * Parameter values blocked for a selection of `item` at `exceptIndex` because
+ * some OTHER selection of the SAME item already holds a value that conflicts
+ * with it, per `PointItem.conditional_incompatible_with`'s
+ * `forbids_same_item_values` (RC review-C item 2, ArMDE:7033) — Warped
+ * Senses: a sibling holding Weak Sight blocks Sensitive Sight for this row,
+ * and a sibling holding Sensitive Sight blocks Weak Sight right back, while
+ * two copies of the SAME value (two Weak Sight) stay legal, exactly as the
+ * engine's own `validate_incompatibilities` same-item-value loop allows.
+ *
+ * Only `forbids`/`forbids_same_item_values` is one-directional in the data —
+ * only Weak Sight declares the pair — but the engine's validator finds the
+ * conflict from EITHER selection's perspective once both exist in
+ * `entity.selections`, regardless of which was added first. So this builds
+ * the symmetric conflict up front: for each entry whose `gate.param` is
+ * `key`, a sibling already holding `gate.equals` blocks every value in
+ * `forbids_same_item_values` (the declared direction), AND a sibling already
+ * holding one of `forbids_same_item_values` blocks `gate.equals` right back
+ * (the reverse direction) — rather than depending on insertion order the way
+ * a single forward pass would.
+ *
+ * Mirrors `paramValueUsage`'s calling convention (bare `{ ref, params }`
+ * rows, an `exceptIndex` so the row being edited never blocks itself), so a
+ * caller can combine both the same way `ParameterPicker` already combines
+ * `usage()`/`full()`. Only bought selections are read, like
+ * `validate_incompatibilities` itself — a House-granted copy never blocks a
+ * pick (see `incompatibleRefs`'s own doc comment for why).
+ */
+export function blockedSameItemValues(
+  item: PointItem,
+  selections: { ref: string; params?: Record<string, string | string[]> }[],
+  key: string,
+  exceptIndex: number,
+): Set<string> {
+  const siblingValues = new Set<string>();
+  selections.forEach((selection, i) => {
+    if (i === exceptIndex || selection.ref !== item.id) return;
+    const value = singleParamValue(selection.params?.[key]);
+    if (value) siblingValues.add(value);
+  });
+  const blocked = new Set<string>();
+  if (siblingValues.size === 0) return blocked;
+
+  for (const entry of item.conditional_incompatible_with ?? []) {
+    if (entry.gate.param !== key) continue;
+    const forbiddenValues = entry.forbids_same_item_values;
+    if (!forbiddenValues || forbiddenValues.length === 0) continue;
+    if (siblingValues.has(entry.gate.equals)) {
+      for (const value of forbiddenValues) blocked.add(value);
+    }
+    if (forbiddenValues.some((value) => siblingValues.has(value))) {
+      blocked.add(entry.gate.equals);
+    }
+  }
+  return blocked;
+}
+
+/**
  * Whether two selections are the same instance: same item ref and same
  * parameter values (order-independent). Used when auto-seeding/removing a Mythic
  * Companion type's required package, where a parameterized requirement (Great

@@ -4580,9 +4580,10 @@ impl EntityTypeProfile {
 /// bump belongs to C5a, which is the slice that actually needs to migrate a
 /// pre-existing shape. `Multi` is the value of a `multi_ref` parameter, which
 /// shipped rules data declares (e.g. `flaw.corrupted_spells`,
-/// `flaw.corrupted_arts`, `flaw.restricted_learning`); C5a added the
-/// canonicalizing fold and the wrong-shape check
-/// (`validation/selections.rs`).
+/// `flaw.corrupted_arts`, `flaw.restricted_learning`). C5a added the
+/// wrong-shape check (`validation/selections.rs`); no fold is needed, since
+/// `BTreeSet` gives `Multi` its canonical form on deserialize (see
+/// `migration.rs`'s `SCHEMA_VERSION` doc comment).
 ///
 /// `BTreeSet`, not `Vec`, for the same reason [`ParameterDef::at_most_one_of`]
 /// already uses it: a `BTreeSet` makes `{A,B}` and `{B,A}` compare equal by

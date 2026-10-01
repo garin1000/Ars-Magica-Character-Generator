@@ -7,6 +7,7 @@
     abilityParamKey,
     artLabel,
     artsOfType,
+    blockedSameItemValues,
     canonicalizeMultiRefValue,
     displayName,
     excludeSelection,
@@ -447,6 +448,33 @@
     return (usageCounts.get(value) ?? 0) >= maxPerTarget;
   }
 
+  // Values forbidden for THIS row because a sibling copy of the SAME item
+  // already holds a conflicting value — `PointItem.conditional_incompatible_with`'s
+  // `forbids_same_item_values` (RC review-C item 2, ArMDE:7033: Warped Senses'
+  // Weak Sight/Sensitive Sight pair). Bought selections only, like `usage()`'s
+  // own bought pass: `validate_incompatibilities` never lets a House-granted
+  // copy block a pick either.
+  function blockedValues(key: string): Set<string> {
+    const item = store.ruleset?.ruleset.point_items[selection.ref];
+    return item
+      ? blockedSameItemValues(item, store.entity.selections ?? [], key, index)
+      : new Set<string>();
+  }
+
+  // The reason tooltip for a value `blockedValues` forbids, reusing the SAME
+  // localized key the Available picker's own incompatibility reason uses
+  // (`vf-blocked-incompatible`) — the blocker IS this item itself (a sibling
+  // copy), so `other` names the item's own display name.
+  function blockedValueReason(): string {
+    return store.ruleset
+      ? store.t('vf-blocked-incompatible', {
+          other: displayName(store.ruleset, selection.ref, undefined, (key) =>
+            store.t('param-hint', { label: store.t(`param-label-${key}`) }),
+          ),
+        })
+      : '';
+  }
+
   // Composite ability targets already claimed by other selections of this item
   // — bought plus granted, mirroring `usage()` above (same two-pass reasoning:
   // a granted row must never be excluded by a bought row's `index`).
@@ -471,6 +499,7 @@
 
 {#each params as param (param.key)}
   {@const used = usage(param.key)}
+  {@const blocked = blockedValues(param.key)}
   <!-- The parameter type (Characteristic, Art, Language…) doubles as the empty
        prompt and the control's accessible name, so no separate label text is
        needed alongside it. -->
@@ -626,7 +655,11 @@
            truth for the label, not two that can silently drift (UI review
            2026-09-30 #2).
            `max_per_target` greys out a value another copy already holds, which is
-           what caps Folk Magic at one copy per category. -->
+           what caps Folk Magic at one copy per category. `blocked` greys out a
+           value a sibling copy's own gate forbids (`forbids_same_item_values`,
+           RC review-C item 2) — Warped Senses' Weak Sight/Sensitive Sight
+           pair — with the same reason tooltip the Available picker's
+           incompatibility blocking uses. -->
           <select
             aria-label={typeLabel}
             value={selection.params?.[param.key] ?? ''}
@@ -635,7 +668,11 @@
           >
             <option value="" disabled>{typeLabel}</option>
             {#each param.values ?? [] as value (value)}
-              <option {value} disabled={full(used, value)}>
+              <option
+                {value}
+                disabled={full(used, value) || blocked.has(value)}
+                title={blocked.has(value) ? blockedValueReason() : undefined}
+              >
                 {store.ruleset
                   ? (abilityCategoryLabel(store.ruleset, value, store.t) ??
                     displayName(store.ruleset, value, undefined, (key) =>

@@ -168,12 +168,34 @@ export interface ParamGate {
   equals: string;
 }
 
+// A value fixed at authoring time, or read from the OWNING selection's own
+// parameter at evaluation time (D14's two forms) — mirrors the engine's
+// `ParamValue` (`#[serde(untagged)]`, distinguished by which field is
+// present: `{ literal }` vs `{ param }`, never a bare string).
+export type ParamValue = { literal: string } | { param: string };
+
+// An Ability id inside an `Effect::RestrictedAbilityXp`/`AbilityAuthorization`
+// list, carrying D14's two constraints: optionally restricted to ONE
+// instance of a parameterized Ability, and/or active only when the OWNING
+// selection's own gate holds. Mirrors the engine's `AbilityRef`
+// (`#[serde(untagged)]`): a bare string for the common unconstrained case, or
+// a scoped object.
+export type AbilityRef = string | { ability: string; instance?: ParamValue; gate?: ParamGate };
+
 // One entry of `PointItem.conditional_incompatible_with` (X6a/e7): while
 // `gate` holds for the declaring item's own selection, every id in `forbids`
 // becomes incompatible with it. Mirrors the engine's `ConditionalIncompatibility`.
 export interface ConditionalIncompatibility {
   gate: ParamGate;
   forbids: string[];
+  // The same-copy twin of `forbids` (RC review-C item 2, ArMDE:7033): while
+  // `gate` holds for the declaring selection, an OTHER selection of the SAME
+  // item whose own value of `gate.param` equals one of these is also
+  // forbidden — "Weak Sight is incompatible with Sensitive Sight", two copies
+  // of `flaw.warped_senses` reading the same `affliction` parameter key.
+  // Omitted when empty (the common case: only Weak Sight/Weak Hearing declare
+  // this).
+  forbids_same_item_values?: string[];
 }
 
 // One entry of `PointItem.same_choice_exclusions` (D69.6): the declaring item
@@ -236,11 +258,20 @@ export type Effect =
       amount: number;
       abilities?: string[];
       categories?: string[];
+      // D48: specific ability instances this pool also funds (Marshal's
+      // Profession: Marshal, Master Bard's Profession: Storyteller/Poet) —
+      // a union with `abilities`/`categories`, never "instances-only".
+      instances?: AbilityRef[];
       // X6a/e5: names a `multi_ref`/`ability`-domain parameter on the SAME
       // item whose resolved set is a further eligibility source, unioned with
       // `abilities`/`categories` (Restricted Learning's five player-named
       // Abilities, ArMDE:6685).
       abilities_param?: string;
+      // D13: this grant earmarks part of the GENERAL pool rather than adding
+      // to it — `false` (the default, omitted from the JSON) preserves every
+      // existing carrier's additive meaning (Educated, Warrior, Privileged
+      // Upbringing).
+      from_normal_budget?: boolean;
     }
   | {
       type: 'group_affinity_cost';
@@ -2166,7 +2197,7 @@ export interface Entity {
   // a bare grog — carries no key), so every read must be defensive.
   selections?: Selection[];
   // Chosen Characteristic scores (point-buy). Omitted when empty.
-  characteristics?: Record<Characteristic, number>;
+  characteristics?: Partial<Record<Characteristic, number>>;
   // Optional free-text description per Characteristic (sheet flavor). Omitted empty.
   characteristic_descriptions?: Partial<Record<Characteristic, string>>;
   // Whole bought Ability scores. Omitted when empty.

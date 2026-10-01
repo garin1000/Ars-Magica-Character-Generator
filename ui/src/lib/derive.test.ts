@@ -25,6 +25,7 @@ import {
   childhoodSlots,
   combatRowLabel,
   atMaxTotalRefs,
+  blockedSameItemValues,
   canonicalizeMultiRefValue,
   displayName,
   excludeSelection,
@@ -812,6 +813,81 @@ describe('incompatibleRefs — same-choice exclusions (D69.6)', () => {
       { ref: 'virtue.academic_concentration_subject', params: { subject: 'something' } },
     ];
     expect(incompatibleRefs(ruleset, selections, 'advisory').size).toBe(0);
+  });
+});
+
+// --- blockedSameItemValues() -------------------------------------------------
+
+describe('blockedSameItemValues — same-item value exclusions (RC review-C item 2, ArMDE:7033)', () => {
+  // Warped Senses' own shape: Weak Sight declares `forbids_same_item_values`
+  // naming Sensitive Sight, so a SECOND copy of the same item may not hold
+  // Sensitive Sight while a held copy's own value is Weak Sight — but two
+  // copies both holding Weak Sight stay legal (`PointItem::ConditionalIncompatibility`
+  // doc comment: "two copies with equal values are legal").
+  const warpedSenses = item({
+    id: 'flaw.warped_senses',
+    kind: 'flaw',
+    conditional_incompatible_with: [
+      {
+        gate: { param: 'affliction', equals: 'affliction.weak_sight' },
+        forbids: [],
+        forbids_same_item_values: ['affliction.sensitive_sight'],
+      },
+    ],
+  });
+
+  it('blocks the forbidden value while a held copy of the same item has its gate holding', () => {
+    const selections = [
+      { ref: 'flaw.warped_senses', params: { affliction: 'affliction.weak_sight' } },
+    ];
+    const blocked = blockedSameItemValues(warpedSenses, selections, 'affliction', 1);
+    expect(blocked.has('affliction.sensitive_sight')).toBe(true);
+  });
+
+  it('does not block a second copy sharing the SAME held value', () => {
+    const selections = [
+      { ref: 'flaw.warped_senses', params: { affliction: 'affliction.weak_sight' } },
+    ];
+    const blocked = blockedSameItemValues(warpedSenses, selections, 'affliction', 1);
+    expect(blocked.has('affliction.weak_sight')).toBe(false);
+  });
+
+  it('does not block an unrelated value', () => {
+    const selections = [
+      { ref: 'flaw.warped_senses', params: { affliction: 'affliction.weak_sight' } },
+    ];
+    const blocked = blockedSameItemValues(warpedSenses, selections, 'affliction', 1);
+    expect(blocked.has('affliction.sensitive_to_cold')).toBe(false);
+  });
+
+  it('blocks nothing when no copy of the item is held', () => {
+    const blocked = blockedSameItemValues(warpedSenses, [], 'affliction', 0);
+    expect(blocked.size).toBe(0);
+  });
+
+  it('also blocks from the OTHER direction: a held Sensitive Sight blocks a new Weak Sight', () => {
+    const selections = [
+      { ref: 'flaw.warped_senses', params: { affliction: 'affliction.sensitive_sight' } },
+    ];
+    const blocked = blockedSameItemValues(warpedSenses, selections, 'affliction', 1);
+    expect(blocked.has('affliction.weak_sight')).toBe(true);
+  });
+
+  it('ignores the selection at exceptIndex (the row being edited)', () => {
+    const selections = [
+      { ref: 'flaw.warped_senses', params: { affliction: 'affliction.weak_sight' } },
+    ];
+    // Editing index 0 itself: there is no OTHER sibling, so nothing is blocked.
+    const blocked = blockedSameItemValues(warpedSenses, selections, 'affliction', 0);
+    expect(blocked.size).toBe(0);
+  });
+
+  it('ignores selections of a different item', () => {
+    const selections = [
+      { ref: 'flaw.other_item', params: { affliction: 'affliction.weak_sight' } },
+    ];
+    const blocked = blockedSameItemValues(warpedSenses, selections, 'affliction', 1);
+    expect(blocked.size).toBe(0);
   });
 });
 
