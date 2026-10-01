@@ -727,6 +727,20 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::De,
         family: "multiplier in words",
     },
+    // D79.2 (2026-10-01): `virtue.relic`/`virtue.powerful_relic`'s composed
+    // Relics clause (ArMDE:17623) states the bearer's Magic Resistance as a
+    // tenfold multiplier of the relic's True Faith score. German renders
+    // "ten times" as the nominalized adjective "Zehnfachen" ("Magieresistenz
+    // in Höhe des Zehnfachen ihres Wahrer-Glaube-Wertes"), not as
+    // "multipliziert"/"multiplikator", so neither existing multiplier idiom
+    // catches it. The English sibling already trips `MECHANICAL_PHRASES`'
+    // "equal to" ("grants Magic Resistance equal to ten times its True Faith
+    // score"), so only this German counterpart is needed.
+    S2Idiom {
+        pattern: r"\bzehnfache",
+        language: Language::De,
+        family: "multiplier in words",
+    },
     // --- Family 9 ("more" without the "or") ---------------------------------
     // F-383's actual miss is "possibly more", not a gap-widened "or more";
     // adding it as its own literal is simpler than a bounded-gap pattern and

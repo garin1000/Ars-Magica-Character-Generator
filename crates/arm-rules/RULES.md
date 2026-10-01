@@ -6431,6 +6431,25 @@ F-556/X5's character-type gate (D58: "animals only" becomes permanently
 unselectable by every human type once that `Prereq` lands); inventing a
 standalone gate for this one entry would pre-empt that slice's design.
 
+### D79.2 — F-256 follow-up: relic/powerful_relic compose the Relics bearer clause (2026-10-01)
+
+`docs/vf-audit/decisions.md` D79.2, applying `docs/vf-audit/design-x7-relic-and-ct-mirror.md`
+§ 1. The F-256 row above (X7b-d) left the relic-as-item mechanic
+"surfaced-only"; this closes that gap data-side, without new engine
+machinery (D70/X6-0: "the relic stub may land before X7b-d's F-256" —
+the stub, not full machinery, per the Talisman-attunement precedent
+`types.rs::TalismanAttunement`).
+
+| Finding | Entry | Fix | Source |
+|---|---|---|---|
+| D79.2 | `virtue.relic` | `description` (both locales) composed via `COMPOSED_DESCRIPTIONS` (`x2_reclassification.rs`) with the "Relics" section's heading, intro paragraph and FAITH clause (own entry text unchanged); `classification` `creation_effect` → `uncomputed_rule` (D67: the bearer-MR/Confidence clause is stated, computed nowhere); `Effect::RelicTrueFaith { score: 1 }` unchanged | `ArMDE:4852-4855, :17619-17623` |
+| D79.2 | `virtue.powerful_relic` | same composition and reclassification; `Effect::RelicTrueFaith { score: 3 }` unchanged | `ArMDE:4782-4787, :17619-17623` |
+
+Divine Might and Scourging the Infernal (`ArMDE:17624-17627`) are the relic's
+own defenses, not a rule about the bearer's sheet, and stay out of scope — the
+composed range stops at `ArMDE:17623`. No new `Effect`, no `Entity`/save-format
+change, no `SCHEMA_VERSION` bump.
+
 ### X2g — rows 318-374 (ArMDE:6382-6708, `tmp/x2g-verdicts.md`)
 
 Thirteen reclassifications and seven description-only additions, none adding a

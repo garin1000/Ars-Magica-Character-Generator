@@ -6381,7 +6381,7 @@
     "kind": "virtue",
     "magnitude": "major",
     "categories": ["general"],
-    "classification": "creation_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [{ "type": "relic_true_faith", "score": 3 }],
     "source": { "anchor": "powerful-relic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4782, 4787] }
@@ -6532,7 +6532,7 @@
     "kind": "virtue",
     "magnitude": "minor",
     "categories": ["general"],
-    "classification": "creation_effect",
+    "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
     "effects": [{ "type": "relic_true_faith", "score": 1 }],
     "source": { "anchor": "relic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4852, 4855] }

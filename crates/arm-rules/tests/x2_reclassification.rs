@@ -447,9 +447,25 @@ fn bracketed_verbatim_body(lines: &[String], start: u32, end: u32) -> String {
 /// (including the bolded "TRUE FAITH MAGIC RESISTANCE" line, which
 /// [`normalize_markdown`] strips to plain text like any other emphasis) —
 /// no new extraction logic needed, only a wider range.
+///
+/// D79.2 (2026-10-01), F-256: `virtue.relic`/`virtue.powerful_relic` compose
+/// their own entry citation with the narrower "### Relics" heading, its intro
+/// paragraph and the FAITH clause only (ArMDE:17619-17623) — Divine Might and
+/// Scourging the Infernal (ArMDE:17624-17627) are the relic's own defenses,
+/// not a rule about the bearer's sheet, and stay out of scope
+/// (`docs/vf-audit/design-x7-relic-and-ct-mirror.md` § 1). Same shape as
+/// `virtue.true_faith`'s second range: it starts at the `###` heading itself
+/// (17619) so [`bracketed_verbatim_body`]'s `start + 2` skip lands past the
+/// heading and its blank line onto the intro paragraph (17621), and runs
+/// through the FAITH clause's own last line (17623), one line before the
+/// blank (17624 is itself the next numbered clause, not a blank — the range
+/// ends mid-list, deliberately short of DIVINE MIGHT). Both ids share this
+/// exact second range.
 const COMPOSED_DESCRIPTIONS: &[(&str, &[(u32, u32)])] = &[
     ("virtue.the_gift", &[(3967, 3970), (2868, 2870)]),
     ("virtue.true_faith", &[(5169, 5172), (17603, 17617)]),
+    ("virtue.powerful_relic", &[(4782, 4787), (17619, 17623)]),
+    ("virtue.relic", &[(4852, 4855), (17619, 17623)]),
 ];
 
 /// The shared scope-tracking list the verbatim-fidelity guard
@@ -1590,15 +1606,20 @@ fn quiet_magic_states_its_twice_taken_elimination() {
 /// F-257: virtue.relic's own summary already states its True Faith score of
 /// one (a signed-looking figure), so the coarse screen never flagged
 /// ArMDE:4854's "The relic does not possess any additional powers."
-/// `classification` stays `creation_effect`.
+/// `classification` was `creation_effect` at F-257's own time — D79.2/F-256
+/// (2026-10-01) now composes this same entry's description with the
+/// bearer-facing Relics clause (ArMDE:17619-17623), a stated rule computed
+/// nowhere, so D67 moves `classification` to `uncomputed_rule` regardless of
+/// what else the entry computes (`RelicTrueFaith` stays, see
+/// `f256_relic_and_powerful_relic_reclassify_with_the_relics_bearer_clause`).
 #[test]
 fn relic_states_it_has_no_additional_powers() {
     let rs = load_ruleset();
     assert_eq!(
         classification_of(&rs, "virtue.relic"),
-        Classification::CreationEffect,
-        "F-257: the True Faith grant is genuinely computed; only the no-additional-powers \
-         clause is missing, which does not change the classification"
+        Classification::UncomputedRule,
+        "D79.2/F-256: the composed description now states the bearer-facing Relics clause, \
+         which is computed nowhere — D67 makes this uncomputed_rule"
     );
 
     let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
@@ -1629,15 +1650,20 @@ fn relic_states_it_has_no_additional_powers() {
 /// score of 3 (a signed-looking figure), so the coarse screen never flagged
 /// ArMDE:4786's "If you ever behave impiously (as judged by the storyguide)
 /// your relic will cease to function until suitable penance is made."
-/// `classification` stays `creation_effect`.
+/// `classification` was `creation_effect` at F-229's own time — D79.2/F-256
+/// (2026-10-01) now composes this same entry's description with the
+/// bearer-facing Relics clause (ArMDE:17619-17623), a stated rule computed
+/// nowhere, so D67 moves `classification` to `uncomputed_rule` regardless of
+/// what else the entry computes (`RelicTrueFaith` stays, see
+/// `f256_relic_and_powerful_relic_reclassify_with_the_relics_bearer_clause`).
 #[test]
 fn powerful_relic_states_its_impiety_consequence() {
     let rs = load_ruleset();
     assert_eq!(
         classification_of(&rs, "virtue.powerful_relic"),
-        Classification::CreationEffect,
-        "F-229: the True Faith grant is genuinely computed; only the impiety/cessation rule is \
-         missing, which does not change the classification"
+        Classification::UncomputedRule,
+        "D79.2/F-256: the composed description now states the bearer-facing Relics clause, \
+         which is computed nowhere — D67 makes this uncomputed_rule"
     );
 
     let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
@@ -1668,6 +1694,95 @@ fn powerful_relic_states_its_impiety_consequence() {
         offenders.is_empty(),
         "X2c (tmp/x2c-verdicts.md), F-229: virtue.powerful_relic's description must state the \
          impiety/cessation rule in both locales:\n{}",
+        offenders.join("\n")
+    );
+}
+
+/// D79.2/F-256 (`docs/vf-audit/decisions.md` D79, `docs/vf-audit/design-x7-relic-and-ct-mirror.md`
+/// § 1): `virtue.relic`/`virtue.powerful_relic` each compose their description
+/// with the bearer-facing "Relics" clause (ArMDE:17619-17623 — the Relics
+/// heading, its intro paragraph and the FAITH clause only; Divine Might and
+/// Scourging the Infernal, ArMDE:17624-17627, are the relic's own defenses,
+/// not a rule about the bearer's sheet) via [`COMPOSED_DESCRIPTIONS`]. D67: once the
+/// description states a rule computed nowhere (the relic's Faith Points
+/// "usable by its bearer as Confidence" and its Magic-Resistance grant to the
+/// bearer), `creation_effect` is wrong regardless of what else the entry
+/// computes, so both reclassify to `uncomputed_rule`
+/// (`relic_states_it_has_no_additional_powers`/
+/// `powerful_relic_states_its_impiety_consequence` above pin the
+/// classification itself).
+///
+/// D67 also keeps an entry's existing effects on reclassification: both still
+/// carry their own `Effect::RelicTrueFaith` (the RELIC's score, 1/3), checked
+/// here directly. That score still must not leak onto the bearer's own True
+/// Faith Score/MR floor (ArMDE:17607, "Only by possessing the True Faith
+/// Major Virtue may a character have a True Faith score") — already pinned by
+/// `f256_relic_does_not_grant_the_character_a_true_faith_score`
+/// (`x7bd_wrong_numbers.rs`) and the inline `true_faith(&relic, ...)`/
+/// `true_faith(&prelic, ...)` assertions in `data_integrity.rs`'s
+/// confidence/size test, both kept unchanged by this slice.
+#[test]
+fn f256_relic_and_powerful_relic_reclassify_with_the_relics_bearer_clause() {
+    let rs = load_ruleset();
+
+    for (id, score) in [("virtue.relic", 1u8), ("virtue.powerful_relic", 3u8)] {
+        assert_eq!(
+            classification_of(&rs, id),
+            Classification::UncomputedRule,
+            "D79.2/F-256: {id}'s composed description states the bearer-facing Relics clause \
+             (ArMDE:17619-17623), computed nowhere (D67)"
+        );
+
+        let item = rs
+            .items()
+            .find(|i| i.id.as_str() == id)
+            .unwrap_or_else(|| panic!("{id} is not in the shipped catalogue"));
+        assert!(
+            item.effects.contains(&Effect::RelicTrueFaith { score }),
+            "{id} must keep its own Effect::RelicTrueFaith {{ score: {score} }} — D67 \
+             reclassification never drops an entry's existing effects"
+        );
+    }
+
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut offenders = Vec::new();
+    for id in ["virtue.relic", "virtue.powerful_relic"] {
+        for (lang, loc, needles) in [
+            (
+                "en",
+                &loc_en,
+                [
+                    "may be used by its bearer as Confidence",
+                    "grants Magic Resistance equal to ten times its True Faith score to its \
+                     bearer",
+                ],
+            ),
+            (
+                "de",
+                &loc_de,
+                [
+                    "die ihr Träger wie Selbstvertrauen einsetzen darf",
+                    "Magieresistenz in Höhe des Zehnfachen ihres Wahrer-Glaube-Wertes",
+                ],
+            ),
+        ] {
+            let text = displayed_text(loc, id).unwrap_or_default();
+            for needle in needles {
+                if !text.contains(needle) {
+                    offenders.push(format!(
+                        "{lang}/{id}: displayed text {text:?} does not state the Relics \
+                         bearer clause needle {needle:?} (ArMDE:17619-17623)"
+                    ));
+                }
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "D79.2/F-256: virtue.relic/virtue.powerful_relic's composed description must state \
+         the Relics section's bearer-facing clause verbatim in both locales:\n{}",
         offenders.join("\n")
     );
 }
