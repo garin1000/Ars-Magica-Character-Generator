@@ -828,6 +828,28 @@ presumption of correctness.
 
 ---
 
+## D79 — Potent Magic gets its own "in field" marker; F-256 is text
+
+**Norbert, 2026-10-01** (`docs/vf-audit/design-x7-relic-and-ct-mirror.md`).
+
+1. **Potent Magic's +3/+6 applies only in its field** (ArMDE:4744-4748), and
+   the field is a free-text theme, so the Arts cannot decide membership.
+   - Today the Casting Total bonus reaches every spell. That is wrong output.
+   - A known spell gains a second marker, "within the Potent Magic field",
+     shown only when the character holds Potent Magic. Its Casting Total adds
+     the bonus.
+   - It is separate from X10c's Magical Focus marker, because the two fields
+     can differ.
+   - The Lab Totals grid gets its own "within the Potent Magic field" figure,
+     so D4's combined within-focus figure separates too.
+   - Both are additive fields, so there is no schema bump.
+2. **F-256: no relic machinery.**
+   - Relic and Powerful Relic get a composed description from ArMDE:17619-17623,
+     in the `COMPOSED_DESCRIPTIONS` shape (D70's True Faith precedent).
+   - Both become `uncomputed_rule` (D67).
+
+---
+
 ## D78 — X9c's sweep results (`tmp/x9c-verdicts*.md`)
 
 **Norbert, 2026-10-01.**
