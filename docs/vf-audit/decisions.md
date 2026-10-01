@@ -843,6 +843,9 @@ presumption of correctness.
    - The Lab Totals grid gets its own "within the Potent Magic field" figure,
      so D4's combined within-focus figure separates too.
    - Both are additive fields, so there is no schema bump.
+   - **Each spell marker shows only when its Virtue is taken**: the focus
+     marker with a Magical Focus, the Potent Magic marker with Potent Magic
+     (Norbert, same day).
 2. **F-256: no relic machinery.**
    - Relic and Powerful Relic get a composed description from ArMDE:17619-17623,
      in the `COMPOSED_DESCRIPTIONS` shape (D70's True Faith precedent).
