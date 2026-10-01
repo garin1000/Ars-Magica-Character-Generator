@@ -4570,7 +4570,7 @@ impl EntityTypeProfile {
 }
 
 /// A value bound to one of a [`Selection`]'s parameters: a single `Id` (every
-/// value this engine produces today) or a set of them (D9 part 3's
+/// parameter type except `multi_ref`) or a set of them (D9 part 3's
 /// multi-valued parameter — `docs/vf-audit/design-c0-parameter-model.md` § 8).
 ///
 /// `#[serde(untagged)]` makes this **wire-compatible with the prior bare-`Id`
@@ -4578,11 +4578,11 @@ impl EntityTypeProfile {
 /// `BTreeMap<String, Id>` value used to be, so every existing save round-trips
 /// byte-identically and this slice (C0b) owes no `SCHEMA_VERSION` bump — the
 /// bump belongs to C5a, which is the slice that actually needs to migrate a
-/// pre-existing shape. `Multi` exists so a (currently hypothetical) JSON array
-/// value already parses; nothing in this engine constructs one yet — no rules
-/// data declares a `multi_ref` parameter type, so a `Multi` can only appear via
-/// a hand-edited save. C5a owns turning that into a real feature (the
-/// canonicalizing fold and the wrong-shape check its migration adds).
+/// pre-existing shape. `Multi` is the value of a `multi_ref` parameter, which
+/// shipped rules data declares (e.g. `flaw.corrupted_spells`,
+/// `flaw.corrupted_arts`, `flaw.restricted_learning`); C5a added the
+/// canonicalizing fold and the wrong-shape check
+/// (`validation/selections.rs`).
 ///
 /// `BTreeSet`, not `Vec`, for the same reason [`ParameterDef::at_most_one_of`]
 /// already uses it: a `BTreeSet` makes `{A,B}` and `{B,A}` compare equal by
@@ -4591,10 +4591,10 @@ impl EntityTypeProfile {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SelectionParamValue {
-    /// One bound `Id` — the shape every value this engine produces today takes.
+    /// One bound `Id` — the value of every parameter type except `multi_ref`.
     Single(Id),
-    /// A set of bound `Id`s, for a (currently hypothetical) multi-valued
-    /// parameter; see the enum's doc comment.
+    /// A set of bound `Id`s — the value of a `multi_ref` parameter; see the
+    /// enum's doc comment.
     Multi(BTreeSet<Id>),
 }
 

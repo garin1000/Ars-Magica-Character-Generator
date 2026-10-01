@@ -14,7 +14,9 @@ use serde::Serialize;
 pub enum AppError {
     /// A filesystem operation failed (missing rules file, unreadable save, etc.).
     Io {
-        /// The underlying I/O error's message.
+        /// What failed: a wrapped `std::io::Error`'s message, or a diagnostic
+        /// the app writes itself when no OS error exists (e.g. no rules
+        /// directory or no writable settings file was found).
         message: String,
     },
     /// A ruleset failed to parse or violated referential integrity.
