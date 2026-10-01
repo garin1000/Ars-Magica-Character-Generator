@@ -208,6 +208,47 @@ fn university_dean_requires_age_forty() {
     );
 }
 
+/// The True-arm counterpart (QA review, coverage): a companion who meets
+/// BOTH of University Dean's prerequisites — holds `virtue.doctor_in_faculty`
+/// (itself requiring Artes Liberales 5 and Dead Language 5, ArMDE:4321-4322)
+/// and is exactly 40 (the boundary, not merely above it) — must raise no
+/// `prereq_not_met` at all. Without this, the only existing test
+/// (`university_dean_requires_age_forty`, a companion with NEITHER
+/// prerequisite met) short-circuits `Prereq::All` on the first child
+/// (`Has(virtue.doctor_in_faculty)`), so `Prereq::AgeMin`'s own True arm in
+/// `prereq.rs::evaluate_prereq` is never actually reached by any test in the
+/// suite.
+#[test]
+fn university_dean_at_exactly_forty_with_doctor_in_faculty_raises_no_prereq_issue() {
+    let rs = load_ruleset();
+    let mut companion = entity(
+        "companion",
+        vec![
+            sel("flaw.university_dean"),
+            Selection::with_params(
+                Id::new("virtue.doctor_in_faculty"),
+                BTreeMap::from([("faculty".into(), Id::new("Canon Law"))]),
+            ),
+        ],
+    );
+    companion.age = Some(40);
+    companion.ability_scores = vec![AbilityScore::new(Id::new("ability.artes_liberales"), 5), {
+        let mut a = AbilityScore::new(Id::new("ability.dead_language"), 5);
+        a.parameter = Some(AbilityParameterValue::Catalogued {
+            id: Id::new("language.latin"),
+        });
+        a
+    }];
+
+    let result = validate(&companion, &rs);
+
+    assert!(
+        !issue_codes(&result).contains(&ValidationIssue::CODE_PREREQ_NOT_MET),
+        "University Dean at exactly age 40 with Doctor in Faculty must raise no prereq-not-met issue: {:?}",
+        result.issues
+    );
+}
+
 /// row 42/nineteen, `flaw.raised_from_the_dead` (ArMDE:6646-6649), D69.1: "You
 /// begin with at least three Warping points, plus one Warping point for every
 /// year that has passed since you were resurrected... You also have a level 4
@@ -268,6 +309,29 @@ fn flawed_powers_requires_a_major_supernatural_virtue() {
     assert!(
         issue_codes(&result).contains(&ValidationIssue::CODE_PREREQ_NOT_MET),
         "Flawed Powers with no Major Supernatural Virtue must be refused, but validation raised nothing: {:?}",
+        result.issues
+    );
+}
+
+/// The True-arm counterpart (QA review, coverage): a companion who DOES hold
+/// a Major Supernatural Virtue (`virtue.amorphous_major` — magnitude major,
+/// category `supernatural`, ArMDE:3410-3413) alongside Flawed Powers must
+/// raise no `prereq_not_met` at all. Without this, no test in the suite ever
+/// reaches `Prereq::HasCategoryAtMagnitude`'s True arm in
+/// `prereq.rs::evaluate_prereq`.
+#[test]
+fn flawed_powers_is_satisfied_by_a_major_supernatural_virtue() {
+    let rs = load_ruleset();
+    let companion = entity(
+        "companion",
+        vec![sel("flaw.flawed_powers"), sel("virtue.amorphous_major")],
+    );
+
+    let result = validate(&companion, &rs);
+
+    assert!(
+        !issue_codes(&result).contains(&ValidationIssue::CODE_PREREQ_NOT_MET),
+        "Flawed Powers with a Major Supernatural Virtue held must raise no prereq-not-met issue: {:?}",
         result.issues
     );
 }

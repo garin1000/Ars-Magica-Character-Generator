@@ -75,13 +75,9 @@ fn ability_warns_banked_xp_at_or_above_next_level(score: u8, banked_xp: u32) -> 
     let table_n1 = ruleset.advancement().xp_for_score(score + 1).unwrap();
     let mut e = entity("grog");
     e.xp_pool = table_n1 + 100; // plenty — this test is not about the XP budget.
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.awareness"),
-        score,
-        specialty: None,
-        parameter: None,
-        banked_xp,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.awareness"), score);
+    a.banked_xp = banked_xp;
+    e.ability_scores = vec![a];
     validate(&e, &ruleset)
         .issues
         .iter()
@@ -141,11 +137,9 @@ fn art_warns_banked_xp_at_or_above_next_level(score: u8, banked_xp: u32) -> bool
     let table_n1 = ruleset.art_advancement().xp_for_score(score + 1).unwrap();
     let mut e = entity("magus");
     e.xp_pool = table_n1 + 100;
-    e.art_scores = vec![ArtScore {
-        art: Id::new("art.creo"),
-        score,
-        banked_xp,
-    }];
+    let mut a = ArtScore::new(Id::new("art.creo"), score);
+    a.banked_xp = banked_xp;
+    e.art_scores = vec![a];
     validate(&e, &ruleset)
         .issues
         .iter()
@@ -201,13 +195,9 @@ fn ability_banked_xp_at_the_ceiling_score_warns() {
 
     let mut e = entity("grog");
     e.xp_pool = u32::MAX;
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.awareness"),
-        score: ceiling,
-        specialty: None,
-        parameter: None,
-        banked_xp: 1,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.awareness"), ceiling);
+    a.banked_xp = 1;
+    e.ability_scores = vec![a];
     let issues = validate(&e, &ruleset).issues;
     let issue = issues
         .iter()
@@ -236,11 +226,9 @@ fn art_banked_xp_at_the_ceiling_score_warns() {
 
     let mut e = entity("magus");
     e.xp_pool = u32::MAX;
-    e.art_scores = vec![ArtScore {
-        art: Id::new("art.creo"),
-        score: ceiling,
-        banked_xp: 1,
-    }];
+    let mut a = ArtScore::new(Id::new("art.creo"), ceiling);
+    a.banked_xp = 1;
+    e.art_scores = vec![a];
     let issues = validate(&e, &ruleset).issues;
     let issue = issues
         .iter()
@@ -253,13 +241,8 @@ fn art_banked_xp_at_the_ceiling_score_warns() {
 
 #[test]
 fn ability_score_banked_xp_round_trips() {
-    let original = AbilityScore {
-        ability: Id::new("ability.awareness"),
-        score: 3,
-        specialty: None,
-        parameter: None,
-        banked_xp: 7,
-    };
+    let mut original = AbilityScore::new(Id::new("ability.awareness"), 3);
+    original.banked_xp = 7;
     let json = serde_json::to_string(&original).expect("serializes");
     assert!(json.contains("\"banked_xp\":7"), "{json}");
     let back: AbilityScore = serde_json::from_str(&json).expect("deserializes");
@@ -268,11 +251,8 @@ fn ability_score_banked_xp_round_trips() {
 
 #[test]
 fn art_score_banked_xp_round_trips() {
-    let original = ArtScore {
-        art: Id::new("art.creo"),
-        score: 5,
-        banked_xp: 4,
-    };
+    let mut original = ArtScore::new(Id::new("art.creo"), 5);
+    original.banked_xp = 4;
     let json = serde_json::to_string(&original).expect("serializes");
     assert!(json.contains("\"banked_xp\":4"), "{json}");
     let back: ArtScore = serde_json::from_str(&json).expect("deserializes");
@@ -281,14 +261,8 @@ fn art_score_banked_xp_round_trips() {
 
 #[test]
 fn spell_selection_within_focus_round_trips() {
-    let original = SpellSelection {
-        spell: Id::new("spell.pilum_of_fire"),
-        level: None,
-        mastery: None,
-        parameter: None,
-        mastery_abilities: Vec::new(),
-        within_focus: true,
-    };
+    let mut original = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+    original.within_focus = true;
     let json = serde_json::to_string(&original).expect("serializes");
     assert!(json.contains("\"within_focus\":true"), "{json}");
     let back: SpellSelection = serde_json::from_str(&json).expect("deserializes");
@@ -337,28 +311,17 @@ fn spell_casting_total_picks_the_within_focus_figure_when_marked() {
     let ruleset = full_ruleset();
     let mut e = entity("magus");
     e.art_scores = vec![
-        ArtScore {
-            art: Id::new("art.creo"),
-            score: 12,
-            banked_xp: 0,
-        },
-        ArtScore {
-            art: Id::new("art.ignem"),
-            score: 15,
-            banked_xp: 0,
-        },
+        ArtScore::new(Id::new("art.creo"), 12),
+        ArtScore::new(Id::new("art.ignem"), 15),
     ];
     e.selections = vec![Selection::with_params(
         Id::new("virtue.major_magical_focus"),
         BTreeMap::from([("focus".to_string(), Id::new("fire"))]),
     )];
-    e.spells = vec![SpellSelection {
-        spell: Id::new("spell.pilum_of_fire"),
-        level: None,
-        mastery: None,
-        parameter: None,
-        mastery_abilities: Vec::new(),
-        within_focus: true,
+    e.spells = vec![{
+        let mut s = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+        s.within_focus = true;
+        s
     }];
 
     let total = arm_rules::derived::spell_casting_total(&e.spells[0], &e, &ruleset)
@@ -422,11 +385,9 @@ fn localized_ruleset() -> LocalizedRuleset {
 fn export_shows_banked_xp_in_parentheses_beside_the_art_score() {
     let ruleset = localized_ruleset();
     let mut e = entity("magus");
-    e.art_scores = vec![ArtScore {
-        art: Id::new("art.creo"),
-        score: 5,
-        banked_xp: 3,
-    }];
+    let mut a = ArtScore::new(Id::new("art.creo"), 5);
+    a.banked_xp = 3;
+    e.art_scores = vec![a];
     let labels = synthetic_labels(&ruleset);
     let md = character_markdown(&e, &ruleset, &labels).expect("exports");
     assert!(
@@ -439,13 +400,9 @@ fn export_shows_banked_xp_in_parentheses_beside_the_art_score() {
 fn export_shows_banked_xp_in_parentheses_beside_the_ability_score() {
     let ruleset = localized_ruleset();
     let mut e = entity("magus");
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.awareness"),
-        score: 2,
-        specialty: None,
-        parameter: None,
-        banked_xp: 4,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.awareness"), 2);
+    a.banked_xp = 4;
+    e.ability_scores = vec![a];
     let labels = synthetic_labels(&ruleset);
     let md = character_markdown(&e, &ruleset, &labels).expect("exports");
     assert!(
@@ -462,25 +419,10 @@ fn export_never_prints_a_casting_total_column_for_spells() {
     let ruleset = localized_ruleset();
     let mut e = entity("magus");
     e.art_scores = vec![
-        ArtScore {
-            art: Id::new("art.creo"),
-            score: 5,
-            banked_xp: 0,
-        },
-        ArtScore {
-            art: Id::new("art.ignem"),
-            score: 5,
-            banked_xp: 0,
-        },
+        ArtScore::new(Id::new("art.creo"), 5),
+        ArtScore::new(Id::new("art.ignem"), 5),
     ];
-    e.spells = vec![SpellSelection {
-        spell: Id::new("spell.pilum_of_fire"),
-        level: None,
-        mastery: None,
-        parameter: None,
-        mastery_abilities: Vec::new(),
-        within_focus: false,
-    }];
+    e.spells = vec![SpellSelection::new(Id::new("spell.pilum_of_fire"))];
     let labels = synthetic_labels(&ruleset);
     let md = character_markdown(&e, &ruleset, &labels).expect("exports");
     assert!(

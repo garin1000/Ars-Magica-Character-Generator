@@ -1062,4 +1062,239 @@ mod tests {
             "a SEPARATE social_status item must satisfy the asking item's own HasCategory"
         );
     }
+
+    /// D69/X7b-e row 42: `Prereq::AgeMin` is a definite True once the entity's
+    /// age meets or exceeds the minimum — mirrors `House`'s `Some(h) if h ==
+    /// id` shape (QA review: previously unit-tested nowhere).
+    #[test]
+    fn evaluate_prereq_age_min_true_when_above_minimum() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            is_grog: None,
+            type_profile_id: None,
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeMap::new(),
+            age: Some(45),
+            held_categories_by_kind: BTreeMap::new(),
+        };
+
+        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
+        assert_eq!(outcome, Tri::True);
+        assert!(!depended_on_unknown);
+    }
+
+    /// The exact boundary: age == min must still be True (`>=`, not `>`).
+    #[test]
+    fn evaluate_prereq_age_min_true_at_exact_boundary() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            is_grog: None,
+            type_profile_id: None,
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeMap::new(),
+            age: Some(40),
+            held_categories_by_kind: BTreeMap::new(),
+        };
+
+        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
+        assert_eq!(outcome, Tri::True);
+        assert!(!depended_on_unknown);
+    }
+
+    /// The refusal half: an age below the minimum is a definite False.
+    #[test]
+    fn evaluate_prereq_age_min_false_when_below_minimum() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            is_grog: None,
+            type_profile_id: None,
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeMap::new(),
+            age: Some(30),
+            held_categories_by_kind: BTreeMap::new(),
+        };
+
+        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
+        assert_eq!(outcome, Tri::False);
+        assert!(!depended_on_unknown);
+    }
+
+    /// An unset age (`prereq.rs::evaluate_prereq`'s `Prereq::AgeMin` arm doc
+    /// comment promise) is genuinely
+    /// unknown, never a definite failure — mirrors `House`'s `None` arm.
+    #[test]
+    fn evaluate_prereq_age_min_unknown_when_age_unset() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            is_grog: None,
+            type_profile_id: None,
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
+        };
+
+        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
+        assert_eq!(outcome, Tri::Unknown);
+        assert!(depended_on_unknown);
+    }
+
+    /// D69/X7b-e row 42/D68.4: `Prereq::HasCategoryAtMagnitude` is a definite
+    /// True when a held item's category AND kind match and its magnitude is
+    /// at or above the required one — the magnitude/kind-filtered twin of
+    /// `evaluate_prereq_has_category_true_when_held` (QA review: previously
+    /// unit-tested nowhere).
+    #[test]
+    fn evaluate_prereq_has_category_at_magnitude_true_when_held_at_or_above() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            is_grog: None,
+            type_profile_id: None,
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::from([(
+                ("supernatural".to_string(), ItemKind::Virtue),
+                BTreeMap::from([(Id::new("virtue.amorphous_major"), Magnitude::Major)]),
+            )]),
+        };
+
+        let (outcome, depended_on_unknown) = evaluate_prereq(
+            &Prereq::HasCategoryAtMagnitude {
+                category: "supernatural".into(),
+                magnitude: Magnitude::Major,
+                item_kind: ItemKind::Virtue,
+            },
+            &ctx,
+            1,
+            None,
+        );
+        assert_eq!(outcome, Tri::True);
+        assert!(!depended_on_unknown);
+    }
+
+    /// The refusal half: nothing held at that category/kind is a definite
+    /// False, never Unknown (static, like `HasCategory`).
+    #[test]
+    fn evaluate_prereq_has_category_at_magnitude_false_when_not_held() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            is_grog: None,
+            type_profile_id: None,
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
+        };
+
+        let (outcome, depended_on_unknown) = evaluate_prereq(
+            &Prereq::HasCategoryAtMagnitude {
+                category: "supernatural".into(),
+                magnitude: Magnitude::Major,
+                item_kind: ItemKind::Virtue,
+            },
+            &ctx,
+            1,
+            None,
+        );
+        assert_eq!(outcome, Tri::False);
+        assert!(!depended_on_unknown);
+    }
+
+    /// B2/ArMDE:4441's self-excluding shape, for `HasCategoryAtMagnitude`
+    /// (D69/X7b-e row 42/D68.4): an item whose own prerequisite names the SAME
+    /// category/kind/magnitude it itself carries must not self-satisfy — the
+    /// magnitude/kind-filtered twin of
+    /// `evaluate_for_item_excludes_the_asking_items_own_category`.
+    #[test]
+    fn evaluate_for_item_excludes_the_asking_items_own_category_at_magnitude() {
+        let items = r#"[
+          { "id": "virtue.self_ref_major", "kind": "virtue", "classification": "narrative",
+            "magnitude": "major", "categories": ["supernatural"], "entity_kinds": ["character"] },
+          { "id": "virtue.other_major", "kind": "virtue", "classification": "narrative",
+            "magnitude": "major", "categories": ["supernatural"], "entity_kinds": ["character"] },
+          { "id": "flaw.filler_personality", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
+        ]"#;
+        let ruleset = Ruleset::from_json("test", "1", items, "[]").unwrap();
+        let prereq = Prereq::HasCategoryAtMagnitude {
+            category: "supernatural".into(),
+            magnitude: Magnitude::Major,
+            item_kind: ItemKind::Virtue,
+        };
+        let item_ref = Id::new("virtue.self_ref_major");
+
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            crate::RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.selections = vec![Selection::new(item_ref.clone())];
+
+        // Held ALONE: no OTHER item contributes a Major `supernatural`
+        // Virtue, so the asking item's own row must not satisfy itself.
+        let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+        let ctx = PrereqCtx::build(&entity, &ruleset, None, &selected_ids, &[]);
+        let (outcome, _) = ctx.evaluate_for_item(&prereq, &item_ref);
+        assert_eq!(
+            outcome,
+            Tri::False,
+            "held alone, the asking item's own category/magnitude must not satisfy its own prerequisite"
+        );
+
+        // Holding a SECOND, distinct Major `supernatural` Virtue satisfies it.
+        entity
+            .selections
+            .push(Selection::new(Id::new("virtue.other_major")));
+        let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+        let ctx = PrereqCtx::build(&entity, &ruleset, None, &selected_ids, &[]);
+        let (outcome, _) = ctx.evaluate_for_item(&prereq, &item_ref);
+        assert_eq!(
+            outcome,
+            Tri::True,
+            "a SEPARATE Major supernatural Virtue must satisfy the asking item's own prerequisite"
+        );
+    }
 }

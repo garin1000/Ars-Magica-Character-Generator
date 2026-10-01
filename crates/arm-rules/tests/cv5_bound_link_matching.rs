@@ -59,13 +59,9 @@ fn companion_with_guild_and_ability(guild: &str, parameter: AbilityParameterValu
         Id::new("virtue.craft_guild_training"),
         BTreeMap::from([("guild".into(), Id::new(guild))]),
     )];
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.organization_lore"),
-        score: 1,
-        specialty: None,
-        parameter: Some(parameter),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.organization_lore"), 1);
+    a.parameter = Some(parameter);
+    e.ability_scores = vec![a];
     e
 }
 
@@ -153,16 +149,12 @@ fn bought_twice_with_a_link_resolves_ambiguous_and_funds_nothing() {
             BTreeMap::from([("guild".into(), Id::new("Different Guild"))]),
         ),
     ];
-    entity.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.organization_lore"),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::Linked {
-            item: Id::new("virtue.craft_guild_training"),
-            param: "guild".into(),
-        }),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.organization_lore"), 1);
+    a.parameter = Some(AbilityParameterValue::Linked {
+        item: Id::new("virtue.craft_guild_training"),
+        param: "guild".into(),
+    });
+    entity.ability_scores = vec![a];
 
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");
     assert!(

@@ -765,13 +765,9 @@ mod tests {
     }
 
     fn score(ability: &str, score: u8, specialty: Option<&str>) -> AbilityScore {
-        AbilityScore {
-            ability: Id::new(ability),
-            score,
-            specialty: specialty.map(str::to_string),
-            parameter: None,
-            banked_xp: 0,
-        }
+        let mut a = AbilityScore::new(Id::new(ability), score);
+        a.specialty = specialty.map(str::to_string);
+        a
     }
 
     /// Every entry becomes an ordinary bought Ability row, and the package the

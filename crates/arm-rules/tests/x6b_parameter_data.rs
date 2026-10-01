@@ -77,13 +77,7 @@ fn param(key: &str, value: &str) -> BTreeMap<String, Id> {
 }
 
 fn ability_score(ability: &str, score: u8) -> AbilityScore {
-    AbilityScore {
-        ability: Id::new(ability),
-        score,
-        specialty: None,
-        parameter: None,
-        banked_xp: 0,
-    }
+    AbilityScore::new(Id::new(ability), score)
 }
 
 fn issue_codes(entity: &Entity, ruleset: &Ruleset) -> Vec<String> {
@@ -718,15 +712,11 @@ fn turb_trained_authorizes_only_the_chosen_dead_language() {
         )],
     );
     let mut with_latin = latin_chosen;
-    with_latin.ability_scores.push(AbilityScore {
-        ability: Id::new("ability.dead_language"),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::Catalogued {
-            id: Id::new("language.latin"),
-        }),
-        banked_xp: 0,
+    let mut a = AbilityScore::new(Id::new("ability.dead_language"), 1);
+    a.parameter = Some(AbilityParameterValue::Catalogued {
+        id: Id::new("language.latin"),
     });
+    with_latin.ability_scores.push(a);
     assert!(
         !issue_codes(&with_latin, &rs)
             .iter()
@@ -741,15 +731,11 @@ fn turb_trained_authorizes_only_the_chosen_dead_language() {
             param("language", "language.latin"),
         )],
     );
-    with_hebrew.ability_scores.push(AbilityScore {
-        ability: Id::new("ability.dead_language"),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::Catalogued {
-            id: Id::new("language.hebrew"),
-        }),
-        banked_xp: 0,
+    let mut a = AbilityScore::new(Id::new("ability.dead_language"), 1);
+    a.parameter = Some(AbilityParameterValue::Catalogued {
+        id: Id::new("language.hebrew"),
     });
+    with_hebrew.ability_scores.push(a);
     assert!(
         issue_codes(&with_hebrew, &rs)
             .iter()

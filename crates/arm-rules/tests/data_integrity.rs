@@ -1990,11 +1990,7 @@ fn shipped_elemental_magic_redistributes_art_xp() {
         "magus",
         vec![Selection::new(Id::new("virtue.elemental_magic"))],
     );
-    let row = |art: &str, score: u8| ArtScore {
-        art: Id::new(art),
-        score,
-        banked_xp: 0,
-    };
+    let row = |art: &str, score: u8| ArtScore::new(Id::new(art), score);
     e.art_scores = vec![
         row("art.aquam", 4),
         row("art.auram", 6),
@@ -2048,19 +2044,15 @@ fn fully_specified_companion_validates() {
         (Characteristic::Sta, -1),
     ]);
     e.ability_scores = vec![
-        AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 2,
-            specialty: Some("searching".into()),
-            parameter: None,
-            banked_xp: 0,
+        {
+            let mut a = AbilityScore::new(Id::new("ability.awareness"), 2);
+            a.specialty = Some("searching".into());
+            a
         },
-        AbilityScore {
-            ability: Id::new("ability.living_language"),
-            score: 5,
-            specialty: None,
-            parameter: Some(AbilityParameterValue::text("German")),
-            banked_xp: 0,
+        {
+            let mut a = AbilityScore::new(Id::new("ability.living_language"), 5);
+            a.parameter = Some(AbilityParameterValue::text("German"));
+            a
         },
     ];
     // Awareness 2 (15 xp) + Living Language 5 (75 xp) = 90 spent; give a pool that
@@ -2788,13 +2780,7 @@ fn shipped_score_effects_apply() {
             ),
         ],
     );
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.awareness"),
-        score: 2,
-        specialty: None,
-        parameter: None,
-        banked_xp: 0,
-    }];
+    e.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 2)];
     e.characteristics = BTreeMap::from([(Characteristic::Str, 3), (Characteristic::Qik, -3)]);
 
     // Puissant adds to the effective ability score.
@@ -2950,13 +2936,7 @@ fn in_play_effects_do_not_perturb_creation_totals() {
 
     let mut base = entity("magus", vec![]);
     base.xp_pool = 15;
-    base.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.awareness"),
-        score: 3,
-        specialty: None,
-        parameter: None,
-        banked_xp: 0,
-    }];
+    base.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 3)];
     base.characteristics = BTreeMap::from([(Characteristic::Int, 2)]);
 
     let mut with_effects = base.clone();
@@ -3188,13 +3168,7 @@ fn mentored_by_demons_character_validates_above_the_age_band() {
         vec![Selection::new(Id::new("virtue.mentored_by_demons"))],
     );
     e.age = Some(20);
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.brawl"),
-        parameter: None,
-        score: 7,
-        specialty: None,
-        banked_xp: 0,
-    }];
+    e.ability_scores = vec![AbilityScore::new(Id::new("ability.brawl"), 7)];
     let result = validate(&e, &rs);
     assert!(
         !result
@@ -3344,25 +3318,21 @@ fn simple_student_funds_latin_but_not_another_dead_language() {
     );
     e.xp_pool = 0;
     e.ability_scores = vec![
-        AbilityScore {
-            ability: Id::new("ability.dead_language"),
+        {
             // CV3 (design-cv-catalogued-values.md § 1.1): the shipped literal
             // becomes the catalogue id `language.latin`, not the bare word.
             // CV4 § 4 rule 1: a Literal instance is satisfied ONLY by
             // `Catalogued`, never `Text` holding the identical letters.
-            parameter: Some(AbilityParameterValue::Catalogued {
+            let mut a = AbilityScore::new(Id::new("ability.dead_language"), 1);
+            a.parameter = Some(AbilityParameterValue::Catalogued {
                 id: Id::new("language.latin"),
-            }),
-            score: 1,
-            specialty: None,
-            banked_xp: 0,
+            });
+            a
         },
-        AbilityScore {
-            ability: Id::new("ability.dead_language"),
-            parameter: Some(AbilityParameterValue::text("ancient_greek")),
-            score: 1,
-            specialty: None,
-            banked_xp: 0,
+        {
+            let mut a = AbilityScore::new(Id::new("ability.dead_language"), 1);
+            a.parameter = Some(AbilityParameterValue::text("ancient_greek"));
+            a
         },
     ];
     let allocation = checked_xp_allocation(&e, &rs).unwrap();
@@ -3499,13 +3469,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     }
 
     // Abilities the totals read (Magic Theory, Parma, Penetration, Single Weapon).
-    let ab = |id: &str, score: u8| AbilityScore {
-        ability: Id::new(id),
-        parameter: None,
-        specialty: None,
-        score,
-        banked_xp: 0,
-    };
+    let ab = |id: &str, score: u8| AbilityScore::new(Id::new(id), score);
     e.ability_scores = vec![
         ab("ability.magic_theory", 4),
         ab("ability.parma_magica", 3),
@@ -3514,11 +3478,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     ];
 
     // Arts: Creo 10, Ignem 8, Corpus 12.
-    let art = |id: &str, score: u8| ArtScore {
-        art: Id::new(id),
-        score,
-        banked_xp: 0,
-    };
+    let art = |id: &str, score: u8| ArtScore::new(Id::new(id), score);
     e.art_scores = vec![
         art("art.creo", 10),
         art("art.ignem", 8),
@@ -3526,14 +3486,9 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
     ];
 
     e.aura = 3;
-    e.spells = vec![SpellSelection {
-        spell: Id::new("spell.blade_of_the_virulent_flame"),
-        level: None,
-        mastery: None,
-        parameter: None,
-        mastery_abilities: Vec::new(),
-        within_focus: false,
-    }];
+    e.spells = vec![SpellSelection::new(Id::new(
+        "spell.blade_of_the_virulent_flame",
+    ))];
     e.equipment = vec![
         EquipmentSlot {
             item: Id::new("weapon.axe"),
@@ -3784,24 +3739,10 @@ fn longevity_hint_reproduces_the_books_lab_total_35_example() {
     );
     // Int 3 + Magic Theory 4 + Creo 10 + Corpus 13 + Aura 5 = 35.
     e.characteristics.insert(Characteristic::Int, 3);
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.magic_theory"),
-        parameter: None,
-        specialty: None,
-        score: 4,
-        banked_xp: 0,
-    }];
+    e.ability_scores = vec![AbilityScore::new(Id::new("ability.magic_theory"), 4)];
     e.art_scores = vec![
-        ArtScore {
-            art: Id::new("art.creo"),
-            score: 10,
-            banked_xp: 0,
-        },
-        ArtScore {
-            art: Id::new("art.corpus"),
-            score: 13,
-            banked_xp: 0,
-        },
+        ArtScore::new(Id::new("art.creo"), 10),
+        ArtScore::new(Id::new("art.corpus"), 13),
     ];
     e.aura = 5;
     e.longevity_ritual = Some(LongevityRitual {
@@ -6097,13 +6038,9 @@ fn abandoned_apprentice_completed_years_fund_16_xp_and_8_spell_levels_per_year()
         native_language: Some("German".to_string()),
         ..LifeStagePlan::default()
     });
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.living_language"),
-        parameter: Some(AbilityParameterValue::text("German")),
-        score: 5,
-        specialty: None,
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.living_language"), 5);
+    a.parameter = Some(AbilityParameterValue::text("German"));
+    e.ability_scores = vec![a];
 
     let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
     // D64 arithmetic (age 20, shipped apprenticeship.years 15, default
@@ -6365,20 +6302,8 @@ fn church_upbringing_earmark_authorizes_only_its_named_abilities() {
     );
     e.xp_pool = 1_000;
     e.ability_scores = vec![
-        AbilityScore {
-            ability: Id::new("ability.artes_liberales"),
-            parameter: None,
-            score: 1,
-            specialty: None,
-            banked_xp: 0,
-        },
-        AbilityScore {
-            ability: Id::new("ability.philosophiae"),
-            parameter: None,
-            score: 1,
-            specialty: None,
-            banked_xp: 0,
-        },
+        AbilityScore::new(Id::new("ability.artes_liberales"), 1),
+        AbilityScore::new(Id::new("ability.philosophiae"), 1),
     ];
 
     let result = validate(&e, &rs);
@@ -6417,13 +6342,7 @@ fn church_upbringing_unspent_earmark_is_not_refunded_and_still_warns() {
     e.age = Some(20);
     e.life_stages = Some(LifeStagePlan::default());
     // Spends only 5 of the earmarked 25 (Music, score 1) — legal, just partial.
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.music"),
-        parameter: None,
-        score: 1,
-        specialty: None,
-        banked_xp: 0,
-    }];
+    e.ability_scores = vec![AbilityScore::new(Id::new("ability.music"), 1)];
 
     let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
     assert_eq!(
@@ -6468,13 +6387,7 @@ fn church_upbringing_earmark_cannot_inflate_a_general_pool_smaller_than_itself()
     e.life_stages = Some(LifeStagePlan::default());
     // Music (eligible, general category) at score 3 = 30 XP demand — more than
     // the 15-point general budget the character actually has.
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.music"),
-        parameter: None,
-        score: 3,
-        specialty: None,
-        banked_xp: 0,
-    }];
+    e.ability_scores = vec![AbilityScore::new(Id::new("ability.music"), 3)];
 
     let allocation = checked_xp_allocation(&e, &rs).expect("within the solve bound");
     assert_eq!(
@@ -10782,18 +10695,8 @@ fn a_genuine_too_many_selections_survives_the_being_migration() {
 /// Resistance number to exist — carrying `selections`.
 fn magus_with_parma(selections: Vec<Selection>) -> Entity {
     let mut e = entity("magus", selections);
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.parma_magica"),
-        parameter: None,
-        specialty: None,
-        score: 3,
-        banked_xp: 0,
-    }];
-    e.art_scores = vec![ArtScore {
-        art: Id::new("art.ignem"),
-        score: 8,
-        banked_xp: 0,
-    }];
+    e.ability_scores = vec![AbilityScore::new(Id::new("ability.parma_magica"), 3)];
+    e.art_scores = vec![ArtScore::new(Id::new("art.ignem"), 8)];
     e
 }
 

@@ -272,14 +272,7 @@ fn corrupted_spells_accepts_a_learned_spell() {
             BTreeSet::from([Id::new("spell.pilum_of_fire")]),
         )],
     );
-    e.spells = vec![SpellSelection {
-        spell: Id::new("spell.pilum_of_fire"),
-        level: None,
-        mastery: None,
-        parameter: None,
-        mastery_abilities: Vec::new(),
-        within_focus: false,
-    }];
+    e.spells = vec![SpellSelection::new(Id::new("spell.pilum_of_fire"))];
     let found = codes(&e, &rs);
 
     for bad_code in [
@@ -550,16 +543,12 @@ fn enchanting_style_grant_authorizes_the_linked_bought_instance() {
         RulesetRef::new(Id::new("t2"), "1"),
     );
     e.selections = vec![selection];
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.tester_enchanting_gated"),
-        parameter: Some(AbilityParameterValue::Linked {
-            item: Id::new("virtue.tester_enchanting_link"),
-            param: "medium".to_string(),
-        }),
-        score: 1,
-        specialty: None,
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.tester_enchanting_gated"), 1);
+    a.parameter = Some(AbilityParameterValue::Linked {
+        item: Id::new("virtue.tester_enchanting_link"),
+        param: "medium".to_string(),
+    });
+    e.ability_scores = vec![a];
 
     let found = codes(&e, &rs);
     assert!(

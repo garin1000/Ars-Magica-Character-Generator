@@ -134,13 +134,9 @@ fn fixed_ability_roll_mod_does_not_surface_for_a_different_ability() {
 fn fixed_ability_roll_mod_does_not_change_bought_or_effective_ability_score() {
     let rs = ruleset_with_fixed_roll_mod();
     let mut entity = companion(vec![Selection::new(Id::new("flaw.tester_poor_hearing"))]);
-    entity.ability_scores.push(AbilityScore {
-        ability: Id::new("ability.awareness"),
-        score: 3,
-        specialty: None,
-        parameter: None,
-        banked_xp: 0,
-    });
+    entity
+        .ability_scores
+        .push(AbilityScore::new(Id::new("ability.awareness"), 3));
     let bought = entity.ability_scores[0].score;
     let effective = effective_ability_score(&entity, &rs, &Id::new("ability.awareness"), None);
     assert_eq!(
@@ -333,13 +329,9 @@ fn assert_shipped_roll_mod_carrier(id: &str, ability: &str, amount: i32) {
          — surfaced: {s:?}"
     );
 
-    entity.ability_scores.push(AbilityScore {
-        ability: Id::new(ability),
-        score: 3,
-        specialty: None,
-        parameter: None,
-        banked_xp: 0,
-    });
+    entity
+        .ability_scores
+        .push(AbilityScore::new(Id::new(ability), 3));
     let bought = entity.ability_scores[0].score;
     let effective = effective_ability_score(&entity, &rs, &Id::new(ability), None);
     assert_eq!(

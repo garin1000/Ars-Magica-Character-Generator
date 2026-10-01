@@ -187,15 +187,11 @@ fn companion_with(selection: &str, ability: &str, parameter: &str) -> Entity {
     );
     e.xp_pool = 0;
     e.selections = vec![Selection::new(Id::new(selection))];
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new(ability),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::Catalogued {
-            id: Id::new(parameter),
-        }),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new(ability), 1);
+    a.parameter = Some(AbilityParameterValue::Catalogued {
+        id: Id::new(parameter),
+    });
+    e.ability_scores = vec![a];
     e
 }
 
@@ -290,13 +286,9 @@ fn craft_guild_training_funds_the_organization_lore_matching_its_own_guild() {
         Id::new("virtue.craft_guild_training"),
         BTreeMap::from([("guild".into(), Id::new("Smiths' Guild of Verdi"))]),
     )];
-    entity.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.organization_lore"),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::text("Smiths' Guild of Verdi")),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.organization_lore"), 1);
+    a.parameter = Some(AbilityParameterValue::text("Smiths' Guild of Verdi"));
+    entity.ability_scores = vec![a];
 
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");
     assert_eq!(
@@ -319,13 +311,9 @@ fn craft_guild_training_does_not_fund_a_different_organization_lore() {
         Id::new("virtue.craft_guild_training"),
         BTreeMap::from([("guild".into(), Id::new("Smiths' Guild of Verdi"))]),
     )];
-    entity.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.organization_lore"),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::text("A Completely Different Guild")),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.organization_lore"), 1);
+    a.parameter = Some(AbilityParameterValue::text("A Completely Different Guild"));
+    entity.ability_scores = vec![a];
 
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");
     assert!(

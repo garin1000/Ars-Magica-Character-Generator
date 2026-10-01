@@ -272,6 +272,16 @@ mod tests {
         assert_eq!(r.total_cost(&scores), 7);
     }
 
+    /// A score outside the table (illegal) contributes 0 to the total rather
+    /// than panicking or being skipped from the sum — `cost_for`'s `None`
+    /// case, reported separately as out-of-range, never silently priced.
+    #[test]
+    fn total_cost_treats_an_out_of_range_score_as_zero() {
+        let r = rules();
+        let scores = BTreeMap::from([(Characteristic::Int, 4), (Characteristic::Per, 1)]);
+        assert_eq!(r.total_cost(&scores), 1);
+    }
+
     #[test]
     fn range_is_derived_from_table() {
         let r = rules();

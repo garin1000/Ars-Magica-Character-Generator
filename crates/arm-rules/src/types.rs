@@ -7680,14 +7680,11 @@ mod tests {
             Id::new("magus"),
             RulesetRef::new(Id::new("arm5-core"), "2024.1"),
         );
-        entity.spells = vec![
-            SpellSelection::new(Id::new("spell.unseen_arm")),
-            {
-                let mut s = SpellSelection::new(Id::new("spell.aegis_of_the_hearth"));
-                s.level = Some(20);
-                s
-            },
-        ];
+        entity.spells = vec![SpellSelection::new(Id::new("spell.unseen_arm")), {
+            let mut s = SpellSelection::new(Id::new("spell.aegis_of_the_hearth"));
+            s.level = Some(20);
+            s
+        }];
         entity.normalize();
         // Sorted by spell id: aegis before unseen_arm.
         assert_eq!(entity.spells[0].spell, Id::new("spell.aegis_of_the_hearth"));

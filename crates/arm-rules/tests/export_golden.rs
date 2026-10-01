@@ -155,86 +155,41 @@ fn golden_magus() -> Entity {
     )]);
     e.xp_pool = 240;
     e.ability_scores = vec![
-        AbilityScore {
-            ability: Id::new("ability.area_lore"),
-            score: 2,
-            specialty: Some("legends".to_string()),
-            parameter: Some(AbilityParameterValue::text("Provence")),
-            banked_xp: 0,
+        {
+            let mut a = AbilityScore::new(Id::new("ability.area_lore"), 2);
+            a.specialty = Some("legends".to_string());
+            a.parameter = Some(AbilityParameterValue::text("Provence"));
+            a
         },
-        AbilityScore {
-            ability: Id::new("ability.artes_liberales"),
-            score: 1,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
+        AbilityScore::new(Id::new("ability.artes_liberales"), 1),
+        {
+            let mut a = AbilityScore::new(Id::new("ability.awareness"), 2);
+            a.specialty = Some("searching".to_string());
+            a
         },
-        AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 2,
-            specialty: Some("searching".to_string()),
-            parameter: None,
-            banked_xp: 0,
-        },
-        AbilityScore {
-            ability: Id::new("ability.magic_theory"),
-            score: 4,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        },
-        AbilityScore {
-            ability: Id::new("ability.parma_magica"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        },
-        AbilityScore {
-            ability: Id::new("ability.single_weapon"),
-            score: 4,
-            specialty: Some("long sword".to_string()),
-            parameter: None,
-            banked_xp: 0,
+        AbilityScore::new(Id::new("ability.magic_theory"), 4),
+        AbilityScore::new(Id::new("ability.parma_magica"), 2),
+        {
+            let mut a = AbilityScore::new(Id::new("ability.single_weapon"), 4);
+            a.specialty = Some("long sword".to_string());
+            a
         },
     ];
     e.art_scores = vec![
         // Scores chosen so the whole spend fits the 240-point pool: 232 from the
         // general pool (Abilities 100 + Arts 117 + Spell Mastery 15) plus Single
         // Weapon's 50 from Warrior's Martial-only pool.
-        ArtScore {
-            art: Id::new("art.creo"),
-            score: 8,
-            banked_xp: 0,
-        },
-        ArtScore {
-            art: Id::new("art.rego"),
-            score: 5,
-            banked_xp: 0,
-        },
-        ArtScore {
-            art: Id::new("art.corpus"),
-            score: 5,
-            banked_xp: 0,
-        },
-        ArtScore {
-            art: Id::new("art.ignem"),
-            score: 8,
-            banked_xp: 0,
-        },
-        ArtScore {
-            art: Id::new("art.vim"),
-            score: 5,
-            banked_xp: 0,
-        },
+        ArtScore::new(Id::new("art.creo"), 8),
+        ArtScore::new(Id::new("art.rego"), 5),
+        ArtScore::new(Id::new("art.corpus"), 5),
+        ArtScore::new(Id::new("art.ignem"), 8),
+        ArtScore::new(Id::new("art.vim"), 5),
     ];
-    e.spells = vec![SpellSelection {
-        spell: Id::new("spell.pilum_of_fire"),
-        level: None,
-        mastery: Some(2),
-        parameter: None,
-        mastery_abilities: vec![Id::new("spell_mastery_ability.penetration")],
-        within_focus: false,
+    e.spells = vec![{
+        let mut s = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+        s.mastery = Some(2);
+        s.mastery_abilities = vec![Id::new("spell_mastery_ability.penetration")];
+        s
     }];
     e.equipment = vec![
         EquipmentSlot {
@@ -568,31 +523,25 @@ fn entity_with_every_parameter_kind() -> Entity {
         BTreeMap::from([("guild".to_string(), Id::new("Smiths' Guild of Verdi"))]),
     )];
     e.ability_scores = vec![
-        AbilityScore {
-            ability: Id::new("ability.dead_language"),
-            score: 4,
-            specialty: None,
-            parameter: Some(AbilityParameterValue::Catalogued {
+        {
+            let mut a = AbilityScore::new(Id::new("ability.dead_language"), 4);
+            a.parameter = Some(AbilityParameterValue::Catalogued {
                 id: Id::new("language.latin"),
-            }),
-            banked_xp: 0,
+            });
+            a
         },
-        AbilityScore {
-            ability: Id::new("ability.organization_lore"),
-            score: 2,
-            specialty: None,
-            parameter: Some(AbilityParameterValue::Linked {
+        {
+            let mut a = AbilityScore::new(Id::new("ability.organization_lore"), 2);
+            a.parameter = Some(AbilityParameterValue::Linked {
                 item: Id::new("virtue.craft_guild_training"),
                 param: "guild".to_string(),
-            }),
-            banked_xp: 0,
+            });
+            a
         },
-        AbilityScore {
-            ability: Id::new("ability.area_lore"),
-            score: 1,
-            specialty: None,
-            parameter: Some(AbilityParameterValue::text("Provence")),
-            banked_xp: 0,
+        {
+            let mut a = AbilityScore::new(Id::new("ability.area_lore"), 1);
+            a.parameter = Some(AbilityParameterValue::text("Provence"));
+            a
         },
     ];
     e.normalize();
@@ -670,4 +619,137 @@ fn a_catalogued_a_linked_and_a_text_ability_parameter_render_localized_in_german
         "a Text value must pass through unchanged, DE-templated:\n{rendered}"
     );
     assert_no_raw_parameter_id(&rendered);
+}
+
+/// The Dangling case (design § 4.1, `LinkResolution::Dangling`): a `Linked`
+/// parameter whose target item is not held at all — unlike
+/// `entity_with_every_parameter_kind`, which always holds
+/// `virtue.craft_guild_training` and so only ever exercises `Resolved` —
+/// must still render (never panic or fail the export) and never leak the
+/// raw `(item, param)` pair. `export/resolve.rs::Doc::ability_param_value`'s
+/// `LinkResolution::Dangling` arm was otherwise never reached by any test.
+#[test]
+fn a_dangling_linked_parameter_renders_without_the_raw_link_pair() {
+    let ruleset = shipped_ruleset();
+    let mut entity = Entity::new(
+        EntityKind::Character,
+        Id::new("companion"),
+        RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+    );
+    entity.ability_scores = vec![{
+        let mut a = AbilityScore::new(Id::new("ability.organization_lore"), 2);
+        a.parameter = Some(AbilityParameterValue::Linked {
+            item: Id::new("virtue.craft_guild_training"),
+            param: "guild".to_string(),
+        });
+        a
+    }];
+    entity.normalize();
+
+    let rendered = character_markdown(&entity, &ruleset, &synthetic_labels())
+        .expect("every id in the fixture is real, even though the linked item is not held");
+
+    assert!(
+        rendered.contains("Lore"),
+        "a dangling Linked parameter must still render the ability row:\n{rendered}"
+    );
+    assert_no_raw_parameter_id(&rendered);
+}
+
+/// The Ambiguous case (design § 4.1, `LinkResolution::Ambiguous`): TWO bought
+/// copies of the Linked target leave no single value to follow — resolution
+/// must fall back to the same deterministic empty text as Dangling (never
+/// guess, never panic, never leak the raw pair), not show either copy's
+/// value as if it were the only one. `export/resolve.rs::Doc::ability_param_value`'s
+/// `LinkResolution::Ambiguous` arm was otherwise never reached by any test.
+#[test]
+fn an_ambiguous_linked_parameter_renders_without_the_raw_link_pair() {
+    let ruleset = shipped_ruleset();
+    let mut entity = Entity::new(
+        EntityKind::Character,
+        Id::new("companion"),
+        RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+    );
+    entity.selections = vec![
+        Selection::with_params(
+            Id::new("virtue.craft_guild_training"),
+            BTreeMap::from([("guild".to_string(), Id::new("Smiths' Guild of Verdi"))]),
+        ),
+        Selection::with_params(
+            Id::new("virtue.craft_guild_training"),
+            BTreeMap::from([("guild".to_string(), Id::new("Weavers' Guild of Londres"))]),
+        ),
+    ];
+    entity.ability_scores = vec![{
+        let mut a = AbilityScore::new(Id::new("ability.organization_lore"), 2);
+        a.parameter = Some(AbilityParameterValue::Linked {
+            item: Id::new("virtue.craft_guild_training"),
+            param: "guild".to_string(),
+        });
+        a
+    }];
+    entity.normalize();
+
+    let rendered = character_markdown(&entity, &ruleset, &synthetic_labels())
+        .expect("every id in the fixture is real, even though which copy to follow is ambiguous");
+
+    assert!(
+        rendered.contains("Lore"),
+        "an ambiguous Linked parameter must still render the ability row:\n{rendered}"
+    );
+    // Both held copies' OWN name rows legitimately show their own guild
+    // ("Craft Guild Training (Smiths' Guild of Verdi)") — that is a
+    // different, correct rendering path (the virtue's own parameterized
+    // name), not the ambiguous Ability's resolution. What must never appear
+    // is the Ability guessing either guild as ITS OWN resolved value.
+    assert!(
+        !rendered.contains("Smiths' Guild of Verdi Lore")
+            && !rendered.contains("Weavers' Guild of Londres Lore"),
+        "an ambiguous Linked parameter must never guess either copy's value for the Ability row:\n{rendered}"
+    );
+    assert_no_raw_parameter_id(&rendered);
+}
+
+/// The defense-in-depth fallback (design § 6.4, `export/resolve.rs`'s doc
+/// comment on `ability_param_value`): a `Catalogued` value whose id the
+/// loaded ruleset's i18n does NOT merge a display name for — a hand-built
+/// fixture that never ran catalogue-name merging, per that doc comment's own
+/// example — falls back to a structural, readable label derived from the
+/// id's own final segment (`humanize_catalogue_id`) rather than printing the
+/// raw slug. Every existing `Catalogued` test merges real catalogue names
+/// first, so this fallback path (`export/resolve.rs::ability_param_value`'s
+/// `Catalogued` arm, falling through to `resolve.rs::humanize_catalogue_id`)
+/// was never reached by any test.
+#[test]
+fn an_unmerged_catalogued_parameter_falls_back_to_a_humanized_label() {
+    // Deliberately NOT merge_catalogue_names()'d: this id exists nowhere in
+    // the loaded ruleset's i18n, exactly the "hand-built fixture" case the
+    // fallback exists for.
+    let ruleset = shipped_ruleset();
+    let mut entity = Entity::new(
+        EntityKind::Character,
+        Id::new("companion"),
+        RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+    );
+    entity.ability_scores = vec![{
+        let mut a = AbilityScore::new(Id::new("ability.dead_language"), 3);
+        a.parameter = Some(AbilityParameterValue::Catalogued {
+            id: Id::new("language.nonexistent_test_language"),
+        });
+        a
+    }];
+    entity.normalize();
+
+    let rendered = character_markdown(&entity, &ruleset, &synthetic_labels()).expect(
+        "every id in the fixture is real, even though the catalogued value has no merged name",
+    );
+
+    assert!(
+        rendered.contains("Nonexistent Test Language (Dead Language)"),
+        "an unmerged Catalogued value must fall back to its humanized final segment:\n{rendered}"
+    );
+    assert!(
+        !rendered.contains("language.nonexistent_test_language"),
+        "no raw catalogue id, even on the fallback path:\n{rendered}"
+    );
 }

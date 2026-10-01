@@ -54,13 +54,9 @@ fn sel(id: &str) -> Selection {
 }
 
 fn ability(id: &str, score: u8) -> AbilityScore {
-    AbilityScore {
-        ability: Id::new(id),
-        score,
-        specialty: Some("focus".into()),
-        parameter: None,
-        banked_xp: 0,
-    }
+    let mut a = AbilityScore::new(Id::new(id), score);
+    a.specialty = Some("focus".into());
+    a
 }
 
 /// Asserts the entity validates with no error-severity issues, printing every
@@ -386,12 +382,11 @@ fn magus_full_build_validates() {
     mag.selections = vec![sel("virtue.the_gift"), sel("virtue.hermetic_magus")];
     mag.xp_pool = 240;
     mag.ability_scores = vec![
-        AbilityScore {
-            ability: Id::new("ability.dead_language"),
-            score: 4,
-            specialty: Some("Latin".into()),
-            parameter: Some(AbilityParameterValue::text("Latin")),
-            banked_xp: 0,
+        {
+            let mut a = AbilityScore::new(Id::new("ability.dead_language"), 4);
+            a.specialty = Some("Latin".into());
+            a.parameter = Some(AbilityParameterValue::text("Latin"));
+            a
         },
         ability("ability.artes_liberales", 1),
         ability("ability.magic_theory", 3),
@@ -399,44 +394,14 @@ fn magus_full_build_validates() {
         ability("ability.awareness", 2),
     ];
     mag.art_scores = vec![
-        ArtScore {
-            art: Id::new("art.creo"),
-            score: 10,
-            banked_xp: 0,
-        },
-        ArtScore {
-            art: Id::new("art.ignem"),
-            score: 10,
-            banked_xp: 0,
-        },
-        ArtScore {
-            art: Id::new("art.rego"),
-            score: 5,
-            banked_xp: 0,
-        },
-        ArtScore {
-            art: Id::new("art.vim"),
-            score: 4,
-            banked_xp: 0,
-        },
+        ArtScore::new(Id::new("art.creo"), 10),
+        ArtScore::new(Id::new("art.ignem"), 10),
+        ArtScore::new(Id::new("art.rego"), 5),
+        ArtScore::new(Id::new("art.vim"), 4),
     ];
     mag.spells = vec![
-        SpellSelection {
-            spell: Id::new("spell.bind_wound"),
-            level: None,
-            mastery: None,
-            parameter: None,
-            mastery_abilities: Vec::new(),
-            within_focus: false,
-        },
-        SpellSelection {
-            spell: Id::new("spell.airs_ghostly_form"),
-            level: None,
-            mastery: None,
-            parameter: None,
-            mastery_abilities: Vec::new(),
-            within_focus: false,
-        },
+        SpellSelection::new(Id::new("spell.bind_wound")),
+        SpellSelection::new(Id::new("spell.airs_ghostly_form")),
     ];
     assert_valid("magus", &mag, &full_ruleset());
 }

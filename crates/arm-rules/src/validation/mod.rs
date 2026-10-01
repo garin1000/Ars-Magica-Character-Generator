@@ -6250,13 +6250,7 @@ mod tests {
         let rs = restricted_xp_ruleset();
         let mut e = make_entity("companion", vec![sel("virtue.educated")]);
         e.xp_pool = 100;
-        e.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.artes_liberales"),
-            score: 4, // 50 xp = the whole Educated pool
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        e.ability_scores = vec![AbilityScore::new(Id::new("ability.artes_liberales"), 4)]; // 50 xp = the whole Educated pool
         let result = validate(&e, &rs);
         assert!(
             !warning_codes(&result).contains(&"restricted_xp_unspent".to_string()),
@@ -6292,13 +6286,7 @@ mod tests {
 
         // Spending it all silences the finding — the overspend error takes over
         // beyond that, so the two never both fire.
-        e.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 5, // 75 xp
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        e.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 5)]; // 75 xp
         e.xp_pool = 75;
         let result = validate(&e, &rs);
         assert!(
@@ -6368,24 +6356,14 @@ mod tests {
         let rs = restricted_xp_ruleset();
         let mut e = make_entity("companion", vec![sel("virtue.educated")]);
         e.xp_pool = 0;
-        e.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 2, // 15 xp
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        e.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 2)]; // 15 xp
         assert!(codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
     }
 
     #[test]
     fn affinity_makes_an_otherwise_overspent_art_fit() {
         let rs = restricted_xp_ruleset();
-        let creo5 = vec![ArtScore {
-            art: Id::new("art.creo"),
-            score: 5, // table cost 15
-            banked_xp: 0,
-        }];
+        let creo5 = vec![ArtScore::new(Id::new("art.creo"), 5)]; // table cost 15
         // Without Affinity, Creo 5 costs 15 and a pool of 10 overspends.
         let mut bare = make_entity("companion", vec![]);
         bare.xp_pool = 10;
@@ -6409,11 +6387,7 @@ mod tests {
         let rs = arts_ruleset();
         let mut e = make_entity("companion", vec![]);
         e.xp_pool = 100;
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.made_up"),
-            score: 1,
-            banked_xp: 0,
-        }];
+        e.art_scores = vec![ArtScore::new(Id::new("art.made_up"), 1)];
         assert!(codes(&validate(&e, &rs)).contains(&"unknown_art".to_string()));
     }
 
@@ -6423,16 +6397,8 @@ mod tests {
         let mut e = make_entity("companion", vec![]);
         e.xp_pool = 100;
         e.art_scores = vec![
-            ArtScore {
-                art: Id::new("art.creo"),
-                score: 2,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.creo"),
-                score: 3,
-                banked_xp: 0,
-            },
+            ArtScore::new(Id::new("art.creo"), 2),
+            ArtScore::new(Id::new("art.creo"), 3),
         ];
         assert!(codes(&validate(&e, &rs)).contains(&"duplicate_art".to_string()));
     }
@@ -6442,11 +6408,7 @@ mod tests {
         let rs = arts_ruleset(); // Art table tops out at score 5
         let mut e = make_entity("companion", vec![]);
         e.xp_pool = 1000;
-        e.art_scores = vec![ArtScore {
-            art: Id::new("art.creo"),
-            score: 9,
-            banked_xp: 0,
-        }];
+        e.art_scores = vec![ArtScore::new(Id::new("art.creo"), 9)];
         let found = codes(&validate(&e, &rs));
         assert_eq!(
             found
@@ -6463,13 +6425,7 @@ mod tests {
         let rs = traits_ruleset(); // advancement table tops out at score 3
         let mut entity = companion_entity();
         entity.xp_pool = 1000; // generous, so the only finding is the range error
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 9, // far above the table max
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 9)]; // far above the table max
         let found = codes(&validate(&entity, &rs));
         assert_eq!(
             found
@@ -6486,13 +6442,7 @@ mod tests {
         let rs = traits_ruleset(); // advancement table tops out at score 3
         let mut entity = companion_entity();
         entity.xp_pool = 1000;
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 3, // the table's max — in range
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 3)]; // the table's max — in range
         assert!(
             !codes(&validate(&entity, &rs)).contains(&"ability_score_out_of_range".to_string()),
             "an in-range score must not be flagged"
@@ -6503,13 +6453,7 @@ mod tests {
     fn raising_an_ability_with_no_pool_is_error() {
         let rs = traits_ruleset();
         let mut entity = companion_entity(); // xp_pool defaults to 0
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 1,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 1)];
         assert!(codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()));
     }
 
@@ -6518,13 +6462,7 @@ mod tests {
         let rs = traits_ruleset();
         let mut entity = companion_entity(); // no pool
         // Selecting an ability without raising it (score 0) spends nothing.
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 0,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 0)];
         assert!(
             !codes(&validate(&entity, &rs)).contains(&"not_enough_xp".to_string()),
             "a score-0 ability is free"
@@ -6538,19 +6476,15 @@ mod tests {
         entity.xp_pool = 100;
         // Two languages: same catalogue row, distinct parameter values.
         entity.ability_scores = vec![
-            AbilityScore {
-                ability: Id::new("ability.living_language"),
-                score: 5,
-                specialty: None,
-                parameter: Some(AbilityParameterValue::text("German")),
-                banked_xp: 0,
+            {
+                let mut a = AbilityScore::new(Id::new("ability.living_language"), 5);
+                a.parameter = Some(AbilityParameterValue::text("German"));
+                a
             },
-            AbilityScore {
-                ability: Id::new("ability.living_language"),
-                score: 1,
-                specialty: None,
-                parameter: Some(AbilityParameterValue::text("Latin")),
-                banked_xp: 0,
+            {
+                let mut a = AbilityScore::new(Id::new("ability.living_language"), 1);
+                a.parameter = Some(AbilityParameterValue::text("Latin"));
+                a
             },
         ];
         assert!(
@@ -6565,19 +6499,15 @@ mod tests {
         let mut entity = companion_entity();
         entity.xp_pool = 100;
         entity.ability_scores = vec![
-            AbilityScore {
-                ability: Id::new("ability.living_language"),
-                score: 5,
-                specialty: None,
-                parameter: Some(AbilityParameterValue::text("German")),
-                banked_xp: 0,
+            {
+                let mut a = AbilityScore::new(Id::new("ability.living_language"), 5);
+                a.parameter = Some(AbilityParameterValue::text("German"));
+                a
             },
-            AbilityScore {
-                ability: Id::new("ability.living_language"),
-                score: 2,
-                specialty: None,
-                parameter: Some(AbilityParameterValue::text("German")),
-                banked_xp: 0,
+            {
+                let mut a = AbilityScore::new(Id::new("ability.living_language"), 2);
+                a.parameter = Some(AbilityParameterValue::text("German"));
+                a
             },
         ];
         assert!(codes(&validate(&entity, &rs)).contains(&"duplicate_ability".to_string()));
@@ -6589,13 +6519,7 @@ mod tests {
         let rs = traits_ruleset();
         let mut entity = companion_entity();
         entity.xp_pool = 100;
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.area_lore"),
-            score: 1,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.area_lore"), 1)];
         assert!(codes(&validate(&entity, &rs)).contains(&"ability_parameter_required".to_string()));
     }
 
@@ -6640,11 +6564,7 @@ mod tests {
         // Creo 5 satisfies the threshold: no prereq error or unevaluated warning.
         let mut met = make_entity("test_type", vec![sel("virtue.a")]);
         met.xp_pool = 100;
-        met.art_scores = vec![ArtScore {
-            art: Id::new("art.creo"),
-            score: 5,
-            banked_xp: 0,
-        }];
+        met.art_scores = vec![ArtScore::new(Id::new("art.creo"), 5)];
         let result = validate(&met, &rs);
         assert!(!codes(&result).contains(&"prereq_not_met".to_string()));
         assert!(
@@ -6657,11 +6577,7 @@ mod tests {
         // Creo 4 falls short: prereq_not_met fires (it is evaluated, not deferred).
         let mut unmet = make_entity("test_type", vec![sel("virtue.a")]);
         unmet.xp_pool = 100;
-        unmet.art_scores = vec![ArtScore {
-            art: Id::new("art.creo"),
-            score: 4,
-            banked_xp: 0,
-        }];
+        unmet.art_scores = vec![ArtScore::new(Id::new("art.creo"), 4)];
         assert!(codes(&validate(&unmet, &rs)).contains(&"prereq_not_met".to_string()));
     }
 
@@ -9408,25 +9324,11 @@ mod tests {
         let mut e = make_entity("magus", vec![]);
         // Cr 20 / Ig 20 / Int 3 / MT 5 → cap 51, so Pilum (20) is legal.
         e.art_scores = vec![
-            ArtScore {
-                art: Id::new("art.creo"),
-                score: 20,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.ignem"),
-                score: 20,
-                banked_xp: 0,
-            },
+            ArtScore::new(Id::new("art.creo"), 20),
+            ArtScore::new(Id::new("art.ignem"), 20),
         ];
         e.characteristics.insert(Characteristic::Int, 3);
-        e.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.magic_theory"),
-            score: 5,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        }];
+        e.ability_scores = vec![AbilityScore::new(Id::new("ability.magic_theory"), 5)];
         e.xp_pool = 1000; // cover the Art/MT costs so no not_enough_xp noise
         e.spells = vec![spell("spell.pilum_of_fire", None)];
         let codes = all_codes(&validate(&e, &rs));
@@ -9602,25 +9504,11 @@ mod tests {
         // is level 20 — above 17, below 35.
         let mut legal = make_entity("magus", vec![]);
         legal.art_scores = vec![
-            ArtScore {
-                art: Id::new("art.creo"),
-                score: 12,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.ignem"),
-                score: 12,
-                banked_xp: 0,
-            },
+            ArtScore::new(Id::new("art.creo"), 12),
+            ArtScore::new(Id::new("art.ignem"), 12),
         ];
         legal.characteristics.insert(Characteristic::Int, 3);
-        legal.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.magic_theory"),
-            parameter: None,
-            score: 5,
-            specialty: None,
-            banked_xp: 0,
-        }];
+        legal.ability_scores = vec![AbilityScore::new(Id::new("ability.magic_theory"), 5)];
         legal.spells = vec![spell("spell.pilum_of_fire", None)];
         assert!(
             !all_codes(&validate(&legal, &rs)).contains(&"spell_level_exceeds_cap".to_string()),
@@ -9651,25 +9539,11 @@ mod tests {
             )],
         );
         e.art_scores = vec![
-            ArtScore {
-                art: Id::new("art.rego"),
-                score: 12,
-                banked_xp: 0,
-            },
-            ArtScore {
-                art: Id::new("art.vim"),
-                score: 12,
-                banked_xp: 0,
-            },
+            ArtScore::new(Id::new("art.rego"), 12),
+            ArtScore::new(Id::new("art.vim"), 12),
         ];
         e.characteristics.insert(Characteristic::Int, 3);
-        e.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.magic_theory"),
-            parameter: None,
-            score: 5,
-            specialty: None,
-            banked_xp: 0,
-        }];
+        e.ability_scores = vec![AbilityScore::new(Id::new("ability.magic_theory"), 5)];
         // Rego Vim cap is the unhalved 35; the General spell is taken at 20.
         e.spells = vec![spell("spell.general_ward", Some(20))];
         assert!(
@@ -9819,16 +9693,14 @@ mod tests {
         let rs = spell_rs();
         let mut e = make_entity("magus", vec![]);
         e.xp_pool = 1000;
-        e.spells = vec![SpellSelection {
-            spell: Id::new("spell.pilum_of_fire"),
-            level: None,
-            mastery: Some(2),
-            parameter: None,
-            mastery_abilities: vec![
+        e.spells = vec![{
+            let mut s = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+            s.mastery = Some(2);
+            s.mastery_abilities = vec![
                 Id::new("spell_mastery_ability.penetration"),
                 Id::new("spell_mastery_ability.fast_casting"),
-            ],
-            within_focus: false,
+            ];
+            s
         }];
         let codes = all_codes(&validate(&e, &rs));
         assert!(
@@ -9845,16 +9717,14 @@ mod tests {
         let mut e = make_entity("magus", vec![]);
         e.xp_pool = 1000;
         // Mastery 1 permits one ability; two are chosen.
-        e.spells = vec![SpellSelection {
-            spell: Id::new("spell.pilum_of_fire"),
-            level: None,
-            mastery: Some(1),
-            parameter: None,
-            mastery_abilities: vec![
+        e.spells = vec![{
+            let mut s = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+            s.mastery = Some(1);
+            s.mastery_abilities = vec![
                 Id::new("spell_mastery_ability.penetration"),
                 Id::new("spell_mastery_ability.fast_casting"),
-            ],
-            within_focus: false,
+            ];
+            s
         }];
         assert!(all_codes(&validate(&e, &rs)).contains(&"too_many_mastery_abilities".to_string()));
     }
@@ -9866,16 +9736,14 @@ mod tests {
         let rs = spell_rs();
         let mut e = make_entity("magus", vec![]);
         e.xp_pool = 1000;
-        e.spells = vec![SpellSelection {
-            spell: Id::new("spell.pilum_of_fire"),
-            level: None,
-            mastery: Some(2),
-            parameter: None,
-            mastery_abilities: vec![
+        e.spells = vec![{
+            let mut s = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+            s.mastery = Some(2);
+            s.mastery_abilities = vec![
                 Id::new("spell_mastery_ability.penetration"),
                 Id::new("spell_mastery_ability.penetration"),
-            ],
-            within_focus: false,
+            ];
+            s
         }];
         assert!(all_codes(&validate(&e, &rs)).contains(&"duplicate_mastery_ability".to_string()));
     }
@@ -9887,16 +9755,14 @@ mod tests {
         let rs = spell_rs();
         let mut e = make_entity("magus", vec![]);
         e.xp_pool = 1000;
-        e.spells = vec![SpellSelection {
-            spell: Id::new("spell.pilum_of_fire"),
-            level: None,
-            mastery: Some(2),
-            parameter: None,
-            mastery_abilities: vec![
+        e.spells = vec![{
+            let mut s = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+            s.mastery = Some(2);
+            s.mastery_abilities = vec![
                 Id::new("spell_mastery_ability.quiet_casting"),
                 Id::new("spell_mastery_ability.quiet_casting"),
-            ],
-            within_focus: false,
+            ];
+            s
         }];
         assert!(!all_codes(&validate(&e, &rs)).contains(&"duplicate_mastery_ability".to_string()));
     }
@@ -9907,13 +9773,11 @@ mod tests {
         let rs = spell_rs();
         let mut e = make_entity("magus", vec![]);
         e.xp_pool = 1000;
-        e.spells = vec![SpellSelection {
-            spell: Id::new("spell.pilum_of_fire"),
-            level: None,
-            mastery: Some(1),
-            parameter: None,
-            mastery_abilities: vec![Id::new("spell_mastery_ability.does_not_exist")],
-            within_focus: false,
+        e.spells = vec![{
+            let mut s = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+            s.mastery = Some(1);
+            s.mastery_abilities = vec![Id::new("spell_mastery_ability.does_not_exist")];
+            s
         }];
         assert!(all_codes(&validate(&e, &rs)).contains(&"unknown_mastery_ability".to_string()));
     }

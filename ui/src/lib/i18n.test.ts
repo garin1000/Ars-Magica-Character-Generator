@@ -357,6 +357,57 @@ describe('German UI bundle', () => {
     }
   });
 
+  // D42/D70/D74: the three realm-association findings, plus X10b's
+  // `banked_xp_at_or_above_next_level` — none of the four had a spot-check
+  // case, so a future placeholder/param-name drift on any of them would pass
+  // silently. Same pattern as `issue-too_many_for_param_value` above: each
+  // code's own `$`-params rendered with real values in both locales.
+  it('names the three realm-association findings and the banked-XP finding in both locales', () => {
+    for (const lang of ['en', 'de']) {
+      const keys = messageKeys(sourceForLang(lang));
+      for (const code of [
+        'issue-realm_changed_default',
+        'issue-realm_unset_subset',
+        'issue-realm_override_invalid',
+        'issue-banked_xp_at_or_above_next_level',
+      ]) {
+        expect(keys, `${lang} is missing ${code}`).toContain(code);
+      }
+    }
+    for (const lang of ['en', 'de'] as const) {
+      const bundle = buildBundle(lang);
+      const clean = (s: string) => s.replace(/[⁦-⁩]/g, '');
+
+      const changedDefault = clean(
+        translate(bundle, 'issue-realm_changed_default', { item: 'Faerie Blood' }),
+      );
+      expect(changedDefault).toContain('Faerie Blood');
+
+      const unsetSubset = clean(
+        translate(bundle, 'issue-realm_unset_subset', { item: 'Manifest Sin' }),
+      );
+      expect(unsetSubset).toContain('Manifest Sin');
+
+      const overrideInvalid = clean(
+        translate(bundle, 'issue-realm_override_invalid', {
+          item: 'Faerie Blood',
+          value: 'realm.infernal',
+        }),
+      );
+      expect(overrideInvalid).toContain('Faerie Blood');
+      expect(overrideInvalid).toContain('realm.infernal');
+
+      const bankedXp = clean(
+        translate(bundle, 'issue-banked_xp_at_or_above_next_level', {
+          banked: '10',
+          needed: '5',
+        }),
+      );
+      expect(bankedXp).toContain('10');
+      expect(bankedXp).toContain('5');
+    }
+  });
+
   // E2 (open-todos row 24): `unknown_param_value` is the finding a player meets
   // when a save's typed realm word no longer resolves, and it names the DOMAIN
   // the value failed in. The engine emits that as the `ParameterDomain` enum's

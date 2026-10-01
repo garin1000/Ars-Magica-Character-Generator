@@ -96,13 +96,7 @@ fn auth(abilities: Vec<AbilityRef>, categories: Vec<CategoryRef>) -> Effect {
 }
 
 fn score(ability: &str, value: u8) -> AbilityScore {
-    AbilityScore {
-        ability: Id::new(ability),
-        score: value,
-        specialty: None,
-        parameter: None,
-        banked_xp: 0,
-    }
+    AbilityScore::new(Id::new(ability), value)
 }
 
 fn issue_codes(result: &ValidationResult) -> Vec<&str> {

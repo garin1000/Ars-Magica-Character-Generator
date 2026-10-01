@@ -118,16 +118,12 @@ fn companion_with_guild_link(guild: &str) -> Entity {
         Id::new("virtue.craft_guild_training"),
         BTreeMap::from([("guild".into(), Id::new(guild))]),
     )];
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.organization_lore"),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::Linked {
-            item: Id::new("virtue.craft_guild_training"),
-            param: "guild".into(),
-        }),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.organization_lore"), 1);
+    a.parameter = Some(AbilityParameterValue::Linked {
+        item: Id::new("virtue.craft_guild_training"),
+        param: "guild".into(),
+    });
+    e.ability_scores = vec![a];
     e
 }
 

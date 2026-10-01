@@ -202,13 +202,9 @@ fn a_literal_is_funded_by_catalogued_not_by_text_with_the_same_spelling() {
         );
         entity.xp_pool = 0;
         entity.selections = vec![Selection::new(Id::new("virtue.clan_ilfetu"))];
-        entity.ability_scores = vec![AbilityScore {
-            ability: Id::new("ability.dead_language"),
-            score: 1,
-            specialty: None,
-            parameter: Some(parameter),
-            banked_xp: 0,
-        }];
+        let mut a = AbilityScore::new(Id::new("ability.dead_language"), 1);
+        a.parameter = Some(parameter);
+        entity.ability_scores = vec![a];
         let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");
         allocation.max_flow == allocation.total_demand
     };

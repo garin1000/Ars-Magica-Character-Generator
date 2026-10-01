@@ -5,11 +5,38 @@
 
 use arm_rules::{
     AbilityFunding, AbilityParameterValue, AbilityScore, AgingLogEntry, ArtScore, Characteristic,
-    EnchantedDevice, Entity, EntityKind, EquipmentSlot, Familiar, FocusPower, Id, LoadoutState,
-    MightScore, PersonalityTrait, Prereq, Realm, Reputation, ReputationType, RulesetRef, Selection,
-    SpellSelection, SupernaturalPower, Talisman, TalismanAttunement, TalismanEffect, TwilightScar,
+    EnchantedDevice, Entity, EntityKind, EquipmentSlot, Familiar, FocusPower, Id, ItemKind,
+    LoadoutState, Magnitude, MightScore, PersonalityTrait, Prereq, Realm, Reputation,
+    ReputationType, RulesetRef, Selection, SpellSelection, SupernaturalPower, Talisman,
+    TalismanAttunement, TalismanEffect, TwilightScar,
 };
 use proptest::prelude::*;
+
+fn arb_magnitude() -> impl Strategy<Value = Magnitude> {
+    prop_oneof![
+        Just(Magnitude::Free),
+        Just(Magnitude::Minor),
+        Just(Magnitude::Major),
+    ]
+}
+
+fn arb_item_kind() -> impl Strategy<Value = ItemKind> {
+    prop_oneof![
+        Just(ItemKind::Virtue),
+        Just(ItemKind::Flaw),
+        Just(ItemKind::Boon),
+        Just(ItemKind::Hook),
+    ]
+}
+
+fn arb_realm() -> impl Strategy<Value = Realm> {
+    prop_oneof![
+        Just(Realm::Magic),
+        Just(Realm::Faerie),
+        Just(Realm::Divine),
+        Just(Realm::Infernal),
+    ]
+}
 
 fn arb_id() -> impl Strategy<Value = Id> {
     "[a-z][a-z_.]{0,12}".prop_map(Id::new)
@@ -44,6 +71,20 @@ fn arb_prereq() -> impl Strategy<Value = Prereq> {
         (arb_id(), any::<u8>()).prop_map(|(art, score)| Prereq::ArtMin { art, score }),
         Just(Prereq::HermeticallyTrained),
         Just(Prereq::OrderMember),
+        Just(Prereq::IsCompanion),
+        Just(Prereq::IsGrog),
+        arb_id().prop_map(Prereq::CharacterType),
+        "[a-z]{1,8}".prop_map(Prereq::HasCategory),
+        any::<u32>().prop_map(Prereq::AgeMin),
+        ("[a-z]{1,8}", arb_magnitude(), arb_item_kind()).prop_map(
+            |(category, magnitude, item_kind)| {
+                Prereq::HasCategoryAtMagnitude {
+                    category,
+                    magnitude,
+                    item_kind,
+                }
+            }
+        ),
     ];
     leaf.prop_recursive(3, 16, 4, |inner| {
         prop_oneof![
@@ -91,21 +132,22 @@ fn arb_ability_score() -> impl Strategy<Value = AbilityScore> {
         0u8..4,
         prop::option::of(arb_name()),
         prop::option::of(arb_ability_parameter_value()),
+        0u32..500,
     )
-        .prop_map(|(ability, score, specialty, parameter)| AbilityScore {
-            ability,
-            score,
-            specialty,
-            parameter,
-            banked_xp: 0,
+        .prop_map(|(ability, score, specialty, parameter, banked_xp)| {
+            let mut a = AbilityScore::new(ability, score);
+            a.specialty = specialty;
+            a.parameter = parameter;
+            a.banked_xp = banked_xp;
+            a
         })
 }
 
 fn arb_art_score() -> impl Strategy<Value = ArtScore> {
-    (arb_small_id(), 0u8..4).prop_map(|(art, score)| ArtScore {
-        art,
-        score,
-        banked_xp: 0,
+    (arb_small_id(), 0u8..4, 0u32..500).prop_map(|(art, score, banked_xp)| {
+        let mut a = ArtScore::new(art, score);
+        a.banked_xp = banked_xp;
+        a
     })
 }
 
@@ -119,15 +161,17 @@ fn arb_spell() -> impl Strategy<Value = SpellSelection> {
         prop::option::of(0u8..4),
         prop::option::of(arb_name()),
         prop::collection::vec(arb_small_id(), 0..4),
+        any::<bool>(),
     )
         .prop_map(
-            |(spell, level, mastery, parameter, mastery_abilities)| SpellSelection {
-                spell,
-                level,
-                mastery,
-                parameter,
-                mastery_abilities,
-                within_focus: false,
+            |(spell, level, mastery, parameter, mastery_abilities, within_focus)| {
+                let mut s = SpellSelection::new(spell);
+                s.level = level;
+                s.mastery = mastery;
+                s.parameter = parameter;
+                s.mastery_abilities = mastery_abilities;
+                s.within_focus = within_focus;
+                s
             },
         )
 }
@@ -418,9 +462,11 @@ fn arb_entity() -> impl Strategy<Value = Entity> {
         // clamp `normalize()` applies is pinned as idempotent: re-normalizing an
         // already-normalized entity must not move it again.
         -30i32..31,
-        // F2/K3: a plain scalar bool, not a sorted list — generated here rather
-        // than in `SortedLists`.
-        any::<bool>(),
+        // F2/K3's `mounted` bool and D70/D74's `concept_realm` bundled into one
+        // sub-tuple purely to stay inside proptest's 12-element tuple arity
+        // limit (`tuple.rs` caps at index 11) — neither is a sorted list, so
+        // neither belongs in `SortedLists`.
+        (any::<bool>(), prop::option::of(arb_realm())),
     )
         .prop_map(
             |(
@@ -435,7 +481,7 @@ fn arb_entity() -> impl Strategy<Value = Entity> {
                 wizard_furthest_phase,
                 sorted_lists,
                 aura,
-                mounted,
+                (mounted, concept_realm),
             )| {
                 let mut entity = Entity::new(entity_kind, type_id, RulesetRef::new(rs_id, "1"));
                 entity.schema_version = schema_version;
@@ -446,6 +492,7 @@ fn arb_entity() -> impl Strategy<Value = Entity> {
                 entity.wizard_furthest_phase = wizard_furthest_phase;
                 entity.aura = aura;
                 entity.mounted = mounted;
+                entity.concept_realm = concept_realm;
                 sorted_lists.install(&mut entity);
                 entity.normalize();
                 entity

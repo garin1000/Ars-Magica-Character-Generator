@@ -537,13 +537,8 @@ mod e5_xp_scope_validators {
                 params,
             )],
         );
-        e.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.brawl"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        });
+        e.ability_scores
+            .push(AbilityScore::new(Id::new("ability.brawl"), 2));
         assert!(
             !issue_codes(&e, &rs).is_empty(),
             "a Martial Ability score must be refused under Ability Block (Martial)"
@@ -588,29 +583,14 @@ mod e5_xp_scope_validators {
             }],
         );
         // In scope: named directly.
-        e.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.awareness"),
-            score: 3,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        });
+        e.ability_scores
+            .push(AbilityScore::new(Id::new("ability.awareness"), 3));
         // In scope: the supernatural category union member.
-        e.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.dominion_lore"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        });
+        e.ability_scores
+            .push(AbilityScore::new(Id::new("ability.dominion_lore"), 2));
         // OUT of scope: neither named nor supernatural.
-        e.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.single_weapon"),
-            score: 1,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        });
+        e.ability_scores
+            .push(AbilityScore::new(Id::new("ability.single_weapon"), 1));
         assert!(
             issue_codes(&e, &rs)
                 .iter()
@@ -660,13 +640,8 @@ mod e5_xp_scope_validators {
                 params,
             }],
         );
-        e.ability_scores.push(AbilityScore {
-            ability: Id::new("ability.single_weapon"),
-            score: 1,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        });
+        e.ability_scores
+            .push(AbilityScore::new(Id::new("ability.single_weapon"), 1));
         let issues = validate(&e, &rs).issues;
         let issue = issues
             .iter()
@@ -906,6 +881,38 @@ mod e7_conditional_incompatibility {
         assert!(
             !issue_codes(&e, &rs).iter().any(|c| c == "incompatible"),
             "two copies of the same value must not collide"
+        );
+    }
+
+    /// The load-rejection counterpart (`integrity.rs::validate_forbids_same_item_values`):
+    /// a `forbids_same_item_values` entry naming a value that does not resolve
+    /// in the gate parameter's own enumerated domain must fail ruleset load
+    /// with a clear error naming the offending item and value, mirroring the
+    /// sibling rejection tests for `realm_association` in d42_realms.rs.
+    #[test]
+    fn an_unresolvable_forbids_same_item_values_entry_is_rejected_at_load() {
+        let items = r#"[
+          { "id": "flaw.warped_senses", "kind": "flaw", "classification": "uncomputed_rule",
+            "magnitude": "minor", "categories": ["general"], "max_total": 255,
+            "parameters": [{ "key": "affliction", "type": "ref", "domain": "enumerated",
+              "values": ["affliction.weak_sight", "affliction.sensitive_sight"] }],
+            "conditional_incompatible_with": [
+              { "gate": { "param": "affliction", "equals": "affliction.weak_sight" },
+                "forbids": [], "forbids_same_item_values": ["affliction.does_not_exist"] }
+            ] }
+        ]"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: COMPANION_TYPE,
+            ..RulesetSources::default()
+        })
+        .unwrap_err();
+        let message = format!("{err}");
+        assert!(
+            message.contains("flaw.warped_senses") && message.contains("affliction.does_not_exist"),
+            "load error must name the offending item and value, got: {message}"
         );
     }
 }

@@ -70,13 +70,9 @@ fn dead_language_lists_the_language_catalogue_ids() {
     let ruleset = full_ruleset();
     let mut entity = companion();
     entity.selections = vec![Selection::new(Id::new("virtue.educated"))];
-    entity.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.dead_language"),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::text("Latin")),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.dead_language"), 1);
+    a.parameter = Some(AbilityParameterValue::text("Latin"));
+    entity.ability_scores = vec![a];
 
     let options = ability_parameter_options(&entity, &ruleset);
     let entry = options_for(&options, "ability.dead_language")
@@ -169,16 +165,12 @@ fn hint_set_when_a_text_value_leaves_an_educated_instance_unmet() {
     let ruleset = full_ruleset();
     let mut entity = companion();
     entity.selections = vec![Selection::new(Id::new("virtue.educated"))];
-    entity.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.dead_language"),
-        score: 1,
-        specialty: None,
-        // Typed by hand, not selected from the catalogue — never satisfies
-        // Educated's `Literal { "language.latin" }` instance (design § 4 rule
-        // 1: a Literal is satisfied ONLY by `Catalogued`).
-        parameter: Some(AbilityParameterValue::text("Latin")),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.dead_language"), 1);
+    // Typed by hand, not selected from the catalogue — never satisfies
+    // Educated's `Literal { "language.latin" }` instance (design § 4 rule
+    // 1: a Literal is satisfied ONLY by `Catalogued`).
+    a.parameter = Some(AbilityParameterValue::text("Latin"));
+    entity.ability_scores = vec![a];
 
     let options = ability_parameter_options(&entity, &ruleset);
     let entry = options_for(&options, "ability.dead_language").expect("entry must exist");
@@ -199,13 +191,9 @@ fn hint_set_when_a_text_value_leaves_a_guild_instance_unmet() {
         Id::new("virtue.craft_guild_training"),
         BTreeMap::from([("guild".into(), Id::new("Smiths' Guild of Verdi"))]),
     )];
-    entity.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.organization_lore"),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::text("A Completely Different Guild")),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.organization_lore"), 1);
+    a.parameter = Some(AbilityParameterValue::text("A Completely Different Guild"));
+    entity.ability_scores = vec![a];
 
     let options = ability_parameter_options(&entity, &ruleset);
     let entry = options_for(&options, "ability.organization_lore").expect("entry must exist");
@@ -229,13 +217,10 @@ fn hint_not_set_for_an_ability_with_no_targeting_rule() {
         Id::new("virtue.craft_guild_training"),
         BTreeMap::from([("guild".into(), Id::new("Smiths' Guild of Verdi"))]),
     )];
-    entity.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.craft"),
-        score: 1,
-        specialty: Some("Blacksmith".into()),
-        parameter: Some(AbilityParameterValue::text("Blacksmithing")),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.craft"), 1);
+    a.specialty = Some("Blacksmith".into());
+    a.parameter = Some(AbilityParameterValue::text("Blacksmithing"));
+    entity.ability_scores = vec![a];
 
     let options = ability_parameter_options(&entity, &ruleset);
     assert!(
@@ -257,13 +242,9 @@ fn hint_not_set_for_an_ability_with_no_targeting_rule() {
 fn hint_not_set_for_a_catalogued_ability_with_no_targeting_rule() {
     let ruleset = full_ruleset();
     let mut entity = companion();
-    entity.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.dead_language"),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::text("Klingon")),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new("ability.dead_language"), 1);
+    a.parameter = Some(AbilityParameterValue::text("Klingon"));
+    entity.ability_scores = vec![a];
 
     let options = ability_parameter_options(&entity, &ruleset);
     let entry = options_for(&options, "ability.dead_language")

@@ -79,13 +79,9 @@ fn companion_with_parameter(
     // this exact instance is directly observable from `max_flow`.
     e.xp_pool = 0;
     e.selections = vec![Selection::new(Id::new(selection))];
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new(ability),
-        score: 1,
-        specialty: None,
-        parameter: Some(parameter),
-        banked_xp: 0,
-    }];
+    let mut a = AbilityScore::new(Id::new(ability), 1);
+    a.parameter = Some(parameter);
+    e.ability_scores = vec![a];
     e
 }
 
@@ -147,20 +143,8 @@ fn master_bard_pool_is_exactly_240_and_still_funds_faerie_and_magic_lore() {
     entity.xp_pool = 0;
     entity.selections = vec![Selection::new(Id::new("virtue.master_bard"))];
     entity.ability_scores = vec![
-        AbilityScore {
-            ability: Id::new("ability.faerie_lore"),
-            score: 9,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        },
-        AbilityScore {
-            ability: Id::new("ability.magic_lore"),
-            score: 2,
-            specialty: None,
-            parameter: None,
-            banked_xp: 0,
-        },
+        AbilityScore::new(Id::new("ability.faerie_lore"), 9),
+        AbilityScore::new(Id::new("ability.magic_lore"), 2),
     ];
 
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");
@@ -173,12 +157,10 @@ fn master_bard_pool_is_exactly_240_and_still_funds_faerie_and_magic_lore() {
 
     // One more XP of demand than the pool holds must overflow, pinning that
     // the pool grants exactly 240 — not 241, not unlimited.
-    entity.ability_scores.push(AbilityScore {
-        ability: Id::new("ability.organization_lore"),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::text("guild")),
-        banked_xp: 0,
+    entity.ability_scores.push({
+        let mut a = AbilityScore::new(Id::new("ability.organization_lore"), 1);
+        a.parameter = Some(AbilityParameterValue::text("guild"));
+        a
     });
     let allocation = checked_xp_allocation(&entity, &ruleset).expect("solve stays in bounds");
     assert_eq!(allocation.total_demand, 245);
@@ -214,13 +196,7 @@ fn master_bard_pool_funds_storyteller_and_faerie_lore_but_not_an_unrelated_profe
     );
     faerie_lore.xp_pool = 0;
     faerie_lore.selections = vec![Selection::new(Id::new("virtue.master_bard"))];
-    faerie_lore.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.faerie_lore"),
-        score: 1,
-        specialty: None,
-        parameter: None,
-        banked_xp: 0,
-    }];
+    faerie_lore.ability_scores = vec![AbilityScore::new(Id::new("ability.faerie_lore"), 1)];
     let allocation = checked_xp_allocation(&faerie_lore, &ruleset).expect("solve stays in bounds");
     assert_eq!(
         allocation.max_flow, allocation.total_demand,

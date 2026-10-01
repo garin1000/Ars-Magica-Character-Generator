@@ -45,13 +45,7 @@ fn companion(selections: Vec<Selection>, ability_scores: Vec<AbilityScore>) -> E
 }
 
 fn ability_score(ability: &str, score: u8) -> AbilityScore {
-    AbilityScore {
-        ability: Id::new(ability),
-        score,
-        specialty: None,
-        parameter: None,
-        banked_xp: 0,
-    }
+    AbilityScore::new(Id::new(ability), score)
 }
 
 fn sel(item_ref: &str) -> Selection {

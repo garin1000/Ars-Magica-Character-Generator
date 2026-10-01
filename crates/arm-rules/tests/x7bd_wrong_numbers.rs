@@ -65,13 +65,7 @@ fn sel(id: &str) -> Selection {
 }
 
 fn score(ability: &str, value: u8) -> AbilityScore {
-    AbilityScore {
-        ability: Id::new(ability),
-        score: value,
-        specialty: None,
-        parameter: None,
-        banked_xp: 0,
-    }
+    AbilityScore::new(Id::new(ability), value)
 }
 
 fn equipped(item: &str, specialization_applies: bool) -> EquipmentSlot {

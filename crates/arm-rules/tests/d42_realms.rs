@@ -525,6 +525,46 @@ mod changed_default_class {
             );
         }
     }
+
+    const DEFAULT_ITEM: &str = r#"[
+      { "id": "virtue.test_default_realm", "kind": "virtue", "magnitude": "minor",
+        "categories": ["supernatural"], "classification": "uncomputed_rule",
+        "entity_kinds": ["character"],
+        "realm_association": { "kind": "default", "realm": "infernal" } },
+      { "id": "flaw.filler_personality", "kind": "flaw", "magnitude": "minor",
+        "categories": ["personality"], "classification": "narrative" }
+    ]"#;
+
+    const COMPANION_TYPE: &str = r#"[
+      { "id": "companion", "budget": { "virtue_points": 20, "flaw_points": 20 },
+        "permitted_categories": ["general", "supernatural"],
+        "creation_phases": [] }
+    ]"#;
+
+    /// `validate_realm_associations`'s own `ChangedDefault` arm (QA review,
+    /// coverage): every other test of the `ChangedDefault` warning calls
+    /// `resolve_realm` directly, so the `validate()`-level issue-emitting
+    /// branch (`validation/realm.rs`) was never actually exercised end to
+    /// end. An override differing from a Default entry's stated realm must
+    /// raise `realm_changed_default` through the real `validate()` entry
+    /// point, not merely through the resolver it wraps.
+    #[test]
+    fn overriding_the_default_raises_the_issue_through_validate() {
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: DEFAULT_ITEM,
+            type_profiles: COMPANION_TYPE,
+            ..RulesetSources::default()
+        })
+        .unwrap();
+        let e = entity(
+            "companion",
+            vec![sel_with_override("virtue.test_default_realm", Realm::Magic)],
+        );
+        let issues = validate(&e, &rs).issues;
+        assert!(has_code(&issues, "realm_changed_default"));
+    }
 }
 
 // --- Named-realm Flaws: default from their own param, no warning (D74 Q3) --
@@ -913,5 +953,34 @@ mod old_save_compatibility {
         let reloaded: Entity = serde_json::from_str(&json).expect("deserializes");
         assert_eq!(reloaded, original);
         assert_eq!(reloaded.concept_realm, None);
+    }
+
+    /// The Some-case counterpart (QA review): a saved character that HAS
+    /// chosen a concept realm, and ALSO carries a per-entry `association`
+    /// override on one selection, must round-trip both fields with full
+    /// fidelity — CLAUDE.md rates save/load round-trip fidelity as a
+    /// high-severity, load-bearing product guarantee.
+    #[test]
+    fn concept_realm_and_a_per_entry_override_round_trip_when_set() {
+        let mut original = entity(
+            "companion",
+            vec![sel_with_override("virtue.animal_ken", Realm::Divine)],
+        );
+        original.name = "Realm Round Trip".to_string();
+        original.concept_realm = Some(Realm::Faerie);
+
+        let json = serde_json::to_string(&original).expect("serializes");
+        assert!(
+            json.contains("\"concept_realm\":\"faerie\""),
+            "a set concept_realm must serialize its realm tag, got: {json}"
+        );
+        assert!(
+            json.contains(&format!("\"{REALM_OVERRIDE_PARAM_KEY}\":\"realm.divine\"")),
+            "the per-entry override param must serialize its realm id, got: {json}"
+        );
+
+        let reloaded: Entity = serde_json::from_str(&json).expect("deserializes");
+        assert_eq!(reloaded, original);
+        assert_eq!(reloaded.concept_realm, Some(Realm::Faerie));
     }
 }

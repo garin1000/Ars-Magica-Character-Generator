@@ -1881,12 +1881,10 @@ mod tests {
         entity.type_id = Id::new("magus");
         entity.ability_scores = scores
             .into_iter()
-            .map(|(ability, parameter, score)| crate::types::AbilityScore {
-                ability: Id::new(ability),
-                parameter: parameter.map(crate::types::AbilityParameterValue::text),
-                score,
-                specialty: None,
-                banked_xp: 0,
+            .map(|(ability, parameter, score)| {
+                let mut a = crate::types::AbilityScore::new(Id::new(ability), score);
+                a.parameter = parameter.map(crate::types::AbilityParameterValue::text);
+                a
             })
             .collect();
         entity

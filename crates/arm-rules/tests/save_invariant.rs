@@ -84,25 +84,19 @@ fn fully_populated_entity() -> Entity {
     e.characteristic_descriptions = BTreeMap::from([(Characteristic::Int, "sharp".to_string())]);
     e.selections = vec![Selection::new(Id::new("virtue.the_gift"))];
     e.xp_pool = 240;
-    e.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.awareness"),
-        score: 3,
-        specialty: Some("searching".to_string()),
-        parameter: None,
-        banked_xp: 0,
+    e.ability_scores = vec![{
+        let mut a = AbilityScore::new(Id::new("ability.awareness"), 3);
+        a.specialty = Some("searching".to_string());
+        a
     }];
-    e.art_scores = vec![ArtScore {
-        art: Id::new("art.creo"),
-        score: 5,
-        banked_xp: 0,
-    }];
-    e.spells = vec![SpellSelection {
-        spell: Id::new("spell.pilum_of_fire"),
-        level: Some(20),
-        mastery: Some(1),
-        parameter: Some("art.ignem".to_string()),
-        mastery_abilities: vec![Id::new("spell_mastery_ability.penetration")],
-        within_focus: false,
+    e.art_scores = vec![ArtScore::new(Id::new("art.creo"), 5)];
+    e.spells = vec![{
+        let mut s = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+        s.level = Some(20);
+        s.mastery = Some(1);
+        s.parameter = Some("art.ignem".to_string());
+        s.mastery_abilities = vec![Id::new("spell_mastery_ability.penetration")];
+        s
     }];
 
     e.personality_traits = vec![PersonalityTrait {
