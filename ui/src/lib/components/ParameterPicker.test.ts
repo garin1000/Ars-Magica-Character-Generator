@@ -257,6 +257,37 @@ const ITEMS: Record<string, PointItem> = {
       forbid_ids: ['ability.true_names'],
     },
   ]),
+  // qa review iteration 7: Warped Senses' own shape (RC review-C item 2,
+  // ArMDE:7033) — Weak Sight declares `forbids_same_item_values` naming
+  // Sensitive Sight, so a sibling copy already holding Weak Sight blocks
+  // Sensitive Sight on THIS row (and the reverse), while two copies both
+  // holding Weak Sight stay legal. `max_per_target: 3` keeps `full(used,
+  // value)` from ALSO disabling a repeated Weak Sight, so the render test
+  // below proves the `blocked.has(value)` wiring in isolation rather than
+  // conflating it with the sibling max-per-target greying already covered
+  // elsewhere in this file.
+  'flaw.warped_senses_probe': {
+    ...pointItem(
+      'flaw.warped_senses_probe',
+      [
+        {
+          key: 'affliction',
+          type: 'ref',
+          domain: 'enumerated',
+          values: ['affliction.weak_sight', 'affliction.sensitive_sight', 'affliction.unrelated'],
+        },
+      ],
+      ['general'],
+    ),
+    max_per_target: 3,
+    conditional_incompatible_with: [
+      {
+        gate: { param: 'affliction', equals: 'affliction.weak_sight' },
+        forbids: [],
+        forbids_same_item_values: ['affliction.sensitive_sight'],
+      },
+    ],
+  },
 };
 
 /** Catalogue spells: two the fixture character has learned, one it has not —
@@ -343,6 +374,10 @@ function installRuleset(): void {
       'flaw.corrupted_arts_probe': { name: 'Corrupted Arts Probe' },
       'flaw.restricted_learning_probe': { name: 'Restricted Learning Probe' },
       'virtue.arcane_ability_probe': { name: 'Arcane Ability Probe {ability}' },
+      'flaw.warped_senses_probe': { name: 'Warped Senses Probe' },
+      'affliction.weak_sight': { name: 'Weak Sight' },
+      'affliction.sensitive_sight': { name: 'Sensitive Sight' },
+      'affliction.unrelated': { name: 'Unrelated' },
     },
   } as unknown as LocalizedRuleset;
 }
@@ -1192,5 +1227,47 @@ describe('ParameterPicker required_if gate (B4/Q-51)', () => {
   it('hides the gated control when the gate parameter is entirely unfilled', () => {
     const select = selectFor(pickerBody('virtue.gated_param_probe'), TESTID);
     expect(select).toBeNull();
+  });
+});
+
+// qa review iteration 7: the enumerated domain's `disabled={full(used, value)
+// || blocked.has(value)}` and its `title` (ParameterPicker.svelte:673-674) had
+// no render-level test, unlike every sibling `full(used, value)` assertion
+// above — so a wiring bug (store.ruleset?.ruleset.point_items[selection.ref]
+// lookup, the exceptIndex, store.entity.selections possibly undefined) could
+// silently never reach the rendered `<option>`. `flaw.warped_senses_probe` is
+// Warped Senses' own shape (RC review-C item 2, ArMDE:7033): Weak Sight on a
+// sibling row (index 0) blocks Sensitive Sight on THIS row (index 1).
+describe('ParameterPicker enumerated domain — blocked same-item values (qa review iteration 7)', () => {
+  const TESTID = 'param-flaw.warped_senses_probe-affliction-1';
+
+  beforeEach(() => {
+    store.entity.selections = [
+      { ref: 'flaw.warped_senses_probe', params: { affliction: 'affliction.weak_sight' } },
+      { ref: 'flaw.warped_senses_probe' },
+    ];
+  });
+
+  it('disables the forbidden sibling value and carries the localized incompatibility title', () => {
+    const select = selectFor(pickerBody('flaw.warped_senses_probe', 1), TESTID);
+    expect(select).not.toBeNull();
+    const option = optionByText(select!, 'Sensitive Sight');
+    expect(option).not.toBeNull();
+    expect(option).toContain('disabled');
+    // The rendered English text, not the raw `vf-blocked-incompatible` key or
+    // the `flaw.warped_senses_probe` id — `blockedValueReason()` names the
+    // blocking item through `displayName`, the same localized string the
+    // Available picker's own incompatibility reason uses.
+    expect(option).toContain(store.t('vf-blocked-incompatible', { other: 'Warped Senses Probe' }));
+  });
+
+  it('does not disable a second copy of the SAME gate value (equal values stay legal)', () => {
+    const select = selectFor(pickerBody('flaw.warped_senses_probe', 1), TESTID);
+    expect(optionByText(select!, 'Weak Sight')).not.toContain('disabled');
+  });
+
+  it('does not disable an unrelated value', () => {
+    const select = selectFor(pickerBody('flaw.warped_senses_probe', 1), TESTID);
+    expect(optionByText(select!, 'Unrelated')).not.toContain('disabled');
   });
 });
