@@ -36,6 +36,6 @@
     { "id": "art.perdo", "art_type": "technique", "source": { "anchor": "perdo-pe-i-destroy", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8881, 8889] } },
     { "id": "art.rego", "art_type": "technique", "source": { "anchor": "rego-re-i-control", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8891, 8897] } },
     { "id": "art.terram", "art_type": "form", "source": { "anchor": "terram-te-earth", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8969, 8975] } },
-    { "id": "art.vim", "art_type": "form", "source": { "anchor": "vim-vi-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8977, 8982] } }
+    { "id": "art.vim", "art_type": "form", "source": { "anchor": "vim-vi-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8977, 8981] } }
   ]
 }

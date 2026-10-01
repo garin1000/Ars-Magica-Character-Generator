@@ -3481,6 +3481,7 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         source: Some(arm_rules::SourceRef::new(
             "Ars Magica - Definitive Edition (Core Rules).md",
             arm_rules::LineRange::new(2388, 2388),
+            "anchor",
         )),
     };
 

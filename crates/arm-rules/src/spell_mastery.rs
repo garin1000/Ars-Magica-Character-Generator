@@ -59,7 +59,7 @@ mod tests {
         let json = r#"{
           "id": "spell_mastery_ability.quiet_casting",
           "repeatable": true,
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9578, 9580] }
+          "source": { "anchor": "quiet-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9578, 9580] }
         }"#;
         let ability: SpellMasteryAbility = serde_json::from_str(json).unwrap();
         assert_eq!(ability.id, Id::new("spell_mastery_ability.quiet_casting"));

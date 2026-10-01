@@ -104,7 +104,7 @@ mod tests {
         let json = r#"{
           "id": "art.creo",
           "art_type": "technique",
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8847, 8863] }
+          "source": { "anchor": "creo-cr-i-create", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [8847, 8863] }
         }"#;
         let art: Art = serde_json::from_str(json).unwrap();
         assert_eq!(art.id, Id::new("art.creo"));

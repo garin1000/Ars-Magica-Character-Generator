@@ -252,7 +252,7 @@ mod tests {
           "technique": "art.creo",
           "form": "art.ignem",
           "level": 20,
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [14250, 14253] }
+          "source": { "anchor": "pilum-of-fire", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [14250, 14253] }
         }"#;
         let spell: Spell = serde_json::from_str(json).unwrap();
         assert_eq!(spell.id, Id::new("spell.pilum_of_fire"));

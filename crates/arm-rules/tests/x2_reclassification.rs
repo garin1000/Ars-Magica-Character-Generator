@@ -419,7 +419,7 @@ fn bracketed_verbatim_body(lines: &[String], start: u32, end: u32) -> String {
 }
 
 /// X2a (2026-09-29), D46: `virtue.the_gift`'s shipped description legitimately
-/// composes two passages — its own entry citation (ArMDE:3967-3970, the
+/// composes two passages — its own entry citation (ArMDE:3967-3969, the
 /// standard header-skipped citation) plus the "### The Gift" prose-section's
 /// penalties clause. That clause has no two-line entry header of its own
 /// (`#### Name` / `*Magnitude, Category*<br>`) to skip, so its range is
@@ -433,7 +433,7 @@ fn bracketed_verbatim_body(lines: &[String], start: u32, end: u32) -> String {
 /// `virtue.the_gift` is on this table for now; X2b-h may add more.
 ///
 /// X2d (2026-09-30), D70: `virtue.true_faith`'s shipped description composes
-/// its own entry citation (ArMDE:5169-5172) with the whole "### True Faith"
+/// its own entry citation (ArMDE:5169-5171) with the whole "### True Faith"
 /// prose section (ArMDE:17603-17617) that entry's own text points readers to
 /// ("For more about True Faith, see page 419"). Unlike `virtue.the_gift`'s
 /// second range, this one is not a single paragraph clipped to a section
@@ -462,10 +462,10 @@ fn bracketed_verbatim_body(lines: &[String], start: u32, end: u32) -> String {
 /// ends mid-list, deliberately short of DIVINE MIGHT). Both ids share this
 /// exact second range.
 const COMPOSED_DESCRIPTIONS: &[(&str, &[(u32, u32)])] = &[
-    ("virtue.the_gift", &[(3967, 3970), (2868, 2870)]),
-    ("virtue.true_faith", &[(5169, 5172), (17603, 17617)]),
-    ("virtue.powerful_relic", &[(4782, 4787), (17619, 17623)]),
-    ("virtue.relic", &[(4852, 4855), (17619, 17623)]),
+    ("virtue.the_gift", &[(3967, 3969), (2868, 2870)]),
+    ("virtue.true_faith", &[(5169, 5171), (17603, 17617)]),
+    ("virtue.powerful_relic", &[(4782, 4786), (17619, 17623)]),
+    ("virtue.relic", &[(4852, 4854), (17619, 17623)]),
 ];
 
 /// The shared scope-tracking list the verbatim-fidelity guard
@@ -1633,7 +1633,7 @@ fn relic_states_it_has_no_additional_powers() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.relic: displayed text {text:?} does not state the \
-                 no-additional-powers clause (ArMDE:4852-4855)"
+                 no-additional-powers clause (ArMDE:4852-4854)"
             ));
         }
     }
@@ -1685,7 +1685,7 @@ fn powerful_relic_states_its_impiety_consequence() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.powerful_relic: displayed text {text:?} does not state the \
-                 impiety/cessation rule (ArMDE:4782-4787)"
+                 impiety/cessation rule (ArMDE:4782-4786)"
             ));
         }
     }

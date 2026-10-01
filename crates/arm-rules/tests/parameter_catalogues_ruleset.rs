@@ -19,8 +19,8 @@ const ORGANIZATION_CATALOGUE_JSON: &str = r#"{
     {
       "id": "catalogue.organization",
       "values": [
-        { "id": "organization.house_bjornaer", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } },
-        { "id": "organization.order_of_hermes", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4063, 4065] } }
+        { "id": "organization.house_bjornaer", "source": { "anchor": "anchor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } },
+        { "id": "organization.order_of_hermes", "source": { "anchor": "anchor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4063, 4065] } }
       ]
     }
   ]
@@ -66,10 +66,10 @@ fn ruleset_from_sources_fails_the_real_load_on_a_broken_catalogue() {
     let duplicate_id_json = r#"{
       "catalogues": [
         { "id": "catalogue.organization", "values": [
-          { "id": "organization.house_bjornaer", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } }
+          { "id": "organization.house_bjornaer", "source": { "anchor": "anchor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } }
         ] },
         { "id": "catalogue.organization", "values": [
-          { "id": "organization.order_of_hermes", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4063, 4065] } }
+          { "id": "organization.order_of_hermes", "source": { "anchor": "anchor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4063, 4065] } }
         ] }
       ]
     }"#;

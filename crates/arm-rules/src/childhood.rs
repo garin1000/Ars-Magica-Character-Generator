@@ -404,7 +404,7 @@ mod tests {
         { "ability": "ability.living_language", "score": 5, "native": true },
         { "ability": "ability.swim", "score": 2 }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2384, 2384] } }"#;
+      "source": { "anchor": "sample-childhoods/athletic-childhood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2384, 2384] } }"#;
 
     /// "Traveling Childhood: Area A Lore 1, Area B Lore 1, Folk Ken 2, Living
     /// Language 1, Native Language 5, Survival 2" (ArMDE:2388) — the
@@ -419,7 +419,7 @@ mod tests {
         { "ability": "ability.living_language", "score": 1, "slot": "language" },
         { "ability": "ability.survival", "score": 2 }
       ],
-      "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2388, 2388] } }"#;
+      "source": { "anchor": "sample-childhoods/traveling-childhood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2388, 2388] } }"#;
 
     fn athletic() -> ChildhoodPackage {
         serde_json::from_str(ATHLETIC).expect("the shipped package shape parses")

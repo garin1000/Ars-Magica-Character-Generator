@@ -993,17 +993,17 @@ fn core_rules_virtues_cite_the_core_rules_file() {
     let rs = load_full_ruleset();
 
     let expected = [
-        ("virtue.blood_of_the_nephilim", 3504, 3518),
-        ("virtue.curse_throwing", 3625, 3628),
-        ("virtue.demonic_blood", 3649, 3662),
-        ("virtue.demonic_might", 3663, 3666),
-        ("virtue.demonic_powers", 3667, 3670),
-        ("virtue.devil_child", 3671, 3674),
-        ("virtue.faerie_doctor", 3821, 3824),
-        ("virtue.nephilim", 4594, 4597),
-        ("virtue.spirit_votary", 5006, 5009),
-        ("virtue.spiritual_pact", 5010, 5021),
-        ("virtue.strong_angelic_heritage", 5022, 5031),
+        ("virtue.blood_of_the_nephilim", 3504, 3517),
+        ("virtue.curse_throwing", 3625, 3627),
+        ("virtue.demonic_blood", 3649, 3661),
+        ("virtue.demonic_might", 3663, 3665),
+        ("virtue.demonic_powers", 3667, 3669),
+        ("virtue.devil_child", 3671, 3673),
+        ("virtue.faerie_doctor", 3821, 3823),
+        ("virtue.nephilim", 4594, 4596),
+        ("virtue.spirit_votary", 5006, 5008),
+        ("virtue.spiritual_pact", 5010, 5020),
+        ("virtue.strong_angelic_heritage", 5022, 5030),
     ];
 
     for (id, start, end) in expected {

@@ -72,10 +72,16 @@ Decided and in use since the Flaws sweep (2026-09-15):
 
 - **English anchor** — `rules/core/*.json`, as a third key inside the existing
   `source` block: `{ "anchor": "poor-concentration", "file": "…", "lines": [6602, 6605] }`.
-  Modelled by `types.rs::SourceRef::anchor`, an `Option<String>` that is skipped
-  when absent, so an unswept entry serializes byte-identically to before the
-  field existed and the rollout stays incremental. Alphabetical field order keeps
-  `CLAUDE.md` → "Canonical serialization" satisfied without a custom `Serialize`.
+  Modelled by `types.rs::SourceRef::anchor`, a plain `String` — **mandatory
+  catalogue-wide** (D30.1, `docs/vf-audit/decisions.md`), not skipped when
+  absent: a `source` block with no `anchor` key fails to deserialize rather
+  than silently defaulting to an absent anchor. It was an `Option<String>`
+  during the incremental rollout (an unswept entry serialized
+  byte-identically to before the field existed); X9a-10 (2026-10-01) dropped
+  that once every catalogue that ships a `source` block at all had its sweep
+  reach 100% (`rules_source_provenance.rs::FULLY_ANCHORED_CATALOGUES`).
+  Alphabetical field order keeps `CLAUDE.md` → "Canonical serialization"
+  satisfied without a custom `Serialize`.
 - **Per-language anchor** — a sidecar, `rules/i18n/<lang>/source_anchors.json`,
   mapping `id -> { anchor, file }`. A sidecar rather than a field on the
   localized entries because those deserialize into `ruleset.rs::I18nEntry`, whose
@@ -129,11 +135,17 @@ deliberately and review the result as a diff.
 
 ## Still owed
 
-- **Rollout.** Virtues/Flaws is complete: all 655 `source` blocks in
-  `rules/core/virtues_flaws.json` carry an English anchor, and
-  `rules/i18n/de/source_anchors.json` carries 655 German ones. The remaining
-  catalogues (abilities, arts, spells, houses, equipment, childhoods, aging
-  rows) are not yet swept; add each to `FULLY_ANCHORED_CATALOGUES` as it is.
+- **Rollout — complete (X9a-10, 2026-10-01).** Every catalogue that ships a
+  `source` block at all (virtues/flaws, abilities, arts, spells, spell mastery
+  abilities, mythic companion types, parameter catalogues, houses, childhoods,
+  equipment, aging) is in `FULLY_ANCHORED_CATALOGUES`, every one of its
+  entries carries an English anchor, and `rules/i18n/de/source_anchors.json`
+  carries the matching German rows. That completion is what let `anchor`
+  itself become mandatory (D30.1) rather than `Option<String>` — see "The
+  recorded shape" above. A new catalogue added later starts outside
+  `FULLY_ANCHORED_CATALOGUES` and must not emit a `source` block for an entry
+  until that entry's anchor is known, since the field no longer tolerates an
+  absent one.
 - A decision on code comments: `ArMDE:547` is the citation form `CLAUDE.md`
   mandates and four guards enforce. Anchors may suit data better than prose
   comments; do not change the comment convention unilaterally.

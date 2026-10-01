@@ -32,10 +32,10 @@ const TEST_ABILITIES_JSON: &str = r#"{ "abilities": [
 const TEST_CATALOGUES_JSON: &str = r#"{
   "catalogues": [
     { "id": "catalogue.language", "values": [
-      { "id": "language.latin", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] } }
+      { "id": "language.latin", "source": { "anchor": "educated", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] } }
     ] },
     { "id": "catalogue.profession", "values": [
-      { "id": "profession.falconer", "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3847, 3852] } }
+      { "id": "profession.falconer", "source": { "anchor": "falconer", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3847, 3852] } }
     ] }
   ]
 }"#;

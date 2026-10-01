@@ -180,15 +180,14 @@ fn virtue_bard_keeps_the_rard_anchor_because_the_heading_still_misspells_it() {
         .expect("virtue.bard must still carry a source reference");
 
     assert_eq!(
-        source.anchor.as_deref(),
-        Some("rard"),
+        source.anchor, "rard",
         "source.anchor must stay \"rard\": the heading is still '#### Rard' \
          (ArMDE:3476), and Guard A compares the anchor against the heading, not \
          the corrected name — do NOT change the anchor"
     );
     assert_eq!(
         source.lines,
-        LineRange::new(3476, 3479),
+        LineRange::new(3476, 3478),
         "the cited range is unaffected by the id/name rename"
     );
     assert_eq!(

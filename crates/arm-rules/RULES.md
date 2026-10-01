@@ -2155,7 +2155,8 @@ mechanism relates two *different* items' parameter values at all.
 
 - Source: `ArMDE:6096` (the repeat
   sentence; the entry runs `ArMDE:6080-6096`, and both catalogue entries carry
-  `source.lines = [6080, 6097]`).
+  `source.lines = [6080, 6096]`, D30.2's "ends on the last non-blank body
+  line" convention).
 - Data: `rules/core/virtues_flaws.json` — `flaw.false_power` (Major,
   `max_total: 1`) and `flaw.false_power_minor` (Minor,
   `prerequisites: { kind: has, value: flaw.false_power }`, no

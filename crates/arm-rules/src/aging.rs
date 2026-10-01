@@ -2022,11 +2022,11 @@ mod tests {
       "living_conditions": [
         { "id": "living_condition.average_peasant", "modifier": 0 },
         { "id": "living_condition.leper", "modifier": -2, "cumulative": true,
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16592, 16592] } }
+          "source": { "anchor": "aging/living-conditions/leper", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16592, 16592] } }
       ],
       "outcomes": [
         { "min": 10, "max": 12, "effect": { "type": "any_characteristic", "points": 1 },
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16601, 16601] } },
+          "source": { "anchor": "aging/aging-roll/10-12", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16601, 16601] } },
         { "min": 13, "max": 13, "effect": { "type": "next_decrepitude_level_and_crisis" } },
         { "min": 18, "max": 18,
           "effect": { "type": "named_characteristics", "points": 1, "characteristics": ["str", "sta"] } },
@@ -2153,13 +2153,13 @@ mod tests {
       "fatal_decrepitude_score": 5,
       "crisis": {
         "die": { "min": 1, "max": 10,
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [474, 474] } },
+          "source": { "anchor": "simple-die", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [474, 474] } },
         "attendant": { "ability": "ability.medicine", "characteristic": "int",
           "ease_factor": 6, "botch_penalty": 3,
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16634, 16634] } },
+          "source": { "anchor": "aging/medical-attention-may-help", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16634, 16634] } },
         "rows": [
           { "id": "crisis.bedridden_week", "max": 8, "outcome": { "type": "bedridden" },
-            "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16626, 16626] } },
+            "source": { "anchor": "aging/crisis-roll/8-or-less", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16626, 16626] } },
           { "id": "crisis.minor_illness", "min": 15, "max": 15,
             "outcome": { "type": "illness", "severity": "minor", "ease_factor": 3, "ritual_level": 20 } },
           { "id": "crisis.terminal_illness", "min": 19,

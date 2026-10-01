@@ -215,7 +215,7 @@ mod tests {
           "min_strength": 0,
           "load": 1,
           "ability": "ability.single_weapon",
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16974, 16974] }
+          "source": { "anchor": "anchor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [16974, 16974] }
         }"#;
         let w: Weapon = serde_json::from_str(json).unwrap();
         assert_eq!(w.id, Id::new("weapon.long_sword"));

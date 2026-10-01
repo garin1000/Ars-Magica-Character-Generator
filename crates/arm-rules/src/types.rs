@@ -3582,13 +3582,15 @@ pub struct SourceRef {
     /// noticing — it fails **loudly** rather than resolving to the wrong text.
     /// That asymmetry is the whole argument for carrying both.
     ///
-    /// Optional, because the sweep that records them is incremental: an entry
-    /// that has not been read yet carries none and serializes exactly as it did
-    /// before this field existed. Always the **English** anchor —
+    /// Mandatory catalogue-wide (D30.1): every catalogue that carries a
+    /// `source` block at all has had its anchor sweep completed (see
+    /// `rules_source_provenance.rs`'s `FULLY_ANCHORED_CATALOGUES`), so a
+    /// `source` block missing this key is a data defect, not an entry still
+    /// awaiting its sweep — it fails to deserialize rather than silently
+    /// defaulting to an absent anchor. Always the **English** anchor —
     /// `rules/core/` is the canonical-ID language (`CLAUDE.md` → "Rules
     /// provenance"); per-language anchors live in `rules/i18n/<lang>/source_anchors.json`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub anchor: Option<String>,
+    pub anchor: String,
     /// Basename of the Markdown source file.
     pub file: String,
     /// Inclusive line range the item was extracted from.
@@ -3596,15 +3598,10 @@ pub struct SourceRef {
 }
 
 impl SourceRef {
-    /// Creates a source reference with no heading anchor recorded.
-    ///
-    /// There is deliberately no `with_anchor` constructor to pair with it:
-    /// every anchor in the shipped data comes from JSON via serde, so a builder
-    /// would be a public API with no caller (`CLAUDE.md` → YAGNI). Construct the
-    /// struct literally if one is ever needed in Rust.
-    pub fn new(file: impl Into<String>, lines: LineRange) -> Self {
+    /// Creates a source reference, with its mandatory anchor (D30.1).
+    pub fn new(file: impl Into<String>, lines: LineRange, anchor: impl Into<String>) -> Self {
         Self {
-            anchor: None,
+            anchor: anchor.into(),
             file: file.into(),
             lines,
         }
@@ -6960,7 +6957,7 @@ mod tests {
           "entity_kinds": ["character"],
           "prerequisites": { "kind": "has", "value": "virtue.hermetic_magus" },
           "incompatible_with": ["flaw.blatant_gift"],
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [120, 135] }
+          "source": { "anchor": "gentle-gift", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [120, 135] }
         }"#;
 
         let item: PointItem = serde_json::from_str(json).unwrap();
@@ -6981,7 +6978,7 @@ mod tests {
         assert_eq!(
             item.source,
             Some(SourceRef {
-                anchor: None,
+                anchor: "gentle-gift".to_string(),
                 file: "Ars Magica - Definitive Edition (Core Rules).md".to_string(),
                 lines: LineRange::new(120, 135)
             })
@@ -7056,7 +7053,7 @@ mod tests {
 
     #[test]
     fn line_range_serializes_as_array() {
-        let source = SourceRef::new("file.md", LineRange::new(10, 20));
+        let source = SourceRef::new("file.md", LineRange::new(10, 20), "anchor");
         let json = serde_json::to_string(&source).unwrap();
         assert!(json.contains("[10,20]"), "lines as array: {json}");
     }
@@ -7066,12 +7063,7 @@ mod tests {
     /// lands on non-blank lines, never that it lands on the right rule. The
     /// heading anchor is the durable half of the same reference — it survives an
     /// edit anywhere else in the book and fails loudly when it breaks. So a
-    /// `SourceRef` must be able to *carry* one, round-trip, without losing it to
-    /// serde.
-    ///
-    /// Written as a round-trip through JSON rather than a field access so it
-    /// compiles against a `SourceRef` that has no anchor field yet and fails on
-    /// its assertion instead of on a missing symbol.
+    /// `SourceRef` must carry one, round-trip, without losing it to serde.
     #[test]
     fn source_ref_preserves_the_heading_anchor() {
         let json = r#"{"anchor":"clumsy","file":"file.md","lines":[10,20]}"#;
@@ -7083,14 +7075,47 @@ mod tests {
         );
     }
 
-    /// The anchor is optional, so the several hundred entries that have not been
-    /// swept yet must serialize byte-identically to before it existed — a
-    /// zero-noise diff is the whole reason this can roll out incrementally.
+    /// **X9a-10.** D30.1 makes `anchor` mandatory catalogue-wide: a
+    /// `SourceRef` with no `anchor` key in its JSON must fail to deserialize
+    /// rather than quietly default to an absent anchor. `anchor` is a plain
+    /// `String` with no `#[serde(default)]`, so a missing key is a hard
+    /// deserialization error.
     #[test]
-    fn source_ref_without_an_anchor_serializes_without_the_key() {
-        let source = SourceRef::new("file.md", LineRange::new(10, 20));
+    fn source_ref_without_an_anchor_key_fails_to_deserialize() {
+        let json = r#"{"file":"file.md","lines":[10,20]}"#;
+        let result: Result<SourceRef, _> = serde_json::from_str(json);
+        assert!(
+            result.is_err(),
+            "D30 makes anchor mandatory: a SourceRef with no anchor key must fail to \
+             deserialize, not default to None: {result:?}"
+        );
+    }
+
+    /// **X9a-10 — replaces `source_ref_without_an_anchor_serializes_without_the_key`.**
+    /// That test asserted the behavior D30 now rejects: that an anchor-less
+    /// `SourceRef` serializes cleanly with the key omitted. D30 says the
+    /// opposite — every `SourceRef` carries an anchor, so the serialized form
+    /// must always carry the key.
+    #[test]
+    fn source_ref_new_always_serializes_the_given_anchor() {
+        let source = SourceRef::new("file.md", LineRange::new(10, 20), "clumsy");
         let json = serde_json::to_string(&source).unwrap();
-        assert!(!json.contains("anchor"), "no empty anchor key: {json}");
+        assert!(
+            json.contains(r#""anchor":"clumsy""#),
+            "a SourceRef must always carry the anchor it was constructed with: {json}"
+        );
+    }
+
+    /// **X9a-10 — pins the field itself, not just the JSON round-trip,** so a
+    /// bug in `Serialize`/`Deserialize` cannot hide a constructor that never
+    /// stored the value in the first place.
+    #[test]
+    fn source_ref_new_stores_the_given_anchor() {
+        let source = SourceRef::new("file.md", LineRange::new(10, 20), "clumsy");
+        assert_eq!(
+            source.anchor, "clumsy",
+            "SourceRef::new must store the anchor it is given, not ignore it"
+        );
     }
 
     #[test]
@@ -7103,7 +7128,7 @@ mod tests {
           "categories": ["general"],
           "entity_kinds": ["character"],
           "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }],
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [240, 251] }
+          "source": { "anchor": "puissant-ability", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [240, 251] }
         }"#;
 
         let item: PointItem = serde_json::from_str(json).unwrap();
@@ -9345,7 +9370,7 @@ mod tests {
 
     #[test]
     fn source_ref_new() {
-        let s = SourceRef::new("f.md", LineRange::new(1, 2));
+        let s = SourceRef::new("f.md", LineRange::new(1, 2), "anchor");
         assert_eq!(s.file, "f.md");
         assert_eq!(s.lines, LineRange::new(1, 2));
     }

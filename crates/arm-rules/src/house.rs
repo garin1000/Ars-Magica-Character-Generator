@@ -136,7 +136,7 @@ mod tests {
             "id": "house.bjornaer",
             "lineage_type": "mystery_cult",
             "grants": [ { "kind": "fixed", "item": "virtue.heartbeast" } ],
-            "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
+            "source": { "anchor": "anchor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2270, 2283] }
         }"#;
         let house: House = serde_json::from_str(json).unwrap();
         assert_eq!(house.id, Id::new("house.bjornaer"));

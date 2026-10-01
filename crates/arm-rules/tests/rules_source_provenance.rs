@@ -2244,3 +2244,197 @@ fn known_misencodings_still_fail_the_guard() {
         );
     }
 }
+
+// --- X9a-9: a range ends on content (D30.2) --------------------------------
+
+/// **X9a-9 red.** D30.2: "A range ends on the last non-blank body line."
+/// `tmp/x9a-spike.md` §1 estimated ~703; re-measured by running this test:
+/// **705** of the `source.lines` ranges across `rules/core/*.json` end on the
+/// blank line before the next heading instead (629 virtues/flaws, 73
+/// abilities, 2 parameter catalogues, 1 arts) — the minority form (D30's "the
+/// range end" measurement on B16's span: 32 of 35 already used the non-blank
+/// form) never got applied to the other ~620.
+///
+/// `every_core_source_citation_brackets_real_content_in_its_named_file` only
+/// checks that *some* line in the range is non-blank, which a range ending
+/// blank still satisfies as long as an earlier line has content — so it is too
+/// loose to catch this. This test is the sharper, D30.2-specific guard: no
+/// range may end on a blank line, named offender by offender so the
+/// regenerator (phase 2) has a worklist.
+#[test]
+fn no_source_range_ends_on_a_blank_line() {
+    let source_dir = rules_dir().join("source/en");
+    let mut cache: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut offenders = Vec::new();
+
+    for found in all_source_refs() {
+        if found.start < 1 || found.end < found.start {
+            // Malformed ranges are `every_core_source_citation_brackets_real_
+            // content_in_its_named_file`'s finding; do not report twice.
+            continue;
+        }
+        let lines = cache.entry(found.source_file.clone()).or_insert_with(|| {
+            fs::read_to_string(source_dir.join(&found.source_file))
+                .map(|text| text.lines().map(str::to_string).collect())
+                .unwrap_or_default()
+        });
+        if found.end as usize > lines.len() {
+            // Out-of-bounds is the same other test's finding.
+            continue;
+        }
+        let end_line = &lines[found.end as usize - 1];
+        if end_line.trim().is_empty() {
+            offenders.push(format!(
+                "{}: \"{}\" ends at {}:{}, which is blank",
+                found.core_file, found.entry_label, found.source_file, found.end
+            ));
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "{} source.lines range(s) in rules/core/*.json end on a blank line, violating D30.2 \
+         (\"a range ends on the last non-blank body line\"):\n{}",
+        offenders.len(),
+        offenders.join("\n")
+    );
+}
+
+/// **X9a-9 regenerator — not a test the gate runs.** Re-derives every
+/// `source.lines` range in `rules/core/*.json` whose *end* lands on a blank
+/// line (the 705 found by [`no_source_range_ends_on_a_blank_line`]) to the
+/// nearest earlier non-blank line, per D30.2. `start` is never touched and a
+/// range is never *extended* — the walk only ever steps backward from the
+/// recorded end, so the result is always a sub-range of what shipped before.
+///
+/// Writes into `rules/core/`, exactly like `regenerate_source_anchors` above
+/// and for the same reason, so it is `#[ignore]`d and run deliberately:
+/// `cargo test -p arm-rules --test rules_source_provenance -- --ignored
+/// regenerate_blank_range_ends`.
+///
+/// Rewrites line by line rather than reserializing, reusing
+/// `regenerate_source_anchors`'s block-joining technique so a `source` block
+/// that happens to span several physical lines is still read correctly — even
+/// though none of the four catalogues this run actually touches
+/// (`virtues_flaws.json`, `abilities.json`, `arts.json`,
+/// `parameter_catalogues.json`) currently have one. A catalogue file is only
+/// written back if at least one of its ranges actually changed, so a file
+/// with nothing to fix is left byte-for-byte untouched — no reformatting
+/// churn on files this run has no business touching.
+#[test]
+#[ignore = "writes into rules/; run deliberately to apply D30.2's range-end convention"]
+fn regenerate_blank_range_ends() {
+    let source_dir = rules_dir().join("source/en");
+    let mut source_cache: BTreeMap<String, Vec<String>> = BTreeMap::new();
+
+    for catalogue in core_json_files() {
+        let catalogue_name = catalogue
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap()
+            .to_string();
+        let text = fs::read_to_string(&catalogue)
+            .unwrap_or_else(|e| panic!("{catalogue_name} is readable: {e}"));
+
+        let mut rewritten = Vec::new();
+        let mut changed = false;
+        let mut source_lines = text.lines().peekable();
+        while let Some(first) = source_lines.next() {
+            let Some((prefix, rest)) = first.split_once("\"source\": {") else {
+                rewritten.push(first.to_string());
+                continue;
+            };
+            let mut block_text = rest.to_string();
+            while !block_text.contains('}') {
+                block_text.push(' ');
+                block_text.push_str(source_lines.next().expect("the block closes").trim());
+            }
+            // See `regenerate_source_anchors`'s identical split for why the
+            // *first* `}` is always `source`'s own closing brace.
+            let (body, suffix) = block_text.split_once('}').expect("the block closes");
+            let block: Value = serde_json::from_str(&format!("{{{body}}}"))
+                .unwrap_or_else(|e| panic!("{catalogue_name}: source block parses: {e}"));
+            let file = block["file"].as_str().expect("source.file is a string");
+            let anchor = block.get("anchor").and_then(Value::as_str);
+            let start = block["lines"][0]
+                .as_u64()
+                .expect("source.lines[0] is a number") as usize;
+            let end = block["lines"][1]
+                .as_u64()
+                .expect("source.lines[1] is a number") as usize;
+
+            let source_text_lines = source_cache.entry(file.to_string()).or_insert_with(|| {
+                fs::read_to_string(source_dir.join(file))
+                    .map(|t| t.lines().map(str::to_string).collect())
+                    .unwrap_or_default()
+            });
+            let mut new_end = end;
+            while new_end > start
+                && source_text_lines
+                    .get(new_end - 1)
+                    .is_some_and(|line| line.trim().is_empty())
+            {
+                new_end -= 1;
+            }
+            if new_end != end {
+                changed = true;
+            }
+
+            let rewritten_source = match anchor {
+                Some(anchor) => format!(
+                    "\"source\": {{ \"anchor\": {}, \"file\": {}, \"lines\": [{start}, {new_end}] }}",
+                    serde_json::to_string(anchor).expect("a string serializes"),
+                    serde_json::to_string(file).expect("a string serializes"),
+                ),
+                None => format!(
+                    "\"source\": {{ \"file\": {}, \"lines\": [{start}, {new_end}] }}",
+                    serde_json::to_string(file).expect("a string serializes"),
+                ),
+            };
+            rewritten.push(format!("{prefix}{rewritten_source}{suffix}"));
+        }
+
+        if changed {
+            fs::write(&catalogue, format!("{}\n", rewritten.join("\n")))
+                .unwrap_or_else(|e| panic!("{catalogue_name} is writable: {e}"));
+        }
+    }
+}
+
+// --- X9a-10: anchor mandatory catalogue-wide, nowhere else -----------------
+
+/// **X9a-10 guard, not a red.** D30.1 makes `anchor` mandatory "everywhere",
+/// which only means something for a catalogue that carries `source` at all.
+/// [`FULLY_ANCHORED_CATALOGUES`] is today's complete list of those catalogues
+/// — `characteristics.json`, `character_types.json`, `life_stages.json` and
+/// `ruleset.json` carry no `source` block and are correctly absent from it.
+/// This measurably holds already (`all_source_refs` finds nothing outside the
+/// list), so there is no failing assertion to pin here — it is a regression
+/// lock: if a future catalogue starts emitting `source` without first earning
+/// a place in `FULLY_ANCHORED_CATALOGUES` (and the matching anchor sweep),
+/// this is what catches it instead of the gap going unnoticed.
+#[test]
+fn only_fully_anchored_catalogues_carry_a_source_block() {
+    let known: BTreeSet<&str> = FULLY_ANCHORED_CATALOGUES
+        .iter()
+        .map(|&(name, _)| name)
+        .collect();
+
+    let mut offenders: Vec<String> = all_source_refs()
+        .into_iter()
+        .map(|found| found.core_file)
+        .filter(|core_file| !known.contains(core_file.as_str()))
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect();
+    offenders.sort();
+
+    assert!(
+        offenders.is_empty(),
+        "{} rules/core/*.json file(s) carry a `source` block without being listed in \
+         FULLY_ANCHORED_CATALOGUES: {:?} — add them to that list (and sweep their anchors) \
+         before shipping, per D30.1 (\"anchor is mandatory everywhere\")",
+        offenders.len(),
+        offenders
+    );
+}

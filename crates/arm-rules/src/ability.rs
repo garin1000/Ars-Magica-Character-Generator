@@ -417,7 +417,7 @@ mod tests {
         let json = r#"{
           "id": "ability.awareness",
           "category": "general",
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7200, 7201] }
+          "source": { "anchor": "awareness", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7200, 7201] }
         }"#;
         let ability: Ability = serde_json::from_str(json).unwrap();
         assert_eq!(ability.id, Id::new("ability.awareness"));
@@ -437,7 +437,7 @@ mod tests {
           "id": "ability.artes_liberales",
           "category": "academic",
           "requires_training": true,
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7307, 7320] }
+          "source": { "anchor": "artes-liberales", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7307, 7320] }
         }"#;
         let ability: Ability = serde_json::from_str(json).unwrap();
         assert!(ability.requires_training);

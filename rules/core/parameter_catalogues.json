@@ -23,9 +23,9 @@
     {
       "id": "catalogue.profession",
       "values": [
-        { "id": "profession.falconer", "source": { "anchor": "falconer", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3847, 3852] } },
+        { "id": "profession.falconer", "source": { "anchor": "falconer", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3847, 3851] } },
         { "id": "profession.marshal", "source": { "anchor": "marshal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4449, 4453] } },
-        { "id": "profession.master_of_kennels", "source": { "anchor": "master-of-kennels", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4467, 4470] } },
+        { "id": "profession.master_of_kennels", "source": { "anchor": "master-of-kennels", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4467, 4469] } },
         { "id": "profession.merchant", "source": { "anchor": "educated-vernacular", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3727, 3729] } },
         { "id": "profession.poet", "source": { "anchor": "master-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4457, 4461] } },
         { "id": "profession.storyteller", "source": { "anchor": "master-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4457, 4461] } }

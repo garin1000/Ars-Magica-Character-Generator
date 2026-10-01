@@ -1646,7 +1646,7 @@ mod tests {
     fn house_invalid_source_range_is_rejected() {
         let houses = r#"{ "houses": [
           { "id": "house.tytalus", "lineage_type": "societas",
-            "source": { "file": "x.md", "lines": [50, 10] } }
+            "source": { "anchor": "anchor", "file": "x.md", "lines": [50, 10] } }
         ] }"#;
         let err = Ruleset::from_sources(RulesetSources {
             id: "t",
@@ -2019,7 +2019,7 @@ mod tests {
           "magnitude": "minor",
           "categories": ["general"],
           "entity_kinds": ["character"],
-          "source": { "file": "f.md", "lines": [50, 10] }
+          "source": { "anchor": "anchor", "file": "f.md", "lines": [50, 10] }
         }]"#;
 
         let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
@@ -5348,7 +5348,7 @@ mod tests {
             { "ability": "ability.living_language", "score": 5, "native": true },
             { "ability": "ability.swim", "score": 2 }
           ],
-          "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2384, 2384] } }
+          "source": { "anchor": "sample-childhoods/athletic-childhood", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2384, 2384] } }
       ]
     }"#;
 
@@ -5687,7 +5687,7 @@ mod tests {
                     { "ability": "ability.living_language", "score": 5, "native": true },
                     { "ability": "ability.swim", "score": 2 }
                   ],
-                  "source": { "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2388, 2384] } }
+                  "source": { "anchor": "anchor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2388, 2384] } }
               ]
             }"#,
         );
@@ -6666,7 +6666,7 @@ mod tests {
     fn mythic_type_invalid_source_range_is_rejected() {
         let mythic = r#"{ "types": [
           { "id": "mythic_type.test",
-            "source": { "file": "x.md", "lines": [50, 10] } }
+            "source": { "anchor": "anchor", "file": "x.md", "lines": [50, 10] } }
         ] }"#;
         let err = Ruleset::from_sources(RulesetSources {
             id: "t",
@@ -6705,7 +6705,7 @@ mod tests {
     fn spell_mastery_ability_invalid_source_range_is_rejected() {
         let mastery = r#"{ "abilities": [
           { "id": "spell_mastery_ability.penetration",
-            "source": { "file": "x.md", "lines": [50, 10] } }
+            "source": { "anchor": "anchor", "file": "x.md", "lines": [50, 10] } }
         ] }"#;
         let err = Ruleset::from_sources(RulesetSources {
             id: "t",
@@ -6750,7 +6750,7 @@ mod tests {
         let equipment = r#"{ "weapons": [
           { "id": "weapon.longsword", "kind": "melee", "init_mod": 2, "defense_mod": 1,
             "load": 1, "ability": "ability.single_weapon",
-            "source": { "file": "x.md", "lines": [50, 10] } }
+            "source": { "anchor": "anchor", "file": "x.md", "lines": [50, 10] } }
         ] }"#;
         let err = Ruleset::from_sources(RulesetSources {
             id: "t",
@@ -6789,7 +6789,7 @@ mod tests {
     fn shield_invalid_source_range_is_rejected() {
         let equipment = r#"{ "shields": [
           { "id": "shield.heater", "init_mod": 0, "attack_mod": 0, "defense_mod": 2, "load": 1,
-            "min_strength": 0, "source": { "file": "x.md", "lines": [50, 10] } }
+            "min_strength": 0, "source": { "anchor": "anchor", "file": "x.md", "lines": [50, 10] } }
         ] }"#;
         let err = Ruleset::from_sources(RulesetSources {
             id: "t",
@@ -6828,7 +6828,7 @@ mod tests {
     fn armor_invalid_source_range_is_rejected() {
         let equipment = r#"{ "armor": [
           { "id": "armor.chain_mail_full", "protection": 9, "load": 6,
-            "source": { "file": "x.md", "lines": [50, 10] } }
+            "source": { "anchor": "anchor", "file": "x.md", "lines": [50, 10] } }
         ] }"#;
         let err = Ruleset::from_sources(RulesetSources {
             id: "t",
@@ -6871,7 +6871,7 @@ mod tests {
         let err = ruleset_with_spells(
             r#"{ "spells": [
               { "id": "spell.ok", "technique": "art.creo", "form": "art.ignem", "level": 20,
-                "source": { "file": "x.md", "lines": [50, 10] } }
+                "source": { "anchor": "anchor", "file": "x.md", "lines": [50, 10] } }
             ] }"#,
         )
         .unwrap_err();

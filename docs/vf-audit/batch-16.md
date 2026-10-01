@@ -146,6 +146,14 @@ turned from a documentation disagreement into a data inconsistency — escalated
 **Q-124**, not counted as three findings, because settling it means ruling on
 Q-97.
 
+*(X9a-9, 2026-10-01): **D30 ruled the other way round.** The "32 correct" here
+are the ones D30 later overturned, and the "three exceptions" are the form D30
+made the rule. This passage is left as written because it records what Check 1
+found **at the time**, before Q-97/Q-124 were settled — rewriting "correct" and
+"exceptions" here to match D30 would falsify the audit record. `RULES.md` and
+every `rules/core/*.json` range have since been normalised to the form these
+three "exceptions" used; see `docs/vf-audit/decisions.md` D30.*
+
 **Check 1, second half — `source.anchor`: 9 of 35 entries carry one, all nine
 correct**, verified twice — derived from the `####` heading, and against the
 book's own "List of Flaws" index links, which spell them out literally.
