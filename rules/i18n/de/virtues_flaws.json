@@ -96,7 +96,7 @@
     "summary": "Du willst in irgendeiner Hinsicht die erfolgreichste oder mächtigste Person der Welt sein."
   },
   "flaw.anchored_to_the_land": {
-    "name": "Verwurzelt im {land}",
+    "name": "Verwurzelt in einem Land, {land}",
     "summary": "Der Charakter leidet unter Einsamkeit und Niedergeschlagenheit, wenn er eine bestimmte Art von Umgebung weder sehen noch hören kann.",
     "description": "Der Charakter leidet unter Einsamkeit und Niedergeschlagenheit, wenn er eine bestimmte Art von Umgebung weder sehen noch hören kann. In Spieltermini hat der Charakter eine -3-Strafe auf alle Würfe, wenn er durch eine andere Art von Umgebung reist (es wird angenommen, dass der Charakter, sobald er Zeit hat, sich von der Reise zu erholen, eine Erinnerung an seine natürliche Umgebung findet, die ihm Erholung verschafft). Ein Charakter, der zum Beispiel am Meer verwurzelt ist, würde die Strafe erleiden, wenn er über Land reist, kann sich aber nach dem Eintreffen leicht trösten – vielleicht durch das Meeresrauschen in einer Muschel."
   },
@@ -503,7 +503,7 @@
   },
   "flaw.exciting_experimentation": {
     "name": "Aufregendes Experimentieren",
-    "summary": "Die Experimente deines Charakters neigen zu einer gewissen ...",
+    "summary": "Die Experimente deines Charakters neigen zu einer gewissen ... dramatischen Note.",
     "description": "Die Experimente deines Charakters neigen zu einer gewissen ... dramatischen Note. Wenn du auf einer der Experimentiertabellen würfelst, wirfst du zwei Würfel statt des normalen einen. Der Spielleiter wählt dann das amüsantere deiner beiden Ergebnisse aus und wendet es an."
   },
   "flaw.excommunicate": {
@@ -582,7 +582,7 @@
     "description": "Der Charakter schwankt zwischen zwei diametral entgegengesetzten Verhaltensweisen. Es gibt keinen Mittelweg, der Charakter zeigt daher immer entweder die Züge der einen oder der anderen Verhaltensweise. Wähle eine Persönlichkeitseigenschaft mit +4 und ihr Gegenteil mit +4. Typische Persönlichkeitseigenschaften sind: Fröhlich und Traurig, Energisch und Faul, Selbstbewusst und Schüchtern oder Stolz und Demütig."
   },
   "flaw.fish_out_of_water_terrain": {
-    "name": "Fremd im {terrain}",
+    "name": "Fremd in einem Gelände, {terrain}",
     "summary": "Dieser Charakter hat eine Affinität zu einer Art von Gelände, sei es auf dem Meer, im Wald, in den Hügeln oder in der städtischen Landschaft von Städten und Gemeinden, und fühlt sich unwohl und unbeholfen, wenn er sich fernab von seinem bevorzugten Umfeld befindet.",
     "description": "Dieser Charakter hat eine Affinität zu einer Art von Gelände, sei es auf dem Meer, im Wald, in den Hügeln oder in der städtischen Landschaft von Städten und Gemeinden, und fühlt sich unwohl und unbeholfen, wenn er sich fernab von seinem bevorzugten Umfeld befindet. Der Charakter erleidet -1 auf alle Stresswürfe außerhalb seines bevorzugten Geländes und würfelt in diesen Situationen auch einen Patzerwürfel mehr als normal.\n\nGeeignete Gebiete können Städte und Gemeinden, Dörfer, Flüsse, das Meer, Gebirge, Wälder, Wüsten usw. sein.\n\nDieser Fehler darf nur einmal genommen werden, da sein mehrmaliges Nehmen ihn weniger schwerwiegend macht statt schwerwiegender."
   },
@@ -842,7 +842,7 @@
   },
   "flaw.lycanthrope": {
     "name": "Lykanthrop",
-    "summary": "Du wurdest verflucht, dich bei Vollmond (oder ähnlichen, monatlichen astronomischen Ereignissen) in ein gefährliches Raubtier (z.B.",
+    "summary": "Du wurdest verflucht, dich bei Vollmond (oder ähnlichen, monatlichen astronomischen Ereignissen) in ein gefährliches Raubtier (z.B. Wolf, Luchs oder Bär) zu verwandeln.",
     "description": "Du wurdest verflucht, dich bei Vollmond (oder ähnlichen, monatlichen astronomischen Ereignissen) in ein gefährliches Raubtier (z.B. Wolf, Luchs oder Bär) zu verwandeln. Keine Gegenstände oder Kleidung verwandeln sich mit, und es dauert eine volle Runde, bis die vollständige Verwandlung abgeschlossen ist. Du bist nicht gegen normale Waffen immun, und der Fluch überträgt sich nicht auf Opfer von Bisswunden. Das Tier kann mit einem InAn- oder InCo-Zauber als verfluchter Mensch erkannt werden.\n\nIm verwandelten Zustand hast du die Intelligenz eines Tieres, reagierst auf alle Reize wie ein Tier und behältst keine Erinnerung an Handlungen in Tiergestalt, außer gelegentlich in Träumen. Du weißt möglicherweise nicht einmal, dass du unter diesem Fluch stehst. Du kannst sowohl Freunde als auch Feinde noch erkennen, wenn du verwandelt bist.\n\nLykanthropen können sich in ein nicht-magisches Tier zwischen Größe -1 (Wolf) und Größe +2 (Bär) verwandeln. Du hast die normalen körperlichen Eigenschaften eines Gestaltwandlers (siehe Seite 107), außer dass +3 zu deinem Absorptionswert addiert wird (nur in Tiergestalt). Darüber hinaus wirst du beim Wiederannehmen der Menschengestalt (was bei der Morgendämmerung geschieht) vollständig von allen in Tiergestalt erlittenen Wunden geheilt."
   },
   "flaw.magic_addiction": {
@@ -992,7 +992,7 @@
   "flaw.offensive_to_beings": {
     "name": "Abstoßend für {being}",
     "summary": "Dieser Fehler ist mit einer von sechs Klassen von Wesen verbunden: Tiere, sterbliche Menschen, göttliche Wesen, Feen, Dämonen oder magische Kreaturen.",
-    "description": "Dieser Fehler ist mit einer von sechs Klassen von Wesen verbunden: Tiere, sterbliche Menschen, göttliche Wesen, Feen, Dämonen oder magische Kreaturen. Die letzten vier umfassen Charaktere, die durch Übernatürliche Tugenden oder Fehler oder als Wesen mit einem Machtwert mit der Göttlichen, Feensphäre, Höllensphäre oder Magiesphäre verbunden sind.\n\nWesen der gewählten Kategorie reagieren negativ auf den Charakter, als hätte er die Gabe, was sie sehr unwohl um ihn herum macht und ihm -3 auf alle Würfe sozialer Interaktion mit ihnen gibt.\n\nDu darfst diesen Fehler nicht mehr als einmal nehmen; Charaktere, die gegenüber mehr als einer Art von Wesen abstoßend sind, sollten stattdessen Magisches Auftreten nehmen. Charaktere mit der Gabe dürfen diesen Fehler nur nehmen, wenn sie die Sanfte Gabe besitzen, wodurch diese Art von Wesen negativ auf sie reagiert, während andere unbeeinträchtigt bleiben. Charaktere mit Magischem Auftreten dürfen ihn überhaupt nicht nehmen.\n\nWenn du gegenüber Tieren abstoßend bist, reagieren Tiere mit einem Machtwert auf unterschiedliche Weise. Im Allgemeinen reagieren jene, die negativ auf die Gabe reagieren, auch negativ auf dich, während jene, die positiv reagieren, dies nicht tun – es sei denn, du besitzt tatsächlich die Gabe."
+    "description": "Dieser Fehler ist mit einer von sechs Klassen von Wesen verbunden: Tiere, sterbliche Menschen, göttliche Wesen, Feen, Dämonen oder magische Kreaturen. Die letzten vier umfassen Charaktere, die durch Übernatürliche Tugenden oder Fehler oder als Wesen mit einem Machtwert mit der Göttlichen, Feensphäre, Höllensphäre oder Magiesphäre verbunden sind.\n\nWesen der gewählten Kategorie reagieren negativ auf den Charakter, als hätte er die Gabe, was sie sehr unwohl um ihn herum macht und ihm -3 auf alle Würfe sozialer Interaktion mit ihnen gibt.\n\nDu darfst diesen Fehler nicht mehr als einmal nehmen; Charaktere, die gegenüber mehr als einer Art von Wesen abstoßend sind, sollten stattdessen Magische Ausstrahlung nehmen. Charaktere mit der Gabe dürfen diesen Fehler nur nehmen, wenn sie die Sanfte Gabe besitzen, wodurch diese Art von Wesen negativ auf sie reagiert, während andere unbeeinträchtigt bleiben. Charaktere mit Magischer Ausstrahlung dürfen ihn überhaupt nicht nehmen.\n\nWenn du gegenüber Tieren abstoßend bist, reagieren Tiere mit einem Machtwert auf unterschiedliche Weise. Im Allgemeinen reagieren jene, die negativ auf die Gabe reagieren, auch negativ auf dich, während jene, die positiv reagieren, dies nicht tun – es sei denn, du besitzt tatsächlich die Gabe."
   },
   "flaw.optimistic_major": {
     "name": "Optimistisch (Groß)",
@@ -1221,7 +1221,7 @@
     "summary": "Du bist ein selbsternanntes Mitglied der Sucher, einer losen Organisation konkurrierender Magi, die nach alter Magie und arkanen Artefakten suchen."
   },
   "flaw.servant_of_the_land": {
-    "name": "Diener des {land}",
+    "name": "Diener eines Landes, {land}",
     "summary": "Eine mächtige magische Kreatur hat den Charakter vor dem Tod bewahrt oder eine ähnliche Wohltat gewährt, und als Gegenleistung wurde dem Charakter eine Aufgabe übertragen.",
     "description": "Eine mächtige magische Kreatur hat den Charakter vor dem Tod bewahrt oder eine ähnliche Wohltat gewährt, und als Gegenleistung wurde dem Charakter eine Aufgabe übertragen. Mögliche Aufgaben umfassen: eine Botschaft zu predigen, einen Leuchtturm zu betreiben oder das Jagen in einem bestimmten Gebiet zu verhindern. Normalerweise ist die Aufgabe entweder schwierig oder zeitaufwendig, und solange sie unvollendet bleibt, hat der Charakter den Kleinen Persönlichkeits-Fehler: Prohibition, der jedoch nicht auf die Gesamtzahl der Tugenden und Fehler des Charakters angerechnet wird. Die Prohibition bedeutet, dass wenn der Charakter nicht mindestens ein vollständiges Quartal pro Jahr damit verbringt, an seiner zugewiesenen Aufgabe zu arbeiten, ein Fluch ihn trifft. Mögliche Flüche umfassen: einen magischen Zwang, in das Land zurückzukehren, wo der Charakter sich seinem Meister erklären muss, sich in ein Tier zu verwandeln oder einen Übernatürlichen Fehler zu erwerben."
   },
@@ -1935,7 +1935,7 @@
   },
   "virtue.curse_throwing": {
     "name": "Fluchschleudern",
-    "summary": "Heile Krankheiten und entferne Flüche, indem du sie auf eine andere Person überträgst. Verleiht die Fähigkeit Fluchschleudern."
+    "summary": "Heile Krankheiten und entferne Flüche, indem du sie auf eine andere Person überträgst. Verleiht die Fertigkeit Fluchschleudern auf 1."
   },
   "virtue.custos": {
     "name": "Custos",
@@ -1980,7 +1980,7 @@
     "description": "Deine magische Abstammung und Tradition stammt von den Druiden und dem unterworfenen ehemaligen Haus Diedne, was dich besonders geschickt in Spontaner Magie macht. Wenn du einen Spontanzauber wirkst, ohne Erschöpfung aufzuwenden, kannst du wählen, ob du durch 5 oder durch 2 teilst. Wenn du durch 5 teilst, brauchst du keinen Stresswürfel zu werfen und kannst keinen Patzer erleiden, wie es normalerweise der Fall ist. Wenn du durch 2 teilst, musst du einen Stresswürfel werfen und kannst einen Patzer erleiden.\n\nWenn du Erschöpfung beim Wirken eines Spontanzaubers aufwendest, wird die niedrigste anwendbare Kunst verdoppelt, bevor die Gesamtsumme durch zwei geteilt wird. Du würfelst weiterhin einen Stresswürfel und kannst einen Patzer erleiden.\n\nDu musst deine Abstammung vor dem Orden verborgen halten, was dir einen Großen Geschichte-Fehler einbringt – Dunkles Geheimnis ist eine naheliegende Wahl, aber du kannst mit Zustimmung der Spieltruppe einen anderen wählen. Dies ist zusätzlich zu deiner normalen Zahl an Fehlern und gewährt dir keine Punkte, mit denen du Tugenden kaufen kannst."
   },
   "virtue.doctor_in_faculty": {
-    "name": "Doktor der {faculty}",
+    "name": "Doktor einer Fakultät, {faculty}",
     "summary": "Der Charakter hat eine der höheren Fakultäten einer Universität in Medizin, Zivil- oder Kanonischem Recht oder Theologie abgeschlossen, nachdem er bereits seine Magister-in-Artibus-Lizenz erworben hat, und darf Kommilitonen unterrichten.",
     "description": "Der Charakter hat eine der höheren Fakultäten einer Universität in Medizin, Zivil- oder Kanonischem Recht oder Theologie abgeschlossen, nachdem er bereits seine Magister-in-Artibus-Lizenz erworben hat, und darf Kommilitonen unterrichten. Der Charakter kann überall unterrichten, auch an einer Universität, die er nicht besucht hat. Dies ist die höchste Bildungslizenz im Mythischen Europa. Ein Doktor der Medizin trägt auch den Titel Magister in Medicina, da er in der Regel an einer der südlichen Universitäten ausgebildet wurde.\n\nEin Charakter, der das Spiel mit dieser Tugend beginnt, muss mindestens (27 – Intelligenz) Jahre alt sein. Er muss einen Wert von 5 in Latein, Artes Liberales und der Fertigkeit haben, die seiner Fakultät entspricht. Der Charakter hat zehn Jahre an einer Universität verbracht und erhält 300 zusätzliche Erfahrungspunkte, die für Latein und Akademische Fertigkeiten ausgegeben werden müssen. Er beginnt das Spiel außerdem mit einer Akademischen Reputation von 3.\n\nWie andere berufstätige Charaktere muss er zwei Quartale pro Jahr in seiner Profession tätig sein, entweder lehrend oder an einem weltlichen oder kirchlichen Gericht arbeitend. Sowohl die Tugend Wohlhabend als auch der Fehler Arm sind zulässig, aber Spieler müssen entscheiden, welches Missgeschick einem solch gelehrten Akademiker widerfahren ist, wenn er Arm ist, wofür er eine Schlechte Reputation auf Stufe 2 erhält.\n\nDiese Tugend ist mit den Tugenden Hermetischer Magus, Bettelbruder und Priester vereinbar. Sie steht nur männlichen Charakteren zur Verfügung, mit Ausnahme von Doktoren der Medizin, die in Salerno graduiert haben. Diese Universität bildet tatsächlich weibliche Ärztinnen aus."
   },
@@ -1990,7 +1990,7 @@
   },
   "virtue.dowsing": {
     "name": "Wünschelrutengehen",
-    "summary": "Finde nahe Dinge mit einer Wünschelrute. Verleiht die Fähigkeit Wünschelrutengehen."
+    "summary": "Finde nahe Dinge mit einer Wünschelrute. Verleiht die Fertigkeit Wünschelrutengehen auf 1."
   },
   "virtue.dust_devil": {
     "name": "Staubwirbel",
@@ -2031,7 +2031,7 @@
     "description": "Dies entspricht der Ritter-Tugend, doch aufgrund der recht anderen Erziehung muslimischer Emire bist du wahrscheinlich ebenso versiert in Jagd, religiösen Lehren und Kultur wie in kriegerischen Belangen."
   },
   "virtue.enchanting_ability": {
-    "name": "Bezaubernde {medium}",
+    "name": "Bezaubernde Fertigkeit, {medium}",
     "summary": "Wenn du dich darauf konzentrierst, kannst du mit einer bestimmten Art künstlerischen Ausdrucks magisch Gefühle und Überzeugungen in anderen hervorrufen: Musik, Tanz, Zeichnen, Geschichtenerzählen oder sogar Handwerk."
   },
   "virtue.enduring_constitution": {
@@ -2063,7 +2063,7 @@
     "description": "Der Magus verwendet nicht-hermetische Methoden, um hermetische Zauber zu wirken. Er muss zwar nach wie vor offensichtliche rituelle Handlungen vollziehen, doch sind diese nicht dieselben Worte und Gesten, die im Orden als Teil der Magietheorie gelehrt werden, und andere Magi, die mit der Tradition des Magus nicht vertraut sind, haben große Mühe, zu erkennen, welchen Zauber er wirkt. Jeder Versuch, die Form seines magischen Effekts zu bestimmen (Seite 217), wird gegen einen Schwierigkeitsgrad von 15 vorgenommen, ohne dass die Magnitude des Effekts wie üblich davon abgezogen wird. Besitzt der Charakter übernatürliche Fertigkeiten, wendet er für das Wirken seiner hermetischen Magie dieselben Methoden an, die er auch für seine nicht-hermetische Magie verwendet. Der Magus kann nicht wählen, stattdessen die üblichen hermetischen Methoden zu verwenden, kann aber in der üblichen Weise auf Worte und Gesten verzichten oder diese reduzieren (Seite 216)."
   },
   "virtue.extractor_of_form_vis": {
-    "name": "Vis-Gewinner der {form}",
+    "name": "Vis-Gewinner der Form, {form}",
     "summary": "Der Magus kann (Form)-Vis aus einer Magiesphären-Aura gewinnen, jedoch nur, wenn die Merkmale der Aura die Form verkörpern.",
     "description": "Der Magus kann (Form)-Vis aus einer Magiesphären-Aura gewinnen, jedoch nur, wenn die Merkmale der Aura die Form verkörpern. Eine Aura am Ufer eines Sees verkörpert beispielsweise Aquam, eine Aura an einer Begräbnisstätte verkörpert Corpus usw. Die Vis-Gewinnung auf diese Weise ist eine Laboratoriumstätigkeit; der Magus gewinnt eine Anzahl Bauern Vis, die einem Zehntel seiner Creo-Vim-(Form)-Laborsumme entspricht (aufgerundet). Offensichtlich benötigt er dafür auch ein Laboratorium in der Aura, und natürlich kann der Magus auch wählen, stattdessen Vim-Vis zu gewinnen (siehe Seite 250). Diese Tugend kann mehrfach gewählt werden (einmal für jede Form)."
   },
@@ -2304,7 +2304,7 @@
     "description": "Der Charakter weiß stets genau, wie er von seinem aktuellen Standort zu einer Anzahl von Orten gelangt, die seinem Intelligenzwert entspricht (mindestens jedoch 1). Um einen Ort in das Repertoire des Charakters aufzunehmen, muss er sich an diesem Ort befinden, der Ort muss im Freien liegen (darf also beispielsweise nicht im Inneren eines Gebäudes sein), und der Spieler muss einen Intelligenz + Konzentrations-Wurf gegen einen Schwierigkeitsgrad von 6 schaffen. Würde dies die Anzahl der bekannten Orte über das Limit des Charakters hinaus erhöhen, muss ein anderer Ort „vergessen\" werden.\n\nDarüber hinaus hat der Charakter eine feste Arkane Verbindung zu den Orten, die er kennt, die auf die übliche Weise genutzt werden kann (Seite 219). Diese Arkane Verbindung ist ein Artefakt des Geistes und kann daher nicht an einen anderen Charakter weitergegeben werden."
   },
   "virtue.imbued_with_the_spirit_of_form": {
-    "name": "Durchdrungen vom Geist der {form}",
+    "name": "Durchdrungen vom Geist der Form, {form}",
     "summary": "Der Magus hat einen Teil der Kräfte eines Elementarwesens oder eines anderen magischen Objekts absorbiert (vielleicht durch Verzehr).",
     "description": "Der Magus hat einen Teil der Kräfte eines Elementarwesens oder eines anderen magischen Objekts absorbiert (vielleicht durch Verzehr). Dieser Vorgang trübt den Magus, sodass jedes Wesen mit einer Magischen Macht, die mit der Form dieser Tugend verknüpft ist, seine Natur in der Nähe wahrnehmen kann. Schwache Kreaturen werden in der Regel Angst vor dem Magus haben, während mächtige versuchen werden, ihn zu töten.\n\nWann immer der Magus einen Zauber wirkt oder eine Laborarbeit ausführt, die Vis der gewählten Form erfordert, kann er langfristige Erschöpfungsstufen als Ersatz für die Vis einsetzen. Jede verlorene langfristige Erschöpfungsstufe verringert den Vis-Bedarf des Zaubers oder Effekts um 1. Beim Wirken eines Zaubers gehen die Erschöpfungsstufen nach dem Zaubern verloren. Bei Laborarbeiten hält der Erschöpfungsverlust für die Dauer des Laborprozesses an (also mindestens ein Quartal), und als Vis-Ersatz eingesetzte Erschöpfungsstufen zählen nicht zur Vis-Ausgabenbeschränkung des Magus pro Quartal. Der Magus erleidet den Erschöpfungsabzug auf seine Laborsumme.\n\nBeachte, dass das Studieren von Vis keine Laborarbeit ist, weshalb der Magus beim Vis-Studium keine Erschöpfungsstufen als Vis-Ersatz einsetzen kann.\n\nAls Beispiel: Ein Magus, der den Zauber Verzauberung des Spionagepools als Ritual wirkt (InAq 30, Seite 322), benötigt 6 Bauern irgendeiner Kombination aus Intellego- und Aquam-Vis. Ist der Magus Durchdrungen vom Geist des Aquam, kann er sich ermüden (und dabei drei langfristige Erschöpfungsstufen verlieren) und damit den Vis-Bedarf um 3 verringern."
   },
@@ -2652,7 +2652,7 @@
   },
   "virtue.mild_aging": {
     "name": "Leichtes Altern",
-    "summary": "Die Alterungswürfe des Charakters profitieren von einem +1-Bonus auf den Lebensumstände-Modifikator, zusätzlich zu dem, was sein sozialer Stand normalerweise bietet."
+    "summary": "Die Alterungswürfe des Charakters profitieren von einem +1-Bonus auf den Lebensumständemodifikator, zusätzlich zu dem, was sein sozialer Stand normalerweise bietet."
   },
   "virtue.minor_enchantments": {
     "name": "Kleine Verzauberungen",
@@ -3080,7 +3080,7 @@
   },
   "virtue.tough": {
     "name": "Zäh",
-    "summary": "+3 auf Widerstandsfähigkeit."
+    "summary": "+3 auf Absorption."
   },
   "virtue.town_magistrate": {
     "name": "Stadtrichter",
@@ -3161,7 +3161,7 @@
     "description": "Du wurdest in das Äußere Mysterium der Verditius-Magie eingeweiht (siehe Seite 240) und bist damit Mitglied des Hauses Verditius. Beachte, dass alle Verditius-Magi diese Tugend bei der Charaktererschaffung kostenlos erhalten."
   },
   "virtue.voice_of_the_land": {
-    "name": "Stimme des {land}",
+    "name": "Stimme eines Landes, {land}",
     "summary": "Der Charakter kann mit jedem Wesen sprechen, dessen natürlicher Lebensraum eine bestimmte, mit dieser Tugend verknüpfte Umgebung ist (einschließlich Tieren und magischen Wesen), und der Charakter wird von diesen Wesen normalerweise weder als Bedrohung noch als Beute wahrgenommen."
   },
   "virtue.wanderer": {
@@ -3174,7 +3174,7 @@
     "summary": "+50 Erfahrungspunkte, nur für Kampf-Fertigkeiten, die du bei der Charaktererschaffung erwerben darfst."
   },
   "virtue.ways_of_the_land": {
-    "name": "Wege des {land}",
+    "name": "Wege eines Landes, {land}",
     "summary": "Du hast ein tiefes Verständnis für eine bestimmte Art von Terrain und fühlst dich dort natürlicher und heimischer als sonst irgendwo.",
     "description": "Du hast ein tiefes Verständnis für eine bestimmte Art von Terrain und fühlst dich dort natürlicher und heimischer als sonst irgendwo. Beispiele umfassen Wege des Waldes, Wege des Gebirges, Wege der Steppe oder Wege der Stadt. Du erhältst einen Bonus von +3 auf alle Würfe, einschließlich Kampf und Zauberwerte, die direkt dieses Gebiet und seine Bewohner betreffen; ob weltlich, magisch oder feenhaft. Außerdem würfelst du bei Würfen, die deinen Verständnisbereich betreffen, einen Patzerwürfel weniger als üblich (was bedeuten kann, dass du gar keinen Patzerwürfel würfelst). Von Tieren des betreffenden Terrains wirst du normalerweise nicht belästigt, und obwohl besonders bösartige Kreaturen dich möglicherweise noch angreifen, werden sie dir zumindest gebührenden Respekt entgegenbringen. (Bei Wegen der Stadt gilt dies weiterhin für Stadttiere, von denen es in der mittelalterlichen Welt viele gibt, nicht für Menschen. Der +3-Bonus gilt jedoch für Menschen.) Du kannst diese Tugend mehrfach wählen, für verschiedene Arten von Terrain."
   },

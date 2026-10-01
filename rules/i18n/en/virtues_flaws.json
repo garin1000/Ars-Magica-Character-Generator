@@ -502,7 +502,7 @@
   },
   "flaw.exciting_experimentation": {
     "name": "Exciting Experimentation",
-    "summary": "Your character's experiments tend to have a flair for the ...",
+    "summary": "Your character's experiments tend to have a flair for the ... dramatic.",
     "description": "Your character's experiments tend to have a flair for the ... dramatic. When rolling on any of the experimentation tables, roll two dice instead of the normal one. The storyguide then chooses and applies the more amusing of your two results."
   },
   "flaw.excommunicate": {
@@ -1933,7 +1933,7 @@
   },
   "virtue.curse_throwing": {
     "name": "Curse-Throwing",
-    "summary": "Cure diseases and remove curses by transferring them to another. Confers the Curse-Throwing Ability."
+    "summary": "Cure diseases and remove curses by transferring them to another. Confers the Curse-Throwing Ability at 1."
   },
   "virtue.custos": {
     "name": "Custos",
@@ -1988,7 +1988,7 @@
   },
   "virtue.dowsing": {
     "name": "Dowsing",
-    "summary": "Find nearby things with a dowsing rod. Confers the Dowsing Ability."
+    "summary": "Find nearby things with a dowsing rod. Confers the Dowsing Ability at 1."
   },
   "virtue.dust_devil": {
     "name": "Dust Devil",
@@ -2621,7 +2621,7 @@
   },
   "virtue.mendicant_friar": {
     "name": "Mendicant Friar",
-    "summary": "You are a follower of St."
+    "summary": "You are a follower of St. Francis or St. Dominic going among the rich and poor, spreading the word of God and giving comfort to the sick, homeless, hungry, or dying."
   },
   "virtue.mentored_by_demons": {
     "name": "Mentored by Demons",
