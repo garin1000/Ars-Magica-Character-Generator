@@ -965,11 +965,15 @@ pub struct SurfacedModifier {
     /// review, post-B5-phase-1): a structured id, resolved by the UI through
     /// the same ruleset-i18n path `abilityLabel` already uses for a bought
     /// Ability's own name — never through `detail`, which stays reserved for
-    /// the free-text subject a [`Effect::AbilityRollModParam`] row carries
-    /// (Academic Concentration). Rendering `detail` verbatim is only ever
-    /// correct for player-typed text; a catalogue id must never reach the
-    /// same field, or it renders as a bare slug (CLAUDE.md). `None` for every
-    /// other family, and for the parameter-relative `AbilityRoll` row.
+    /// the subject a [`Effect::AbilityRollModParam`] row carries (Academic
+    /// Concentration). That subject may itself be free text OR a catalogue id
+    /// (X6c: the seven Artes Liberales subjects, `subject.*`) — the UI
+    /// resolves `detail` through `selectionParamLabel`
+    /// (`derive.ts`), the same generic rules-i18n-id-or-verbatim lookup every
+    /// other selection-parameter value already uses, rather than rendering it
+    /// unconditionally raw, so a catalogue id never reaches the player as a
+    /// bare slug (CLAUDE.md). `None` for every other family, and for the
+    /// parameter-relative `AbilityRoll` row.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ability: Option<Id>,
 }

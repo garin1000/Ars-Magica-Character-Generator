@@ -2553,6 +2553,36 @@ impl Ruleset {
         }
     }
 
+    /// Validates an `ability_roll_mod_param` effect: its declared parameter
+    /// must exist and carry a Text OR Enumerated domain (D70/X6c — Academic
+    /// Concentration's `subject` retypes text→enumerated over the seven
+    /// Artes Liberales subjects; a free-text carrier with no catalogue stays
+    /// Text). Mirrors `validate_deficient_art_effect`'s own dual acceptance
+    /// just above. A third domain (e.g. `ability`) is still rejected.
+    fn validate_ability_roll_mod_param_effect(
+        &self,
+        item: &PointItem,
+        param: &str,
+        id: &Id,
+        errors: &mut Vec<String>,
+    ) {
+        match item.parameters.iter().find(|p| p.key.as_str() == param) {
+            None => errors.push(format!(
+                "{id}: effect 'ability_roll_mod_param' references unknown parameter '{param}'"
+            )),
+            Some(def)
+                if def.domain != ParameterDomain::Text
+                    && def.domain != ParameterDomain::Enumerated =>
+            {
+                errors.push(format!(
+                    "{id}: effect 'ability_roll_mod_param' parameter '{param}' has domain '{}', expected 'text' or 'enumerated'",
+                    def.domain
+                ))
+            }
+            Some(_) => {}
+        }
+    }
+
     /// Validates that every [`Effect`] names a declared parameter whose domain
     /// matches the effect kind (`ability_bonus` → an `ability`-domain param,
     /// `characteristic_score_delta_param` → a `characteristic`-domain param).
@@ -2603,13 +2633,20 @@ impl Ruleset {
                 Effect::AffinityArtCost { param, .. } => {
                     (param, ParameterDomain::Art, "affinity_art_cost")
                 }
-                // Magical Focus / Academic Concentration name a free-text
-                // descriptor the player types (a sub-Art focus, a study field).
+                // Magical Focus names a free-text descriptor the player
+                // types (a sub-Art focus) — Text only, unlike its
+                // AbilityRollModParam sibling below.
                 Effect::MagicalFocus { param, .. } => {
                     (param, ParameterDomain::Text, "magical_focus")
                 }
+                // Academic Concentration's `subject` (D70/X6c): Text OR
+                // Enumerated, exactly like `DeficientArt`'s Technique-or-Form
+                // dual acceptance below — the declared parameter's domain is
+                // the carrier's own choice (a free-text field has no
+                // catalogue; the seven Artes Liberales subjects do).
                 Effect::AbilityRollModParam { param, .. } => {
-                    (param, ParameterDomain::Text, "ability_roll_mod_param")
+                    self.validate_ability_roll_mod_param_effect(item, param, id, errors);
+                    continue;
                 }
                 // B5/F-489: fixed target, exactly like `AbilityScoreGrant`
                 // above — validate the directly-stored ability id resolves.

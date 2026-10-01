@@ -12000,7 +12000,7 @@ type at once.
 
 ---
 
-## X6c — the label-only parameters + 2 of 3 retypes (`tmp/x6c-verdicts.md`, D80)
+## X6c — the label-only parameters + all 3 retypes (`tmp/x6c-verdicts.md`, D80)
 
 Data only, same convention as X6b: one behavioral test per entry against the
 SHIPPED `rules/core/*.json`, in `crates/arm-rules/tests/x6c_label_parameters.rs`.
@@ -12064,7 +12064,7 @@ required-set computation and guarded at load by
   new mechanism. `required: false` is the ONE exception to D70's "every new
   parameter is required": the cover applies only while away from home on a
   mission, a fact the engine cannot observe, so it is never reported missing.
-- **Retypes, text → enumerated (2 of 3 landed):**
+- **Retypes, text → enumerated (3 of 3 landed):**
   `virtue.alluring_to_beings`'s `being` (ArMDE:3388-3395 — "one of three
   classes of beings: mundane animals, faeries, or magical beings") now
   resolves against the SAME `being.animals`/`being.faeries`/
@@ -12075,28 +12075,38 @@ required-set computation and guarded at load by
   mirroring the Academic Abilities the book ties each faculty to
   (`ability.civil_and_canon_law`, `ability.medicine`,
   `ability.theology_christian`/`_islam`/`_judaism` — the faculty parameter
-  itself stays a 3-way axis, not split by creed). Old free text in either
-  fails `unknown_param_value`, never migrated (Q-X6-4/D70), no schema bump.
-- **`virtue.academic_concentration_subject`'s retype — BLOCKED, discovered in
-  Phase 2, not landed.** Its `subject` parameter (still `domain: text`) is
-  read by `Effect::AbilityRollModParam { param: "subject", .. }`, whose
-  `param` field `ruleset::integrity.rs` hardcodes to require
-  `ParameterDomain::Text`. `derived.rs::surfaced_modifiers` passes that value
-  straight into `SurfacedModifier::detail`, and
+  itself stays a 3-way axis, not split by creed). `virtue.academic_concentration_subject`'s
+  `subject` (ArMDE:3362-3367, :7310 — "one of the seven subjects of Artes
+  Liberales": Trivium `grammar`, `logic`, `rhetoric`; Quadrivium `arithmetic`,
+  `geometry`, `astronomy`, `music`) now resolves against the seven new
+  `subject.*` values. Old free text in any of the three fails
+  `unknown_param_value`, never migrated (Q-X6-4/D70), no schema bump.
+- **The engine fix the `subject` retype needed.** `Effect::AbilityRollModParam`'s
+  declared parameter was hardcoded to `ParameterDomain::Text` in
+  `ruleset::integrity.rs::validate_effect_refs`, which rejected at LOAD time a
+  ruleset giving it `domain: enumerated`. Widened via a new helper,
+  `ruleset::integrity.rs::validate_ability_roll_mod_param_effect` (mirroring
+  `validate_deficient_art_effect`'s own Technique-or-Form dual acceptance a
+  few hundred lines above), to accept EITHER `Text` or `Enumerated` — a third
+  domain still fails load, with a message naming both accepted domains.
+  `Effect::MagicalFocus` (Magical Focus's own free-text descriptor) is
+  UNCHANGED, Text-only: nothing asks for an enumerated Magical Focus field.
+  Reds in `crates/arm-rules/tests/x6c_academic_concentration_domain.rs`.
+- **The UI fix.** `derived.rs::surfaced_modifiers` still passes the
+  parameter's raw value straight into `SurfacedModifier::detail`, and
   `ui/src/lib/components/DerivedSurfacedModifiersSection.svelte::detailLabel`
-  renders `detail` VERBATIM for the `ability_roll` family whenever
-  `m.ability` is `None` — only the fixed-target `AbilityRollMod` sibling
-  resolves through `abilityLabel`. Retyping `subject` to enumerated would
-  make an old save's raw value (e.g. `"subject.grammar"`) reach the player as
-  a literal slug, the exact anti-pattern CLAUDE.md forbids ("a raw ID or enum
-  value must never be rendered directly as a user-facing label"), unless the
-  Svelte component also gains an enumerated-value resolution path — a UI
-  change outside this Rust-engine slice, and one that touches a file another
-  concurrent slice was editing the same day. The seven Artes Liberales
-  subjects (Trivium: Grammar, Logic, Rhetoric; Quadrivium: Arithmetic,
-  Geometry, Astronomy, Music — ArMDE:7310) are otherwise exactly stated and
-  ready to land once the UI side is designed; the test is
-  `#[ignore]`-marked with the reason, not deleted.
+  still renders `detail` for the `ability_roll` family whenever `m.ability` is
+  `None` — but now through `derive.ts::selectionParamLabel` (newly exported),
+  the SAME generic rules-i18n-id-or-verbatim resolver every other
+  selection-parameter value already uses, rather than unconditionally raw. An
+  enumerated value (`subject.logic`) resolves to its localized rules-i18n
+  name; a genuinely free-text value (no rules-i18n entry) still renders
+  exactly as entered — so neither the old-save free-text case nor Focus
+  Power's typed field changes behavior. Confirmed this is the only rendering
+  surface: the Markdown export (`crates/arm-rules/src/export/`) never reads
+  `surfaced_modifiers` at all, and `DerivedSurfacedModifiersSection.svelte` is
+  the sole consumer of `DerivedTotals.surfaced_modifiers` in `ui/src`, shared
+  by every creation mode (there is no separate wizard-preview copy).
 
 **Fluent (`locales/{en,de}/main.ftl`):** 10 new `param-label-*` keys —
 `disease`, `illness`, `benediction`, `action`, `kind`, `section`, `predator`,
@@ -12106,8 +12116,13 @@ required-set computation and guarded at load by
 
 **Rules-i18n (`rules/i18n/{en,de}/virtues_flaws.json`):** `name` entries added
 for `benediction.*` (5), `faculty.*` (3), `form.*` (2), `rank.major_figure`/
-`rank.minor_official` (2, inserted into the existing `rank.*` block). No new
-entries for `being.*` (fully reused) or for `subject.*` (blocked, not landed).
+`rank.minor_official` (2, inserted into the existing `rank.*` block),
+`subject.*` (7: `arithmetic`, `astronomy`, `geometry`, `grammar`, `logic`,
+`music`, `rhetoric` — EN verbatim from ArMDE:7310, :7319; DE from the
+SAME lines of the line-mirrored German core rulebook, since no translation
+table covers these seven terms individually and D31 only overrides the
+rulebook when a table row is actually in dispute). No new entries for
+`being.*` (fully reused).
 
 ---
 

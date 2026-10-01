@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { abilityLabel, formatSigned, grantItemLabel } from '../derive';
+  import { abilityLabel, formatSigned, grantItemLabel, selectionParamLabel } from '../derive';
   import type { DerivedTotals, SurfacedModifier } from '../types';
 
   // Split out of `DerivedTotalsPanel.svelte` (V26, full-audit round). Always
@@ -9,13 +9,17 @@
 
   let { d }: { d: DerivedTotals } = $props();
 
-  // Surfaced-modifier detail: enum scalars go through Fluent; free-text
-  // (a parameter-based ability-roll subject, e.g. Academic Concentration) is
-  // shown as entered. B5/F-489: a FIXED-target ability-roll modifier (Poor
-  // Hearing) names its Ability through the structured `ability` field
-  // instead — resolved through the same ruleset-i18n path `AbilityTab.svelte`'s
-  // own `sourceName` uses (`abilityLabel`), never rendered from `detail` or
-  // the raw id, which the rest of this label-map convention forbids for any
+  // Surfaced-modifier detail: enum scalars go through Fluent; a
+  // parameter-based ability-roll subject (e.g. Academic Concentration) goes
+  // through `selectionParamLabel` — the SAME resolver every other
+  // selection-parameter value uses, so an enumerated value (the retyped
+  // `subject.*`) resolves to its localized rules-i18n name and a genuinely
+  // free-text value (no rules-i18n entry) still renders exactly as entered
+  // (X6c). B5/F-489: a FIXED-target ability-roll modifier (Poor Hearing)
+  // names its Ability through the structured `ability` field instead —
+  // resolved through the same ruleset-i18n path `AbilityTab.svelte`'s own
+  // `sourceName` uses (`abilityLabel`), never rendered from `detail` or the
+  // raw id, which the rest of this label-map convention forbids for any
   // other catalogue slug.
   function detailLabel(m: SurfacedModifier): string {
     if (m.family === 'ability_roll' && m.ability) {
@@ -29,7 +33,11 @@
           )
         : m.ability;
     }
-    if (m.family === 'ability_roll') return m.detail;
+    if (m.family === 'ability_roll') {
+      return store.ruleset
+        ? selectionParamLabel(store.ruleset, undefined, m.detail, store.t)
+        : m.detail;
+    }
     return store.t(`derived-detail-${m.detail}`);
   }
 

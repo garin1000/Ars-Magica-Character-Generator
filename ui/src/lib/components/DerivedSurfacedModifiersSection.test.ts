@@ -191,3 +191,63 @@ describe('DerivedSurfacedModifiersSection renders a fixed-target ability_roll_mo
     expect(body).not.toContain('ability.concentration');
   });
 });
+
+// X6c (`tmp/ac-handover.md`): a parameter-based `ability_roll` row (no
+// `m.ability` — Academic Concentration's retyped `subject`) must resolve an
+// ENUMERATED `detail` value through the SAME rules-i18n lookup every other
+// selection-parameter value already uses, never render the raw slug — the
+// identical CLAUDE.md anti-pattern B5 above fixed for the FIXED-target
+// sibling. A genuinely free-text `detail` (no rules-i18n entry, e.g. Focus
+// Power's typed-in field) must keep rendering exactly as entered: there is no
+// migration of an old save's free text to an enumerated id (D70/Q-X6-4), so
+// the UI must not need to tell the two cases apart — only rules-i18n
+// presence does that.
+describe('DerivedSurfacedModifiersSection resolves an enumerated ability_roll detail (X6c)', () => {
+  it('renders the localized English name for an enumerated subject value, not the raw id', () => {
+    store.lang = 'en';
+    installRulesetNaming('subject.logic', 'Logic');
+    const body = html(
+      derivedFixture([
+        {
+          family: 'ability_roll',
+          detail: 'subject.logic',
+          amount: 3,
+          source: 'virtue.academic_concentration_subject',
+        },
+      ]),
+    );
+    expect(body).toContain('Logic');
+    expect(body).not.toContain('subject.logic');
+  });
+
+  it('renders the localized German name for an enumerated subject value, not the raw id', () => {
+    store.lang = 'de';
+    installRulesetNaming('subject.logic', 'Logik');
+    const body = html(
+      derivedFixture([
+        {
+          family: 'ability_roll',
+          detail: 'subject.logic',
+          amount: 3,
+          source: 'virtue.academic_concentration_subject',
+        },
+      ]),
+    );
+    expect(body).toContain('Logik');
+    expect(body).not.toContain('subject.logic');
+  });
+
+  it('still renders a genuinely free-text detail verbatim (Focus Power, no rules-i18n id)', () => {
+    const body = html(
+      derivedFixture([
+        {
+          family: 'ability_roll',
+          detail: 'finding lost things',
+          amount: 3,
+          source: 'virtue.focus_power',
+        },
+      ]),
+    );
+    expect(body).toContain('finding lost things');
+  });
+});

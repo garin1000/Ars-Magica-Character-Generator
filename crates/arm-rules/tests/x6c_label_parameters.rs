@@ -552,32 +552,27 @@ fn cyclic_magic_negative_cycle_parameter_already_resolves() {
 /// F-03: ArMDE:3362-3367, :7310 — "one of the seven subjects of Artes
 /// Liberales" (Trivium: Grammar, Logic, Rhetoric; Quadrivium: Arithmetic,
 /// Geometry, Astronomy, Music). Today `subject` is `domain: text`
-/// (`rules/core/virtues_flaws.json:3670`).
+/// (`rules/core/virtues_flaws.json:3685`).
 ///
-/// **BLOCKED, discovered during Phase 2 (not a Phase-1 gap):** the SAME
-/// parameter is read by `Effect::AbilityRollModParam { param: "subject", .. }`
-/// (`types.rs::Effect::AbilityRollModParam`), whose `param` field
-/// `ruleset::integrity.rs` hardcodes to `ParameterDomain::Text` — and
-/// `derived.rs::surfaced_modifiers` passes that TEXT value straight into
-/// `SurfacedModifier::detail`, which `ui/src/lib/components/
-/// DerivedSurfacedModifiersSection.svelte::detailLabel` renders VERBATIM for
-/// the `ability_roll` family whenever `m.ability` is `None` (only the
-/// FIXED-target `AbilityRollMod` sibling resolves through `abilityLabel`).
-/// Retyping `subject` to enumerated would make an old save's raw value
-/// (`"subject.grammar"`) reach the player as a literal slug — exactly the
-/// CLAUDE.md anti-pattern ("a raw ID or enum value must never be rendered
-/// directly as a user-facing label") — unless the Svelte component also
-/// gains an enumerated-value resolution path first. That is a UI change, out
-/// of this Rust-engine slice's scope, and `DerivedSurfacedModifiersSection.*`
-/// is among the files another agent is editing today (git status) — not a
-/// file to touch alongside unrelated work. Left `#[ignore]`, data reverted to
-/// `domain: text` in `rules/core/virtues_flaws.json`; this one retype needs
-/// its own design note before it can land. The other two retypes below have
-/// no such consumer (confirmed: no effect anywhere reads `faculty` or
-/// `being` by param key) and are unaffected.
+/// **Previously BLOCKED** (`tmp/x6c-handover.md`'s "A discovered, out-of-scope
+/// blocker" section): the SAME parameter is read by
+/// `Effect::AbilityRollModParam { param: "subject", .. }`
+/// (`types.rs::Effect::AbilityRollModParam`), whose declared parameter
+/// `ruleset::integrity.rs::validate_effect_refs` hardcoded to
+/// `ParameterDomain::Text` — so a ruleset giving `subject` `domain: enumerated`
+/// failed to LOAD at all. `tmp/ac-handover.md`'s design note resolves this:
+/// `ruleset::integrity.rs` accepts Text OR Enumerated for this effect's
+/// parameter (see `x6c_academic_concentration_domain.rs`'s two reds), and the
+/// UI resolves `SurfacedModifier::detail` through the SAME generic
+/// rules-i18n-id-or-verbatim lookup every other selection parameter value
+/// already uses (`derive.ts::selectionParamLabel`), rather than rendering it
+/// unconditionally raw — so a free-text subject still shows verbatim and an
+/// enumerated one resolves through its rules-i18n name, never as a bare slug
+/// (`DerivedSurfacedModifiersSection.test.ts` covers this UI side). The other
+/// two retypes below have no such consumer (confirmed: no effect anywhere
+/// reads `faculty` or `being` by param key) and were unaffected by the
+/// blocker.
 #[test]
-#[ignore = "BLOCKED on a UI fix for DerivedSurfacedModifiersSection's detail \
-            rendering — see tmp/x6c-handover.md"]
 fn academic_concentration_subject_retypes_to_the_seven_liberal_arts() {
     let rs = load_ruleset();
 
@@ -783,9 +778,15 @@ fn new_x6c_enumerated_values_have_rules_i18n_names_in_both_locales() {
         serde_json::from_str(include_str!("../../../rules/i18n/de/virtues_flaws.json")).unwrap();
 
     let new_values = [
-        // academic_concentration_subject's retype is BLOCKED (see the
-        // #[ignore]'d test above) — its subject.* values are NOT in rules
-        // data and must not be asserted here.
+        // academic_concentration_subject's retype (F-03): the seven Artes
+        // Liberales subjects (Trivium + Quadrivium), ArMDE:3362-3367, :7310.
+        "subject.grammar",
+        "subject.logic",
+        "subject.rhetoric",
+        "subject.arithmetic",
+        "subject.geometry",
+        "subject.astronomy",
+        "subject.music",
         // doctor_in_faculty's retype
         "faculty.medicine",
         "faculty.law",

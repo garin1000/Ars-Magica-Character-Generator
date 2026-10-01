@@ -1763,6 +1763,27 @@
   "scope.custom": {
     "name": "Eigene Angabe"
   },
+  "subject.arithmetic": {
+    "name": "Arithmetik"
+  },
+  "subject.astronomy": {
+    "name": "Astronomie"
+  },
+  "subject.geometry": {
+    "name": "Geometrie"
+  },
+  "subject.grammar": {
+    "name": "Grammatik"
+  },
+  "subject.logic": {
+    "name": "Logik"
+  },
+  "subject.music": {
+    "name": "Musik"
+  },
+  "subject.rhetoric": {
+    "name": "Rhetorik"
+  },
   "virtue.academic_concentration_subject": {
     "name": "Akademische Vertiefung {subject}",
     "summary": "Der Charakter hat sich auf eines der sieben Fächer der Artes Liberales spezialisiert und die anderen sechs dabei vernachlässigt.",

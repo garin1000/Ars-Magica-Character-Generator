@@ -387,8 +387,14 @@ export function abilityCategoryLabel(
  *
  * A value whose id resolves against nothing — free text such as a Magical
  * Focus's field — is returned as it stands, which is exactly what free text is.
+ *
+ * Exported (X6c) so `DerivedSurfacedModifiersSection.svelte::detailLabel` can
+ * resolve a parameter-based `ability_roll` row's enumerated `detail` the SAME
+ * way (Academic Concentration's retyped `subject`) — one resolver for every
+ * surface that renders a selection-parameter value, so a domain added to one
+ * cannot go missing on the other (see `grantItemLabel`'s own doc comment).
  */
-function selectionParamLabel(
+export function selectionParamLabel(
   localized: LocalizedRuleset,
   params: Record<string, string> | undefined,
   value: string,

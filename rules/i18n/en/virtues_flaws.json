@@ -1761,6 +1761,27 @@
   "scope.custom": {
     "name": "Custom"
   },
+  "subject.arithmetic": {
+    "name": "Arithmetic"
+  },
+  "subject.astronomy": {
+    "name": "Astronomy"
+  },
+  "subject.geometry": {
+    "name": "Geometry"
+  },
+  "subject.grammar": {
+    "name": "Grammar"
+  },
+  "subject.logic": {
+    "name": "Logic"
+  },
+  "subject.music": {
+    "name": "Music"
+  },
+  "subject.rhetoric": {
+    "name": "Rhetoric"
+  },
   "virtue.academic_concentration_subject": {
     "name": "Academic Concentration {subject}",
     "summary": "The character has concentrated in one of the seven subjects of Artes Liberales, in preference to the other six.",

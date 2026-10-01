@@ -3682,7 +3682,8 @@
     "categories": ["general"],
     "classification": "in_play_effect",
     "entity_kinds": ["character"],
-    "parameters": [{ "key": "subject", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "subject", "type": "ref", "domain": "enumerated",
+      "values": ["subject.arithmetic", "subject.astronomy", "subject.geometry", "subject.grammar", "subject.logic", "subject.music", "subject.rhetoric"] }],
     "same_choice_exclusions": [
       { "other": "virtue.puissant_ability", "other_param": "ability", "fixed_target": "ability.artes_liberales" }
     ],
