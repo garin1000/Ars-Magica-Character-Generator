@@ -171,7 +171,28 @@ use crate::types::{
 /// captures — before the loop — whether ANY equipment element still lacks
 /// `loadout`, and stamps [`SCHEMA_VERSION`] once afterward on that flag, rather
 /// than per element.
-pub const SCHEMA_VERSION: u32 = 20;
+///
+/// Bumped 20 → 21 for X9b (F-16, `docs/vf-audit/corrections.md`): the point
+/// item `virtue.rard` is renamed to `virtue.bard` — the English name at
+/// ArMDE:3476 is the scanno "Rard", but the book's own index (ArMDE:24289) and
+/// the German translation table (`tugenden-fehler.md:243`) both read "Bard",
+/// and the **id**, not only the displayed name, was wrong. `source.anchor`
+/// stays `"rard"`: the heading itself is still misspelled `#### Rard`, and
+/// Guard A (`rules_source_provenance.rs`) compares the anchor against the
+/// heading, not the corrected name — only the id and the English name track
+/// the fix. This is a genuine value move (an id, not a shape), so
+/// [`fold_legacy_bard_id`] renames every occurrence it finds — the bought
+/// `selections` list, the three resolved-pick maps (`house_choices`,
+/// `mythic_choices`, `warping_choices`), every selection `params` value
+/// (`Single` or a member of `Multi`), and an `AbilityScore.parameter`'s
+/// `Linked.item` — and the version is stamped only when something was
+/// actually found, the same dispatch-on-presence rule every fold above uses.
+/// No shipped data holds the old id in any of those places except a bought
+/// `selections` entry, but a hand-edited save is this project's declared
+/// hostile-input surface (`CLAUDE.md` → "This is a DESKTOP APPLICATION"), so
+/// every place an item id can hide is swept, not only the one the shipped
+/// catalogue happens to use.
+pub const SCHEMA_VERSION: u32 = 21;
 
 /// `(ability, original text, resolved catalogue id)` — see
 /// [`LoadedEntity::migrated_catalogued_parameters`]. A named alias rather than
@@ -436,6 +457,88 @@ fn fold_legacy_being_params(entity: &mut Entity) {
             fold_legacy_being_param(selection);
         }
     }
+}
+
+/// X9b (F-16): the point-item id [`fold_legacy_bard_id`] renames away from.
+/// See [`SCHEMA_VERSION`]'s 20 → 21 paragraph for why.
+const LEGACY_BARD_ID: &str = "virtue.rard";
+/// What [`LEGACY_BARD_ID`] renames to.
+const RENAMED_BARD_ID: &str = "virtue.bard";
+
+/// Renames a single parameter value from [`LEGACY_BARD_ID`] to
+/// [`RENAMED_BARD_ID`] in place, wherever it appears — the one bound [`Id`] of
+/// a `Single` value, or any member of a `Multi` set — reporting whether
+/// anything changed. A parameter value is compared byte-for-byte wherever a
+/// selection's identity or a grant's `options.contains(pick)` is decided
+/// (`trim_selection_params`'s doc comment), so a stale id surviving under ANY
+/// parameter key — not only the `item_ref` the parameter is declared
+/// against — would silently stop matching once the catalogue id moves.
+fn fold_legacy_bard_param_value(value: &mut SelectionParamValue) -> bool {
+    match value {
+        SelectionParamValue::Single(id) if id.as_str() == LEGACY_BARD_ID => {
+            *id = Id::new(RENAMED_BARD_ID);
+            true
+        }
+        SelectionParamValue::Single(_) => false,
+        SelectionParamValue::Multi(ids) => {
+            if !ids.remove(&Id::new(LEGACY_BARD_ID)) {
+                return false;
+            }
+            ids.insert(Id::new(RENAMED_BARD_ID));
+            true
+        }
+    }
+}
+
+/// Renames `selection.item_ref` and every one of `selection.params`'s values
+/// from [`LEGACY_BARD_ID`] to [`RENAMED_BARD_ID`], reporting whether anything
+/// changed.
+fn fold_legacy_bard_selection(selection: &mut Selection) -> bool {
+    let mut found = false;
+    if selection.item_ref.as_str() == LEGACY_BARD_ID {
+        selection.item_ref = Id::new(RENAMED_BARD_ID);
+        found = true;
+    }
+    for value in selection.params.values_mut() {
+        found |= fold_legacy_bard_param_value(value);
+    }
+    found
+}
+
+/// X9b (F-16): renames every occurrence of [`LEGACY_BARD_ID`] on `entity` to
+/// [`RENAMED_BARD_ID`] — the bought `selections` list, the three
+/// resolved-pick maps (`house_choices`, `mythic_choices`, `warping_choices`,
+/// the same containers [`fold_legacy_being_params`] and
+/// [`trim_all_selection_params`] already walk for the same structural
+/// reason), and every `AbilityScore.parameter`'s
+/// [`AbilityParameterValue::Linked`] `item` — the one place a declaring item's
+/// id can hide outside a [`Selection`] (CV5). Returns whether ANY occurrence
+/// was found, so the caller stamps [`SCHEMA_VERSION`] only when something
+/// actually moved, exactly like [`fold_legacy_equipment_loadout`]'s own
+/// dispatch-on-presence flag.
+fn fold_legacy_bard_id(entity: &mut Entity) -> bool {
+    let mut found = false;
+    for selection in &mut entity.selections {
+        found |= fold_legacy_bard_selection(selection);
+    }
+    for choices in [
+        &mut entity.house_choices,
+        &mut entity.mythic_choices,
+        &mut entity.warping_choices,
+    ] {
+        for selection in choices.values_mut() {
+            found |= fold_legacy_bard_selection(selection);
+        }
+    }
+    for score in &mut entity.ability_scores {
+        if let Some(AbilityParameterValue::Linked { item, .. }) = &mut score.parameter
+            && item.as_str() == LEGACY_BARD_ID
+        {
+            *item = Id::new(RENAMED_BARD_ID);
+            found = true;
+        }
+    }
+    found
 }
 
 /// Trims surrounding whitespace off every parameter value of one selection.
@@ -862,6 +965,17 @@ pub fn load_entity_migrating(
         // the document inherits is therefore the one the user has configured — handed
         // in, because this crate may not read a settings file (engine purity).
         entity.saga_year = default_saga_year;
+        entity.schema_version = SCHEMA_VERSION;
+    }
+
+    // X9b (F-16): dispatch is on finding the OLD id itself, not a legacy key's
+    // presence — there is no single top-level marker the way `talisman_attunements`
+    // or `ability_funding`'s absence is, so `fold_legacy_bard_id` reports whether it
+    // renamed anything, the same per-element flag `fold_legacy_equipment_loadout`
+    // returns. Runs AFTER the trim/being folds above (so it sees canonical values)
+    // and BEFORE `fold_dangling_and_ambiguous_links` below, so a renamed
+    // `Linked.item` resolves against the also-renamed `selections` in the same pass.
+    if fold_legacy_bard_id(&mut entity) {
         entity.schema_version = SCHEMA_VERSION;
     }
 
@@ -1667,7 +1781,7 @@ mod tests {
     /// talisman folds do. The aging log itself is still untouched.
     #[test]
     fn a_schema_fourteen_save_loads_without_migration() {
-        assert_eq!(SCHEMA_VERSION, 20);
+        assert_eq!(SCHEMA_VERSION, 21);
         let schema_14 = r#"{
           "schema_version": 14,
           "ruleset": { "id": "arm5-core", "version": "2024.1" },
@@ -1699,12 +1813,12 @@ mod tests {
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 
-    /// The current-version pin, advanced at every bump (most recently 19 → 20 for
-    /// F1/K5's `EquipmentSlot::loadout` move — see [`SCHEMA_VERSION`]'s own doc
-    /// comment for why that bump owns a fold, unlike C5a's 18 → 19 pure marker).
+    /// The current-version pin, advanced at every bump (most recently 20 → 21 for
+    /// X9b's `virtue.rard` -> `virtue.bard` id rename — see [`SCHEMA_VERSION`]'s own
+    /// doc comment for why that bump owns a fold, unlike C5a's 18 → 19 pure marker).
     #[test]
-    fn schema_version_is_20() {
-        assert_eq!(SCHEMA_VERSION, 20);
+    fn schema_version_is_21() {
+        assert_eq!(SCHEMA_VERSION, 21);
     }
 
     /// C5a's bump is a **pure version marker**: no shape moved, so no fold
@@ -2476,7 +2590,12 @@ mod tests {
         )
         .unwrap();
         assert!(!loaded.entity.mounted);
-        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
+        // Literal 20, not `SCHEMA_VERSION`: the claim this test pins is that a v20
+        // save lacking `mounted` stays at v20 (no bump owed for a purely additive
+        // field), which is a fact about the fixture's OWN claimed version, not about
+        // whatever the live constant happens to be — X9b's later, unrelated bump
+        // must not make this assertion drift with it.
+        assert_eq!(loaded.entity.schema_version, 20);
 
         let json = serde_json::to_string(&loaded.entity).unwrap();
         assert!(!json.contains("mounted"), "got {json}");
@@ -2514,5 +2633,55 @@ mod tests {
         )
         .unwrap();
         assert!(reloaded.entity.mounted);
+    }
+
+    // --- X9b (F-16): `fold_legacy_bard_id` ------------------------------------
+
+    /// The open gap `tmp/x9b-handover.md` flagged: a stray `virtue.rard` value
+    /// hiding under a selection's OWN `params` map (not its `item_ref`) is swept
+    /// too, both a `Single` value and every member of a `Multi` set. No shipped
+    /// parameter can legally hold `virtue.rard` today — none of the three
+    /// `domain: "item"` entries' `require_categories`/`allow_ids` admit it — but
+    /// a hand-edited save is this project's declared hostile-input surface, so
+    /// the fold sweeps every parameter value, not only the ones the shipped
+    /// catalogue happens to produce.
+    #[test]
+    fn a_bard_id_hiding_in_a_selection_param_value_migrates_too() {
+        let old = r#"{
+          "schema_version": 20,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "ability_funding": "pool",
+          "saga_year": 1220,
+          "selections": [
+            { "ref": "virtue.craft_guild_training", "params": { "hermetic_flaw": "virtue.rard" } },
+            { "ref": "virtue.puissant_ability", "params": { "ability": ["virtue.rard", "ability.awareness"] } }
+          ]
+        }"#;
+        let loaded = load_entity_migrating(
+            old,
+            DEFAULT_SAGA_YEAR,
+            &empty_ruleset(),
+            &empty_catalogue_names(),
+        )
+        .unwrap();
+
+        let single = loaded.entity.selections[0]
+            .params
+            .get("hermetic_flaw")
+            .and_then(SelectionParamValue::as_single)
+            .cloned();
+        assert_eq!(single, Some(Id::new("virtue.bard")));
+
+        let SelectionParamValue::Multi(multi) = &loaded.entity.selections[1].params["ability"]
+        else {
+            panic!("expected a Multi value");
+        };
+        assert!(multi.contains(&Id::new("virtue.bard")));
+        assert!(!multi.contains(&Id::new("virtue.rard")));
+        assert!(multi.contains(&Id::new("ability.awareness")));
+
+        assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 }

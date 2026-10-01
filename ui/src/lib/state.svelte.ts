@@ -91,7 +91,7 @@ const VALIDATE_DEBOUNCE_MS = 150;
  * Mirrors `arm_rules::SCHEMA_VERSION` by hand; the Rust constant is the source
  * and `the_frontend_mirrors_the_engine_schema_version` pins the two together.
  */
-export const SCHEMA_VERSION = 20;
+export const SCHEMA_VERSION = 21;
 
 /**
  * The saga year a document starts at when nothing else says otherwise — the

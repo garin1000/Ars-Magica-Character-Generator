@@ -3887,6 +3887,16 @@
     "source": { "anchor": "baccalaureus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3470, 3475] }
   },
   {
+    "id": "virtue.bard",
+    "kind": "virtue",
+    "magnitude": "free",
+    "categories": ["social_status"],
+    "classification": "creation_effect",
+    "entity_kinds": ["character"],
+    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 1 }],
+    "source": { "anchor": "rard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3476, 3479] }
+  },
+  {
     "id": "virtue.beadle",
     "kind": "virtue",
     "magnitude": "minor",
@@ -6491,16 +6501,6 @@
     "entity_kinds": ["character"],
     "effects": [{ "type": "health_mod", "track": "recovery", "amount": 3 }],
     "source": { "anchor": "rapid-convalescence", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4834, 4837] }
-  },
-  {
-    "id": "virtue.rard",
-    "kind": "virtue",
-    "magnitude": "free",
-    "categories": ["social_status"],
-    "classification": "creation_effect",
-    "entity_kinds": ["character"],
-    "effects": [{ "type": "grants_reputation", "kind": "local", "score": 1 }],
-    "source": { "anchor": "rard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3476, 3479] }
   },
   {
     "id": "virtue.rat_up_a_drainpipe",

@@ -1,5 +1,5 @@
 {
-  "schema_version": 20,
+  "schema_version": 21,
   "ruleset": {
     "id": "arm5-core",
     "version": "2024.1"

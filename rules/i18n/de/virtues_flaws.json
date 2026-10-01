@@ -1819,6 +1819,10 @@
     "name": "Baccalaureus",
     "summary": "Der Charakter hat ein dreijähriges Studium an einer Universität abgeschlossen und den Baccalaureus Artium (Bakkalaureat der Künste) erworben."
   },
+  "virtue.bard": {
+    "name": "Barde",
+    "summary": "Der Charakter hat eine Bardenschule besucht und nach vier Jahren die Prüfung bestanden, wodurch er den Titel Fili im Rang des Dos erlangt hat."
+  },
   "virtue.beadle": {
     "name": "Pedell",
     "summary": "Der Charakter ist ein Assistent eines Universitätsdekans."
@@ -2821,10 +2825,6 @@
   "virtue.rapid_convalescence": {
     "name": "Schnelle Genesung",
     "summary": "Dein Körper kann schnell heilen."
-  },
-  "virtue.rard": {
-    "name": "Barde",
-    "summary": "Der Charakter hat eine Bardenschule besucht und nach vier Jahren die Prüfung bestanden, wodurch er den Titel Fili im Rang des Dos erlangt hat."
   },
   "virtue.rat_up_a_drainpipe": {
     "name": "Ratte im Abflussrohr",

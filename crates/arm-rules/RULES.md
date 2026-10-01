@@ -7259,6 +7259,7 @@ falls outside its grant; `docs/vf-audit/decisions.md` § D11,
   Reputation'" — was a fixed, invented score 1)
 - `flaw.usurer` (ArMDE:6951-6954) — reputation grant poor score 4
 - `virtue.baccalaureus` (ArMDE:3470-3475) — XP grant 90 + reputation grant academic score 1
+- `virtue.bard` (ArMDE:3476-3479) — reputation grant local score 1
 - `virtue.cathedral_school_master` (ArMDE:3549-3554) — XP grant 240 + reputation grant academic score 2
 - `virtue.doctor_in_faculty` (ArMDE:3683-3698) — XP grant 300 + reputation grant academic score 3
 - `virtue.famous` (ArMDE:3861-3864) — reputation grant player-chosen score 4
@@ -7274,7 +7275,6 @@ falls outside its grant; `docs/vf-audit/decisions.md` § D11,
 - `virtue.protection` (ArMDE:4810-4813) — reputation grant player-chosen score 3
   (F-235: "a Reputation (good or bad, your choice) of level 3" — carried by no
   effect before this fix)
-- `virtue.rard` (ArMDE:3476-3479) — reputation grant local score 1
 - `virtue.rosh_beth_din` (ArMDE:4878-4883) — XP grant 50 + reputation grant
   player-chosen score 2 + grants Virtue (F-254: `kind` dropped — "applies
   across his country" is wider than Local and not

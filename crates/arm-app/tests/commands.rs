@@ -340,7 +340,7 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
     // The shipped sample now carries characteristics, ability scores, and a bank,
     // and is kept at the current schema version so a save/load round trip on it is
     // an identity (see `save_then_load_round_trips_with_byte_stable_canonical_json`).
-    assert_eq!(entity.schema_version, 20);
+    assert_eq!(entity.schema_version, 21);
     assert!(!entity.characteristics.is_empty());
     assert!(!entity.ability_scores.is_empty());
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
@@ -1002,7 +1002,7 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     .unwrap()
     .entity;
     assert_eq!(
-        migrated.schema_version, 20,
+        migrated.schema_version, 21,
         "the field move bumps the schema"
     );
     let talisman = migrated
@@ -1020,7 +1020,7 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     let written = fs::read_to_string(&path).unwrap();
     assert!(!written.contains("talisman_attunements"), "got: {written}");
     assert!(written.contains("\"talisman\""), "got: {written}");
-    assert!(written.contains("\"schema_version\": 20"), "got: {written}");
+    assert!(written.contains("\"schema_version\": 21"), "got: {written}");
 }
 
 /// C8: the app's load door is what carries the user's configured default into the
@@ -1072,7 +1072,7 @@ fn save_stamps_current_schema_version() {
     save_entity_to_path(&entity, &path).unwrap();
     let written = fs::read_to_string(&path).unwrap();
     assert!(
-        written.contains("\"schema_version\": 20"),
+        written.contains("\"schema_version\": 21"),
         "save must stamp the current schema version, got: {written}"
     );
 }
@@ -1565,7 +1565,7 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
     )
     .unwrap()
     .entity;
-    assert_eq!(reloaded.schema_version, 20);
+    assert_eq!(reloaded.schema_version, 21);
     assert_eq!(reloaded.art_scores, entity.art_scores);
 }
 
@@ -4499,7 +4499,7 @@ fn the_examples_keep_a_genuine_pre_migration_fixture() {
     // And the current fixture is genuinely current, so the round-trip test above is
     // comparing like with like.
     let current = fs::read_to_string(repo_root().join("examples/companion_sample.json")).unwrap();
-    assert!(current.contains("\"schema_version\": 20"), "got {current}");
+    assert!(current.contains("\"schema_version\": 21"), "got {current}");
     assert!(current.contains("\"saga_year\": 1220"), "got {current}");
 }
 

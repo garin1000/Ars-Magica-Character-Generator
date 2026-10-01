@@ -1817,6 +1817,10 @@
     "name": "Baccalaureus",
     "summary": "The character has completed a three-year program at a university to receive a baccalaureus artium (Bachelor of Arts degree)."
   },
+  "virtue.bard": {
+    "name": "Bard",
+    "summary": "The character has attended a bardic school and has passed the examination after four years, earning him the title of fili at the rank of Dos."
+  },
   "virtue.beadle": {
     "name": "Beadle",
     "summary": "The character is an assistant to a university dean."
@@ -2819,10 +2823,6 @@
   "virtue.rapid_convalescence": {
     "name": "Rapid Convalescence",
     "summary": "Your body can heal quickly."
-  },
-  "virtue.rard": {
-    "name": "Rard",
-    "summary": "The character has attended a bardic school and has passed the examination after four years, earning him the title of fili at the rank of Dos."
   },
   "virtue.rat_up_a_drainpipe": {
     "name": "Rat Up a Drainpipe",
