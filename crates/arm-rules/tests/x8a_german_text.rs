@@ -10,10 +10,9 @@
 //! in `tmp/x8a-verdicts.md`.
 //!
 //! F-46 (`virtue.cyclic_magic_positive`) is already fixed in the shipped tree,
-//! so it is a guard, not a red. `virtue.enchanting_ability` (D57 shape, but
-//! entangled with the granted Ability's own label — see `tmp/x8a-verdicts.md`
-//! § E) is deliberately left with no pinned-string test: it needs a ruling,
-//! not a guess.
+//! so it is a guard, not a red. `virtue.enchanting_ability` is pinned in the
+//! D57 table: its DE name template is the Virtue's own, separate from the
+//! granted `ability.enchanting` label (`tmp/x8a-handover.md` § E).
 
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::Id;

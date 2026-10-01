@@ -828,6 +828,22 @@ presumption of correctness.
 
 ---
 
+## D77 — X9c's three open points (`tmp/x9c-plan.md`)
+
+**Norbert, 2026-10-01.**
+1. **The extent guard is extended.** A blockquoted `> ####` heading that opens
+   another entry's sidebar ends the previous entry's range, so
+   `rules_source_provenance.rs` catches the `virtue.perfectus` pattern.
+2. **A sidebar placed just before the heading it belongs to stays uncited**
+   (e.g. ArMDE:3693). An entry's range is its heading plus its body; the sweep
+   records such sidebars.
+3. **F-500: `WarpingGrant.score` is dropped.** The engine derives the visible
+   Warping Score from the point total (`effective/warping.rs::warping_score`),
+   so a stored score is an unread second copy that can only disagree. A test
+   pins that Warped by Magic shows Score 1 from its 5 points (ArMDE:7019-7021).
+
+---
+
 ## D76 — the Friday review defers the coverage target
 
 **Norbert, 2026-10-01.** Engine coverage is 91.51% against the full-review

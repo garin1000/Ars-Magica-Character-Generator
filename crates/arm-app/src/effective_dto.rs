@@ -125,6 +125,7 @@ pub struct EffectiveScores {
     /// the budget without recomputing it in TS. Budget numbers stay
     /// engine-authoritative.
     pub virtue_budget: u32,
+    /// The Flaw-side twin of [`Self::virtue_budget`].
     pub flaw_budget: u32,
     /// The virtue/flaw points actually spent — `validation::compute_balance`'s own
     /// figure, the same one `export.rs`'s Markdown export and the
@@ -136,6 +137,7 @@ pub struct EffectiveScores {
     /// `compute_balance` with nothing to catch it — the same defect class as
     /// [`Self::characteristic_points_used`] above (VA1/GF1/GD4).
     pub virtue_points: i32,
+    /// The Flaw-side twin of [`Self::virtue_points`].
     pub flaw_points: i32,
     /// The magus's effective spell-levels budget (base + Skilled/Weak Parens
     /// modifiers + the levels its post-Gauntlet years bought) — the "available"
@@ -186,12 +188,14 @@ pub struct EffectiveScores {
     /// Effective Confidence Score / Points (type default + V/F), for the read-only
     /// Confidence readout. 0/0 for grogs (who have no Confidence).
     pub confidence_score: u8,
+    /// The Confidence Points beside [`Self::confidence_score`].
     pub confidence_points: u8,
     /// The Gift's free Supernatural-Ability slots: how many the character has
     /// (1 for a Gifted non-magus, else 0) and how many are already used. The
     /// ability picker greys a Supernatural Ability when `used >= total` and it is
     /// not already granted by a Virtue.
     pub supernatural_free_total: u8,
+    /// How many of [`Self::supernatural_free_total`]'s slots are already used.
     pub supernatural_free_used: u8,
     /// The Reputation grants the character's V/F confer, so the UI only offers a
     /// Reputation add-control (pre-filled kind/score) when one exists.
@@ -201,6 +205,7 @@ pub struct EffectiveScores {
     /// with the score derived by inverting the advancement curve (15 points → 2).
     /// 0/0 when there is no Warping. Engine-authoritative; never recomputed in JS.
     pub warping_score: u8,
+    /// The Warping Points total that [`Self::warping_score`] is derived from.
     pub warping_points: u32,
     /// One OPEN grant per owed warping slot (stable `choice_key` + the constraint
     /// its fill must satisfy), so the UI renders one picker per slot filtered to
