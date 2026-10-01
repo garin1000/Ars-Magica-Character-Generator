@@ -3876,7 +3876,7 @@ Like companion and magus characters, this character has Confidence points. Howev
 
 #### Fida'i
 *Minor, Social Status*<br>
-The character is an assassin of the Nizari Isma'ilis. A fida'i is a devout member of the sect who is prepared to die on its orders, and as such he should consider taking either the Oath of Fealty or Dutybound Flaw. When not on a mission, a fida'i wears white, with a red girdle, cap, or boots. He has been trained in precise placement of daggers and blades, as well as disguise. Fida'i may take Martial Abilities at character creation. He can expect to become a lasig if he proves his loyalty to the sect.
+The character is an assassin of the Nizari Isma'ilis. A fida'i is a devout member of the sect who is prepared to die on its orders, and as such he should consider taking either the Oath of Fealty or Dutybound Flaw. When not on a mission, a fida'i wears white, with a red girdle, cap, or boots. He has been trained in precise placement of daggers and blades, as well as disguise. Fida'i may take Martial Abilities at character creation. He can expect to become a lasiq if he proves his loyalty to the sect.
 
 This Social Status Virtue may be taken by a character who is living far from the home of the Nizaris, as the assassins are sent on missions, and may be sent far away. Such a character should have a Story Flaw representing his mission, and choose the Social Status he is pretending to have. See *The Cradle and the Crescent*, from page 162, for more detail on the Nizaris.
 
@@ -4232,7 +4232,7 @@ Your Size is +1 instead of 0, so you are between six and seven feet tall. This m
 
 #### Lasiq
 *Major, Social Status*<br>
-The character is an experienced assassin of the Nizari İsma'ilis, having successfully completed seven murders at the orders of his grand master, and commands a small band of up to six fida'is. Lasiq may take Martial Abilities at character creation. As for a fida'i, a lasig may be far from home on a mission, either alone or with some fida'i. In such as case, he is pretending to have some other social status, which you should choose. For more details on the Nizaris, see The Cradle and the Crescent, from page 162.
+The character is an experienced assassin of the Nizari İsma'ilis, having successfully completed seven murders at the orders of his grand master, and commands a small band of up to six fida'is. Lasiq may take Martial Abilities at character creation. As for a fida'i, a lasiq may be far from home on a mission, either alone or with some fida'i. In such as case, he is pretending to have some other social status, which you should choose. For more details on the Nizaris, see The Cradle and the Crescent, from page 162.
 
 #### Latent Magic Ability
 *Minor, General*<br>
