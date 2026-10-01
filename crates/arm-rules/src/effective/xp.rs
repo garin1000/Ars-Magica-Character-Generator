@@ -2026,6 +2026,56 @@ mod tests {
         e
     }
 
+    /// D76 coverage follow-up: `AbilityInstanceRef::satisfied_by`'s own doc
+    /// comment calls `(None, None)` — no `bound_source`, no `parameter`
+    /// restriction — "vacuously satisfied". This is the ordinary shape for a
+    /// restricted pool naming a plain, unparameterized Ability (most of
+    /// them), yet no existing test constructs the type directly to check it.
+    #[test]
+    fn ability_instance_ref_with_no_restriction_is_satisfied_by_anything() {
+        let unrestricted = AbilityInstanceRef {
+            ability: Id::new("ability.single_weapon"),
+            parameter: None,
+            requires_catalogued: false,
+            bound_source: None,
+            ambiguous: false,
+        };
+        assert!(unrestricted.satisfied_by(None));
+        assert!(unrestricted.satisfied_by(Some(&AbilityParameterValue::text("anything"))));
+    }
+
+    /// `AuthorizedAbility::covers`'s `ambiguous` check must short-circuit to
+    /// `false` even when the ability id and instance would otherwise match —
+    /// "satisfies NOTHING, ever", per `AbilityInstanceRef::ambiguous`'s own
+    /// doc comment, which this type mirrors. No existing test sets
+    /// `ambiguous: true` and then calls `covers`.
+    #[test]
+    fn authorized_ability_covers_nothing_when_ambiguous() {
+        let authorized = AuthorizedAbility {
+            ability: Id::new("ability.area_lore"),
+            instance: None,
+            requires_catalogued: false,
+            bound_source: None,
+            ambiguous: true,
+        };
+        assert!(!authorized.covers(&Id::new("ability.area_lore"), None));
+    }
+
+    /// `bound_instance_satisfied`'s `None` arm: a Bound-source restriction can
+    /// never be satisfied by an ability bought with NO parameter at all — not
+    /// even by an explicit empty value, only by an actual bought `Linked`,
+    /// `Text` or `Catalogued`. No existing test calls it with `parameter:
+    /// None`.
+    #[test]
+    fn bound_instance_is_never_satisfied_by_an_unparameterized_purchase() {
+        assert!(!bound_instance_satisfied(
+            &Id::new("virtue.student_of_realm"),
+            "realm",
+            Some("ability.faerie_lore"),
+            None,
+        ));
+    }
+
     /// K1 (round-2 CRITICAL): `checked_xp_allocation` is the only entry point to
     /// the flow solve safe to call on an untrusted `Entity`. Exactly at the
     /// bound (`nodes == MAX_XP_SOLVE_NODES`) it must still compute, and return

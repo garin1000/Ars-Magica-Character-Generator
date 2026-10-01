@@ -321,3 +321,95 @@ pub fn characteristic_aging_drops(
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ruleset::RulesetSources;
+    use crate::types::{EntityKind, RulesetRef};
+
+    const TYPES: &str = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general"], "creation_phases": [] }
+    ]"#;
+
+    fn bare_entity() -> Entity {
+        Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        )
+    }
+
+    /// D76 coverage follow-up: `capped_characteristic_delta_contribution`'s own
+    /// early return when the ruleset carries NO Characteristic rules at all —
+    /// unreachable via the shipped ruleset, which always ships
+    /// `rules/core/characteristics.json`, so only a hand-built (or malformed)
+    /// ruleset omitting it can reach this fallback.
+    #[test]
+    fn delta_contribution_passes_the_amount_through_with_no_characteristic_rules() {
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: TYPES,
+            characteristics: None,
+            ..RulesetSources::default()
+        })
+        .unwrap();
+        let entity = bare_entity();
+        assert_eq!(
+            capped_characteristic_delta_contribution(&rs, &entity, Characteristic::Str, 2),
+            2
+        );
+    }
+
+    /// The table-less fallback for both the raise (`base_max_score`) and drop
+    /// (`base_min_score`) directions: with Characteristic rules present but no
+    /// `base_max`/`base_min` and an empty cost table, both resolve to `None`
+    /// (`CharacteristicRules::base_max_score`'s own doc comment: "`None` only
+    /// when the table itself is empty"), so the delta passes through
+    /// unclamped. The shipped `characteristics.json` always sets `base_max: 3`
+    /// / `base_min: -3`, so neither fallback is reachable from real data.
+    #[test]
+    fn delta_contribution_is_unclamped_when_the_cost_table_is_empty() {
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: TYPES,
+            characteristics: Some(r#"{ "start_points": 7, "costs": [] }"#),
+            ..RulesetSources::default()
+        })
+        .unwrap();
+        let entity = bare_entity();
+        assert_eq!(
+            capped_characteristic_delta_contribution(&rs, &entity, Characteristic::Str, 3),
+            3
+        );
+        assert_eq!(
+            capped_characteristic_delta_contribution(&rs, &entity, Characteristic::Str, -3),
+            -3
+        );
+    }
+
+    /// `amount.signum()`'s wildcard arm: a zero delta contributes nothing,
+    /// regardless of the bought score or the table.
+    #[test]
+    fn delta_contribution_of_zero_is_always_zero() {
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: TYPES,
+            characteristics: Some(include_str!("../../../../rules/core/characteristics.json")),
+            ..RulesetSources::default()
+        })
+        .unwrap();
+        let entity = bare_entity();
+        assert_eq!(
+            capped_characteristic_delta_contribution(&rs, &entity, Characteristic::Str, 0),
+            0
+        );
+    }
+}

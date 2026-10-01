@@ -243,6 +243,35 @@ mod tests {
         completeness(entity, &rs()).incomplete_phases
     }
 
+    /// D76 coverage follow-up: `CompletenessReport::is_incomplete` itself had
+    /// no direct test — every existing test reads `incomplete_phases`
+    /// directly rather than through this convenience method.
+    #[test]
+    fn is_incomplete_reads_the_recorded_phase_list() {
+        let report = CompletenessReport {
+            incomplete_phases: vec![CreationPhase::Aging],
+        };
+        assert!(report.is_incomplete(CreationPhase::Aging));
+        assert!(!report.is_incomplete(CreationPhase::Review));
+    }
+
+    /// `phase_is_engaged`'s `CreationPhase::Review` arm: "the closing look at
+    /// the whole character... can never be untouched" — unreachable from
+    /// `completeness()`'s own iteration, since no shipped profile's
+    /// `creation_phases` names `review` (it is the wizard's synthetic step,
+    /// added by the UI layer, never by rules data), so this calls the
+    /// private function directly.
+    #[test]
+    fn phase_is_engaged_treats_review_as_always_engaged() {
+        let ruleset = rs();
+        let profile = ruleset.profile(&Id::new("grog")).unwrap();
+        assert!(phase_is_engaged(
+            CreationPhase::Review,
+            &character("grog"),
+            profile
+        ));
+    }
+
     #[test]
     fn an_untouched_character_is_incomplete_in_every_phase_that_takes_a_choice() {
         assert_eq!(

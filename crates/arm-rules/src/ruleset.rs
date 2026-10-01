@@ -881,6 +881,41 @@ mod tests {
     use crate::types::ParameterDomain;
     use pretty_assertions::assert_eq;
 
+    /// D76 coverage follow-up: `minor_variant_sibling` itself had no direct
+    /// test at all — every exercise of it came indirectly through
+    /// `ruleset/integrity.rs`'s load-time Major/Minor pairing check against
+    /// real catalogue ids, which always carry a `namespace.` prefix. These
+    /// four cases pin its own contract: the `_major`/`major_` affix swap on
+    /// a namespaced id, the no-namespace fallback (a malformed id the
+    /// integrity check must not panic on), and the "not a Major variant at
+    /// all" `None` case.
+    #[test]
+    fn minor_variant_sibling_swaps_the_major_suffix_within_its_namespace() {
+        let sibling = minor_variant_sibling(&Id::new("virtue.magical_focus_major"));
+        assert_eq!(sibling, Some(Id::new("virtue.magical_focus_minor")));
+    }
+
+    #[test]
+    fn minor_variant_sibling_swaps_the_major_prefix_within_its_namespace() {
+        let sibling = minor_variant_sibling(&Id::new("virtue.major_magical_focus"));
+        assert_eq!(sibling, Some(Id::new("virtue.minor_magical_focus")));
+    }
+
+    /// A real catalogue id always carries a `namespace.` prefix, but a
+    /// hand-edited or corrupted `rules/core/*.json` need not — this is the
+    /// trust-boundary case: the integrity check that calls this function
+    /// must degrade to a plain name swap rather than panic.
+    #[test]
+    fn minor_variant_sibling_handles_an_id_with_no_namespace() {
+        let sibling = minor_variant_sibling(&Id::new("something_major"));
+        assert_eq!(sibling, Some(Id::new("something_minor")));
+    }
+
+    #[test]
+    fn minor_variant_sibling_is_none_for_an_id_that_is_not_a_major_variant() {
+        assert_eq!(minor_variant_sibling(&Id::new("virtue.the_gift")), None);
+    }
+
     const VALID_ITEMS: &str = r#"[
       {
         "id": "virtue.the_gift",

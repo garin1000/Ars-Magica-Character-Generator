@@ -1167,6 +1167,36 @@ mod tests {
         assert!(depended_on_unknown);
     }
 
+    /// `Prereq::IsGrog`'s `None` arm (D76 coverage follow-up): when no type
+    /// profile resolved, `ctx.is_grog` is `None` and the audience is
+    /// genuinely unknown, never a definite False — mirrors `AgeMin`'s and
+    /// `House`'s own `None` arms. Every other `PrereqCtx` fixture in this
+    /// module sets `is_grog: None` too, but none of them evaluate
+    /// `Prereq::IsGrog` itself, so this exact arm had no test.
+    #[test]
+    fn evaluate_prereq_is_grog_unknown_when_profile_absent() {
+        let (present_ids_owned, ability_scores, art_scores) = empty_ctx();
+        let present_ids: BTreeSet<&Id> = present_ids_owned.iter().collect();
+        let ctx = PrereqCtx {
+            present_ids,
+            trained: None,
+            order: None,
+            is_companion: None,
+            is_grog: None,
+            type_profile_id: None,
+            house: None,
+            ability_scores,
+            art_scores,
+            held_categories: BTreeMap::new(),
+            age: None,
+            held_categories_by_kind: BTreeMap::new(),
+        };
+
+        let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsGrog, &ctx, 1, None);
+        assert_eq!(outcome, Tri::Unknown);
+        assert!(depended_on_unknown);
+    }
+
     /// D69/X7b-e row 42/D68.4: `Prereq::HasCategoryAtMagnitude` is a definite
     /// True when a held item's category AND kind match and its magnitude is
     /// at or above the required one — the magnitude/kind-filtered twin of
