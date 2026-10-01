@@ -68,7 +68,7 @@ function resetEntity(): void {
   };
 }
 
-function labTotal(): LabTotal {
+function labTotal(overrides: Partial<LabTotal> = {}): LabTotal {
   return {
     technique: 'art.creo',
     form: 'art.ignem',
@@ -77,6 +77,7 @@ function labTotal(): LabTotal {
     within_focus: null,
     deficient: false,
     enchanting: 30,
+    ...overrides,
   };
 }
 
@@ -107,9 +108,9 @@ function castingTotal(overrides: Partial<CastingTotal> = {}): CastingTotal {
 }
 
 /** Render the section to an HTML string (node env, no DOM). */
-function html(casting: CastingTotal = castingTotal()): string {
+function html(casting: CastingTotal = castingTotal(), lab: LabTotal = labTotal()): string {
   return render(DerivedLabCastingSection, {
-    props: { d: { lab_totals: [labTotal()], casting_totals: [casting] } as never },
+    props: { d: { lab_totals: [lab], casting_totals: [casting] } as never },
   }).body;
 }
 
@@ -172,6 +173,106 @@ describe('DerivedLabCastingSection — table semantics (Sabine 9)', () => {
     expect(headers.length).toBe(7);
     expect(headers.filter((h) => h.includes('scope="row"')).length).toBe(2);
     expect(headers.every((h) => h.includes('scope='))).toBe(true);
+  });
+
+  // D79: Potent Magic gets its own row, independent of the within-focus one
+  // above — a cell may carry either figure, both, or neither.
+  it('scopes the within-potent-field row header too when that row renders', () => {
+    const table = castingTable(
+      html(
+        castingTotal({
+          within_potent_field: {
+            formulaic: 31,
+            ritual: 34,
+            spontaneous_fatiguing: 15,
+            spontaneous_non_fatiguing: 7,
+          },
+        }),
+      ),
+    );
+    const headers = table.match(/<th(?=[\s>])[^>]*>/g) ?? [];
+    expect(headers.length).toBe(7);
+    expect(headers.filter((h) => h.includes('scope="row"')).length).toBe(2);
+    expect(headers.every((h) => h.includes('scope='))).toBe(true);
+  });
+
+  it('scopes both extra row headers when a cell carries both figures', () => {
+    const table = castingTable(
+      html(
+        castingTotal({
+          within_focus: {
+            focus_art: 8,
+            formulaic: 33,
+            ritual: 36,
+            spontaneous_fatiguing: 16,
+            spontaneous_non_fatiguing: 8,
+          },
+          within_potent_field: {
+            formulaic: 31,
+            ritual: 34,
+            spontaneous_fatiguing: 15,
+            spontaneous_non_fatiguing: 7,
+          },
+        }),
+      ),
+    );
+    const headers = table.match(/<th(?=[\s>])[^>]*>/g) ?? [];
+    expect(headers.length).toBe(8);
+    expect(headers.filter((h) => h.includes('scope="row"')).length).toBe(3);
+    expect(headers.every((h) => h.includes('scope='))).toBe(true);
+  });
+});
+
+// D79 (docs/vf-audit/decisions.md): the Lab/Casting grids' own within-Potent-
+// Magic-field figures — independent of the within-focus ones already covered
+// above, since a character may hold a Magical Focus, Potent Magic, both, or
+// neither (gates proven independent by the SpellTab toggle-gating tests).
+describe('DerivedLabCastingSection — within-Potent-Magic-field figures (D79)', () => {
+  it('shows the Lab Total within-potent-field figure only when the cell carries one', () => {
+    const shown = html(castingTotal(), labTotal({ within_potent_field: 33 }));
+    expect(shown).toContain(store.t('derived-within-potent-field'));
+    expect(shown).toContain('33');
+
+    const hidden = html(castingTotal(), labTotal());
+    expect(hidden).not.toContain(store.t('derived-within-potent-field'));
+  });
+
+  it('shows the Casting Total within-potent-field row only when the cell carries one', () => {
+    const table = castingTable(
+      html(
+        castingTotal({
+          within_potent_field: {
+            formulaic: 31,
+            ritual: 34,
+            spontaneous_fatiguing: 15,
+            spontaneous_non_fatiguing: 7,
+          },
+        }),
+      ),
+    );
+    expect(table).toContain(store.t('derived-within-potent-field'));
+    expect(table).toContain('<td>31</td>');
+
+    const hiddenTable = castingTable(html(castingTotal()));
+    expect(hiddenTable).not.toContain(store.t('derived-within-potent-field'));
+  });
+
+  it('is independent of the within-focus figure: a cell may show either, both, or neither', () => {
+    const neither = html(castingTotal(), labTotal());
+    expect(neither).not.toContain(store.t('derived-within-focus'));
+    expect(neither).not.toContain(store.t('derived-within-potent-field'));
+
+    const focusOnly = html(castingTotal(), labTotal({ within_focus: 40 }));
+    expect(focusOnly).toContain(store.t('derived-within-focus'));
+    expect(focusOnly).not.toContain(store.t('derived-within-potent-field'));
+
+    const potentOnly = html(castingTotal(), labTotal({ within_potent_field: 33 }));
+    expect(potentOnly).not.toContain(store.t('derived-within-focus'));
+    expect(potentOnly).toContain(store.t('derived-within-potent-field'));
+
+    const both = html(castingTotal(), labTotal({ within_focus: 40, within_potent_field: 33 }));
+    expect(both).toContain(store.t('derived-within-focus'));
+    expect(both).toContain(store.t('derived-within-potent-field'));
   });
 });
 

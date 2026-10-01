@@ -1478,6 +1478,11 @@ class AppStore {
     this.#spellWorkflow.setWithinFocusAt(index, value);
   }
 
+  /** @see SpellWorkflow.setWithinPotentFieldAt */
+  setSpellWithinPotentFieldAt(index: number, value: boolean): void {
+    this.#spellWorkflow.setWithinPotentFieldAt(index, value);
+  }
+
   /**
    * Adjust the bought Spell Mastery score of the spell at `index` by `delta`,
    * clamped to [0, max].

@@ -16,7 +16,7 @@ use arm_app::ruleset_io::{
 };
 use arm_rules::{
     AbilityParameterValue, AbilityScore, ArtScore, CreationPhase, Entity, Id, Ruleset,
-    RulesetSources, Selection, ValidationMode,
+    RulesetSources, Selection, SpellSelection, ValidationMode, derived_totals,
 };
 use pretty_assertions::assert_eq;
 use std::collections::BTreeMap;
@@ -4617,5 +4617,60 @@ fn unlink_ability_parameters_converts_a_linked_ability_score_to_text() {
         updated.ability_scores[0].parameter,
         Some(AbilityParameterValue::text("Smiths' Guild of Verdi")),
         "the linked Ability score must convert to Text holding the last resolvable value"
+    );
+}
+
+/// D79 (`docs/vf-audit/decisions.md`): the frontend must not reconstruct a
+/// per-spell Casting Total client-side from the three grid figures (base /
+/// within-focus / within-potent-field) — `halve(a) + halve(b) != halve(a + b)`
+/// in general, so summing two already-halved grid deltas is wrong whenever the
+/// cell is Deficient. `derived_totals` instead carries one
+/// `spell_casting_totals` entry per `entity.spells` row, index-aligned,
+/// computed by the engine's own `spell_casting_total` (which already combines
+/// both markers correctly). This is the IPC boundary's own test: the real
+/// `derived_totals` Tauri command (`commands.rs::derived_totals`) is a thin
+/// pass-through to `arm_rules::derived_totals`, exercised directly here
+/// against the real shipped ruleset.
+#[test]
+fn derived_totals_spell_casting_totals_are_index_aligned_with_entity_spells() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut magus = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("magus"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+    // Creo 12 / Ignem 15, nothing else: base Casting Total 27 for
+    // spell.pilum_of_fire (the same baseline the engine's own
+    // `d79_potent_magic.rs` suite uses).
+    magus.art_scores = vec![
+        ArtScore::new(Id::new("art.creo"), 12),
+        ArtScore::new(Id::new("art.ignem"), 15),
+    ];
+    magus.selections = vec![Selection::with_params(
+        Id::new("virtue.potent_magic_major"),
+        BTreeMap::from([("field".to_string(), Id::new("fire"))]),
+    )];
+    let mut unmarked = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+    unmarked.within_potent_field = false;
+    let mut marked = SpellSelection::new(Id::new("spell.pilum_of_fire"));
+    marked.within_potent_field = true;
+    magus.spells = vec![unmarked, marked];
+
+    let totals = derived_totals(&magus, &ruleset);
+    assert_eq!(
+        totals.spell_casting_totals.len(),
+        2,
+        "one entry per entity.spells row, index-aligned: {:?}",
+        totals.spell_casting_totals
+    );
+    let unmarked_total =
+        totals.spell_casting_totals[0].expect("spell.pilum_of_fire is in the shipped catalogue");
+    let marked_total =
+        totals.spell_casting_totals[1].expect("spell.pilum_of_fire is in the shipped catalogue");
+    assert_eq!(
+        marked_total - unmarked_total,
+        6,
+        "row 1 (within_potent_field: true) must add Major Potent Magic's +6 over row 0 \
+         (marked {marked_total}, unmarked {unmarked_total})"
     );
 }

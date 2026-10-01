@@ -96,6 +96,20 @@ export class SpellWorkflow {
   }
 
   /**
+   * Set (or clear) the player's own claim that the spell at `index` falls
+   * within the character's Potent Magic field (D79, ArMDE:4740-4748) — same
+   * shape as {@link setWithinFocusAt} and independent of it, since the two
+   * free-text themes need not coincide. `false` omits the field.
+   */
+  setWithinPotentFieldAt(index: number, value: boolean): void {
+    const entity = this.#host.entity();
+    entity.spells = (entity.spells ?? []).map((s, i) =>
+      i === index ? { ...s, within_potent_field: value ? true : undefined } : s,
+    );
+    this.#host.scheduleValidate();
+  }
+
+  /**
    * Adjust the bought Spell Mastery score of the spell at `index` by `delta`,
    * clamped to [0, max]. Spent from the restricted Spell-Mastery XP pool; the
    * granted floor (Flawless Magic) is applied on top when computing the effective

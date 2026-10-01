@@ -92,6 +92,10 @@
         <dt class="derived-focus">{store.t('derived-within-focus')}</dt>
         <dd class="derived-focus">{labCell.within_focus}</dd>
       {/if}
+      {#if labCell.within_potent_field != null}
+        <dt class="derived-focus">{store.t('derived-within-potent-field')}</dt>
+        <dd class="derived-focus">{labCell.within_potent_field}</dd>
+      {/if}
       {#if labCell.enchanting !== labCell.total}
         <!-- Only shown when Weak Enchanter halves this cell's total for
              enchanting; equal to `total` (and hidden) for everyone else, so
@@ -152,6 +156,15 @@
               <td>{castCell.within_focus.ritual}</td>
               <td>{castCell.within_focus.spontaneous_fatiguing}</td>
               <td>{castCell.within_focus.spontaneous_non_fatiguing}</td>
+            </tr>
+          {/if}
+          {#if castCell.within_potent_field}
+            <tr class="derived-focus">
+              <th scope="row">{store.t('derived-within-potent-field')}</th>
+              <td>{castCell.within_potent_field.formulaic}</td>
+              <td>{castCell.within_potent_field.ritual}</td>
+              <td>{castCell.within_potent_field.spontaneous_fatiguing}</td>
+              <td>{castCell.within_potent_field.spontaneous_non_fatiguing}</td>
             </tr>
           {/if}
         </tbody>

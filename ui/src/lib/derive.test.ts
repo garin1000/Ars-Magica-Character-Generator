@@ -73,7 +73,6 @@ import {
   resolvedLinksFrom,
   sameParam,
   selectionDisplayName,
-  spellCastingTotal,
   spellDisplayName,
   spellLevelAllocation,
   spellRangeBeyondTouch,
@@ -95,7 +94,6 @@ import type {
   GrantConstraint,
   LocalizedRuleset,
   PointItem,
-  CastingTotal,
   Reputation,
   ReputationGrant,
   Spell,
@@ -2035,62 +2033,6 @@ describe('spellRangeBeyondTouch', () => {
   it('treats an absent range as not beyond Touch regardless of the set', () => {
     expect(spellRangeBeyondTouch(undefined, ['eye'])).toBe(false);
     expect(spellRangeBeyondTouch(null, ['eye'])).toBe(false);
-  });
-});
-
-// X10c (design-x10bc-save-format.md § 3, D73.2): the in-app per-spell Casting
-// Total is a pure SELECTOR over the two figures `casting_totals` already
-// computed — no new rules math. Mirrors the engine's own selector exactly:
-// `crates/arm-rules/src/derived/casting.rs::spell_casting_total`.
-describe('spellCastingTotal', () => {
-  const SPELL: Spell = { id: 's', technique: 'art.creo', form: 'art.animal' };
-
-  function cell(withinFocus: boolean): CastingTotal {
-    return {
-      technique: 'art.creo',
-      form: 'art.animal',
-      addends: [],
-      ritual_addends: [],
-      casting_mod_addends: [],
-      formulaic: 29,
-      ritual: 29,
-      spontaneous_fatiguing: 14,
-      spontaneous_non_fatiguing: 14,
-      within_focus: withinFocus
-        ? {
-            focus_art: 0,
-            formulaic: 41,
-            ritual: 41,
-            spontaneous_fatiguing: 20,
-            spontaneous_non_fatiguing: 20,
-          }
-        : null,
-      non_standard: {
-        voice_penalty: 0,
-        gesture_penalty: 0,
-        silent: 0,
-        still: 0,
-        silent_and_still: 0,
-        deft_form: false,
-      },
-      deficient: false,
-    };
-  }
-
-  it('returns the base formulaic figure when within_focus is not claimed', () => {
-    expect(spellCastingTotal(SPELL, [cell(true)], false)).toBe(29);
-  });
-
-  it('returns the within-focus formulaic figure when claimed AND the cell carries one', () => {
-    expect(spellCastingTotal(SPELL, [cell(true)], true)).toBe(41);
-  });
-
-  it('falls back to the base figure when claimed but the cell carries no within-focus figure', () => {
-    expect(spellCastingTotal(SPELL, [cell(false)], true)).toBe(29);
-  });
-
-  it("returns null when the spell's Technique/Form has no cell yet", () => {
-    expect(spellCastingTotal(SPELL, [], true)).toBeNull();
   });
 });
 

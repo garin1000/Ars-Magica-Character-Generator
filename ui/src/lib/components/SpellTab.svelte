@@ -16,7 +16,6 @@
     ORDINARY_SPELL_MINIMUM_LEVEL,
     RITUAL_MINIMUM_LEVEL_FALLBACK,
     usedSpellForms,
-    spellCastingTotal,
     spellDisplayName,
   } from '../derive';
   import type { SelectedSpellGroup } from '../derive';
@@ -272,13 +271,25 @@
     );
   }
 
-  // The in-app Casting Total for a known spell (X10c, D73.2) — a pure
-  // selector over figures the engine already computed; see `spellCastingTotal`
-  // in `derive.ts`.
-  function castingTotalOf(spell: Spell, chosen: SpellSelection): number | null {
-    const castingTotals = store.derived?.casting_totals;
-    if (!castingTotals) return null;
-    return spellCastingTotal(spell, castingTotals, chosen.within_focus ?? false);
+  // D79: whether this spell's own (Technique, Form) cell carries a
+  // within-Potent-Magic-field figure — independent of `hasFocusFigure` (a
+  // character may hold a Magical Focus, Potent Magic, both, or neither).
+  function hasPotentFieldFigure(spell: Spell): boolean {
+    return (store.derived?.casting_totals ?? []).some(
+      (c) =>
+        c.technique === spell.technique && c.form === spell.form && c.within_potent_field != null,
+    );
+  }
+
+  // The in-app Casting Total for a known spell at row `index` (X10c, D73.2;
+  // D79) — a plain lookup into the engine's own per-row computation
+  // (`DerivedTotals.spell_casting_totals`, index-aligned with `entity.spells`).
+  // Not reconstructed client-side: the engine combines both the within-focus
+  // and within-potent-field markers (and any Deficient-Art halving) directly,
+  // which summing the grid's three independently-halved figures cannot do
+  // correctly (`halve(a) + halve(b) != halve(a + b)`).
+  function castingTotalOf(index: number): number | null {
+    return store.derived?.spell_casting_totals?.[index] ?? null;
   }
 
   // The Spell Mastery special-ability catalogue (id order), for the per-spell
@@ -385,7 +396,7 @@
               {@const chosen = item.selection}
               {@const i = item.index}
               {@const cat = store.ruleset?.ruleset.spells?.[chosen.spell]}
-              {@const total = cat ? castingTotalOf(cat, chosen) : null}
+              {@const total = castingTotalOf(i)}
               <li class:invalid-selection={invalidIds.has(chosen.spell)}>
                 <!-- Deliberately focusable, and NOT on the `<li>` (Sabine 3): a list
                      item is not interactive, and `use:tooltip` points
@@ -422,6 +433,25 @@
                         )}
                       data-testid="spell-within-focus-{chosen.spell}-{i}"
                     /><span>{store.t('spell-within-focus-label')}</span>
+                  </label>
+                {/if}
+                {#if cat && hasPotentFieldFigure(cat)}
+                  <!-- D79: independent of the within-focus toggle above — a
+                       character may hold a Magical Focus, Potent Magic, both,
+                       or neither, and the two free-text themes need not
+                       coincide. -->
+                  <label class="checkbox inline within-potent-field-toggle">
+                    <input
+                      type="checkbox"
+                      aria-label={store.t('spell-within-potent-field-label')}
+                      checked={chosen.within_potent_field ?? false}
+                      onchange={(e) =>
+                        store.setSpellWithinPotentFieldAt(
+                          i,
+                          (e.currentTarget as HTMLInputElement).checked,
+                        )}
+                      data-testid="spell-within-potent-field-{chosen.spell}-{i}"
+                    /><span>{store.t('spell-within-potent-field-label')}</span>
                   </label>
                 {/if}
                 {#if isParametrized(chosen.spell)}

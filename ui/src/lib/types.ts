@@ -1399,6 +1399,14 @@ export interface DerivedTotals {
   hermetically_trained: boolean;
   lab_totals: LabTotal[];
   casting_totals: CastingTotal[];
+  // D79: per-known-spell Casting Total, index-aligned with `entity.spells` —
+  // the engine's own `spell_casting_total` computation (combines both the
+  // within-focus and within-potent-field markers directly, which a
+  // client-side reconstruction from the three grid figures above cannot do
+  // correctly under Deficient-Art halving: halve(a) + halve(b) != halve(a + b)).
+  // `null` for a row whose spell id is absent from the catalogue. The UI must
+  // read this rather than re-derive the figure itself.
+  spell_casting_totals: (number | null)[];
   penetration: PenetrationLine[];
   magic_resistance: MagicResistance[];
   longevity?: LongevityBonus | null;

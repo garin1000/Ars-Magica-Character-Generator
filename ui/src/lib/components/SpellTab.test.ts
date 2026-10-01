@@ -490,50 +490,215 @@ describe('SpellTab within-focus toggle (X10c)', () => {
   });
 });
 
-// X10c (design-x10bc-save-format.md § 3, D73.2): "X10c covers the marker and
-// the in-app totals" — a read-only per-spell Casting Total badge, selecting
-// between the two figures `casting_totals` already computed via the pure
-// `spellCastingTotal` selector (mirrors
-// `crates/arm-rules/src/derived/casting.rs::spell_casting_total`). Labelled
-// via the Fluent key `spell-casting-total` ("Casting Total: { $total }").
-describe('SpellTab in-app Casting Total (D73.2)', () => {
-  function installDerived(formulaic: number, withinFocusFormulaic?: number): void {
+// D79 (docs/vf-audit/decisions.md): Potent Magic gets its OWN per-spell
+// marker/toggle, independent of the Magical Focus one above — a character's
+// Potent Magic field and Magical Focus descriptor need not be the same text.
+// Mirrors the within-focus toggle block exactly, gated on
+// `within_potent_field != null` instead of `within_focus != null`, labelled
+// via `spell-within-potent-field-label`.
+describe('SpellTab within-potent-field toggle (D79)', () => {
+  function castingTotal(withinPotentField: boolean): CastingTotal {
+    return {
+      technique: 'art.creo',
+      form: 'art.animal',
+      addends: [],
+      ritual_addends: [],
+      casting_mod_addends: [],
+      formulaic: 29,
+      ritual: 29,
+      spontaneous_fatiguing: 14,
+      spontaneous_non_fatiguing: 14,
+      within_focus: null,
+      within_potent_field: withinPotentField
+        ? {
+            formulaic: 35,
+            ritual: 35,
+            spontaneous_fatiguing: 17,
+            spontaneous_non_fatiguing: 17,
+          }
+        : null,
+      non_standard: {
+        voice_penalty: 0,
+        gesture_penalty: 0,
+        silent: 0,
+        still: 0,
+        silent_and_still: 0,
+        deft_form: false,
+      },
+      deficient: false,
+    };
+  }
+
+  function installDerived(withinPotentField: boolean): void {
     store.derived = {
-      casting_totals: [
-        {
-          technique: 'art.creo',
-          form: 'art.animal',
-          formulaic,
-          within_focus:
-            withinFocusFormulaic == null
-              ? null
-              : {
-                  focus_art: 0,
-                  formulaic: withinFocusFormulaic,
-                  ritual: 0,
-                  spontaneous_fatiguing: 0,
-                  spontaneous_non_fatiguing: 0,
-                },
-        },
-      ],
+      casting_totals: [castingTotal(withinPotentField)],
     } as unknown as DerivedTotals;
   }
 
-  it('shows the base formulaic Casting Total for a known spell, labelled via the Fluent key', () => {
-    installDerived(29);
+  function toggleTag(body: string): string {
+    const match = new RegExp(
+      `<input[^>]*data-testid="spell-within-potent-field-${SPELL}-0"[^>]*>`,
+    ).exec(body);
+    if (!match) throw new Error(`no within-potent-field toggle for ${SPELL}-0`);
+    return match[0];
+  }
+
+  it('shows the toggle, labelled via the Fluent key, when the cell carries a within-potent-field figure', () => {
+    installDerived(true);
+    const tag = toggleTag(html());
+    expect(tag).toContain('type="checkbox"');
+    expect(tag).toContain('aria-label="Within Potent Magic field"');
+  });
+
+  it('hides the toggle when the character holds no Potent Magic Virtue for this cell', () => {
+    installDerived(false);
+    expect(html()).not.toContain(`data-testid="spell-within-potent-field-${SPELL}-0"`);
+  });
+
+  it('hides the toggle before any derived totals have been computed', () => {
+    store.derived = null;
+    expect(html()).not.toContain(`data-testid="spell-within-potent-field-${SPELL}-0"`);
+  });
+
+  it("reflects the spell's own stored claim", () => {
+    installDerived(true);
+    store.entity.spells = [{ spell: SPELL, mastery: 1, within_potent_field: true }];
+    expect(toggleTag(html())).toContain('checked');
+  });
+
+  it('pairs the checkbox with a visible caption, not just an aria-label', () => {
+    installDerived(true);
+    const label =
+      /<label class="checkbox inline within-potent-field-toggle">([\s\S]*?)<\/label>/.exec(html());
+    expect(label, 'within-potent-field toggle <label>').not.toBeNull();
+    expect(label![1]).toContain('<span>Within Potent Magic field</span>');
+  });
+});
+
+// D79: the two toggles are gated INDEPENDENTLY — a character may hold a
+// Magical Focus, Potent Magic, both, or neither, and this spell's own cell may
+// carry either figure, both, or neither, independently of the other. The four
+// combinations below are the full gate matrix.
+describe('SpellTab focus/potent-field toggle gating is independent (D79)', () => {
+  function castingTotal(withinFocus: boolean, withinPotentField: boolean): CastingTotal {
+    return {
+      technique: 'art.creo',
+      form: 'art.animal',
+      addends: [],
+      ritual_addends: [],
+      casting_mod_addends: [],
+      formulaic: 29,
+      ritual: 29,
+      spontaneous_fatiguing: 14,
+      spontaneous_non_fatiguing: 14,
+      within_focus: withinFocus
+        ? {
+            focus_art: 0,
+            formulaic: 41,
+            ritual: 41,
+            spontaneous_fatiguing: 20,
+            spontaneous_non_fatiguing: 20,
+          }
+        : null,
+      within_potent_field: withinPotentField
+        ? {
+            formulaic: 35,
+            ritual: 35,
+            spontaneous_fatiguing: 17,
+            spontaneous_non_fatiguing: 17,
+          }
+        : null,
+      non_standard: {
+        voice_penalty: 0,
+        gesture_penalty: 0,
+        silent: 0,
+        still: 0,
+        silent_and_still: 0,
+        deft_form: false,
+      },
+      deficient: false,
+    };
+  }
+
+  function install(withinFocus: boolean, withinPotentField: boolean): void {
+    store.derived = {
+      casting_totals: [castingTotal(withinFocus, withinPotentField)],
+    } as unknown as DerivedTotals;
+  }
+
+  const focusToggle = `data-testid="spell-within-focus-${SPELL}-0"`;
+  const potentToggle = `data-testid="spell-within-potent-field-${SPELL}-0"`;
+
+  it('shows only the focus toggle when only a Magical Focus matches this cell (focus-only)', () => {
+    install(true, false);
+    const body = html();
+    expect(body).toContain(focusToggle);
+    expect(body).not.toContain(potentToggle);
+  });
+
+  it('shows only the potent-field toggle when only Potent Magic matches this cell (potent-only)', () => {
+    install(false, true);
+    const body = html();
+    expect(body).not.toContain(focusToggle);
+    expect(body).toContain(potentToggle);
+  });
+
+  it('shows both toggles when both match this cell (both)', () => {
+    install(true, true);
+    const body = html();
+    expect(body).toContain(focusToggle);
+    expect(body).toContain(potentToggle);
+  });
+
+  it('shows neither toggle when neither matches this cell (neither)', () => {
+    install(false, false);
+    const body = html();
+    expect(body).not.toContain(focusToggle);
+    expect(body).not.toContain(potentToggle);
+  });
+});
+
+// X10c (design-x10bc-save-format.md § 3, D73.2) + D79: a read-only per-spell
+// Casting Total badge. D79 moved this off a client-side selector over the
+// three grid figures (base / within-focus / within-potent-field) onto the
+// engine's own per-row computation: `DerivedTotals.spell_casting_totals`,
+// index-aligned with `entity.spells` (`derived/casting.rs::spell_casting_total`
+// — combines both markers directly, which a client-side reconstruction cannot
+// do correctly under Deficient-Art halving, since `halve(a) + halve(b) !=
+// halve(a + b)`). The badge is now a plain index lookup, nothing more.
+// Labelled via the Fluent key `spell-casting-total` ("Casting Total: { $total }").
+describe('SpellTab in-app Casting Total (D73.2, D79)', () => {
+  function installDerived(totals: Array<number | null>): void {
+    store.derived = {
+      spell_casting_totals: totals,
+    } as unknown as DerivedTotals;
+  }
+
+  it('shows the engine-computed Casting Total for a known spell, labelled via the Fluent key', () => {
+    installDerived([29]);
     const badge = outer(html(), `spell-casting-total-${SPELL}-0`);
     expect(badge).toContain('Casting Total');
     expect(badge).toContain('29');
   });
 
-  it('shows the within-focus figure once the player claims the spell is within the Focus', () => {
-    installDerived(29, 41);
-    store.entity.spells = [{ spell: SPELL, mastery: 1, within_focus: true }];
-    expect(outer(html(), `spell-casting-total-${SPELL}-0`)).toContain('41');
+  // D79: the engine combines focus doubling AND the Potent Magic bonus
+  // together for a spell marked under both — the badge must show WHATEVER
+  // figure the engine computed for this row, never re-derive it client-side.
+  it('shows whatever combined figure the engine computed for the row, regardless of which markers are claimed', () => {
+    installDerived([47]);
+    store.entity.spells = [
+      { spell: SPELL, mastery: 1, within_focus: true, within_potent_field: true },
+    ];
+    expect(outer(html(), `spell-casting-total-${SPELL}-0`)).toContain('47');
   });
 
   it('hides the total before any derived totals have been computed', () => {
     store.derived = null;
+    expect(html()).not.toContain(`data-testid="spell-casting-total-${SPELL}-0"`);
+  });
+
+  it('hides the total when the row carries no figure (e.g. a spell absent from the catalogue)', () => {
+    installDerived([null]);
     expect(html()).not.toContain(`data-testid="spell-casting-total-${SPELL}-0"`);
   });
 });

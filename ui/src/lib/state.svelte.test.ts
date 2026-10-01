@@ -33,6 +33,7 @@ vi.mock('./ipc', () => ({
     hermetically_trained: false,
     lab_totals: [],
     casting_totals: [],
+    spell_casting_totals: [],
     penetration: [],
     magic_resistance: [],
     combat: [],

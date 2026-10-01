@@ -1014,6 +1014,20 @@ pub struct DerivedTotals {
     pub lab_totals: Vec<LabTotal>,
     /// Per-`(Technique, Form)` Casting Totals (magi only; empty otherwise).
     pub casting_totals: Vec<CastingTotal>,
+    /// Per-known-spell Casting Total, index-aligned with `entity.spells` (D79,
+    /// `docs/vf-audit/decisions.md`). `None` for a row whose spell id is absent
+    /// from the catalogue (mirrors [`spell_casting_total`]'s own `None`).
+    ///
+    /// The frontend must read this rather than reconstruct the figure from
+    /// [`Self::casting_totals`]'s three grid figures (base / within-focus /
+    /// within-potent-field): a spell marked under BOTH [`SpellSelection`]
+    /// markers needs `base + focus_add + potent_add`, Deficient-halved as one
+    /// sum — and `halve(a) + halve(b) != halve(a + b)` in general, so summing
+    /// two already-halved grid deltas is wrong whenever the cell is Deficient.
+    /// [`spell_casting_total`] computes the combined figure directly per spell
+    /// for exactly this reason; this field is that same computation, run once
+    /// per `entity.spells` row so the UI never duplicates it.
+    pub spell_casting_totals: Vec<Option<i32>>,
     /// Per-known-spell Penetration lines (magi only; empty otherwise).
     pub penetration: Vec<PenetrationLine>,
     /// Per-Form Magic Resistance (magi only; empty otherwise).
@@ -1104,6 +1118,15 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
         lab_totals: lab,
         casting_totals: if trained {
             casting_totals(entity, ruleset)
+        } else {
+            Vec::new()
+        },
+        spell_casting_totals: if trained {
+            entity
+                .spells
+                .iter()
+                .map(|sel| spell_casting_total(sel, entity, ruleset))
+                .collect()
         } else {
             Vec::new()
         },

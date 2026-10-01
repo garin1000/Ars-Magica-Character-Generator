@@ -214,3 +214,94 @@ describe('SpellTab within-focus toggle writes through the store (X10c)', () => {
     expect(store.entity.spells![0].within_focus ?? false).toBe(false);
   });
 });
+
+// D79: the within-potent-field toggle writes through the store exactly like
+// the within-focus one above. A `client` test for the same reason (real
+// `onchange` wiring, not just markup).
+describe('SpellTab within-potent-field toggle writes through the store (D79)', () => {
+  function mountTab(): void {
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(SpellTab, { target });
+    flushSync();
+  }
+
+  function toggle(): HTMLInputElement {
+    const testid = `spell-within-potent-field-${RITUAL}-0`;
+    const el = target.querySelector<HTMLInputElement>(`[data-testid="${testid}"]`);
+    if (!el)
+      throw new Error(`within-potent-field toggle not rendered: no [data-testid="${testid}"]`);
+    return el;
+  }
+
+  beforeEach(() => {
+    store.derived = {
+      casting_totals: [
+        {
+          technique: 'art.creo',
+          form: 'art.animal',
+          within_potent_field: {
+            formulaic: 35,
+            ritual: 35,
+            spontaneous_fatiguing: 17,
+            spontaneous_non_fatiguing: 17,
+          },
+        },
+      ],
+    } as unknown as DerivedTotals;
+  });
+
+  it('toggling on writes within_potent_field: true onto the spell selection', () => {
+    store.entity.spells = [{ spell: RITUAL, level: 20 }];
+    mountTab();
+    const input = toggle();
+    input.checked = true;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(store.entity.spells![0].within_potent_field).toBe(true);
+  });
+
+  it('toggling back off clears within_potent_field', () => {
+    store.entity.spells = [{ spell: RITUAL, level: 20, within_potent_field: true }];
+    mountTab();
+    const input = toggle();
+    input.checked = false;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(store.entity.spells![0].within_potent_field ?? false).toBe(false);
+  });
+
+  // D79: toggling the Potent Magic marker must never touch the independent
+  // Magical Focus marker on the same row.
+  it('does not disturb an independently-set within_focus on the same row', () => {
+    store.derived = {
+      casting_totals: [
+        {
+          technique: 'art.creo',
+          form: 'art.animal',
+          within_focus: {
+            focus_art: 0,
+            formulaic: 41,
+            ritual: 41,
+            spontaneous_fatiguing: 20,
+            spontaneous_non_fatiguing: 20,
+          },
+          within_potent_field: {
+            formulaic: 35,
+            ritual: 35,
+            spontaneous_fatiguing: 17,
+            spontaneous_non_fatiguing: 17,
+          },
+        },
+      ],
+    } as unknown as DerivedTotals;
+    store.entity.spells = [{ spell: RITUAL, level: 20, within_focus: true }];
+    mountTab();
+    const input = toggle();
+    input.checked = true;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(store.entity.spells![0].within_focus).toBe(true);
+    expect(store.entity.spells![0].within_potent_field).toBe(true);
+  });
+});
