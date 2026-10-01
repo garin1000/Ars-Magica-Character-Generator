@@ -828,6 +828,16 @@ presumption of correctness.
 
 ---
 
+## D76 — the Friday review defers the coverage target
+
+**Norbert, 2026-10-01.** Engine coverage is 91.51% against the full-review
+skill's 95% floor. The gap of about 890 lines is spread across the crate,
+mostly older code. The Friday review accepts 91.5% and converges on its other
+findings. Raising coverage to 95% becomes its own slice in the next plan
+section.
+
+---
+
 ## D75 — F-556 and the covenant gap
 
 **Norbert, 2026-09-30.**
