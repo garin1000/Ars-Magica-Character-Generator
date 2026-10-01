@@ -2208,6 +2208,44 @@ describe('abilityDisplayName', () => {
 
   const placeholder = (key: string) => `(${key})`;
 
+  /** The shipped rules i18n for `ability.enchanting`, by language. */
+  function shippedAbilitiesI18n(lang: string): LocalizedRuleset['i18n'] {
+    return JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL(`../../../rules/i18n/${lang}/abilities.json`, import.meta.url)),
+        'utf-8',
+      ),
+    ) as LocalizedRuleset['i18n'];
+  }
+
+  // X8a §E / tmp/x8a-handover.md: `virtue.enchanting_ability` grants
+  // `ability.enchanting` at the player's chosen `medium`
+  // (`ability_score_grant_param`, `instance: {"param": "medium"}`), and the
+  // Ability can also be bought directly with that same `medium` parameter
+  // (`rules/core/abilities.json` declares `"parameter": "medium"`). But the
+  // shipped `ability.enchanting` name carries no `{medium}` token at all —
+  // unlike `(Area) Lore`/`Living Language` — so `displayName`'s regex finds no
+  // placeholder to fill and the chosen medium is silently dropped.
+  it('names the shipped Enchanting Ability instance after its chosen medium (English)', () => {
+    const ruleset = withAbilityNames(
+      [{ id: 'ability.enchanting', category: 'supernatural', parameter: 'medium' }],
+      shippedAbilitiesI18n('en'),
+    );
+    expect(abilityDisplayName(ruleset, 'ability.enchanting', 'Music', placeholder)).toBe(
+      'Enchanting Music',
+    );
+  });
+
+  it('names the shipped Enchanting Ability instance after its chosen medium (German)', () => {
+    const ruleset = withAbilityNames(
+      [{ id: 'ability.enchanting', category: 'supernatural', parameter: 'medium' }],
+      shippedAbilitiesI18n('de'),
+    );
+    expect(abilityDisplayName(ruleset, 'ability.enchanting', 'Music', placeholder)).toBe(
+      'Bezaubernde Fertigkeit, Music',
+    );
+  });
+
   it('interpolates the parameter value for a parameterized ability', () => {
     const ruleset = withAbilityNames(
       [{ id: 'ability.area_lore', category: 'general', parameter: 'area' }],

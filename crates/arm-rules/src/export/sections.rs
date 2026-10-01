@@ -393,26 +393,52 @@ impl<'a> Doc<'a> {
     /// also bought. Without these the sheet omits an Ability the character can use,
     /// since a granted score is stored nowhere in `ability_scores`.
     ///
-    /// A grant fixes its target by id and reaches only the parameter-less instance
-    /// (see [`crate::effective::granted_ability_floor`]), so a bought row cancels the
-    /// floor row exactly when it names the same Ability with no parameter — the same
-    /// instance match [`effective_ability_score`] makes. The bought column reads 0,
-    /// the convention every unbought score uses, and the effective column comes from
-    /// [`effective_ability_score`], so a Puissant bonus on a granted Ability shows.
-    /// Order is the floors' own (ability id), after the bought rows.
+    /// A plain [`crate::types::Effect::AbilityScoreGrant`] floor has `parameter:
+    /// None`, matching [`crate::effective::granted_ability_floor`]'s own fixed-id
+    /// reading. An [`crate::types::Effect::AbilityScoreGrantParam`] floor (F-63,
+    /// `virtue.enchanting_ability`) resolves to the ONE instance its `instance` link
+    /// names (e.g. the chosen `medium`), carried on [`AbilityFloor::parameter`] — so
+    /// the dedup below compares the whole `(ability, parameter)` instance, exactly
+    /// like [`effective_ability_score`] does, not just the ability id: a bought row
+    /// cancels the floor row only when it names the SAME instance, and the floor's
+    /// own parameter value is threaded into both [`Doc::parameterized_name`] (so the
+    /// row's label names the instance, e.g. "Enchanting Music") and
+    /// [`effective_ability_score`] (so a Puissant bonus or a sibling instance of the
+    /// same Ability cannot bleed into this row's effective score). The bought column
+    /// reads 0, the convention every unbought score uses. Order is the floors' own
+    /// `(ability id, parameter)`, after the bought rows.
     fn granted_ability_rows(&self) -> Vec<Vec<String>> {
         let e = self.entity;
         ability_score_floors(e, self.rules())
             .into_iter()
             .filter(|floor| {
-                !e.ability_scores
-                    .iter()
-                    .any(|bought| bought.ability == floor.ability && bought.parameter.is_none())
+                !e.ability_scores.iter().any(|bought| {
+                    bought.ability == floor.ability
+                        && bought
+                            .parameter
+                            .as_ref()
+                            .and_then(AbilityParameterValue::match_key)
+                            == floor.parameter.as_deref()
+                })
             })
             .map(|floor| {
-                let effective = effective_ability_score(e, self.rules(), &floor.ability, None);
+                let mut values: BTreeMap<String, String> = BTreeMap::new();
+                if let Some(raw) = floor.parameter.as_deref() {
+                    let key = self
+                        .rules()
+                        .ability(&floor.ability)
+                        .and_then(|a| a.parameter.clone())
+                        .unwrap_or_else(|| UNKNOWN_PARAM_KEY.to_string());
+                    values.insert(key, self.param_value(raw));
+                }
+                let effective = effective_ability_score(
+                    e,
+                    self.rules(),
+                    &floor.ability,
+                    floor.parameter.as_deref(),
+                );
                 vec![
-                    self.parameterized_name(&floor.ability, &BTreeMap::new()),
+                    self.parameterized_name(&floor.ability, &values),
                     String::new(),
                     "0".to_string(),
                     if effective == 0 {
