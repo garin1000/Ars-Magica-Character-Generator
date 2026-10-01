@@ -26,6 +26,7 @@ use crate::settings;
 /// files per export would duplicate the loader for no gain.
 #[derive(Default)]
 pub struct AppState {
+    /// The loaded ruleset, or `None` until [`load_ruleset`] succeeds.
     pub ruleset: RwLock<Option<LocalizedRuleset>>,
     /// Every catalogue value's display name, **both locales at once**, loaded
     /// alongside `ruleset` by [`load_ruleset`] — CV4's dependency for
@@ -59,9 +60,13 @@ pub struct CloseGuardState {
 /// verbatim from the frontend; Rust never authors these.
 #[derive(Default, Clone, serde::Deserialize)]
 pub struct CloseGuardLabels {
+    /// The confirmation dialog's title.
     pub title: String,
+    /// The confirmation dialog's body text.
     pub message: String,
+    /// Label for the button that discards unsaved changes and proceeds.
     pub discard: String,
+    /// Label for the button that cancels the close/quit.
     pub cancel: String,
 }
 
@@ -591,11 +596,13 @@ pub fn derive_birth_year(saga_year: i32, age: u32) -> i32 {
 #[cfg(feature = "e2e-testing")]
 const E2E_FILE_ENV: &str = "ARM_E2E_FILE";
 
+/// The `ARM_E2E_FILE` override path, when the `e2e-testing` feature is built in.
 #[cfg(feature = "e2e-testing")]
 pub fn e2e_file_override() -> Option<std::path::PathBuf> {
     std::env::var_os(E2E_FILE_ENV).map(std::path::PathBuf::from)
 }
 
+/// Always `None`: the shipped (non-`e2e-testing`) build has no override seam.
 #[cfg(not(feature = "e2e-testing"))]
 pub fn e2e_file_override() -> Option<std::path::PathBuf> {
     None
@@ -754,6 +761,7 @@ pub fn menu_test_seams_enabled() -> bool {
     true
 }
 
+/// Always `false`: the shipped (non-`e2e-testing`) build has neither seam.
 #[cfg(not(feature = "e2e-testing"))]
 pub fn menu_test_seams_enabled() -> bool {
     false
@@ -785,7 +793,9 @@ fn parented_to_main_window(
 /// was.
 #[derive(serde::Serialize)]
 pub struct OpenedDocument {
+    /// The filesystem path the entity was loaded from.
     pub path: String,
+    /// The deserialized (and migrated) entity.
     pub entity: Entity,
     /// Characteristics whose legacy `aging_reductions` the load folded into
     /// `aging_points` — empty for a save that needed no migration.
@@ -829,7 +839,9 @@ pub struct OpenedDocument {
 /// [`OpenedDocument::unresolved_catalogued_parameters`].
 #[derive(serde::Serialize)]
 pub struct UnresolvedCatalogueParameter {
+    /// The parameterized Ability's id.
     pub ability: Id,
+    /// The stored free-text value that matched no catalogue entry.
     pub text: String,
 }
 
@@ -838,8 +850,11 @@ pub struct UnresolvedCatalogueParameter {
 /// [`OpenedDocument::migrated_catalogued_parameters`].
 #[derive(serde::Serialize)]
 pub struct MigratedCatalogueParameter {
+    /// The parameterized Ability's id.
     pub ability: Id,
+    /// The stored free-text value that was recognized.
     pub text: String,
+    /// The catalogue entry id the free text was folded into.
     pub resolved: Id,
 }
 
@@ -928,6 +943,7 @@ pub fn e2e_export_file_override() -> Option<std::path::PathBuf> {
     std::env::var_os(E2E_EXPORT_FILE_ENV).map(std::path::PathBuf::from)
 }
 
+/// Always `None`: the shipped (non-`e2e-testing`) build has no override seam.
 #[cfg(not(feature = "e2e-testing"))]
 pub fn e2e_export_file_override() -> Option<std::path::PathBuf> {
     None

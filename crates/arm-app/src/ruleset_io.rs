@@ -41,8 +41,16 @@ use crate::error::AppError;
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "status", rename_all = "snake_case")]
 pub enum ChildhoodApplication {
-    Applied { entity: Box<Entity> },
-    Rejected { issues: Vec<ValidationIssue> },
+    /// The package applied; the entity with its rows written.
+    Applied {
+        /// The entity with the package's rows written.
+        entity: Box<Entity>,
+    },
+    /// The package could not be applied.
+    Rejected {
+        /// One issue per reason the package was rejected.
+        issues: Vec<ValidationIssue>,
+    },
 }
 
 /// Applies the Sample Childhood package `package` names to `entity` against a
@@ -81,8 +89,11 @@ pub fn apply_childhood_package_loaded(
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "status", rename_all = "snake_case")]
 pub enum AgingProjection {
+    /// The roll was legal; the reading it produced.
     Previewed {
+        /// The computed AGING TOTAL.
         total: AgingTotal,
+        /// The row the total lands on and its effects.
         outcome: AgingOutcome,
         /// The Crisis this year would send the character to, read whole and
         /// **written nowhere** — present only once the row demands one, the
@@ -95,7 +106,9 @@ pub enum AgingProjection {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         crisis: Option<Box<CrisisPreview>>,
     },
+    /// The roll was refused.
     Rejected {
+        /// One issue per reason the roll was refused.
         issues: Vec<ValidationIssue>,
     },
 }
@@ -110,9 +123,13 @@ pub enum AgingProjection {
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "status", rename_all = "snake_case")]
 pub enum AgingApplication {
+    /// The roll was legal and applied.
     Applied {
+        /// The entity with the year's aging written.
         entity: Box<Entity>,
+        /// The computed AGING TOTAL.
         total: AgingTotal,
+        /// The row the total landed on and its effects.
         outcome: AgingOutcome,
         /// The Crisis the year sent the character to, read whole — present only
         /// when the row demanded one *and* the player had thrown the Simple Die.
@@ -130,7 +147,9 @@ pub enum AgingApplication {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         notes: Vec<AgingNote>,
     },
+    /// The roll was refused.
     Rejected {
+        /// One issue per reason the roll was refused.
         issues: Vec<ValidationIssue>,
     },
 }
@@ -139,8 +158,16 @@ pub enum AgingApplication {
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "status", rename_all = "snake_case")]
 pub enum AgingReversion {
-    Reverted { entity: Box<Entity> },
-    Rejected { issues: Vec<ValidationIssue> },
+    /// The year's aging was reverted; the entity with it removed.
+    Reverted {
+        /// The entity with the year's aging reverted.
+        entity: Box<Entity>,
+    },
+    /// The reversion was refused.
+    Rejected {
+        /// One issue per reason the reversion was refused.
+        issues: Vec<ValidationIssue>,
+    },
 }
 
 /// Reads one year's aging roll without writing anything: the AGING TOTAL the typed

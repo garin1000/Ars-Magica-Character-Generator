@@ -298,6 +298,7 @@ impl fmt::Display for MissingLabel {
 /// time.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ExportError {
+    /// One entry per unresolved key or catalogue id, sorted and deduplicated.
     pub missing: Vec<MissingLabel>,
 }
 

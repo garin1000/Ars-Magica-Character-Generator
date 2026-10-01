@@ -1,6 +1,7 @@
 //! Pure rules engine for Ars Magica 5th Edition character and covenant generation.
 
 #![deny(clippy::all)]
+#![warn(missing_docs)]
 
 pub mod ability;
 pub mod aging;

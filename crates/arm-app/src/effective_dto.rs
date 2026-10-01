@@ -453,6 +453,8 @@ pub struct ReputationGrant {
     pub source: Id,
     /// The Reputation type the grant fixes, or `None` when player-chosen.
     pub kind: Option<ReputationType>,
+    /// The Reputation score the grant confers (passed through from
+    /// `arm_rules::ReputationGrant::score`, unmodified).
     pub score: u8,
     /// The upper bound of a stated range (D11/Q5), or `None` when the score is
     /// exact. Outsider alone states one ("a bad Reputation of level 1 to 3",

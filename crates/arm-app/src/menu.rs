@@ -30,16 +30,26 @@ use serde::{Deserialize, Serialize};
 use tauri::menu::{Menu, MenuItem, MenuItemKind, PredefinedMenuItem, Submenu};
 use tauri::{Emitter, Manager, Runtime};
 
+/// Id of the macOS application menu section.
 pub const SECTION_APP: &str = "menu.app";
+/// Id of the File menu section.
 pub const SECTION_FILE: &str = "menu.file";
+/// Id of the Edit menu section.
 pub const SECTION_EDIT: &str = "menu.edit";
+/// Id of the Window menu section.
 pub const SECTION_WINDOW: &str = "menu.window";
 
+/// Id of the New-document action.
 pub const ACTION_NEW: &str = "menu.new";
+/// Id of the Open-document action.
 pub const ACTION_OPEN: &str = "menu.open";
+/// Id of the Save action.
 pub const ACTION_SAVE: &str = "menu.save";
+/// Id of the Save-As action.
 pub const ACTION_SAVE_AS: &str = "menu.save-as";
+/// Id of the Markdown-export action.
 pub const ACTION_EXPORT: &str = "menu.export";
+/// Id of the Settings action.
 pub const ACTION_SETTINGS: &str = "menu.settings";
 /// Window → Fullscreen, on the two desktops where the predefined role is a
 /// dead click (P1, `docs/open-todos.md`): muda's Windows and GTK backends
@@ -82,13 +92,16 @@ pub const MENU_ACTION_EVENT: &str = "menu://action";
 /// machine and a CI runner instead of only being compiled there.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Platform {
+    /// macOS, whose menu backend is Cocoa's `NSMenu`.
     MacOs,
+    /// Windows, whose menu backend is WebView2's native menu support.
     Windows,
     /// Linux and the BSDs — every desktop whose menu backend is GTK.
     Other,
 }
 
 impl Platform {
+    /// Every variant, for tests that must exercise all three desktops.
     pub const ALL: &'static [Platform] = &[Platform::MacOs, Platform::Windows, Platform::Other];
 
     /// The desktop this binary was compiled for.
@@ -110,28 +123,51 @@ impl Platform {
 pub struct MenuLabels {
     /// Title of the macOS application menu — the app's own name.
     pub app: String,
+    /// Title of the File menu section.
     pub file: String,
+    /// Title of the Edit menu section.
     pub edit: String,
+    /// Title of the Window menu section.
     pub window: String,
+    /// Label for the New-document item.
     pub new: String,
+    /// Label for the Open-document item.
     pub open: String,
+    /// Label for the Save item.
     pub save: String,
+    /// Label for the Save-As item.
     pub save_as: String,
+    /// Label for the Markdown-export item.
     pub export: String,
+    /// Label for the Settings item.
     pub settings: String,
+    /// Label for the Quit item.
     pub quit: String,
+    /// Label for the macOS Services item.
     pub services: String,
+    /// Label for the Hide item.
     pub hide: String,
+    /// Label for the Hide Others item.
     pub hide_others: String,
+    /// Label for the Show All item.
     pub show_all: String,
+    /// Label for the Undo item.
     pub undo: String,
+    /// Label for the Redo item.
     pub redo: String,
+    /// Label for the Cut item.
     pub cut: String,
+    /// Label for the Copy item.
     pub copy: String,
+    /// Label for the Paste item.
     pub paste: String,
+    /// Label for the Select All item.
     pub select_all: String,
+    /// Label for the Minimize item.
     pub minimize: String,
+    /// Label for the Fullscreen item.
     pub fullscreen: String,
+    /// Label for the Close Window item.
     pub close_window: String,
 }
 
@@ -144,11 +180,17 @@ pub struct MenuLabels {
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuFlags {
+    /// Whether New may run right now.
     pub new: bool,
+    /// Whether Open may run right now.
     pub open: bool,
+    /// Whether Save may run right now.
     pub save: bool,
+    /// Whether Save-As may run right now.
     pub save_as: bool,
+    /// Whether Markdown export may run right now.
     pub export: bool,
+    /// Whether Settings may run right now.
     pub settings: bool,
 }
 
@@ -156,30 +198,49 @@ pub struct MenuFlags {
 /// adding a role is a compile error until it is handled.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PredefinedRole {
+    /// macOS's Services submenu.
     Services,
+    /// Hide the application.
     Hide,
+    /// Hide all other applications.
     HideOthers,
+    /// Show all hidden applications.
     ShowAll,
+    /// Quit the application.
     Quit,
+    /// Undo the last edit.
     Undo,
+    /// Redo the last undone edit.
     Redo,
+    /// Cut the current selection.
     Cut,
+    /// Copy the current selection.
     Copy,
+    /// Paste the clipboard.
     Paste,
+    /// Select all.
     SelectAll,
+    /// Minimize the window.
     Minimize,
+    /// Toggle fullscreen (macOS only; see [`ACTION_FULLSCREEN`] for the other
+    /// desktops).
     Fullscreen,
+    /// Close the window.
     CloseWindow,
 }
 
 /// One entry of a submenu.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MenuEntry {
+    /// A visual divider between items.
     Separator,
     /// An item this app handles itself, announced on [`MENU_ACTION_EVENT`].
     Action {
+        /// One of the `ACTION_*` constants, identifying which action this is.
         id: String,
+        /// The item's displayed text.
         label: String,
+        /// Whether the item is currently clickable.
         enabled: bool,
         /// The keyboard chord the OS binds to this item and draws beside its
         /// label, in muda's cross-platform notation (`CmdOrCtrl+N`). Not
@@ -187,8 +248,11 @@ pub enum MenuEntry {
         /// modifiers this string names, in its own language.
         accelerator: Option<String>,
     },
+    /// An item the OS implements itself.
     Predefined {
+        /// Which OS-implemented role this item performs.
         role: PredefinedRole,
+        /// The item's displayed text.
         label: String,
     },
 }
@@ -196,8 +260,11 @@ pub enum MenuEntry {
 /// One top-level submenu.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MenuSection {
+    /// One of the `SECTION_*` constants, identifying which section this is.
     pub id: String,
+    /// The section's displayed title.
     pub label: String,
+    /// The section's entries, in display order.
     pub items: Vec<MenuEntry>,
 }
 
@@ -476,7 +543,9 @@ pub fn forward_menu_action<R: Runtime>(app: &tauri::AppHandle<R>, id: &str) {
 /// [`read_installed_menu`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct InstalledMenuSection {
+    /// The submenu's installed title.
     pub title: String,
+    /// The submenu's installed entries, in order.
     pub items: Vec<InstalledMenuItem>,
 }
 
@@ -492,12 +561,19 @@ pub struct InstalledMenuSection {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum InstalledMenuItem {
+    /// An item this app handles itself.
     Action {
+        /// The installed item's id.
         id: String,
+        /// The installed item's displayed text.
         title: String,
+        /// Whether the installed item is currently clickable.
         enabled: bool,
     },
+    /// A separator or an OS-implemented (predefined) item — see the enum's
+    /// doc comment for why the two cannot be told apart through this API.
     Other {
+        /// The installed item's displayed text (empty for a separator).
         title: String,
     },
 }

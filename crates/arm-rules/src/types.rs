@@ -313,11 +313,21 @@ pub enum Prereq {
     /// Evaluated against the entity's effective ability score (bought score
     /// plus virtue bonuses such as Puissant Ability); an ability the entity
     /// lacks counts as 0.
-    AbilityMin { ability: Id, score: u8 },
+    AbilityMin {
+        /// The required Ability's id.
+        ability: Id,
+        /// The minimum effective score required.
+        score: u8,
+    },
     /// The entity must have the referenced art at or above the given score.
     /// Evaluated against the entity's max effective Art score (bought score plus
     /// virtue bonuses such as Puissant Art); an art the entity lacks counts as 0.
-    ArtMin { art: Id, score: u8 },
+    ArtMin {
+        /// The required Art's id.
+        art: Id,
+        /// The minimum effective score required.
+        score: u8,
+    },
     /// The entity must be Hermetically trained. Evaluated against
     /// `is_hermetically_trained` (D56/A0): the type profile's own
     /// `hermetically_trained` flag, unioned with any selection carrying
@@ -1944,6 +1954,8 @@ pub enum Effect {
         /// `{1, 1}` (no reduction — a plain floor grant). Source: ArMDE:3889.
         #[serde(default = "one_u8", skip_serializing_if = "is_one_u8")]
         advancement_num: u8,
+        /// Denominator of the Advancement-Total multiplier above. Absent in
+        /// JSON → `1` (no reduction).
         #[serde(default = "one_u8", skip_serializing_if = "is_one_u8")]
         advancement_den: u8,
     },
@@ -4579,7 +4591,10 @@ impl EntityTypeProfile {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SelectionParamValue {
+    /// One bound `Id` — the shape every value this engine produces today takes.
     Single(Id),
+    /// A set of bound `Id`s, for a (currently hypothetical) multi-valued
+    /// parameter; see the enum's doc comment.
     Multi(BTreeSet<Id>),
 }
 
@@ -5057,21 +5072,33 @@ pub enum RealmAssociation {
     /// Dead). Shown read-only in the UI; an override present in data (e.g. a
     /// pre-ruling save) is silently ignored by the resolver rather than
     /// rejected.
-    Fixed { realm: Realm },
+    Fixed {
+        /// The fixed Realm the book states for this entry.
+        realm: Realm,
+    },
     /// The book states a default the concept does not override (Spiritual
     /// Pact, Warped by Magic, Hex, Sufi, Cursed Guile). An override is legal
     /// but raises the `realm_changed_default` warning when it differs.
-    Default { realm: Realm },
+    Default {
+        /// The Realm that applies unless the concept overrides it.
+        realm: Realm,
+    },
     /// The book restricts this entry to a named subset of realms (Manifest
     /// Sin: Divine/Infernal). No override and no concept realm inside the
     /// subset raises `realm_unset_subset` rather than silently falling back
     /// to Magic, which would be illegal here. An override outside the subset
     /// is a validator error (`realm_override_invalid`), not resolved here.
-    Subset { realms: BTreeSet<Realm> },
+    Subset {
+        /// The Realms this entry is restricted to.
+        realms: BTreeSet<Realm>,
+    },
     /// This entry already declares a named-realm parameter of its own (Bound
     /// to (Realm)'s `realm` key, (Realm) Stigmatic's, Necessary (Realm) Aura
     /// for (Ability)'s) that supplies the default; no warning either way.
-    FromParam { key: String },
+    FromParam {
+        /// The parameter key supplying the realm (e.g. `"realm"`).
+        key: String,
+    },
 }
 
 /// A supernatural being's **Might Score** and the Realm it is aligned to. A Might

@@ -102,18 +102,21 @@ pub struct SettingsPatch {
         skip_serializing_if = "Option::is_none"
     )]
     pub default_saga_year: Option<i32>,
+    /// The UI language, as an opaque locale string the frontend owns.
     #[serde(
         default,
         deserialize_with = "lenient",
         skip_serializing_if = "Option::is_none"
     )]
     pub lang: Option<String>,
+    /// The UI color theme, as an opaque string the frontend owns.
     #[serde(
         default,
         deserialize_with = "lenient",
         skip_serializing_if = "Option::is_none"
     )]
     pub theme: Option<String>,
+    /// The default [`ValidationMode`](arm_rules::ValidationMode) for a new document.
     #[serde(
         default,
         deserialize_with = "lenient",
@@ -127,9 +130,14 @@ pub struct SettingsPatch {
 /// so their defaults stay in the one place each already lives.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Settings {
+    /// The saga year a new document starts at, resolved to the engine's
+    /// default when the stored value is unset.
     pub default_saga_year: i32,
+    /// The UI language, or `None` when unset.
     pub lang: Option<String>,
+    /// The UI color theme, or `None` when unset.
     pub theme: Option<String>,
+    /// The default validation mode, or `None` when unset.
     pub validation_mode: Option<arm_rules::ValidationMode>,
 }
 

@@ -10,6 +10,7 @@
 //! — and its tests — compile without the bundled frontend.
 
 #![deny(clippy::all)]
+#![warn(missing_docs)]
 
 pub mod atomic_write;
 pub mod commands;
