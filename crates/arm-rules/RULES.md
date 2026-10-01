@@ -6422,7 +6422,7 @@ here by the consuming slice.
 | F-449 | `flaw.low_tolerance` | `derived/combat.rs::fatigue_levels` — Low Tolerance's `delta` now applies only to tiers whose base penalty is already nonzero (Weary/Tired/Dazed); Fresh/Winded stay 0 regardless of sign ("Each Fatigue level above Winded has a penalty", `ArMDE:17129` — Winded itself takes none) | `ArMDE:6366-6369`, `ArMDE:17129` |
 | F-462 | `flaw.missing_eye` | added weapon-scoped `combat_mod` at −3 for each ranged weapon (`weapon.bow_long`/`bow_short`/`sling`/`javelin`/`axe_throwing`/`knife_thrown`/`stone`), mirroring `flaw.lame`'s scoped-delta pattern; the unscoped −1 stays for melee | `ArMDE:6434-6437` |
 | F-306 | (confidence engine) | `effective/gift_confidence.rs::confidence` skips `ConfidenceBonus` entirely when the profile's Confidence base is 0/0 — the general fix for any Confidence-less profile ("Grogs do not have Confidence Points", `ArMDE:2522`; the 1-score/3-point Companion/Magus default is `ArMDE:2524`) | `ArMDE:2522-2524` |
-| D4 | `virtue.potent_magic_major`/`_minor` | `derived.rs`/`derived/lab.rs::lab_totals` split: `lab_mod_within_focus` field, fed by each entry's `LabTotalMod::scope: within_focus_only` (X7a-refactor; formerly `derived.rs::D4_WITHIN_FOCUS_ONLY`) — Potent Magic's +6/+3 now lands only in `within_focus`, never `total`. Casting Total's mirror (`derived/casting.rs::casting_totals`) is not yet split — flagged, no red test pins it | `ArMDE:4740-4781` (`ArMDE:4746` Minor +3, `ArMDE:4748` Major +6) |
+| D4 | `virtue.potent_magic_major`/`_minor` | `derived.rs`/`derived/lab.rs::lab_totals` split: Potent Magic's +6/+3 moved out of the unconditional `total` into a separate figure. **Superseded by D79**: that figure was `within_focus` (gated on holding a Magical Focus, the wrong Virtue) — D79 gives Potent Magic its own `within_potent_field` figure instead, on both Lab and Casting Totals; see the "Flat lab-total bonus/penalty" bullet's "D79 correction" below | `ArMDE:4740-4781` (`ArMDE:4746` Minor +3, `ArMDE:4748` Major +6) |
 | F-256 | `virtue.relic`/`virtue.powerful_relic` | new `Effect::RelicTrueFaith { score }`, NOT consumed by `effective::true_faith` (so a Relic no longer moves the bearer's own True Faith Score/MR floor). The relic-as-item mechanic itself (`ArMDE:17607-17623`: a Faith Points pool usable as Confidence, and a separate MR the relic grants its bearer) is NOT implemented — the effect is surfaced-only today | corrections.md § 3.10 |
 | (n/a) | `types.rs::HealthTrack::CastingFatigue` | doc comment's sign convention corrected to "positive = fewer levels lost" (Withstand Casting +1; Vulnerable Casting/Painful Magic negative); Fluent label `derived-detail-casting_fatigue` reworded to "Casting fatigue resistance" (en) so a positive number reads as a resistance, not a cost | (label/doc only, no rulebook value) |
 
@@ -6646,7 +6646,8 @@ is a data change this slice made deliberately, not a screen regression.
   **X7a-refactor correction**: which carriers are excluded/gated is now DATA on
   the `LabTotalMod` effect itself, never an id the engine hardcodes.
   `Effect::LabTotalMod` (`types.rs`) carries a `scope: LabTotalModScope`
-  (`in_play_grid` default / `within_focus_only` / `never_at_creation`) and an
+  (`in_play_grid` default / `within_potent_field_only` (D79; named
+  `within_focus_only` before it) / `never_at_creation`) and an
   optional `suppressed_when: ParamGate`; `adept_laboratory_student`,
   `weak_scholar` and `cyclic_magic_positive` set
   `scope: "never_at_creation"`, and `cyclic_magic_negative` sets
@@ -6659,14 +6660,37 @@ is a data change this slice made deliberately, not a screen regression.
   **X7b-d/D4 correction (8c2a252)**: both Potent Magic entries no longer stay
   "flat" either. `ArMDE:4746`/`ArMDE:4748` ("Minor Potent Magic covers the same
   narrow fields as a Minor Magical Focus, and grants a +3 bonus to Lab Totals
-  and Casting Score" / Major, +6) is a **within-focus-only** bonus, not an
-  unconditional one — both set `scope: "within_focus_only"` (X7a-refactor;
-  formerly `derived.rs::D4_WITHIN_FOCUS_ONLY`), so `in_play_lab_total_mod`
-  excludes them from its `in_play_grid` fold, and
-  `in_play_lab_total_mod_within_focus`/`InPlayMods::lab_mod_within_focus`
-  (`derived/lab.rs::lab_totals`) add the bonus to `within_focus` alone. D1's
-  `spell_level_cap` fold is unaffected (it still reads `lab_total_mod`
-  unconditionally, matching every other carrier — see the `LabTotalMod` row).
+  and Casting Score" / Major, +6) is a within-field-only bonus, not an
+  unconditional one. D1's `spell_level_cap` fold is unaffected (it still reads
+  `lab_total_mod` unconditionally, matching every other carrier — see the
+  `LabTotalMod` row).
+
+  **D79 correction**: the within-field gate is **Potent Magic's own field, not
+  a Magical Focus**, and this entry's `scope` and doc comments were renamed
+  accordingly — `WithinFocusOnly`/`"within_focus_only"` is now
+  `WithinPotentFieldOnly`/`"within_potent_field_only"`
+  (`LabTotalModScope`, `types.rs`). Before D79, `in_play_lab_total_mod_within_focus`
+  folded this amount into `derived/lab.rs::lab_totals`'s `within_focus` figure
+  — i.e. gated on holding a **Magical Focus**, the wrong Virtue, and leaking
+  the bonus into a different figure whenever both were held. D79 gives it its
+  own figure instead: `in_play_lab_total_mod_within_potent_field`/
+  `InPlayMods::lab_mod_within_potent_field` (MAX across carriers, not sum —
+  ArMDE:4742, "only one Potent Magic Virtue applies to any single activity")
+  feed `LabTotal::within_potent_field` alone, gated on
+  `InPlayMods::has_potent_magic`, independent of `has_focus`. The **Casting
+  Total mirror**, flagged above as "not yet split", also landed under D79:
+  `Effect::CastingTotalMod` gained `potent_field_only: bool`
+  (`#[serde(default)]`, orthogonal to the existing cast-type `scope`), both
+  Potent Magic entries set it `true`, and `derived/casting.rs::casting_totals`
+  folds it into a separate `InPlayMods::casting_mods_within_potent_field`
+  (also MAX, not sum) feeding `CastingTotal::within_potent_field` — never the
+  unconditional `casting_mods` fold that the base and within-focus figures
+  read. `derived/casting.rs::spell_casting_total` combines
+  `SpellSelection::within_focus` and the new
+  `SpellSelection::within_potent_field` independently via
+  `formulaic_casting_score`'s `focus`/`potent` parameters, so a spell marked
+  under both gets the Magical-Focus doubling **and** the Potent Magic bonus
+  together. Tests: `crates/arm-rules/tests/d79_potent_magic.rs`.
 
   `virtue.aristotelian_training` (ArMDE:3440-3443) is no longer in this list:
   X7a deleted its `lab_total_mod` effect entirely (D4 — its condition can
@@ -6914,7 +6938,7 @@ E2E: `ui/e2e/specs/companion-editor.e2e.js`'s `mutually exclusive Virtues/Flaws`
 |---|---|---|---|
 | `MagicalFocus { param(Text), major }` | Magical Focus — major/minor/mythic_blood | ArMDE:4399-4422, 4536-4542, 4573-4589 | computed |
 | `CastingTotalMod { amount, scope }` | Flat casting bonus/penalty — method_caster (+3 formulaic_ritual), poor_formulaic_magic (−5 formulaic), afflicted_tongue, cyclic_magic ±3, special_circumstances, ways_of_the_land, potent_magic | ArMDE:4524-4527, 6610-6613, 5655-5658, 3635-3638, 5893-5896, 4998-5001, 5231-5234, 4740-4781 | computed; conditional ones folded **unconditionally** (no toggle exists), surfaced per scope as the `casting_mod_formulaic`/`_ritual`/`_spontaneous` addends |
-| `LabTotalMod { amount, scope, suppressed_when }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), creative_block (−3), weak_scholar (−6), cyclic_magic (±3), potent_magic. Flat only for `spell_level_cap` (D1), which ignores `scope`/`suppressed_when` entirely; the in-play grid reads them per-entry instead of hardcoding ids (X7a-refactor: `scope: LabTotalModScope` is `in_play_grid`/`within_focus_only`/`never_at_creation`; `suppressed_when: ParamGate` excludes the amount while it holds), see the "Flat lab-total bonus/penalty" bullet above and `derived.rs::in_play_lab_total_mod` (X7a). `virtue.aristotelian_training`'s `+1` (ArMDE:3440-3443) was deleted (X7a/D4) and no longer carries this effect. **X7c (D46/D67, Phase 2)**: `inventive_genius` and `creative_block` each state a second, still-uncomputed experimentation-dice clause (+6 / roll twice as many dice); both reclassify to `uncomputed_rule` carrying the whole passage in `description`, while keeping this flat modifier. | ArMDE:3368-3371, 4151-4154, 5873-5876, 7080-7083, 3635-3638, 5893-5896, 4740-4781 | computed |
+| `LabTotalMod { amount, scope, suppressed_when }` | Flat lab bonus/penalty — adept_laboratory_student (+6), inventive_genius (+3), creative_block (−3), weak_scholar (−6), cyclic_magic (±3), potent_magic. Flat only for `spell_level_cap` (D1), which ignores `scope`/`suppressed_when` entirely; the in-play grid reads them per-entry instead of hardcoding ids (X7a-refactor: `scope: LabTotalModScope` is `in_play_grid`/`within_potent_field_only` (D79; `within_focus_only` before it)/`never_at_creation`; `suppressed_when: ParamGate` excludes the amount while it holds), see the "Flat lab-total bonus/penalty" bullet above and `derived.rs::in_play_lab_total_mod` (X7a). `virtue.aristotelian_training`'s `+1` (ArMDE:3440-3443) was deleted (X7a/D4) and no longer carries this effect. **X7c (D46/D67, Phase 2)**: `inventive_genius` and `creative_block` each state a second, still-uncomputed experimentation-dice clause (+6 / roll twice as many dice); both reclassify to `uncomputed_rule` carrying the whole passage in `description`, while keeping this flat modifier. | ArMDE:3368-3371, 4151-4154, 5873-5876, 7080-7083, 3635-3638, 5893-5896, 4740-4781 | computed |
 | `flaw.cyclic_magic_negative`'s `parameters` — `cycle` (Enumerated: `cycle.solar`/`cycle.lunar`/`cycle.seasonal`) | D9/D52/X7a: "attuned to some cycle of nature (solar, lunar, or seasonal, for example)" (ArMDE:3637, mirrored at :5893-5896 for the Flaw) is a stated choice D9 obliges recording. The entry's own `LabTotalMod::suppressed_when: { "param": "cycle", "equals": "cycle.seasonal" }` (X7a-refactor; formerly a hardcoded check in `derived.rs::in_play_lab_total_mod`) suppresses the −3 in the in-play grid when `cycle.seasonal` is selected (D52 — a seasonal cycle is exactly as uncertain at creation as the Virtue's bonus); solar/lunar/absent apply the flat −3. `virtue.cyclic_magic_positive` needs no parameter — its in-play Lab answer is "no" regardless of cycle type. i18n: `param-label-cycle` (`.ftl`), `cycle.solar`/`cycle.lunar`/`cycle.seasonal` (`rules/i18n/<lang>/virtues_flaws.json`) | ArMDE:3635-3638, 5893-5896 | computed (lab_mod only; D1's `spell_level_cap` fold ignores it, matching every other carrier) |
 | `DeficientArt { param(Technique\|Form) }` | Art-halving — deficient_technique, deficient_form | ArMDE:5913-5915, 5909-5912 | computed |
 | `MagicTotalHalving { total }` | Halve spont casting / lab-enchant / lab-longevity / penetration — weak_spontaneous_magic, weak_enchanter, difficult_longevity_ritual, weak_magic. Two items have left this family: weak_magic_resistance in the round-5 audit (`ArMDE:7070` halves nothing), and flawed_parma_magica with row 35 (it halves one *addend* against one *Form*, which is not a whole total — see **Magic-resistance modifier** above). `HalvableTotal::MagicResistance` was deleted with the second of them | ArMDE:7084-7089, 7060-7063, 5962-5964, 7064-7067 | **computed** (round-2 audit finding GD3 closed the last gap): `spontaneous_casting`, `penetration`, `lab_longevity` (since M5.5a), and now `lab_enchanting` too — folded into the new `LabTotal.enchanting` field in `derived/lab.rs::lab_totals` (Deficiency first, then this halving, per `ArMDE:7060-7063`'s own stated order). Round 3 (G1) wired `enchanting` into `masterpiece_item_cap` too — the one remaining consumer of a Lab Total that used to read `total` instead — and into the frontend `LabTotal` type / `DerivedTotalsPanel` (G2) |
@@ -7044,16 +7068,23 @@ true:
   its `cycle` parameter is `cycle.seasonal`, D52) — **X7a-refactor**: reading
   the entry's own `scope: LabTotalModScope`/`suppressed_when: ParamGate`
   fields (`types.rs`) rather than matching against a hardcoded id list.
-  Inventive Genius and Creative Block are unaffected. **X7b-d (8c2a252)**:
+  Inventive Genius and Creative Block are unaffected. **X7b-d (8c2a252), D79**:
   both Potent Magic entries are no longer unaffected either — both set
-  `scope: "within_focus_only"` (X7a-refactor; formerly
-  `derived.rs::D4_WITHIN_FOCUS_ONLY`), so `in_play_lab_total_mod` excludes
-  them and their +3/+6 lands only in the separate `within_focus` field via
-  `in_play_lab_total_mod_within_focus` — see the "Flat lab-total
-  bonus/penalty" and `LabTotalMod` rows below.
+  `scope: "within_potent_field_only"` (D79; `"within_focus_only"` before it —
+  X7a-refactor named it after the wrong Virtue), so `in_play_lab_total_mod`
+  excludes them and their +3/+6 lands only in the separate
+  `within_potent_field` field via `in_play_lab_total_mod_within_potent_field`,
+  gated on `InPlayMods::has_potent_magic` rather than on holding a Magical
+  Focus — see the "Flat lab-total bonus/penalty" and `LabTotalMod` rows below.
 - `CastingTotalMod` — folded, and labelled since round 4 as the three per-scope
   `casting_mod_*` addends (`derived/casting.rs::CastingTotal`); before that it
   was folded into the printed figure with nothing on screen accounting for it.
+  **D79**: Potent Magic's two entries additionally set `potent_field_only:
+  true`, which routes them to a **separate** fold
+  (`InPlayMods::casting_mods_within_potent_field`, MAX not sum per
+  ArMDE:4742) feeding `CastingTotal::within_potent_field` instead of the
+  labelled `casting_mod_*` addends above, which explain only the
+  unconditional base/within-focus figures.
 - `CombatMod` — folded, and **not** surfaced at all: `CombatLine` has no
   `addends` field, so a conditional combat modifier is invisible in the
   breakdown.
@@ -11574,12 +11605,15 @@ required/negative pair) per entry, against the SHIPPED `rules/core/*.json`.
   gating it would wrongly block the ordinary Story reading for a non-magus.
   A real per-value gate is a future engine change, not this slice's.
 - **`virtue.potent_magic_major` / `_minor`** — `field` (`text`,
-  `max_total: 255` — "more than one area of Potent Magic", ArMDE:4742). Data
-  only: the +3/+6 bonus is X7b-d's D4 fix (already landed, each entry's
-  `LabTotalMod::scope: within_focus_only` +
-  `in_play_lab_total_mod_within_focus`; X7a-refactor replaced the original
-  `derived.rs::D4_WITHIN_FOCUS_ONLY` id list with this data field),
-  coordinated with, not duplicated by, this slice.
+  `max_total: 255` — "more than one area of Potent Magic", ArMDE:4742, which
+  also bounds the +3/+6 to at most one applying Virtue — see D79 below). Data
+  only: the +3/+6 bonus's Lab Total half was X7b-d's D4 fix (each entry's
+  `LabTotalMod::scope: within_potent_field_only` +
+  `in_play_lab_total_mod_within_potent_field`; X7a-refactor replaced the
+  original `derived.rs::D4_WITHIN_FOCUS_ONLY` id list with this data field;
+  D79 renamed the scope from `within_focus_only` once its Casting Total mirror
+  exposed that the gate was never about Magical Focus at all), coordinated
+  with, not duplicated by, this slice.
 - **`virtue.special_circumstances`** — `circumstance` (`text`). Closes
   F-541/F-287 (the duplicate-copy inversion): `max_per_target: 255` removed
   (reverts to the default 1, now meaningful since the parameter makes two

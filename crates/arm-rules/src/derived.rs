@@ -161,13 +161,31 @@ struct InPlayMods {
     has_focus: bool,
     /// The magus holds the Masterpiece Virtue (a lesser-item cap is surfaced).
     has_masterpiece: bool,
-    /// Flat Casting-Total modifiers with their scope (Method Caster +3, …).
+    /// The magus holds at least one Potent Magic Virtue (a within-potent-field
+    /// total is computed). Independent of `has_focus` (D79) — Potent Magic
+    /// carries no `Effect::MagicalFocus`.
+    has_potent_magic: bool,
+    /// Flat Casting-Total modifiers with their scope (Method Caster +3, …) —
+    /// never Potent Magic, which is field-gated and folded separately into
+    /// `casting_mods_within_potent_field` (D79).
     casting_mods: Vec<(i32, CastingScope)>,
+    /// Potent Magic's Casting-Total modifiers with their cast-type scope,
+    /// folded separately from `casting_mods` because they apply only within
+    /// the maga's own Potent Magic field (D79), never unconditionally. Read
+    /// by `potent_casting_mod_for`, which takes the MAX matching amount
+    /// rather than summing — ArMDE:4742: "only one Potent Magic Virtue
+    /// applies to any single activity".
+    casting_mods_within_potent_field: Vec<(i32, CastingScope)>,
     /// Flat Lab-Total modifier (Inventive Genius +3, summed).
     lab_mod: i32,
-    /// Lab-Total modifier that applies only within a Magical Focus (Potent
-    /// Magic's +6/+3, D4) — added to `within_focus` alone, never to `lab_mod`.
-    lab_mod_within_focus: i32,
+    /// Lab-Total modifier that applies only within the maga's own Potent
+    /// Magic field (Potent Magic's +6/+3, D79) — added to
+    /// `within_potent_field` alone, never to `lab_mod` and never to
+    /// `within_focus` (D4 originally folded it into the latter; D79
+    /// separates them, since the Potent Magic field and a Magical Focus
+    /// descriptor need not coincide). The MAX, not the sum, across carriers —
+    /// same ArMDE:4742 bound as `casting_mods_within_potent_field`.
+    lab_mod_within_potent_field: i32,
     /// The deficient Technique/Form Art ids (Deficient Art halves totals adding one).
     deficient_arts: BTreeSet<Id>,
     /// Whole-total halvings in effect (Weak Magic → Penetration, Weak Enchanter →
@@ -220,9 +238,9 @@ struct InPlayMods {
 /// (`Effect::LabTotalMod::scope`), never an id the engine hardcodes: the
 /// default `InPlayGrid` applies flat here — Inventive Genius and Creative
 /// Block, because their condition ("not using a Lab Text or being taught") is
-/// the character-generation default. `WithinFocusOnly` (Potent Magic) is
+/// the character-generation default. `WithinPotentFieldOnly` (Potent Magic) is
 /// excluded from this fold entirely and instead folded by
-/// [`in_play_lab_total_mod_within_focus`]. `NeverAtCreation` (Adept
+/// [`in_play_lab_total_mod_within_potent_field`]. `NeverAtCreation` (Adept
 /// Laboratory Student, Weak Scholar: D4 resolves their condition as never true
 /// at creation) is excluded outright. A `suppressed_when` gate that holds for
 /// the selection (Cyclic Magic (Negative)'s seasonal cycle, D52 — a seasonal
@@ -259,11 +277,18 @@ fn in_play_lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
     total
 }
 
-/// D4's within-focus-only half of the same fold: Potent Magic's flat bonus,
-/// summed separately so it never reaches `total`/`base`, only `within_focus`
-/// (`derived/lab.rs::lab_totals`). Reads [`LabTotalModScope::WithinFocusOnly`]
-/// off the data rather than an id list.
-fn in_play_lab_total_mod_within_focus(entity: &Entity, ruleset: &Ruleset) -> i32 {
+/// D79's within-potent-field half of the same fold: Potent Magic's flat
+/// bonus, folded separately so it never reaches `total`/`base` and never
+/// reaches `within_focus` either — only `within_potent_field`
+/// (`derived/lab.rs::lab_totals`). Reads
+/// [`LabTotalModScope::WithinPotentFieldOnly`] off the data rather than an id
+/// list. **MAX, not sum**, across carriers: ArMDE:4742, "a maga may have more
+/// than one area of Potent Magic, although only one Potent Magic Virtue
+/// applies to any single activity" — two Potent Magic Virtues must not stack.
+/// Before D79 this same amount was folded into `within_focus`
+/// (`in_play_lab_total_mod_within_focus`), gated on holding a Magical Focus
+/// rather than on holding Potent Magic itself.
+fn in_play_lab_total_mod_within_potent_field(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0i32;
     for selection in selections_for_effects(entity, ruleset).iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
@@ -272,11 +297,11 @@ fn in_play_lab_total_mod_within_focus(entity: &Entity, ruleset: &Ruleset) -> i32
         for effect in &item.effects {
             if let Effect::LabTotalMod {
                 amount,
-                scope: LabTotalModScope::WithinFocusOnly,
+                scope: LabTotalModScope::WithinPotentFieldOnly,
                 ..
             } = effect
             {
-                total += i32::from(*amount);
+                total = total.max(i32::from(*amount));
             }
         }
     }
@@ -300,7 +325,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
     let mut m = InPlayMods {
         deficient_arts: deficient_arts(entity, ruleset),
         lab_mod: in_play_lab_total_mod(entity, ruleset),
-        lab_mod_within_focus: in_play_lab_total_mod_within_focus(entity, ruleset),
+        lab_mod_within_potent_field: in_play_lab_total_mod_within_potent_field(entity, ruleset),
         ..InPlayMods::default()
     };
     for selection in selections_for_effects(entity, ruleset).iter() {
@@ -329,10 +354,36 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
             match effect {
                 Effect::MagicalFocus { .. } => m.has_focus = true,
                 Effect::MasterpieceItem => m.has_masterpiece = true,
-                Effect::CastingTotalMod { amount, scope } => {
+                Effect::CastingTotalMod {
+                    amount,
+                    scope,
+                    potent_field_only: true,
+                } => {
+                    m.has_potent_magic = true;
+                    m.casting_mods_within_potent_field
+                        .push((i32::from(*amount), *scope));
+                }
+                Effect::CastingTotalMod {
+                    amount,
+                    scope,
+                    potent_field_only: false,
+                } => {
                     m.casting_mods.push((i32::from(*amount), *scope));
                 }
-                // Already folded, above — listed so the match stays exhaustive.
+                // Already folded, above (`lab_mod`/`lab_mod_within_potent_field`)
+                // — listed so the match stays exhaustive. `has_potent_magic` is
+                // also set here for a Potent Magic entry whose `LabTotalMod` is
+                // the only carrier naming the field (today both Potent Magic
+                // entries carry a matching `CastingTotalMod { potent_field_only:
+                // true }` too, so this arm is redundant in practice, not in
+                // principle — a future field-gated Lab-only carrier must still
+                // set the flag).
+                Effect::LabTotalMod {
+                    scope: LabTotalModScope::WithinPotentFieldOnly,
+                    ..
+                } => {
+                    m.has_potent_magic = true;
+                }
                 Effect::LabTotalMod { .. } => {}
                 // Consumed only by `effective/spell.rs::spell_level_cap` (D28); a
                 // no-op for every in-play total this module computes.
@@ -658,6 +709,20 @@ impl InPlayMods {
             .sum()
     }
 
+    /// The Potent-Magic-field Casting-Total modifier applying to `cast` — the
+    /// MAX matching amount, not the sum (ArMDE:4742, D79: "only one Potent
+    /// Magic Virtue applies to any single activity"), `0` if the character
+    /// holds none. Mirrors [`Self::casting_mod_for`]'s scope matching exactly;
+    /// only the fold differs.
+    fn potent_casting_mod_for(&self, cast: CastType) -> i32 {
+        self.casting_mods_within_potent_field
+            .iter()
+            .filter(|(_, scope)| cast.matches(*scope))
+            .map(|(amount, _)| *amount)
+            .max()
+            .unwrap_or(0)
+    }
+
     /// Whether either Art of a `(technique, form)` pair is a Deficient Art.
     fn deficient(&self, technique: &Id, form: &Id) -> bool {
         self.deficient_arts.contains(technique) || self.deficient_arts.contains(form)
@@ -736,8 +801,9 @@ fn art(entity: &Entity, ruleset: &Ruleset, id: &str) -> i32 {
 mod casting;
 
 pub use casting::{
-    CastingTotal, CastingWithinFocus, MagicResistance, NonStandardCasting, PenetrationLine,
-    casting_totals, magic_resistance, penetration, spell_casting_total,
+    CastingTotal, CastingWithinFocus, CastingWithinPotentField, MagicResistance,
+    NonStandardCasting, PenetrationLine, casting_totals, magic_resistance, penetration,
+    spell_casting_total,
 };
 
 mod combat;
@@ -3759,15 +3825,16 @@ mod tests {
                 "virtue.inventive_genius",
                 (LabTotalModScope::InPlayGrid, false),
             ),
-            // Both Potent Magic entries are within-focus-only (X7b-d): their
-            // +6/+3 must never reach the flat `in_play_lab_total_mod` fold.
+            // Both Potent Magic entries are within-potent-field-only (D79):
+            // their +6/+3 must never reach the flat `in_play_lab_total_mod`
+            // fold, and must never fold into the Magical-Focus figure either.
             (
                 "virtue.potent_magic_major",
-                (LabTotalModScope::WithinFocusOnly, false),
+                (LabTotalModScope::WithinPotentFieldOnly, false),
             ),
             (
                 "virtue.potent_magic_minor",
-                (LabTotalModScope::WithinFocusOnly, false),
+                (LabTotalModScope::WithinPotentFieldOnly, false),
             ),
         ]
         .into_iter()

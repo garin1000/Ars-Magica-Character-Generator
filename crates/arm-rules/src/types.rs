@@ -1477,14 +1477,20 @@ pub enum LabTotalModScope {
     /// JSON, not in saves).
     #[default]
     InPlayGrid,
-    /// Counted only within a Magical Focus's doubled total, never the ordinary
-    /// Lab Total (Potent Magic Major/Minor — "only within the chosen [Magical]
-    /// focus"). Read separately by
-    /// `derived.rs::in_play_lab_total_mod_within_focus`, added to
-    /// `within_focus` alone (`derived/lab.rs::lab_totals`).
+    /// Counted only within the maga's own Potent Magic field, never the
+    /// ordinary Lab Total and never folded into a Magical Focus's doubled
+    /// total either (Potent Magic Major/Minor — "a bonus in her field of
+    /// magic ... much as in a Magical Focus", ArMDE:4740-4744). Read
+    /// separately by `derived.rs::in_play_lab_total_mod_within_potent_field`,
+    /// added to `within_potent_field` alone (`derived/lab.rs::lab_totals`) —
+    /// independent of [`Self::InPlayGrid`]'s `within_focus` figure, since a
+    /// character's Potent Magic field and Magical Focus descriptor need not
+    /// be the same free text (D79, `docs/vf-audit/decisions.md`). Named
+    /// `WithinFocusOnly` before D79, when this same amount was (wrongly)
+    /// folded into the Magical-Focus figure instead of its own.
     ///
     /// Source: ArMDE:4740-4781.
-    WithinFocusOnly,
+    WithinPotentFieldOnly,
     /// Never counted in the in-play grid at all: the entry's qualifying
     /// condition can never hold at character generation (Adept Laboratory
     /// Student and Weak Scholar apply only "when working from the lab texts of
@@ -2317,6 +2323,17 @@ pub enum Effect {
         amount: i8,
         /// Which spells the modifier applies to.
         scope: CastingScope,
+        /// This amount is counted only within the maga's own Potent Magic
+        /// field, never the unconditional Casting Total (Potent Magic
+        /// Major/Minor — ArMDE:4740-4748, D79: "a bonus in her field of
+        /// magic", not everywhere). Orthogonal to `scope`, which is the
+        /// cast-TYPE axis (formulaic/ritual/spontaneous); this is the
+        /// field-gating axis, mirroring [`LabTotalModScope::WithinPotentFieldOnly`]
+        /// on the Lab Total side. `false` for every carrier that predates
+        /// this field (Method Caster, Cyclic Magic, Special Circumstances),
+        /// so every pre-D79 entry's JSON is unchanged.
+        #[serde(default, skip_serializing_if = "is_false")]
+        potent_field_only: bool,
     },
     /// A flat modifier to a magus's Lab Total (Inventive Genius +3). Computed by
     /// `derived.rs` (5i).
@@ -4879,6 +4896,19 @@ pub struct SpellSelection {
     /// last, same byte-identity reasoning as [`AbilityScore::banked_xp`].
     #[serde(default, skip_serializing_if = "is_false")]
     pub within_focus: bool,
+    /// The player's own claim that this spell falls within the character's
+    /// Potent Magic field (ArMDE:4740-4748). A free-text `field` parameter
+    /// can't supply this either, for the same reason `within_focus` can't
+    /// (MAG8's shape, generalised): which Technique/Form cells a free-text
+    /// field covers is table judgement. Independent of [`Self::within_focus`]
+    /// — a spell may be within a Magical Focus, within a Potent Magic field,
+    /// both, or neither, because the two free-text themes need not coincide
+    /// (D79, `docs/vf-audit/decisions.md`). Harmless if the character holds no
+    /// Potent Magic Virtue at all — see
+    /// `derived/casting.rs::spell_casting_total`. Appended last, same
+    /// byte-identity reasoning as [`Self::within_focus`].
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub within_potent_field: bool,
 }
 
 impl SpellSelection {
@@ -4894,6 +4924,7 @@ impl SpellSelection {
             parameter: None,
             mastery_abilities: Vec::new(),
             within_focus: false,
+            within_potent_field: false,
         }
     }
 }
@@ -6727,6 +6758,7 @@ mod tests {
             Effect::CastingTotalMod {
                 amount: 3,
                 scope: CastingScope::FormulaicRitual,
+                potent_field_only: false,
             },
             Effect::LabTotalMod {
                 amount: 3,

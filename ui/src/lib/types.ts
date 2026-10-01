@@ -332,17 +332,28 @@ export type Effect =
     }
   // M5/5b in-play effects (consumed by the derived-totals read-out, slice 5i).
   | { type: 'magical_focus'; param: string; major: boolean }
-  | { type: 'casting_total_mod'; amount: number; scope: CastingScope }
+  | {
+      type: 'casting_total_mod';
+      amount: number;
+      scope: CastingScope;
+      // D79: counted only within the maga's own Potent Magic field, never
+      // unconditionally — orthogonal to `scope` (the cast-TYPE axis). Mirrors
+      // the Lab Total side's `within_potent_field_only` scope. Omitted
+      // (false) for every carrier that predates D79.
+      potent_field_only?: boolean;
+    }
   | {
       type: 'lab_total_mod';
       amount: number;
       // D4/X7a: where this amount counts in the in-play Lab Total grid —
       // data, never an id the app hardcodes. `in_play_grid` (the default,
-      // omitted from the JSON) applies flat; `within_focus_only` (Potent
-      // Magic) counts only within a Magical Focus; `never_at_creation`
-      // (Adept Laboratory Student, Weak Scholar) never counts at all.
-      // Mirrors the engine's `LabTotalModScope`.
-      scope?: 'in_play_grid' | 'within_focus_only' | 'never_at_creation';
+      // omitted from the JSON) applies flat; `within_potent_field_only`
+      // (Potent Magic, D79 — named `within_focus_only` before it, when it was
+      // wrongly gated on holding a Magical Focus instead of Potent Magic)
+      // counts only within the maga's own Potent Magic field;
+      // `never_at_creation` (Adept Laboratory Student, Weak Scholar) never
+      // counts at all. Mirrors the engine's `LabTotalModScope`.
+      scope?: 'in_play_grid' | 'within_potent_field_only' | 'never_at_creation';
       // D52: this amount is excluded from the in-play grid while the OWNING
       // selection's own gate holds (Cyclic Magic (Negative)'s seasonal
       // cycle).
@@ -1145,6 +1156,11 @@ export interface LabTotal {
   addends: Addend[];
   total: number;
   within_focus?: number | null;
+  // D79: the Potent-Magic-field figure, independent of `within_focus` — `null`
+  // unless the character holds a Potent Magic Virtue. Before D79, Potent
+  // Magic's bonus wrongly folded into `within_focus` (gated on a Magical
+  // Focus instead); the two are now separate figures, non-null independently.
+  within_potent_field?: number | null;
   deficient: boolean;
   // `total` (Deficient-halved), halved again for Weak Enchanter — the figure
   // to use when creating or investigating an enchanted item. Equal to `total`
@@ -1156,6 +1172,16 @@ export interface LabTotal {
 // The within-focus counterparts of a CastingTotal's four cast types.
 export interface CastingWithinFocus {
   focus_art: number;
+  formulaic: number;
+  ritual: number;
+  spontaneous_fatiguing: number;
+  spontaneous_non_fatiguing: number;
+}
+
+// The within-Potent-Magic-field counterparts of a CastingTotal's four cast
+// types (D79). Unlike CastingWithinFocus there is no doubled Art — Potent
+// Magic is a flat bonus, not a doubling.
+export interface CastingWithinPotentField {
   formulaic: number;
   ritual: number;
   spontaneous_fatiguing: number;
@@ -1191,6 +1217,11 @@ export interface CastingTotal {
   spontaneous_fatiguing: number;
   spontaneous_non_fatiguing: number;
   within_focus?: CastingWithinFocus | null;
+  // D79: the Potent-Magic-field variants, independent of `within_focus` —
+  // gates the UI's second per-spell toggle. `null` unless the character holds
+  // a Potent Magic Virtue; non-null independently of whether `within_focus`
+  // is also non-null (a character may hold either Virtue, both, or neither).
+  within_potent_field?: CastingWithinPotentField | null;
   non_standard: NonStandardCasting;
   deficient: boolean;
 }
@@ -1622,6 +1653,12 @@ export interface SpellSelection {
   // `derived/casting.rs::spell_casting_total`'s selector; harmless if the
   // character holds no Focus.
   within_focus?: boolean;
+  // D79: the player's own claim that this known spell falls within the
+  // character's Potent Magic field (ArMDE:4740-4748) — same shape as
+  // `within_focus` and independent of it, since the two free-text themes
+  // need not coincide. Absent/false = not claimed. Harmless if the character
+  // holds no Potent Magic Virtue.
+  within_potent_field?: boolean;
 }
 
 // A named Personality Trait with a value in ±3 (±6 for a Major Personality Flaw).

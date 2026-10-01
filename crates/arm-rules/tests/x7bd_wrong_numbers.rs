@@ -498,8 +498,22 @@ fn f77_faerie_raised_magic_also_carries_spell_improvisation() {
 /// his focus (flagged by X2c as an engine defect for whichever slice
 /// implements D4 — not itself an `F-`numbered corrections.md finding, but
 /// explicitly in this slice's collection brief).
+///
+/// **D79 correction**: "within the chosen [Magical] focus" was D4's own
+/// reading of ArMDE:4742's "much as in a Magical Focus" — which turned out to
+/// describe the SHAPE of Potent Magic's field (narrow/wide, like a Minor/Major
+/// Focus), not its gate. D79 re-reads ArMDE:4740-4748 and separates the two:
+/// Potent Magic's bonus now lands in its OWN `within_potent_field` figure,
+/// gated on holding Potent Magic itself, never in `within_focus` (gated on
+/// holding a Magical Focus) — a character could hold either Virtue without
+/// the other, and D4's original reading made that case silently lose the
+/// bonus entirely (Potent Magic with no Focus) while another case leaked it
+/// into the wrong figure (both held). This test is renamed and rewritten to
+/// pin the corrected behavior; `crates/arm-rules/tests/d79_potent_magic.rs`
+/// covers the rest of D79 (the Casting Total mirror, the per-spell marker, the
+/// ArMDE:4742 one-Virtue-applies bound).
 #[test]
-fn d4_potent_magic_lab_bonus_applies_only_within_the_focus() {
+fn d79_potent_magic_lab_bonus_applies_only_within_its_own_field_not_the_focus() {
     let rs = load_ruleset();
     let focus_params: BTreeMap<String, Id> = [("focus".to_string(), Id::new("fire"))]
         .into_iter()
@@ -525,18 +539,28 @@ fn d4_potent_magic_lab_bonus_applies_only_within_the_focus() {
 
     assert_eq!(
         potent_cell.total, baseline_cell.total,
-        "ArMDE:4740-4781 gives Potent Magic's +6 only within the chosen \
-         focus; the ordinary Lab Total (outside the focus) must be \
-         unaffected. baseline total {}, with Potent Magic {}",
+        "ArMDE:4740-4781 gives Potent Magic's +6 only within its own field; \
+         the ordinary Lab Total (outside that field) must be unaffected. \
+         baseline total {}, with Potent Magic {}",
         baseline_cell.total, potent_cell.total
     );
     assert_eq!(
-        potent_cell.within_focus,
-        baseline_cell.within_focus.map(|v| v + 6),
-        "the +6 must still apply within the focus: baseline within_focus \
+        potent_cell.within_focus, baseline_cell.within_focus,
+        "D79: the Magical-Focus figure must NOT include Potent Magic's bonus \
+         — the two free-text themes are independent. baseline within_focus \
          {:?}, with Potent Magic {:?}",
-        baseline_cell.within_focus,
-        potent_cell.within_focus
+        baseline_cell.within_focus, potent_cell.within_focus
+    );
+    assert_eq!(
+        potent_cell.within_potent_field,
+        Some(baseline_cell.total + 6),
+        "D79: Potent Magic gets its OWN within-field figure, independent of \
+         whether a Magical Focus is also held: {:?}",
+        potent_cell.within_potent_field
+    );
+    assert_eq!(
+        baseline_cell.within_potent_field, None,
+        "no Potent Magic is held in the baseline, so this figure must stay None"
     );
 }
 

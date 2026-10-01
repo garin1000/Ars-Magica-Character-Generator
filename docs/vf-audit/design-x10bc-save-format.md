@@ -100,6 +100,19 @@ split as two fields on one struct rather than a second total. `within_focus:
 true` with no Focus falls back to `cell.formulaic` silently — reachable only
 via a hand-edited save, since the UI (§ 3) offers the toggle only with a Focus.
 
+**Correction (D79, `docs/vf-audit/decisions.md`).** The claim above held only
+for the Lab Total half of D4's fix, and was never true for Casting — confirmed
+directly in code at the time: both Potent Magic entries' `casting_total_mod`
+carried `scope: "all"` with no within-focus gate at all, so the +3/+6 reached
+every spell unconditionally, inside or outside any focus (`design-x7-relic-and-ct-mirror.md`
+§ 2 caught this first). D79 went further still: holding a Magical Focus was
+always the wrong gate for Potent Magic's bonus, on *either* total — the two
+free-text themes (a Magical Focus's descriptor, a Potent Magic field) need not
+coincide. `spell_casting_total` now applies `SpellSelection::within_focus` and
+the new `SpellSelection::within_potent_field` independently, and neither
+`cell.formulaic` (base) nor `cell.within_focus` includes Potent Magic's bonus
+any more — only the new `cell.within_potent_field` does.
+
 **Validation: none.** Whether a Technique/Form lies "within" a free-text descriptor is table judgement (MAG8: "a capability gap, and arguably the right design"); the engine records the claim, it does not adjudicate it.
 
 **Saves / SCHEMA_VERSION**: no bump, identical reasoning to § 1.

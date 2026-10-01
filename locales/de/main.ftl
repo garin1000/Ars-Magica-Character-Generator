@@ -436,6 +436,13 @@ spell-level-label = Stufe
 # der ihn abdecken könnte. Die eigene Einschätzung des Spielers, dass der
 # Zauber innerhalb dieses Fokus liegt.
 spell-within-focus-label = Im Fokus
+# D79: nur sichtbar für einen bekannten Zauber, dessen (Technik, Form)-Zelle
+# eine Zahl für den Bereich der Potenten Magie besitzt — der Charakter also
+# eine Tugend der Potenten Magie besitzt, die ihn abdecken könnte. Unabhängig
+# von spell-within-focus-label: ein Zauber kann innerhalb eines Magischen
+# Fokus, eines Bereichs der Potenten Magie, beidem oder keinem von beidem
+# liegen, da die beiden Freitext-Themen nicht übereinstimmen müssen.
+spell-within-potent-field-label = Im Bereich der Potenten Magie
 # X10c (D73.2): die Zaubersumme eines bekannten Zaubers in der App.
 # UI review 2026-09-30b #5: der Wert steckt in dieser einen Nachricht statt in
 # der Vorlage mit einem literalen ": " verkettet zu werden.
@@ -1499,6 +1506,10 @@ derived-aura-out-of-range = Außerhalb des Regelbereichs ({ $min } bis { $max })
 derived-lab-enchanting = Für Verzauberung
 derived-lab-enchanting-hint = Von der obigen Laborsumme wegen Schwacher Verzauberer halbiert — für das Erschaffen oder Untersuchen verzauberter Gegenstände verwenden.
 derived-within-focus = Im Fokus
+# D79: die Zahl für den Bereich der Potenten Magie neben der des Magischen
+# Fokus oben, nur sichtbar, wenn der Charakter eine Tugend der Potenten Magie
+# besitzt.
+derived-within-potent-field = Im Bereich der Potenten Magie
 derived-deficient = (defizitär, halbiert)
 derived-weak-magic = (Schwache Magie, halbiert)
 derived-level = Stufe

@@ -28,6 +28,25 @@ pub struct CastingWithinFocus {
     pub spontaneous_non_fatiguing: i32,
 }
 
+/// The within-Potent-Magic-field counterparts of a [`CastingTotal`]'s four cast
+/// types (D79, `docs/vf-audit/decisions.md`). Unlike [`CastingWithinFocus`],
+/// there is no doubled Art — Potent Magic is a flat +6/+3 bonus, not a
+/// doubling — so this struct carries no `focus_art`-equivalent field. Gated
+/// on holding any Potent Magic Virtue (`InPlayMods::has_potent_magic`),
+/// independent of [`CastingWithinFocus`]'s `has_focus` gate — a spell may be
+/// within a Magical Focus, a Potent Magic field, both, or neither.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CastingWithinPotentField {
+    /// Within-potent-field formulaic total.
+    pub formulaic: i32,
+    /// Within-potent-field ritual total.
+    pub ritual: i32,
+    /// Within-potent-field fatiguing-spontaneous total.
+    pub spontaneous_fatiguing: i32,
+    /// Within-potent-field non-fatiguing-spontaneous total.
+    pub spontaneous_non_fatiguing: i32,
+}
+
 /// The non-standard-casting variants of a cell's **Formulaic** Casting Total:
 /// casting with no voice ("silent") and/or no gestures ("still"). The Words and
 /// Gestures penalties apply to Formulaic and Spontaneous casting, never to Ritual
@@ -102,6 +121,12 @@ pub struct CastingTotal {
     /// The within-focus variants; `None` when the magus holds no Magical Focus.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub within_focus: Option<CastingWithinFocus>,
+    /// The within-Potent-Magic-field variants; `None` when the magus holds no
+    /// Potent Magic Virtue. Independent of [`Self::within_focus`] — gates the
+    /// UI's second per-spell toggle (D79) rather than sharing the Magical
+    /// Focus one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub within_potent_field: Option<CastingWithinPotentField>,
     /// The non-standard-casting (silent / still) variants of the Formulaic total.
     pub non_standard: NonStandardCasting,
     /// Whether a Deficient Art halved these totals.
@@ -130,17 +155,20 @@ impl CastingBase {
 }
 
 /// The formulaic casting score of one `(Technique, Form)` cell, without the die,
-/// including the focus double when `focus` is set and the Deficient-Art halving.
-/// Shared by the grid and by per-spell penetration.
+/// including the focus double when `focus` is set, the Potent Magic bonus
+/// when `potent` is set (D79 — independent of `focus`, since the two
+/// free-text themes need not coincide), and the Deficient-Art halving. Shared
+/// by the grid, by per-spell penetration, and by [`spell_casting_total`].
 fn formulaic_casting_score(
     entity: &Entity,
     ruleset: &Ruleset,
     mods: &InPlayMods,
-    technique: &Id,
-    form: &Id,
+    cell: (&Id, &Id),
     base: CastingBase,
     focus: bool,
+    potent: bool,
 ) -> i32 {
+    let (technique, form) = cell;
     let te = effective_art_score(entity, ruleset, technique);
     let fo = effective_art_score(entity, ruleset, form);
     let mut score = saturating_i32_sum([
@@ -153,6 +181,9 @@ fn formulaic_casting_score(
     ]);
     if focus {
         score = saturating_i32_sum([score, te.min(fo)]);
+    }
+    if potent {
+        score = saturating_i32_sum([score, mods.potent_casting_mod_for(CastType::Formulaic)]);
     }
     if mods.deficient(technique, form) {
         score = halve(score);
@@ -194,6 +225,14 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
             let formulaic_mod = mods.casting_mod_for(CastType::Formulaic);
             let ritual_mod = mods.casting_mod_for(CastType::Ritual);
             let spontaneous_mod = mods.casting_mod_for(CastType::Spontaneous);
+            // D79: Potent Magic's bonus, folded SEPARATELY from the three
+            // above — it applies only within the maga's own Potent Magic
+            // field, never unconditionally, so it must never reach `common`,
+            // `within_focus`, or the labelled `casting_mod_addends` breakdown
+            // below (which explains only the unconditional figures).
+            let potent_formulaic_mod = mods.potent_casting_mod_for(CastType::Formulaic);
+            let potent_ritual_mod = mods.potent_casting_mod_for(CastType::Ritual);
+            let potent_spontaneous_mod = mods.potent_casting_mod_for(CastType::Spontaneous);
             // One entry per scope, always present — including at 0, exactly as
             // the sibling `lab.rs::lab_totals` always carries its `lab_mod`
             // addend. A breakdown that silently omits a zero term cannot be
@@ -215,14 +254,21 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
             // Passing them to `variant` rather than adding them to its result is
             // what keeps that true — see
             // `derived.rs::non_standard_penalties_are_inside_the_deficient_halving`.
-            let variant = |focused: bool, extra: i32| -> CastingScores {
+            let variant = |focused: bool, potent: bool, extra: i32| -> CastingScores {
                 let focus_add = if focused { focus_art } else { 0 };
+                // D79: the potent addends are 0 unless `potent` is set — base
+                // (`variant(false, false, _)`) and within-focus
+                // (`variant(true, false, _)`) never pick these up; only
+                // `within_potent_field` (`variant(false, true, 0)`) does.
+                let potent_formulaic = if potent { potent_formulaic_mod } else { 0 };
+                let potent_ritual = if potent { potent_ritual_mod } else { 0 };
+                let potent_spontaneous = if potent { potent_spontaneous_mod } else { 0 };
                 // `common` is already saturated by `sum`, so every fold onto it
                 // goes through the same helper: a plain `+` aborts the process
                 // under `overflow-checks = true`. See
                 // `derived.rs::saturating_i32_sum`.
                 let formulaic = post(
-                    saturating_i32_sum([common, focus_add, formulaic_mod, extra]),
+                    saturating_i32_sum([common, focus_add, formulaic_mod, potent_formulaic, extra]),
                     deficient,
                 );
                 let ritual = post(
@@ -231,12 +277,19 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                         focus_add,
                         sum(&ritual_addends),
                         ritual_mod,
+                        potent_ritual,
                         extra,
                     ]),
                     deficient,
                 );
                 let spont_base = post(
-                    saturating_i32_sum([common, focus_add, spontaneous_mod, extra]),
+                    saturating_i32_sum([
+                        common,
+                        focus_add,
+                        spontaneous_mod,
+                        potent_spontaneous,
+                        extra,
+                    ]),
                     deficient,
                 );
                 // Rounded down, like every other division the rules leave
@@ -264,7 +317,7 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                 }
             };
 
-            let base = variant(false, 0);
+            let base = variant(false, false, 0);
             let voice_penalty = mods.residual_voice_penalty(&form);
             let gesture_penalty = mods.residual_gesture_penalty(&form);
             // These three penalties are always `<= 0`, so they cannot push a
@@ -276,9 +329,10 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
             let non_standard = NonStandardCasting {
                 voice_penalty,
                 gesture_penalty,
-                silent: variant(false, voice_penalty).formulaic,
-                still: variant(false, gesture_penalty).formulaic,
+                silent: variant(false, false, voice_penalty).formulaic,
+                still: variant(false, false, gesture_penalty).formulaic,
                 silent_and_still: variant(
+                    false,
                     false,
                     saturating_i32_sum([voice_penalty, gesture_penalty]),
                 )
@@ -286,13 +340,22 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                 deft_form: mods.deft_forms.contains(&form),
             };
             let within_focus = mods.has_focus.then(|| {
-                let f = variant(true, 0);
+                let f = variant(true, false, 0);
                 CastingWithinFocus {
                     focus_art,
                     formulaic: f.formulaic,
                     ritual: f.ritual,
                     spontaneous_fatiguing: f.spontaneous_fatiguing,
                     spontaneous_non_fatiguing: f.spontaneous_non_fatiguing,
+                }
+            });
+            let within_potent_field = mods.has_potent_magic.then(|| {
+                let p = variant(false, true, 0);
+                CastingWithinPotentField {
+                    formulaic: p.formulaic,
+                    ritual: p.ritual,
+                    spontaneous_fatiguing: p.spontaneous_fatiguing,
+                    spontaneous_non_fatiguing: p.spontaneous_non_fatiguing,
                 }
             });
 
@@ -307,6 +370,7 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                 spontaneous_fatiguing: base.spontaneous_fatiguing,
                 spontaneous_non_fatiguing: base.spontaneous_non_fatiguing,
                 within_focus,
+                within_potent_field,
                 non_standard,
                 deficient,
             });
@@ -316,31 +380,38 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
 }
 
 /// The Casting Total the book prints beside one known spell (ArMDE:1179's
-/// "TeFo X/+Y"; formulaic only — Ritual/Spontaneous stay grid-only). Selects
-/// between a `(Technique, Form)` cell's base and within-focus formulaic
-/// figures by [`SpellSelection::within_focus`] (X10c) — a pure selector over
-/// the two numbers [`casting_totals`] already computes, so Potent Magic (which
-/// folds into `within_focus` alone, never the base total) comes along
-/// automatically whenever the flag is set. `within_focus: true` with no
-/// Magical Focus falls back to the base figure silently: reachable only via a
-/// hand-edited save, since the UI offers the toggle only when the character
-/// holds a Focus.
+/// "TeFo X/+Y"; formulaic only — Ritual/Spontaneous stay grid-only).
+/// Independently applies [`SpellSelection::within_focus`] (X10c, Magical
+/// Focus doubling) and [`SpellSelection::within_potent_field`] (D79, Potent
+/// Magic's flat bonus) via [`formulaic_casting_score`] — a spell marked under
+/// both gets the doubling AND the bonus together, since the two free-text
+/// themes need not coincide. Either marker with no matching Virtue held falls
+/// back to no contribution from that marker, silently: reachable only via a
+/// hand-edited save, since the UI offers each toggle only when the character
+/// holds the matching Virtue.
+///
+/// Computed directly via [`formulaic_casting_score`] rather than selecting
+/// from a [`casting_totals`] cell, because the grid only carries three
+/// figures (base, within-focus, within-potent-field) while a spell marked
+/// under both markers needs a fourth combination the grid does not
+/// materialize.
 pub fn spell_casting_total(
     chosen: &SpellSelection,
     entity: &Entity,
     ruleset: &Ruleset,
 ) -> Option<i32> {
     let spell = ruleset.spell(&chosen.spell)?;
-    let cell = casting_totals(entity, ruleset)
-        .into_iter()
-        .find(|c| c.technique == spell.technique && c.form == spell.form)?;
-    Some(if chosen.within_focus {
-        cell.within_focus
-            .map(|wf| wf.formulaic)
-            .unwrap_or(cell.formulaic)
-    } else {
-        cell.formulaic
-    })
+    let mods = in_play_mods(entity, ruleset);
+    let base = CastingBase::of(entity, ruleset);
+    Some(formulaic_casting_score(
+        entity,
+        ruleset,
+        &mods,
+        (&spell.technique, &spell.form),
+        base,
+        chosen.within_focus,
+        chosen.within_potent_field,
+    ))
 }
 
 /// Applies the Deficient-Art halving to a casting score. Weak Spontaneous
@@ -411,13 +482,21 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
             let raw = saturating_i32_sum([casting, -level_i, pen_ability]);
             if weak_magic { halve(raw) } else { raw }
         };
+        // D79: `potent: false` at both call sites — Penetration has no
+        // Potent-Magic-field figure of its own (only `within_focus`, gated on
+        // holding a Focus, predates D79 and is out of this ruling's scope).
+        // This still FIXES a side-effect bug: before D79, `casting_mod_for`
+        // folded Potent Magic's bonus unconditionally, so Penetration
+        // silently included it even for a character with no Focus at all;
+        // now that fold excludes Potent Magic entirely, so Penetration no
+        // longer leaks it either.
         let base_casting = formulaic_casting_score(
             entity,
             ruleset,
             &mods,
-            &spell.technique,
-            &spell.form,
+            (&spell.technique, &spell.form),
             base,
+            false,
             false,
         );
         let within_focus = mods.has_focus.then(|| {
@@ -425,10 +504,10 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
                 entity,
                 ruleset,
                 &mods,
-                &spell.technique,
-                &spell.form,
+                (&spell.technique, &spell.form),
                 base,
                 true,
+                false,
             );
             pen(focus_casting)
         });

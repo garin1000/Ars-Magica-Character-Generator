@@ -27,6 +27,15 @@ pub struct LabTotal {
     /// magus holds no Magical Focus.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub within_focus: Option<i32>,
+    /// The within-Potent-Magic-field Lab Total; `None` when the magus holds no
+    /// Potent Magic Virtue. Independent of [`Self::within_focus`] (D79,
+    /// `docs/vf-audit/decisions.md`) — D4 originally folded Potent Magic's
+    /// bonus into this same `within_focus` figure, which D79 reverses: the two
+    /// free-text themes (Magical Focus, Potent Magic field) need not coincide,
+    /// so each gets its own figure, gated on holding any Potent Magic Virtue
+    /// rather than on [`Self::within_focus`]'s `has_focus` gate.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub within_potent_field: Option<i32>,
     /// Whether a Deficient Art halved this cell.
     pub deficient: bool,
     /// `total`, halved again for Weak Enchanter (ArMDE:7060-7063: "Halve your Lab Total whenever you
@@ -67,10 +76,17 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
                 // `base` is already saturated by `sum`, so a plain `+` here would
                 // abort under `overflow-checks = true`; fold through the same
                 // helper instead. See `derived.rs::saturating_i32_sum`.
-                // D4: Potent Magic's flat bonus (`lab_mod_within_focus`) applies
-                // only here, never to `base`/`total`.
-                let focused = saturating_i32_sum([base, te.min(fo), mods.lab_mod_within_focus]);
+                // D79: Potent Magic's flat bonus is NEVER added here — it has
+                // its own `within_potent_field` figure below, independent of
+                // whether a Magical Focus is also held.
+                let focused = saturating_i32_sum([base, te.min(fo)]);
                 if deficient { halve(focused) } else { focused }
+            });
+            let within_potent_field = mods.has_potent_magic.then(|| {
+                // D79: Potent Magic's flat bonus, added only here — never to
+                // `base`/`total` and never to `within_focus` above.
+                let potent = saturating_i32_sum([base, mods.lab_mod_within_potent_field]);
+                if deficient { halve(potent) } else { potent }
             });
             // Weak Enchanter: Deficiency (already folded into `total`) first,
             // then this halving on top — the order the Flaw's text specifies.
@@ -85,6 +101,7 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
                 addends,
                 total,
                 within_focus,
+                within_potent_field,
                 deficient,
                 enchanting,
             });

@@ -6351,8 +6351,8 @@
     ],
     "max_total": 255,
     "effects": [
-      { "type": "casting_total_mod", "amount": 6, "scope": "all" },
-      { "type": "lab_total_mod", "amount": 6, "scope": "within_focus_only" }
+      { "type": "casting_total_mod", "amount": 6, "scope": "all", "potent_field_only": true },
+      { "type": "lab_total_mod", "amount": 6, "scope": "within_potent_field_only" }
     ],
     "source": { "anchor": "potent-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4740, 4781] }
   },
@@ -6371,8 +6371,8 @@
     ],
     "max_total": 255,
     "effects": [
-      { "type": "casting_total_mod", "amount": 3, "scope": "all" },
-      { "type": "lab_total_mod", "amount": 3, "scope": "within_focus_only" }
+      { "type": "casting_total_mod", "amount": 3, "scope": "all", "potent_field_only": true },
+      { "type": "lab_total_mod", "amount": 3, "scope": "within_potent_field_only" }
     ],
     "source": { "anchor": "potent-magic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4740, 4781] }
   },

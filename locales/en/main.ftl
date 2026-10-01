@@ -408,6 +408,12 @@ spell-level-label = Level
 # within-focus figure — i.e. the character holds a Magical Focus that could
 # cover it. The player's own claim the spell falls within that focus.
 spell-within-focus-label = Within focus
+# D79: shown only for a known spell whose (Technique, Form) cell has a
+# within-potent-field figure — i.e. the character holds a Potent Magic
+# Virtue that could cover it. Independent of spell-within-focus-label: a
+# spell may be within a Magical Focus, a Potent Magic field, both, or
+# neither, since the two free-text themes need not coincide.
+spell-within-potent-field-label = Within Potent Magic field
 # X10c (D73.2): the in-app per-spell Casting Total beside a known spell.
 # UI review 2026-09-30b #5: the value is baked into this one message rather
 # than concatenated with a literal ": " in the template.
@@ -1416,6 +1422,9 @@ derived-aura-out-of-range = Outside the rules range ({ $min } to { $max }); the 
 derived-lab-enchanting = For enchanting
 derived-lab-enchanting-hint = Halved from the Lab Total above for Weak Enchanter — use this figure when creating or investigating an enchanted item.
 derived-within-focus = Within focus
+# D79: the Potent-Magic-field figure beside the Magical-Focus one above,
+# shown only when the character holds a Potent Magic Virtue.
+derived-within-potent-field = Within Potent Magic field
 derived-deficient = (deficient, halved)
 derived-weak-magic = (Weak Magic, halved)
 derived-level = level
