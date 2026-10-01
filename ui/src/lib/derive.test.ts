@@ -746,6 +746,75 @@ describe('incompatibleRefs — conditional exclusions (UI review #5)', () => {
   });
 });
 
+describe('incompatibleRefs — same-choice exclusions (D69.6)', () => {
+  // Mirrors the two shipped entries: Academic Concentration (Artes Liberales)
+  // has a `fixed_target`, Student of (Realm) resolves its target through its
+  // OWN `realm` param via `via` — both forbid sharing a target with Puissant
+  // Ability's `ability` param.
+  const ruleset = makeRuleset([
+    item({
+      id: 'virtue.academic_concentration_subject',
+      parameters: [{ key: 'subject', type: 'ref', domain: 'text' }],
+      same_choice_exclusions: [
+        {
+          other: 'virtue.puissant_ability',
+          other_param: 'ability',
+          fixed_target: 'ability.artes_liberales',
+        },
+      ],
+    }),
+    item({
+      id: 'virtue.student_of_realm',
+      parameters: [{ key: 'realm', type: 'ref', domain: 'realm' }],
+      same_choice_exclusions: [
+        {
+          other: 'virtue.puissant_ability',
+          other_param: 'ability',
+          this_param: 'realm',
+          via: { 'realm.faerie': 'ability.faerie_lore' },
+        },
+      ],
+    }),
+    item({
+      id: 'virtue.puissant_ability',
+      parameters: [{ key: 'ability', type: 'ref', domain: 'ability' }],
+    }),
+  ]);
+
+  it('blocks the same-choice target once a fixed_target exclusion is selected', () => {
+    const selections = [
+      { ref: 'virtue.academic_concentration_subject', params: { subject: 'something' } },
+    ];
+    const blocked = incompatibleRefs(ruleset, selections, 'enforced');
+    expect(blocked.get('virtue.puissant_ability')).toBe('virtue.academic_concentration_subject');
+  });
+
+  it('blocks the same-choice target once a this_param/via exclusion resolves', () => {
+    const selections = [{ ref: 'virtue.student_of_realm', params: { realm: 'realm.faerie' } }];
+    const blocked = incompatibleRefs(ruleset, selections, 'enforced');
+    expect(blocked.get('virtue.puissant_ability')).toBe('virtue.student_of_realm');
+  });
+
+  it('does not block when the this_param value is unanswered', () => {
+    const blocked = incompatibleRefs(ruleset, [{ ref: 'virtue.student_of_realm' }], 'enforced');
+    expect(blocked.has('virtue.puissant_ability')).toBe(false);
+  });
+
+  it('does not block when the this_param value has no via mapping', () => {
+    const selections = [{ ref: 'virtue.student_of_realm', params: { realm: 'realm.magic' } }];
+    expect(incompatibleRefs(ruleset, selections, 'enforced').has('virtue.puissant_ability')).toBe(
+      false,
+    );
+  });
+
+  it('is empty in advisory mode, where violations only get reported', () => {
+    const selections = [
+      { ref: 'virtue.academic_concentration_subject', params: { subject: 'something' } },
+    ];
+    expect(incompatibleRefs(ruleset, selections, 'advisory').size).toBe(0);
+  });
+});
+
 // --- grantedSelectionsForSide() ---------------------------------------------
 
 describe('grantedSelectionsForSide', () => {

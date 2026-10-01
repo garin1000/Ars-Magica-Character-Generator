@@ -286,6 +286,9 @@ pub struct ResolvedRealmEntry {
     pub item_ref: Id,
     /// The realm [`arm_rules::resolve_realm`] resolved this selection to.
     pub realm: Realm,
+    /// `true` when the book states the realm outright, or the item is
+    /// Tainted — see the struct doc; the V/F row shows it read-only rather
+    /// than offering an override control.
     pub fixed: bool,
 }
 

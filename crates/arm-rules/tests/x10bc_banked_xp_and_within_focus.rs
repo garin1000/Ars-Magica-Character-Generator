@@ -1,18 +1,13 @@
-//! X10bc PHASE 1 (docs/vf-audit/design-x10bc-save-format.md;
-//! `docs/vf-audit/decisions.md` D73) — RED checkpoint for the two new fields
+//! X10bc (docs/vf-audit/design-x10bc-save-format.md;
+//! `docs/vf-audit/decisions.md` D73) — GREEN, phase 2 landed: the two fields
 //! `AbilityScore::banked_xp` / `ArtScore::banked_xp` (X10b) and
-//! `SpellSelection::within_focus` (X10c).
-//!
-//! Phase 1 ships the fields and a stub `spell_casting_total` with NO new
-//! behavior (`types.rs`, `derived/casting.rs`): the Ability/Art spend loops in
-//! `effective/xp.rs` do not yet fold `banked_xp` into the charged cost, no
-//! validation pass yet emits `banked_xp_at_or_above_next_level`, and
-//! `spell_casting_total` always returns the base (grid) figure regardless of
-//! `within_focus`. Every test below that exercises one of those THREE
-//! not-yet-wired behaviors is expected to be RED until Phase 2. The
-//! round-trip tests are plain serde mechanics the fields already satisfy, so
-//! those are expected GREEN today — see `tmp/x10bc-handover.md` for exactly
-//! which is which and the verbatim RED output.
+//! `SpellSelection::within_focus` (X10c) are fully wired, not just shipped.
+//! The Ability/Art spend loops in `effective/xp.rs` fold `banked_xp` into the
+//! charged cost, `validation/scores.rs` emits
+//! `banked_xp_at_or_above_next_level`, and `spell_casting_total`
+//! (`derived/casting.rs`) returns the focus-adjusted figure when
+//! `within_focus` is set. See `tmp/x10bc-handover.md` for the phase 1/phase 2
+//! split and the original verbatim RED output.
 
 use arm_rules::export::{LABEL_KEYS, character_markdown};
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
@@ -104,7 +99,7 @@ fn ability_banked_xp_at_next_level_warns() {
         - ruleset.advancement().xp_for_score(score).unwrap();
     assert!(
         ability_warns_banked_xp_at_or_above_next_level(score, delta),
-        "banked_xp exactly at the next level's raw-table delta must warn — RED until Phase 2 wires the check into validation"
+        "banked_xp exactly at the next level's raw-table delta must warn"
     );
 }
 
@@ -116,19 +111,18 @@ fn ability_banked_xp_over_next_level_warns() {
         - ruleset.advancement().xp_for_score(score).unwrap();
     assert!(
         ability_warns_banked_xp_at_or_above_next_level(score, delta + 5),
-        "banked_xp comfortably over the next level must warn — RED until Phase 2"
+        "banked_xp comfortably over the next level must warn"
     );
 }
 
 #[test]
 fn ability_banked_xp_at_u32_max_warns_without_panicking() {
-    // The point of this case: `u32::MAX` must not panic anywhere on the way
-    // to the (currently absent) warning — `saturating_add` is what closes that
-    // path in Phase 2's engine change; Phase 1 doesn't read `banked_xp`
-    // computationally at all yet, so there is nothing to overflow today either.
+    // The point of this case: `u32::MAX` must not panic anywhere on the way to
+    // the warning — see `validate_ability_banked_xp`'s own doc comment
+    // (`validation/scores.rs`) for the overflow-safety shape this locks in.
     assert!(
         ability_warns_banked_xp_at_or_above_next_level(2, u32::MAX),
-        "banked_xp at u32::MAX must warn (and must not panic reaching that assertion) — RED until Phase 2"
+        "banked_xp at u32::MAX must warn (and must not panic reaching that assertion)"
     );
 }
 
@@ -166,7 +160,32 @@ fn art_banked_xp_at_next_level_warns() {
         - ruleset.art_advancement().xp_for_score(score).unwrap();
     assert!(
         art_warns_banked_xp_at_or_above_next_level(score, delta),
-        "an Art's banked_xp exactly at the next level's delta must warn — RED until Phase 2"
+        "an Art's banked_xp exactly at the next level's delta must warn"
+    );
+}
+
+#[test]
+fn art_banked_xp_over_next_level_warns() {
+    let ruleset = full_ruleset();
+    let score = 5u8;
+    let delta = ruleset.art_advancement().xp_for_score(score + 1).unwrap()
+        - ruleset.art_advancement().xp_for_score(score).unwrap();
+    assert!(
+        art_warns_banked_xp_at_or_above_next_level(score, delta + 5),
+        "an Art's banked_xp comfortably over the next level must warn"
+    );
+}
+
+#[test]
+fn art_banked_xp_at_u32_max_warns_without_panicking() {
+    // Art-side mirror of `ability_banked_xp_at_u32_max_warns_without_panicking`:
+    // `validate_art_banked_xp` (`validation/scores.rs`) duplicates the same
+    // checked_add/saturating_sub shape as the Ability-side validator, so a
+    // hostile save file's Art `banked_xp: u32::MAX` must warn without panicking
+    // here too.
+    assert!(
+        art_warns_banked_xp_at_or_above_next_level(5, u32::MAX),
+        "an Art's banked_xp at u32::MAX must warn (and must not panic reaching that assertion)"
     );
 }
 
@@ -306,8 +325,7 @@ fn a_save_without_the_new_keys_defaults_to_zero_and_false_and_omits_them_on_writ
 fn spell_casting_total_picks_the_within_focus_figure_when_marked() {
     // A minimal magus with a Major Magical Focus and one known Creo Ignem
     // spell: base Casting Total 27 (Cr 12 + Ig 15), within-focus 39
-    // (+ min(12, 15)). RED until Phase 2 wires `SpellSelection::within_focus`
-    // into `spell_casting_total` — the stub always returns the base figure.
+    // (+ min(12, 15)).
     let ruleset = full_ruleset();
     let mut e = entity("magus");
     e.art_scores = vec![
@@ -326,10 +344,7 @@ fn spell_casting_total_picks_the_within_focus_figure_when_marked() {
 
     let total = arm_rules::derived::spell_casting_total(&e.spells[0], &e, &ruleset)
         .expect("spell.pilum_of_fire is in the shipped catalogue");
-    assert_eq!(
-        total, 39,
-        "within_focus: true must pick the focused figure — RED until Phase 2"
-    );
+    assert_eq!(total, 39, "within_focus: true must pick the focused figure");
 }
 
 // --- Export: the score cell prints " (Z)" only when banked_xp > 0 ----------
@@ -392,7 +407,7 @@ fn export_shows_banked_xp_in_parentheses_beside_the_art_score() {
     let md = character_markdown(&e, &ruleset, &labels).expect("exports");
     assert!(
         md.contains("| 5 (3) |") || md.contains("5 (3)"),
-        "expected the Arts score cell to show the banked XP in parentheses (design § 5) — RED until Phase 2's export/sections.rs change:\n{md}"
+        "expected the Arts score cell to show the banked XP in parentheses (design § 5):\n{md}"
     );
 }
 
@@ -407,7 +422,7 @@ fn export_shows_banked_xp_in_parentheses_beside_the_ability_score() {
     let md = character_markdown(&e, &ruleset, &labels).expect("exports");
     assert!(
         md.contains("2 (4)"),
-        "expected the Abilities score cell to show the banked XP in parentheses (design § 5) — RED until Phase 2's export/sections.rs change:\n{md}"
+        "expected the Abilities score cell to show the banked XP in parentheses (design § 5):\n{md}"
     );
 }
 

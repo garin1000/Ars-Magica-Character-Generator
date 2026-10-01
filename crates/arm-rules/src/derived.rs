@@ -3121,13 +3121,12 @@ mod tests {
         assert_eq!(lines[0].defense, 6);
     }
 
-    /// K5 red (`docs/vf-audit/design-f0-book-template-engine.md` § 2a): a
+    /// K5 (`docs/vf-audit/design-f0-book-template-engine.md` § 2a): a
     /// `Carried` weapon yields a Combat row but contributes no Load — the
-    /// Knight's own carried great sword (ArMDE:1470-1471). The row-emission
-    /// filter in `combat_totals` still reads `== Wielded` only (the F1 stub,
-    /// left unchanged pending the green-phase K5 fix — see the `TODO(K5, ...)`
-    /// comment there), so this fails today: a Carried weapon yields no line at
-    /// all.
+    /// Knight's own carried great sword (ArMDE:1470-1471), fixed by
+    /// `combat.rs::combat_totals`'s `!= Stowed` row-emission filter, which
+    /// excludes only Stowed gear and leaves Wielded's existing behavior
+    /// unchanged.
     #[test]
     fn a_carried_weapon_yields_a_combat_row_with_no_load() {
         let rs = ruleset();

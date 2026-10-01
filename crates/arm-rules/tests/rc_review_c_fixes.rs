@@ -1,11 +1,11 @@
-//! RC (review-2026-09-30c) fix slice — RED CHECKPOINT.
+//! RC (review-2026-09-30c) fix slice — GREEN.
 //!
 //! Each test below pins a REAL DEFECT confirmed against the rulebook source
 //! and `docs/vf-audit/decisions.md` (see `tmp/rc-verdicts.md` for the full
 //! per-finding verdict table, including the Review C findings judged FALSE
 //! POSITIVE and therefore NOT pinned here). Every test runs against the
-//! SHIPPED `rules/core/*.json` and fails today (phase 2, data/engine work,
-//! has not landed yet).
+//! SHIPPED `rules/core/*.json` and passes, now that the data/engine fix for
+//! each pinned defect has landed.
 
 use std::collections::BTreeMap;
 

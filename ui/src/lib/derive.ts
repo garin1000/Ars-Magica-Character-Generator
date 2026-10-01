@@ -32,6 +32,7 @@ import type {
   Reputation,
   ReputationGrant,
   RestrictedXpPool,
+  SameChoiceExclusion,
   Selection,
   Spell,
   SpellSelection,
@@ -1120,23 +1121,62 @@ function paramGateHolds(gate: ParamGate, selection: Selection): boolean {
 }
 
 /**
+ * The target id `selection` (the declaring item's own pick) resolves to for
+ * one `SameChoiceExclusion` entry — mirrors the engine's own `this_target`
+ * resolution in `validate_same_choice_exclusions`
+ * (`crates/arm-rules/src/validation/selections.rs`): `fixed_target` when set,
+ * else `this_param`'s value on THIS selection mapped through `via`.
+ * `undefined` when the parameter is unset or absent from `via` — an unfilled
+ * choice resolves no target and so conflicts with nothing, same as the
+ * engine's own early-continue.
+ */
+function sameChoiceTarget(entry: SameChoiceExclusion, selection: Selection): string | undefined {
+  if (entry.fixed_target !== undefined) return entry.fixed_target;
+  if (entry.this_param === undefined) return undefined;
+  const value = singleParamValue(selection.params?.[entry.this_param]);
+  return value !== undefined ? entry.via?.[value] : undefined;
+}
+
+/**
  * Item ids that may not be added because a currently selected item excludes
  * them, each mapped to the selected item responsible (so a greyed row can say
- * WHY). Built from every selected item's `incompatible_with`, PLUS every
+ * WHY). Built from every selected item's `incompatible_with`, every
  * `conditional_incompatible_with` entry whose `gate` holds for that selection's
  * own params (X6a/e7: Warped Senses excludes Keen Vision only when its `sense`
- * param names sight). Covers both magnitude-variant pairs (Major/Minor Magical
- * Focus, Ambitious Major/Minor) and hand-authored exclusion cliques (Gentle vs
- * Blatant Gift; Dwarf / Small Frame / Giant Blood / Large), since all three are
- * expressed through the same data fields.
+ * param names sight), PLUS every `same_choice_exclusions` entry (D69.6) whose
+ * target resolves for that selection — Academic Concentration (Artes
+ * Liberales) blocks `virtue.puissant_ability` once its own target is known.
+ * Covers both magnitude-variant pairs (Major/Minor Magical Focus, Ambitious
+ * Major/Minor) and hand-authored exclusion cliques (Gentle vs Blatant Gift;
+ * Dwarf / Small Frame / Giant Blood / Large), since all three are expressed
+ * through the same data fields.
+ *
+ * `same_choice_exclusions` blocks the whole OTHER item id once this
+ * selection's target resolves, the same coarse shape
+ * `conditional_incompatible_with` already uses — rather than narrowing to the
+ * one parameter VALUE that would actually conflict (the engine's own
+ * `validate_same_choice_exclusions` checks the OTHER selection's resolved
+ * value, not merely its id). So this can over-block: once Academic
+ * Concentration (Artes Liberales) is selected, Puissant Ability is greyed out
+ * entirely, not just for Artes Liberales. It never under-blocks a conflict the
+ * engine would catch. It is also one-directional, like
+ * `PointItem::excluded_if_holds`: only the side that DECLARES the exclusion
+ * triggers it, so taking Puissant Ability (Faerie Lore) first does not grey
+ * out Student of (Realm) — the declaring item must be selected first for the
+ * picker to warn, though the engine's own validator still catches either
+ * order at save time.
  *
  * Only `enforced` mode blocks: `advisory` and `silent` leave every option
- * takeable and let the engine's `incompatible` issue report the violation
- * instead. Declared incompatibilities are symmetric (the engine rejects a
- * ruleset where they are not), so walking the selected side alone is complete.
+ * takeable and let the engine's `incompatible`/`same_choice_conflict` issue
+ * report the violation instead. Declared `incompatible_with` pairs are
+ * symmetric (the engine rejects a ruleset where they are not), so walking the
+ * selected side alone is complete for that source; `same_choice_exclusions`
+ * is declared one-directionally by design (see above), so walking the
+ * selected side alone is exactly as complete as the data itself is.
  *
- * Mirrors `validate_incompatibilities`, which likewise tests bought selections
- * only: a House-granted item never blocks a pick.
+ * Mirrors `validate_incompatibilities`/`validate_same_choice_exclusions`,
+ * which likewise test bought selections only: a House-granted item never
+ * blocks a pick.
  */
 export function incompatibleRefs(
   localized: LocalizedRuleset,
@@ -1157,6 +1197,10 @@ export function incompatibleRefs(
       for (const ref of entry.forbids) {
         if (!blocked.has(ref)) blocked.set(ref, selection.ref);
       }
+    }
+    for (const entry of item?.same_choice_exclusions ?? []) {
+      if (sameChoiceTarget(entry, selection) === undefined) continue;
+      if (!blocked.has(entry.other)) blocked.set(entry.other, selection.ref);
     }
   }
   return blocked;

@@ -70,7 +70,7 @@ pub use derived::{
     WoundRange, casting_totals, combat_totals, cord_points_spent, derived_totals, encumbrance,
     familiar_binding_level, familiar_invested_power_levels, familiar_readout, fatigue_levels,
     focus_power_lines, lab_totals, longevity_bonus, magic_resistance, masterpiece_item_cap,
-    penetration, soak, surfaced_modifiers, talisman_capacity, wound_ranges,
+    penetration, soak, spell_casting_total, surfaced_modifiers, talisman_capacity, wound_ranges,
 };
 // Curated public compute-function facade (see the `derived` re-export above):
 // bare names such as `size`, `warping`, `confidence`, and `true_faith` are the

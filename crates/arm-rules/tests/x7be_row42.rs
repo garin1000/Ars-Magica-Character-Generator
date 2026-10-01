@@ -335,3 +335,28 @@ fn flawed_powers_is_satisfied_by_a_major_supernatural_virtue() {
         result.issues
     );
 }
+
+/// The "held but below threshold" arm (QA review, coverage): a companion
+/// holding only `virtue.amorphous_minor` (magnitude minor, category
+/// `supernatural`, ArMDE:3410-3413) — a Supernatural Virtue, just not a MAJOR
+/// one — must still be refused Flawed Powers, distinguishing this from "holds
+/// nothing at all" (`flawed_powers_requires_a_major_supernatural_virtue`
+/// above). Without this, `Prereq::HasCategoryAtMagnitude`'s `>=` comparison's
+/// false-but-present arm (`prereq.rs::evaluate_prereq`) has no regression
+/// coverage distinct from the "nothing held" case.
+#[test]
+fn flawed_powers_is_not_satisfied_by_a_minor_supernatural_virtue() {
+    let rs = load_ruleset();
+    let companion = entity(
+        "companion",
+        vec![sel("flaw.flawed_powers"), sel("virtue.amorphous_minor")],
+    );
+
+    let result = validate(&companion, &rs);
+
+    assert!(
+        issue_codes(&result).contains(&ValidationIssue::CODE_PREREQ_NOT_MET),
+        "Flawed Powers with only a Minor Supernatural Virtue held must still be refused: {:?}",
+        result.issues
+    );
+}

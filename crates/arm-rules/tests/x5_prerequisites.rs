@@ -7,18 +7,16 @@
 //! Magic, Leper Magus, Mythic Blood, A Deal with the Devil), and the two
 //! Educated (Hebrew) prerequisites (Shamash, Sofer).
 //!
-//! Phase 1 only — verdicts and failing tests, no data or engine changes. See
-//! `tmp/x5-verdicts.md` for the full per-entry citation table and
-//! `tmp/x5-handover.md` for exactly what Phase 2 must change: the new
+//! GREEN, phase 2 landed. See `tmp/x5-verdicts.md` for the full per-entry
+//! citation table and `tmp/x5-handover.md` for what phase 2 changed: the new
 //! `Prereq::IsGrog` variant + `EntityTypeProfile::is_grog` (every match site,
 //! plus the UI mirror and its parity test), the new open-V/F-grant machinery
 //! (Mythic Blood's hereditary Minor Personality Flaw), and the data for every
 //! entry below.
 //!
-//! `Prereq::IsGrog` does not exist yet (confirmed:
-//! `grep -rn IsGrog crates ui/src` finds nothing), so every test here goes
-//! through `validate()` against the shipped ruleset — data behaviour, never
-//! the enum directly — exactly as the brief requires.
+//! `Prereq::IsGrog` is exercised only through `validate()` against the shipped
+//! ruleset — data behaviour, never the enum directly — exactly as the brief
+//! required.
 
 use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::*;

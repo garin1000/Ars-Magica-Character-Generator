@@ -14,15 +14,16 @@
 //! "True Friend" (EN) / "Wahrer Freund" (DE, `tugenden-fehler.md:170`,
 //! confirmed against the translation table per D31's precedence rule).
 //!
-//! RED CHECKPOINT: none of the three ids exist in the shipped catalogue yet.
+//! GREEN (phase 2 data landed): all three ids are shipped in
 //! `rules/core/virtues_flaws.json` and the two `rules/i18n/<lang>/
-//! virtues_flaws.json` files have not been edited (phase 2 data work), so
-//! every test below fails against the shipped catalogue until that data
-//! change lands. See `tmp/x2t-handover.md` for the exact JSON to add and the
-//! other guard lists (`x4_incompatibilities.rs::ENTAILED_TWIN_PAIRS`,
+//! virtues_flaws.json` files, copying their twins' mechanics, categories,
+//! classification and source as D60 requires — every test below passes
+//! against the shipped catalogue. See `tmp/x2t-handover.md` for the data that
+//! landed and the other guard lists
+//! (`x4_incompatibilities.rs::ENTAILED_TWIN_PAIRS`,
 //! `uncomputed_clauses.rs::NO_RULE_DESPITE_TOKEN`,
 //! `data_integrity.rs::PENDING_D67_CLASSIFICATION`,
-//! `rules/i18n/de/source_anchors.json`) that must be updated alongside it.
+//! `rules/i18n/de/source_anchors.json`) that were updated alongside it.
 
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;

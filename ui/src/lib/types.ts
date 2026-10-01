@@ -176,6 +176,22 @@ export interface ConditionalIncompatibility {
   forbids: string[];
 }
 
+// One entry of `PointItem.same_choice_exclusions` (D69.6): the declaring item
+// may not be held alongside a selection of `other` that resolves `other_param`
+// to the SAME target this item resolves to — "You may not take Student of
+// (Realm) and Puissant Ability for the same Lore" (ArMDE:5054). The target is
+// either `fixed_target` (set regardless of this item's own parameters), or —
+// when `this_param` is set — this item's OWN `this_param` value mapped
+// through `via`. Exactly one of `this_param`/`fixed_target` is ever set.
+// Mirrors the engine's `SameChoiceExclusion` (`types.rs::SameChoiceExclusion`).
+export interface SameChoiceExclusion {
+  other: string;
+  other_param: string;
+  this_param?: string;
+  via?: Record<string, string>;
+  fixed_target?: string;
+}
+
 // A property-based test over a point item, for an exclusion the rulebook
 // states by description rather than by id (`PointItem.incompatible_with`) or
 // category (`Effect.forbids_item_category`) — D23/D33/D68.4/D69.5. Mirrors the
@@ -572,6 +588,13 @@ export interface PointItem {
   // selection satisfies one of these predicates (D23/B3) — one-directional,
   // unlike `incompatible_with`. Omitted when empty.
   excluded_if_holds?: ItemPredicate[];
+  // D69.6: this item may not be held alongside another selection that
+  // resolves to the SAME target as this one (Student of (Realm) vs Puissant
+  // Ability for the same Lore; Academic Concentration (Artes Liberales) vs
+  // Puissant Artes Liberales). Declared one-directionally, like
+  // `excluded_if_holds` above. Omitted when empty. Mirrors the engine's
+  // `PointItem::same_choice_exclusions`.
+  same_choice_exclusions?: SameChoiceExclusion[];
   parameters?: ParameterDef[];
   effects?: Effect[];
   // Max selections per (id, params) target. Omitted when the default (1).
