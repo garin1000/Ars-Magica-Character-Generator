@@ -828,6 +828,24 @@ presumption of correctness.
 
 ---
 
+## D78 — X9c's sweep results (`tmp/x9c-verdicts*.md`)
+
+**Norbert, 2026-10-01.**
+1. **Companion Animal** ("Minor, Social Status, animals only", ArMDE:5806)
+   gets D75's gate, the same animal character type no profile has.
+2. **`flaw.pagan_minor` is added** as a Minor twin of `flaw.pagan`
+   ("Major or Minor, Personality", ArMDE:6571), mutually incompatible with it.
+3. **The RULES.md errata note** lists:
+   - the four index omissions;
+   - the three index disagreements;
+   - the stray Folk Magic entry in the Flaw index;
+   - for each, both citations and the side taken.
+
+   The same errata, plus the dead index links and the descriptor typos, also go
+   to the todo in `arm-de-translation/docs/todo.md`.
+
+---
+
 ## D77 — X9c's three open points (`tmp/x9c-plan.md`)
 
 **Norbert, 2026-10-01.**
