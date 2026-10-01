@@ -284,7 +284,10 @@ export type Effect =
   | { type: 'spell_levels'; amount: number }
   | { type: 'general_xp'; amount: number }
   | { type: 'confidence_bonus'; score: number; points: number }
-  | { type: 'warping_grant'; score: number; points: number }
+  // No `score` field (D77.3): the Warping Score is always derived from the
+  // point total alone, never authored directly, so a stored score could only
+  // ever be an unread, disagreeable second copy of the same fact.
+  | { type: 'warping_grant'; points: number }
   // D69.1: Raised from the Dead's parameterized sibling of `warping_grant` —
   // `base_points` unconditionally, plus one per unit named by the OWNING
   // selection's `params[param]` (ArMDE:6646-6649).

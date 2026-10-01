@@ -1947,7 +1947,7 @@ fn tainted_treasure_reclassifies_and_states_its_curse() {
     assert_eq!(
         classification_of(&rs, "virtue.tainted_treasure"),
         Classification::UncomputedRule,
-        "D50: ArMDE:5097-5108's curse consequences are a real, storyguide-enforced rule; \
+        "D50: ArMDE:5097-5103's curse consequences are a real, storyguide-enforced rule; \
          virtue.tainted_treasure must reclassify to uncomputed_rule"
     );
 
@@ -1962,7 +1962,7 @@ fn tainted_treasure_reclassifies_and_states_its_curse() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.tainted_treasure: displayed text {text:?} does not state the \
-                 curse-transfer clause (ArMDE:5097-5108)"
+                 curse-transfer clause (ArMDE:5097-5103)"
             ));
         }
     }

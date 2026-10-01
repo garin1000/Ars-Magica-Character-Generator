@@ -434,6 +434,7 @@
     "categories": ["social_status"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "character_type", "value": "character_type.domestic_animal" },
     "source": { "anchor": "companion-animal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5805, 5808] }
   },
   {
@@ -2275,6 +2276,18 @@
     "categories": ["personality"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.pagan_minor"],
+    "effects": [{ "type": "ability_authorization", "abilities": ["ability.faerie_lore", "ability.magic_lore"] }],
+    "source": { "anchor": "pagan", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6570, 6573] }
+  },
+  {
+    "id": "flaw.pagan_minor",
+    "kind": "flaw",
+    "magnitude": "minor",
+    "categories": ["personality"],
+    "classification": "creation_effect",
+    "entity_kinds": ["character"],
+    "incompatible_with": ["flaw.pagan"],
     "effects": [{ "type": "ability_authorization", "abilities": ["ability.faerie_lore", "ability.magic_lore"] }],
     "source": { "anchor": "pagan", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6570, 6573] }
   },
@@ -3424,7 +3437,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "effects": [
-      { "type": "warping_grant", "score": 1, "points": 5 },
+      { "type": "warping_grant", "points": 5 },
       { "type": "ability_authorization", "abilities": ["ability.magic_lore"] }
     ],
     "realm_association": { "kind": "default", "realm": "magic" },
@@ -6098,7 +6111,7 @@
     "incompatible_with": ["virtue.major_magical_focus"],
     "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
     "effects": [{ "type": "magical_focus", "param": "focus", "major": false }],
-    "source": { "anchor": "minor-magical-focus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4536, 4538] }
+    "source": { "anchor": "minor-magical-focus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4536, 4557] }
   },
   {
     "id": "virtue.muqta_muq_ta",
@@ -6240,7 +6253,7 @@
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.wealthy"],
     "effects": [{ "type": "ability_authorization", "categories": ["academic"] }],
-    "source": { "anchor": "perfectus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4632, 4641] }
+    "source": { "anchor": "perfectus", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4632, 4634] }
   },
   {
     "id": "virtue.performance_magic",
@@ -6466,6 +6479,7 @@
     "categories": ["social_status"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "has", "value": "virtue.educated_hebrew" },
     "source": { "anchor": "rabbi", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4828, 4833] }
   },
   {
@@ -7047,7 +7061,7 @@
     "classification": "uncomputed_rule",
     "tainted": true,
     "entity_kinds": ["character"],
-    "source": { "anchor": "tainted-treasure", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5097, 5108] }
+    "source": { "anchor": "tainted-treasure", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5097, 5103] }
   },
   {
     "id": "virtue.templar_administrator",

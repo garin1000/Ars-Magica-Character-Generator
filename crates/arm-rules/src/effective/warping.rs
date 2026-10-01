@@ -13,11 +13,11 @@ use super::*;
 /// and [`Effect::WarpingGrantParam`] (Raised from the Dead, D69/X7b-e: `base_points`
 /// plus one per year named by the owning selection's own parameter — an
 /// unanswered parameter contributes 0 extra years), summed across selections
-/// and derived grants. `WarpingGrant`'s declared *score* field is **not** read
-/// here — the Warping Score is derived by inverting the advancement curve
-/// over the point total (see [`warping_score`]), so the score is computed
-/// from points alone and the two can never disagree; `WarpingGrantParam`
-/// carries no `score` field at all, for the same reason.
+/// and derived grants. Neither variant carries a *score* field (D77.3 dropped
+/// `WarpingGrant`'s) — the Warping Score is derived by inverting the
+/// advancement curve over the point total (see [`warping_score`]), so the
+/// score is computed from points alone and a stored score could only ever
+/// disagree with it.
 fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
     let mut points = 0u32;
     for selection in selections {
@@ -26,10 +26,7 @@ fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
         };
         for effect in &item.effects {
             match effect {
-                Effect::WarpingGrant {
-                    score: _,
-                    points: p,
-                } => {
+                Effect::WarpingGrant { points: p } => {
                     points += u32::from(*p);
                 }
                 Effect::WarpingGrantParam { param, base_points } => {

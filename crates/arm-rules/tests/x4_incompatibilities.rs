@@ -508,6 +508,11 @@ fn magical_focus_twins_stay_hard_blocked() {
 /// - Magian Lineage: ArMDE:4345's Major explicitly states it already
 ///   includes Minor's benefit "in addition to" — holding both double-counts
 ///   the same bonus.
+/// - Pagan (X9c, D78.2): ArMDE:6571 "Major or Minor" is ONE entry, ONE
+///   passage, for a single trait (not following the Church); the magnitude is
+///   a judgment call about the character's circumstances (ArMDE:6572's
+///   parenthetical), not two separable facts, so holding both at once is
+///   incoherent the same way holding both Outsider magnitudes is.
 const ENTAILED_TWIN_PAIRS: &[(&str, &str)] = &[
     ("flaw.outsider_major", "flaw.outsider_minor"),
     ("flaw.true_love_major", "flaw.true_love_minor"),
@@ -517,6 +522,7 @@ const ENTAILED_TWIN_PAIRS: &[(&str, &str)] = &[
     ("flaw.true_friend_major", "flaw.true_friend_minor"),
     ("virtue.amorphous_major", "virtue.amorphous_minor"),
     ("virtue.magian_lineage_major", "virtue.magian_lineage_minor"),
+    ("flaw.pagan", "flaw.pagan_minor"),
 ];
 
 #[test]

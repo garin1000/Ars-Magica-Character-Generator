@@ -1830,6 +1830,33 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::De,
         family: "prohibition",
     },
+    S2Idiom {
+        // X9c/D77.1: fixing virtue.tainted_treasure's source range (F-309,
+        // dropping a sidebar that was actually Templar Administrator's own
+        // background text) re-exposed this entry's real rule, previously
+        // masked by the Knights Templar paragraph's unrelated "restricted to"
+        // hit. ArMDE:5101: "If it is used for a nonsinful purpose, the
+        // treasure destroys itself" — the GM-judgement/open-ended-magnitude
+        // shape `uncomputed_rule` exists for (no number, no roll, just a
+        // guaranteed-but-unspecified consequence), the same family as
+        // "cannot die". Verified unique in the book (one hit, this passage).
+        pattern: r"\bdestroys itself\b",
+        language: Language::En,
+        family: "absolutes",
+    },
+    S2Idiom {
+        // virtue.tainted_treasure (ArMDE:5101, DE): "zerstört der Schatz sich
+        // selbst" — same idiom, German word order puts the subject between
+        // the verb and "sich selbst", so this is a bounded gap (never
+        // crossing a sentence) rather than a contiguous phrase, mirroring
+        // DE_MODAL_NICHT's own reason for being a gap pattern. The book's
+        // other "sich selbst" (the Fire/Air Elemental's "mit sich selbst zu
+        // vereinen") sits in a different sentence from any "zerstört", so the
+        // period boundary keeps this from crossing into it.
+        pattern: r"\bzerstört\b[^.]{0,30}?\bsich selbst\b",
+        language: Language::De,
+        family: "absolutes",
+    },
 ];
 
 /// [`S2_IDIOMS`], compiled once.
@@ -2509,6 +2536,11 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          a numeric rule.",
     ),
     (
+        "flaw.pagan_minor",
+        "D78.2: the Minor twin of flaw.pagan, citing the SAME passage (ArMDE:6570-6573) and \
+         carrying the identical ability_authorization effect — same reading as flaw.pagan above.",
+    ),
+    (
         "virtue.alim",
         "operative clause (\"may purchase\" Academic Abilities) is computed via \
          ability_authorization (X1/D43); \"male characters only\" is a flavor/eligibility note, \
@@ -3102,7 +3134,7 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
         "orphan: \"may not take Wealthy\" carries no incompatible_with (F-340's family, X4), and \
          the conditional \"may... take Purity or Transcendence Abilities\" (only with True \
          Faith) is a second, unencoded permission distinct from the plain Academic one this row \
-         adds — a separate finding, ArMDE:4632-4641",
+         adds — a separate finding, ArMDE:4632-4634",
     ),
     (
         "virtue.priest",

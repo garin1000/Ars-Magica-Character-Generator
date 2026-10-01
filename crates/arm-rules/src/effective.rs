@@ -1633,7 +1633,7 @@ mod tests {
             "id": "flaw.warped_by_magic",
             "kind": "flaw", "classification": "narrative", "magnitude": "minor", "categories": ["supernatural"],
             "entity_kinds": ["character"],
-            "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }]
+            "effects": [{ "type": "warping_grant", "points": 5 }]
           },
           {
             "id": "virtue.true_faith",
@@ -2447,10 +2447,11 @@ mod tests {
     }
 
     #[test]
-    fn warping_grant_sums_score_and_points() {
+    fn warping_grant_derives_score_from_points() {
         // Warped by Magic grants 5 Warping Points; the score is DERIVED by
-        // inverting the advancement curve (5 points → Warping Score 1), not read
-        // from the grant's declared score. ArMDE:7019-7021, :16464-16475.
+        // inverting the advancement curve (5 points → Warping Score 1) — the
+        // effect carries no stored score at all (D77.3). ArMDE:7019-7021,
+        // :16464-16475.
         let rs = xp_ruleset();
         assert_eq!(
             warping(&xp_entity(vec![]), &rs),

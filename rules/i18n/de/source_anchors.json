@@ -343,6 +343,7 @@
   "flaw.oversensitive_major": { "anchor": "überempfindlich", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.oversensitive_minor": { "anchor": "überempfindlich", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.pagan": { "anchor": "heide", "file": "Ars Magica Definitive Edition Basisregeln.md" },
+  "flaw.pagan_minor": { "anchor": "heide", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.painful_magic": { "anchor": "schmerzhafte-magie", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.palsied_hands": { "anchor": "zitternde-hände", "file": "Ars Magica Definitive Edition Basisregeln.md" },
   "flaw.pessimistic": { "anchor": "pessimistisch", "file": "Ars Magica Definitive Edition Basisregeln.md" },

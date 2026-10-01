@@ -842,6 +842,34 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   `tests/data_integrity.rs` (`shipped_data_passes_integrity_check`,
   `english/german_i18n_covers_all_items`) — never an exact catalogue total.
 
+#### Known source errata (D25, D78)
+
+The book's own catalogue index (the `### <Category>, <Magnitude>` link lists,
+Virtues `ArMDE:3006-3358`, Flaws `ArMDE:5285-5637`) is provenance, never a data
+source and never a guard (D25) — where it disagrees with an entry's own
+descriptor, **the descriptor always wins**, and the disagreement is recorded
+here rather than left implicit. D25 found the first row (`flaw.weak_personality`)
+in a 25-entry span; the X9c descriptor sweep (`tmp/x9c-plan.md`,
+`tmp/x9c-verdicts*.md`) then compared descriptor, data, and index for the
+**entire** catalogue — all 662 entries — and found **zero data mismatches**
+(every shipped `kind`/`magnitude`/`categories` already agrees with its own
+descriptor) and exactly these further 7 index errata, for 8 rows total:
+
+| Entry | Descriptor cites | Index cites | Kind | Side taken |
+|---|---|---|---|---|
+| `virtue.lupus_the_wolf` (Lupus (the Wolf)) | `ArMDE:4336` *Minor, Social Status* | absent from Social Status, Minor (`ArMDE:3187-3237`) | omission | descriptor stands — the entry is real, just unindexed |
+| `virtue.minor_enchantments` (Minor Enchantments) | `ArMDE:4533` *Minor, Supernatural* | absent from Supernatural, Minor (`ArMDE:3135-3185`) | omission | descriptor stands |
+| `virtue.turb_trained` (Turb Trained) | `ArMDE:5180` *Minor, Social Status* | absent from Social Status, Minor (`ArMDE:3187-3237`) | omission | descriptor stands |
+| `flaw.true_love_minor` (True Love, Minor) | `ArMDE:6872` and `ArMDE:6877` *Major or Minor, Story* | absent from Story, Minor (`ArMDE:5501-5518`); only "True Love (NPC)" appears under Story, Major (`ArMDE:5373`) | omission | descriptor stands — both magnitudes are real, per the Dual-magnitude split convention above |
+| `flaw.bound_to_role_role` (Bound to (Role) Role) | `ArMDE:5736` *Minor*, Supernatural | `ArMDE:5392`, listed under Supernatural, **Major** | disagreement (magnitude) | descriptor (Minor) stands — shipped data already agrees |
+| `flaw.broken_vessel` (Broken Vessel) | `ArMDE:5754` *Minor*, Supernatural | `ArMDE:5393`, listed under Supernatural, **Major** | disagreement (magnitude) | descriptor (Minor) stands — shipped data already agrees |
+| `flaw.weak_personality` (Weak Personality) | `ArMDE:7077` *Minor*, **Personality** | `ArMDE:5518`, listed under Story, Minor | disagreement (category) | descriptor (Personality) stands — shipped data already agrees (D25's original finding) |
+| Folk Magic | Virtue heading `ArMDE:3907`, correctly listed under Supernatural, Minor in the Virtue index (`ArMDE:3150`) | ALSO stray-listed under Supernatural, Minor in the **Flaw** index (`ArMDE:5545`) | stray index entry | Folk Magic is a Virtue only (`virtue.folk_magic`); the Flaw-index row is spurious and ignored |
+
+**Sweep result, stated explicitly per D25 obligation 2: all 662 catalogue
+entries checked, 0 data mismatches, 8 index errata (the above), none still
+open.**
+
 #### A category rule may carry a condition (open-to-dos row 20)
 > "You may not take Hermetic Virtues and Flaws, unless you have The Gift (this
 > would be highly unusual)" — `ArMDE:2840`
@@ -3587,8 +3615,10 @@ naming a `LifeStageBlock` (`ChildhoodSpread` or `Apprenticeship`), consumed in
 > experience points on Magic Lore during character creation."
 
 - Source: `ArMDE:7019-7021`.
-- Data: `flaw.warped_by_magic` — `effects: [{ warping_grant, score: 1, points: 5 }]`.
-- Implementation: `Effect::WarpingGrant { score, points }` → `effective/warping.rs::warping`
+- Data: `flaw.warped_by_magic` — `effects: [{ warping_grant, points: 5 }]`. No `score`
+  key (D77.3): a stored score would be an unread second copy of the same fact the
+  point total already derives, and could only ever disagree with it.
+- Implementation: `Effect::WarpingGrant { points }` → `effective/warping.rs::warping`
   (derived `(score, points)`, base 0 each, summed across grants — never stored, like
   Confidence). Surfaced as `EffectiveScores.warping_{score,points}` and shown on the
   sheet via Fluent `warping-label`/`warping-readout` (DE "Verzerrung", per the
@@ -4214,10 +4244,11 @@ consumes them). Both invert the **Ability** advancement table via the new
   entity.warping_points + Σ WarpingGrant.points`, then `warping_score =
   advancement.score_for_xp(points_total)` (cumulative 5/15/30/50/75: 15 points →
   **Warping Score 2**). The two warping sources are routed through **one** function:
-  `warping()` now returns `(warping_score, warping_points_total)`, and the
-  `WarpingGrant.score` field is **ignored** for the derived score (it is asserted
-  consistent — Warped by Magic's declared Score 1 equals `score_for_xp(5)`). Source:
-  `ArMDE:16464-16475`; grant at `ArMDE:7019-7021`.
+  `warping()` now returns `(warping_score, warping_points_total)`. `WarpingGrant`
+  carries no `score` field at all (D77.3 dropped it): a stored score could only ever
+  be an unread second copy of the same fact the point total derives, never anything
+  the engine could additionally need. Source: `ArMDE:16464-16475`; grant at
+  `ArMDE:7019-7021`.
 
 **Aging lowers derived, not creation.** The drops are DERIVED from the accrued
 points by `effective/warping.rs::aging_drops(entity, char)`: once the points **exceed** the
@@ -6547,7 +6578,7 @@ is a data change this slice made deliberately, not a screen regression.
 
 ### In-play effect families (definitive input to slice 4 / 5b)
 
-- **Magical Focus (major/minor)** — `virtue.major_magical_focus` (ArMDE:4399-4422), `virtue.minor_magical_focus` (ArMDE:4536-4538), `virtue.mythic_blood` (ArMDE:4573-4589)
+- **Magical Focus (major/minor)** — `virtue.major_magical_focus` (ArMDE:4399-4422), `virtue.minor_magical_focus` (ArMDE:4536-4557), `virtue.mythic_blood` (ArMDE:4573-4589)
 - **Flat casting-total bonus/penalty** — `virtue.method_caster` (ArMDE:4524-4527), `flaw.poor_formulaic_magic` (ArMDE:6610-6613), `flaw.afflicted_tongue` (ArMDE:5655-5658), `virtue.life_boost` (ArMDE:4295-4298), `virtue.leper_magus` (ArMDE:4249-4252) (`flaw.corrupted_spells`, ArMDE:5859-5864, left this list in Phase 2 C5c/D15; `virtue.cyclic_magic_positive`/`flaw.cyclic_magic_negative`/`virtue.special_circumstances`/`virtue.ways_of_the_land` left it in F2/D61 — see **Berserk / Ways of the Land / Cyclic Magic / Special Circumstances** below)
 - **Spontaneous-magic casting modifier** — `flaw.weak_spontaneous_magic` (ArMDE:7084-7089), `virtue.diedne_magic` (ArMDE:3675-3682), `virtue.faerie_raised_magic` (ArMDE:3829-3842), `virtue.spell_improvisation` (ArMDE:5002-5005), `virtue.life_linked_spontaneous_magic` (ArMDE:4299-4306)
 - **Art-halving (Technique / Form)** — `flaw.deficient_technique` (ArMDE:5913-5915), `flaw.deficient_form` (ArMDE:5909-5912)
@@ -11194,7 +11225,7 @@ now computes something, D46):
 `virtue.mazdean_priest` (academic, `ArMDE:4480-4487`), `virtue.mendicant_friar`
 (academic, `ArMDE:4488-4495`), `virtue.mercenary_captain` (martial,
 `ArMDE:4500-4505`), `virtue.notary` (academic, `ArMDE:4598-4601`), `virtue.perfectus`
-(academic, `ArMDE:4632-4641`), `virtue.prestigious_student` (academic,
+(academic, `ArMDE:4632-4634`), `virtue.prestigious_student` (academic,
 `ArMDE:4792-4795`), `virtue.priest` (academic, `ArMDE:4796-4805`), `virtue.redcap`
 (academic+arcane+martial, `ArMDE:4842-4851`), `virtue.religious` (academic,
 `ArMDE:4856-4861`), `virtue.rosh_beth_din` (academic, `ArMDE:4878-4883`),

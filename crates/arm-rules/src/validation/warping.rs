@@ -233,7 +233,7 @@ mod tests {
             "parameters": [{ "key": "ability", "type": "ref", "domain": "ability" }] },
           { "id": "flaw.warped_by_magic", "kind": "flaw", "classification": "narrative",
             "magnitude": "minor", "categories": ["supernatural"], "entity_kinds": ["character"],
-            "effects": [{ "type": "warping_grant", "score": 1, "points": 5 }] },
+            "effects": [{ "type": "warping_grant", "points": 5 }] },
           { "id": "flaw.test_confers_training", "kind": "flaw", "classification": "creation_effect",
             "magnitude": "major", "categories": ["story"], "entity_kinds": ["character"],
             "effects": [{ "type": "confers_hermetic_training" }] }

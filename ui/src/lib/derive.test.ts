@@ -3878,7 +3878,7 @@ describe('eligibleForConstraint', () => {
       kind: 'virtue',
       magnitude: 'minor',
       categories: ['supernatural'],
-      effects: [{ type: 'warping_grant', score: 1, points: 5 }],
+      effects: [{ type: 'warping_grant', points: 5 }],
     }),
   ];
   const ruleset = makeRuleset(items);

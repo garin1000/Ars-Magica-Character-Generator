@@ -1104,7 +1104,7 @@ fn resolve_row_key_anchor(
         .iter()
         .find(|h| h.anchor == heading_slug)
         .ok_or_else(|| format!("no heading with anchor \"#{heading_slug}\""))?;
-    let boundary_line = section_boundary_after(file_headings, heading)
+    let boundary_line = section_boundary_after(file_headings, heading, true)
         .map(|h| h.line)
         .unwrap_or(lines.len() + 1);
 
@@ -1380,17 +1380,125 @@ fn every_anchored_catalogue_entry_records_the_heading_that_opens_its_range() {
     );
 }
 
-/// The heading that ends `opening`'s section: the next one that is neither a
-/// blockquoted sidebar nor a deeper sub-heading. `None` when the section runs to
-/// the end of the file.
+/// The heading that ends `opening`'s section: the next one — at the same level
+/// or shallower — that is not a deeper sub-heading, and (when
+/// `exempt_blockquotes` is set) not a blockquoted sidebar either. `None` when
+/// the section runs to the end of the file.
+///
+/// `exempt_blockquotes` exists because a blockquoted `> ####` heading is
+/// ambiguous on its own: most are a sidebar printed *inside* the section they
+/// follow (D77.1's "a sidebar placed ... stays uncited" is the opposite case —
+/// one placed *before* its own heading), but some open the *next* entry's own
+/// sidebar instead (the `virtue.perfectus` pattern — D77.1). Guard B (the only
+/// caller that passes `false`) resolves that per entry via
+/// [`OWN_BLOCKQUOTED_SIDEBARS`]; every other caller is unrelated to that
+/// question and keeps the old blanket exemption by passing `true`.
 fn section_boundary_after<'a>(
     file_headings: &'a [Heading],
     opening: &Heading,
+    exempt_blockquotes: bool,
 ) -> Option<&'a Heading> {
     file_headings.iter().find(|heading| {
-        heading.line > opening.line && !heading.blockquoted && heading.level <= opening.level
+        heading.line > opening.line
+            && (!exempt_blockquotes || !heading.blockquoted)
+            && heading.level <= opening.level
     })
 }
+
+/// Entries whose range legitimately reaches one of their own trailing
+/// blockquoted sidebars, confirmed by reading the passage: the sidebar's
+/// content is about the entry's own topic, not the entry that follows it.
+/// `virtue.minor_magical_focus`'s "Sample Minor Magical Foci" list (its own
+/// examples) is the shape this holds; `virtue.perfectus`'s "Example" sidebar
+/// (which is actually Performance Magic's worked example, F-215) and
+/// `virtue.tainted_treasure`'s "The Knights Templar" sidebar (background for
+/// the Templar Virtues that follow, F-309) are the opposite shape and are
+/// deliberately NOT here — D77.1 wants Guard B to catch exactly those two.
+const OWN_BLOCKQUOTED_SIDEBARS: &[(&str, &str)] = &[
+    (
+        "virtue.minor_magical_focus",
+        "ArMDE:4544-4557 \"Sample Minor Magical Foci\" lists per-Form examples (Animal, Aquam, \
+         Auram, ...) of the entry's own mechanic, directly above the next heading, Muqta' \
+         (:4559) — which is unrelated Social Status content, not a continuation of the sidebar.",
+    ),
+    (
+        "ability.art_of_memory",
+        "ArMDE:7297-7305 \"Memorization Ease Factors\" is the Ease Factor table the entry's own \
+         body refers to implicitly (\"Ease Factor of 9 (or higher)\", :7290).",
+    ),
+    (
+        "ability.corpse_magic",
+        "ArMDE:7379-7386 \"Corpse Magic Ease Factor Outcome\" is the table the entry's own body \
+         names directly: \"Compare the result to the Ease Factors at right\" (:7376).",
+    ),
+    (
+        "ability.curse_throwing",
+        "ArMDE:7427-7429 \"Example of Curse-Throwing\" is a worked example of the entry's own \
+         mechanic (the Casting/Penetration Totals it defines just above).",
+    ),
+    (
+        "ability.induction",
+        "ArMDE:7582-7584 \"Entrancement and Induction\" disambiguates Induction from the \
+         Entrancement Ability, directly serving the entry it sits beneath.",
+    ),
+    (
+        "flaw.form_monstrosity",
+        "ArMDE:6170-6184 \"Monstrosity Examples\" is the table the entry's own body points at: \
+         \"Some examples of possible monstrosities are listed nearby\" (:6168).",
+    ),
+    (
+        "flaw.warped_senses",
+        "ArMDE:7041-7051 \"Environmental Temperatures\" is the chart the entry's own body cites \
+         twice by name: \"see sidebar\" (:7035, :7037).",
+    ),
+    (
+        "virtue.atlantean_magic",
+        "ArMDE:3464-3468 \"Possible Abuses of Storms\" elaborates the Storm Duration this entry \
+         defines just above (:3456-3458).",
+    ),
+    (
+        "virtue.greater_benediction",
+        "ArMDE:3995-4007 \"Greater Benediction Examples\" is the list the entry's own body points \
+         at: \"See insert for examples\" (:3993).",
+    ),
+    (
+        "virtue.kassalan_exorcism",
+        "ArMDE:4179-4185 \"Kassalan Dust\" is the material component the entry's own body \
+         requires: \"expend one handful of Kassalan Dust\" (:4177).",
+    ),
+    (
+        "virtue.lesser_benediction",
+        "ArMDE:4257-4273 \"Lesser Benediction Examples\" is the list the entry's own body points \
+         at: \"See insert for examples\" (:4255).",
+    ),
+    (
+        "virtue.major_magical_focus",
+        "ArMDE:4407-4421 \"Sample Major Magical Foci\" lists per-Form examples of the entry's own \
+         mechanic, the Major-Focus twin of `virtue.minor_magical_focus`'s own sidebar above.",
+    ),
+    (
+        "virtue.performance_magic",
+        "ArMDE:4666-4708 (\"Example\", \"Performance Abilities\", \"Sorcerous Music (Performance \
+         Magic)\", \"Recognizing Performance Magic\") are four sidebars elaborating this entry's \
+         own mechanic — confirmed by the first naming the entry's own Orlando/Harold examples, \
+         not `virtue.perfectus`'s misattributed copy of the Orlando passage (F-215).",
+    ),
+    (
+        "virtue.potent_magic_major",
+        "ArMDE:4752-4780 \"How Potent Magic Works\" is the Potency mechanic this entry defines; \
+         `virtue.potent_magic_minor` cites the identical range for the same reason.",
+    ),
+    (
+        "virtue.potent_magic_minor",
+        "ArMDE:4752-4780 \"How Potent Magic Works\" is the Potency mechanic this entry defines; \
+         `virtue.potent_magic_major` cites the identical range for the same reason.",
+    ),
+    (
+        "virtue.study_bonus",
+        "ArMDE:5060-5071 \"Study Bonus Examples\" is the table the entry's own body points at: \
+         \"See the table for some guidelines\" (:5058).",
+    ),
+];
 
 /// Items whose own section is cut into same-level `####` pieces, so the "next
 /// heading at the same level" is still part of the item rather than the start of
@@ -1426,20 +1534,30 @@ const SUBDIVIDED_ITEMS: &[(&str, &str)] = &[(
 /// Scoped to citations that open on a heading: a range that brackets table rows
 /// (aging, spell levels) has no "own section" for this question to be about.
 ///
-/// Two kinds of heading are deliberately **not** section boundaries, both
+/// Two kinds of heading are not automatically section boundaries, both
 /// established by running this guard over the catalogue and reading every
 /// passage it flagged:
 ///
 /// - a **blockquoted** heading (`> #### Environmental Temperatures`,
-///   ArMDE:7041) is a printed sidebar belonging to the section it sits in —
-///   Warped Senses' own text says "see sidebar" — so a range that reaches it is
-///   right to. Nineteen of the twenty-two first-run flags were this;
+///   ArMDE:7041) is *usually* a printed sidebar belonging to the section it
+///   sits in — Warped Senses' own text says "see sidebar" — so a range that
+///   reaches it is right to, and [`OWN_BLOCKQUOTED_SIDEBARS`] names every
+///   entry confirmed to be this shape (fifteen, as of D77.1). But a
+///   blockquoted heading can instead open the *next* entry's own sidebar,
+///   printed before that entry's `####` rather than after it —
+///   `virtue.perfectus`'s "Example" is Performance Magic's worked example
+///   (F-215), and `virtue.tainted_treasure`'s "The Knights Templar" is
+///   background for the Templar Virtues that follow (F-309). D77.1 rules that
+///   this second shape DOES end the citation, so any entry not listed in
+///   [`OWN_BLOCKQUOTED_SIDEBARS`] gets a blockquoted heading as a boundary
+///   like any other;
 /// - a **deeper** heading is a sub-section of the item, not the next item:
 ///   `mythic_type.faerie_doctor` opens on `### Faerie Doctors` (ArMDE:2668) and
 ///   its `#### Faerie Doctors as Mythic Companions` at ArMDE:2676 is part of it.
 ///
-/// So the boundary is the next non-blockquoted heading at the same level or
-/// shallower.
+/// So the boundary is the next heading at the same level or shallower that is
+/// not a deeper sub-heading, and — unless the entry owns the sidebar — not a
+/// blockquoted one either.
 #[test]
 fn no_source_range_runs_past_the_heading_that_follows_it() {
     let mut cache = BTreeMap::new();
@@ -1460,7 +1578,10 @@ fn no_source_range_runs_past_the_heading_that_follows_it() {
         {
             continue;
         }
-        let Some(next) = section_boundary_after(&file_headings, opening) else {
+        let exempt_blockquotes = OWN_BLOCKQUOTED_SIDEBARS
+            .iter()
+            .any(|(id, _)| *id == found.entry_label);
+        let Some(next) = section_boundary_after(&file_headings, opening, exempt_blockquotes) else {
             continue;
         };
         checked += 1;
@@ -1520,7 +1641,7 @@ fn every_subdivided_item_really_is_subdivided() {
             .unwrap_or_else(|| {
                 panic!("SUBDIVIDED_ITEMS row \"{id}\" no longer opens on a heading")
             });
-        let boundary = section_boundary_after(&file_headings, opening).unwrap_or_else(|| {
+        let boundary = section_boundary_after(&file_headings, opening, true).unwrap_or_else(|| {
             panic!("SUBDIVIDED_ITEMS row \"{id}\" has no following section boundary — delete it")
         });
         assert!(

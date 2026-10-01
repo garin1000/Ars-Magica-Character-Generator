@@ -480,7 +480,7 @@ const X3A_VIRTUES: &[(&str, Gate)] = &[
         // background, not an eligibility clause.
     ),
     ("virtue.method_caster", Gate::Trained), // ArMDE:4524-4527, Casting Total
-    ("virtue.minor_magical_focus", Gate::Trained), // ArMDE:4536-4538 (range defect noted for X9c), Casting Total
+    ("virtue.minor_magical_focus", Gate::Trained), // ArMDE:4536-4557 (F-200 fixed, X9c), Casting Total
     ("virtue.mystical_choreography", Gate::Trained), // ArMDE:4567-4572, spellcasting
     (
         "virtue.mythic_blood",

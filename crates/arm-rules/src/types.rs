@@ -2036,13 +2036,16 @@ pub enum Effect {
         /// The relic's own True Faith Score (not the bearer's).
         score: u8,
     },
-    /// Grants a derived Warping Score and Warping Points (base 0 each, summed
-    /// across grants). Warped by Magic confers Warping Score 1 + 5 Warping Points.
+    /// Grants Warping Points (base 0, summed across grants). Warped by Magic
+    /// confers 5 Warping Points. No `score` field: the Warping Score is
+    /// always derived from the point total alone
+    /// (`effective/warping.rs::warping_score`), never authored directly, so a
+    /// stored score could only ever be a disagreeable, unread second copy of
+    /// the same fact (D77.3 — a field this variant used to carry and X9c's
+    /// descriptor sweep found nothing ever read).
     ///
     /// Source: ArMDE:7019-7021.
     WarpingGrant {
-        /// Warping Score added.
-        score: u8,
         /// Warping Points added.
         points: u8,
     },
@@ -2054,11 +2057,11 @@ pub enum Effect {
     /// parameter contributes 0 extra, following every other parameterized
     /// grant's "additive on top of an otherwise-unaffected base" convention
     /// (see [`Self::ConfersHermeticTrainingIf`]'s doc comment) — never a
-    /// missing-data error, since the floor points are unconditional. No
-    /// `score` field, unlike `WarpingGrant`: the Warping Score is always
-    /// derived from the point total alone
-    /// (`effective/warping.rs::warping_score`), never authored directly, so a
-    /// parameterized grant carries nothing that could disagree with it. The
+    /// missing-data error, since the floor points are unconditional. Carries
+    /// no `score` field, same as `WarpingGrant` (D77.3): the Warping Score is
+    /// always derived from the point total alone
+    /// (`effective/warping.rs::warping_score`), never authored directly, so
+    /// neither grant carries anything that could disagree with it. The
     /// ongoing "+1 Warping point every year you continue living" clause is
     /// NOT this effect's concern — it is a per-year accrual after creation,
     /// not a creation-time constant (D69.1), and stays text.
@@ -6367,10 +6370,15 @@ mod tests {
             }
         }
 
-        let expected: BTreeSet<(&str, &str)> =
-            [("virtue.domestic_animal", "character_type.domestic_animal")]
-                .into_iter()
-                .collect();
+        let expected: BTreeSet<(&str, &str)> = [
+            ("virtue.domestic_animal", "character_type.domestic_animal"),
+            // D78.1: Companion Animal reuses the SAME never-profiled sentinel id
+            // as Domestic Animal — both are "the animal character type no
+            // profile has", not two distinct ids.
+            ("flaw.companion_animal", "character_type.domestic_animal"),
+        ]
+        .into_iter()
+        .collect();
         assert_eq!(
             carriers, expected,
             "a Prereq::CharacterType carrier was added, removed, or retargeted in the \
