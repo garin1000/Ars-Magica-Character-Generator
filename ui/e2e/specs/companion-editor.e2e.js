@@ -400,6 +400,10 @@ describe('phase-3 virtue/flaw effects', () => {
     const add = await $(`[data-testid="add-${id}"]`);
     await add.waitForExist({ timeout: 10000 });
     await add.click();
+    // Wait for the added row's remove control to exist before returning, so a
+    // caller that immediately switches tabs is not racing the pick's own
+    // round trip under parallel load (tmp/e2e-second-sight-note.md).
+    await $(`[data-testid^="remove-${id}-"]`).waitForExist({ timeout: 10000 });
   }
 
   it('Improved Characteristics raises the Characteristic-buy budget by 3', async () => {
@@ -480,7 +484,7 @@ describe('phase-3 virtue/flaw effects', () => {
     await add.click();
 
     const eff = await $('[data-testid="ability-eff-ability.second_sight-0"]');
-    await eff.waitForExist({ timeout: 5000 });
+    await eff.waitForExist({ timeout: 10000 });
     await browser.waitUntil(async () => clean(await eff.getText()).includes('1'), {
       timeout: 5000,
       timeoutMsg: 'Second Sight should read as effective 1 at score 0',
