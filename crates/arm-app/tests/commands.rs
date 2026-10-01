@@ -1519,16 +1519,8 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
     // `xp_pool` alongside abilities (the sample already sets a pool).
     let mut entity = sample_entity();
     entity.art_scores = vec![
-        ArtScore {
-            art: Id::new("art.creo"),
-            score: 3, // 6 xp
-            banked_xp: 0,
-        },
-        ArtScore {
-            art: Id::new("art.ignem"),
-            score: 5, // 15 xp
-            banked_xp: 0,
-        },
+        ArtScore::new(Id::new("art.creo"), 3),  // 6 xp
+        ArtScore::new(Id::new("art.ignem"), 5), // 15 xp
     ];
     entity.selections.push(Selection::with_params(
         Id::new("virtue.puissant_art"),
@@ -2182,13 +2174,10 @@ fn effective_scores_surface_the_magus_minimum_ability_checklist() {
     // Parma 1 is demanded by BOTH lists (`ArMDE:2437` and `ArMDE:2459`), so buying it correctly
     // flips two, while the recommended Magic Theory threshold is 3 — which makes this
     // the only clean single-flip probe.
-    magus.ability_scores = vec![arm_rules::AbilityScore {
-        ability: Id::new("ability.magic_theory"),
-        score: 1,
-        specialty: None,
-        parameter: None,
-        banked_xp: 0,
-    }];
+    magus.ability_scores = vec![arm_rules::AbilityScore::new(
+        Id::new("ability.magic_theory"),
+        1,
+    )];
     let checklist = effective_scores_loaded(&magus, &ruleset).magus_minimum_abilities;
     assert_eq!(checklist.iter().filter(|row| row.met).count(), 1);
     let met = checklist
@@ -2247,13 +2236,10 @@ fn effective_scores_surface_max_flow_so_the_ui_can_show_an_overspent_pool() {
     // A 10-xp pool buying an Ability score of 2 (15 xp on the advancement table):
     // a 5-xp overspend.
     entity.xp_pool = 10;
-    entity.ability_scores = vec![arm_rules::AbilityScore {
-        ability: Id::new("ability.awareness"),
-        score: 2,
-        specialty: None,
-        parameter: None,
-        banked_xp: 0,
-    }];
+    entity.ability_scores = vec![arm_rules::AbilityScore::new(
+        Id::new("ability.awareness"),
+        2,
+    )];
 
     let effective = effective_scores_loaded(&entity, &ruleset);
     assert_eq!(effective.xp_total_demand, 15, "score 2 costs 15 xp");
@@ -4596,16 +4582,12 @@ fn unlink_ability_parameters_converts_a_linked_ability_score_to_text() {
         Id::new("virtue.craft_guild_training"),
         BTreeMap::from([("guild".to_string(), Id::new("Smiths' Guild of Verdi"))]),
     )];
-    entity.ability_scores = vec![AbilityScore {
-        ability: Id::new("ability.organization_lore"),
-        score: 1,
-        specialty: None,
-        parameter: Some(AbilityParameterValue::Linked {
-            item: Id::new("virtue.craft_guild_training"),
-            param: "guild".to_string(),
-        }),
-        banked_xp: 0,
-    }];
+    let mut lore = AbilityScore::new(Id::new("ability.organization_lore"), 1);
+    lore.parameter = Some(AbilityParameterValue::Linked {
+        item: Id::new("virtue.craft_guild_training"),
+        param: "guild".to_string(),
+    });
+    entity.ability_scores = vec![lore];
 
     let updated = unlink_ability_parameters_loaded(
         &entity,
