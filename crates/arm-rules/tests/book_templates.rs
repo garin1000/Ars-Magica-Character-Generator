@@ -285,6 +285,19 @@ fn the_bjornaer_matches_the_book() {
         2
     );
 
+    // House Bjornaer's own grant (ArMDE:2272 `#### Hermetic Houses Summary`,
+    // "Heartbeast... beginning score of 1 in Heartbeast Ability") pinned directly:
+    // the fixture buys Heartbeast at 2, above the grant's floor of 1, so the
+    // ability-score assertion above can't tell a present grant from a deleted one
+    // (tmp/houses-audit.md "Grant coverage gap").
+    let bjornaer_grants = arm_rules::house::granted_selections(&bjornaer, &ruleset);
+    assert!(
+        bjornaer_grants
+            .iter()
+            .any(|s| s.item_ref == Id::new("virtue.heartbeast")),
+        "House Bjornaer must grant Heartbeast"
+    );
+
     // Soak: +1 (ArMDE:1626 `#### Bjornaer`).
     assert_eq!(soak(&bjornaer, &ruleset).total, 1);
 
@@ -438,6 +451,19 @@ fn the_criamon_matches_the_book() {
     assert_eq!(
         ability_score(&criamon, &ruleset, "ability.enigmatic_wisdom", None),
         5
+    );
+
+    // House Criamon's own grant (ArMDE:2274 `#### Hermetic Houses Summary`,
+    // "The Enigma... beginning score of 1 in Enigmatic Wisdom") pinned directly:
+    // the fixture buys Enigmatic Wisdom at 3, above the grant's floor of 1, so the
+    // ability-score assertion above can't tell a present grant from a deleted one
+    // (tmp/houses-audit.md "Grant coverage gap").
+    let criamon_grants = arm_rules::house::granted_selections(&criamon, &ruleset);
+    assert!(
+        criamon_grants
+            .iter()
+            .any(|s| s.item_ref == Id::new("virtue.the_enigma")),
+        "House Criamon must grant The Enigma"
     );
 
     // Soak: +2 (ArMDE:1725 `#### Criamon`).
@@ -944,6 +970,19 @@ fn the_merinita_matches_the_book() {
         5
     );
 
+    // House Merinita's own grant (ArMDE:2280 `#### Hermetic Houses Summary`,
+    // "Faerie Magic... beginning score of 1 in Faerie Magic") pinned directly:
+    // the fixture buys Faerie Magic at exactly the grant's floor of 1, so the
+    // ability-score assertion above can't tell a present grant from a deleted one
+    // (tmp/houses-audit.md "Grant coverage gap").
+    let merinita_grants = arm_rules::house::granted_selections(&merinita, &ruleset);
+    assert!(
+        merinita_grants
+            .iter()
+            .any(|s| s.item_ref == Id::new("virtue.faerie_magic")),
+        "House Merinita must grant Faerie Magic"
+    );
+
     // Soak: -1 (ArMDE:2023 `#### Merinita`).
     assert_eq!(soak(&merinita, &ruleset).total, -1);
 
@@ -1158,6 +1197,19 @@ fn the_verditius_matches_the_book() {
     // so the fixture's `xp_pool: 435` matches the age formula's grant exactly.
     assert_eq!(error_codes(&verditius, &ruleset), codes(&[]));
     assert_eq!(warning_codes(&verditius, &ruleset), codes(&[]));
+
+    // House Verditius's own grant (ArMDE:2283 `#### Hermetic Houses Summary`,
+    // "Verditius Magic") pinned directly: the granted Virtue has no
+    // creation-time numeric effect at all (RULES.md:4797), so nothing else in
+    // this test would ever change if the grant were deleted from
+    // `rules/core/houses.json` (tmp/houses-audit.md "Grant coverage gap").
+    let verditius_grants = arm_rules::house::granted_selections(&verditius, &ruleset);
+    assert!(
+        verditius_grants
+            .iter()
+            .any(|s| s.item_ref == Id::new("virtue.verditius_magic")),
+        "House Verditius must grant Verditius Magic"
+    );
 
     // Str -3, Sta +1 (ArMDE:2153 `#### Verditius`) are a bought -2 / +2 shifted by Dwarf's -1 each.
     assert_eq!(
