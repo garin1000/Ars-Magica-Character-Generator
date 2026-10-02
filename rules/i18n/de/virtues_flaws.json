@@ -165,7 +165,7 @@
   },
   "flaw.black_sheep": {
     "name": "Schwarzes Schaf",
-    "summary": "Von einer angesehenen Familie entfremdet; ein schlechter Ruf der Stufe 2 bei denen, die sie achten."
+    "summary": "Von einer angesehenen Familie entfremdet; eine schlechte Reputation der Stufe 2 bei denen, die sie achten."
   },
   "flaw.blackmail": {
     "name": "Erpressung",
@@ -794,7 +794,7 @@
   },
   "flaw.infamous": {
     "name": "Berüchtigt",
-    "summary": "Ein schlechter Ruf der Stufe 4 für frei wählbare schändliche Taten."
+    "summary": "Eine schlechte Reputation der Stufe 4 für frei wählbare schändliche Taten."
   },
   "flaw.infamous_master": {
     "name": "Berüchtigter Meister",
@@ -1597,7 +1597,7 @@
   },
   "flaw.weak_parens": {
     "name": "Schwacher Parens",
-    "summary": "Du erhältst aus deiner Lehrzeit 60 Erfahrungspunkte und 30 Zauberstufen weniger."
+    "summary": "Du erhältst 60 Erfahrungspunkte und 30 Zauberstufen weniger aus der Lehrlingschaft."
   },
   "flaw.weak_personality": {
     "name": "Schwache Persönlichkeit",
@@ -2357,7 +2357,7 @@
   },
   "virtue.hermetic_prestige": {
     "name": "Hermetisches Ansehen",
-    "summary": "Andere Magi blicken zu dir auf. Du erhältst ein Ansehen der Stufe 4 innerhalb des Ordens."
+    "summary": "Andere Magi blicken zu dir auf. Du erhältst eine Reputation der Stufe 4 innerhalb des Ordens."
   },
   "virtue.hex": {
     "name": "Verhexung",
@@ -2958,7 +2958,7 @@
   },
   "virtue.sense_holiness_and_unholiness": {
     "name": "Gespür für Heiliges und Unheiliges",
-    "summary": "Spüre die Gegenwart von Gut und Böse. Verleiht die gleichnamige Fähigkeit.",
+    "summary": "Spüre die Gegenwart von Gut und Böse. Verleiht die gleichnamige Fertigkeit.",
     "description": "Du kannst die Anwesenheit von Gut und Böse spüren. In Auren von besonders starkem göttlichem oder infernalen Einfluss kann Deine Sensibilität Dich überwältigen. Die Wahl dieser Tugend verleiht die Fertigkeit Gespür für Heiliges und Unheiliges 1 (Seite 170)."
   },
   "virtue.sense_passions": {
@@ -3136,7 +3136,7 @@
   },
   "virtue.the_gift": {
     "name": "Die Gabe",
-    "summary": "Du hast die Fähigkeit, Magie zu wirken.",
+    "summary": "Du besitzt die Fähigkeit, Magie zu wirken.",
     "description": "Du besitzt die Fähigkeit, Magie zu wirken. Vollständige Einzelheiten finden sich weiter oben auf Seite 63.\n\nDie Gabe ist eine besondere Tugend, weil sie keine Kosten hat. Der Charakter erleidet alle Nachteile der Gabe, genauso wie Magi (siehe Seite 203), kann aber ohne die entsprechenden Tugenden wählen zu müssen in Übernatürlichen Fertigkeiten unterwiesen werden (siehe Seite 383 für die Regeln). Am wichtigsten ist, dass der Charakter in Hermetischer Magie unterwiesen werden kann, weshalb alle Magi diese Tugend haben müssen. Ein Charakter mit der Gabe, auch wenn er kein Magus ist, darf Hermetische Tugenden und Fehler wählen, die sich auf innere Begabung statt auf Herkunft oder Ausbildung beziehen."
   },
   "virtue.tough": {
