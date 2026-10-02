@@ -89,6 +89,21 @@ const ITEMS: Record<string, PointItem> = {
   'flaw.deficient_technique': pointItem('flaw.deficient_technique', [
     { key: 'technique', type: 'ref', domain: 'technique' },
   ]),
+  // D81.8: Incompatible Arts' own shape — two independent Technique+Form pairs,
+  // FOUR separate parameter keys (not two parameters reused twice), each its
+  // own select via the existing technique/form domain branches. Pins that the
+  // generic picker needs no new code for this: four keys of an already-handled
+  // domain are four independent `{#each params}` iterations.
+  'flaw.incompatible_arts_probe': pointItem(
+    'flaw.incompatible_arts_probe',
+    [
+      { key: 'form_1', type: 'ref', domain: 'form' },
+      { key: 'form_2', type: 'ref', domain: 'form' },
+      { key: 'technique_1', type: 'ref', domain: 'technique' },
+      { key: 'technique_2', type: 'ref', domain: 'technique' },
+    ],
+    ['general'],
+  ),
   'virtue.item_domain_probe': pointItem('virtue.item_domain_probe', [
     { key: 'item', type: 'ref', domain: 'item' },
   ]),
@@ -334,6 +349,7 @@ function installRuleset(): void {
       'art.ignem': { name: 'Ignem' },
       'virtue.deft_form': { name: 'Deft {form}' },
       'flaw.deficient_technique': { name: 'Deficient {technique}' },
+      'flaw.incompatible_arts_probe': { name: 'Incompatible Arts Probe' },
       'virtue.item_domain_probe': { name: 'Probe {item}' },
       'virtue.narrowed_probe': { name: 'Narrowed Probe {item}' },
       'virtue.allow_ids_probe': { name: 'Allow Ids Probe {item}' },
@@ -528,6 +544,37 @@ describe('ParameterPicker domain branches (slice 7, #4)', () => {
     expect(optionTexts(select!)).toEqual(['Technique', 'Creo', 'Rego']);
     expect(select!).not.toContain('art.ignem');
     expect(select!).not.toContain('art.aquam');
+  });
+
+  // D81.8: Incompatible Arts needs a 2×(Technique+Form) picker per copy. The
+  // engine phase added four REQUIRED parameter keys
+  // (`technique_1`/`form_1`/`technique_2`/`form_2`), each resolved against the
+  // domain its key already declares — no new widget type, no new branch: four
+  // independent instances of the existing technique/form `<select>`s.
+  it('renders four independent Technique/Form selects for Incompatible Arts (D81.8)', () => {
+    const body = pickerBody('flaw.incompatible_arts_probe');
+    const form1 = selectFor(body, 'param-flaw.incompatible_arts_probe-form_1-0');
+    const form2 = selectFor(body, 'param-flaw.incompatible_arts_probe-form_2-0');
+    const technique1 = selectFor(body, 'param-flaw.incompatible_arts_probe-technique_1-0');
+    const technique2 = selectFor(body, 'param-flaw.incompatible_arts_probe-technique_2-0');
+    for (const select of [form1, form2, technique1, technique2]) {
+      expect(select).not.toBeNull();
+    }
+    // Each key's own domain narrows the options — Forms only for form_1/form_2,
+    // Techniques only for technique_1/technique_2 — identically to the
+    // single-parameter Deft (Form)/Deficient (Technique) cases above.
+    expect(optionTexts(form1!)).toEqual(['Form 1', 'Aquam', 'Ignem']);
+    expect(optionTexts(form2!)).toEqual(['Form 2', 'Aquam', 'Ignem']);
+    expect(optionTexts(technique1!)).toEqual(['Technique 1', 'Creo', 'Rego']);
+    expect(optionTexts(technique2!)).toEqual(['Technique 2', 'Creo', 'Rego']);
+    // Each key's own label comes from its own `param-label-<key>` Fluent entry
+    // (`Technique 1`/`Technique 2`/`Form 1`/`Form 2`), never the bare
+    // `technique`/`form` label the single-parameter items above use — so the
+    // two pairs are visibly distinguishable on the row.
+    expect(ariaLabel(form1!)).toBe('Form 1');
+    expect(ariaLabel(form2!)).toBe('Form 2');
+    expect(ariaLabel(technique1!)).toBe('Technique 1');
+    expect(ariaLabel(technique2!)).toBe('Technique 2');
   });
 
   it('renders a select, not a text input, for an item-domain parameter', () => {

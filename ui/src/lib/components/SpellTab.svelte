@@ -332,6 +332,21 @@
     return store.derived?.spell_casting_totals?.[index] ?? null;
   }
 
+  // D81.8: whether the known spell at row `index` touches one of a held
+  // Incompatible Arts Flaw's two barred combinations — as its primary Arts or
+  // only through a requisite ("even if one or both are requisites",
+  // ArMDE:6292). A plain index lookup into the engine's own computation
+  // (`DerivedTotals.spell_casting_unusable`), index-aligned with
+  // `spell_casting_totals` and `entity.spells` for the same reason that field
+  // is. The Casting Total figure stays visible beside this marker (unlike the
+  // Lab/Casting grids, which withhold the number outright) — it still has
+  // informational value here, and D81.15 separately raises a creation-time
+  // ERROR for this spell on the Spells phase (surfaced through the existing
+  // generic `invalidSelectionIds` row styling, not a second marker).
+  function castingUnusable(index: number): boolean {
+    return store.derived?.spell_casting_unusable?.[index] ?? false;
+  }
+
   // The Spell Mastery special-ability catalogue (id order), for the per-spell
   // "add ability" picker. Empty when the ruleset ships no mastery catalogue.
   // Localized name/tooltip lookups for a catalogue entry live in
@@ -465,6 +480,17 @@
                     data-testid="spell-casting-total-{chosen.spell}-{i}"
                   >
                     {store.t('spell-casting-total', { total: String(total) })}
+                    {#if castingUnusable(i)}
+                      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+                      <span
+                        class="derived-unusable"
+                        tabindex="0"
+                        use:tooltip={{ text: store.t('derived-unusable-tooltip') }}
+                        data-testid="spell-casting-unusable-{chosen.spell}-{i}"
+                      >
+                        {store.t('derived-unusable')}
+                      </span>
+                    {/if}
                   </span>
                 {/if}
                 {#if cat && hasFocusFigure(cat)}

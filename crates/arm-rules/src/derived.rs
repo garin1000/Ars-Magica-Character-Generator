@@ -1060,6 +1060,17 @@ pub struct DerivedTotals {
     /// for exactly this reason; this field is that same computation, run once
     /// per `entity.spells` row so the UI never duplicates it.
     pub spell_casting_totals: Vec<Option<i32>>,
+    /// Whether each known spell is unusable because it touches (as its primary
+    /// Technique/Form or as a requisite — "even if one or both are requisites",
+    /// ArMDE:6292) one of a held Incompatible Arts Flaw's two forbidden
+    /// combinations (D81.8). Index-aligned with [`Self::spell_casting_totals`]
+    /// and `entity.spells`, for the same reason that field is. A parallel `Vec`
+    /// rather than widening [`Self::spell_casting_totals`]'s element to a small
+    /// struct, to keep this additive: `spell_casting_totals` is read directly as
+    /// `Option<i32>` at an existing call site
+    /// (`crates/arm-app/tests/commands.rs`). `false` for a spell id absent from
+    /// the catalogue, matching [`Self::spell_casting_totals`]'s own `None` there.
+    pub spell_casting_unusable: Vec<bool>,
     /// Per-known-spell Penetration lines (magi only; empty otherwise).
     pub penetration: Vec<PenetrationLine>,
     /// Per-Form Magic Resistance (magi only; empty otherwise).
@@ -1158,6 +1169,23 @@ pub fn derived_totals(entity: &Entity, ruleset: &Ruleset) -> DerivedTotals {
                 .spells
                 .iter()
                 .map(|sel| spell_casting_total(sel, entity, ruleset))
+                .collect()
+        } else {
+            Vec::new()
+        },
+        spell_casting_unusable: if trained {
+            let barred = crate::effective::barred_combinations(
+                &crate::effective::selections_for_effects(entity, ruleset),
+                ruleset,
+            );
+            entity
+                .spells
+                .iter()
+                .map(|sel| {
+                    ruleset.spell(&sel.spell).is_some_and(|spell| {
+                        crate::effective::spell_touches_barred_combination(spell, ruleset, &barred)
+                    })
+                })
                 .collect()
         } else {
             Vec::new()

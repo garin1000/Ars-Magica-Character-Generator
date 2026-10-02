@@ -658,6 +658,14 @@ export interface PointItem {
   // `PointItem::same_choice_exclusions`.
   same_choice_exclusions?: SameChoiceExclusion[];
   parameters?: ParameterDef[];
+  // D81.8/Q3: groups of this item's own parameter keys that together name ONE
+  // unordered "combination" for duplicate-detection purposes (Incompatible
+  // Arts: `[["technique_1","form_1"],["technique_2","form_2"]]`). Omitted for
+  // every item except Incompatible Arts today. No frontend reader exists yet —
+  // duplicate detection is engine-side only — but the field is mirrored for
+  // fidelity, like every other `PointItem` field above. Mirrors the engine's
+  // `PointItem::unordered_param_groups` (`crates/arm-rules/src/types.rs`).
+  unordered_param_groups?: string[][];
   effects?: Effect[];
   // Max selections per (id, params) target. Omitted when the default (1).
   max_per_target?: number;
@@ -1222,6 +1230,12 @@ export interface LabTotal {
   // for anyone without the Flaw. Mirrored from the Rust `LabTotal.enchanting`
   // field (`crates/arm-rules/src/derived/lab.rs`).
   enchanting: number;
+  // D81.8: whether this cell's `(Technique, Form)` pair is one of a held
+  // Incompatible Arts Flaw's two barred combinations (ArMDE:6290-6292). The
+  // numeric totals above are still computed and must NOT be read as 0 when
+  // this is true — 0 is a legitimate Lab Total and would be indistinguishable
+  // from this. Mirrors the Rust `LabTotal.unusable` field.
+  unusable: boolean;
 }
 
 // The within-focus counterparts of a CastingTotal's four cast types.
@@ -1279,6 +1293,13 @@ export interface CastingTotal {
   within_potent_field?: CastingWithinPotentField | null;
   non_standard: NonStandardCasting;
   deficient: boolean;
+  // D81.8: whether this cell's `(Technique, Form)` pair is one of a held
+  // Incompatible Arts Flaw's two barred combinations (ArMDE:6290-6292), same
+  // reasoning as `LabTotal.unusable`. A requisite spell may still be unusable
+  // through this cell without the cell itself being flagged — see
+  // `DerivedTotals.spell_casting_unusable`, which the per-spell figure reads
+  // instead. Mirrors the Rust `CastingTotal.unusable` field.
+  unusable: boolean;
 }
 
 // A per-known-spell Penetration line.
@@ -1462,6 +1483,15 @@ export interface DerivedTotals {
   // `null` for a row whose spell id is absent from the catalogue. The UI must
   // read this rather than re-derive the figure itself.
   spell_casting_totals: (number | null)[];
+  // D81.8: whether each known spell touches one of a held Incompatible Arts
+  // Flaw's two barred `(Technique, Form)` combinations — as its primary Arts
+  // or only through a requisite ("even if one or both are requisites",
+  // ArMDE:6292). Index-aligned with `spell_casting_totals` and
+  // `entity.spells`, for the same reason that field is; a parallel `Vec`
+  // rather than widening `spell_casting_totals`'s element, so every existing
+  // reader of that field stays untouched. Mirrors the Rust
+  // `DerivedTotals.spell_casting_unusable` field.
+  spell_casting_unusable: boolean[];
   penetration: PenetrationLine[];
   magic_resistance: MagicResistance[];
   longevity?: LongevityBonus | null;

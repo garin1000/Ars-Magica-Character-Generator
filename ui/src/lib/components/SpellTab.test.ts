@@ -488,6 +488,7 @@ describe('SpellTab within-focus toggle (X10c)', () => {
         deft_form: false,
       },
       deficient: false,
+      unusable: false,
     };
   }
 
@@ -579,6 +580,7 @@ describe('SpellTab within-potent-field toggle (D79)', () => {
         deft_form: false,
       },
       deficient: false,
+      unusable: false,
     };
   }
 
@@ -670,6 +672,7 @@ describe('SpellTab focus/potent-field toggle gating is independent (D79)', () =>
         deft_form: false,
       },
       deficient: false,
+      unusable: false,
     };
   }
 
@@ -753,6 +756,39 @@ describe('SpellTab in-app Casting Total (D73.2, D79)', () => {
   it('hides the total when the row carries no figure (e.g. a spell absent from the catalogue)', () => {
     installDerived([null]);
     expect(html()).not.toContain(`data-testid="spell-casting-total-${SPELL}-0"`);
+  });
+});
+
+// D81.8 (docs/vf-audit/decisions.md): a spell touching one of a held
+// Incompatible Arts Flaw's two barred combinations — directly or only through a
+// requisite — shows a marker NEXT TO its Casting Total badge (the figure itself
+// stays visible; D81.15 separately raises a creation-time ERROR for this, via the
+// existing generic `invalidSelectionIds` row-styling, not a second UI surface).
+describe('SpellTab unusable-spell marker (D81.8)', () => {
+  function installDerived(totals: Array<number | null>, unusable: boolean[]): void {
+    store.derived = {
+      spell_casting_totals: totals,
+      spell_casting_unusable: unusable,
+    } as unknown as DerivedTotals;
+  }
+
+  it('shows the unusable marker next to the Casting Total badge when the spell is flagged', () => {
+    installDerived([29], [true]);
+    const badge = outer(html(), `spell-casting-total-${SPELL}-0`);
+    expect(badge).toContain('29');
+    expect(badge).toContain(store.t('derived-unusable'));
+  });
+
+  it('shows no marker when the spell is not flagged', () => {
+    installDerived([29], [false]);
+    const badge = outer(html(), `spell-casting-total-${SPELL}-0`);
+    expect(badge).not.toContain(store.t('derived-unusable'));
+  });
+
+  it('shows no marker when the engine has not computed any flags at all', () => {
+    installDerived([29], []);
+    const badge = outer(html(), `spell-casting-total-${SPELL}-0`);
+    expect(badge).not.toContain(store.t('derived-unusable'));
   });
 });
 

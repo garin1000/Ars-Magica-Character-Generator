@@ -1527,6 +1527,15 @@ ul {
   font-weight: 700;
 }
 
+/* D81.8: a Lab/Casting Total grid cell or spell whose (Technique, Form) pair is
+   barred by a held Incompatible Arts Flaw — always backed by an actual rule
+   violation (same `--error` the invalid-selection family above uses), styled
+   italic so it reads as a withheld figure rather than a plain label. */
+.derived-unusable {
+  color: var(--error);
+  font-style: italic;
+}
+
 /* Ability lists: the name grows so the +/spinner/specialty/× align right. */
 .item-name {
   flex: 1;

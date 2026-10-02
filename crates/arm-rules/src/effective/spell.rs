@@ -820,3 +820,86 @@ pub fn spell_levels_used(entity: &Entity, ruleset: &Ruleset) -> u32 {
         .filter_map(|s| resolved_spell_level(s, ruleset))
         .sum()
 }
+
+// --- Incompatible Arts (D81.8) ----------------------------------------------
+
+/// The set of `(Technique, Form)` pairs barred by every held copy of an item
+/// declaring [`crate::types::PointItem::unordered_param_groups`] — today only
+/// `flaw.incompatible_arts`, but driven entirely by that data field, not by
+/// this item's id (ArMDE:6290-6292, "unable to use two combinations of
+/// Techniques and Forms"). Each group's named values are resolved against
+/// THIS selection's own `params` and placed by which key's
+/// [`ParameterDomain`] is `Technique` vs `Form` — not by position in the
+/// group — so a group declares its two keys in either order with no effect on
+/// which pair results.
+///
+/// Grant-aware: `selections` is expected to be the folded bought-plus-granted
+/// list ([`crate::effective::selections_for_effects`]), matching every other
+/// reader in this module.
+pub(crate) fn barred_combinations(
+    selections: &[Selection],
+    ruleset: &Ruleset,
+) -> BTreeSet<(Id, Id)> {
+    let mut barred = BTreeSet::new();
+    for selection in selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        for group in &item.unordered_param_groups {
+            let mut technique = None;
+            let mut form = None;
+            for key in group {
+                let Some(def) = item.parameters.iter().find(|p| &p.key == key) else {
+                    continue;
+                };
+                let Some(value) = selection
+                    .params
+                    .get(key)
+                    .and_then(SelectionParamValue::as_single)
+                else {
+                    continue;
+                };
+                match def.domain {
+                    ParameterDomain::Technique => technique = Some(value.clone()),
+                    ParameterDomain::Form => form = Some(value.clone()),
+                    _ => {}
+                }
+            }
+            if let (Some(t), Some(f)) = (technique, form) {
+                barred.insert((t, f));
+            }
+        }
+    }
+    barred
+}
+
+/// Whether `spell` draws on any pair in `barred` — either directly, as its
+/// primary Technique+Form, or "even if one or both are requisites"
+/// (ArMDE:6292): the cross product of `{primary technique} ∪ {Technique-class
+/// requisites}` × `{primary form} ∪ {Form-class requisites}`
+/// (ArMDE:12309-12311, "Sometimes a spell has a requisite for both its
+/// Technique and Form" — the same reading `derived/casting.rs::fold_requisite`
+/// already applies to the numeric Casting Total).
+pub(crate) fn spell_touches_barred_combination(
+    spell: &crate::spell::Spell,
+    ruleset: &Ruleset,
+    barred: &BTreeSet<(Id, Id)>,
+) -> bool {
+    if barred.is_empty() {
+        return false;
+    }
+    let mut techniques = vec![&spell.technique];
+    let mut forms = vec![&spell.form];
+    for req in &spell.requisites {
+        match ruleset.art(req).map(|a| a.art_type) {
+            Some(ArtType::Technique) => techniques.push(req),
+            Some(ArtType::Form) => forms.push(req),
+            None => {}
+        }
+    }
+    techniques.iter().any(|t| {
+        forms
+            .iter()
+            .any(|f| barred.contains(&((*t).clone(), (*f).clone())))
+    })
+}

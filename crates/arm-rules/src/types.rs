@@ -3902,6 +3902,26 @@ pub struct PointItem {
     /// Parameter slots a selection of this item must fill.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub parameters: Vec<ParameterDef>,
+    /// Groups of this item's own parameter keys that together name ONE
+    /// unordered "combination" for duplicate-detection purposes (D81.8,
+    /// Incompatible Arts: `[["technique_1","form_1"],["technique_2","form_2"]]`
+    /// — the Flaw's two Technique+Form pairs are interchangeable, so a copy
+    /// naming the same two pairs with the groups swapped is the same copy
+    /// restated, not a second distinct target). Empty for every item except
+    /// Incompatible Arts today.
+    ///
+    /// Consumed by `validation/selections.rs::validate_duplicate_selections`,
+    /// which canonicalizes each named group's values into an order-independent
+    /// tuple before building its `(item_ref, params)` duplicate key — the
+    /// plain key is order-SENSITIVE on which slot a value sits in, so without
+    /// this it cannot tell "pair A in slot 1, pair B in slot 2" from "pair B
+    /// in slot 1, pair A in slot 2".
+    ///
+    /// Load-time integrity requires every named key to be one of this item's
+    /// own declared [`Self::parameters`]
+    /// (`ruleset/integrity.rs::validate_unordered_param_groups`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub unordered_param_groups: Vec<Vec<String>>,
     /// Mechanical effects this item applies (e.g. Puissant Ability +2, Great
     /// Characteristic raising a buy cap). Empty for items with no effect.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -4086,6 +4106,8 @@ struct PointItemRepr {
     #[serde(default)]
     parameters: Vec<ParameterDef>,
     #[serde(default)]
+    unordered_param_groups: Vec<Vec<String>>,
+    #[serde(default)]
     effects: Vec<Effect>,
     #[serde(default = "default_max_per_target")]
     max_per_target: u8,
@@ -4123,6 +4145,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             excluded_if_holds,
             same_choice_exclusions,
             parameters,
+            unordered_param_groups,
             effects,
             max_per_target,
             max_total,
@@ -4165,6 +4188,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             excluded_if_holds,
             same_choice_exclusions,
             parameters,
+            unordered_param_groups,
             effects,
             max_per_target,
             max_total,
@@ -4184,6 +4208,12 @@ impl PointItem {
     pub fn normalize(&mut self) {
         self.parameters.sort_by(|a, b| a.key.cmp(&b.key));
         self.index_categories.sort();
+        // Each group is itself unordered (D81.8/Q3), so both its own keys and
+        // the outer list of groups sort canonically — zero-noise git diffs.
+        for group in &mut self.unordered_param_groups {
+            group.sort();
+        }
+        self.unordered_param_groups.sort();
     }
 
     /// The category the item's rulebook descriptor lists **first**.

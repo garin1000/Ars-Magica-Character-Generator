@@ -454,6 +454,8 @@ pub(crate) fn validate_spells(
     // Vim spell may be taken once per distinct target (Form) (ArMDE:12353,
     // ArMDE:15791-15794).
     let mut seen: BTreeMap<(&Id, Option<u32>, Option<&String>), u32> = BTreeMap::new();
+    // D81.8/D81.15: computed once for every spell below, not per spell.
+    let barred = crate::effective::barred_combinations(effective_selections, ruleset);
 
     for sel in &entity.spells {
         let Some(spell) = validate_spell_ref(sel, ruleset, issues) else {
@@ -470,6 +472,7 @@ pub(crate) fn validate_spells(
 
         validate_spell_ritual_legality(sel, spell, resolved, issues);
         validate_ritual_casting_restriction(sel, spell, effective_selections, ruleset, issues);
+        validate_spell_incompatible_arts(sel, spell, ruleset, &barred, issues);
         if trained {
             validate_spell_level_cap(entity, ruleset, sel, spell, resolved, issues);
         }
@@ -644,6 +647,30 @@ fn validate_ritual_casting_restriction(
     if restricted {
         issues.push(ValidationIssue::warning(
             ValidationIssue::CODE_RITUAL_CASTING_RESTRICTED,
+            CreationPhase::Spells,
+            args([("spell", sel.spell.to_string())]),
+            Some(sel.spell.clone()),
+        ));
+    }
+}
+
+/// D81.15 (`docs/vf-audit/decisions.md`): a known spell that draws on one of
+/// a held Incompatible Arts Flaw's two barred `(Technique, Form)`
+/// combinations — directly, as its primary Arts, or only through a requisite
+/// ("even if one or both are requisites", ArMDE:6292) — is an ERROR, not
+/// merely a quiet grid/spell-list marker: the player cannot legally cast it at
+/// all. Grant-aware like [`validate_ritual_casting_restriction`]: `barred` is
+/// built from the folded bought-plus-granted selections.
+fn validate_spell_incompatible_arts(
+    sel: &SpellSelection,
+    spell: &crate::spell::Spell,
+    ruleset: &Ruleset,
+    barred: &BTreeSet<(Id, Id)>,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    if crate::effective::spell_touches_barred_combination(spell, ruleset, barred) {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_SPELL_USES_INCOMPATIBLE_ARTS,
             CreationPhase::Spells,
             args([("spell", sel.spell.to_string())]),
             Some(sel.spell.clone()),

@@ -12,6 +12,7 @@ function derivedFixture(surfaced_modifiers: SurfacedModifier[]): DerivedTotals {
     lab_totals: [],
     casting_totals: [],
     spell_casting_totals: [],
+    spell_casting_unusable: [],
     penetration: [],
     magic_resistance: [],
     combat: [],

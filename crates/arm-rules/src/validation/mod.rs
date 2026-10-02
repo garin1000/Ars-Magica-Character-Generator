@@ -241,6 +241,7 @@ impl fmt::Display for IssueSeverity {
 /// | `multiple_magical_foci` | error | virtues_flaws | `count` |
 /// | `spell_ritual_legality` | error | spells | `spell`, `level` |
 /// | `ritual_casting_restricted` | warning | spells | `spell` |
+/// | `spell_uses_incompatible_arts` | error | spells | `spell` |
 /// | `unknown_mastery_ability` | error | spells | `spell`, `ability` |
 /// | `too_many_mastery_abilities` | error | spells | `spell`, `chosen`, `mastery` |
 /// | `duplicate_mastery_ability` | error | spells | `spell`, `ability`, `count` |
@@ -793,6 +794,15 @@ impl ValidationIssue {
     /// Read against `effective_selections` (bought ++ granted, D2): the Flaw may
     /// be granted, and the check must not read bought only.
     pub const CODE_RITUAL_CASTING_RESTRICTED: &'static str = "ritual_casting_restricted";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error (D81.15,
+    /// `docs/vf-audit/decisions.md`): a known spell draws on one of a held
+    /// Incompatible Arts Flaw's two barred `(Technique, Form)` combinations —
+    /// directly, as its primary Arts, or only through a requisite ("even if
+    /// one or both are requisites", ArMDE:6292). Grant-aware like
+    /// [`ValidationIssue::CODE_RITUAL_CASTING_RESTRICTED`], and an ERROR
+    /// rather than that code's advisory warning: the player cannot legally
+    /// cast the spell at all, not merely under a restriction.
+    pub const CODE_SPELL_USES_INCOMPATIBLE_ARTS: &'static str = "spell_uses_incompatible_arts";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a chosen Spell Mastery
     /// special ability id does not resolve against the mastery-ability catalogue.
     pub const CODE_UNKNOWN_MASTERY_ABILITY: &'static str = "unknown_mastery_ability";

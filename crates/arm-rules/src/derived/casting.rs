@@ -131,6 +131,13 @@ pub struct CastingTotal {
     pub non_standard: NonStandardCasting,
     /// Whether a Deficient Art halved these totals.
     pub deficient: bool,
+    /// Whether this cell's `(Technique, Form)` pair is one of a held Incompatible
+    /// Arts Flaw's two combinations (D81.8, `docs/vf-audit/decisions.md`;
+    /// ArMDE:6290-6292). A requisite spell may still be unusable through this
+    /// cell without the cell itself being flagged — see
+    /// `effective/spell.rs::spell_touches_barred_combination`, which the
+    /// per-spell figure reads instead.
+    pub unusable: bool,
 }
 
 /// The addends of a Casting Total that belong to the **character** rather than to
@@ -294,6 +301,12 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
     let artes_liberales = ability(entity, ruleset, ID_ARTES_LIBERALES);
     let philosophiae = ability(entity, ruleset, ID_PHILOSOPHIAE);
     let weak_spont = mods.halvings.contains(&HalvableTotal::SpontaneousCasting);
+    // D81.8: the Flaw's barred `(Technique, Form)` pairs, computed once for
+    // the whole grid rather than per cell.
+    let barred = crate::effective::barred_combinations(
+        &crate::effective::selections_for_effects(entity, ruleset),
+        ruleset,
+    );
     let mut out = Vec::new();
     for technique in ruleset.art_ids_of(ArtType::Technique) {
         let te = effective_art_score(entity, ruleset, &technique);
@@ -469,6 +482,7 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                 within_potent_field,
                 non_standard,
                 deficient,
+                unusable: barred.contains(&(technique.clone(), form.clone())),
             });
         }
     }

@@ -996,6 +996,9 @@ requirement-exemplar = { " " }(any { $ability })
 # type-aware placeholder/prompt for an empty parameter input.
 param-label-ability = Ability
 param-label-technique = Technique
+# Incompatible Arts' two Technique+Form combinations (D81.8, ArMDE:6290-6292).
+param-label-technique_1 = Technique 1
+param-label-technique_2 = Technique 2
 param-label-art = Art
 param-label-focus = Focus
 param-label-area = Area
@@ -1013,6 +1016,9 @@ param-label-craft = Craft
 param-label-guild = Guild
 param-label-profession = Profession
 param-label-form = Form
+# Incompatible Arts' two Technique+Form combinations (D81.8, ArMDE:6290-6292).
+param-label-form_1 = Form 1
+param-label-form_2 = Form 2
 # For the `item` domain: no shipped catalogue entry declares one yet, but the domain
 # is part of the engine's closed enum and its picker branch names its control here
 # rather than falling back to the raw key.
@@ -1350,6 +1356,7 @@ issue-over_spell_levels = Spells total { $used } levels, over the budget of { $b
 issue-spell_level_exceeds_cap = Spell { $spell } is level { $level }, above the maximum you can learn ({ $cap }).
 issue-spell_ritual_legality = Spell { $spell } is learned at level { $level }, which breaks the ritual level bounds (rituals at least 20, non-rituals at most 50).
 issue-ritual_casting_restricted = { $spell } is a Ritual, and Rigid Magic forbids using vis to cast it.
+issue-spell_uses_incompatible_arts = { $spell } draws on two Techniques and Forms that Incompatible Arts forbids using together.
 issue-unknown_mastery_ability = Unknown Spell Mastery ability { $ability } chosen for { $spell }.
 issue-too_many_mastery_abilities = { $spell } has { $chosen } Mastery special abilities, above its Mastery score of { $mastery } (one per level).
 issue-duplicate_mastery_ability = Mastery ability { $ability } is chosen { $count } times for { $spell }, but may be taken only once.
@@ -1471,6 +1478,13 @@ derived-within-focus = Within focus
 # shown only when the character holds a Potent Magic Virtue.
 derived-within-potent-field = Within Potent Magic field
 derived-deficient = (deficient, halved)
+# D81.8: a Lab/Casting Total grid cell (or spell) whose (Technique, Form) pair is
+# barred by a held Incompatible Arts Flaw. The grid replaces the cell's number
+# with this marker outright (0 is a legitimate total and would be indistinguishable
+# from this); the Spells tab shows it next to the figure instead, since the number
+# there still has informational value.
+derived-unusable = Unusable
+derived-unusable-tooltip = Incompatible Arts forbids using this Technique and Form together.
 derived-weak-magic = (Weak Magic, halved)
 derived-level = level
 derived-range = Range

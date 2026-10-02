@@ -69,6 +69,7 @@ function derivedFixture(overrides: Partial<DerivedTotals> = {}): DerivedTotals {
     lab_totals: [],
     casting_totals: [],
     spell_casting_totals: [],
+    spell_casting_unusable: [],
     penetration: [],
     magic_resistance: [],
     combat: [],
@@ -250,6 +251,7 @@ describe('DerivedTotalsPanel Weak Enchanter lab-total read-out (round 3, G2)', (
           total: 16,
           deficient: false,
           enchanting: 8,
+          unusable: false,
         },
       ],
     });
@@ -269,6 +271,7 @@ describe('DerivedTotalsPanel Weak Enchanter lab-total read-out (round 3, G2)', (
           total: 16,
           deficient: false,
           enchanting: 16,
+          unusable: false,
         },
       ],
     });

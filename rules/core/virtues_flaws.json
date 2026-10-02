@@ -1602,7 +1602,13 @@
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
     "incompatible_with": ["flaw.deficient_form", "flaw.deficient_technique"],
-    "max_per_target": 255,
+    "parameters": [
+      { "key": "form_1", "type": "ref", "domain": "form" },
+      { "key": "form_2", "type": "ref", "domain": "form" },
+      { "key": "technique_1", "type": "ref", "domain": "technique" },
+      { "key": "technique_2", "type": "ref", "domain": "technique" }
+    ],
+    "unordered_param_groups": [["form_1", "technique_1"], ["form_2", "technique_2"]],
     "max_total": 255,
     "source": { "anchor": "incompatible-arts", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6290, 6292] }
   },

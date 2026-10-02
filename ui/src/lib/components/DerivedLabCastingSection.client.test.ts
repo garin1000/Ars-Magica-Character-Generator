@@ -73,6 +73,7 @@ function labTotal(): LabTotal {
     within_focus: null,
     deficient: false,
     enchanting: 30,
+    unusable: false,
   };
 }
 
@@ -113,6 +114,7 @@ function castingTotal(): CastingTotal {
       deft_form: false,
     },
     deficient: false,
+    unusable: false,
   };
 }
 

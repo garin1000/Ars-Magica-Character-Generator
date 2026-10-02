@@ -47,6 +47,10 @@ pub struct LabTotal {
     /// for every other lab activity (spell invention, etc.), which Weak
     /// Enchanter does not touch.
     pub enchanting: i32,
+    /// Whether this cell's `(Technique, Form)` pair is one of a held Incompatible
+    /// Arts Flaw's two combinations (D81.8, `docs/vf-audit/decisions.md`;
+    /// ArMDE:6290-6292).
+    pub unusable: bool,
 }
 
 /// Lab Totals for every `(Technique, Form)` pair — the 5×10 grid. Source:
@@ -56,6 +60,12 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
     let intelligence = characteristic(entity, ruleset, Characteristic::Int);
     let magic_theory = ability(entity, ruleset, ID_MAGIC_THEORY);
     let aura = entity.aura;
+    // D81.8: the Flaw's barred `(Technique, Form)` pairs, computed once for
+    // the whole grid rather than per cell.
+    let barred = crate::effective::barred_combinations(
+        &crate::effective::selections_for_effects(entity, ruleset),
+        ruleset,
+    );
     let mut out = Vec::new();
     for technique in ruleset.art_ids_of(ArtType::Technique) {
         let te = effective_art_score(entity, ruleset, &technique);
@@ -108,6 +118,7 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
                 within_potent_field,
                 deficient,
                 enchanting,
+                unusable: barred.contains(&(technique.clone(), form.clone())),
             });
         }
     }

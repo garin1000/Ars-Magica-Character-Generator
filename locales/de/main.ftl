@@ -1043,6 +1043,9 @@ requirement-exemplar = { " " }({ $ability } genügt)
 # als typbezogener Platzhalter/Hinweis für ein leeres Parameter-Eingabefeld.
 param-label-ability = Fertigkeit
 param-label-technique = Technik
+# Die zwei Technik+Form-Kombinationen von Unvereinbare Künste (D81.8, ArMDE:6290-6292).
+param-label-technique_1 = Technik 1
+param-label-technique_2 = Technik 2
 param-label-art = Kunst
 param-label-focus = Fokus
 param-label-area = Gebiet
@@ -1060,6 +1063,9 @@ param-label-craft = Handwerk
 param-label-guild = Zunft
 param-label-profession = Beruf
 param-label-form = Form
+# Die zwei Technik+Form-Kombinationen von Unvereinbare Künste (D81.8, ArMDE:6290-6292).
+param-label-form_1 = Form 1
+param-label-form_2 = Form 2
 # Für die Domäne `item`: noch kein ausgelieferter Katalogeintrag deklariert eine, aber
 # die Domäne gehört zum geschlossenen Enum der Engine, und ihr Auswahlfeld benennt sich
 # hier, statt auf den rohen Schlüssel zurückzufallen. Begriff aus
@@ -1432,6 +1438,7 @@ issue-over_spell_levels = Die Zauber ergeben { $used } Stufen und überschreiten
 issue-spell_level_exceeds_cap = Zauber { $spell } hat Stufe { $level }, über der höchsten erlernbaren Stufe ({ $cap }).
 issue-spell_ritual_legality = Zauber { $spell } wird auf Stufe { $level } erlernt und verletzt die Ritualgrenzen (Rituale mindestens 20, Nicht-Rituale höchstens 50).
 issue-ritual_casting_restricted = { $spell } ist ein Ritual, und Starre Magie verbietet es, dabei Vis einzusetzen.
+issue-spell_uses_incompatible_arts = { $spell } verwendet zwei Techniken und Formen, deren gemeinsame Nutzung Unvereinbare Künste verbietet.
 issue-unknown_mastery_ability = Unbekannte Meisterschaftsfähigkeit { $ability } für { $spell } gewählt.
 issue-too_many_mastery_abilities = { $spell } hat { $chosen } Meisterschaftsfähigkeiten, mehr als der Meisterschaftswert von { $mastery } (eine je Stufe).
 issue-duplicate_mastery_ability = Meisterschaftsfähigkeit { $ability } wurde { $count }-mal für { $spell } gewählt, darf aber nur einmal genommen werden.
@@ -1561,6 +1568,14 @@ derived-within-focus = Im Fokus
 # besitzt.
 derived-within-potent-field = Im Bereich der Potenten Magie
 derived-deficient = (defizitär, halbiert)
+# D81.8: eine Zelle der Labor-/Zauberwirkungssumme (oder ein Zauber), deren
+# Technik+Form-Paar durch eine gehaltene Unvereinbare-Künste-Schwäche verbaut
+# ist. Das Raster ersetzt die Zahl der Zelle ganz durch diese Markierung (0 ist
+# eine gültige Summe und wäre davon nicht zu unterscheiden); die
+# Zauber-Registerkarte zeigt sie neben der Zahl, da diese dort weiterhin
+# informativ ist.
+derived-unusable = Unbrauchbar
+derived-unusable-tooltip = Unvereinbare Künste verbietet die gemeinsame Nutzung dieser Technik und Form.
 derived-weak-magic = (Schwache Magie, halbiert)
 derived-level = Stufe
 derived-range = Reichweite

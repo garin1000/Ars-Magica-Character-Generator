@@ -1841,6 +1841,29 @@ mod tests {
         );
     }
 
+    /// D81.8/Q3: a group named in `unordered_param_groups` must name only keys
+    /// this item actually declares in `parameters` — a stale/typo'd key must
+    /// fail loudly at load, not silently drop out of the duplicate-detection
+    /// canonicalization.
+    #[test]
+    fn unordered_param_groups_rejects_an_undeclared_key() {
+        let items = r#"[{
+          "id": "flaw.test_pair", "kind": "flaw", "classification": "uncomputed_rule",
+          "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+          "parameters": [
+            { "key": "technique_1", "type": "ref", "domain": "technique" },
+            { "key": "form_1", "type": "ref", "domain": "form" }
+          ],
+          "unordered_param_groups": [["technique_1", "form_1"], ["technique_2", "form_2"]]
+        }]"#;
+        let err = Ruleset::from_json("test", "1", items, "[]").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("technique_2"),
+            "error should name the undeclared key: {msg}"
+        );
+    }
+
     #[test]
     fn asymmetric_incompatibility() {
         let items = r#"[

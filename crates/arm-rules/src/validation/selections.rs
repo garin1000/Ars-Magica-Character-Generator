@@ -640,13 +640,75 @@ pub(crate) fn validate_entity_kind_applicability(
     }
 }
 
+/// The order-independent comparison key one selection contributes to
+/// [`validate_duplicate_selections`]'s duplicate count (D81.8/Q3).
+///
+/// For an item with no `unordered_param_groups` (almost every item),
+/// `canonical_groups` is empty and `ungrouped` is a clone of the selection's
+/// whole `params` map — exactly today's `(item_ref, params)` key, so every
+/// existing item's duplicate detection is unaffected byte-for-byte.
+///
+/// For an item that DOES declare groups (Incompatible Arts: two Technique+Form
+/// pairs), each group's named values are re-keyed by their
+/// [`ParameterDomain`] (`"technique"`, `"form"`, …) rather than by their
+/// literal parameter key — `technique_1`/`form_1` and `technique_2`/`form_2`
+/// both become the same two-entry map `{"technique": …, "form": …}` when they
+/// name the same Arts, so swapping which named group holds which pair changes
+/// nothing. The groups are then collected into a `BTreeSet`, so the ORDER the
+/// groups are declared/filled in no longer matters either — only the
+/// unordered SET of pairs does. Keys the groups do not cover stay in
+/// `ungrouped`, keyed by their own name as before.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+struct DuplicateKey {
+    item_ref: Id,
+    canonical_groups: BTreeSet<BTreeMap<String, SelectionParamValue>>,
+    ungrouped: BTreeMap<String, SelectionParamValue>,
+}
+
+fn duplicate_key(selection: &Selection, ruleset: &Ruleset) -> DuplicateKey {
+    let item = ruleset.point_items.get(&selection.item_ref);
+    let groups: &[Vec<String>] = item.map_or(&[], |i| i.unordered_param_groups.as_slice());
+
+    let mut grouped_keys: BTreeSet<&str> = BTreeSet::new();
+    let mut canonical_groups = BTreeSet::new();
+    for group in groups {
+        let mut role_map = BTreeMap::new();
+        for key in group {
+            grouped_keys.insert(key.as_str());
+            let Some(value) = selection.params.get(key) else {
+                continue; // missing_param already reported
+            };
+            let Some(def) = item.and_then(|i| i.parameters.iter().find(|p| &p.key == key)) else {
+                continue; // unknown key — the integrity check already rejects this
+            };
+            role_map.insert(def.domain.to_string(), value.clone());
+        }
+        canonical_groups.insert(role_map);
+    }
+
+    let ungrouped = selection
+        .params
+        .iter()
+        .filter(|(key, _)| !grouped_keys.contains(key.as_str()))
+        .map(|(key, value)| (key.clone(), value.clone()))
+        .collect();
+
+    DuplicateKey {
+        item_ref: selection.item_ref.clone(),
+        canonical_groups,
+        ungrouped,
+    }
+}
+
 /// Enforces `max_per_target`: how many copies of an item may share one
-/// identical `(id, params)` target. Grant-aware — `selections` is the folded
-/// bought-plus-granted list ([`crate::effective::selections_for_effects`]), so
-/// a House-granted copy of a target counts the same as a bought one. This
-/// closes a wrong-rules-output bug: a Flambeau magus granted a free Puissant
-/// Ignem who also BUYS Puissant Ignem is taking the same Virtue for the same
-/// target twice — illegal (ArMDE:4820,
+/// identical `(id, params)` target — canonicalized per [`DuplicateKey`] when
+/// the item declares `unordered_param_groups` (D81.8/Q3). Grant-aware —
+/// `selections` is the folded bought-plus-granted list
+/// ([`crate::effective::selections_for_effects`]), so a House-granted copy of
+/// a target counts the same as a bought one. This closes a wrong-rules-output
+/// bug: a Flambeau magus granted a free Puissant Ignem who also BUYS Puissant
+/// Ignem is taking the same Virtue for the same target twice — illegal
+/// (ArMDE:4820,
 /// "twice, for two different Arts") — but validated clean, and stacked +6 to
 /// Ignem, before grants were folded in here.
 pub(crate) fn validate_duplicate_selections(
@@ -654,21 +716,21 @@ pub(crate) fn validate_duplicate_selections(
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    let mut seen: BTreeMap<(&Id, &BTreeMap<String, SelectionParamValue>), usize> = BTreeMap::new();
+    let mut seen: BTreeMap<DuplicateKey, usize> = BTreeMap::new();
 
     for selection in selections {
-        let key = (&selection.item_ref, &selection.params);
-        *seen.entry(key).or_insert(0) += 1;
+        *seen.entry(duplicate_key(selection, ruleset)).or_insert(0) += 1;
     }
 
-    for ((item_ref, _params), count) in &seen {
+    for (key, count) in &seen {
+        let item_ref = &key.item_ref;
         // Selections are grouped by (item_ref, params): two selections of the
         // same parameterized item with DIFFERENT params are distinct targets and
         // do not collide here. An item may be taken up to `max_per_target` times
         // for the same target (default 1; Great Characteristic allows 2).
         let max = ruleset
             .point_items
-            .get(*item_ref)
+            .get(item_ref)
             .map_or(1, |item| usize::from(item.max_per_target));
         if *count <= max {
             continue;
@@ -681,7 +743,7 @@ pub(crate) fn validate_duplicate_selections(
                 ("count", count.to_string()),
                 ("max", max.to_string()),
             ]),
-            Some((*item_ref).clone()),
+            Some(item_ref.clone()),
         ));
     }
 }

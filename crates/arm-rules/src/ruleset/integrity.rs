@@ -181,6 +181,7 @@ impl Ruleset {
                 errors,
             );
             Self::validate_taken_as_max_total(id, item, errors);
+            Self::validate_unordered_param_groups(id, item, errors);
             self.validate_at_most_one_of(&item.parameters, &format!("{id}"), errors);
             self.validate_require_categories(&item.parameters, &format!("{id}"), errors);
             self.validate_allow_ids(&item.parameters, &format!("{id}"), errors);
@@ -314,6 +315,26 @@ impl Ruleset {
                  must be 1 (one choice among several readings of ONE item), not {}",
                 item.max_total
             ));
+        }
+    }
+
+    /// Checks `PointItem::unordered_param_groups` (D81.8/Q3): every parameter
+    /// key a group names must be one this item actually declares in its own
+    /// `parameters` — otherwise `validate_duplicate_selections`'s
+    /// canonicalization would silently skip a group naming a typo'd or
+    /// stale-renamed key, and the order-insensitive duplicate check it drives
+    /// would quietly stop applying.
+    fn validate_unordered_param_groups(id: &Id, item: &PointItem, errors: &mut Vec<String>) {
+        let declared: BTreeSet<&str> = item.parameters.iter().map(|p| p.key.as_str()).collect();
+        for group in &item.unordered_param_groups {
+            for key in group {
+                if !declared.contains(key.as_str()) {
+                    errors.push(format!(
+                        "{id}: 'unordered_param_groups' names '{key}', which is not \
+                         one of this item's own declared parameters"
+                    ));
+                }
+            }
         }
     }
 

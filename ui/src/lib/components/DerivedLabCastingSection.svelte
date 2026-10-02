@@ -87,7 +87,21 @@
       <dt tabindex="0" use:tooltip={{ text: addendBreakdown(labCell.addends, store.t) }}>
         {store.t('derived-lab-total')}
       </dt>
-      <dd>{labCell.total}{labCell.deficient ? ' ' + store.t('derived-deficient') : ''}</dd>
+      {#if labCell.unusable}
+        <!-- D81.8: the number is withheld outright, not merely annotated — 0 is a
+             legitimate Lab Total and would be indistinguishable from this marker. -->
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+        <dd
+          class="derived-unusable"
+          tabindex="0"
+          use:tooltip={{ text: store.t('derived-unusable-tooltip') }}
+          data-testid="derived-lab-unusable"
+        >
+          {store.t('derived-unusable')}
+        </dd>
+      {:else}
+        <dd>{labCell.total}{labCell.deficient ? ' ' + store.t('derived-deficient') : ''}</dd>
+      {/if}
       {#if labCell.within_focus != null}
         <dt class="derived-focus">{store.t('derived-within-focus')}</dt>
         <dd class="derived-focus">{labCell.within_focus}</dd>
@@ -114,6 +128,24 @@
   {/if}
 
   {#if castCell}
+    <!-- D81.8: shared by every cast-type cell below — the number is withheld
+         outright for a barred cell, same reasoning as the Lab Total above. One
+         snippet rather than four inline `{#if}`s repeating the same markup. -->
+    {#snippet castValue(value: number)}
+      {#if castCell?.unusable}
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+        <span
+          class="derived-unusable"
+          tabindex="0"
+          use:tooltip={{ text: store.t('derived-unusable-tooltip') }}
+          data-testid="derived-casting-unusable"
+        >
+          {store.t('derived-unusable')}
+        </span>
+      {:else}
+        {value}
+      {/if}
+    {/snippet}
     <div class="table-scroll">
       <!-- Both axes are scoped (Sabine 9): the table has a header ROW naming the
            four cast types and a header COLUMN naming the line, and with neither
@@ -144,27 +176,27 @@
                 ? ' ' + store.t('derived-deficient')
                 : ''}</th
             >
-            <td>{castCell.formulaic}</td>
-            <td>{castCell.ritual}</td>
-            <td>{castCell.spontaneous_fatiguing}</td>
-            <td>{castCell.spontaneous_non_fatiguing}</td>
+            <td>{@render castValue(castCell.formulaic)}</td>
+            <td>{@render castValue(castCell.ritual)}</td>
+            <td>{@render castValue(castCell.spontaneous_fatiguing)}</td>
+            <td>{@render castValue(castCell.spontaneous_non_fatiguing)}</td>
           </tr>
           {#if castCell.within_focus}
             <tr class="derived-focus">
               <th scope="row">{store.t('derived-within-focus')}</th>
-              <td>{castCell.within_focus.formulaic}</td>
-              <td>{castCell.within_focus.ritual}</td>
-              <td>{castCell.within_focus.spontaneous_fatiguing}</td>
-              <td>{castCell.within_focus.spontaneous_non_fatiguing}</td>
+              <td>{@render castValue(castCell.within_focus.formulaic)}</td>
+              <td>{@render castValue(castCell.within_focus.ritual)}</td>
+              <td>{@render castValue(castCell.within_focus.spontaneous_fatiguing)}</td>
+              <td>{@render castValue(castCell.within_focus.spontaneous_non_fatiguing)}</td>
             </tr>
           {/if}
           {#if castCell.within_potent_field}
             <tr class="derived-focus">
               <th scope="row">{store.t('derived-within-potent-field')}</th>
-              <td>{castCell.within_potent_field.formulaic}</td>
-              <td>{castCell.within_potent_field.ritual}</td>
-              <td>{castCell.within_potent_field.spontaneous_fatiguing}</td>
-              <td>{castCell.within_potent_field.spontaneous_non_fatiguing}</td>
+              <td>{@render castValue(castCell.within_potent_field.formulaic)}</td>
+              <td>{@render castValue(castCell.within_potent_field.ritual)}</td>
+              <td>{@render castValue(castCell.within_potent_field.spontaneous_fatiguing)}</td>
+              <td>{@render castValue(castCell.within_potent_field.spontaneous_non_fatiguing)}</td>
             </tr>
           {/if}
         </tbody>

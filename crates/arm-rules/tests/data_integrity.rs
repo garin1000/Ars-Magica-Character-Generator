@@ -8726,7 +8726,6 @@ const UNLIMITED_REPEAT_ITEMS: &[(&str, u32)] = &[
     ("virtue.strong_angelic_heritage", 5030),
     ("virtue.withstand_casting", 5265),
     ("flaw.vulnerable_casting", 6997),
-    ("flaw.incompatible_arts", 6292),
 ];
 
 /// **Slice Q4b (D9 part 1)**: the three vary-the-target items from

@@ -77,6 +77,7 @@ function labTotal(overrides: Partial<LabTotal> = {}): LabTotal {
     within_focus: null,
     deficient: false,
     enchanting: 30,
+    unusable: false,
     ...overrides,
   };
 }
@@ -103,6 +104,7 @@ function castingTotal(overrides: Partial<CastingTotal> = {}): CastingTotal {
       ...(overrides.non_standard ?? {}),
     },
     deficient: false,
+    unusable: false,
     ...overrides,
   };
 }
@@ -251,7 +253,11 @@ describe('DerivedLabCastingSection — within-Potent-Magic-field figures (D79)',
       ),
     );
     expect(table).toContain(store.t('derived-within-potent-field'));
-    expect(table).toContain('<td>31</td>');
+    // D81.8 wraps every cast-type cell in a conditional (unusable or not), which
+    // SSR renders with its own anchor comments even on the plain-number branch —
+    // so a bare substring check for the figure, not an exact `<td>31</td>` match.
+    expect(table).toContain('31');
+    expect(table).not.toContain(store.t('derived-unusable'));
 
     const hiddenTable = castingTable(html(castingTotal()));
     expect(hiddenTable).not.toContain(store.t('derived-within-potent-field'));
@@ -310,5 +316,47 @@ describe('DerivedLabCastingSection — the non-standard casting figures (Sabine 
   it('still flags Deft Form on the group heading', () => {
     const body = html(castingTotal({ non_standard: { deft_form: true } as never }));
     expect(body).toContain(store.t('derived-deft-form'));
+  });
+});
+
+// D81.8 (docs/vf-audit/decisions.md): a cell whose (Technique, Form) pair is one
+// of a held Incompatible Arts Flaw's two barred combinations must show a visible
+// "unusable" marker INSTEAD of its number — 0 is a legitimate Lab/Casting Total
+// and would be indistinguishable from "legitimately zero" by any reader, so the
+// number itself must not render for a flagged cell.
+describe('DerivedLabCastingSection — unusable cells (D81.8)', () => {
+  /** The `<dl data-testid="derived-lab-total">…</dl>` element's markup only. */
+  function labDl(body: string): string {
+    const start = body.indexOf('data-testid="derived-lab-total"');
+    const end = body.indexOf('</dl>', start);
+    expect(start, 'the Lab Total list should render').toBeGreaterThan(-1);
+    return body.slice(start, end);
+  }
+
+  it('shows the unusable marker instead of the Lab Total number when the cell is barred', () => {
+    const dl = labDl(html(castingTotal(), labTotal({ unusable: true, total: 30 })));
+    expect(dl).toContain(store.t('derived-unusable'));
+    expect(dl).not.toContain('>30<');
+  });
+
+  it('shows the Lab Total number as normal when the cell is not barred', () => {
+    const dl = labDl(html(castingTotal(), labTotal({ unusable: false, total: 30 })));
+    expect(dl).not.toContain(store.t('derived-unusable'));
+    expect(dl).toContain('30');
+  });
+
+  it('shows the unusable marker instead of all four Casting Total figures when the cell is barred', () => {
+    const table = castingTable(html(castingTotal({ unusable: true })));
+    expect(table).toContain(store.t('derived-unusable'));
+    expect(table).not.toContain('>25<');
+    expect(table).not.toContain('>28<');
+    expect(table).not.toContain('>12<');
+    expect(table).not.toContain('>6<');
+  });
+
+  it('shows the Casting Total figures as normal when the cell is not barred', () => {
+    const table = castingTable(html(castingTotal({ unusable: false })));
+    expect(table).not.toContain(store.t('derived-unusable'));
+    expect(table).toContain('>25<');
   });
 });
