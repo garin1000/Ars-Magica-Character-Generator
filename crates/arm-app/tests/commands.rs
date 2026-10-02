@@ -2904,6 +2904,94 @@ fn export_label_keys_command_returns_the_engine_list() {
     );
 }
 
+/// `derive_age` is a thin `#[tauri::command]` delegation to the engine's own
+/// [`arm_rules::age_in_saga_year`] (coverage slice, round 3): the clamp policy
+/// has one home, so the command must hand back exactly what the engine
+/// computes, not a reimplementation of the subtraction.
+#[test]
+fn derive_age_command_delegates_to_the_engine_computation() {
+    assert_eq!(
+        arm_app::commands::derive_age(1220, 1190),
+        arm_rules::age_in_saga_year(1220, 1190)
+    );
+    // The underflow-clamp branch too: a saga year before the birth year.
+    assert_eq!(
+        arm_app::commands::derive_age(1150, 1190),
+        arm_rules::age_in_saga_year(1150, 1190)
+    );
+}
+
+/// The other view of the same fact: `derive_birth_year` delegates to
+/// [`arm_rules::birth_year_in_saga_year`] unchanged.
+#[test]
+fn derive_birth_year_command_delegates_to_the_engine_computation() {
+    assert_eq!(
+        arm_app::commands::derive_birth_year(1220, 30),
+        arm_rules::birth_year_in_saga_year(1220, 30)
+    );
+}
+
+/// `AppError`'s `Display` impl is what a terminal-launched binary and any
+/// `{err}` formatting show; every variant must print its own distinguishing
+/// detail rather than a bare discriminant (coverage slice, round 3 — the impl
+/// had no test of any kind before).
+#[test]
+fn display_formats_every_variant_with_its_distinguishing_detail() {
+    assert_eq!(
+        AppError::Io {
+            message: "disk full".to_string()
+        }
+        .to_string(),
+        "io error: disk full"
+    );
+    assert_eq!(
+        AppError::Ruleset {
+            ruleset_kind: "integrity".to_string(),
+            errors: vec!["a".to_string(), "b".to_string()],
+        }
+        .to_string(),
+        "ruleset error (integrity): a; b"
+    );
+    assert_eq!(AppError::NotLoaded.to_string(), "no ruleset loaded");
+    assert_eq!(
+        AppError::Serialize {
+            message: "unexpected EOF".to_string()
+        }
+        .to_string(),
+        "serialize error: unexpected EOF"
+    );
+    assert_eq!(
+        AppError::Export {
+            missing: vec!["spell.x".to_string()]
+        }
+        .to_string(),
+        "export error: spell.x"
+    );
+    assert_eq!(
+        AppError::Menu {
+            message: "no window".to_string()
+        }
+        .to_string(),
+        "menu error: no window"
+    );
+}
+
+/// A malformed-JSON `serde_json::Error` must convert to `AppError::Serialize`
+/// carrying the same message, not get silently dropped or miscategorized as
+/// `AppError::Io`.
+#[test]
+fn a_malformed_json_error_converts_to_a_serialize_app_error() {
+    let json_err = serde_json::from_str::<serde_json::Value>("not json").unwrap_err();
+    let expected_message = json_err.to_string();
+
+    let app_err: AppError = json_err.into();
+
+    let AppError::Serialize { message } = app_err else {
+        panic!("expected AppError::Serialize, got {app_err:?}");
+    };
+    assert_eq!(message, expected_message);
+}
+
 /// Every document-chrome key the exporter can ask for must exist in every locale,
 /// or the exported sheet would print the raw key. Mirrors
 /// `every_validation_code_has_a_fluent_key_in_each_locale`.

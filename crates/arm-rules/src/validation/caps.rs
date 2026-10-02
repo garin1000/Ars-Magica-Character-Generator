@@ -378,3 +378,136 @@ pub(crate) fn validate_share_of_kind_cap(
         ));
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ruleset::Ruleset;
+    use crate::types::{Entity, EntityKind, RulesetRef};
+
+    /// No shipped profile combines a category-cap floor (`min`) with
+    /// `min_hard: false` (a soft guideline) or with `major_only: true` (the
+    /// "major" issue-code wording) — the only shipped floor
+    /// (`social_status`, `rules/core/character_types.json`) is `min_hard:
+    /// true, major_only` absent. Both branches
+    /// (`validation/caps.rs::push_category_cap_issues`) are real and
+    /// reachable, just untested with real data, so this builds a minimal
+    /// synthetic ruleset carrying both combinations on one data-only
+    /// `test_status` category — no production code changes.
+    fn ruleset_with_test_status_caps() -> Ruleset {
+        let items = r#"[
+          { "id": "virtue.test_status_small", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": ["test_status"] },
+          { "id": "virtue.test_status_large", "kind": "virtue", "classification": "narrative",
+            "magnitude": "major", "categories": ["test_status"] },
+          { "id": "flaw.personality_filler", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"] }
+        ]"#;
+        let profiles = r#"[
+          {
+            "id": "test_type",
+            "creation_phases": ["virtues_flaws"],
+            "budget": {
+              "virtue_points": 10,
+              "flaw_points": 10,
+              "virtue_category_caps": [
+                { "category": "test_status", "max": 5, "min": 1, "min_hard": false },
+                { "category": "test_status", "max": 5, "min": 1, "min_hard": true, "major_only": true }
+              ]
+            }
+          }
+        ]"#;
+        Ruleset::from_json("t", "1", items, profiles).expect("synthetic ruleset loads")
+    }
+
+    fn entity_with(selections: Vec<Selection>) -> Entity {
+        let mut e = Entity::new(
+            EntityKind::Character,
+            Id::new("test_type"),
+            RulesetRef::new(Id::new("t"), "1"),
+        );
+        e.selections = selections;
+        e
+    }
+
+    fn issues_for(ruleset: &Ruleset, selections: Vec<Selection>) -> Vec<ValidationIssue> {
+        let profile = ruleset.profile(&Id::new("test_type")).unwrap();
+        let entity = entity_with(selections);
+        let mut issues = Vec::new();
+        validate_caps(&entity, ruleset, Some(profile), &mut issues);
+        issues
+    }
+
+    #[test]
+    fn a_soft_category_floor_below_minimum_raises_a_warning_not_an_error() {
+        let ruleset = ruleset_with_test_status_caps();
+        let issues = issues_for(&ruleset, vec![]);
+
+        let soft_floor = issues
+            .iter()
+            .find(|i| i.code == "too_few_test_status_virtues")
+            .expect("the min_hard: false floor must still raise its issue when unmet");
+        assert_eq!(
+            soft_floor.severity,
+            IssueSeverity::Warning,
+            "min_hard: false must raise a WARNING, not an error — got {soft_floor:?}"
+        );
+    }
+
+    #[test]
+    fn a_major_only_category_floor_uses_the_major_wording_and_is_an_error() {
+        let ruleset = ruleset_with_test_status_caps();
+        let issues = issues_for(&ruleset, vec![]);
+
+        let major_floor = issues
+            .iter()
+            .find(|i| i.code == "too_few_major_test_status_virtues")
+            .expect("major_only: true must derive the 'too_few_major_<category>' code");
+        assert_eq!(
+            major_floor.severity,
+            IssueSeverity::Error,
+            "min_hard: true must raise an ERROR — got {major_floor:?}"
+        );
+    }
+
+    #[test]
+    fn a_major_only_floor_counts_only_major_magnitude_items() {
+        let ruleset = ruleset_with_test_status_caps();
+        // A MINOR test_status virtue clears the plain (non-major_only) floor,
+        // which counts any magnitude, but must leave the major_only floor
+        // unmet, since it counts only Major-magnitude items.
+        let issues = issues_for(
+            &ruleset,
+            vec![Selection::new(Id::new("virtue.test_status_small"))],
+        );
+
+        assert!(
+            !issues
+                .iter()
+                .any(|i| i.code == "too_few_test_status_virtues"),
+            "a minor test_status virtue must clear the plain floor — issues: {issues:?}"
+        );
+        assert!(
+            issues
+                .iter()
+                .any(|i| i.code == "too_few_major_test_status_virtues"),
+            "a MINOR item must not satisfy the major_only floor — issues: {issues:?}"
+        );
+    }
+
+    #[test]
+    fn a_major_only_floor_is_cleared_by_a_major_magnitude_item() {
+        let ruleset = ruleset_with_test_status_caps();
+        let issues = issues_for(
+            &ruleset,
+            vec![Selection::new(Id::new("virtue.test_status_large"))],
+        );
+
+        assert!(
+            !issues
+                .iter()
+                .any(|i| i.code == "too_few_major_test_status_virtues"),
+            "a MAJOR test_status virtue must clear the major_only floor — issues: {issues:?}"
+        );
+    }
+}

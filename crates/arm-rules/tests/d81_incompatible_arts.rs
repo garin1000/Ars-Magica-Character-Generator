@@ -359,6 +359,41 @@ fn a_spell_using_a_barred_combination_only_through_a_requisite_is_a_creation_tim
 }
 
 #[test]
+fn a_spell_reaching_a_barred_combination_through_a_form_class_requisite_is_an_error() {
+    // Same shape as the Technique-requisite test above, but the requisite Art
+    // (art.herbam) is FORM-class rather than Technique-class —
+    // `effective/spell.rs::spell_touches_barred_combination`'s
+    // `Some(ArtType::Form) => forms.push(req)` arm, which the Technique-requisite
+    // test above never reaches (its own requisite, art.intellego, only ever
+    // exercises the sibling Technique arm). Primary Rego+Animal is clean on its
+    // own; the barred pair (Rego, Herbam) is reached only via the Form
+    // requisite.
+    let ruleset = ruleset_with_only_spell(
+        r#"{ "id": "spell.test_form_requisite_hit", "technique": "art.rego",
+             "form": "art.animal", "level": 10, "requisites": ["art.herbam"] }"#,
+    );
+    let mut e = magus();
+    e.selections = vec![incompatible_arts(
+        "art.rego",
+        "art.herbam",
+        "art.perdo",
+        "art.terram",
+    )];
+    e.spells = vec![SpellSelection::new(Id::new(
+        "spell.test_form_requisite_hit",
+    ))];
+
+    let result = validate(&e, &ruleset);
+    assert!(
+        has_spell_uses_incompatible_arts_error(&result.issues, "spell.test_form_requisite_hit"),
+        "a spell reaching a barred combination through a FORM-class requisite \
+         (distinct from its own primary Form) must still be a creation-time \
+         error: {:?}",
+        result.issues
+    );
+}
+
+#[test]
 fn a_spell_using_no_barred_combination_is_not_flagged() {
     let ruleset = ruleset_with_only_spell(
         r#"{ "id": "spell.test_clean", "technique": "art.creo",

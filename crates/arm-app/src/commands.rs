@@ -1084,3 +1084,62 @@ pub async fn load_entity(
     )?;
     Ok(Some(opened_document(reported, loaded)))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{describe_rejected_candidate, require_loaded};
+    use crate::error::AppError;
+    use std::fs;
+
+    /// [`require_loaded`] is the one place `None` (no `load_ruleset` call yet)
+    /// becomes [`AppError::NotLoaded`] — coverage slice, round 3: the function
+    /// had no test of any kind before, only its callers' happy paths.
+    #[test]
+    fn require_loaded_turns_none_into_not_loaded() {
+        let err = require_loaded(None).unwrap_err();
+        assert!(matches!(err, AppError::NotLoaded), "got {err:?}");
+    }
+
+    #[test]
+    fn require_loaded_passes_through_a_present_ruleset() {
+        let localized = crate::ruleset_io::load_ruleset_from_dir(
+            &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../rules"),
+            "en",
+        )
+        .unwrap();
+        let got = require_loaded(Some(&localized)).unwrap();
+        assert_eq!(got.ruleset.id, localized.ruleset.id);
+    }
+
+    /// [`describe_rejected_candidate`] (V9) must name exactly why a candidate
+    /// rules directory was rejected: either it is absent, or it exists but is
+    /// missing specific required files — never a bare "not found".
+    #[test]
+    fn describe_rejected_candidate_names_a_nonexistent_directory() {
+        let description =
+            describe_rejected_candidate(std::path::Path::new("/does/not/exist/at/all"));
+        assert!(
+            description.contains("directory does not exist"),
+            "got: {description}"
+        );
+    }
+
+    #[test]
+    fn describe_rejected_candidate_names_the_missing_files_of_a_partial_directory() {
+        let stale = tempfile::tempdir().unwrap();
+        fs::create_dir_all(stale.path().join("core")).unwrap();
+        fs::write(stale.path().join("core/character_types.json"), "[]").unwrap();
+
+        let description = describe_rejected_candidate(stale.path());
+
+        assert!(description.contains("missing:"), "got: {description}");
+        assert!(
+            description.contains("core/ruleset.json"),
+            "got: {description}"
+        );
+        assert!(
+            !description.contains("character_types.json"),
+            "a present file must not be listed as missing, got: {description}"
+        );
+    }
+}

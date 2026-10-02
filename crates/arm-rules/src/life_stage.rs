@@ -2205,4 +2205,121 @@ mod tests {
         assert_eq!(budget.later_life_xp, 0);
         assert_eq!(budget.total(), 120);
     }
+
+    // --- `truncated_apprentice_years_completed`'s own paired-gate check -----
+    //
+    // F1's gate is "BOTH halves on the SAME item, naming the IDENTICAL
+    // param" — every shipped item that carries either effect always pairs
+    // them on the same param, so the mismatch branch
+    // (`if !gate_resolved { return None; }`) is real but untested with real
+    // data. This fixture deliberately declares TWO distinct parameters on one
+    // item, one per effect, so `TruncatedApprenticeshipXp`'s `param` and
+    // `ConfersHermeticTrainingIf`'s `param` disagree.
+
+    const MISMATCHED_GATE_ITEMS: &str = r#"[
+      { "id": "flaw.test_mismatched_gate", "kind": "flaw", "classification": "creation_effect",
+        "magnitude": "major", "categories": ["story"], "entity_kinds": ["character"],
+        "parameters": [
+          { "key": "years_completed", "type": { "number": { "min": 1, "max": 14 } }, "domain": "number" },
+          { "key": "other_gate", "type": { "number": { "min": 1, "max": 14 } }, "domain": "number" }
+        ],
+        "effects": [
+          { "type": "confers_hermetic_training_if", "param": "other_gate" },
+          { "type": "truncated_apprenticeship_xp", "param": "years_completed" }
+        ] },
+      { "id": "flaw.test_filler_personality", "kind": "flaw", "classification": "narrative",
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
+    ]"#;
+    const MISMATCHED_GATE_TYPES: &str = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["story", "personality"], "creation_phases": [] }
+    ]"#;
+    /// Minimal apprenticeship block — `years: 15` matches both fixture
+    /// items' `years_completed` bound (`max: 14`); empty ability lists
+    /// sidestep the unrelated engine-required-abilities check entirely
+    /// (mirrors `effective/hermetic_training.rs::TRUNCATED_LIFE_STAGES`).
+    const MISMATCHED_GATE_LIFE_STAGES: &str = r#"{
+      "apprenticeship": { "default_gauntlet_age": 25, "years": 15, "xp": 240,
+                           "minimum_abilities": [], "recommended_abilities": [], "recommended_xp": 0,
+                           "truncated_xp_per_year": 16, "truncated_spell_levels_per_year": 8 },
+      "childhood": { "years": 5, "native_language_ability": "ability.living_language",
+                     "native_language_xp": 75, "spread_xp": 45, "spread_abilities": [] },
+      "later_life": { "xp_per_year": 15 }
+    }"#;
+    const MISMATCHED_GATE_ABILITIES: &str = r#"{
+      "advancement": [{ "score": 1, "total_xp": 5 }],
+      "abilities": [{ "id": "ability.living_language", "category": "general", "parameter": "language" }]
+    }"#;
+
+    fn mismatched_gate_ruleset() -> Ruleset {
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: MISMATCHED_GATE_ITEMS,
+            type_profiles: MISMATCHED_GATE_TYPES,
+            abilities: Some(MISMATCHED_GATE_ABILITIES),
+            life_stages: Some(MISMATCHED_GATE_LIFE_STAGES),
+            ..crate::ruleset::RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    /// The positive control: the SAME param on both effects resolves normally,
+    /// so `truncated_apprentice_years_completed` reads the filled-in value.
+    #[test]
+    fn truncated_apprentice_years_completed_reads_the_paired_params_value() {
+        let mut entity = companion(vec![]);
+        entity.selections = vec![Selection::with_params(
+            Id::new("flaw.test_truncated_apprentice_paired"),
+            std::collections::BTreeMap::from([("years_completed".into(), Id::new("7"))]),
+        )];
+        let items = r#"[
+          { "id": "flaw.test_truncated_apprentice_paired", "kind": "flaw",
+            "classification": "creation_effect", "magnitude": "major", "categories": ["story"],
+            "entity_kinds": ["character"],
+            "parameters": [{ "key": "years_completed", "type": { "number": { "min": 1, "max": 14 } }, "domain": "number" }],
+            "effects": [
+              { "type": "confers_hermetic_training_if", "param": "years_completed" },
+              { "type": "truncated_apprenticeship_xp", "param": "years_completed" }
+            ] },
+          { "id": "flaw.test_filler_personality", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
+        ]"#;
+        let ruleset = Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: items,
+            type_profiles: MISMATCHED_GATE_TYPES,
+            abilities: Some(MISMATCHED_GATE_ABILITIES),
+            life_stages: Some(MISMATCHED_GATE_LIFE_STAGES),
+            ..crate::ruleset::RulesetSources::default()
+        })
+        .unwrap();
+        assert_eq!(
+            truncated_apprentice_years_completed(&entity, &ruleset),
+            Some(7),
+            "a paired gate on the SAME param must read the selection's own value"
+        );
+    }
+
+    /// F1's mismatch branch: `TruncatedApprenticeshipXp`'s param
+    /// (`years_completed`, filled in) and `ConfersHermeticTrainingIf`'s param
+    /// (`other_gate`, a DIFFERENT key on the same item) never agree, so the
+    /// gate never resolves — the function must return `None`, never guess at
+    /// the unrelated value, even though `years_completed` itself IS answered.
+    #[test]
+    fn truncated_apprentice_years_completed_is_none_when_the_gate_param_differs() {
+        let mut entity = companion(vec![]);
+        entity.selections = vec![Selection::with_params(
+            Id::new("flaw.test_mismatched_gate"),
+            std::collections::BTreeMap::from([("years_completed".into(), Id::new("7"))]),
+        )];
+        let ruleset = mismatched_gate_ruleset();
+        assert_eq!(
+            truncated_apprentice_years_completed(&entity, &ruleset),
+            None,
+            "a TruncatedApprenticeshipXp whose sibling ConfersHermeticTrainingIf names a \
+             DIFFERENT param must never resolve, regardless of its own param's value"
+        );
+    }
 }

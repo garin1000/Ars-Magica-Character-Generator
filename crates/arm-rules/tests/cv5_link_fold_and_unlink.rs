@@ -260,3 +260,141 @@ fn unlink_operation_converts_linked_rows_to_text_with_the_last_value() {
          resolvable value"
     );
 }
+
+/// Design § 4.1: when `removed_item` resolves AMBIGUOUSLY — more than one
+/// BOUGHT copy, so `fallback` is `None` (the "exactly one bought copy" case
+/// does not apply) — the unlink must still complete cleanly and fold to empty
+/// Text rather than guess between the two candidate values. This hand-built
+/// entity has two bought copies of the same once-only item, which bypasses a
+/// VALIDATION-layer constraint (real saves cap a linkable item's own
+/// `max_total` at 1, design § 7) on purpose, to exercise
+/// `effective.rs::resolve_link`'s ambiguity guard — and the
+/// `LinkResolution::Ambiguous` arm of `unlink_ability_parameters` itself —
+/// directly, since no shipped item can produce this through the normal UI
+/// flow.
+#[test]
+fn unlink_operation_with_two_bought_copies_of_the_target_folds_to_empty_text() {
+    let ruleset = full_ruleset();
+    let mut entity = companion_with_guild_link("Smiths' Guild of Verdi");
+    entity.selections.push(Selection::with_params(
+        Id::new("virtue.craft_guild_training"),
+        BTreeMap::from([("guild".into(), Id::new("Journeyman's Lodge"))]),
+    ));
+
+    let converted = unlink_ability_parameters(
+        &mut entity,
+        &ruleset,
+        &Id::new("virtue.craft_guild_training"),
+    );
+
+    assert_eq!(
+        converted,
+        vec![Id::new("ability.organization_lore")],
+        "the operation must still report the converted Ability even when the link was ambiguous"
+    );
+    assert_eq!(
+        entity.ability_scores[0].parameter,
+        Some(AbilityParameterValue::text("")),
+        "more than one BOUGHT copy leaves no single 'last resolvable value' to fall back to \
+         — it must fold to empty Text, never guess one of the two"
+    );
+}
+
+/// Design § 5.4's OTHER arm: a `Linked` value that resolves to EXACTLY one
+/// effective occurrence, with its parameter actually filled in
+/// (`LinkResolution::Resolved(Some(_))`), must be left completely untouched on
+/// load — no fold, no report — since there is nothing wrong to fix.
+/// `a_dangling_link_is_folded_to_text_and_reported_on_load` above covers the
+/// opposite (zero occurrences); this is the ordinary, nothing-to-see-here
+/// path through the exact same fold (`migration.rs::fold_dangling_and_ambiguous_links`).
+#[test]
+fn a_resolvable_link_is_left_untouched_and_unreported_on_load() {
+    let ruleset = full_ruleset();
+    let names = catalogue_names(&ruleset);
+    let json = r#"{
+      "schema_version": 18,
+      "ruleset": { "id": "arm5-core", "version": "2024.1" },
+      "entity_kind": "character",
+      "type_id": "companion",
+      "selections": [
+        { "ref": "virtue.craft_guild_training", "params": { "guild": "Smiths' Guild of Verdi" } }
+      ],
+      "ability_scores": [
+        { "ability": "ability.organization_lore", "score": 1,
+          "parameter": { "item": "virtue.craft_guild_training", "param": "guild" } }
+      ]
+    }"#;
+    let loaded = load_entity_migrating(json, DEFAULT_SAGA_YEAR, &ruleset, &names)
+        .expect("a resolvable link loads cleanly");
+
+    assert_eq!(
+        loaded.entity.ability_scores[0].parameter,
+        Some(AbilityParameterValue::Linked {
+            item: Id::new("virtue.craft_guild_training"),
+            param: "guild".into(),
+        }),
+        "a link that resolves to exactly one filled-in occurrence must be left as Linked, \
+         never folded to Text"
+    );
+    assert!(
+        loaded.dangling_links.is_empty(),
+        "a resolvable link must not be reported dangling: {:?}",
+        loaded.dangling_links
+    );
+    assert!(
+        loaded.ambiguous_links.is_empty(),
+        "a resolvable link must not be reported ambiguous: {:?}",
+        loaded.ambiguous_links
+    );
+}
+
+/// The migration-time twin of the unlink test above: TWO bought copies of the
+/// same once-only item at LOAD (again deliberately bypassing the
+/// validation-layer `max_total` constraint to reach the engine's own
+/// ambiguity arm) must fold the `Linked` row to empty Text and report it via
+/// `ambiguous_links`, never `dangling_links` — exercising
+/// `migration.rs::fold_dangling_and_ambiguous_links`'s
+/// `LinkResolution::Ambiguous` match arm, which is distinct from the
+/// `Dangling` arm the existing test above already covers.
+#[test]
+fn two_bought_copies_fold_to_ambiguous_and_are_reported_as_such_on_load() {
+    let ruleset = full_ruleset();
+    let names = catalogue_names(&ruleset);
+    let json = r#"{
+      "schema_version": 18,
+      "ruleset": { "id": "arm5-core", "version": "2024.1" },
+      "entity_kind": "character",
+      "type_id": "companion",
+      "selections": [
+        { "ref": "virtue.craft_guild_training", "params": { "guild": "Smiths' Guild of Verdi" } },
+        { "ref": "virtue.craft_guild_training", "params": { "guild": "Journeyman's Lodge" } }
+      ],
+      "ability_scores": [
+        { "ability": "ability.organization_lore", "score": 1,
+          "parameter": { "item": "virtue.craft_guild_training", "param": "guild" } }
+      ]
+    }"#;
+    let loaded = load_entity_migrating(json, DEFAULT_SAGA_YEAR, &ruleset, &names)
+        .expect("an ambiguous link still loads, never a hard failure");
+
+    assert_eq!(
+        loaded.entity.ability_scores[0].parameter,
+        Some(AbilityParameterValue::text("")),
+        "more than one bought copy must fold the Linked row to empty Text (no single \
+         'last resolvable value')"
+    );
+    assert!(
+        loaded.dangling_links.is_empty(),
+        "an ambiguous link must NOT be reported as dangling: {:?}",
+        loaded.dangling_links
+    );
+    assert!(
+        loaded.ambiguous_links.contains(&(
+            Id::new("ability.organization_lore"),
+            Id::new("virtue.craft_guild_training"),
+            "guild".to_string(),
+        )),
+        "an ambiguous link must be reported via ambiguous_links: {:?}",
+        loaded.ambiguous_links
+    );
+}
