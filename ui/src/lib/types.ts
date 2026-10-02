@@ -666,6 +666,12 @@ export interface PointItem {
   // fidelity, like every other `PointItem` field above. Mirrors the engine's
   // `PointItem::unordered_param_groups` (`crates/arm-rules/src/types.rs`).
   unordered_param_groups?: string[][];
+  // D81.14: an entry Merinita's conditional Warping Point (ArMDE:2280) reads
+  // as "faerie-related" without carrying a Faerie realm association (Faerie
+  // Friend, Faerie Upbringing, Susceptibility to Faerie Power). Omitted when
+  // false. No frontend reader: the Warping Point is computed engine-side.
+  // Mirrors `types.rs::PointItem::faerie_related`.
+  faerie_related?: boolean;
   effects?: Effect[];
   // Max selections per (id, params) target. Omitted when the default (1).
   max_per_target?: number;
