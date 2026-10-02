@@ -452,8 +452,26 @@ spell-level-max-label = Stufe max
 spell-group-header = { $technique } { $form }
 spell-level-general = Gen
 spell-cap-reason = Über deiner Zaubergrenze ({ $cap })
+# D81.5: der Grund für die normale Hinzufügen-Schaltfläche, wenn die Stufe des
+# Zaubers die normale Zaubergrenze pro Zauber überschreitet, aber innerhalb der
+# durch den Magischen Fokus verdoppelten Grenze liegt — getrennt von
+# spell-cap-reason, damit der Tooltip auf die eigene „Im Fokus hinzufügen“-
+# Aktion verweist, statt den Zauber als schlicht unerreichbar darzustellen.
+spell-cap-within-focus-reason = Über deiner Zaubergrenze ({ $cap }); passt innerhalb deines Magischen Fokus
 spell-budget-reason = Nicht genug Zauberstufen übrig
 spell-already-taken-reason = Bereits ausgewählt
+# D81.5: ein Zauber, dessen Stufe die normale Zaubergrenze pro Zauber
+# überschreitet, aber innerhalb der durch den Magischen Fokus verdoppelten
+# Grenze liegt — eine eigene Aktion, die ihn gleich als „im Fokus“ markiert
+# (`SpellSelection.within_focus`), da die Engine einen Zauber nicht
+# selbstständig einem frei formulierten Magischen Fokus zuordnen kann.
+spell-add-within-focus = Im Fokus hinzufügen
+spell-add-within-focus-label = { $name } im Fokus hinzufügen
+spell-add-within-focus-tooltip = Passt innerhalb deines Magischen Fokus (Grenze { $cap })
+# Die Te/Fo-Basisgrenze (ohne gefaltete Voraussetzungen des einzelnen
+# Zaubers), als Hover-Hinweis auf der Gruppenüberschrift — ein schneller
+# Richtwert; die Grenze pro Zauber oben entscheidet tatsächlich über die Zeile.
+spell-group-cap-tooltip = Zaubergrenze: { $cap }
 spell-general-level-label = Stufe (General)
 spell-add = Zauber hinzufügen
 spell-none = — Zauber wählen —

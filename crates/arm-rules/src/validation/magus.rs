@@ -652,9 +652,15 @@ fn validate_ritual_casting_restriction(
 }
 
 /// Job 6/7: no spell's level may exceed Technique + Form + Intelligence +
-/// Magic Theory + 3 (ArMDE:2465), further halved for a Short-Ranged-Magic
-/// holder when the spell's own Range is beyond Touch (D28).
-/// Trained only — the caller gates on `is_hermetically_trained`.
+/// Magic Theory + 3 (ArMDE:2465), with the spell's own requisites folded in
+/// the same way the Casting Total is (ArMDE:12309-12313, X11b/D81.5) and the
+/// Magical Focus doubling applied when the player has marked this spell
+/// `within_focus` (ArMDE:4403, X10c) — the engine cannot match a free-text
+/// focus theme to a spell, so the player's own marker decides, mirroring
+/// `derived/casting.rs::spell_casting_total`'s reading of the same field.
+/// Further halved for a Short-Ranged-Magic holder when the spell's own Range
+/// is beyond Touch (D28). Trained only — the caller gates on
+/// `is_hermetically_trained`.
 fn validate_spell_level_cap(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -674,7 +680,9 @@ fn validate_spell_level_cap(
         ruleset,
         &spell.technique,
         &spell.form,
+        &spell.requisites,
         range_beyond_touch,
+        sel.within_focus,
     );
     if i64::from(level) > cap {
         issues.push(ValidationIssue::error(

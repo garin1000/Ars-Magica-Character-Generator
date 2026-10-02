@@ -285,18 +285,15 @@ describe('SpellTab ritual minimum learnable level (VA2)', () => {
 });
 
 // D28 (docs/vf-audit/decisions.md): the spell-level cap is range-aware —
-// Short-Ranged Magic halves it for a spell whose Range is beyond Touch. The
-// engine surfaces two `spell_level_caps` rows per Technique/Form pair, keyed by
-// `range_beyond_touch`; the picker must read the row matching each candidate
-// spell's own Range, not just its Technique/Form.
-//
-// CLAUDE.md: fixed taxonomies stay Rust enums, and the UI must not re-hardcode
-// their values — the engine surfaces them (`Magnitude::points` →
-// `Ruleset.magnitude_points`, `AbilityCategory::ALL` →
-// `Ruleset.ability_category_order`). The "beyond Touch" whitelist follows the
-// same rule: the picker reads `ruleset.ranges_beyond_touch`
-// (`effective::range_beyond_touch` surfaced), never a Svelte-side list.
-describe('SpellTab spell-level cap is range-aware (D28)', () => {
+// Short-Ranged Magic halves it for a spell whose Range is beyond Touch. D81.5
+// moved this folding fully server-side: the engine now surfaces ONE per-spell
+// `spell_caps` row (`EffectiveScores.spell_caps`), keyed by spell id, that
+// already has the Range-beyond-Touch halving baked in — the picker no longer
+// keys a lookup by Technique/Form/range itself (see `derive.ts::nonTakeableReason`'s
+// own doc comment). Two spells sharing a Te/Fo pair can therefore report
+// different caps purely because the engine gave them different `spell_caps`
+// rows, with no range-set machinery left in this component to prove.
+describe('SpellTab per-spell cap gates the Add control (D81.5)', () => {
   const TOUCH_SPELL = 'spell.test_touch_range';
   const EYE_SPELL = 'spell.test_eye_range';
 
@@ -320,29 +317,85 @@ describe('SpellTab spell-level cap is range-aware (D28)', () => {
     };
     store.ruleset!.i18n[TOUCH_SPELL] = { name: 'Test Touch-Range Spell' };
     store.ruleset!.i18n[EYE_SPELL] = { name: 'Test Eye-Range Spell' };
-    store.effective!.spell_level_caps = [
-      { technique: 'art.creo', form: 'art.animal', range_beyond_touch: false, cap: 20 },
-      { technique: 'art.creo', form: 'art.animal', range_beyond_touch: true, cap: 9 },
+    // Same Te/Fo pair, different per-spell caps — exactly what the engine's
+    // own Range-beyond-Touch halving produces for these two Ranges.
+    store.effective!.spell_caps = [
+      { spell: TOUCH_SPELL, cap: 20 },
+      { spell: EYE_SPELL, cap: 9 },
     ];
   }
 
-  it('greys only the beyond-Touch spell when the beyond-Touch cap is lower', () => {
+  it('greys only the spell whose own per-spell cap is below its level', () => {
     installRangedSpells();
-    store.ruleset!.ruleset.ranges_beyond_touch = ['eye', 'voice', 'sight', 'arcane_connection'];
     const body = html();
     expect(outer(body, `add-${TOUCH_SPELL}`)).toMatch(/aria-disabled="false"/);
     expect(outer(body, `add-${EYE_SPELL}`)).toMatch(/aria-disabled="true"/);
   });
 
-  it('follows the ruleset-surfaced set, not a hardcoded whitelist: a test ruleset naming Touch (not Eye) as beyond-Touch flips which spell is greyed', () => {
+  it('reads the cap by the SPELL id, not a shared Technique/Form figure', () => {
+    // Both spells share "art.creo art.animal", so a Te/Fo-keyed lookup would
+    // report the same cap for both — only a per-spell lookup can tell them
+    // apart, which is the whole point of D81.5.
     installRangedSpells();
-    // A surfaced set that disagrees with the real engine whitelist — if the
-    // picker had its own hardcoded Eye/Voice/Sight/Arcane-Connection list
-    // anywhere, this would still grey the Eye spell and this test would fail.
-    store.ruleset!.ruleset.ranges_beyond_touch = ['touch'];
     const body = html();
-    expect(outer(body, `add-${TOUCH_SPELL}`)).toMatch(/aria-disabled="true"/);
-    expect(outer(body, `add-${EYE_SPELL}`)).toMatch(/aria-disabled="false"/);
+    expect(outer(body, `add-${TOUCH_SPELL}`)).not.toBe(outer(body, `add-${EYE_SPELL}`));
+  });
+});
+
+// D81.5: the picker's "add within focus" action — appears ONLY when a
+// candidate's level exceeds its plain per-spell cap but fits the
+// Magical-Focus-doubled `within_focus_cap`. Clicking it is covered end-to-end
+// in `SpellTab.client.test.ts` (a real DOM click, which SSR cannot observe);
+// this file only proves the markup's presence/absence, same split as every
+// other interactive control in this suite.
+describe('SpellTab "add within focus" action appears only within the focus-doubled cap (D81.5)', () => {
+  const CANDIDATE = 'spell.test_focus_candidate';
+
+  function installCandidate(): void {
+    store.ruleset!.ruleset.spells = {
+      ...store.ruleset!.ruleset.spells,
+      [CANDIDATE]: { id: CANDIDATE, technique: 'art.creo', form: 'art.animal', level: 15 },
+    };
+    store.ruleset!.i18n[CANDIDATE] = { name: 'Test Focus Candidate' };
+  }
+
+  function actionTestid(): string {
+    return `add-within-focus-${CANDIDATE}`;
+  }
+
+  it('is absent when the level is already within the plain cap', () => {
+    installCandidate();
+    store.effective!.spell_caps = [{ spell: CANDIDATE, cap: 20, within_focus_cap: 30 }];
+    expect(html()).not.toContain(`data-testid="${actionTestid()}"`);
+  });
+
+  it('appears when the level exceeds the plain cap but fits the within-focus cap', () => {
+    installCandidate();
+    store.effective!.spell_caps = [{ spell: CANDIDATE, cap: 10, within_focus_cap: 20 }];
+    const body = html();
+    expect(body).toContain(`data-testid="${actionTestid()}"`);
+    expect(outer(body, actionTestid())).toContain('Add within focus');
+  });
+
+  it('is absent when the level exceeds the within-focus cap too', () => {
+    installCandidate();
+    store.effective!.spell_caps = [{ spell: CANDIDATE, cap: 5, within_focus_cap: 8 }];
+    expect(html()).not.toContain(`data-testid="${actionTestid()}"`);
+  });
+
+  it('is absent when the character holds no Magical Focus at all (no within_focus_cap)', () => {
+    installCandidate();
+    store.effective!.spell_caps = [{ spell: CANDIDATE, cap: 10 }];
+    expect(html()).not.toContain(`data-testid="${actionTestid()}"`);
+  });
+
+  it('gives the action an accessible name naming the spell (not a generic label alone)', () => {
+    installCandidate();
+    store.effective!.spell_caps = [{ spell: CANDIDATE, cap: 10, within_focus_cap: 20 }];
+    const tag = outer(html(), actionTestid());
+    // Fluent wraps the interpolated $name in bidi isolate marks, so match
+    // loosely rather than pinning the exact byte sequence around it.
+    expect(tag).toMatch(/aria-label="Add .*Test Focus Candidate \(15\).*within focus"/);
   });
 });
 

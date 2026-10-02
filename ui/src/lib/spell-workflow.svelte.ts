@@ -67,6 +67,41 @@ export class SpellWorkflow {
   }
 
   /**
+   * Add a spell already marked within the character's Magical Focus (D81.5):
+   * the picker's "add within focus" action for a spell whose level fits only
+   * the Magical-Focus-doubled cap, not the plain one. Same identity/dedupe
+   * rules as {@link add}, with `within_focus: true` set FROM THE START rather
+   * than a separate {@link setWithinFocusAt} write afterward — the row is
+   * never transiently in an illegal (over-cap, unmarked) state.
+   */
+  addWithinFocus(spellId: string, level?: number | null, parameter?: string | null): void {
+    const entity = this.#host.entity();
+    const lvl = typeof level === 'number' ? level : undefined;
+    const param = parameter ?? undefined;
+    const parameterized =
+      (this.#host.ruleset()?.ruleset.spells?.[spellId]?.parameters?.length ?? 0) > 0;
+    if (!parameterized) {
+      const present = (entity.spells ?? []).some(
+        (s) =>
+          s.spell === spellId &&
+          (s.level ?? undefined) === lvl &&
+          (s.parameter ?? undefined) === param,
+      );
+      if (present) return;
+    }
+    entity.spells = [
+      ...(entity.spells ?? []),
+      {
+        spell: spellId,
+        ...(lvl === undefined ? {} : { level: lvl }),
+        ...(param === undefined ? {} : { parameter: param }),
+        within_focus: true,
+      },
+    ];
+    this.#host.scheduleValidate();
+  }
+
+  /**
    * Set (or clear) the target Form of a parametrized spell at `index` — part of
    * the spell's identity, so distinct Forms are distinct instances. The chosen
    * value is an Art id (e.g. `art.ignem`). Mirrors

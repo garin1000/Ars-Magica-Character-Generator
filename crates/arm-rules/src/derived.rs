@@ -822,7 +822,11 @@ fn art(entity: &Entity, ruleset: &Ruleset, id: &str) -> i32 {
     effective_art_score(entity, ruleset, &Id::new(id))
 }
 
-mod casting;
+// `pub(crate)`, not private: `effective/spell.rs::spell_level_cap` reuses
+// `casting::fold_requisite` directly (X11b) so the per-spell level cap folds
+// requisites with the exact same rule the Casting Total already does, rather
+// than a second hand-written copy that could drift.
+pub(crate) mod casting;
 
 pub use casting::{
     CastingTotal, CastingWithinFocus, CastingWithinPotentField, MagicResistance,

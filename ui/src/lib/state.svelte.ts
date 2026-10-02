@@ -1464,6 +1464,16 @@ class AppStore {
   }
 
   /**
+   * Add a spell already marked within the character's Magical Focus — the
+   * picker's "add within focus" action (D81.5).
+   *
+   * @see SpellWorkflow.addWithinFocus
+   */
+  addSpellWithinFocus(spellId: string, level?: number | null, parameter?: string | null): void {
+    this.#spellWorkflow.addWithinFocus(spellId, level, parameter);
+  }
+
+  /**
    * Set (or clear) the target Form of a parametrized spell at `index` — part of
    * the spell's identity, so distinct Forms are distinct instances.
    *

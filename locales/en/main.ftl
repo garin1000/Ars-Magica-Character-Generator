@@ -431,8 +431,24 @@ spell-level-general = Gen
 # casting cap, the remaining spell-levels budget cannot afford it, or the spell is
 # already in the selected list (an ordinary fixed-level spell is taken only once).
 spell-cap-reason = Above your casting cap ({ $cap })
+# D81.5: the plain Add control's reason when the spell's level exceeds the
+# plain per-spell cap but still fits the Magical-Focus-doubled one — distinct
+# from spell-cap-reason so the tooltip points at the separate "add within
+# focus" action instead of calling the spell simply out of reach.
+spell-cap-within-focus-reason = Above your casting cap ({ $cap }); fits within your Magical Focus
 spell-budget-reason = Not enough spell levels remaining
 spell-already-taken-reason = Already selected
+# D81.5: a spell whose level exceeds the plain per-spell cap but fits the
+# Magical-Focus-doubled one — a separate action that adds it already marked
+# as within focus (`SpellSelection.within_focus`), since the engine cannot
+# match a spell to a player's own free-text Magical Focus by itself.
+spell-add-within-focus = Add within focus
+spell-add-within-focus-label = Add { $name } within focus
+spell-add-within-focus-tooltip = Fits within your Magical Focus (cap { $cap })
+# The Technique/Form baseline casting cap (no spell-specific requisites
+# folded in), shown as a hover hint on a source group's header — a quick
+# at-a-glance figure; the per-spell cap above is what actually gates a row.
+spell-group-cap-tooltip = Spell-level cap: { $cap }
 # Accessible label for the inline level field on a chosen General spell (its
 # level is not fixed by the catalogue, so it is edited per row).
 spell-general-level-label = General level

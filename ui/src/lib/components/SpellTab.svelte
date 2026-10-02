@@ -17,10 +17,11 @@
     RITUAL_MINIMUM_LEVEL_FALLBACK,
     usedSpellForms,
     spellDisplayName,
+    withinFocusAddable,
   } from '../derive';
   import type { SelectedSpellGroup } from '../derive';
   import { tooltip, withReason, type TooltipContent } from '../actions';
-  import type { Art, Spell, SpellMasteryAbility, SpellSelection } from '../types';
+  import type { Art, Spell, SpellCap, SpellMasteryAbility, SpellSelection } from '../types';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
   import Spinner from './Spinner.svelte';
@@ -59,6 +60,7 @@
       key: `${group.technique} ${group.form}`,
       header: groupHeader(group.technique, group.form),
       headerTestid: `spell-group-${group.technique}-${group.form}`,
+      headerTooltip: groupCapTooltip(group.technique, group.form),
       items: group.spells,
     }));
   });
@@ -114,12 +116,25 @@
   const used = $derived(store.effective?.spell_levels_used ?? 0);
   const remaining = $derived(budget - used);
 
+  // D81.5: the engine-authoritative PER-SPELL level cap — each row already
+  // folds that spell's own requisites and its Range (D28's beyond-Touch
+  // halving), so this is what the picker greys a candidate spell BY. Never
+  // recomputed here; `nonTakeableReason`/`withinFocusAddable` only read the
+  // surfaced value by the candidate spell's own id.
+  const capBySpell = $derived.by((): Map<string, SpellCap> => {
+    const m = new Map<string, SpellCap>();
+    for (const c of store.effective?.spell_caps ?? []) m.set(c.spell, c);
+    return m;
+  });
   // The engine-authoritative per-Technique/Form/range-class spell-level cap
   // (Te + Fo + Int + Magic Theory + 3, D1's flat lab term, halved beyond Touch
   // for Short-Ranged Magic per D28), keyed by the
-  // "<technique> <form> <range_beyond_touch>" triple. Never recomputed here —
-  // the picker only reads the surfaced value; `nonTakeableReason` builds the
-  // matching key from a candidate spell's own Range via `spellRangeBeyondTouch`.
+  // "<technique> <form> <range_beyond_touch>" triple. Superseded as the
+  // PICKER's own grey/offer logic by `capBySpell` above (D81.5: a per-spell
+  // figure folding each spell's own requisites, which this Te/Fo-keyed grid
+  // cannot); kept for `groupCapTooltip`'s quick at-a-glance figure on a
+  // source group's header — a requisite-free BASELINE for the whole
+  // Technique/Form pair, independent of any one candidate spell.
   const capByTeFo = $derived.by((): Map<string, number> => {
     const m = new Map<string, number>();
     for (const c of store.effective?.spell_level_caps ?? [])
@@ -133,11 +148,6 @@
   const ritualMinLevel = $derived(
     store.ruleset?.ruleset.ritual_min_level ?? RITUAL_MINIMUM_LEVEL_FALLBACK,
   );
-  // The Ranges beyond Touch (Eye, Voice, Sight, Arcane Connection), read from
-  // the engine-surfaced `ruleset.ranges_beyond_touch` (D28) — never a
-  // hardcoded whitelist here; `[]` only for the moment before a ruleset has
-  // loaded, when no spell exists to disable anyway.
-  const rangesBeyondTouch = $derived(store.ruleset?.ruleset.ranges_beyond_touch ?? []);
   // Spell-Mastery: the auto-mastery floor (Flawless Magic) drives each row's
   // effective mastery; the pool read-out itself lives in `SpellBudgetBar`.
   const masteryFloor = $derived(store.effective?.spell_mastery_floor ?? 0);
@@ -159,6 +169,16 @@
       technique: artLabel(rs, technique),
       form: artLabel(rs, form),
     });
+  }
+
+  // D81.5: the source group header's hover hint — the Te/Fo grid's own
+  // requisite-free BASELINE cap (the near, not-beyond-Touch row), a quick
+  // at-a-glance figure independent of any one candidate spell's requisites.
+  // `undefined` (no `title` attribute) before the grid has any data for this
+  // pair (e.g. a non-magus, where `spell_level_caps` is empty).
+  function groupCapTooltip(technique: string, form: string): string | undefined {
+    const cap = capByTeFo.get(`${technique} ${form} false`);
+    return cap == null ? undefined : store.t('spell-group-cap-tooltip', { cap: String(cap) });
   }
 
   // A spell's level tag for a source row: its fixed level, or the localized
@@ -200,12 +220,12 @@
     return `${spellDisplayName(rs, chosen.spell, chosen.parameter, paramLabel)} (${tf} ${lvl})`;
   }
 
-  // `minLearnableLevel`, `nonTakeableReason`, and `isDisabled` are imported
-  // from `derive.ts` (V28, full-audit round): spell-eligibility business rules
-  // live there alongside every other eligibility computation
-  // (`eligibleForConstraint`, `filterSpells`, …), not inline in this component.
-  // This component only supplies the reactive state (`selectedSpellIds`,
-  // `capByTeFo`, `remaining`, `ritualMinLevel`, `rangesBeyondTouch`) they need.
+  // `minLearnableLevel`, `nonTakeableReason`, `isDisabled`, and
+  // `withinFocusAddable` are imported from `derive.ts` (V28, full-audit round;
+  // D81.5): spell-eligibility business rules live there alongside every other
+  // eligibility computation (`eligibleForConstraint`, `filterSpells`, …), not
+  // inline in this component. This component only supplies the reactive state
+  // (`selectedSpellIds`, `capBySpell`, `remaining`, `ritualMinLevel`) they need.
 
   // The Ritual floor, looked up from a chosen (selected-list) row's id rather
   // than a source-list Spell object — used by the inline level spinner so it
@@ -231,6 +251,20 @@
     );
   }
 
+  // D81.5: the picker's "add within focus" action — offered only when the
+  // spell's level exceeds its plain per-spell cap but fits the
+  // Magical-Focus-doubled one ({@link withinFocusAddable}). Adds the spell
+  // already marked `within_focus: true` in the SAME write (not a separate
+  // toggle afterward), so the row is never transiently in an illegal
+  // (over-cap, unmarked) state — the engine cannot match a spell to a
+  // player's free-text focus on its own, so the player's click IS the claim.
+  function addWithinFocus(spell: Spell) {
+    store.addSpellWithinFocus(
+      spell.id,
+      spell.level == null ? minLearnableLevel(spell, ritualMinLevel) : undefined,
+    );
+  }
+
   // A chosen row is General (level editable inline) when its catalogue entry has
   // no fixed level.
   function isGeneral(spellId: string): boolean {
@@ -245,15 +279,21 @@
     const reason = nonTakeableReason(
       spell,
       selectedSpellIds,
-      capByTeFo,
+      capBySpell,
       remaining,
       ritualMinLevel,
-      rangesBeyondTouch,
     );
     return withReason(
       { text: store.ruleset?.i18n[spell.id]?.description ?? undefined },
       reason ? store.t(reason.key, { cap: String(reason.cap) }) : undefined,
     );
+  }
+
+  // The "add within focus" action's own tooltip: WHY it is offered, naming
+  // the focus-doubled cap (D81.5's "Its tooltip or reason text says why").
+  function withinFocusTip(spell: Spell): TooltipContent {
+    const cap = capBySpell.get(spell.id)?.within_focus_cap;
+    return { text: store.t('spell-add-within-focus-tooltip', { cap: String(cap ?? 0) }) };
   }
 
   // A chosen (selected-list) row's tooltip: the description only.
@@ -317,16 +357,23 @@
         getId={(spell: Spell) => spell.id}
         onAdd={(spell: Spell) => add(spell)}
         disabled={(spell: Spell) =>
-          isDisabled(
-            spell,
-            selectedSpellIds,
-            capByTeFo,
-            remaining,
-            ritualMinLevel,
-            rangesBeyondTouch,
-          )}
+          isDisabled(spell, selectedSpellIds, capBySpell, remaining, ritualMinLevel)}
         tip={(spell: Spell) => sourceTip(spell)}
       >
+        {#snippet extra(spell: Spell)}
+          {#if withinFocusAddable(spell, selectedSpellIds, capBySpell, remaining, ritualMinLevel)}
+            <button
+              type="button"
+              class="within-focus-add"
+              onclick={() => addWithinFocus(spell)}
+              use:tooltip={withinFocusTip(spell)}
+              aria-label={store.t('spell-add-within-focus-label', { name: optionLabel(spell) })}
+              data-testid="add-within-focus-{spell.id}"
+            >
+              {store.t('spell-add-within-focus')}
+            </button>
+          {/if}
+        {/snippet}
         {#snippet filters()}
           <input
             type="search"

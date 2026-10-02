@@ -699,6 +699,22 @@ export interface SpellLevelCap {
   cap: number;
 }
 
+// A per-CATALOGUE-SPELL level cap (D81.5/X11b): unlike `SpellLevelCap`'s
+// Te/Fo/range-keyed grid, this folds the spell's OWN requisites, so two
+// spells sharing a Te/Fo pair but different requisites can report different
+// caps — the per-spell cap the picker greys a spell BY. Mirrors the engine's
+// `SpellCap`. `within_focus_cap` is the same cap with the Magical Focus
+// doubling (ArMDE:4403) applied, present only when the entity holds a
+// Magical Focus at all; the picker's "add within focus" action offers
+// itself only when a candidate level fits `within_focus_cap` but not `cap` —
+// the engine cannot match a spell to a player's free-text focus itself, so
+// the player decides via that action.
+export interface SpellCap {
+  spell: string;
+  cap: number;
+  within_focus_cap?: number;
+}
+
 // Whether a demanded Ability score is one the Order enforces or one the rulebook
 // merely recommends. Mirrors the engine's `AbilityRequirementKind`.
 export type AbilityRequirementKind = 'required' | 'recommended';
@@ -1065,6 +1081,13 @@ export interface EffectiveScores {
   // Theory + 3), so the picker greys a spell above the magus's cap. Empty for a
   // non-magus. Engine-authoritative; the UI only reads it, never recomputes it.
   spell_level_caps: SpellLevelCap[];
+  // D81.5: the per-catalogue-spell level cap, folding each spell's own
+  // requisites and, when the entity holds a Magical Focus, the focus-doubled
+  // figure — what the picker's per-spell grey/offer logic reads, since only
+  // this folds a candidate spell's own requisites (`spell_level_caps` above
+  // stays the Te/Fo-keyed grid, a requisite-free baseline figure). Empty for
+  // a non-magus, exactly like `spell_level_caps`. Engine-authoritative.
+  spell_caps: SpellCap[];
   // The Hermetic minimum-Ability checklist: what the Order demands (ArMDE:2437) and
   // what the rulebook recommends (ArMDE:2451-2461), each with the character's bought
   // score and whether it suffices. Empty for a non-magus, exactly like
@@ -1651,8 +1674,9 @@ export interface Spell {
   ritual?: boolean;
   // The spell's Range (RDT chart) — 'personal' | 'touch' | 'eye' | 'voice' |
   // 'sight' | 'arcane_connection'. Mirrors the engine's `SpellRange`. Drives
-  // Short-Ranged Magic's beyond-Touch cap halving (D28); see
-  // `spellRangeBeyondTouch` in `derive.ts`.
+  // Short-Ranged Magic's beyond-Touch cap halving (D28), folded server-side
+  // into this spell's own `EffectiveScores.spell_caps` row (D81.5) — nothing
+  // in the UI re-derives it from this field.
   range?: string | null;
   // Selection parameters this spell requires (a meta-magic Vim spell whose target
   // (Form) is a selection declares a single `form`-domain parameter). Empty/absent
@@ -2205,9 +2229,12 @@ export interface Ruleset {
   aura_modifier_max?: number;
   // The `SpellRange` scalars beyond Touch (Eye, Voice, Sight, Arcane
   // Connection), mirrored from the Rust `effective::range_beyond_touch`
-  // predicate over every `SpellRange` variant (D28) — so
-  // `derive.ts::spellRangeBeyondTouch` reads this set instead of re-hardcoding
-  // the whitelist. Optional like `ritual_min_level` above, for the same reason.
+  // predicate over every `SpellRange` variant (D28). Read directly by the
+  // spell picker before D81.5; now the per-spell `EffectiveScores.spell_caps`
+  // folds the beyond-Touch halving in SERVER-side (one cap number per
+  // catalogue spell), so nothing under `ui/src` reads this field any more —
+  // kept for `Ruleset` JSON parity regardless. Optional like
+  // `ritual_min_level` above, for the same reason.
   ranges_beyond_touch?: string[];
 }
 

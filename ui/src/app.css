@@ -1339,6 +1339,26 @@ ul {
   color: var(--muted);
 }
 
+/* D81.5: the Spell picker's "add within focus" action — a SECOND, clearly
+   labelled control beside `.pick-row` for a spell that exceeds the plain
+   per-spell cap but fits the Magical-Focus-doubled one. Text-labelled (never
+   a bare glyph), so it is never confused with `.icon-btn`'s square +/- shape;
+   `.pick-row`'s own `width: 100%` already puts it on its own line below the
+   main add control. */
+.within-focus-add {
+  margin: 0.15rem 0 0.3rem 0.35rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent);
+  font-size: var(--font-small);
+}
+
+.within-focus-add:hover {
+  background: var(--divider);
+}
+
 /* Compact single-glyph +/- action buttons, kept square regardless of glyph.
    1.9rem, NOT the 1.6rem this was: the number is a WCAG 2.5.8 (AA) pointer target
    of 24x24 CSS px, and 1.6rem only happened to mean 24px while the root was 15px.

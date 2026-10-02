@@ -250,7 +250,15 @@ fn aristotelian_trainings_lab_bonus_must_never_apply_anywhere() {
          must never fire in the in-play Lab Total grid — N6/X2a left the effect active"
     );
     assert_eq!(
-        spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem"), false),
+        spell_level_cap(
+            &e,
+            &rs,
+            &Id::new("art.creo"),
+            &Id::new("art.ignem"),
+            &[],
+            false,
+            false
+        ),
         // Int(0) + MagicTheory(0) + Creo(0) + Ignem(0) + 3 (ArMDE:2465) + 0 (no lab_mod)
         3,
         "D1's normally-generous flat fold must ALSO exclude this carrier — D4 says the \

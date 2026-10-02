@@ -263,10 +263,10 @@ pub struct Ruleset {
     /// The [`SpellRange`] variants beyond Touch (Eye, Voice, Sight, Arcane
     /// Connection) — Short-Ranged Magic's cap-halving predicate
     /// (`effective::range_beyond_touch`), derived by filtering
-    /// [`SpellRange::ALL`] through it (D28). Serialized to the frontend so the
-    /// spell picker (`derive.ts::spellRangeBeyondTouch`) reads the whitelist
-    /// from engine data instead of re-hardcoding it, mirroring
-    /// `magnitude_points`. Derived data, not authored (see `magnitude_points`).
+    /// [`SpellRange::ALL`] through it (D28). Serialized to the frontend, which
+    /// no longer reads it: since D81.5 the per-spell `spell_caps` fold the
+    /// beyond-Touch halving in on the engine side. It stays for `Ruleset` JSON
+    /// parity. Derived data, not authored (see `magnitude_points`).
     /// The `ranges_beyond_touch` field name is a stable public contract.
     #[serde(default)]
     pub(crate) ranges_beyond_touch: BTreeSet<SpellRange>,
@@ -5961,9 +5961,9 @@ mod tests {
             obj["reputation_type_order"],
             serde_json::json!(["local", "ecclesiastical", "hermetic", "academic"])
         );
-        // D28's frontend mirror: the Ranges beyond Touch (Eye, Voice, Sight, Arcane
-        // Connection), so `derive.ts::spellRangeBeyondTouch` reads this set instead
-        // of re-hardcoding the whitelist.
+        // D28's serialized set of the Ranges beyond Touch (Eye, Voice, Sight,
+        // Arcane Connection), kept for JSON parity since D81.5 moved the
+        // halving into the per-spell `spell_caps`.
         assert_eq!(
             obj["ranges_beyond_touch"],
             serde_json::json!(["eye", "voice", "sight", "arcane_connection"])

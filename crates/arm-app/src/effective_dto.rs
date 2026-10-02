@@ -14,18 +14,19 @@ use arm_rules::{
     AbilityBonus, AbilityFloor, AbilityParameterOptions, ArtBonus, Characteristic,
     CharacteristicBonus, Confidence, CreationPhase, Entity, EntityTypeProfile, Grant, Id,
     LifeStageBudget, MagusMinimumAbility, MightScore, PointCeilings, Realm, RealmAssociation,
-    ReputationType, RestrictedXpPool, Ruleset, Selection, SpellLevelCap, SupernaturalFreeSlots,
-    ability_bonuses, ability_parameter_options, ability_score_floors, aging_schedule, aging_total,
-    art_bonuses, characteristic_aging_drops, characteristic_bonuses, characteristic_caps,
-    characteristic_floors, characteristic_points_granted, checked_xp_allocation, compute_balance,
-    confidence, decrepitude_score, effective_characteristics, effective_might,
-    effective_point_ceilings, entity_grants, focus_points_budget, focus_points_used,
-    is_hermetically_trained, item_has_realm_association, item_level_budget, item_level_used,
-    life_stage_spell_levels, longevity_bonus, magus_minimum_abilities, phases_in_force,
-    power_levels_budget, powers_used, reputation_grants, resolve_realm, size, spell_level_caps,
-    spell_levels_base, spell_levels_bonus, spell_levels_budget, spell_levels_used,
-    spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
-    supernatural_free_slots, true_faith, warping, warping_owed_grants,
+    ReputationType, RestrictedXpPool, Ruleset, Selection, SpellCap, SpellLevelCap,
+    SupernaturalFreeSlots, ability_bonuses, ability_parameter_options, ability_score_floors,
+    aging_schedule, aging_total, art_bonuses, characteristic_aging_drops, characteristic_bonuses,
+    characteristic_caps, characteristic_floors, characteristic_points_granted,
+    checked_xp_allocation, compute_balance, confidence, decrepitude_score,
+    effective_characteristics, effective_might, effective_point_ceilings, entity_grants,
+    focus_points_budget, focus_points_used, is_hermetically_trained, item_has_realm_association,
+    item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
+    magus_minimum_abilities, phases_in_force, power_levels_budget, powers_used, reputation_grants,
+    resolve_realm, size, spell_caps, spell_level_caps, spell_levels_base, spell_levels_bonus,
+    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
+    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, warping,
+    warping_owed_grants,
 };
 use serde::Serialize;
 
@@ -178,6 +179,17 @@ pub struct EffectiveScores {
     /// selection (D56's Abandoned Apprentice). Engine-authoritative; the UI
     /// only reads it.
     pub spell_level_caps: Vec<SpellLevelCap>,
+    /// Per-catalogue-spell maximum learnable level (X11b, D81.5): unlike
+    /// [`Self::spell_level_caps`]'s Te/Fo-keyed grid, each row folds that
+    /// spell's own requisites (ArMDE:2465/:12309-12313), so two spells sharing
+    /// a Te/Fo pair but different requisites can report different caps. A row
+    /// also carries a Magical-Focus-doubled figure (ArMDE:4403) when the
+    /// character holds a Magical Focus at all — the picker greys by the plain
+    /// `cap` and offers an "add within focus" action when only
+    /// `within_focus_cap` admits the spell's level, adding it already marked.
+    /// Empty for an entity that is not Hermetically trained, same gate as
+    /// [`Self::spell_level_caps`].
+    pub spell_caps: Vec<SpellCap>,
     /// The Hermetic minimum-Ability checklist: what the Order demands (ArMDE:2437) and
     /// what the rulebook recommends (ArMDE:2451-2461), each with the character's bought
     /// score and whether it suffices. Empty for a non-magus, exactly like
@@ -590,6 +602,7 @@ struct SpellFields {
     life_stage: u32,
     used: u32,
     level_caps: Vec<SpellLevelCap>,
+    caps: Vec<SpellCap>,
     minimum_abilities: Vec<MagusMinimumAbility>,
 }
 
@@ -612,6 +625,12 @@ fn spell_fields(
         // `docs/vf-audit/design-a0-is-magus-split.md` § 4 row 14'.
         level_caps: if is_hermetically_trained(entity, ruleset, profile) {
             spell_level_caps(entity, ruleset)
+        } else {
+            Vec::new()
+        },
+        // X11b/D81.5: same gate as `level_caps` above.
+        caps: if is_hermetically_trained(entity, ruleset, profile) {
+            spell_caps(entity, ruleset)
         } else {
             Vec::new()
         },
@@ -878,6 +897,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         spell_levels_life_stage: spell.life_stage,
         spell_levels_used: spell.used,
         spell_level_caps: spell.level_caps,
+        spell_caps: spell.caps,
         magus_minimum_abilities: spell.minimum_abilities,
 
         confidence_score: confidence.confidence_score,

@@ -178,7 +178,13 @@ impl CastingBase {
 /// other "effects that affect spells based on their Arts" (ArMDE:12313) —
 /// those rely on the primary Arts only and call neither this function nor
 /// [`formulaic_casting_score`].
-fn fold_requisite(
+///
+/// `pub(crate)`: `effective/spell.rs::spell_level_cap` (X11b) reuses this
+/// same fold for the per-spell creation-time level cap — `ArMDE:2465`'s own
+/// closing sentence calls that cap "the appropriate Lab Total", so the
+/// identical lesser-of-requisite-and-primary rule governs it too. One fold,
+/// shared by both call sites, rather than a second copy that could disagree.
+pub(crate) fn fold_requisite(
     entity: &Entity,
     ruleset: &Ruleset,
     art_type: ArtType,

@@ -3291,7 +3291,7 @@ exemption is read off the effect's presence (age cap itself is M4/4e).
 - Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
   arithmetic, verified against the worked example below) + `ability_affinity`,
   folded into `effective/xp.rs::xp_allocation` and so into
-  `validation/magus.rs::validate_xp_pool` (:881). **Not** the simpler
+  `validation/magus.rs::validate_xp_pool` (:889). **Not** the simpler
   `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
   example below, but overcharges by one XP whenever `T·den mod num` falls
   strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
@@ -3369,7 +3369,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:881) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:889) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -5137,7 +5137,7 @@ is `available`, always. Printing the editable base there instead read "150 / 120
 Available: 0" for a magus the engine considers exactly balanced, so the two figures
 are now rendered in separate slots.
 
-**Per-spell cap — Technique + Form + Intelligence + Magic Theory + 3 + flat `lab_total_mod` (D1).**
+**Per-spell cap — Technique + Form + Intelligence + Magic Theory + 3 + flat `lab_total_mod` (D1), with requisites folded and the Magical Focus doubling (X11b, D81.5).**
 
 > `ArMDE:2465` "The highest level spell you can learn is equal to Technique + Form +
 > Intelligence + Magic Theory +3 … If the spell has requisites … they apply to
@@ -5145,21 +5145,67 @@ are now rendered in separate slots.
 > of +3, and thus any Virtues and Flaws your character has apply to this total if
 > they would apply to a Lab Total in play."
 
-`spell_level_cap(entity, ruleset, technique, form)` (`effective/spell.rs`) computes it
-from the effective Art scores, the Intelligence characteristic, and effective
-Magic Theory → a spell above it emits `spell_level_exceeds_cap` (validation, in
-`validation/magus.rs`). The same function is surfaced per-Te/Fo combination as
-`spell_level_caps` → `EffectiveScores.spell_level_caps` (`effective_dto.rs`), so the
-spell picker greys a spell above the cap from the one engine-authoritative value
-rather than recomputing it in JS. **Approximation, narrowed by X11:** requisite
-folding now applies to the Casting Total (below), but this cap and the in-play
-Lab Total (`derived/lab.rs::lab_totals`) remain unfolded — `ArMDE:12313`
-("Requisites listed with a spell's statistics apply when you are learning,
-inventing, or casting that spell...") makes learning/inventing (the Lab Total
-family) and casting two separate applications of the same base rule, and only
-the second is done; requisites are stored on the spell for display and read by
-the Casting Total fold, but still not folded into this cap or into
-`lab_totals`. See `tmp/requisites-handover.md` §QUESTIONS for the follow-up.
+`spell_level_cap(entity, ruleset, technique, form, requisites, range_beyond_touch,
+within_focus)` (`effective/spell.rs`) computes it from the effective Art scores
+(folded against `requisites` — below), the Intelligence characteristic, and
+effective Magic Theory → a spell above it emits `spell_level_exceeds_cap`
+(validation, in `validation/magus.rs`). The grid function `spell_level_caps`
+→ `EffectiveScores.spell_level_caps` (`effective_dto.rs`) has no specific spell
+at a Te/Fo cell (it may host several, with different or no requisites), so it
+calls the same function with `requisites: &[]`, `within_focus: false` — a no-op
+fold, unchanged from before X11b.
+
+**X11b/D81.5 closes the approximation the previous paragraph used to record
+here.** `ArMDE:2465`'s own second sentence — "If the spell has requisites …
+they apply to this total as well" — and `ArMDE:12313`'s "Requisites listed
+with a spell's statistics apply when you are learning, inventing, or casting
+that spell" put learning (this cap) on the same footing as casting, which
+`derived/casting.rs::fold_requisite` already folds (X11, `b5ee82a`). That exact
+function is **reused, not duplicated**: `spell_level_cap` calls
+`crate::derived::casting::fold_requisite` directly (made `pub(crate)` for this),
+so a Puissant Art bonus (ArMDE:4820), several same-class requisites folding to
+their group's lowest (ArMDE:12311), and the Elemental Magic exception
+(ArMDE:3737 — "you use the primary Form to calculate totals, even if the
+requisite is lower"; generic "totals" wording, so it governs this Lab-Total-
+shaped cap too, per :2465's own closing sentence calling the cap itself "the
+appropriate Lab Total") all behave identically on both totals. A requisite
+Art that is itself Deficient halves the cap even when it does not numerically
+bind the fold (ArMDE:12311's closing sentence) — the same
+[`deficient_arts`](`effective/art.rs`) fold both totals already shared is
+simply also checked against `requisites`, so the two can never disagree about
+which Arts are deficient.
+
+**Magical Focus doubling (ArMDE:4403).** "If a spell has requisites, the
+lowest applicable score may be one of the requisites, rather than one of the
+primary Arts" — `within_focus` adds the lower of the two *already-folded*
+scores to the cap before either halving, so a requisite that won the fold is
+automatically eligible with no separate case. `within_focus` is the caller's
+own claim (`SpellSelection::within_focus`, X10c) — the engine cannot match a
+free-text Magical Focus theme to a spell (MAG8), so the player decides, and
+`validate_spell_level_cap` reads `sel.within_focus` back, the same way
+`spell_casting_total` already reads it for the Casting Total.
+
+**The in-play Lab Total (`derived/lab.rs::lab_totals`) still does not fold
+requisites.** `ArMDE:12313` separates "learning" (this cap, now folded) from
+"inventing" (the in-play Lab Total family, still unfolded) — a genuinely
+separate change (Lab Text similarity bonuses, arcane experimentation,
+ArMDE:10746's "lowest of several simultaneous activities" rule), not started
+by this slice.
+
+**DTO: `EffectiveScores.spell_caps` (new, X11b).** The Te/Fo-keyed grid
+(`spell_level_caps`/`SpellLevelCap`) cannot represent a per-spell fold: two
+spells sharing a Te/Fo pair but different requisites can now genuinely report
+different caps, the same reason `spell_casting_total` exists beside
+`casting_totals`. `spell_caps(entity, ruleset)` (`effective/spell.rs`) returns
+one `SpellCap { spell, cap, within_focus_cap }` row per **catalogue** spell
+(not just known ones, so the picker can grey an unlearned spell too):
+`within_focus_cap` is `Some` only when the entity holds a Magical Focus at
+all (`has_magical_focus`), independent of whether any spell is marked
+`within_focus` yet. Both grids are kept — the Te/Fo grid still backs
+`SpellTab.svelte`'s cross-Te/Fo matrix display, while the picker's per-spell
+grey/offer logic should read `spell_caps` for any spell carrying requisites.
+Tests: `crates/arm-rules/tests/requisite_level_cap.rs` (engine fold + focus),
+`crates/arm-app/tests/spell_caps_dto.rs` (DTO row).
 
 **Casting Total — requisite folding (X11, `derived/casting.rs::fold_requisite`).**
 
@@ -5172,6 +5218,9 @@ the Casting Total fold, but still not folded into this cap or into
 > apply to the same primary Art... your effective score is the lowest of the
 > group. Furthermore, any Deficiencies you have with an Art apply when you
 > use that Art as a requisite."
+
+**Reused by the per-spell cap (X11b, above), not duplicated:** `fold_requisite` is
+`pub(crate)` so `effective/spell.rs::spell_level_cap` calls it directly.
 
 `fold_requisite` reduces the effective Technique/Form score `formulaic_casting_score`
 uses to the lowest of the primary and every same-class requisite — bonus-inclusive
@@ -5270,13 +5319,14 @@ the *same* RDT difficulty as Touch, and the book names it explicitly for exactly
 that reason ("greater than Touch, **including Eye**" would be redundant to state
 if Eye already fell out of "greater than" by magnitude).
 
-**Order of operations.** The D1 flat term sums into `base` first (it is part of
-what the Lab Total *is*), then the two conditional halvings — Deficient Art and
-this one — apply. Neither passage orders the two halvings relative to each
-other, and the order between them is provably immaterial: both are a plain
-`div_euclid(_, 2)`, and floor division by 2 twice equals floor division by 4
-regardless of which comes first (the same reasoning `derived/lab.rs::creo_corpus_lab_total`
-already applies to its own Deficient/Difficult-Longevity stack).
+**Order of operations.** The D1 flat term and (X11b) the within-focus double
+both sum into `base` first (they are part of what the Lab Total *is*), then
+the two conditional halvings — Deficient Art and this one — apply. Neither
+passage orders the two halvings relative to each other, and the order between
+them is provably immaterial: both are a plain `div_euclid(_, 2)`, and floor
+division by 2 twice equals floor division by 4 regardless of which comes
+first (the same reasoning `derived/lab.rs::creo_corpus_lab_total` already
+applies to its own Deficient/Difficult-Longevity stack).
 
 **Re-keyed.** `SpellLevelCap` (`effective/spell.rs`) gains `range_beyond_touch:
 bool` alongside `technique`/`form`; `spell_level_caps` now emits **two** rows per

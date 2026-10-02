@@ -59,7 +59,16 @@ fn bought_art_score(entity: &Entity, art: &Id) -> u8 {
 /// if it carries one ([`Effect::ElementalMagic`]). `None` for a character without
 /// the Virtue — the overwhelmingly common case, so the redistribution path is
 /// skipped entirely.
-fn elemental_magic_forms(entity: &Entity, ruleset: &Ruleset) -> Option<BTreeSet<Id>> {
+///
+/// `pub(crate)`: `effective/spell.rs::spell_level_cap` (X11b) reuses this same
+/// set to except a Form requisite from the cap's fold when both it and the
+/// spell's primary Form are elemental (ArMDE:3737) — the same exception
+/// `derived/casting.rs::fold_requisite` applies to the Casting Total, via its
+/// own independent fold (`derived.rs::InPlayMods::elemental_forms`, D4's
+/// in-play-conditions territory). The two folds are allowed to walk the same
+/// selections twice — same precedent as `lab_total_mod` vs.
+/// `in_play_lab_total_mod`.
+pub(crate) fn elemental_magic_forms(entity: &Entity, ruleset: &Ruleset) -> Option<BTreeSet<Id>> {
     for_each_effect!(entity, ruleset, |_selection, effect| {
         if let Effect::ElementalMagic { forms } = effect {
             return Some(forms.clone());

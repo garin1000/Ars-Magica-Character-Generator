@@ -34,6 +34,7 @@ import type {
   SameChoiceExclusion,
   Selection,
   Spell,
+  SpellCap,
   SpellSelection,
   ValidationIssue,
   ValidationMode,
@@ -1439,29 +1440,6 @@ export const ORDINARY_SPELL_MINIMUM_LEVEL = 1;
 export const RITUAL_MINIMUM_LEVEL_FALLBACK = 20;
 
 /**
- * Whether a spell's Range makes it subject to Short-Ranged Magic's beyond-Touch
- * cap halving (D28): present in `rangesBeyondTouch`, and an absent range is
- * treated as not beyond Touch regardless of that set.
- *
- * A thin lookup, deliberately carrying no whitelist of its own: the fixed
- * taxonomy (Eye, Voice, Sight, Arcane Connection — never Personal or Touch)
- * lives in exactly one place, the Rust predicate
- * `crates/arm-rules/src/effective/spell.rs::range_beyond_touch`, surfaced to
- * the frontend as `Ruleset.ranges_beyond_touch`
- * (`crates/arm-rules/src/ruleset.rs`). The caller (`SpellTab.svelte`) reads
- * that surfaced set and passes it in here — this function must never
- * re-hardcode the four scalars itself, which is exactly the CLAUDE.md
- * "fixed taxonomies stay Rust enums" invariant `magnitude_points` /
- * `ability_category_order` already follow.
- */
-export function spellRangeBeyondTouch(
-  range: string | null | undefined,
-  rangesBeyondTouch: readonly string[],
-): boolean {
-  return range != null && rangesBeyondTouch.includes(range);
-}
-
-/**
  * The minimum level a spell can be learned at: a Ritual must be learned at the
  * ruleset's `ritual_min_level` (ArMDE:12293, "Ritual spells are always at
  * least level 20"), an ordinary
@@ -1487,16 +1465,20 @@ export function minLearnableLevel(
  * level) or a parameterized spell (takeable once per Form) is tested at its
  * minimum learnable level — never at a nonexistent catalogue level. Blocked
  * when that level exceeds the per-spell cap or the remaining spell-levels
- * budget. `capByTeFo` and `remaining` are engine-authoritative figures, never
+ * budget. `capBySpell` and `remaining` are engine-authoritative figures, never
  * recomputed here.
  *
- * `capByTeFo` is keyed `` `${technique} ${form} ${range_beyond_touch}` `` (D28):
- * the cap depends on the spell's own Range as well as its Technique/Form, so the
- * lookup key folds in {@link spellRangeBeyondTouch} of `spell.range` against
- * `rangesBeyondTouch` — the engine-surfaced `Ruleset.ranges_beyond_touch` set,
- * which the caller (`SpellTab.svelte`) reads and passes through; this function
- * carries no whitelist of its own. `capByTeFo` itself is built from the
- * matching `spell_level_caps` rows.
+ * `capBySpell` is keyed by spell id (D81.5, `EffectiveScores.spell_caps`):
+ * each row already folds that spell's own requisites AND its Range (D28's
+ * beyond-Touch halving) server-side, so this function carries no Te/Fo/range
+ * key-building of its own — `spell_caps` is safe to read uniformly for every
+ * catalogue spell, with or without requisites.
+ *
+ * A spell whose level exceeds the plain `cap` but still fits
+ * `SpellCap.within_focus_cap` is NOT reported as takeable here — the plain
+ * Add control stays blocked, with a reason that points at the separate
+ * "add within focus" action ({@link withinFocusAddable}) instead of merely
+ * saying the spell is out of reach.
  *
  * `selectedSpellIds` greys an ordinary fixed-level spell once selected; a
  * General spell (multiple learnable levels) or a parameterized spell (once per
@@ -1506,20 +1488,23 @@ export function minLearnableLevel(
 export function nonTakeableReason(
   spell: Spell,
   selectedSpellIds: Set<string>,
-  capByTeFo: Map<string, number>,
+  capBySpell: Map<string, SpellCap>,
   remaining: number,
   ritualMinLevel: number = RITUAL_MINIMUM_LEVEL_FALLBACK,
-  rangesBeyondTouch: readonly string[] = [],
 ): { key: string; cap: number } | null {
   const isParametrized = (spell.parameters?.length ?? 0) > 0;
   if (spell.level != null && !isParametrized && selectedSpellIds.has(spell.id)) {
     return { key: 'spell-already-taken-reason', cap: 0 };
   }
-  const beyondTouch = spellRangeBeyondTouch(spell.range, rangesBeyondTouch);
-  const cap = capByTeFo.get(`${spell.technique} ${spell.form} ${beyondTouch}`);
+  const row = capBySpell.get(spell.id);
   const need = spell.level ?? minLearnableLevel(spell, ritualMinLevel);
-  if (cap != null && need > cap) return { key: 'spell-cap-reason', cap };
-  if (need > remaining) return { key: 'spell-budget-reason', cap: cap ?? 0 };
+  if (row != null && need > row.cap) {
+    if (row.within_focus_cap != null && need <= row.within_focus_cap) {
+      return { key: 'spell-cap-within-focus-reason', cap: row.cap };
+    }
+    return { key: 'spell-cap-reason', cap: row.cap };
+  }
+  if (need > remaining) return { key: 'spell-budget-reason', cap: row?.cap ?? 0 };
   return null;
 }
 
@@ -1527,21 +1512,38 @@ export function nonTakeableReason(
 export function isDisabled(
   spell: Spell,
   selectedSpellIds: Set<string>,
-  capByTeFo: Map<string, number>,
+  capBySpell: Map<string, SpellCap>,
   remaining: number,
   ritualMinLevel: number = RITUAL_MINIMUM_LEVEL_FALLBACK,
-  rangesBeyondTouch: readonly string[] = [],
 ): boolean {
-  return (
-    nonTakeableReason(
-      spell,
-      selectedSpellIds,
-      capByTeFo,
-      remaining,
-      ritualMinLevel,
-      rangesBeyondTouch,
-    ) != null
-  );
+  return nonTakeableReason(spell, selectedSpellIds, capBySpell, remaining, ritualMinLevel) != null;
+}
+
+/**
+ * Whether the picker's "add within focus" action should appear for this
+ * candidate spell (D81.5): the spell's level exceeds the plain per-spell cap
+ * but fits the Magical-Focus-doubled `within_focus_cap` — absent entirely
+ * when the entity holds no Magical Focus at all (`within_focus_cap` is then
+ * `undefined`, mirroring the engine's `Option<i64>`). Also respects the same
+ * already-selected and remaining-budget gates as {@link nonTakeableReason},
+ * so the action never offers what the plain Add control would refuse for a
+ * DIFFERENT reason. Selecting it adds the spell with
+ * `SpellSelection.within_focus = true` already set — see
+ * `state.svelte.ts::AppStore.addSpellWithinFocus`.
+ */
+export function withinFocusAddable(
+  spell: Spell,
+  selectedSpellIds: Set<string>,
+  capBySpell: Map<string, SpellCap>,
+  remaining: number,
+  ritualMinLevel: number = RITUAL_MINIMUM_LEVEL_FALLBACK,
+): boolean {
+  const isParametrized = (spell.parameters?.length ?? 0) > 0;
+  if (spell.level != null && !isParametrized && selectedSpellIds.has(spell.id)) return false;
+  const row = capBySpell.get(spell.id);
+  if (row?.within_focus_cap == null) return false;
+  const need = spell.level ?? minLearnableLevel(spell, ritualMinLevel);
+  return need > row.cap && need <= row.within_focus_cap && need <= remaining;
 }
 
 /** Highest whole score the advancement table can price (the spinner ceiling). */

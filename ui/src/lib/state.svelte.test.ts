@@ -1588,6 +1588,28 @@ describe('addSpell', () => {
   });
 });
 
+// D81.5: the picker's "add within focus" action — same identity/dedupe rules
+// as addSpell, but the new row starts with `within_focus: true` already set.
+describe('addSpellWithinFocus', () => {
+  it('adds a fixed spell already marked within_focus', () => {
+    store.addSpellWithinFocus('spell.pilum_of_fire');
+    expect(store.entity.spells).toEqual([{ spell: 'spell.pilum_of_fire', within_focus: true }]);
+  });
+
+  it('stores the chosen level for a General spell, already marked within_focus', () => {
+    store.addSpellWithinFocus('spell.aegis_of_the_hearth', 20);
+    expect(store.entity.spells).toEqual([
+      { spell: 'spell.aegis_of_the_hearth', level: 20, within_focus: true },
+    ]);
+  });
+
+  it('dedups the same (spell, level) pair exactly like addSpell', () => {
+    store.addSpellWithinFocus('spell.pilum_of_fire');
+    store.addSpellWithinFocus('spell.pilum_of_fire');
+    expect(store.entity.spells).toEqual([{ spell: 'spell.pilum_of_fire', within_focus: true }]);
+  });
+});
+
 describe('removeSpellAt', () => {
   it('removes only the row at the given index, keeping order', () => {
     store.addSpell('spell.a');

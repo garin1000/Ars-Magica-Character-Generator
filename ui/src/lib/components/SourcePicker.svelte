@@ -18,6 +18,9 @@
     header: string;
     /** Optional `data-testid` on the group header (only Spells sets one today). */
     headerTestid?: string;
+    /** Optional native-title hover hint on the group header (D81.5: the Spell
+     *  picker's quick Te/Fo-grid cap figure; omitted → no `title` attribute). */
+    headerTooltip?: string;
     items: T[];
   }
 
@@ -29,6 +32,7 @@
     disabled,
     tip,
     row,
+    extra,
     filters,
   }: {
     /** Optional panel heading (V/F uses it for the per-side Virtues/Flaws title). */
@@ -43,6 +47,10 @@
     tip?: (item: T) => TooltipContent | undefined;
     /** Renders the row body inside the add button (name, badges, level tag, …). */
     row: Snippet<[T]>;
+    /** An optional SECOND action rendered beside the main add button (D81.5:
+     *  the Spell picker's "add within focus" action) — omitted → no caller
+     *  needs one, which is every caller but Spells today. */
+    extra?: Snippet<[T]>;
     /** Renders the filter-bar controls (search + selects), owning their testids. */
     filters: Snippet;
   } = $props();
@@ -63,7 +71,9 @@
         <p class="empty" data-testid="source-no-results">{store.t('filter-no-results')}</p>
       {/if}
       {#each groups as group (group.key)}
-        <h3 class="category" data-testid={group.headerTestid}>{group.header}</h3>
+        <h3 class="category" data-testid={group.headerTestid} title={group.headerTooltip}>
+          {group.header}
+        </h3>
         <ul class="item-list">
           {#each group.items as item (getId(item))}
             {@const blocked = disabled?.(item) ?? false}
@@ -89,6 +99,7 @@
                 {@render row(item)}
                 <span class="pick-plus" aria-hidden="true">+</span>
               </button>
+              {#if extra}{@render extra(item)}{/if}
             </li>
           {/each}
         </ul>

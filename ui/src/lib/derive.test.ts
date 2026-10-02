@@ -75,8 +75,8 @@ import {
   selectionDisplayName,
   spellDisplayName,
   spellLevelAllocation,
-  spellRangeBeyondTouch,
   totalCopies,
+  withinFocusAddable,
   type Translate,
 } from './derive';
 // Aliased: this file already declares a `translate` stub of its own further down.
@@ -97,6 +97,7 @@ import type {
   Reputation,
   ReputationGrant,
   Spell,
+  SpellCap,
   ValidationIssue,
   ValidationResult,
 } from './types';
@@ -1877,6 +1878,14 @@ describe('minLearnableLevel', () => {
   });
 });
 
+/** A one-row `capBySpell` map, mirroring `SpellTab.svelte`'s own lookup built
+ * from `EffectiveScores.spell_caps` (D81.5). */
+function capMap(spellId: string, cap: number, withinFocusCap?: number): Map<string, SpellCap> {
+  const row: SpellCap = { spell: spellId, cap };
+  if (withinFocusCap != null) row.within_focus_cap = withinFocusCap;
+  return new Map([[spellId, row]]);
+}
+
 describe('nonTakeableReason', () => {
   const FIXED: Spell = { id: 'spell.fixed', technique: 'art.creo', form: 'art.animal', level: 10 };
   const GENERAL: Spell = { id: 'spell.general', technique: 'art.creo', form: 'art.animal' };
@@ -1905,9 +1914,8 @@ describe('nonTakeableReason', () => {
     expect(nonTakeableReason(GENERAL, new Set([GENERAL.id]), new Map(), 100)).toBeNull();
   });
 
-  it('blocks when the spell level exceeds the per-Technique/Form cap', () => {
-    const cap = new Map([['art.creo art.animal false', 9]]);
-    expect(nonTakeableReason(FIXED, new Set(), cap, 100)).toEqual({
+  it('blocks when the spell level exceeds its per-spell cap (D81.5)', () => {
+    expect(nonTakeableReason(FIXED, new Set(), capMap(FIXED.id, 9), 100)).toEqual({
       key: 'spell-cap-reason',
       cap: 9,
     });
@@ -1921,8 +1929,7 @@ describe('nonTakeableReason', () => {
   });
 
   it('reports the cap alongside a budget-reason when a cap also applies', () => {
-    const cap = new Map([['art.creo art.animal false', 20]]);
-    expect(nonTakeableReason(FIXED, new Set(), cap, 9)).toEqual({
+    expect(nonTakeableReason(FIXED, new Set(), capMap(FIXED.id, 20), 9)).toEqual({
       key: 'spell-budget-reason',
       cap: 20,
     });
@@ -1951,88 +1958,44 @@ describe('nonTakeableReason', () => {
     expect(nonTakeableReason(ritual, new Set(), new Map(), 20, 20)).toBeNull();
   });
 
-  // D28: the cap lookup is keyed by range class too, not just Technique/Form.
-  // `rangesBeyondTouch` is the engine-surfaced `Ruleset.ranges_beyond_touch`
-  // set (never a hardcoded whitelist here — see the "follows the injected set"
-  // test below, which proves it by using a set that disagrees with the real
-  // engine whitelist).
-  it('keys the cap lookup by range class: a beyond-Touch spell reads the beyond-Touch row', () => {
-    const eyeSpell: Spell = {
-      id: 'spell.eye',
+  // D81.5: the lookup is keyed by the SPELL's own id (`EffectiveScores.spell_caps`),
+  // not by Technique/Form/range — the engine already folds the spell's own
+  // requisites AND its Range (D28's beyond-Touch halving) into one number per
+  // catalogue spell, so two spells sharing a Te/Fo pair can report different
+  // caps and this function need not know why.
+  it('reads the cap for the candidate spell by id, not by Technique/Form', () => {
+    const otherSpell: Spell = {
+      id: 'spell.other',
       technique: 'art.creo',
       form: 'art.animal',
       level: 10,
-      range: 'eye',
     };
-    const cap = new Map([
-      ['art.creo art.animal false', 20],
-      ['art.creo art.animal true', 9],
-    ]);
-    const rangesBeyondTouch = ['eye', 'voice', 'sight', 'arcane_connection'];
-    expect(nonTakeableReason(eyeSpell, new Set(), cap, 100, undefined, rangesBeyondTouch)).toEqual({
+    const caps = new Map<string, SpellCap>([...capMap(FIXED.id, 20), ...capMap(otherSpell.id, 9)]);
+    expect(nonTakeableReason(FIXED, new Set(), caps, 100)).toBeNull();
+    expect(nonTakeableReason(otherSpell, new Set(), caps, 100)).toEqual({
       key: 'spell-cap-reason',
       cap: 9,
     });
-    // The same Te/Fo pair's Touch-or-nearer row is unaffected.
-    expect(nonTakeableReason(FIXED, new Set(), cap, 100, undefined, rangesBeyondTouch)).toBeNull();
   });
 
-  // CLAUDE.md: fixed taxonomies stay Rust enums; the UI must not re-hardcode
-  // their values. This proves `nonTakeableReason` has no such hardcoded
-  // fallback: a surfaced set that disagrees with the real engine whitelist
-  // (here, 'touch' rather than 'eye' is "beyond Touch") flips which spell is
-  // greyed — the decision follows whatever set it is GIVEN, not a literal list
-  // baked into this function.
-  it('follows the injected ranges-beyond-touch set, not a hardcoded whitelist', () => {
-    const touchSpell: Spell = {
-      id: 'spell.touch',
-      technique: 'art.creo',
-      form: 'art.animal',
-      level: 10,
-      range: 'touch',
-    };
-    const eyeSpell: Spell = {
-      id: 'spell.eye',
-      technique: 'art.creo',
-      form: 'art.animal',
-      level: 10,
-      range: 'eye',
-    };
-    const cap = new Map([
-      ['art.creo art.animal false', 20],
-      ['art.creo art.animal true', 9],
-    ]);
-    const unusualRangesBeyondTouch = ['touch'];
-    expect(
-      nonTakeableReason(touchSpell, new Set(), cap, 100, undefined, unusualRangesBeyondTouch),
-    ).toEqual({ key: 'spell-cap-reason', cap: 9 });
-    expect(
-      nonTakeableReason(eyeSpell, new Set(), cap, 100, undefined, unusualRangesBeyondTouch),
-    ).toBeNull();
-  });
-});
-
-describe('spellRangeBeyondTouch', () => {
-  it('is true only for a range present in the given set', () => {
-    const ranges = ['eye', 'voice', 'sight', 'arcane_connection'];
-    expect(spellRangeBeyondTouch('eye', ranges)).toBe(true);
-    expect(spellRangeBeyondTouch('voice', ranges)).toBe(true);
-    expect(spellRangeBeyondTouch('sight', ranges)).toBe(true);
-    expect(spellRangeBeyondTouch('arcane_connection', ranges)).toBe(true);
-    expect(spellRangeBeyondTouch('personal', ranges)).toBe(false);
-    expect(spellRangeBeyondTouch('touch', ranges)).toBe(false);
+  // D81.5: a spell above the plain cap but within the Magical-Focus-doubled
+  // cap still blocks the PLAIN Add control (a separate action handles it —
+  // see `withinFocusAddable` below), but the reason differs so the tooltip
+  // can point at that action instead of calling the spell simply out of reach.
+  it('reports a focus-aware reason when the level fits only the within-focus cap', () => {
+    const row = capMap(FIXED.id, 9, 20); // level 10 > 9, <= 20
+    expect(nonTakeableReason(FIXED, new Set(), row, 100)).toEqual({
+      key: 'spell-cap-within-focus-reason',
+      cap: 9,
+    });
   });
 
-  it('follows the given set rather than a hardcoded whitelist', () => {
-    // An empty set means nothing is beyond Touch, even 'eye'.
-    expect(spellRangeBeyondTouch('eye', [])).toBe(false);
-    // A set naming an unusual range makes that range count instead.
-    expect(spellRangeBeyondTouch('touch', ['touch'])).toBe(true);
-  });
-
-  it('treats an absent range as not beyond Touch regardless of the set', () => {
-    expect(spellRangeBeyondTouch(undefined, ['eye'])).toBe(false);
-    expect(spellRangeBeyondTouch(null, ['eye'])).toBe(false);
+  it('reports the plain cap-reason when the level exceeds the within-focus cap too', () => {
+    const row = capMap(FIXED.id, 5, 8); // level 10 > both
+    expect(nonTakeableReason(FIXED, new Set(), row, 100)).toEqual({
+      key: 'spell-cap-reason',
+      cap: 5,
+    });
   });
 });
 
@@ -2045,6 +2008,41 @@ describe('isDisabled', () => {
 
   it('mirrors nonTakeableReason: true when any reason applies', () => {
     expect(isDisabled(FIXED, new Set([FIXED.id]), new Map(), 100)).toBe(true);
+  });
+});
+
+// D81.5: the picker's "add within focus" action — appears only when the
+// level exceeds the plain per-spell cap but fits the Magical-Focus-doubled
+// `within_focus_cap`; absent entirely without a Magical Focus
+// (`within_focus_cap` unset) and gated by the same already-selected/budget
+// checks as the plain Add control.
+describe('withinFocusAddable', () => {
+  const FIXED: Spell = { id: 'spell.fixed', technique: 'art.creo', form: 'art.animal', level: 10 };
+
+  it('is false when the level is within the plain cap (plain Add suffices)', () => {
+    expect(withinFocusAddable(FIXED, new Set(), capMap(FIXED.id, 20, 30), 100)).toBe(false);
+  });
+
+  it('is true when the level exceeds the plain cap but fits the within-focus cap', () => {
+    expect(withinFocusAddable(FIXED, new Set(), capMap(FIXED.id, 9, 20), 100)).toBe(true);
+  });
+
+  it('is false when the level exceeds the within-focus cap too', () => {
+    expect(withinFocusAddable(FIXED, new Set(), capMap(FIXED.id, 5, 8), 100)).toBe(false);
+  });
+
+  it('is false when the character holds no Magical Focus (no within_focus_cap at all)', () => {
+    expect(withinFocusAddable(FIXED, new Set(), capMap(FIXED.id, 9), 100)).toBe(false);
+  });
+
+  it('is false once the remaining spell-levels budget cannot afford the level', () => {
+    expect(withinFocusAddable(FIXED, new Set(), capMap(FIXED.id, 9, 20), 9)).toBe(false);
+  });
+
+  it('is false for an already-selected fixed-level spell', () => {
+    expect(withinFocusAddable(FIXED, new Set([FIXED.id]), capMap(FIXED.id, 9, 20), 100)).toBe(
+      false,
+    );
   });
 });
 

@@ -6,6 +6,7 @@
 //! change.
 
 use super::*;
+use crate::art::ArtType;
 use crate::spell::SpellRange;
 
 /// Sums the [`Effect::SpellLevels`] amounts across the entity's selections (may
@@ -366,15 +367,68 @@ fn has_short_ranged_magic(entity: &Entity, ruleset: &Ruleset) -> bool {
         })
 }
 
+/// Whether the entity holds a Magical Focus ([`Effect::MagicalFocus`]) at all —
+/// read here (not via `derived.rs::InPlayMods::has_focus`, which is private to
+/// that module) so [`spell_caps`] knows whether a within-focus figure is worth
+/// computing for the picker at all. Mirrors [`has_short_ranged_magic`]'s shape.
+fn has_magical_focus(entity: &Entity, ruleset: &Ruleset) -> bool {
+    selections_for_effects(entity, ruleset)
+        .iter()
+        .any(|selection| {
+            ruleset
+                .point_items
+                .get(&selection.item_ref)
+                .is_some_and(|item| {
+                    item.effects
+                        .iter()
+                        .any(|effect| matches!(effect, Effect::MagicalFocus { .. }))
+                })
+        })
+}
+
 /// The maximum level a magus may learn of a spell of the given Technique/Form:
 /// the sum of Technique, Form, Intelligence, Magic Theory and 3 (ArMDE:2465),
-/// using effective Art/Ability scores, **halved** if either Art is deficient,
-/// plus the flat [`lab_total_mod`] term (D1, `docs/vf-audit/decisions.md`), and
-/// **halved again** if `range_beyond_touch` is set and the character holds
-/// Short-Ranged Magic (D28). Returns an `i64` (small or negative for a
-/// beginning magus). Requisite-Art reduction is a lab-total nuance out of
-/// scope. Single source of truth: both the validation cap and the UI-surfaced
-/// cap read this, so the two can never diverge.
+/// using effective Art/Ability scores, **folded with `requisites`** the same
+/// way the Casting Total is (ArMDE:12309-12313, X11b — see below), **doubled**
+/// by the lowest folded score when `within_focus` is set (ArMDE:4403),
+/// **halved** if either Art or any requisite is deficient, plus the flat
+/// [`lab_total_mod`] term (D1, `docs/vf-audit/decisions.md`), and **halved
+/// again** if `range_beyond_touch` is set and the character holds Short-Ranged
+/// Magic (D28). Returns an `i64` (small or negative for a beginning magus).
+/// Single source of truth: both the validation cap and the UI-surfaced cap
+/// read this, so the two can never diverge.
+///
+/// **Requisite folding (X11b, D81.5).** `ArMDE:2465`'s own second sentence —
+/// "If the spell has requisites (see page 311), they apply to this total as
+/// well" — and its closing sentence, which calls the cap itself "the
+/// appropriate Lab Total", bring in exactly the same lesser-of-requisite-and-
+/// primary rule the Casting Total already folds (`b5ee82a`, X11):
+/// `derived/casting.rs::fold_requisite` is reused here verbatim, not
+/// duplicated, so a Puissant Art bonus (ArMDE:4820), several requisites of one
+/// class folding to their group's lowest (ArMDE:12311), and the Elemental
+/// Magic exception (ArMDE:3737, "you use the primary Form to calculate totals,
+/// even if the requisite is lower" — generic "totals" wording, so it governs
+/// this Lab-Total-shaped cap too) all behave identically on both totals. A
+/// requisite Art that is itself Deficient halves the cap even when it does not
+/// numerically bind the fold (ArMDE:12311's closing sentence) — `deficient`
+/// below checks `requisites` for exactly this reason, reading the same
+/// [`deficient_arts`] fold the Casting Total's `InPlayMods::deficient` does, so
+/// the two can never disagree about which Arts are deficient. The grid
+/// (`spell_level_caps`) has no specific spell at a cell (it may host several),
+/// so it passes `requisites: &[]` — a no-op fold, exactly like
+/// `derived/casting.rs::casting_totals` does for the same reason.
+///
+/// **Magical Focus doubling (ArMDE:4403, X11b).** "If a spell has requisites,
+/// the lowest applicable score may be one of the requisites, rather than one
+/// of the primary Arts" — since `within_focus` adds the lower of the two
+/// *already-folded* scores, a requisite that won the fold is automatically
+/// eligible, with no separate case needed (confirmed by hand against the
+/// passage's own worked example and by
+/// `crates/arm-rules/tests/requisite_level_cap.rs`'s focus test). `within_focus`
+/// is the caller's own claim (`SpellSelection::within_focus`, X10c) — the
+/// engine cannot match a free-text focus theme to a spell (MAG8), so the
+/// player decides and the validator reads that choice back
+/// (`validation/magus.rs::validate_spell_level_cap`).
 ///
 /// `range_beyond_touch` is a fact about the **spell being asked about** (its
 /// own Range), not the character. `validation/magus.rs::validate_spell_level_cap`
@@ -382,9 +436,11 @@ fn has_short_ranged_magic(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// [`range_beyond_touch`]; [`spell_level_caps`] instead iterates both range
 /// classes directly (`false`, `true`) to synthesize the two surfaced rows.
 ///
-/// **Order of operations**, from the passages: the flat D1 term is summed into
-/// `base` first (it is part of what the Lab Total *is*, `ArMDE:2465`'s closing
-/// sentence), then the two conditional halvings apply. The halving is not a
+/// **Order of operations**, from the passages: the flat D1 term and the
+/// within-focus double both sum into `base` first (they are part of what the
+/// Lab Total *is* — `ArMDE:2465`'s closing sentence, and `ArMDE:4403`'s own
+/// worked example adds the doubled Art alongside the rest before anything else
+/// applies), then the two conditional halvings apply. The halving is not a
 /// separate rule but the same sentence: `ArMDE:2465` ends "This is the
 /// appropriate Lab Total, assuming an aura modifier of +3, and thus any Virtues
 /// and Flaws your character has apply to this total if they would apply to a
@@ -399,19 +455,40 @@ fn has_short_ranged_magic(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// reads the same `effective/art.rs::deficient_arts` fold Deficient-Art halving
 /// always has, so the creation-time cap and the in-play Lab Totals can never
 /// disagree about which Arts are deficient.
-// Source: ArMDE:2465, :5911, :5915, :547, :6739
+// Source: ArMDE:2465, :12309-12313, :3737, :4403, :4820, :5911, :5915, :547, :6739
 pub fn spell_level_cap(
     entity: &Entity,
     ruleset: &Ruleset,
     technique: &Id,
     form: &Id,
+    requisites: &[Id],
     range_beyond_touch: bool,
+    within_focus: bool,
 ) -> i64 {
     // Read before the Art *scores* shadow `technique`/`form` with their totals.
     let deficiencies = deficient_arts(entity, ruleset);
-    let deficient = deficiencies.contains(technique) || deficiencies.contains(form);
-    let tech = i64::from(effective_art_score(entity, ruleset, technique));
-    let form = i64::from(effective_art_score(entity, ruleset, form));
+    let deficient = deficiencies.contains(technique)
+        || deficiencies.contains(form)
+        || requisites.iter().any(|r| deficiencies.contains(r));
+    let elemental_forms = elemental_magic_forms(entity, ruleset);
+    let tech = i64::from(crate::derived::casting::fold_requisite(
+        entity,
+        ruleset,
+        ArtType::Technique,
+        technique,
+        effective_art_score(entity, ruleset, technique),
+        requisites,
+        None,
+    ));
+    let fo = i64::from(crate::derived::casting::fold_requisite(
+        entity,
+        ruleset,
+        ArtType::Form,
+        form,
+        effective_art_score(entity, ruleset, form),
+        requisites,
+        elemental_forms.as_ref(),
+    ));
     let int = i64::from(
         entity
             .characteristics
@@ -425,7 +502,10 @@ pub fn spell_level_cap(
         &Id::new(crate::ruleset::ID_MAGIC_THEORY),
         None,
     ));
-    let base = tech + form + int + magic_theory + 3 + i64::from(lab_total_mod(entity, ruleset));
+    let mut base = tech + fo + int + magic_theory + 3 + i64::from(lab_total_mod(entity, ruleset));
+    if within_focus {
+        base += tech.min(fo);
+    }
     // Floor, not truncate, for both halvings below. No halving rule names a
     // rounding direction, so the rulebook default governs — "if it does not,
     // round down" (ArMDE:547) — and this cap is routinely negative for a
@@ -480,12 +560,89 @@ pub fn spell_level_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellLevelCap
                     technique: technique.clone(),
                     form: form.clone(),
                     range_beyond_touch,
-                    cap: spell_level_cap(entity, ruleset, technique, form, range_beyond_touch),
+                    // No specific spell at this grid cell (it may host several,
+                    // each with different or no requisites, and none of them
+                    // specifically marked within-focus) — a no-op fold, same
+                    // reasoning as `derived/casting.rs::casting_totals`'s own
+                    // `requisites: &[]`.
+                    cap: spell_level_cap(
+                        entity,
+                        ruleset,
+                        technique,
+                        form,
+                        &[],
+                        range_beyond_touch,
+                        false,
+                    ),
                 });
             }
         }
     }
     caps
+}
+
+/// A per-catalogue-spell level cap (X11b, D81.5): unlike [`SpellLevelCap`]'s
+/// Te/Fo/range-keyed grid, this folds the spell's own `requisites`, so two
+/// spells sharing a Te/Fo pair but different requisites can genuinely report
+/// different caps — the same reason `derived/casting.rs::spell_casting_total`
+/// exists beside `casting_totals`. Serializes as `{ "spell": "<id>", "cap": N,
+/// "within_focus_cap": N | null }`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SpellCap {
+    /// The catalogue spell's id.
+    pub spell: Id,
+    /// The maximum learnable level for this spell, requisites folded, no
+    /// Magical Focus doubling (may be negative for a beginning magus).
+    pub cap: i64,
+    /// The same cap WITH the Magical Focus doubling (ArMDE:4403) applied,
+    /// present only when the entity holds a Magical Focus at all — the
+    /// picker's "add within focus" action offers itself only then. `None` for
+    /// an entity with no Magical Focus Virtue, same shape as
+    /// [`crate::derived::CastingTotal::within_focus`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub within_focus_cap: Option<i64>,
+}
+
+/// [`spell_level_cap`] for every spell in the catalogue, folding each spell's
+/// own `requisites` and, only when the entity holds a Magical Focus, also
+/// computing the focus-doubled figure. The UI picker greys a spell by
+/// [`SpellCap::cap`] and, when only [`SpellCap::within_focus_cap`] admits the
+/// spell's level, offers an "add within focus" action that adds it already
+/// marked (`SpellSelection::within_focus = true`) — D81.5: "The engine cannot
+/// match a spell to a free-text focus, so the player decides."
+pub fn spell_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellCap> {
+    let has_focus = has_magical_focus(entity, ruleset);
+    ruleset
+        .spells()
+        .map(|spell| {
+            let range_beyond_touch = spell.range.is_some_and(range_beyond_touch);
+            let cap = spell_level_cap(
+                entity,
+                ruleset,
+                &spell.technique,
+                &spell.form,
+                &spell.requisites,
+                range_beyond_touch,
+                false,
+            );
+            let within_focus_cap = has_focus.then(|| {
+                spell_level_cap(
+                    entity,
+                    ruleset,
+                    &spell.technique,
+                    &spell.form,
+                    &spell.requisites,
+                    range_beyond_touch,
+                    true,
+                )
+            });
+            SpellCap {
+                spell: spell.id.clone(),
+                cap,
+                within_focus_cap,
+            }
+        })
+        .collect()
 }
 
 /// The learned level of a chosen spell: the catalogue's fixed level, or — for a

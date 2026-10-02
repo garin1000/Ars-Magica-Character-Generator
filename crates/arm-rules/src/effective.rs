@@ -3343,7 +3343,15 @@ mod tests {
         )]);
         // 2 + 3 + 1 + 0 + 3 = 9, halved → 4.
         assert_eq!(
-            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem"), false),
+            spell_level_cap(
+                &e,
+                &rs,
+                &Id::new("art.creo"),
+                &Id::new("art.ignem"),
+                &[],
+                false,
+                false
+            ),
             4
         );
     }
@@ -3356,7 +3364,15 @@ mod tests {
         let rs = ruleset();
         let e = cap_fixture(vec![deficient("flaw.deficient_form", "form", "art.ignem")]);
         assert_eq!(
-            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem"), false),
+            spell_level_cap(
+                &e,
+                &rs,
+                &Id::new("art.creo"),
+                &Id::new("art.ignem"),
+                &[],
+                false,
+                false
+            ),
             4
         );
     }
@@ -3373,7 +3389,15 @@ mod tests {
             deficient("flaw.deficient_form", "form", "art.ignem"),
         ]);
         assert_eq!(
-            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem"), false),
+            spell_level_cap(
+                &e,
+                &rs,
+                &Id::new("art.creo"),
+                &Id::new("art.ignem"),
+                &[],
+                false,
+                false
+            ),
             4
         );
     }
@@ -3394,11 +3418,17 @@ mod tests {
         let ignem = Id::new("art.ignem");
         // 0 + 0 + (-5) + 0 + 3 = -2, halved → -1: the halving applies below zero.
         e.characteristics.insert(Characteristic::Int, -5);
-        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, false), -1);
+        assert_eq!(
+            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, false),
+            -1
+        );
         // 0 + 0 + (-4) + 0 + 3 = -1; floor(-1/2) = -1, where a truncating `/ 2`
         // would report 0 and hand the character a free level-0 spell.
         e.characteristics.insert(Characteristic::Int, -4);
-        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, false), -1);
+        assert_eq!(
+            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, false),
+            -1
+        );
     }
 
     /// D1 (`docs/vf-audit/decisions.md`): every `LabTotalMod` effect applies flat
@@ -3411,7 +3441,15 @@ mod tests {
         let e = cap_fixture(vec![Selection::new(Id::new("virtue.inventive_genius"))]);
         // 2 (Creo) + 3 (Ignem) + 1 (Int) + 0 (no Magic Theory) + 3 + 3 (lab_total_mod) = 12.
         assert_eq!(
-            spell_level_cap(&e, &rs, &Id::new("art.creo"), &Id::new("art.ignem"), false),
+            spell_level_cap(
+                &e,
+                &rs,
+                &Id::new("art.creo"),
+                &Id::new("art.ignem"),
+                &[],
+                false,
+                false
+            ),
             12
         );
     }
@@ -3426,9 +3464,12 @@ mod tests {
         let creo = Id::new("art.creo");
         let ignem = Id::new("art.ignem");
         // 2 + 3 + 1 + 0 + 3 = 9, unaffected at Touch or nearer.
-        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, false), 9);
+        assert_eq!(
+            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, false),
+            9
+        );
         // Halved beyond Touch (Eye, Voice, Sight, Arcane Connection): floor(9/2) = 4.
-        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, true), 4);
+        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, &[], true, false), 4);
     }
 
     /// A magus without the Flaw sees no difference between the two cap rows —
@@ -3440,8 +3481,11 @@ mod tests {
         let e = cap_fixture(vec![]);
         let creo = Id::new("art.creo");
         let ignem = Id::new("art.ignem");
-        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, false), 9);
-        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, true), 9);
+        assert_eq!(
+            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, false),
+            9
+        );
+        assert_eq!(spell_level_cap(&e, &rs, &creo, &ignem, &[], true, false), 9);
     }
 
     /// Issue 11: with no per-character override the base budget is the type

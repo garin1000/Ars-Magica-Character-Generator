@@ -305,3 +305,40 @@ describe('SpellTab within-potent-field toggle writes through the store (D79)', (
     expect(store.entity.spells![0].within_potent_field).toBe(true);
   });
 });
+
+// D81.5: the picker's "add within focus" action writes through the store
+// with `within_focus: true` already set — a real click, so it belongs in the
+// `client` project exactly like the General-Ritual add above (SSR renders
+// the markup but never runs the click handler against `store`).
+describe('SpellTab "add within focus" action adds the spell already marked (D81.5)', () => {
+  const CANDIDATE = 'spell.test_focus_candidate';
+
+  function installCandidate(): void {
+    store.ruleset!.ruleset.spells = {
+      ...store.ruleset!.ruleset.spells,
+      [CANDIDATE]: { id: CANDIDATE, technique: 'art.creo', form: 'art.animal', level: 15 },
+    };
+    store.ruleset!.i18n[CANDIDATE] = { name: 'Test Focus Candidate' };
+    // Exceeds the plain cap (10) but fits the Magical-Focus-doubled one (20).
+    store.effective!.spell_caps = [{ spell: CANDIDATE, cap: 10, within_focus_cap: 20 }];
+  }
+
+  function mountTab(): void {
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(SpellTab, { target });
+    flushSync();
+  }
+
+  it('adds the spell with within_focus: true set from the click, not a later toggle', () => {
+    installCandidate();
+    mountTab();
+    const button = target.querySelector(
+      `[data-testid="add-within-focus-${CANDIDATE}"]`,
+    ) as HTMLButtonElement;
+    expect(button).toBeTruthy();
+    button.click();
+    flushSync();
+    expect(store.entity.spells).toEqual([{ spell: CANDIDATE, within_focus: true }]);
+  });
+});
