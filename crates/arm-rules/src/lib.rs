@@ -99,7 +99,7 @@ pub use effective::{
 pub use equipment::{Armor, Shield, Weapon, WeaponKind};
 pub use export::{LABEL_KEYS, character_markdown};
 pub use grant::{Grant, GrantConstraint, open_pick_satisfies, resolve_grants};
-pub use house::{House, LineageType};
+pub use house::{ConditionalWarping, House, LineageType, WarpingExemption};
 // The save-migration subsystem lives in its own module (`migration.rs`), but its
 // three public names stay at the crate root, where `arm-app` has always imported
 // them from.

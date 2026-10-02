@@ -458,9 +458,10 @@ pub(crate) fn has_magical_focus(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// stack in `derived/lab.rs::creo_corpus_lab_total` — the order between them is
 /// provably immaterial: both are a plain `div_euclid(_, 2)`, and floor division
 /// by 2 twice equals floor division by 4 regardless of which comes first. This
-/// reads the same `effective/art.rs::deficient_arts` fold Deficient-Art halving
-/// always has, so the creation-time cap and the in-play Lab Totals can never
-/// disagree about which Arts are deficient.
+/// reads the same [`deficient_arts`] fold Deficient-Art halving always has,
+/// through the same [`arts_deficient`] predicate [`crate::derived::InPlayMods::deficient`]
+/// applies to its own cached set, so the creation-time cap and the in-play Lab
+/// Totals can never disagree about which Arts are deficient.
 // Source: ArMDE:2465, :12309-12313, :3737, :4403, :4820, :5911, :5915, :547, :6739
 pub fn spell_level_cap(
     entity: &Entity,
@@ -473,9 +474,7 @@ pub fn spell_level_cap(
 ) -> i64 {
     // Read before the Art *scores* shadow `technique`/`form` with their totals.
     let deficiencies = deficient_arts(entity, ruleset);
-    let deficient = deficiencies.contains(technique)
-        || deficiencies.contains(form)
-        || requisites.iter().any(|r| deficiencies.contains(r));
+    let deficient = arts_deficient(&deficiencies, technique, form, requisites);
     let elemental_forms = elemental_magic_forms(entity, ruleset);
     let tech = i64::from(crate::derived::casting::fold_requisite(
         entity,

@@ -151,6 +151,30 @@ pub(crate) fn deficient_arts(entity: &Entity, ruleset: &Ruleset) -> BTreeSet<Id>
     arts
 }
 
+/// Whether a `(technique, form, requisites)` combination is halved by a
+/// Deficient Art — either primary Art, or (ArMDE:12311, closing sentence: "any
+/// Deficiencies you have with an Art apply when you use that Art as a
+/// requisite") any of `requisites`, regardless of whether that requisite
+/// numerically binds in `derived::casting::fold_requisite`. Empty
+/// `requisites` (the grid, which has no specific spell) is the pre-X11
+/// two-Art check unchanged.
+///
+/// The one predicate both [`crate::derived::InPlayMods::deficient`] (against
+/// its cached `deficient_arts` field) and [`spell_level_cap`] (against a
+/// freshly-computed [`deficient_arts`] set) apply, so the in-play Lab/Casting
+/// totals and the creation-time per-spell cap can never disagree about the
+/// *shape* of the check, only about which set they check it against.
+pub(crate) fn arts_deficient(
+    deficient_arts: &BTreeSet<Id>,
+    technique: &Id,
+    form: &Id,
+    requisites: &[Id],
+) -> bool {
+    deficient_arts.contains(technique)
+        || deficient_arts.contains(form)
+        || requisites.iter().any(|r| deficient_arts.contains(r))
+}
+
 /// The effective score of `art`: the highest bought score the entity holds for
 /// it, plus any flat bonus (Puissant Art) and any Elemental Magic XP-space boost.
 /// An Art the entity has not bought counts as 0.

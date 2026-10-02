@@ -8,6 +8,7 @@
 //! `effective.rs` split); pure code motion, no behavior change.
 
 use super::*;
+use crate::house::WarpingExemption;
 
 /// The Warping Points granted by [`Effect::WarpingGrant`] (Warped by Magic → 5)
 /// and [`Effect::WarpingGrantParam`] (Raised from the Dead, D69/X7b-e: `base_points`
@@ -67,7 +68,7 @@ pub fn warping_points_total(entity: &Entity, ruleset: &Ruleset) -> u32 {
             selections_for_effects(entity, ruleset).as_ref(),
             ruleset,
         ))
-        .saturating_add(merinita_warping_points(entity, ruleset))
+        .saturating_add(house_conditional_warping_points(entity, ruleset))
 }
 
 /// The Warping Points that DETERMINE how many V/F are owed from Warping: the
@@ -82,7 +83,7 @@ fn warping_points_for_owed(entity: &Entity, ruleset: &Ruleset) -> u32 {
     entity
         .warping_points
         .saturating_add(warping_grant_points_in(&base, ruleset))
-        .saturating_add(merinita_warping_points(entity, ruleset))
+        .saturating_add(house_conditional_warping_points(entity, ruleset))
 }
 
 /// Whether `entity` holds, among its effective (bought ∪ House/mythic/VF-
@@ -118,15 +119,46 @@ fn has_faerie_related_vf(entity: &Entity, ruleset: &Ruleset) -> bool {
     })
 }
 
-/// The conditional Warping Point Merinita's own Mystery inflicts at creation:
-/// "Any magus in this House without a faerie-related Virtue or Flaw has a
-/// Warping Point, inflicted to allow initiation into the Mystery" (ArMDE:2280).
-/// 1 for a `house.merinita` magus with no faerie-related V/F, 0 otherwise —
-/// including every non-Merinita entity, for which the House clause never
-/// applies at all.
-fn merinita_warping_points(entity: &Entity, ruleset: &Ruleset) -> u32 {
-    let is_merinita = entity.house == Some(Id::new("house.merinita"));
-    u32::from(is_merinita && !has_faerie_related_vf(entity, ruleset))
+/// The conditional Warping Point `entity`'s own House's Mystery inflicts at
+/// creation, per the House's data-driven
+/// [`crate::house::House::conditional_warping`] field — e.g. Merinita's "Any
+/// magus in this House without a faerie-related Virtue or Flaw has a Warping
+/// Point, inflicted to allow initiation into the Mystery" (ArMDE:2280). 0 for
+/// an entity with no House, a House absent the field entirely, or one whose
+/// stated exemption holds; the House's own `points` otherwise.
+///
+/// Generic over House by construction: there is no House-id branch here at
+/// all, so a second House's analogous Mystery-initiation clause (Houses of
+/// Hermes — Mystery Cults/True Lineages/Societas each define several) is a
+/// `rules/core/houses.json` change, never a new Rust function.
+fn house_conditional_warping_points(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    let Some(house_id) = &entity.house else {
+        return 0;
+    };
+    let Some(house) = ruleset.house(house_id) else {
+        return 0;
+    };
+    let Some(conditional) = &house.conditional_warping else {
+        return 0;
+    };
+    if warping_exemption_holds(conditional.unless, entity, ruleset) {
+        0
+    } else {
+        conditional.points
+    }
+}
+
+/// Whether `entity` satisfies the named [`WarpingExemption`] from a House's
+/// conditional Warping clause. An exhaustive match so a new variant is a
+/// compile error here until handled.
+fn warping_exemption_holds(
+    exemption: WarpingExemption,
+    entity: &Entity,
+    ruleset: &Ruleset,
+) -> bool {
+    match exemption {
+        WarpingExemption::FaerieRelatedVf => has_faerie_related_vf(entity, ruleset),
+    }
 }
 
 /// The Warping Score used to decide the owed warping V/F: [`warping_points_for_owed`]

@@ -46,9 +46,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::art::ArtType;
 use crate::characteristics::Characteristic;
 use crate::effective::{
-    decrepitude_score, deficient_arts, effective_ability_score, effective_art_score,
-    effective_characteristic_after_aging, resolved_spell_level, selections_for_effects,
-    warping_points_total, warping_score,
+    arts_deficient, decrepitude_score, deficient_arts, effective_ability_score,
+    effective_art_score, effective_characteristic_after_aging, resolved_spell_level,
+    selections_for_effects, warping_points_total, warping_score,
 };
 use crate::ruleset::{
     ID_ARTES_LIBERALES, ID_CORPUS, ID_CREO, ID_MAGIC_THEORY, ID_PARMA_MAGICA, ID_PENETRATION,
@@ -747,9 +747,7 @@ impl InPlayMods {
     /// numerically binds in [`fold_requisite`]. Empty `requisites` (the grid,
     /// which has no specific spell) is the pre-X11 two-Art check unchanged.
     fn deficient(&self, technique: &Id, form: &Id, requisites: &[Id]) -> bool {
-        self.deficient_arts.contains(technique)
-            || self.deficient_arts.contains(form)
-            || requisites.iter().any(|r| self.deficient_arts.contains(r))
+        arts_deficient(&self.deficient_arts, technique, form, requisites)
     }
 
     /// The residual Casting-Score penalty for casting a `form` spell with no voice:

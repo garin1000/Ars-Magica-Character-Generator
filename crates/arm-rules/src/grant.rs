@@ -12,12 +12,20 @@
 //!
 //! Extracted from the House machinery so mythic-companion types reuse the exact
 //! same grant model rather than duplicating it.
+//!
+//! `grant` depends on nothing in `effective` — only on `crate::types` and
+//! `crate::ruleset`, both layers underneath it — so the dependency stays
+//! one-way: `effective` consumes `grant`, never the reverse. That is why
+//! [`resolve_grant`]'s realm stamp (`crate::types::stamp_realm_override`)
+//! lives in `types` rather than in `effective::realm`: it is the one function
+//! both `grant` and `effective` need to call, and `types` is the one module
+//! both already sit above.
 
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ruleset::Ruleset;
-use crate::types::{Id, ItemKind, Magnitude, Realm, Selection};
+use crate::types::{Id, ItemKind, Magnitude, Realm, Selection, stamp_realm_override};
 
 /// A constraint on a player-chosen open grant: the kind of item, an optional
 /// magnitude, and category allow/deny lists. Purely declarative — enforced in
@@ -58,7 +66,7 @@ pub enum Grant {
         /// other `Fixed` grant (a House's free Virtue has no realm of its own
         /// to stamp). Consumed by `resolve_grant`, which stamps it onto the
         /// resolved `Selection`'s own `association` param
-        /// (`effective::stamp_realm_override`).
+        /// (`crate::types::stamp_realm_override`).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         realm: Option<Realm>,
     },
@@ -119,7 +127,7 @@ fn resolve_grant(grant: &Grant, choices: &BTreeMap<String, Selection>) -> Option
             realm,
         } => {
             let mut selection = Selection::with_params(item.clone(), params.clone());
-            crate::effective::stamp_realm_override(&mut selection, *realm);
+            stamp_realm_override(&mut selection, *realm);
             Some(selection)
         }
         Grant::Choice {

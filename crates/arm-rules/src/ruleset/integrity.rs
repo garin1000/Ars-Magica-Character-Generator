@@ -1883,7 +1883,9 @@ impl Ruleset {
     }
 
     /// Validates a House record: every Virtue/Flaw it can grant must resolve to a
-    /// known point item, and its source line range (if any) must be well-formed.
+    /// known point item, a `conditional_warping` clause (if any) must inflict a
+    /// nonzero number of points, and its source line range (if any) must be
+    /// well-formed.
     ///
     /// A `Fixed` grant and each `Choice` option name a concrete point-item id, so
     /// those are integrity-checked here. An `Open` grant carries no item id (the
@@ -1891,10 +1893,23 @@ impl Ruleset {
     /// [`crate::validation`]), so there is nothing to resolve at load. Grant
     /// `params` values (the `ability`/`art` a Puissant targets) are deliberately
     /// NOT registry-checked, mirroring the forward-declared Ability/Art-domain
-    /// policy on parameter values elsewhere.
+    /// policy on parameter values elsewhere. `conditional_warping.unless` is a
+    /// closed Rust enum ([`crate::house::WarpingExemption`]), so serde itself is
+    /// the trust gate on that half — an unknown predicate string fails the parse
+    /// before integrity validation ever runs; `points == 0` is the one condition
+    /// serde cannot reject on its own.
     fn validate_house_refs(&self, house: &House, errors: &mut Vec<String>) {
         let id = &house.id;
         self.validate_grant_refs("house", id, &house.grants, errors);
+        if let Some(conditional) = &house.conditional_warping
+            && conditional.points == 0
+        {
+            errors.push(format!(
+                "house '{id}': conditional_warping grants 0 Warping Points, which is a \
+                 no-op that reads as a rule — omit the field entirely for a House with no \
+                 conditional Warping clause"
+            ));
+        }
         validate_source_range(&house.source, &format!("house '{id}'"), errors);
     }
 

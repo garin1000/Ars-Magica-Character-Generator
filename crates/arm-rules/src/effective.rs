@@ -60,6 +60,18 @@ pub use reputation_and_caps::*;
 mod parameter_options;
 pub use parameter_options::*;
 mod realm;
+/// Re-exported here rather than defined here: `REALM_OVERRIDE_PARAM_KEY` and
+/// `stamp_realm_override` live in `crate::types` (the one layer both `grant`
+/// and `effective` already sit above), not in `effective::realm`, so
+/// `crate::grant::resolve_grant` can call the stamp without `grant` depending
+/// on `effective` — the reverse of this crate's established direction. Every
+/// existing consumer of `effective::REALM_OVERRIDE_PARAM_KEY` /
+/// `effective::stamp_realm_override` keeps resolving unchanged. Split in two
+/// because their visibility differs: `tests/d42_realms.rs` reads the constant
+/// from outside the crate (so it stays `pub`), but nothing outside the crate
+/// calls the stamp (so it is `pub(crate)`, narrower than before this move).
+pub use crate::types::REALM_OVERRIDE_PARAM_KEY;
+pub(crate) use crate::types::stamp_realm_override;
 pub use realm::*;
 
 /// The selection list every effect / score computation iterates: the entity's

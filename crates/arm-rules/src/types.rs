@@ -2059,10 +2059,10 @@ pub enum Effect {
         /// (ArMDE:5038), so this is `Some(Realm::Faerie)` there, while most
         /// `GrantsSelection` effects (Templar Commander's Brother-Knight) carry
         /// `None` and the granted copy resolves through the plain chain exactly
-        /// like a bought one. Consumed by `effective::vf_granted_selections`,
+        /// like a bought one. Consumed by `crate::effective::vf_granted_selections`,
         /// which stamps it onto the granted `Selection`'s own `association`
-        /// param (`effective::stamp_realm_override`) — `resolve_realm` itself
-        /// needs no change, since it already reads that param off any
+        /// param ([`stamp_realm_override`]) — `crate::effective::resolve_realm`
+        /// itself needs no change, since it already reads that param off any
         /// `Selection`, bought or granted.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         realm: Option<Realm>,
@@ -5226,6 +5226,46 @@ impl fmt::Display for Realm {
             Realm::Divine => "divine",
             Realm::Infernal => "infernal",
         })
+    }
+}
+
+/// The selection param key an override is stored under. Deliberately not
+/// `"realm"`, which `flaw.bound_to_realm`, `flaw.realm_stigmatic`,
+/// `flaw.necessary_realm_aura_for_ability` and `virtue.folk_magic` already use
+/// for a different (or, for Folk Magic, the same) realm-shaped value.
+///
+/// Lives here in `types`, beside [`stamp_realm_override`], rather than in
+/// `effective::realm` where its only other reader (`override_realm`) lives:
+/// `crate::grant::resolve_grant` needs to call [`stamp_realm_override`] too,
+/// and `types` is the one layer both `grant` and `effective` already sit
+/// above, so defining it here keeps neither depending on the other. Stays
+/// `pub` (re-exported at `effective::REALM_OVERRIDE_PARAM_KEY`, its established
+/// path): `tests/d42_realms.rs` reads it from outside the crate, unlike
+/// [`stamp_realm_override`], which no external test calls.
+pub const REALM_OVERRIDE_PARAM_KEY: &str = "association";
+
+/// Stamps `realm`, if stated, onto `selection`'s [`REALM_OVERRIDE_PARAM_KEY`]
+/// param — row 55 (`docs/open-todos.md`; D74.4,
+/// `docs/vf-audit/decisions.md`): a granted copy of a Supernatural entry
+/// carries a realm only where the grant states one
+/// (`Effect::GrantsSelection::realm`, `crate::grant::Grant::Fixed::realm`),
+/// independent of the granted item's own `realm_association`. A no-op when
+/// `realm` is `None`, so a grant that states nothing leaves the granted
+/// [`Selection`] exactly as [`Selection::new`]/[`Selection::with_params`]
+/// built it, resolving through the plain chain exactly like a bought copy.
+///
+/// The single call site for every grant mechanism that can carry a per-grant
+/// realm (`crate::grant::resolve_grant`,
+/// `crate::effective::vf_granted_selections`) so
+/// [`crate::effective::resolve_realm`] itself needs no change: it already
+/// reads [`REALM_OVERRIDE_PARAM_KEY`] off any [`Selection`], bought or
+/// granted, through the exact same `override_realm` step.
+pub(crate) fn stamp_realm_override(selection: &mut Selection, realm: Option<Realm>) {
+    if let Some(realm) = realm {
+        selection.params.insert(
+            REALM_OVERRIDE_PARAM_KEY.to_string(),
+            SelectionParamValue::Single(realm.id()),
+        );
     }
 }
 

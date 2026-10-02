@@ -73,9 +73,45 @@ pub struct House {
     /// The free Virtue(s)/Flaw(s) this House grants at creation.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub grants: Vec<Grant>,
+    /// A conditional Warping Point this House's own Mystery inflicts at
+    /// creation, unless the entity meets the stated exemption — Merinita,
+    /// ArMDE:2280: "Any magus in this House without a faerie-related Virtue or
+    /// Flaw has a Warping Point, inflicted to allow initiation into the
+    /// Mystery." `None` for every House without such a clause. Data, not
+    /// code: a second House's analogous Mystery-initiation clause (Houses of
+    /// Hermes — Mystery Cults/True Lineages/Societas each define several) is a
+    /// `rules/core/houses.json` change, never a new Rust function.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub conditional_warping: Option<ConditionalWarping>,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
+}
+
+/// A House's conditional Warping Point clause: `points` inflicted unless the
+/// entity's effective V/F satisfy `unless`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConditionalWarping {
+    /// Warping Points inflicted when `unless` does not hold. Must be nonzero
+    /// (`ruleset::integrity` rejects 0 — a no-op that reads as a rule).
+    pub points: u32,
+    /// The exemption that, if satisfied, inflicts no points at all.
+    pub unless: WarpingExemption,
+}
+
+/// A closed, data-named exemption predicate for [`ConditionalWarping::unless`].
+/// Closed rather than a general boolean expression (YAGNI): the rulebook names
+/// exactly one shape today (ArMDE:2280's "faerie-related Virtue or Flaw"); a
+/// future House clause needing a different predicate adds a variant here —
+/// still zero `if house.id == ...` branching at the evaluation site.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WarpingExemption {
+    /// Exempts an entity holding any faerie-related Virtue or Flaw — D81.14
+    /// (`docs/vf-audit/decisions.md`): an entry whose realm resolves to Faerie,
+    /// or one of the three entries explicitly flagged
+    /// [`crate::types::PointItem::faerie_related`].
+    FaerieRelatedVf,
 }
 
 /// The on-disk shape of `rules/core/houses.json`: the House catalogue. Internal

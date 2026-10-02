@@ -1269,8 +1269,8 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2236, shared by
-  `validate_prereq_refs` :2113 and `validate_effect_refs` :2651) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2251, shared by
+  `validate_prereq_refs` :2128 and `validate_effect_refs` :2666) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
@@ -2926,7 +2926,7 @@ Inventing it for Student of (Realm) would forbid a build the book permits.
   realm_stigmatic`, `flaw.necessary_realm_aura_for_ability`, `virtue.
   folk_magic`.
 - Engine: the override is stored under a selection param key of its own,
-  `effective/realm.rs::REALM_OVERRIDE_PARAM_KEY` (`"association"`) — not
+  `types.rs::REALM_OVERRIDE_PARAM_KEY` (`"association"`) — not
   `"realm"`, which four of the entries above already use for a different (or,
   for Folk Magic, the same) value. It is admitted as a legal key but never a
   *required* one (`validation/selections.rs::validate_selection_parameters`),
@@ -2995,7 +2995,7 @@ chain).
   item level (Demonic Might/Powers, Strong Angelic Heritage), or is not
   Supernatural at all (Templar Commander's Brother-Knight/Temporal
   Influence).
-- Engine: `effective/realm.rs::stamp_realm_override` writes the stated realm
+- Engine: `types.rs::stamp_realm_override` writes the stated realm
   onto the granted `Selection`'s own `REALM_OVERRIDE_PARAM_KEY` param
   (`"association"` — the exact key a player's own override uses), called from
   `grant.rs::resolve_grant`'s `Grant::Fixed` arm and
@@ -4869,7 +4869,8 @@ The named Virtues a House grants, and the Mystery Abilities their
   House benefit table (above), distinct from the Faerie Magic grant the first
   sentence states.
 - D81.4/D81.14 (`docs/vf-audit/decisions.md`): a conditional point, not a
-  `Grant` — applies only to a `house.merinita` magus holding no
+  `Grant` — applies only to a magus of a House carrying a
+  `conditional_warping` clause (Merinita only, today) who holds no
   "faerie-related" Virtue or Flaw. D81.14 rules "faerie-related" as EITHER an
   entry whose realm resolves to Faerie via the existing realm-resolution chain
   (Faerie Blood, Strong Faerie Blood, and Bound to (Realm) / Realm Stigmatic /
@@ -4884,16 +4885,25 @@ The named Virtues a House grants, and the Mystery Abilities their
   predicate, scanning bought ∪ non-warping-fill granted selections — the same
   base `warping_points_for_owed` uses, so a player cannot fill an owed-warping
   Flaw slot with a faerie-related pick to dodge this very point) and
-  `effective/warping.rs::merinita_warping_points` (the House gate: 1 point iff
-  `house.merinita` and the predicate is false, 0 otherwise), folded additively
-  into both `warping_points_total` and `warping_points_for_owed` via
-  `saturating_add` — a genuine accrued Warping Point, not a Merinita-only side
-  channel.
-- Data: `rules/core/virtues_flaws.json` — `faerie_related: true` added to
-  `flaw.faerie_friend`, `flaw.faerie_upbringing`,
-  `flaw.susceptibility_to_faerie_power`. No new field on `virtue.faerie_magic`
-  or `virtue.faerie_doctor` (mythic-companion-only category, unreachable by any
-  Hermetic magus profile) — see D81.14.
+  `effective/warping.rs::house_conditional_warping_points` (the data-driven
+  gate: reads `entity`'s House's own `conditional_warping` field — `points`
+  unless `unless` holds, 0 for a House with no such field at all), folded
+  additively into both `warping_points_total` and `warping_points_for_owed`
+  via `saturating_add` — a genuine accrued Warping Point, not a Merinita-only
+  side channel. Generic over House: `house_conditional_warping_points` names
+  no House id, so a second House's analogous Mystery clause is a
+  `rules/core/houses.json` change (architecture review finding, 2026-10-02 —
+  the original implementation hardcoded `house.merinita` by id).
+- Data: `house.rs::House::conditional_warping` (`ConditionalWarping { points,
+  unless: WarpingExemption }`); `house.merinita`'s entry in
+  `rules/core/houses.json` sets `{ "points": 1, "unless": "faerie_related_vf" }`.
+  `WarpingExemption` is a closed enum naming the one predicate shape the
+  rulebook states today (YAGNI) — a future House with a differently-shaped
+  exemption adds a variant, not a branch. `rules/core/virtues_flaws.json` —
+  `faerie_related: true` added to `flaw.faerie_friend`,
+  `flaw.faerie_upbringing`, `flaw.susceptibility_to_faerie_power`. No new
+  field on `virtue.faerie_magic` or `virtue.faerie_doctor` (mythic-companion-
+  only category, unreachable by any Hermetic magus profile) — see D81.14.
 - Tests: `crates/arm-rules/tests/d81_merinita_warping.rs` — the no-faerie-V/F
   case (1 point), the House gate (non-Merinita owes nothing), additive
   stacking with pre-existing accrued points, the two realm-resolved and three

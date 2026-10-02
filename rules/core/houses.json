@@ -101,6 +101,7 @@
       "id": "house.merinita",
       "lineage_type": "mystery_cult",
       "grants": [{ "kind": "fixed", "item": "virtue.faerie_magic" }],
+      "conditional_warping": { "points": 1, "unless": "faerie_related_vf" },
       "source": { "anchor": "house-merinita", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [729, 741] }
     },
     {

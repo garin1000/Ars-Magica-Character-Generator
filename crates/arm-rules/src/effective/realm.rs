@@ -11,13 +11,9 @@
 //! `validation::realm::validate_realm_associations`'s job, not this
 //! function's — see its doc comment for the two codes.
 
-use crate::types::{PointItem, Realm, RealmAssociation, Selection, SelectionParamValue};
-
-/// The selection param key an override is stored under. Deliberately not
-/// `"realm"`, which `flaw.bound_to_realm`, `flaw.realm_stigmatic`,
-/// `flaw.necessary_realm_aura_for_ability` and `virtue.folk_magic` already use
-/// for a different (or, for Folk Magic, the same) realm-shaped value.
-pub const REALM_OVERRIDE_PARAM_KEY: &str = "association";
+use crate::types::{
+    PointItem, REALM_OVERRIDE_PARAM_KEY, Realm, RealmAssociation, Selection, SelectionParamValue,
+};
 
 /// A non-blocking condition [`resolve_realm`] detected while resolving one
 /// entry's realm. Turned into a `ValidationIssue` by
@@ -72,31 +68,6 @@ fn override_realm(selection: &Selection) -> Option<Realm> {
         .get(REALM_OVERRIDE_PARAM_KEY)
         .and_then(SelectionParamValue::as_single)
         .and_then(Realm::from_id)
-}
-
-/// Stamps `realm`, if stated, onto `selection`'s [`REALM_OVERRIDE_PARAM_KEY`]
-/// param — row 55 (`docs/open-todos.md`; D74.4,
-/// `docs/vf-audit/decisions.md`): a granted copy of a Supernatural entry
-/// carries a realm only where the grant states one
-/// (`crate::types::Effect::GrantsSelection::realm`,
-/// `crate::grant::Grant::Fixed::realm`), independent of the granted item's
-/// own `realm_association`. A no-op when `realm` is `None`, so a grant that
-/// states nothing leaves the granted [`Selection`] exactly as
-/// [`Selection::new`]/[`Selection::with_params`] built it, resolving through
-/// the plain chain exactly like a bought copy.
-///
-/// The single call site for every grant mechanism that can carry a per-grant
-/// realm (`crate::grant::resolve_grant`, `crate::effective::vf_granted_selections`)
-/// so [`resolve_realm`] itself needs no change: it already reads
-/// [`REALM_OVERRIDE_PARAM_KEY`] off any [`Selection`], bought or granted,
-/// through the exact same [`override_realm`] step.
-pub fn stamp_realm_override(selection: &mut Selection, realm: Option<Realm>) {
-    if let Some(realm) = realm {
-        selection.params.insert(
-            REALM_OVERRIDE_PARAM_KEY.to_string(),
-            SelectionParamValue::Single(realm.id()),
-        );
-    }
 }
 
 /// Resolves the [`Realm`] `selection` (of `item`) is associated with, given

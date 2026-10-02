@@ -1680,6 +1680,43 @@ mod tests {
     }
 
     #[test]
+    fn house_conditional_warping_with_zero_points_is_rejected() {
+        let houses = r#"{ "houses": [
+          { "id": "house.tytalus", "lineage_type": "societas",
+            "conditional_warping": { "points": 0, "unless": "faerie_related_vf" } }
+        ] }"#;
+        let err = Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: VALID_ITEMS,
+            type_profiles: VALID_TYPES,
+            abilities: None,
+            arts: None,
+            houses: Some(houses),
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: None,
+            life_stages: None,
+            childhoods: None,
+            aging: None,
+            parameter_catalogues: None,
+        })
+        .unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("house.tytalus") && m.contains("conditional_warping")),
+                "expected a zero-point conditional_warping error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    #[test]
     fn from_json_defaults_to_no_abilities() {
         let rs = Ruleset::from_json("t", "1", VALID_ITEMS, VALID_TYPES).unwrap();
         assert_eq!(rs.ability_count(), 0);
