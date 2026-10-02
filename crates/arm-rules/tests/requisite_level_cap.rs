@@ -412,6 +412,14 @@ fn within_focus_marker_doubles_the_lowest_folded_score_and_can_admit_an_otherwis
         art("art.auram", 20),
         art("art.rego", 5),
     ];
+    // The doubling applies only while a Magical Focus is actually held
+    // (`tmp/review-d81.json` #1) — a bare `within_focus` marker with no
+    // Focus Virtue at all is covered separately, by
+    // `focus_marker_needs_focus.rs`.
+    e.selections = vec![Selection::with_params(
+        Id::new("virtue.major_magical_focus"),
+        BTreeMap::from([("focus".to_string(), Id::new("test"))]),
+    )];
     let mut sel = SpellSelection::new(Id::new("spell.test_focus_requisite"));
     sel.within_focus = true;
     e.spells = vec![sel];

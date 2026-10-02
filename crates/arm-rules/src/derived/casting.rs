@@ -495,10 +495,16 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
 /// Focus doubling) and [`SpellSelection::within_potent_field`] (D79, Potent
 /// Magic's flat bonus) via [`formulaic_casting_score`] — a spell marked under
 /// both gets the doubling AND the bonus together, since the two free-text
-/// themes need not coincide. Either marker with no matching Virtue held falls
-/// back to no contribution from that marker, silently: reachable only via a
-/// hand-edited save, since the UI offers each toggle only when the character
-/// holds the matching Virtue.
+/// themes need not coincide. `within_focus` is gated on `mods.has_focus`
+/// (same predicate `casting_totals`'s own `within_focus` field already gates
+/// on, and `effective/spell.rs::has_magical_focus` reads for the per-spell
+/// level cap): a stale marker surviving the removal of the entity's last
+/// Magical Focus Virtue must not keep doubling the total (review finding,
+/// `tmp/review-d81.json` #1) — the UI offers the "mark within focus" action
+/// only while a Focus is held, but nothing previously re-checked that once
+/// marked, which made the figure reachable via plain Virtue removal through
+/// the normal UI, not only a hand-edited save. `within_potent_field` is
+/// unchanged and still applies unconditionally (out of scope here).
 ///
 /// Computed directly via [`formulaic_casting_score`] rather than selecting
 /// from a [`casting_totals`] cell, because the grid only carries three
@@ -521,7 +527,7 @@ pub fn spell_casting_total(
         base,
         &spell.requisites,
         CastingVariant {
-            focus: chosen.within_focus,
+            focus: chosen.within_focus && mods.has_focus,
             potent: chosen.within_potent_field,
         },
     ))

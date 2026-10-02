@@ -503,7 +503,12 @@ pub fn spell_level_cap(
         None,
     ));
     let mut base = tech + fo + int + magic_theory + 3 + i64::from(lab_total_mod(entity, ruleset));
-    if within_focus {
+    // A stale marker (the Magical Focus Virtue removed after the spell was
+    // marked `within_focus`) must not double the cap — the doubling applies
+    // only while the entity actually holds a Magical Focus right now. Saves
+    // store choices, so `within_focus` itself is never scrubbed; only its
+    // effect here is gated.
+    if within_focus && has_magical_focus(entity, ruleset) {
         base += tech.min(fo);
     }
     // Floor, not truncate, for both halvings below. No halving rule names a

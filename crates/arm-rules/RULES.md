@@ -5206,6 +5206,25 @@ free-text Magical Focus theme to a spell (MAG8), so the player decides, and
 `validate_spell_level_cap` reads `sel.within_focus` back, the same way
 `spell_casting_total` already reads it for the Casting Total.
 
+**Correction (review finding, `tmp/review-d81.json` #1): the doubling is now
+also gated on actually holding a Magical Focus right now.** The marker alone
+used to be enough — `spell_level_cap` applied the doubling for any
+`within_focus: true`, with no check that the entity still held a Magical
+Focus Virtue. That made the gate on the *cap* strictly weaker than the gate
+the picker uses to offer the "add within focus" action in the first place
+(`spell_caps`'s own `has_magical_focus` check, above), so removing the Focus
+Virtue after marking a spell left an illegally over-cap spell with no
+`spell_level_exceeds_cap` error — reachable through plain Virtue removal in
+the normal UI, not only a hand-edited save. `spell_level_cap` now reads
+`within_focus && has_magical_focus(entity, ruleset)` — the SAME predicate
+`spell_caps` already calls, so the enforcement path and the picker's own
+gate can never disagree again. The marker itself is never scrubbed (saves
+store choices); only its *effect* here is conditional on the Virtue still
+being held. `derived/casting.rs::spell_casting_total` gets the identical
+gate, against its own already-computed `InPlayMods::has_focus`, for the same
+reason — the Casting Total a known spell shows was inflating the same way.
+Tests: `crates/arm-rules/tests/focus_marker_needs_focus.rs`.
+
 **The in-play Lab Total (`derived/lab.rs::lab_totals`) still does not fold
 requisites.** `ArMDE:12313` separates "learning" (this cap, now folded) from
 "inventing" (the in-play Lab Total family, still unfolded) — a genuinely
@@ -12088,12 +12107,17 @@ slice.
   stands; the engine still cannot *derive* membership, only record the
   claim). `spell_casting_total` selects the one figure the book prints
   beside a known spell: the cell's within-focus formulaic figure when the
-  flag is set (falling back to the base formulaic figure if the character
-  holds no Magical Focus — reachable only via a hand-edited save, since the
-  UI's toggle shows only when a Focus is held), else the base figure. A pure
-  selector over the two numbers `casting_totals` already computes, so Potent
-  Magic (which folds into the within-focus figure alone, never the base
-  total) comes along automatically.
+  flag is set AND the entity currently holds a Magical Focus, else the base
+  figure. **Correction (review finding, `tmp/review-d81.json` #1):** this
+  used to read the flag alone, so a Focus Virtue removed after a spell was
+  marked left the figure inflated with no Focus to justify it — reachable
+  via plain Virtue removal through the normal UI, not only a hand-edited
+  save as originally claimed here. Now gated on the same `InPlayMods::has_focus`
+  `casting_totals`'s own grid cell already gates its `within_focus` figure on,
+  so the picker's per-spell figure and the grid cell can never disagree. A
+  pure selector over the two numbers `casting_totals` already computes, so
+  Potent Magic (which folds into the within-focus figure alone, never the
+  base total) comes along automatically.
 - **Export**: the book's own "X (Z)" notation — `write_abilities`/
   `write_arts` append `" ({banked_xp})"` to the score cell only when
   `banked_xp > 0`, so every export written before X10b stays byte-identical.
@@ -12130,7 +12154,8 @@ slice.
   `validation/scores.rs::validate_art_banked_xp`,
   `derived/casting.rs::spell_casting_total`, `export/sections.rs::score_cell`.
   Tests: `crates/arm-rules/tests/x10bc_banked_xp_and_within_focus.rs`,
-  `crates/arm-rules/tests/book_templates.rs`.
+  `crates/arm-rules/tests/book_templates.rs`. The live-Focus gate
+  (`tmp/review-d81.json` #1, above): `crates/arm-rules/tests/focus_marker_needs_focus.rs`.
 
 ---
 
