@@ -170,10 +170,13 @@ describe('characteristic grant + ability bonus', () => {
 // area's row and not bleed onto the character's other areas.
 describe('Puissant Ability targets one ability instance', () => {
   // Add an (Area) Lore instance at row `i`, name its area, and raise it to `score`.
+  // Same generous, measured row-render wait as the Puissant Ability picks below
+  // (see ROW_RENDER_TIMEOUT's comment in the `it` for why 20s, not 10s).
   async function addLore(i, area, score) {
     await $('[data-testid="add-ability.area_lore"]').click();
     const param = await $(`[data-testid="ability-param-ability.area_lore-${i}"]`);
-    await param.waitForExist({ timeout: 5000 });
+    await param.waitForExist({ timeout: 20000 });
+    await param.waitForEnabled({ timeout: 20000 });
     await param.setValue(area);
     const inc = await $(`[data-testid="ability-inc-ability.area_lore-${i}"]`);
     for (let n = 0; n < score; n++) await inc.click();
@@ -203,10 +206,27 @@ describe('Puissant Ability targets one ability instance', () => {
     await add.click();
     await add.click();
 
+    // Generous wait, and measured rather than guessed: under a real concurrent
+    // CPU load (a `cargo tarpaulin` pass sharing the machine, load average into
+    // the teens on 8 cores) the SECOND instance's row was still observed missing
+    // after a 10s wait, even though the add is purely client-side/synchronous
+    // (confirmed by reading ParameterPicker.svelte / VirtueFlawTab.svelte — no
+    // IPC gates a row's existence). That is the webview renderer itself being
+    // starved of CPU time, not a logic race, so the fix is a longer wait on the
+    // right condition, not a sleep or a global default bump.
+    const ROW_RENDER_TIMEOUT = 20000;
     const first = await $('[data-testid="param-virtue.puissant_ability-ability-0"]');
-    await first.waitForExist({ timeout: 5000 });
+    await first.waitForExist({ timeout: ROW_RENDER_TIMEOUT });
+    await first.waitForEnabled({ timeout: ROW_RENDER_TIMEOUT });
     await first.selectByVisibleText('Brandenburg Lore');
+    // The second instance's row is added by the SAME two clicks above, but its
+    // render lands on a later tick than the first's. Unlike `first`, this element
+    // used to have no explicit wait at all and fell through to webdriverio's
+    // implicit default (5000ms), which is exactly the "wasn't found"/"still not
+    // existing after 5000ms" flake this guards against.
     const second = await $('[data-testid="param-virtue.puissant_ability-ability-1"]');
+    await second.waitForExist({ timeout: ROW_RENDER_TIMEOUT });
+    await second.waitForEnabled({ timeout: ROW_RENDER_TIMEOUT });
     await second.selectByVisibleText('Bavaria Lore');
 
     // Back on Abilities: the two targeted instances show their score + 2, and the

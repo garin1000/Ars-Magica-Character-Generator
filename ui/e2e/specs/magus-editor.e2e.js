@@ -808,11 +808,21 @@ describe('repeated parameterized virtues', () => {
     );
 
     // Each instance gets its own characteristic (all distinct, so under the cap).
+    // Six rapid-fire adds queue up six selection renders; under a real concurrent
+    // CPU load (a `cargo tarpaulin` pass sharing the machine) a later instance's
+    // row can settle well past the webdriverio default implicit wait, and past
+    // even a 10s (STEP_TIMEOUT) explicit one — measured on the sibling Puissant
+    // Ability flake in companion-editor.e2e.js, where the row genuinely had not
+    // rendered after 10s under that load, purely from the webview renderer being
+    // starved of CPU time (the add itself is client-side/synchronous — see
+    // ParameterPicker.svelte / VirtueFlawTab.svelte). Wait generously (20s), and
+    // confirm the control is enabled (not merely present) before selecting.
     for (let i = 0; i < targets.length; i++) {
       const param = await $(
         `[data-testid="param-virtue.great_characteristic-characteristic-${i}"]`,
       );
-      await param.waitForExist({ timeout: 5000 });
+      await param.waitForExist({ timeout: 20000 });
+      await param.waitForEnabled({ timeout: 20000 });
       await param.selectByAttribute('value', `characteristic.${targets[i]}`);
     }
 
