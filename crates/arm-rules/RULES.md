@@ -1869,6 +1869,22 @@ the WHOLE key `None`, and such a selection is excluded from
 anything, complete or not. Items with no `unordered_param_groups` are
 unaffected (the `None` path is only reachable when `groups` is non-empty).
 
+**D81.15 (`docs/vf-audit/decisions.md`): a spell that touches a barred
+combination is a creation-time ERROR.** "You may not use these Arts together
+**even if one or both are requisites**" (`ArMDE:6292`) is not a quiet
+grid/spell-list marker — the player cannot legally cast the spell at all, so
+it is a blocking error, not a warning. `effective/spell.rs::barred_combinations`
+folds every held Incompatible Arts copy's two `(Technique, Form)` groups
+(bought-plus-granted) into a set; `effective/spell.rs::spell_touches_barred_combination`
+tests a spell against that set as the cross product of `{primary technique} ∪
+{Technique-class requisites}` × `{primary form} ∪ {Form-class requisites}` —
+the same "a requisite for both its Technique and Form" reading
+(`ArMDE:12309-12311`) `derived/casting.rs::fold_requisite` already applies to
+the numeric Casting Total. `validation/magus.rs::validate_spell_incompatible_arts`
+raises `ValidationIssue::CODE_SPELL_USES_INCOMPATIBLE_ARTS`
+(`"spell_uses_incompatible_arts"`) per spell. Pinned by
+`crates/arm-rules/tests/d81_incompatible_arts.rs`.
+
 **D81.16 (`docs/vf-audit/decisions.md`): a copy's own groups must be pairwise
 distinct.** One Incompatible Arts copy naming the SAME `(Technique, Form)`
 pair in both of its two groups halves the Flaw's intended restriction
