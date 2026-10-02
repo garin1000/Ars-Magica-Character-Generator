@@ -636,6 +636,11 @@ enum Prereq {
     HasCategoryAtMagnitude { category: String, magnitude: Magnitude, item_kind: ItemKind },
         // magnitude/kind-filtered twin of HasCategory (e.g. "a Major Supernatural Virtue")
     CharacterType(Id),  // entity's own type profile id equals this, literally (D38/D75)
+    CharacteristicMin { characteristic: Id, score: i8 },
+        // entity's effective Characteristic score >= this; unset is Unknown, not False (D81.2)
+    AbilityCategoryScoreMin { category: String, score: u8 },
+        // holds an Ability of this category at effective score >= this (D81.3)
+    AnyArtMin { score: u8 }, // holds any Art at effective score >= this (D81.3)
 }
 ```
 

@@ -424,6 +424,49 @@ pub enum Prereq {
     /// F-556's use is to name an id that resolves to NO profile, so requiring
     /// one to exist would make the fix itself illegal to load.
     CharacterType(Id),
+    /// The entity's effective score in the named Characteristic must be at
+    /// least this value (D81.2) — Supernatural Beauty and Envied Beauty both
+    /// require a positive Presence ("A character lacking a positive Presence
+    /// score may not have this Virtue/Flaw", `ArMDE:5095, :6014`, i.e.
+    /// `score: 1`), and Uncontrollable Strength requires Strength not below 0
+    /// ("may not be taken if the character's Strength is below 0",
+    /// `ArMDE:6909`, i.e. `score: 0`) — one variant covers both floors rather
+    /// than shipping two near-identical ones. Evaluated against
+    /// [`Entity::characteristics`]: a Characteristic the entity has not yet
+    /// set is genuinely unknown (mirrors [`Self::AgeMin`]'s own unset-age
+    /// handling), never a definite failure.
+    CharacteristicMin {
+        /// The required Characteristic's id (e.g. `characteristic.pre`).
+        characteristic: Id,
+        /// The minimum effective score required.
+        score: i8,
+    },
+    /// The entity must hold a score of at least this value in some Ability of
+    /// the named [`crate::ability::AbilityCategory`] (D81.3, Broken Vessel's
+    /// "Supernatural Ability" half — `ArMDE:5755`). A free-form category
+    /// string rather than the typed enum, matching [`Self::HasCategory`]'s own
+    /// shape; unlike that variant, this ranges over the fixed Ability-category
+    /// taxonomy (general/academic/arcane/martial/supernatural), not
+    /// [`PointItem::categories`]' open vocabulary, so load-time integrity
+    /// requires it to resolve via [`crate::ability::AbilityCategory`]'s own
+    /// snake_case spelling. Static (like `HasCategory`), never `Unknown`: an
+    /// Ability the entity does not have counts as score 0.
+    AbilityCategoryScoreMin {
+        /// The Ability category to match, e.g. `"supernatural"`.
+        category: String,
+        /// The minimum effective score required.
+        score: u8,
+    },
+    /// The entity must hold some Hermetic Art at or above this score (D81.3,
+    /// Broken Vessel's "… or Art normally improved through experience points"
+    /// half — `ArMDE:5755`). Every entry in the Art registry IS a Hermetic
+    /// Art — there is no other kind in this engine — so this ranges over the
+    /// whole registry, the Art-side twin of [`Self::AbilityCategoryScoreMin`].
+    /// Static, never `Unknown`: an Art the entity does not have counts as 0.
+    AnyArtMin {
+        /// The minimum effective score required.
+        score: u8,
+    },
 }
 
 impl Prereq {
@@ -486,7 +529,10 @@ impl Prereq {
             | Prereq::HasCategory(_)
             | Prereq::AgeMin(_)
             | Prereq::HasCategoryAtMagnitude { .. }
-            | Prereq::CharacterType(_) => None,
+            | Prereq::CharacterType(_)
+            | Prereq::CharacteristicMin { .. }
+            | Prereq::AbilityCategoryScoreMin { .. }
+            | Prereq::AnyArtMin { .. } => None,
         }
     }
 
@@ -6390,7 +6436,10 @@ mod tests {
             | Prereq::IsGrog
             | Prereq::HasCategory(_)
             | Prereq::AgeMin(_)
-            | Prereq::HasCategoryAtMagnitude { .. } => {}
+            | Prereq::HasCategoryAtMagnitude { .. }
+            | Prereq::CharacteristicMin { .. }
+            | Prereq::AbilityCategoryScoreMin { .. }
+            | Prereq::AnyArtMin { .. } => {}
         }
     }
 

@@ -1184,7 +1184,7 @@ reason: a category condition would license itself.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :333) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :387) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
@@ -1269,7 +1269,7 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2189, shared by
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2215, shared by
   `validate_prereq_refs` :2064 and `validate_effect_refs` :2547) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
@@ -1277,7 +1277,7 @@ reason: a category condition would license itself.
   prerequisites/effects and claim the catalogue as it stands). Every
   `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
   rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
-  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :751).
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :752).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -12266,6 +12266,63 @@ SAME lines of the line-mirrored German core rulebook, since no translation
 table covers these seven terms individually and D31 only overrides the
 rulebook when a table row is actually in dispute). No new entries for
 `being.*` (fully reused).
+
+---
+
+## D81.1-3 — the night audits' exclusions (`tmp/incompat-audit.md`, D81)
+
+Three gaps the incompatibility/prerequisite sweep found, none previously
+documented. Behavioral tests in `crates/arm-rules/tests/d81_exclusions.rs`.
+
+- **Incompatible Arts excludes a Deficiency** (`flaw.incompatible_arts`,
+  `ArMDE:6292`) — "may not be combined with a Deficiency (see page 125)" is a
+  flat, symmetric `incompatible_with` toward `flaw.deficient_technique`
+  (`ArMDE:5913-5915`) and `flaw.deficient_form` (`ArMDE:5909-5911`), added to
+  all three entries (D44's own convention: every pair's `incompatible_with`
+  is declared on both sides).
+- **Characteristic-floor prerequisite — a new `Prereq::CharacteristicMin
+  { characteristic, score }`.** `virtue.supernatural_beauty` (`ArMDE:5095`)
+  and `flaw.envied_beauty` (`ArMDE:6014`): "a character lacking a positive
+  Presence score may not have this Virtue/Flaw" → Presence ≥ 1.
+  `flaw.uncontrollable_strength` (`ArMDE:6909`): "may not be taken if the
+  character's Strength is below 0" → Strength ≥ 0. One variant covers both
+  floors (score 1 or 0) rather than shipping two near-identical ones.
+  Evaluated against the entity's effective score
+  (`effective/characteristic.rs::effective_characteristic_score`) for every
+  Characteristic it has actually SET (`Entity::characteristics`); a
+  Characteristic never touched is genuinely unknown — `Tri::Unknown`,
+  surfaced as `prereq_unevaluated` — mirroring `Prereq::AgeMin`'s own
+  unset-is-Unknown contract, never a silent pass. Referential integrity
+  requires `characteristic` to resolve via `Characteristic::from_id`.
+- **Broken Vessel — two new variants composed under `Prereq::Any`, not one
+  hard-coded predicate.** `flaw.broken_vessel` (`ArMDE:5755`): "Characters may
+  only take this Flaw if they have at least one Supernatural Ability or Art
+  normally improved through experience points" is a disjunction over TWO
+  different kinds of catalogue entry, so CLAUDE.md's data-driven rule (the
+  engine must not assume which category a rule names) rules out a single
+  `HasSupernaturalAbilityOrArt`-shaped variant — that was the Phase-1 draft,
+  replaced before Phase 2 landed. Instead:
+  - `Prereq::AbilityCategoryScoreMin { category, score }` — holds an Ability
+    of the named [`AbilityCategory`] at effective score ≥ `score`. Unlike
+    `Prereq::HasCategory`'s open `PointItem::categories` vocabulary, the
+    Ability-category taxonomy is closed (five fixed variants), so load-time
+    integrity requires `category` to resolve via
+    `AbilityCategory::from_slug` — a new bare-slug parse (no
+    `ability_category.` prefix) alongside the existing `from_id`.
+  - `Prereq::AnyArtMin { score }` — holds ANY Hermetic Art at effective score
+    ≥ `score`. Every entry in the Art registry IS a Hermetic Art (no other
+    kind exists in this engine), so no category filter is needed.
+  - Both are static (never `Unknown`), matching `Prereq::HasCategory`'s own
+    nature: an Ability/Art the entity does not hold simply scores 0.
+  - `flaw.broken_vessel`'s data:
+    `Any([AbilityCategoryScoreMin{category:"supernatural",score:1},
+    AnyArtMin{score:1}])`.
+
+| Value | Source |
+|---|---|
+| Supernatural Beauty's/Envied Beauty's Presence floor (1) | `ArMDE:5095, :6014` |
+| Uncontrollable Strength's Strength floor (0) | `ArMDE:6909` |
+| Broken Vessel's Supernatural-Ability/Art floor (1) | `ArMDE:5755` |
 
 ---
 

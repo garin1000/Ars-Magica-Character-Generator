@@ -295,6 +295,13 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "prerequisites": {
+      "kind": "any",
+      "value": [
+        { "kind": "ability_category_score_min", "value": { "category": "supernatural", "score": 1 } },
+        { "kind": "any_art_min", "value": { "score": 1 } }
+      ]
+    },
     "source": { "anchor": "broken-vessel", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5753, 5755] }
   },
   {
@@ -679,6 +686,7 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
+    "incompatible_with": ["flaw.incompatible_arts"],
     "parameters": [{ "key": "form", "type": "ref", "domain": "form" }],
     "effects": [{ "type": "deficient_art", "param": "form" }],
     "source": { "anchor": "deficient-form", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5909, 5911] }
@@ -694,6 +702,7 @@
     "entity_kinds": ["character"],
     "parameters": [{ "key": "technique", "type": "ref", "domain": "technique" }],
     "prerequisites": { "kind": "hermetically_trained" },
+    "incompatible_with": ["flaw.incompatible_arts"],
     "effects": [{ "type": "deficient_art", "param": "technique" }],
     "source": { "anchor": "deficient-technique", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5913, 5915] }
   },
@@ -949,6 +958,7 @@
     "categories": ["story"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "characteristic_min", "value": { "characteristic": "characteristic.pre", "score": 1 } },
     "source": { "anchor": "envied-beauty", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6012, 6014] }
   },
   {
@@ -1589,6 +1599,7 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
+    "incompatible_with": ["flaw.deficient_form", "flaw.deficient_technique"],
     "max_per_target": 255,
     "max_total": 255,
     "source": { "anchor": "incompatible-arts", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6290, 6292] }
@@ -3204,6 +3215,7 @@
     "categories": ["general"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "characteristic_min", "value": { "characteristic": "characteristic.str", "score": 0 } },
     "source": { "anchor": "uncontrollable-strength", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6907, 6909] }
   },
   {
@@ -7088,6 +7100,7 @@
     "categories": ["supernatural"],
     "classification": "uncomputed_rule",
     "entity_kinds": ["character"],
+    "prerequisites": { "kind": "characteristic_min", "value": { "characteristic": "characteristic.pre", "score": 1 } },
     "source": { "anchor": "supernatural-beauty", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5089, 5095] }
   },
   {

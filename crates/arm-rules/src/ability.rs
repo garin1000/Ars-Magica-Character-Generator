@@ -60,6 +60,15 @@ impl AbilityCategory {
         let slug = id.as_str().strip_prefix("ability_category.")?;
         Self::ALL.into_iter().find(|c| c.to_string() == slug)
     }
+
+    /// Resolves a BARE category slug (e.g. `"supernatural"`, no
+    /// `ability_category.` prefix) against the closed enum — D81.3's
+    /// `Prereq::AbilityCategoryScoreMin`, which stores a free-form `String`
+    /// field matching `Prereq::HasCategory`'s own shape rather than an `Id`,
+    /// since it is not a `ParameterDomain::AbilityCategory` parameter value.
+    pub fn from_slug(slug: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|c| c.to_string() == slug)
+    }
 }
 
 impl fmt::Display for AbilityCategory {

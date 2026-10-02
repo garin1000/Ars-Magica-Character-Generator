@@ -19,6 +19,7 @@
 //! it for the considered-and-rejected note.
 
 use super::*;
+use crate::characteristics::Characteristic;
 use crate::types::CategoryCap;
 use crate::validation::param_value_resolves;
 
@@ -2180,6 +2181,31 @@ impl Ruleset {
                     ));
                 }
             }
+            // D81.2: the Characteristic is a closed engine taxonomy (like
+            // `Realm`/`AbilityCategory`), so `Characteristic::from_id` IS the
+            // registry check, mirroring `AbilityMin`/`ArtMin` above.
+            Prereq::CharacteristicMin { characteristic, .. } => {
+                if Characteristic::from_id(characteristic).is_none() {
+                    errors.push(format!(
+                        "{context}: prerequisite references unknown characteristic \
+                         '{characteristic}'"
+                    ));
+                }
+            }
+            // D81.3: the Ability-category taxonomy is closed too (unlike
+            // `HasCategory`'s open `PointItem::categories` vocabulary), so
+            // `AbilityCategory::from_slug` IS the registry check.
+            Prereq::AbilityCategoryScoreMin { category, .. } => {
+                if AbilityCategory::from_slug(category).is_none() {
+                    errors.push(format!(
+                        "{context}: prerequisite references unknown ability category \
+                         '{category}'"
+                    ));
+                }
+            }
+            // A bare threshold ranging over the whole Art registry — nothing
+            // to check, like `AgeMin` above.
+            Prereq::AnyArtMin { .. } => {}
         }
     }
 

@@ -547,12 +547,26 @@ export type ReputationType = 'local' | 'ecclesiastical' | 'hermetic' | 'academic
 // F-556) requires the entity's own type profile id to equal `value` literally
 // (unlike `is_companion`/`is_grog`, which read a profile FLAG) —
 // `virtue.domestic_animal` gates on an id no shipped profile carries, so no
-// human character type can ever satisfy it.
+// human character type can ever satisfy it. `characteristic_min` (D81.2)
+// requires the entity's effective score in the named Characteristic to be at
+// least `score`; a Characteristic the entity has not SET is unknown, not a
+// definite failure, mirroring `age_min`'s own unset handling.
+// `ability_category_score_min` (D81.3, Broken Vessel's "Supernatural Ability"
+// half) requires an Ability of the named category at effective score at
+// least `score` — a free-form category string like `has_category`'s, but
+// ranging over the closed Ability-category taxonomy rather than
+// `PointItem.categories`'s open vocabulary. `any_art_min` (D81.3, Broken
+// Vessel's "... or Art" half) requires ANY Hermetic Art at effective score at
+// least `score`.
 export type HasCategoryAtMagnitudeValue = {
   category: string;
   magnitude: Magnitude;
   item_kind: ItemKind;
 };
+
+export type CharacteristicMinValue = { characteristic: string; score: number };
+
+export type AbilityCategoryScoreMinValue = { category: string; score: number };
 
 export type Prereq =
   | { kind: 'all'; value: Prereq[] }
@@ -569,7 +583,10 @@ export type Prereq =
   | { kind: 'has_category'; value: string }
   | { kind: 'age_min'; value: number }
   | { kind: 'has_category_at_magnitude'; value: HasCategoryAtMagnitudeValue }
-  | { kind: 'character_type'; value: string };
+  | { kind: 'character_type'; value: string }
+  | { kind: 'characteristic_min'; value: CharacteristicMinValue }
+  | { kind: 'ability_category_score_min'; value: AbilityCategoryScoreMinValue }
+  | { kind: 'any_art_min'; value: { score: number } };
 
 // How a V/F impacts a character mechanically (M5 slice 5a). Mirrors the engine's
 // `Classification`. Required on every PointItem.

@@ -4,6 +4,7 @@
 //! the `ValidationIssue` issue-code contract.
 
 use super::*;
+use crate::ability::AbilityCategory;
 use crate::types::AbilityParameterValue;
 
 /// Tri-state outcome of evaluating a prerequisite expression.
@@ -159,6 +160,24 @@ pub(crate) struct PrereqCtx<'a> {
     /// `held_categories`) so `Prereq::HasCategory`'s existing kind-blind
     /// query is unaffected.
     held_categories_by_kind: BTreeMap<(String, ItemKind), BTreeMap<Id, Magnitude>>,
+    /// `Prereq::CharacteristicMin`'s fact (D81.2): the entity's effective score
+    /// (bought + free deltas, via [`crate::effective::characteristic::effective_characteristic_score`])
+    /// for every Characteristic the entity has actually SET
+    /// ([`Entity::characteristics`]). A Characteristic absent from this map is
+    /// genuinely unknown (unset), mirroring `age`'s own `None` handling —
+    /// never a definite failure.
+    characteristic_scores: BTreeMap<Characteristic, i32>,
+    /// `Prereq::AbilityCategoryScoreMin`'s fact (D81.3): the highest effective
+    /// score among this entity's Abilities, per [`AbilityCategory`] — folded
+    /// from `ability_scores` above via each ability's catalogue entry. Static
+    /// (like `held_categories`), never `Unknown`: a category with no held
+    /// Ability is simply absent, read as 0.
+    ability_category_max_score: BTreeMap<AbilityCategory, u8>,
+    /// `Prereq::AnyArtMin`'s fact (D81.3): the highest effective score among
+    /// this entity's Arts — every entry in the Art registry IS a Hermetic
+    /// Art, so no category filter is needed (unlike the Ability side). `0`
+    /// when the entity holds no Art.
+    max_art_score: u8,
 }
 
 impl<'a> PrereqCtx<'a> {
@@ -237,6 +256,38 @@ impl<'a> PrereqCtx<'a> {
             *entry = (*entry).max(effective);
         }
 
+        // `Prereq::AbilityCategoryScoreMin`'s fact (D81.3): fold each held
+        // ability's EFFECTIVE score (already computed above) into the max for
+        // its catalogue category. An ability absent from the catalogue
+        // contributes nothing (nowhere to file it) rather than panicking.
+        let mut ability_category_max_score: BTreeMap<AbilityCategory, u8> = BTreeMap::new();
+        for (ability_id, score) in &ability_scores {
+            if let Some(category) = ruleset.ability(ability_id).map(|a| a.category) {
+                let entry = ability_category_max_score.entry(category).or_insert(0);
+                *entry = (*entry).max(*score);
+            }
+        }
+        // `Prereq::AnyArtMin`'s fact (D81.3): the single highest effective Art
+        // score — every Art in the registry is Hermetic, so no category
+        // filter is needed (unlike the Ability side above).
+        let max_art_score = art_scores.values().copied().max().unwrap_or(0);
+
+        // `Prereq::CharacteristicMin`'s fact (D81.2): the entity's effective
+        // score for every Characteristic it has actually SET. A Characteristic
+        // never touched (`entity.characteristics` has no entry) stays OUT of
+        // this map entirely, so the evaluator reads it as unknown rather than
+        // as a bought 0 — mirroring `age`'s own `Option` handling just below.
+        let characteristic_scores: BTreeMap<Characteristic, i32> = entity
+            .characteristics
+            .keys()
+            .map(|&c| {
+                (
+                    c,
+                    crate::effective::effective_characteristic_score(entity, ruleset, c),
+                )
+            })
+            .collect();
+
         // `Prereq::Has` resolves against bought AND granted rows (a granted
         // Heartbeast/Dowsing satisfies `Has(...)`), so build a grants-inclusive
         // id set spanning House and Mythic-Companion-type grants (`granted`,
@@ -286,6 +337,9 @@ impl<'a> PrereqCtx<'a> {
             held_categories,
             age: entity.age,
             held_categories_by_kind,
+            characteristic_scores,
+            ability_category_max_score,
+            max_art_score,
         }
     }
 
@@ -503,6 +557,47 @@ fn evaluate_prereq(
                 (Tri::False, false)
             }
         }
+        // D81.2: an unset Characteristic is genuinely unknown (mirrors
+        // `AgeMin`'s own `None` handling above), never a definite failure.
+        // `Characteristic::from_id` failing to resolve is unreachable for any
+        // ruleset that passed load-time integrity (which requires it to), so
+        // it degrades to `Unknown` rather than panicking — the same K8
+        // defense-in-depth posture `PREREQ_MAX_DEPTH` uses.
+        Prereq::CharacteristicMin {
+            characteristic,
+            score,
+        } => {
+            match Characteristic::from_id(characteristic)
+                .and_then(|c| ctx.characteristic_scores.get(&c))
+            {
+                Some(have) if *have >= i32::from(*score) => (Tri::True, false),
+                Some(_) => (Tri::False, false),
+                None => (Tri::Unknown, true),
+            }
+        }
+        // D81.3 (Broken Vessel's "Supernatural Ability" half): static (like
+        // `HasCategory`), never Unknown — an unrecognized category is
+        // unreachable post-integrity, and degrades to False rather than
+        // panicking.
+        Prereq::AbilityCategoryScoreMin { category, score } => {
+            let have = AbilityCategory::from_slug(category)
+                .and_then(|c| ctx.ability_category_max_score.get(&c))
+                .copied()
+                .unwrap_or(0);
+            if have >= *score {
+                (Tri::True, false)
+            } else {
+                (Tri::False, false)
+            }
+        }
+        // D81.3 (Broken Vessel's "… or Art" half): static, never Unknown.
+        Prereq::AnyArtMin { score } => {
+            if ctx.max_art_score >= *score {
+                (Tri::True, false)
+            } else {
+                (Tri::False, false)
+            }
+        }
     }
 }
 
@@ -690,6 +785,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         // A single leaf, but evaluated as though it were already past the
@@ -723,6 +821,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) =
@@ -778,6 +879,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
@@ -806,6 +910,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
@@ -832,6 +939,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
@@ -858,6 +968,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) =
@@ -885,6 +998,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(
@@ -916,6 +1032,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) =
@@ -947,6 +1066,9 @@ mod tests {
             )]),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) =
@@ -974,6 +1096,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) =
@@ -1083,6 +1208,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: Some(45),
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
@@ -1108,6 +1236,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: Some(40),
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
@@ -1133,6 +1264,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: Some(30),
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
@@ -1160,6 +1294,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
@@ -1190,6 +1327,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsGrog, &ctx, 1, None);
@@ -1222,6 +1362,9 @@ mod tests {
                 ("supernatural".to_string(), ItemKind::Virtue),
                 BTreeMap::from([(Id::new("virtue.amorphous_major"), Magnitude::Major)]),
             )]),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(
@@ -1257,6 +1400,9 @@ mod tests {
             held_categories: BTreeMap::new(),
             age: None,
             held_categories_by_kind: BTreeMap::new(),
+            characteristic_scores: BTreeMap::new(),
+            ability_category_max_score: BTreeMap::new(),
+            max_art_score: 0,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(
