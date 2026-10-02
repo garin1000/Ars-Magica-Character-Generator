@@ -20,7 +20,7 @@
       "required_flaws": [
         {
           "default": { "ref": "flaw.tragic_life" },
-          "constraint": { "kind": "flaw", "magnitude": "major" }
+          "constraint": { "kind": "flaw", "magnitude": "major", "require_categories": ["story"] }
         }
       ],
       "source": { "anchor": "devil-child", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2643, 2666] }
