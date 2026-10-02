@@ -431,8 +431,8 @@ fn assemble_ruleset(id: &str, version: &str, parsed: ParsedSources) -> Ruleset {
         parameter_catalogues,
     } = parsed;
 
-    // The eight engine-derived fields below (magnitude_points through
-    // ranges_beyond_touch) are placeholders, immediately overwritten by
+    // The seven engine-derived fields below (magnitude_points through
+    // aura_modifier_max) are placeholders, immediately overwritten by
     // `apply_derived_fields` — the same single derivation
     // `Ruleset::from_serialized` calls (V46), so the two construction paths
     // cannot silently diverge.
@@ -459,7 +459,6 @@ fn assemble_ruleset(id: &str, version: &str, parsed: ParsedSources) -> Ruleset {
         ritual_min_level: 0,
         aura_modifier_min: 0,
         aura_modifier_max: 0,
-        ranges_beyond_touch: BTreeSet::new(),
         houses: index_by_id(houses_file.houses, |h| h.id.clone()),
         mythic_companion_types: index_by_id(mythic_types_file.types, |t| t.id.clone()),
         spells: index_by_id(spells_file.spells, |s| s.id.clone()),

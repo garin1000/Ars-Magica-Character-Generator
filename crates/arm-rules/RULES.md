@@ -5441,23 +5441,20 @@ Te/Fo pair (crossed with both range classes) instead of one. The picker
 `` `${technique} ${form} ${beyond_touch}` ``, computing a candidate spell's own
 `beyond_touch` from its `range` via `spellRangeBeyondTouch` (`derive.ts`).
 
-**The whitelist itself is engine data, not a second copy in TypeScript.**
-`SpellRange` is a fixed taxonomy, so per the architecture invariant that
-governs `Magnitude::points` → `Ruleset.magnitude_points` and
-`AbilityCategory::ALL` → `Ruleset.ability_category_order`, the UI must not
-re-hardcode its values. `Ruleset.ranges_beyond_touch` (`ruleset.rs`) is
-`SpellRange::ALL` filtered through `effective::range_beyond_touch` — derived,
-not authored, applied by `apply_derived_fields` on both construction paths like
-the other seven engine-derived fields. `SpellTab.svelte` reads
-`ruleset.ranges_beyond_touch` (`[]` only for the instant before a ruleset has
-loaded) and passes it to `nonTakeableReason`/`isDisabled`; `spellRangeBeyondTouch`
-(`derive.ts`) is a thin `.includes()` lookup against whatever set it is given,
-carrying no whitelist of its own. Test:
-`ranges_beyond_touch_equals_the_predicate_over_every_spellrange_variant`
-(`ruleset.rs`) pins that the surfaced set is exactly the predicate over every
-variant, so the two can never drift; `SpellTab.test.ts`'s "follows the
-ruleset-surfaced set, not a hardcoded whitelist" test proves it end-to-end by
-using a ruleset whose surfaced set disagrees with the real engine whitelist.
+**The whitelist stayed engine-side even after the picker moved on (D82.2).**
+`SpellRange` is a fixed taxonomy, so the UI must not re-hardcode which
+variants count as beyond Touch — but since D81.5's `capBySpell`
+(`SpellTab.svelte`) replaced the picker's Te/Fo-keyed grey/offer logic with
+the per-spell `spell_caps` DTO, the classification it greys a candidate spell
+BY is read off that spell's own `SpellCap.range_beyond_touch`
+(mirrors `effective::spell.rs::SpellLevelCap`), computed engine-side from
+`effective::range_beyond_touch` — never recomputed in TypeScript.
+`Ruleset.ranges_beyond_touch`, the `SpellRange::ALL`-derived set this
+paragraph used to describe surfacing to `nonTakeableReason`/`isDisabled` via a
+`spellRangeBeyondTouch` lookup, had no remaining reader once that move landed;
+it was removed from the serialized `Ruleset` and the TS type (D82.2). The
+predicate it was derived from, `effective::range_beyond_touch`, is unchanged
+and remains the sole whitelist.
 
 **It lowers a cap, so a save legal today can become invalid — same treatment as
 D10:** `Enforced` blocks it, `Advisory` warns, no migration and no schema

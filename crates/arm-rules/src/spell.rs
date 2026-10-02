@@ -47,9 +47,10 @@ pub enum SpellRange {
 
 impl SpellRange {
     /// Every Range variant, RDT-chart order. Mirrors `AbilityCategory::ALL` /
-    /// `ArtType::ALL`: the fixed source `Ruleset::apply_derived_fields` derives
-    /// `ranges_beyond_touch` from, by filtering through
-    /// `effective::range_beyond_touch`.
+    /// `ArtType::ALL`: the fixed source the beyond-Touch classification
+    /// (`effective::range_beyond_touch`) is filtered over, feeding the
+    /// per-spell/per-Te-Fo cap DTOs (D82.2 removed the ruleset-level
+    /// `ranges_beyond_touch` set this used to also feed).
     pub const ALL: [SpellRange; 6] = [
         SpellRange::Personal,
         SpellRange::Touch,

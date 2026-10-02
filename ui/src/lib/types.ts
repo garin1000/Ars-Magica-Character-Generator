@@ -2266,15 +2266,6 @@ export interface Ruleset {
   // Optional like `ritual_min_level` above, for the same reason.
   aura_modifier_min?: number;
   aura_modifier_max?: number;
-  // The `SpellRange` scalars beyond Touch (Eye, Voice, Sight, Arcane
-  // Connection), mirrored from the Rust `effective::range_beyond_touch`
-  // predicate over every `SpellRange` variant (D28). Read directly by the
-  // spell picker before D81.5; now the per-spell `EffectiveScores.spell_caps`
-  // folds the beyond-Touch halving in SERVER-side (one cap number per
-  // catalogue spell), so nothing under `ui/src` reads this field any more —
-  // kept for `Ruleset` JSON parity regardless. Optional like
-  // `ritual_min_level` above, for the same reason.
-  ranges_beyond_touch?: string[];
 }
 
 export interface LocalizedRuleset {
