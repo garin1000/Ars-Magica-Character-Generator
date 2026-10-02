@@ -183,7 +183,8 @@
       "spell": "spell.pull_of_the_skybound_winds"
     },
     {
-      "spell": "spell.wings_of_the_soaring_wind"
+      "spell": "spell.wings_of_the_soaring_wind",
+      "within_focus": true
     }
   ],
   "house": "house.mercere",

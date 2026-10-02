@@ -899,19 +899,14 @@ fn the_mercere_matches_the_book() {
     assert_eq!(casting("spell.clouds_of_rain_and_thunder"), 35);
     assert_eq!(casting("spell.clouds_of_summer_snow"), 35);
     assert_eq!(casting("spell.pull_of_the_skybound_winds"), 26);
-    // DISAGREEMENT MAG7, UPDATED by X11 (requisite folding; still unresolved —
-    // the book is still wrong, only the engine's own best-reachable figure
-    // changes). The book prints +27 here (ArMDE:1996 `#### Mercere`) where
-    // every other Creo Auram row on the same statblock reads +26 or +35.
-    // Wings of the Soaring Wind is Cr(Re)Au, requisite Rego (ArMDE:12309):
-    // Creo's Puissant-inclusive 9 vs. Rego's 5 — the lesser is 5, so the
-    // effective Technique folds to 5: 5 + Au 15 + Sta 2 = 22, not the
-    // pre-fold 26. Neither 22 nor 26 is the book's 27; `within_focus: false`
-    // (Weather does not cover this spell — it is not marked within the two
-    // weather spells' focus either before or after this change), and 22 is
-    // now the rules-correct figure the engine actually computes, replacing
-    // 26 as "the best available."
-    assert_eq!(casting("spell.wings_of_the_soaring_wind"), 22);
+    // MAG7, RESOLVED by the requisite fold: the book prints +27 here
+    // (ArMDE:1996 `#### Mercere`). Wings of the Soaring Wind is Cr(Re)Au,
+    // requisite Rego (ArMDE:13140), so the effective Technique folds to the
+    // lesser of Creo 9 and Rego 5 (ArMDE:12309). Within the Weather focus,
+    // "the lowest applicable score may be one of the requisites" (ArMDE:4403),
+    // so Rego's 5 is the score doubled: 5 + 5 + Au 15 + Sta 2 = 27, exactly the
+    // printed figure. Hence `within_focus: true` in `magus_mercere.json`.
+    assert_eq!(casting("spell.wings_of_the_soaring_wind"), 27);
 }
 
 // --- Merinita (ArMDE:2000-2048 `#### Merinita`) -----------------------------

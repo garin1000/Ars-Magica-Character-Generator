@@ -786,8 +786,9 @@ land. Where the numbers do part company the cause is one of exactly three things
   Mercere), the same defect shape as the Berserker's B2;
 - **a free-text Magical Focus the engine cannot match to a spell** (MAG8 —
   Flambeau, Ex Miscellanea, Mercere, Tremere), a capability gap, not an error;
-- **the book disagreeing with itself** (MAG3, MAG4, MAG5, MAG6, MAG7, MAG11 and
-  the Criamon `Ag 0` typo), each demonstrable from its own printed Arts line.
+- **the book disagreeing with itself** (MAG3, MAG5, MAG6, MAG11 and the Criamon
+  `Ag 0` typo), each demonstrable from its own printed Arts line. (MAG4 and MAG7
+  were filed here until X11's requisite fold showed the book was right.)
 
 Only one new **(a)** defect is a wrong *number* on every character who has the
 Virtue (MAG1). Two more are narrow data omissions (MAG10, MAG11). Nothing here
@@ -1209,7 +1210,7 @@ Init +1 / Def +1 and all eight Art scores (Cr 6+3 = 9, Au 12+3 = 15) reproduce.
 Abilities 315 + Arts 120 = 435 exactly. Error set empty, warning set empty. The
 Casting Totals are MAG1's second instance, above, plus one row of their own.
 
-### MAG7 — a Creo Auram total the Arts line cannot produce — STILL WRONG, figure updated (X11)
+### MAG7 — a Creo Auram total the Arts line cannot produce — RESOLVED (X11)
 
 - **Book:** Wings of the Soaring Wind prints `Cr(Re)Au 30/**+27**` (`ArMDE:1996`)
   where the four other Creo Auram rows on the same statblock read +26 (base) or
@@ -1219,18 +1220,17 @@ Casting Totals are MAG1's second instance, above, plus one row of their own.
   a Casting Total (`ArMDE:9089`)" — the same too-narrow reading of `ArMDE:9089`
   MAG4 made (see that entry's note: `ArMDE:9089` names no requisite because it
   is only the Casting Score formula; `ArMDE:12309` is what actually governs it).
-- **Engine (X11):** this spell DOES carry a Rego requisite, and Rego (5) is
-  lower than Creo's Puissant-inclusive effective score (9) — `ArMDE:12309`'s
-  lesser-of rule folds the effective Technique to 5: `5 + Au 15 + Sta 2 = 22`.
-  Not within the Weather focus (this spell is not weather-themed; only the two
-  weather spells are marked `within_focus: true`). 22 replaces the pre-fold 26
-  as the figure the engine actually computes — still not the book's 27, so the
-  disagreement is not resolved, only its "best reachable" figure moved.
-- **Wrong:** **(c) the book**, unchanged verdict. Unlike MAG4 (same shape, Mu
-  vs. Rego requisite, but there the fold happened to land exactly on the
-  book's own pair of printed figures), here the book's 27 remains unreachable
-  under any combination of base/focus/requisite-fold — still an isolated
-  arithmetic slip, still sibling in shape to MAG9 (Verditius's Touch of Midas).
+- **Engine (X11):** this spell DOES carry a Rego requisite (`ArMDE:13140`), and
+  Rego (5) is lower than Creo's Puissant-inclusive effective score (9), so
+  `ArMDE:12309`'s lesser-of rule folds the effective Technique to 5. Within the
+  Weather focus, "the lowest applicable score may be one of the requisites"
+  (`ArMDE:4403`), so Rego's 5 is the score doubled:
+  `5 + 5 + Au 15 + Sta 2 = 27`, exactly the printed figure. The fixture marks
+  the spell `within_focus: true` (a wind that carries the caster counts as
+  weather; Pull of the Skybound Winds stays outside it, as its printed +26
+  shows). An interpretive call on the focus's scope, queued for Norbert.
+- **Wrong:** **(a) the engine, fixed** (X11). Like MAG4, the book was right
+  once requisites fold.
 
 ## The Merinita (`ArMDE:2000-2048` `#### Merinita`)
 
@@ -1349,7 +1349,8 @@ promise, tested here against a printed statblock rather than a synthetic fixture
   no Magical Focus, so unlike the Ex Miscellanea and the Mercere there is not even
   a second reading to reach a higher number by.
 - **Engine:** 23, like its neighbours.
-- **Wrong:** **(c) the book**, an isolated slip; sibling of MAG7.
+- **Wrong:** **(c) the book**, an isolated slip. Unlike MAG4 and MAG7, Touch of
+  Midas has no requisite (`ArMDE:15250`), so X11's fold cannot explain it.
 
 ### MAG13 — Affinity overcharges Craft (stonemason) by one point
 
@@ -1621,7 +1622,7 @@ to be read from `rules/core/houses.json`.
 | MAG4 | Ex Miscellanea | two Re(Mu)Te 15 rows at +27 and +23 (`ArMDE:1798-1799`) | **RESOLVED (X11)** — requisite folding (`ArMDE:12309`) reaches 23 base / 27 within the stone focus; both rows match exactly | **(a) the engine, fixed** — was missing the requisite fold, not a book error |
 | MAG5 | Ex Miscellanea | a Grappling Combat row (`ArMDE:1774`) | no grapple entry in `rules/core/equipment.json`; only the Dodging row is emitted | (d) capability gap |
 | MAG6 | Jerbiton | PeIm +6 under Deficient Technique (`ArMDE:1946`) — 11 halved, rounded up | 5, rounding down per `ArMDE:547` ("if it does not [say], round down") | (c) the book |
-| MAG7 | Mercere | Cr(Re)Au +27 (`ArMDE:1996`) where its four CrAu neighbours read +26 / +35 | **UPDATED (X11)** — the Rego requisite now folds (`ArMDE:12309`): 22, not the pre-fold 26; still not 27 | (c) the book, still — the fold moved the engine's own figure, not the verdict |
+| MAG7 | Mercere | Cr(Re)Au +27 (`ArMDE:1996`) where its four CrAu neighbours read +26 / +35 | **RESOLVED (X11)** — the Rego requisite folds (`ArMDE:12309`) and, within the Weather focus, is the doubled lowest score (`ArMDE:4403`): 27 | (a) the engine, fixed |
 | MAG8 | Flambeau, Ex Miscellanea, Mercere, Tremere | one Casting Total per spell, focused or not (`ArMDE:4399-4422` `#### Major Magical Focus`) | both figures reported; a focus is free text and nothing relates it to a spell | (d) capability gap |
 | MAG9 | Verditius | CrTe +25 for Touch of Midas (`ArMDE:2192`) where its two CrTe neighbours read +23 | 23; this magus holds no focus, so no second reading exists | (c) the book |
 | MAG10 | Tremere | "Minor Magical Focus(certamen)" (`ArMDE:2064`, `ArMDE:2281`) | `houses.json` grants the Virtue with **no `focus` param**; a focus on nothing, and `validate_magical_focus` only counts foci | (a) rules data |
@@ -1663,9 +1664,9 @@ player as a toggle), not five data patches.
 Everything else the magi turned up is either a narrow data omission (MAG10's
 missing `focus` parameter, MAG11's Reputation level), a gap the rules themselves
 leave open (MAG2, MAG5, MAG8, MAG12), or the book disagreeing with its own
-arithmetic (MAG3, MAG6, MAG7, MAG9, MAG14). **Five (c) entries out of twelve
-templates** (MAG4 moved to **(a)** — X11, requisite folding, resolved it
-outright rather than confirming a book error) **is still the highest rate in
+arithmetic (MAG3, MAG6, MAG9, MAG14). **Four (c) entries out of twelve
+templates** (MAG4 and MAG7 moved to **(a)** — X11, requisite folding, resolved
+both outright rather than confirming a book error) **is still the highest rate in
 this document**, and the reason is simply that magi print far more derived
 numbers than grogs and companions do: 80 Casting Totals and 12 full fifteen-Art
 lines on top of everything a companion prints, each one an independent chance
