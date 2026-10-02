@@ -153,8 +153,8 @@ impl fmt::Display for IssueSeverity {
 /// | `too_many_<category>_flaws`† | error or warning | virtues_flaws | `count`, `max` |
 /// | `too_many_major_<category>_virtues`† | error or warning | virtues_flaws | `count`, `max` |
 /// | `too_many_<category>_virtues`† | error or warning | virtues_flaws | `count`, `max` |
-/// | `prereq_not_met` | error | virtues_flaws | `item` |
-/// | `prereq_unevaluated` | warning | virtues_flaws | `item` |
+/// | `prereq_not_met` | error | virtues_flaws, abilities, arts | `item` |
+/// | `prereq_unevaluated` | warning | virtues_flaws, abilities, arts | `item` |
 /// | `advisory_prereq_not_met` | warning | virtues_flaws | `item` |
 /// | `incompatible` | error | virtues_flaws | `item`, `other` |
 /// | `category_not_permitted` | error | virtues_flaws | `item`, `category` |

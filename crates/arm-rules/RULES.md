@@ -1184,7 +1184,7 @@ reason: a category condition would license itself.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :387) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :435) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.

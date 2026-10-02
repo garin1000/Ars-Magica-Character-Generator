@@ -227,6 +227,46 @@ fn broken_vessel_requires_a_supernatural_ability_or_art() {
 }
 
 // ---------------------------------------------------------------------------
+// Wizard dead end (review-final.json finding #1, MAJOR): Broken Vessel is
+// selected in the VirtuesFlaws phase, but its prerequisite can only ever be
+// satisfied by a later purchase (a Supernatural Ability in the Abilities
+// phase, or an Art in the Arts phase — `CreationPhase::ALL` orders both
+// after `VirtuesFlaws`, and every shipped type profile's own
+// `creation_phases` agrees: `rules/core/character_types.json` declares
+// `virtues_flaws` before `abilities` before `arts` everywhere both appear).
+// A `prereq_not_met` issue hard-coded to `CreationPhase::VirtuesFlaws`
+// therefore blocks `wizard-navigation.svelte.ts`'s `canAdvance` on the
+// CURRENT phase forever, since the fix lives on a phase the player cannot
+// reach until Next unblocks — a dead end with no later phase ever able to
+// clear it. The issue must be attributed to the phase whose input surface
+// can actually satisfy it (a Supernatural Ability OR an Art — i.e. the
+// LATER of the two, Arts, since either purchase clears the `Any`).
+// ---------------------------------------------------------------------------
+
+#[test]
+fn broken_vessel_prereq_issue_is_reported_on_a_reachable_phase() {
+    let rs = load_ruleset();
+    let none = entity("magus", vec![sel("flaw.broken_vessel")]);
+    let result = validate(&none, &rs);
+    let issue = result
+        .issues
+        .iter()
+        .find(|i| {
+            i.code == "prereq_not_met" && i.context.as_ref() == Some(&Id::new("flaw.broken_vessel"))
+        })
+        .expect("flaw.broken_vessel must carry a prereq_not_met issue with no Ability/Art bought");
+    assert_eq!(
+        issue.phase,
+        CreationPhase::Arts,
+        "the issue must be attributed to the LATEST phase that can satisfy the Any \
+         (Arts, since either a later Ability or a later Art purchase clears it), not \
+         to VirtuesFlaws — the phase the player is stuck on with no way to reach \
+         Abilities/Arts and fix it, got {:?}",
+        issue.phase
+    );
+}
+
+// ---------------------------------------------------------------------------
 // Serde round-trips for the three new `Prereq` variants (D81.2/.3). These
 // pass already — the `#[serde(tag = "kind", content = "value")]` derive
 // needs no extra code for a new variant — but pin the wire shape now so the

@@ -39,11 +39,16 @@ pub(crate) fn validate_prerequisites(
             // contribution to `HasCategory` — see `evaluate_for_item`'s doc
             // comment.
             let (outcome, depended_on_unknown) = ctx.evaluate_for_item(prereq, &selection.item_ref);
+            // The phase whose input surface owns the fix, not necessarily the
+            // phase `selection` was made on — see `prereq_resolution_phase`'s
+            // doc comment (review-final.json finding #1: a wizard dead end
+            // without this).
+            let phase = prereq_resolution_phase(prereq);
             match outcome {
                 Tri::False => {
                     issues.push(ValidationIssue::error(
                         ValidationIssue::CODE_PREREQ_NOT_MET,
-                        CreationPhase::VirtuesFlaws,
+                        phase,
                         args([("item", selection.item_ref.to_string())]),
                         Some(selection.item_ref.clone()),
                     ));
@@ -51,7 +56,7 @@ pub(crate) fn validate_prerequisites(
                 Tri::Unknown if depended_on_unknown => {
                     issues.push(ValidationIssue::warning(
                         ValidationIssue::CODE_PREREQ_UNEVALUATED,
-                        CreationPhase::VirtuesFlaws,
+                        phase,
                         args([("item", selection.item_ref.to_string())]),
                         Some(selection.item_ref.clone()),
                     ));
@@ -78,6 +83,49 @@ pub(crate) fn validate_prerequisites(
                 ));
             }
         }
+    }
+}
+
+/// The creation phase a prerequisite's own hard tree should be attributed to
+/// — the same "attribute to the phase that owns the fix" pattern
+/// `validate_characteristics` already uses for Great/Poor Characteristic
+/// (`scores.rs`'s `CreationPhase::Characteristics`, even though the
+/// triggering selection is a V/F Virtue; see `ui/src/lib/derive.ts`'s
+/// `issuesForStep` doc comment for the UI-side half of that precedent).
+///
+/// An item's own selection always lives in `CreationPhase::VirtuesFlaws`
+/// (prerequisites exist only on V/F items), which is the floor this returns.
+/// But an `AbilityMin`/`AbilityCategoryScoreMin`/`ArtMin`/`AnyArtMin` leaf's
+/// *data* arrives only in a later phase — every shipped type profile's own
+/// `creation_phases` (`rules/core/character_types.json`) declares
+/// `virtues_flaws` before `abilities` before `arts`, wherever both appear —
+/// so a tree containing one is promoted to the latest such phase instead.
+/// Promoting on the whole tree (not just the branch that actually produced
+/// `Tri::False`) is deliberately simple rather than precise: it is exactly as
+/// precise as a per-branch scan for every `prerequisites` tree the shipped
+/// catalogue has today (verified: none mixes an Ability/Art leaf with a
+/// non-Ability/Art leaf in the same tree), and a future tree that DID mix
+/// them would only ever defer an already-fixable-now V/F error one phase
+/// later, never let a real violation through Finish.
+///
+/// Every other variant (`Has`, `House`, `HermeticallyTrained`, `OrderMember`,
+/// `IsCompanion`, `IsGrog`, `CharacterType`, `HasCategory`, `AgeMin`,
+/// `HasCategoryAtMagnitude`, `CharacteristicMin`) is unaffected and keeps the
+/// `VirtuesFlaws` floor exactly as before — `Characteristics` precedes
+/// `VirtuesFlaws` in every profile, so a resolved `CharacteristicMin` failure
+/// is already fixable the moment it is reported, same as `Has`/`House`/etc.
+fn prereq_resolution_phase(prereq: &Prereq) -> CreationPhase {
+    match prereq {
+        Prereq::All(children) | Prereq::Any(children) | Prereq::Nor(children) => children
+            .iter()
+            .map(prereq_resolution_phase)
+            .max()
+            .unwrap_or(CreationPhase::VirtuesFlaws),
+        Prereq::AbilityMin { .. } | Prereq::AbilityCategoryScoreMin { .. } => {
+            CreationPhase::Abilities
+        }
+        Prereq::ArtMin { .. } | Prereq::AnyArtMin { .. } => CreationPhase::Arts,
+        _ => CreationPhase::VirtuesFlaws,
     }
 }
 

@@ -89,7 +89,7 @@ fn warping_points_for_owed(entity: &Entity, ruleset: &Ruleset) -> u32 {
 /// Whether `entity` holds, among its effective (bought ∪ House/mythic/VF-
 /// granted, non-warping-fill) selections, any Virtue or Flaw ArMDE:2280 reads
 /// as "faerie-related" — the gate on Merinita's conditional Warping Point
-/// ([`merinita_warping_points`]).
+/// ([`house_conditional_warping_points`]).
 ///
 /// D81.14 (`docs/vf-audit/decisions.md`): an item counts if EITHER
 /// `PointItem::faerie_related` is set (Faerie Friend, Faerie Upbringing,

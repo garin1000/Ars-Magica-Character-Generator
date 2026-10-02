@@ -167,6 +167,33 @@ fn merinita_initiation_point_stacks_additively_with_other_warping() {
     );
 }
 
+/// The conditional House point must also stack with a GRANT-EFFECT Warping
+/// source (`flaw.warped_by_magic`'s `Effect::WarpingGrant { points: 5 }`),
+/// not just the flat stored-points field the previous test already covers —
+/// review-final.json finding #2 (MINOR): `warping_points_total` sums the
+/// House-conditional term and `warping_grant_points_in` via two independent
+/// `saturating_add` calls, but no existing test combined both sources on one
+/// entity. Warped by Magic's own `realm_association` is `magic`, not
+/// `faerie`, so it does not exempt itself from the Merinita clause.
+///
+/// Already GREEN: both terms are independent additive folds by construction
+/// (`warping.rs`'s `warping_points_total`), so this pins the correct result
+/// rather than fixing a regression.
+#[test]
+fn merinita_initiation_point_stacks_additively_with_a_warping_grant_flaw() {
+    let rs = full_ruleset();
+    let entity = magus("house.merinita", vec![sel("flaw.warped_by_magic")]);
+
+    let outcome = warping(&entity, &rs);
+
+    assert_eq!(
+        outcome.points, 6,
+        "the initiation point (1, ArMDE:2280 — no faerie-related V/F held) \
+         must add to Warped by Magic's own grant (5, Effect::WarpingGrant), \
+         neither suppressing the other, got {outcome:?}"
+    );
+}
+
 // --- D81.14: the three explicitly flagged entries --------------------------
 
 /// D81.14: Faerie Friend (ArMDE:6052) is flagged `faerie_related: true` even

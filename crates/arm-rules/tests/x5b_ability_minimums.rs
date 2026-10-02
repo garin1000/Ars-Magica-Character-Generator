@@ -166,6 +166,45 @@ fn f30_cathedral_school_master_at_ability_minimums_is_legal() {
 }
 
 // ---------------------------------------------------------------------------
+// Wizard dead end (review-final.json finding #1, MAJOR): the same trap
+// confirmed to pre-exist here as for the newer `AbilityCategoryScoreMin`/
+// `AnyArtMin` variants (D81.3's Broken Vessel) — a V/F item whose hard
+// `AbilityMin` prerequisite can only be satisfied by a later purchase (the
+// Abilities phase, which every shipped type profile's `creation_phases`
+// declares AFTER `virtues_flaws`: `rules/core/character_types.json`). With
+// no Abilities bought yet, selecting this Virtue in the VirtuesFlaws phase
+// must not report `prereq_not_met` on `CreationPhase::VirtuesFlaws` — the
+// phase whose input surface (Abilities) actually owns the fix is the one
+// `wizard-navigation.svelte.ts`'s `canAdvance` must gate on instead.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn f30_cathedral_school_master_prereq_issue_is_reported_on_a_reachable_phase() {
+    let rs = load_ruleset();
+    let e = entity("companion", vec![sel("virtue.cathedral_school_master")]);
+
+    let result = validate(&e, &rs);
+    let issue = result
+        .issues
+        .iter()
+        .find(|i| {
+            i.code == "prereq_not_met"
+                && i.context.as_ref() == Some(&Id::new("virtue.cathedral_school_master"))
+        })
+        .expect(
+            "cathedral_school_master must carry a prereq_not_met issue with no Abilities bought",
+        );
+    assert_eq!(
+        issue.phase,
+        CreationPhase::Abilities,
+        "the issue must be attributed to Abilities — the phase whose input surface can \
+         satisfy all three AbilityMin minima — not to VirtuesFlaws, where the player is \
+         stuck with no way to reach Abilities and fix it, got {:?}",
+        issue.phase
+    );
+}
+
+// ---------------------------------------------------------------------------
 // F-56 — `virtue.doctor_in_faculty`, ArMDE:3683-3698.
 // "He must have a score of 5 in Latin. Artes Liberales, and the Ability that
 // correlates to his faculty degree." (German resolves the OCR's missing
