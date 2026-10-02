@@ -874,6 +874,11 @@ presumption of correctness.
 15. **A spell that uses a barred Incompatible Arts combination**, directly or
     through a requisite, is a creation-time ERROR (ArMDE:6292, "completely
     unable to use").
+16. **One Incompatible Arts copy naming the same combination twice is an
+    ERROR**: its "two combinations" (ArMDE:6292) must differ.
+17. **A spell marked within a focus the character no longer holds** gets a
+    non-blocking WARNING. The mark is inert (the cap and Casting Total ignore
+    it) and stays saved.
 
 ---
 
