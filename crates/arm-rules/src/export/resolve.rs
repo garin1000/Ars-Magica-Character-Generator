@@ -318,7 +318,7 @@ impl<'a> Doc<'a> {
         if let Some(unfilled) = self.unfilled_name(id, values) {
             return unfilled;
         }
-        self.fill_template(&self.name(id), values)
+        self.fill_template(&self.name(id), values, self.rules().item(id))
     }
 
     /// The entry's own [`I18nEntry::name_unfilled`], when it declares one and **no**
@@ -349,7 +349,7 @@ impl<'a> Doc<'a> {
         if let Some(unfilled) = self.unfilled_name(id, values) {
             return unfilled;
         }
-        self.fill_template(&self.value_template(id), values)
+        self.fill_template(&self.value_template(id), values, None)
     }
 
     /// Fills `template`'s `{key}` placeholders from `values`
@@ -357,7 +357,14 @@ impl<'a> Doc<'a> {
     /// shows the localized slot label instead ("Puissant (Ability)"), and a value
     /// the template never mentions is appended in parentheses ("Minor Magical
     /// Focus (fire)") so a chosen parameter can never be silently dropped.
-    fn fill_template(&self, template: &str, values: &BTreeMap<String, String>) -> String {
+    /// `item` is the catalogue entry whose name this is, when it has one; see
+    /// [`Doc::template_extras`] for what it changes.
+    fn fill_template(
+        &self,
+        template: &str,
+        values: &BTreeMap<String, String>,
+        item: Option<&PointItem>,
+    ) -> String {
         let template = escape_cell(template);
         let mut filled = String::new();
         let mut consumed: BTreeSet<&str> = BTreeSet::new();
@@ -386,14 +393,68 @@ impl<'a> Doc<'a> {
             rest = &after[close + 1..];
         }
         filled.push_str(rest);
-        let extras: Vec<&str> = values
-            .iter()
-            .filter(|(key, _)| !consumed.contains(key.as_str()))
-            .map(|(_, value)| value.as_str())
-            .collect();
+        let extras = Self::template_extras(values, &consumed, item);
         if extras.is_empty() {
             return filled;
         }
         format!("{filled} ({})", extras.join(&self.list_separator()))
     }
+
+    /// The values `template` did not consume, in the order they are appended.
+    ///
+    /// D81.8: an item declaring [`PointItem::unordered_param_groups`] has its
+    /// grouped values printed as one entry per group, the members joined by a
+    /// space with Technique before Form ("Creo Ignem"). This is the same pairing
+    /// the in-app picker shows (`ParameterPicker.svelte::paramGroups`). Without
+    /// it, Incompatible Arts printed its four Arts in key order and the two
+    /// barred combinations could not be read off the sheet (ArMDE:6290-6292).
+    /// Ungrouped values trail afterwards in key order, which is the whole output
+    /// for an item with no groups, exactly as before.
+    fn template_extras(
+        values: &BTreeMap<String, String>,
+        consumed: &BTreeSet<&str>,
+        item: Option<&PointItem>,
+    ) -> Vec<String> {
+        let open = |key: &str| values.contains_key(key) && !consumed.contains(key);
+        let mut extras = Vec::new();
+        let mut grouped: BTreeSet<&str> = BTreeSet::new();
+        if let Some(item) = item {
+            for group in &item.unordered_param_groups {
+                let mut members: Vec<&str> = group
+                    .iter()
+                    .map(String::as_str)
+                    .filter(|key| open(key))
+                    .collect();
+                if members.is_empty() {
+                    continue;
+                }
+                members.sort_by_key(|key| group_member_rank(item, key));
+                grouped.extend(members.iter().copied());
+                let words: Vec<&str> = members.iter().map(|key| values[*key].as_str()).collect();
+                extras.push(words.join(" "));
+            }
+        }
+        extras.extend(
+            values
+                .iter()
+                .filter(|(key, _)| open(key) && !grouped.contains(key.as_str()))
+                .map(|(_, value)| value.clone()),
+        );
+        extras
+    }
+}
+
+/// Where a grouped parameter sits within its printed group (D81.8): Technique,
+/// then Form, then any other domain, each tier in the item's declared order —
+/// the order Hermetic Arts are spoken in ("Creo Ignem").
+fn group_member_rank(item: &PointItem, key: &str) -> (u8, usize) {
+    let Some(index) = item.parameters.iter().position(|p| p.key == key) else {
+        return (u8::MAX, usize::MAX);
+    };
+    let tier = match item.parameters[index].domain {
+        ParameterDomain::Technique => 0,
+        ParameterDomain::Form => 1,
+        _ => 2,
+    };
+    (tier, index)
 }

@@ -1897,6 +1897,16 @@ generic over `unordered_param_groups`, with no item id named in the check
 itself. An incomplete group is exempt from the comparison (same reasoning as
 the duplicate-key fix above): `missing_param` already reports the gap.
 
+**D81.8, the exported name pairs each group.** The Markdown sheet used to
+append the four Arts in key order, `Incompatible Arts (Ignem, Aquam, Creo,
+Perdo)`, which hides which two combinations are barred. Now
+`export/resolve.rs::template_extras` prints one entry per `unordered_param_groups`
+group, Technique before Form (`export/resolve.rs::group_member_rank`):
+`Incompatible Arts (Creo Ignem, Perdo Aquam)`, the same pairing as the in-app
+`ParameterPicker.svelte::paramGroups`. Ungrouped values trail in key order, so an
+item with no groups exports byte-identically. Pinned (EN, DE, granted table, and
+an ungrouped guard) by `crates/arm-rules/tests/d81_export_incompatible_arts.rs`.
+
 Items with a stated ceiling of two: `virtue.great_characteristic` (`ArMDE:3989`),
 `virtue.quiet_magic` ("You may take this Virtue twice, and eliminate the penalty
 altogether", `ArMDE:4826`), `flaw.poor_characteristic` (`ArMDE:6600`),
