@@ -244,6 +244,8 @@ impl fmt::Display for IssueSeverity {
 /// | `unknown_mastery_ability` | error | spells | `spell`, `ability` |
 /// | `too_many_mastery_abilities` | error | spells | `spell`, `chosen`, `mastery` |
 /// | `duplicate_mastery_ability` | error | spells | `spell`, `ability`, `count` |
+/// | `too_many_of_mastery_ability` | error | spells | `spell`, `ability`, `count`, `max` |
+/// | `mastery_ability_forbidden_for_ritual` | error | spells | `spell`, `ability` |
 /// | `over_power_levels` | error | review | `used`, `budget`, `over` |
 /// | `over_focus_points` | error | review | `used`, `budget`, `over` |
 /// | `might_realm_mismatch` | warning | review | `base`, `granted` |
@@ -802,6 +804,18 @@ impl ValidationIssue {
     /// Mastery special ability is chosen more than once for the same spell. Only
     /// Precise, Quick, and Quiet Casting may repeat (ArMDE:9572, :9576, :9580).
     pub const CODE_DUPLICATE_MASTERY_ABILITY: &'static str = "duplicate_mastery_ability";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Spell Mastery special
+    /// ability carrying a `max_count` cap is chosen more times than that cap for
+    /// the same spell. Only Quiet Casting carries one today — "A maga may take
+    /// this ability twice" (ArMDE:9580), tighter than its own `repeatable` flag.
+    pub const CODE_TOO_MANY_OF_MASTERY_ABILITY: &'static str = "too_many_of_mastery_ability";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Spell Mastery special
+    /// ability that may not be taken for Ritual spells (Ceremonial Casting, Fast
+    /// Casting, Quick Casting — ArMDE:9534, :9540, :9576) is chosen for a spell
+    /// whose `ritual` flag is set. Multiple Casting is the explicit converse
+    /// (ArMDE:9560) and is unaffected.
+    pub const CODE_MASTERY_ABILITY_FORBIDDEN_FOR_RITUAL: &'static str =
+        "mastery_ability_forbidden_for_ritual";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a bought Ability exceeds
     /// the character's age-based maximum (ArMDE:2366-2376; Affinity raises it +2).
     pub const CODE_ABILITY_ABOVE_AGE_CAP: &'static str = "ability_above_age_cap";

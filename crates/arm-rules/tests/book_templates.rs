@@ -1200,8 +1200,9 @@ fn the_verditius_matches_the_book() {
 
     // House Verditius's own grant (ArMDE:2283 `#### Hermetic Houses Summary`,
     // "Verditius Magic") pinned directly: the granted Virtue has no
-    // creation-time numeric effect at all (RULES.md:4797), so nothing else in
-    // this test would ever change if the grant were deleted from
+    // creation-time numeric effect at all (RULES.md, "`validate_house` —
+    // specialisation resolution"), so nothing else in this test would ever
+    // change if the grant were deleted from
     // `rules/core/houses.json` (tmp/houses-audit.md "Grant coverage gap").
     let verditius_grants = arm_rules::house::granted_selections(&verditius, &ruleset);
     assert!(

@@ -473,7 +473,7 @@ pub(crate) fn validate_spells(
         if trained {
             validate_spell_level_cap(entity, ruleset, sel, spell, resolved, issues);
         }
-        validate_spell_mastery_abilities(sel, entity, ruleset, issues);
+        validate_spell_mastery_abilities(sel, spell, entity, ruleset, issues);
     }
 
     validate_duplicate_spells(seen, issues);
@@ -767,10 +767,16 @@ fn validate_spell_levels_budget(
 ///   special ability (ArMDE:9524-9526).
 /// - A non-repeatable ability may be chosen only once for the same spell; only
 ///   Precise, Quick, and Quiet Casting may repeat (ArMDE:9572, :9576, :9580).
+/// - A `max_count`-bearing ability (Quiet Casting, capped at 2,
+///   ArMDE:9580) may not be chosen more times than that cap, even though it
+///   is also `repeatable`.
+/// - A `forbidden_for_ritual` ability (Ceremonial Casting, Fast Casting, Quick
+///   Casting — ArMDE:9534, :9540, :9576) may not be chosen for a Ritual spell.
 ///
 /// Source: ArMDE:9524-9592.
 fn validate_spell_mastery_abilities(
     sel: &SpellSelection,
+    spell: &crate::spell::Spell,
     entity: &Entity,
     ruleset: &Ruleset,
     issues: &mut Vec<ValidationIssue>,
@@ -813,12 +819,16 @@ fn validate_spell_mastery_abilities(
         }
     }
 
-    // A non-repeatable ability may not appear more than once for the same spell.
+    // A non-repeatable ability may not appear more than once for the same spell;
+    // a `max_count`-bearing ability (Quiet Casting) may not exceed that cap even
+    // though it is also repeatable; a `forbidden_for_ritual` ability may not be
+    // chosen at all for a Ritual spell.
     for (ability_id, count) in counts {
-        let repeatable = ruleset
-            .spell_mastery_ability(ability_id)
-            .is_some_and(|a| a.repeatable);
-        if count > 1 && !repeatable {
+        let Some(ability) = ruleset.spell_mastery_ability(ability_id) else {
+            continue;
+        };
+
+        if count > 1 && !ability.repeatable {
             issues.push(ValidationIssue::error(
                 ValidationIssue::CODE_DUPLICATE_MASTERY_ABILITY,
                 CreationPhase::Spells,
@@ -826,6 +836,34 @@ fn validate_spell_mastery_abilities(
                     ("spell", sel.spell.to_string()),
                     ("ability", ability_id.to_string()),
                     ("count", count.to_string()),
+                ]),
+                Some(sel.spell.clone()),
+            ));
+        }
+
+        if let Some(max) = ability.max_count
+            && count > u32::from(max)
+        {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_TOO_MANY_OF_MASTERY_ABILITY,
+                CreationPhase::Spells,
+                args([
+                    ("spell", sel.spell.to_string()),
+                    ("ability", ability_id.to_string()),
+                    ("count", count.to_string()),
+                    ("max", max.to_string()),
+                ]),
+                Some(sel.spell.clone()),
+            ));
+        }
+
+        if ability.forbidden_for_ritual && spell.ritual {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_MASTERY_ABILITY_FORBIDDEN_FOR_RITUAL,
+                CreationPhase::Spells,
+                args([
+                    ("spell", sel.spell.to_string()),
+                    ("ability", ability_id.to_string()),
                 ]),
                 Some(sel.spell.clone()),
             ));

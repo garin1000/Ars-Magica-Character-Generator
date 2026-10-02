@@ -1651,6 +1651,12 @@ export interface SpellMasteryAbility {
   // Whether this ability may be taken multiple times for the same spell (Precise,
   // Quick, Quiet Casting). Absent = false (once per spell).
   repeatable?: boolean;
+  // A hard ceiling on picks per spell, tighter than plain `repeatable`. Set only
+  // for Quiet Casting (2); absent = no ceiling beyond `repeatable`.
+  max_count?: number;
+  // Whether this ability may not be chosen for a Ritual spell (Ceremonial, Fast,
+  // Quick Casting). Absent = false.
+  forbidden_for_ritual?: boolean;
 }
 
 // A spell the character knows. `level` is set only for a General spell (the

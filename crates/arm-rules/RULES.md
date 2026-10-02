@@ -3291,7 +3291,7 @@ exemption is read off the effect's presence (age cap itself is M4/4e).
 - Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
   arithmetic, verified against the worked example below) + `ability_affinity`,
   folded into `effective/xp.rs::xp_allocation` and so into
-  `validation/magus.rs::validate_xp_pool` (:843). **Not** the simpler
+  `validation/magus.rs::validate_xp_pool` (:881). **Not** the simpler
   `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
   example below, but overcharges by one XP whenever `T·den mod num` falls
   strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
@@ -3369,7 +3369,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:843) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:881) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -3810,9 +3810,17 @@ naming a `LifeStageBlock` (`ChildhoodSpread` or `Apprenticeship`), consumed in
   ability per Mastery level); `ArMDE:9528-9592` (the catalogue); `ArMDE:9572`, `ArMDE:9576`,
   `ArMDE:9580` (Precise/Quick/Quiet are repeatable). German source
   `Ars Magica Definitive Edition Basisregeln.md:9524-9592` mirrors it line-for-line.
+> Quiet Casting (`ArMDE:9578-9580`): "A maga may take this ability twice" — a hard
+> ceiling of 2, tighter than the unlimited "multiple times" Precise/Quick Casting get.
+> Ceremonial Casting (`ArMDE:9534`), Fast Casting (`ArMDE:9540`), and Quick Casting
+> (`ArMDE:9576`) "may not be taken for Ritual spells"; Multiple Casting (`ArMDE:9560`)
+> is the explicit converse, "may be taken for Ritual spells".
+
 - Data: catalogue in `rules/core/spell_mastery_abilities.json` — each entry an `id`
   (`spell_mastery_ability.<slug>`) + a `repeatable` bool (true only for Precise/
-  Quick/Quiet Casting) + `source`. Names/descriptions in
+  Quick/Quiet Casting) + an optional `max_count: u8` (only Quiet Casting, `2`) +
+  a `forbidden_for_ritual` bool (true only for Ceremonial/Fast/Quick Casting) +
+  `source`. Names/descriptions in
   `rules/i18n/{en,de}/spell_mastery_abilities.json` (German names from the German
   source headings; terms matching the translation tables — e.g. Adaptives Zaubern,
   Zeremonielles Zaubern, Schnellzaubern, Magieresistenz, Penetration). Catalogue
@@ -3828,7 +3836,11 @@ naming a `LifeStageBlock` (`ChildhoodSpread` or `Apprenticeship`), consumed in
   (a) count ≤ `effective_spell_mastery(sel)` = `max(bought, floor)`, one per level
   (`CODE_TOO_MANY_MASTERY_ABILITIES`); (b) a non-repeatable ability chosen more than
   once for the same spell (`CODE_DUPLICATE_MASTERY_ABILITY`); (c) referential
-  integrity — an unknown chosen id fails (`CODE_UNKNOWN_MASTERY_ABILITY`). Load-time
+  integrity — an unknown chosen id fails (`CODE_UNKNOWN_MASTERY_ABILITY`); (d) a
+  `max_count`-bearing ability (Quiet Casting) chosen more times than its cap, even
+  though it is also `repeatable` (`CODE_TOO_MANY_OF_MASTERY_ABILITY`); (e) a
+  `forbidden_for_ritual` ability chosen for a spell whose `ritual` flag is set
+  (`CODE_MASTERY_ABILITY_FORBIDDEN_FOR_RITUAL`). Load-time
   integrity checks each catalogue entry's `source` range. UI: per-spell add/remove
   picker in `SpellPicker.svelte` (store `addMasteryAbilityAt`/`removeMasteryAbilityAt`),
   greying non-repeatable already-chosen options and hiding the add control once the

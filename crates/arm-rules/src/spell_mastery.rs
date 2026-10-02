@@ -33,6 +33,21 @@ pub struct SpellMasteryAbility {
     /// which are once-per-spell.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub repeatable: bool,
+    /// A hard ceiling on picks per spell, tighter than plain `repeatable`
+    /// (unlimited). `Some(2)` only for Quiet Casting — "A maga may take this
+    /// ability twice" (ArMDE:9580) — vs. Precise/Quick Casting's unlimited
+    /// "multiple times" (ArMDE:9572, :9576). `None` (the default) means no
+    /// ceiling beyond the ordinary `repeatable` rule.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_count: Option<u8>,
+    /// Whether this ability may not be chosen for a Ritual spell. `true` for
+    /// Ceremonial Casting, Fast Casting, and Quick Casting
+    /// (ArMDE:9534, :9540, :9576);
+    /// `false` (the default) for the rest — Multiple Casting is the explicit
+    /// converse, "may be taken for Ritual spells"
+    /// (ArMDE:9560).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub forbidden_for_ritual: bool,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
@@ -77,6 +92,8 @@ mod tests {
         let ability = SpellMasteryAbility {
             id: Id::new("spell_mastery_ability.penetration"),
             repeatable: false,
+            max_count: None,
+            forbidden_for_ritual: false,
             source: None,
         };
         let out = serde_json::to_string(&ability).unwrap();
