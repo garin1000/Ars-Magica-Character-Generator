@@ -1226,9 +1226,11 @@ Casting Totals are MAG1's second instance, above, plus one row of their own.
   Weather focus, "the lowest applicable score may be one of the requisites"
   (`ArMDE:4403`), so Rego's 5 is the score doubled:
   `5 + 5 + Au 15 + Sta 2 = 27`, exactly the printed figure. The fixture marks
-  the spell `within_focus: true` (a wind that carries the caster counts as
-  weather; Pull of the Skybound Winds stays outside it, as its printed +26
-  shows). An interpretive call on the focus's scope, queued for Norbert.
+  the spell `within_focus: true`. That the spell lies within the Weather focus
+  is Norbert's ruling, not an inference from the target number:
+  `docs/vf-audit/decisions.md` D81.11, "a wind that carries the caster is
+  weather". Pull of the Skybound Winds is outside the focus only because the
+  book prints it at the base +26. No ruling covers it.
 - **Wrong:** **(a) the engine, fixed** (X11). Like MAG4, the book was right
   once requisites fold.
 
