@@ -863,6 +863,14 @@ presumption of correctness.
     German-name guard exceptions stay.
 13. **Devil Child's required-Flaw slot** gains `require_categories: ["story"]`,
     like its siblings.
+14. **"Faerie-related" for Merinita** (ArMDE:2280) means either an entry whose
+    realm resolves to Faerie, or one of three entries outside the realm
+    system, flagged explicitly: Faerie Friend (ArMDE:6052), Faerie Upbringing
+    (:6056) and Susceptibility to Faerie Power (:6819).
+    - The realm case covers Faerie Blood and Strong Faerie Blood, plus Bound
+      to / Realm Stigmatic / Necessary Aura / Folk Magic when their realm is
+      Faerie.
+    - The House's own Faerie Magic grant does not count.
 
 ---
 
