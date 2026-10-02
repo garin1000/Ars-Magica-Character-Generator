@@ -871,6 +871,9 @@ presumption of correctness.
       to / Realm Stigmatic / Necessary Aura / Folk Magic when their realm is
       Faerie.
     - The House's own Faerie Magic grant does not count.
+15. **A spell that uses a barred Incompatible Arts combination**, directly or
+    through a requisite, is a creation-time ERROR (ArMDE:6292, "completely
+    unable to use").
 
 ---
 
