@@ -828,6 +828,17 @@ presumption of correctness.
 
 ---
 
+## D82 — the coverage target and a dead Ruleset field
+
+**Norbert, 2026-10-02.**
+1. **D76's 95% means the whole tarpaulin report** (all workspace crates), not
+   just `arm-rules/src`, which already stands at 97.1%.
+2. **`Ruleset.ranges_beyond_touch` is removed** from the serialized Ruleset
+   and the TS type. Since D81.5 the per-spell caps fold the beyond-Touch
+   halving in the engine, so nothing reads the field.
+
+---
+
 ## D81 — the night audits' exclusions and Merinita's Warping Point
 
 **Norbert, 2026-10-02** (`tmp/incompat-audit.md`, `tmp/houses-audit.md`).
