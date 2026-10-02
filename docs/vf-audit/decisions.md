@@ -849,6 +849,20 @@ presumption of correctness.
    stated grant realm beats the concept realm.
 7. **"In such as case" (ArMDE:4235)** is corrected here as a same-line edit,
    and recorded upstream.
+8. **Incompatible Arts records its two combinations** (ArMDE:6292) as four
+   selects per copy (Technique 1 + Form 1, Technique 2 + Form 2). A copy that
+   repeats another's pair, in either order, is refused. The engine flags both
+   combinations as unusable in the Casting and Lab totals and on the spells
+   that use them, requisites included ("even if one or both are requisites").
+9. **Focus Power** copies may share a scope or found separate powers
+   (ArMDE:3903, "the points gained may be combined"); the current data stands.
+10. **Mists of Change** keeps Duration Year (ArMDE:13634, "D: Sun & Year").
+11. **MAG7 stays resolved:** a wind that carries the caster is weather, so
+    Wings of the Soaring Wind is inside the Mercere's Weather focus.
+12. **The D31 table revert is only recorded** upstream, not done. The seven
+    German-name guard exceptions stay.
+13. **Devil Child's required-Flaw slot** gains `require_categories: ["story"]`,
+    like its siblings.
 
 ---
 
