@@ -828,6 +828,20 @@ presumption of correctness.
 
 ---
 
+## D81 — the night audits' exclusions and Merinita's Warping Point
+
+**Norbert, 2026-10-02** (`tmp/incompat-audit.md`, `tmp/houses-audit.md`).
+1. **Incompatible Arts excludes the Deficiencies outright** (ArMDE:6292, "may
+   not be combined with a Deficiency"): a flat `incompatible_with` on both sides.
+2. **A Characteristic-floor prerequisite** is built for Supernatural Beauty
+   (ArMDE:5095), Envied Beauty (:6014) and Uncontrollable Strength (:6909).
+3. **Broken Vessel** (ArMDE:5755) requires a score in a Supernatural Ability or
+   an Art, through a new predicate.
+4. **Merinita's Warping Point** (ArMDE:2280) is a conditional grant: it applies
+   to a magus of the House who holds no faerie-related Virtue or Flaw.
+
+---
+
 ## D80 — X6c's three open points (`tmp/x6c-verdicts.md`)
 
 **Norbert, 2026-10-01.**
