@@ -3765,6 +3765,18 @@ pub struct PointItem {
     /// entry the book leaves free. See [`RealmAssociation`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub realm_association: Option<RealmAssociation>,
+    /// D81.14 (`docs/vf-audit/decisions.md`): `true` for an entry ArMDE:2280's
+    /// "faerie-related Virtue or Flaw" (Merinita's conditional Warping Point)
+    /// reads as faerie-related despite carrying no [`Self::realm_association`]
+    /// at all — Faerie Friend, Faerie Upbringing, Susceptibility to Faerie
+    /// Power. An entry whose realm resolves to [`Realm::Faerie`] (Faerie
+    /// Blood, Bound to (Realm) at Faerie, …) needs no flag; the predicate
+    /// reads `realm_association` for those. Never set on `virtue.faerie_magic`
+    /// itself — the House's own grant, which every Merinita magus holds by
+    /// construction, so flagging it would make the clause permanently
+    /// vacuous.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub faerie_related: bool,
     /// D12's intrinsic/trained classification: `true` when this item
     /// operates on Techniques, Forms, spells, Casting/Lab Totals, Parma
     /// Magica, certámen, or Twilight — things that exist only after
@@ -4050,6 +4062,8 @@ struct PointItemRepr {
     #[serde(default)]
     realm_association: Option<RealmAssociation>,
     #[serde(default)]
+    faerie_related: bool,
+    #[serde(default)]
     trained: bool,
     #[serde(default)]
     requires_hermetic_arts: bool,
@@ -4097,6 +4111,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             classification,
             tainted,
             realm_association,
+            faerie_related,
             trained,
             requires_hermetic_arts,
             entity_kinds,
@@ -4138,6 +4153,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             classification,
             tainted,
             realm_association,
+            faerie_related,
             trained,
             requires_hermetic_arts,
             entity_kinds,

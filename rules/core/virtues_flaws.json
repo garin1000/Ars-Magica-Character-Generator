@@ -1058,6 +1058,7 @@
     "magnitude": "minor",
     "categories": ["story"],
     "classification": "creation_effect",
+    "faerie_related": true,
     "entity_kinds": ["character"],
     "effects": [{ "type": "ability_authorization", "abilities": ["ability.faerie_lore"] }],
     "source": { "anchor": "faerie-friend", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6052, 6054] }
@@ -1068,6 +1069,7 @@
     "magnitude": "minor",
     "categories": ["personality"],
     "classification": "creation_effect",
+    "faerie_related": true,
     "entity_kinds": ["character"],
     "effects": [{ "type": "ability_authorization", "abilities": ["ability.faerie_lore"] }],
     "source": { "anchor": "faerie-upbringing", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6056, 6058] }
@@ -3010,6 +3012,7 @@
     "magnitude": "minor",
     "categories": ["hermetic"],
     "classification": "uncomputed_rule",
+    "faerie_related": true,
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },

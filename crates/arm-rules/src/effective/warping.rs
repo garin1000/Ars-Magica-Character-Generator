@@ -67,6 +67,7 @@ pub fn warping_points_total(entity: &Entity, ruleset: &Ruleset) -> u32 {
             selections_for_effects(entity, ruleset).as_ref(),
             ruleset,
         ))
+        .saturating_add(merinita_warping_points(entity, ruleset))
 }
 
 /// The Warping Points that DETERMINE how many V/F are owed from Warping: the
@@ -81,6 +82,51 @@ fn warping_points_for_owed(entity: &Entity, ruleset: &Ruleset) -> u32 {
     entity
         .warping_points
         .saturating_add(warping_grant_points_in(&base, ruleset))
+        .saturating_add(merinita_warping_points(entity, ruleset))
+}
+
+/// Whether `entity` holds, among its effective (bought ∪ House/mythic/VF-
+/// granted, non-warping-fill) selections, any Virtue or Flaw ArMDE:2280 reads
+/// as "faerie-related" — the gate on Merinita's conditional Warping Point
+/// ([`merinita_warping_points`]).
+///
+/// D81.14 (`docs/vf-audit/decisions.md`): an item counts if EITHER
+/// `PointItem::faerie_related` is set (Faerie Friend, Faerie Upbringing,
+/// Susceptibility to Faerie Power — three entries outside the realm system
+/// entirely), OR it carries a realm association that resolves to
+/// [`Realm::Faerie`] via the existing [`item_has_realm_association`] +
+/// [`resolve_realm`] chain (Faerie Blood, Strong Faerie Blood, and Bound to /
+/// Realm Stigmatic / Necessary Aura / Folk Magic when their own `realm`
+/// parameter names Faerie). `virtue.faerie_magic` itself — the House's own
+/// grant every Merinita magus holds by construction — carries neither, so it
+/// correctly never counts.
+///
+/// Uses the same selection base as [`warping_points_for_owed`] (bought ∪
+/// non-warping-fill grants): the warping-owed fills themselves are excluded
+/// so a player cannot fill an owed-warping Flaw slot with a faerie-related
+/// pick to retroactively dodge this very point.
+fn has_faerie_related_vf(entity: &Entity, ruleset: &Ruleset) -> bool {
+    let mut base = entity.selections.clone();
+    base.extend(entity_grants_base(entity, ruleset));
+    base.iter().any(|selection| {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            return false;
+        };
+        item.faerie_related
+            || (item_has_realm_association(item, selection)
+                && resolve_realm(item, selection, entity.concept_realm).realm == Realm::Faerie)
+    })
+}
+
+/// The conditional Warping Point Merinita's own Mystery inflicts at creation:
+/// "Any magus in this House without a faerie-related Virtue or Flaw has a
+/// Warping Point, inflicted to allow initiation into the Mystery" (ArMDE:2280).
+/// 1 for a `house.merinita` magus with no faerie-related V/F, 0 otherwise —
+/// including every non-Merinita entity, for which the House clause never
+/// applies at all.
+fn merinita_warping_points(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    let is_merinita = entity.house == Some(Id::new("house.merinita"));
+    u32::from(is_merinita && !has_faerie_related_vf(entity, ruleset))
 }
 
 /// The Warping Score used to decide the owed warping V/F: [`warping_points_for_owed`]

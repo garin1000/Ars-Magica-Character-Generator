@@ -4815,6 +4815,45 @@ The named Virtues a House grants, and the Mystery Abilities their
 | `ability.faerie_magic` (requires_training) | Arcane | `ArMDE:7478-7479` |
 | `ability.heartbeast` (requires_training) | Arcane | `ArMDE:7501-7502` |
 
+#### Merinita's conditional Warping Point
+> "Any magus in this House without a faerie-related Virtue or Flaw has a
+> Warping Point, inflicted to allow initiation into the Mystery."
+
+- Source: `ArMDE:2280` — the second sentence of Merinita's own cell in the
+  House benefit table (above), distinct from the Faerie Magic grant the first
+  sentence states.
+- D81.4/D81.14 (`docs/vf-audit/decisions.md`): a conditional point, not a
+  `Grant` — applies only to a `house.merinita` magus holding no
+  "faerie-related" Virtue or Flaw. D81.14 rules "faerie-related" as EITHER an
+  entry whose realm resolves to Faerie via the existing realm-resolution chain
+  (Faerie Blood, Strong Faerie Blood, and Bound to (Realm) / Realm Stigmatic /
+  Necessary Realm Aura for Ability / Folk Magic when their own `realm`
+  parameter names Faerie), OR an explicit `faerie_related: true` data flag on
+  three entries outside the realm system entirely: Faerie Friend
+  (`ArMDE:6052-6054`), Faerie Upbringing (`ArMDE:6056-6058`), Susceptibility to
+  Faerie Power (`ArMDE:6819-6821`). `virtue.faerie_magic` itself — the first
+  sentence's grant, which every Merinita magus holds by construction — carries
+  neither, so the clause is never vacuous.
+- Implementation: `effective/warping.rs::has_faerie_related_vf` (the
+  predicate, scanning bought ∪ non-warping-fill granted selections — the same
+  base `warping_points_for_owed` uses, so a player cannot fill an owed-warping
+  Flaw slot with a faerie-related pick to dodge this very point) and
+  `effective/warping.rs::merinita_warping_points` (the House gate: 1 point iff
+  `house.merinita` and the predicate is false, 0 otherwise), folded additively
+  into both `warping_points_total` and `warping_points_for_owed` via
+  `saturating_add` — a genuine accrued Warping Point, not a Merinita-only side
+  channel.
+- Data: `rules/core/virtues_flaws.json` — `faerie_related: true` added to
+  `flaw.faerie_friend`, `flaw.faerie_upbringing`,
+  `flaw.susceptibility_to_faerie_power`. No new field on `virtue.faerie_magic`
+  or `virtue.faerie_doctor` (mythic-companion-only category, unreachable by any
+  Hermetic magus profile) — see D81.14.
+- Tests: `crates/arm-rules/tests/d81_merinita_warping.rs` — the no-faerie-V/F
+  case (1 point), the House gate (non-Merinita owes nothing), additive
+  stacking with pre-existing accrued points, the two realm-resolved and three
+  explicitly-flagged exemptions, and the Bound-to-(Magic)-realm forward guard
+  (does NOT exempt).
+
 #### The four Outer-Mystery Virtues confer House membership
 > "You have been initiated into the Outer Mystery of the Heartbeast (see page
 > 233), **and thus are a member of House Bjornaer**. You start with the Ability
