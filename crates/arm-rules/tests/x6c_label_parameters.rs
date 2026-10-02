@@ -151,6 +151,26 @@ fn focus_power_requires_a_focus() {
     assert_required_text_param("virtue.focus_power", "focus", "finding lost things");
 }
 
+/// ArMDE:3903: "This Virtue may be taken more than once, and the points
+/// gained may be combined", so a second copy for the SAME focus is legal.
+/// X6c's new `focus` parameter must not turn that into a duplicate selection.
+#[test]
+fn focus_power_may_be_taken_twice_for_the_same_focus() {
+    let rs = load_ruleset();
+    let twice = entity(
+        "companion",
+        vec![
+            sel_with("virtue.focus_power", param("focus", "finding lost things")),
+            sel_with("virtue.focus_power", param("focus", "finding lost things")),
+        ],
+    );
+    let codes = issue_codes(&twice, &rs);
+    assert!(
+        !codes.iter().any(|c| c == "duplicate_selection"),
+        "two Focus Power copies on one focus combine their points, got {codes:?}"
+    );
+}
+
 #[test]
 fn baneful_circumstances_requires_a_circumstance() {
     assert_required_text_param(

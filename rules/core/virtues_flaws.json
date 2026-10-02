@@ -4866,6 +4866,7 @@
     "categories": ["supernatural"],
     "classification": "creation_effect",
     "entity_kinds": ["character"],
+    "max_per_target": 255,
     "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
     "max_total": 255,
     "effects": [{ "type": "focus_points", "amount": 25 }],

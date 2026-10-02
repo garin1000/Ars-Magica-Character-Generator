@@ -8749,10 +8749,9 @@ const TEXT_TARGET_PARAM_ITEMS: &[(&str, &str, u32)] = &[
     // even if more than one set of circumstances applies" (ArMDE:5000, X6b,
     // F-541/F-287) — the parameter distinguishes copies by circumstance.
     ("virtue.special_circumstances", "circumstance", 5000),
-    // "This Virtue may be taken more than once, and the points gained may be
-    // combined" (ArMDE:3903, X6c) — the parameter records D9's narrow
-    // thematic scope per copy.
-    ("virtue.focus_power", "focus", 3903),
+    // Not `virtue.focus_power`: "the points gained may be combined"
+    // (ArMDE:3903) asks for a second copy on the SAME focus, so it keeps
+    // `max_per_target: 255` (`x6c_label_parameters.rs::focus_power_may_be_taken_twice_for_the_same_focus`).
 ];
 
 /// Items whose descriptor states a ceiling of exactly two copies, paired with
