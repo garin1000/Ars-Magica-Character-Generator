@@ -257,6 +257,10 @@ Sizes per the project's convention: **S** ≈ ½ session, **M** ≈ 1 session,
 
 ### P8-0 — Measure, remaining pieces (S)
 
+**Done 2026-10-02: see `p8-0-census.md`.** It confirms the Core-only assumption for
+every anchored entry, re-estimates P8-4 at M (L without continuation parsing) and
+P8-5 at S, and finds 58 hard line pins in 7 test files that must move in P8-3's commit.
+
 This design's own measurement pass (above) covers the heading/body/line-count
 questions the brief asked for. Two things are still unmeasured and gate
 sizing for later phases:
