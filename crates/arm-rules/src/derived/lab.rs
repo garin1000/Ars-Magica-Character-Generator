@@ -69,7 +69,11 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
                 Addend::new("aura", aura),
                 Addend::new("lab_mod", mods.lab_mod),
             ];
-            let deficient = mods.deficient(&technique, &form);
+            // Lab Total, not Casting Total: requisite folding stays an M4
+            // approximation here (ArMDE:2465/:10350/:10746 — see RULES.md and
+            // `tmp/requisites-handover.md` §5), so no requisites are threaded
+            // through at all.
+            let deficient = mods.deficient(&technique, &form, &[]);
             let base = sum(&addends);
             let total = if deficient { halve(base) } else { base };
             let within_focus = mods.has_focus.then(|| {
@@ -223,7 +227,10 @@ fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> (i32, bool) {
         entity.aura,
         mods.lab_mod,
     ]);
-    let deficient = mods.deficient(&Id::new(ID_CREO), &Id::new(ID_CORPUS));
+    // Lab Total, not Casting Total: requisite folding stays an M4
+    // approximation here (ArMDE:2465/:10350/:10746) — no requisites threaded
+    // through.
+    let deficient = mods.deficient(&Id::new(ID_CREO), &Id::new(ID_CORPUS), &[]);
     let difficult = mods.halvings.contains(&HalvableTotal::LabLongevity);
     let mut total = base;
     if deficient {

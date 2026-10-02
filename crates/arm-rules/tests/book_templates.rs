@@ -600,16 +600,21 @@ fn the_ex_miscellanea_matches_the_book() {
     assert_eq!(casting("spell.rock_of_viscid_clay"), 27);
     assert_eq!(casting("spell.earth_that_breaks_no_more"), 27);
     assert_eq!(casting("spell.obliteration_of_the_metallic_barrier"), 22);
-    // DISAGREEMENT MAG4 (docs/book-template-conformance.md), UNCHANGED by X10c.
-    // The book prints +27 for The Earth's Carbuncle and +23 for Hands of the
-    // Grasping Earth (ArMDE:1798-1799 `#### Ex Miscellanea`) although both are
-    // Re(Mu)Te 15 and its own Arts line gives Re 5 + Te 15 + Sta +4 = 24 base,
-    // 29 within the stone focus. The two figures cannot both be right, and
-    // neither is either of the two the arithmetic allows, so no `within_focus`
-    // value fixes this: both spells are marked `false` (the base figure, 24,
-    // is what the engine reaches either way) and the disagreement stands.
-    assert_eq!(casting("spell.the_earths_carbuncle"), 24);
-    assert_eq!(casting("spell.hands_of_the_grasping_earth"), 24);
+    // DISAGREEMENT MAG4 — RESOLVED (X11, requisite folding). Both spells are
+    // Re(Mu)Te 15 with the SAME Muto requisite, on the same magus (Re 5, Te
+    // 15, Mu 4, Sta +4). ArMDE:12309 ("You must use the lesser of your score
+    // in the requisite and your score in the spell's main Technique"): Mu 4 <
+    // Re 5, so the effective Technique folds to 4: 4 + 15 + 4 = 23 base. The
+    // Earth's Carbuncle ("ground [becomes] jagged stone", ArMDE:15540) is
+    // stone-themed and sits within the Major Magical Focus (stone), 23 + focus
+    // (min(4, 15) = 4) = 27; Hands of the Grasping Earth ("Earthen hands...
+    // rise out of the ground", ArMDE:15546) is earth/soil, not stone, same
+    // distinction already drawn for `obliteration_of_the_metallic_barrier`
+    // above ("metal, not stone"), so it stays at the base 23. Both now match
+    // the book exactly (`ArMDE:1798-1799`): +27 and +23. The previous "(c) the
+    // book" verdict was wrong — the engine was missing the fold, not the book.
+    assert_eq!(casting("spell.the_earths_carbuncle"), 27);
+    assert_eq!(casting("spell.hands_of_the_grasping_earth"), 23);
 }
 
 // --- Flambeau (ArMDE:1803-1849 `#### Flambeau`) -----------------------------
@@ -894,13 +899,19 @@ fn the_mercere_matches_the_book() {
     assert_eq!(casting("spell.clouds_of_rain_and_thunder"), 35);
     assert_eq!(casting("spell.clouds_of_summer_snow"), 35);
     assert_eq!(casting("spell.pull_of_the_skybound_winds"), 26);
-    // DISAGREEMENT MAG7: the book prints +27 here (ArMDE:1996 `#### Mercere`) where every other
-    // Creo Auram row on the same statblock reads +26 or +35, and nothing in the
-    // Arts line makes 27 reachable — the Rego requisite of Cr(Re)Au adds nothing
-    // to a Casting Total (ArMDE:9089 `## Casting Spells`). Marked `within_focus:
-    // false` (the base figure, 26, is the best available; neither candidate
-    // is 27), unresolved by X10c same as MAG4 above.
-    assert_eq!(casting("spell.wings_of_the_soaring_wind"), 26);
+    // DISAGREEMENT MAG7, UPDATED by X11 (requisite folding; still unresolved —
+    // the book is still wrong, only the engine's own best-reachable figure
+    // changes). The book prints +27 here (ArMDE:1996 `#### Mercere`) where
+    // every other Creo Auram row on the same statblock reads +26 or +35.
+    // Wings of the Soaring Wind is Cr(Re)Au, requisite Rego (ArMDE:12309):
+    // Creo's Puissant-inclusive 9 vs. Rego's 5 — the lesser is 5, so the
+    // effective Technique folds to 5: 5 + Au 15 + Sta 2 = 22, not the
+    // pre-fold 26. Neither 22 nor 26 is the book's 27; `within_focus: false`
+    // (Weather does not cover this spell — it is not marked within the two
+    // weather spells' focus either before or after this change), and 22 is
+    // now the rules-correct figure the engine actually computes, replacing
+    // 26 as "the best available."
+    assert_eq!(casting("spell.wings_of_the_soaring_wind"), 22);
 }
 
 // --- Merinita (ArMDE:2000-2048 `#### Merinita`) -----------------------------

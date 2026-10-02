@@ -5100,9 +5100,46 @@ Magic Theory → a spell above it emits `spell_level_exceeds_cap` (validation, i
 `validation/magus.rs`). The same function is surfaced per-Te/Fo combination as
 `spell_level_caps` → `EffectiveScores.spell_level_caps` (`effective_dto.rs`), so the
 spell picker greys a spell above the cap from the one engine-authoritative value
-rather than recomputing it in JS. **Approximation:** requisite-Art reduction is a
-lab-total nuance out of M4 scope — requisites are stored on the spell for display
-but not folded into the cap.
+rather than recomputing it in JS. **Approximation, narrowed by X11:** requisite
+folding now applies to the Casting Total (below), but this cap and the in-play
+Lab Total (`derived/lab.rs::lab_totals`) remain unfolded — `ArMDE:12313`
+("Requisites listed with a spell's statistics apply when you are learning,
+inventing, or casting that spell...") makes learning/inventing (the Lab Total
+family) and casting two separate applications of the same base rule, and only
+the second is done; requisites are stored on the spell for display and read by
+the Casting Total fold, but still not folded into this cap or into
+`lab_totals`. See `tmp/requisites-handover.md` §QUESTIONS for the follow-up.
+
+**Casting Total — requisite folding (X11, `derived/casting.rs::fold_requisite`).**
+
+> `ArMDE:12309` "You must use the lesser of your score in the requisite and
+> your score in the spell's main Technique or Form — Technique if the
+> requisite is a Technique, Form if the requisite is a Form."
+
+> `ArMDE:12311` "Sometimes a spell has a requisite for both its Technique and
+> Form. You must use the lowest in each case. And, if several requisites
+> apply to the same primary Art... your effective score is the lowest of the
+> group. Furthermore, any Deficiencies you have with an Art apply when you
+> use that Art as a requisite."
+
+`fold_requisite` reduces the effective Technique/Form score `formulaic_casting_score`
+uses to the lowest of the primary and every same-class requisite — bonus-inclusive
+on every side (`effective_art_score`), so Puissant Art (`ArMDE:4820`) needs no
+special case. `InPlayMods::deficient` additionally checks the spell's
+requisites, not only its primary Technique/Form, per `ArMDE:12311`'s closing
+sentence. `Effect::ElementalMagic`'s pooled Forms (`InPlayMods::elemental_forms`)
+exempt a Form requisite from the fold when both it and the primary Form are
+elemental (`ArMDE:3737`), so a magus with Elemental Magic always uses the
+primary elemental Form. Reached by `spell_casting_total` and `penetration`
+(both resolve a concrete spell); the Technique×Form grid (`casting_totals`)
+passes no requisites at all, since one cell may host several spells with
+different or no requisites of their own. Deliberately does **not** reach Magic
+Resistance, vis-boosting, or any other "effects that affect spells based on
+their Arts" (`ArMDE:12313`) — those read the primary Arts only and call neither
+`fold_requisite` nor `formulaic_casting_score`. Tests:
+`crates/arm-rules/tests/requisite_casting_total.rs`; resolves `docs/book-template-
+conformance.md`'s MAG4 (was "(c) the book", now "(a) the engine, fixed") and
+updates MAG7's own best-reachable figure (still "(c) the book").
 
 **Stat-line guard (`tests/spell_stat_line.rs`).** Every entry in
 `rules/core/spells.json` is cross-checked against the Technique, Form, Level,

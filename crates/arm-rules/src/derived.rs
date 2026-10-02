@@ -188,6 +188,12 @@ struct InPlayMods {
     lab_mod_within_potent_field: i32,
     /// The deficient Technique/Form Art ids (Deficient Art halves totals adding one).
     deficient_arts: BTreeSet<Id>,
+    /// The pooled elemental Form ids from [`Effect::ElementalMagic`], `None`
+    /// for an entity without the Virtue. Read only by
+    /// `derived/casting.rs::fold_requisite` (ArMDE:3737: a Form requisite
+    /// never reduces an elemental primary Form when both are pooled here) —
+    /// Elemental Magic names only Forms, never Techniques.
+    elemental_forms: Option<BTreeSet<Id>>,
     /// Whole-total halvings in effect (Weak Magic → Penetration, Weak Enchanter →
     /// lab enchanting).
     halvings: BTreeSet<HalvableTotal>,
@@ -354,6 +360,18 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
             match effect {
                 Effect::MagicalFocus { .. } => m.has_focus = true,
                 Effect::MasterpieceItem => m.has_masterpiece = true,
+                // ArMDE:3737 (Elemental Magic): the pooled elemental Forms,
+                // read here (rather than re-walking selections a second time)
+                // so `derived/casting.rs::fold_requisite` can except a Form
+                // requisite from the fold when both it and the spell's primary
+                // Form are members of this set. `get_or_insert_with` combines
+                // two copies gracefully rather than requiring exactly one
+                // (not a legality guarantee this fold needs to make).
+                Effect::ElementalMagic { forms } => {
+                    m.elemental_forms
+                        .get_or_insert_with(BTreeSet::new)
+                        .extend(forms.iter().cloned());
+                }
                 Effect::CastingTotalMod {
                     amount,
                     scope,
@@ -677,7 +695,6 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 | Effect::MightGrant { .. }
                 | Effect::PowerLevels { .. }
                 | Effect::FocusPoints { .. }
-                | Effect::ElementalMagic { .. }
                 | Effect::ForbidsAbilitySpecialties
                 | Effect::ForbidsRitualCasting
                 | Effect::WaivesAbilityAgeCap
@@ -723,9 +740,16 @@ impl InPlayMods {
             .unwrap_or(0)
     }
 
-    /// Whether either Art of a `(technique, form)` pair is a Deficient Art.
-    fn deficient(&self, technique: &Id, form: &Id) -> bool {
-        self.deficient_arts.contains(technique) || self.deficient_arts.contains(form)
+    /// Whether a `(technique, form)` pair's totals are halved by a Deficient
+    /// Art — either primary Art, or (ArMDE:12311, closing sentence: "any
+    /// Deficiencies you have with an Art apply when you use that Art as a
+    /// requisite") any of `requisites`, regardless of whether that requisite
+    /// numerically binds in [`fold_requisite`]. Empty `requisites` (the grid,
+    /// which has no specific spell) is the pre-X11 two-Art check unchanged.
+    fn deficient(&self, technique: &Id, form: &Id, requisites: &[Id]) -> bool {
+        self.deficient_arts.contains(technique)
+            || self.deficient_arts.contains(form)
+            || requisites.iter().any(|r| self.deficient_arts.contains(r))
     }
 
     /// The residual Casting-Score penalty for casting a `form` spell with no voice:

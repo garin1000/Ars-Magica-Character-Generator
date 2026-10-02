@@ -1042,20 +1042,36 @@ Encumbrance 0 (0), Dodging Init -2 / Def +1 and Te 12+3 = 15 all reproduce. Erro
 set empty, warning set empty. Abilities 315 + Arts 120 = 435 exactly, with Terram
 12 Affinity-charged at 52.
 
-### MAG4 — two identical spells, two different Casting Totals, neither reachable
+### MAG4 — two identical spells, two different Casting Totals — RESOLVED (X11)
 
 - **Book:** The Earth's Carbuncle prints `Re(Mu)Te 15/+27` and Hands of the
   Grasping Earth `Re(Mu)Te 15/+23` (`ArMDE:1798-1799`). Same Technique, same Form,
-  same magus. The statblock's own Arts line (`ArMDE:1784`) gives
-  `Re 5 + Te 15 + Sta +4 = 24`, and the Major Magical Focus (stone) would add
-  `min(5, 15) = 5` for 29. Neither 27 nor 23 is reachable, and the two cannot both
-  be right whatever the focus does. A requisite adds nothing to a Casting Total
-  (`ArMDE:9089` `## Casting Spells`), so the `(Mu)` explains neither.
-- **Engine:** 24 base and 29 within focus, for both rows.
-- **Wrong:** **(c) the book.** The rest of the list is internally consistent —
-  CrTe +35 is `27 + 8` within the focus, MuTe +27 is `23 + 4`, Pe(Re)Te +22 is the
-  base with the focus not applied (metal, not stone) — so these two rows are the
-  only ones that do not follow from the printed Arts.
+  same magus.
+- **Original (wrong) analysis:** the statblock's own Arts line (`ArMDE:1784`)
+  gives `Re 5 + Te 15 + Sta +4 = 24`, and the Major Magical Focus (stone) would
+  add `min(5, 15) = 5` for 29 — neither 27 nor 23 reachable, "a requisite adds
+  nothing to a Casting Total (`ArMDE:9089`)." That reading of `ArMDE:9089` is
+  too narrow: `ArMDE:9089` is only the Casting *Score* formula and names no
+  requisite at all, but `ArMDE:12309` (`### Requisites`) is the passage that
+  actually governs which Technique/Form scores feed it, and it explicitly
+  replaces one of them with a lower requisite.
+- **Fix (X11):** both spells carry a Muto requisite (Mu 4), lower than Rego's 5.
+  `ArMDE:12309`'s lesser-of rule folds the effective Technique to 4: `4 + Te 15
+  + Sta 4 = 23` base — Hands of the Grasping Earth's printed figure exactly.
+  The Earth's Carbuncle ("ground [becomes] jagged stone", `ArMDE:15540`) is
+  stone-themed and sits within the Major Magical Focus (stone): `23 + min(4,
+  15) = 27` — its printed figure exactly. Hands of the Grasping Earth
+  ("Earthen hands... rise out of the ground", `ArMDE:15546`) is earth/soil,
+  not stone — the same distinction the original write-up below already drew
+  for Pe(Re)Te ("metal, not stone") — so it stays at the base 23, no focus.
+  Both rows now match the book exactly; `magus_ex_miscellanea.json` marks only
+  The Earth's Carbuncle `within_focus: true`.
+- **Wrong: was "(c) the book," now "(a) the engine" (fixed).** The requisite
+  fold (`derived/casting.rs::fold_requisite`) was simply missing; once added,
+  the book's own numbers are internally consistent after all. The rest of the
+  list was already consistent independently of this fix — CrTe +35 is `27 + 8`
+  within the focus, MuTe +27 is `23 + 4`, Pe(Re)Te +22 is the base with the
+  focus not applied (metal, not stone).
 
 ### MAG5 — the Grappling Combat row has no engine counterpart
 
@@ -1193,18 +1209,28 @@ Init +1 / Def +1 and all eight Art scores (Cr 6+3 = 9, Au 12+3 = 15) reproduce.
 Abilities 315 + Arts 120 = 435 exactly. Error set empty, warning set empty. The
 Casting Totals are MAG1's second instance, above, plus one row of their own.
 
-### MAG7 — a Creo Auram total the Arts line cannot produce
+### MAG7 — a Creo Auram total the Arts line cannot produce — STILL WRONG, figure updated (X11)
 
 - **Book:** Wings of the Soaring Wind prints `Cr(Re)Au 30/**+27**` (`ArMDE:1996`)
   where the four other Creo Auram rows on the same statblock read +26 (base) or
-  +35 (within the Major Magical Focus on Weather). `Cr 9 + Au 15 + Sta +2 = 26`,
-  and the focus would give 35; 27 is neither, and the Rego requisite contributes
-  nothing to a Casting Total (`ArMDE:9089`).
-- **Engine:** 29 base / 38 focused, i.e. the book's 26 / 35 plus MAG1's spurious
-  +3 — so the engine reproduces the book's *relationship* between the rows exactly
-  and disagrees only by the one constant, on this row as on the other four.
-- **Wrong:** **(c) the book**, an isolated arithmetic slip. Sibling of MAG9
-  (Verditius's Touch of Midas), which has the same shape on the same Form family.
+  +35 (within the Major Magical Focus on Weather).
+- **Original (wrong) analysis:** `Cr 9 + Au 15 + Sta +2 = 26`, and the focus
+  would give 35; 27 is neither, and "the Rego requisite contributes nothing to
+  a Casting Total (`ArMDE:9089`)" — the same too-narrow reading of `ArMDE:9089`
+  MAG4 made (see that entry's note: `ArMDE:9089` names no requisite because it
+  is only the Casting Score formula; `ArMDE:12309` is what actually governs it).
+- **Engine (X11):** this spell DOES carry a Rego requisite, and Rego (5) is
+  lower than Creo's Puissant-inclusive effective score (9) — `ArMDE:12309`'s
+  lesser-of rule folds the effective Technique to 5: `5 + Au 15 + Sta 2 = 22`.
+  Not within the Weather focus (this spell is not weather-themed; only the two
+  weather spells are marked `within_focus: true`). 22 replaces the pre-fold 26
+  as the figure the engine actually computes — still not the book's 27, so the
+  disagreement is not resolved, only its "best reachable" figure moved.
+- **Wrong:** **(c) the book**, unchanged verdict. Unlike MAG4 (same shape, Mu
+  vs. Rego requisite, but there the fold happened to land exactly on the
+  book's own pair of printed figures), here the book's 27 remains unreachable
+  under any combination of base/focus/requisite-fold — still an isolated
+  arithmetic slip, still sibling in shape to MAG9 (Verditius's Touch of Midas).
 
 ## The Merinita (`ArMDE:2000-2048` `#### Merinita`)
 
@@ -1592,10 +1618,10 @@ to be read from `rules/core/houses.json`.
 | MAG1 | Bjornaer, Mercere | Casting Totals with no conditional bonus applied (`ArMDE:1643-1650`, `ArMDE:1992-1996`) | +3 on every cell: Ways of the (Land), Cyclic Magic (both) and Special Circumstances are all `scope: all` | (a) rules data |
 | MAG2 | Criamon | 7 spells, 120 levels, one of them "Piercing the Magical Veil" (`ArMDE:1745`) | the spell has no entry in the book (`ArMDE:15709`) and none in the catalogue → `spell_levels_unspent` at 100/120 | (d) the book leaves it undefined |
 | MAG3 | Criamon | `Ag 0` in the Arts line (`ArMDE:1733`) | no such Art; the missing slot is Aq, Aquam (`ArMDE:8843`) | (c) the book |
-| MAG4 | Ex Miscellanea | two Re(Mu)Te 15 rows at +27 and +23 (`ArMDE:1798-1799`) | 24 base / 29 focused for both; neither printed figure is reachable from its own Arts line | (c) the book |
+| MAG4 | Ex Miscellanea | two Re(Mu)Te 15 rows at +27 and +23 (`ArMDE:1798-1799`) | **RESOLVED (X11)** — requisite folding (`ArMDE:12309`) reaches 23 base / 27 within the stone focus; both rows match exactly | **(a) the engine, fixed** — was missing the requisite fold, not a book error |
 | MAG5 | Ex Miscellanea | a Grappling Combat row (`ArMDE:1774`) | no grapple entry in `rules/core/equipment.json`; only the Dodging row is emitted | (d) capability gap |
 | MAG6 | Jerbiton | PeIm +6 under Deficient Technique (`ArMDE:1946`) — 11 halved, rounded up | 5, rounding down per `ArMDE:547` ("if it does not [say], round down") | (c) the book |
-| MAG7 | Mercere | Cr(Re)Au +27 (`ArMDE:1996`) where its four CrAu neighbours read +26 / +35 | 26 / 35 on the same footing as the others (29 / 38 with MAG1's +3) | (c) the book |
+| MAG7 | Mercere | Cr(Re)Au +27 (`ArMDE:1996`) where its four CrAu neighbours read +26 / +35 | **UPDATED (X11)** — the Rego requisite now folds (`ArMDE:12309`): 22, not the pre-fold 26; still not 27 | (c) the book, still — the fold moved the engine's own figure, not the verdict |
 | MAG8 | Flambeau, Ex Miscellanea, Mercere, Tremere | one Casting Total per spell, focused or not (`ArMDE:4399-4422` `#### Major Magical Focus`) | both figures reported; a focus is free text and nothing relates it to a spell | (d) capability gap |
 | MAG9 | Verditius | CrTe +25 for Touch of Midas (`ArMDE:2192`) where its two CrTe neighbours read +23 | 23; this magus holds no focus, so no second reading exists | (c) the book |
 | MAG10 | Tremere | "Minor Magical Focus(certamen)" (`ArMDE:2064`, `ArMDE:2281`) | `houses.json` grants the Virtue with **no `focus` param**; a focus on nothing, and `validate_magical_focus` only counts foci | (a) rules data |
@@ -1637,9 +1663,10 @@ player as a toggle), not five data patches.
 Everything else the magi turned up is either a narrow data omission (MAG10's
 missing `focus` parameter, MAG11's Reputation level), a gap the rules themselves
 leave open (MAG2, MAG5, MAG8, MAG12), or the book disagreeing with its own
-arithmetic (MAG3, MAG4, MAG6, MAG7, MAG9, MAG14). **Six (c) entries out of twelve
-templates is the highest rate in this document**, and the reason is simply that
-magi print far more derived numbers than grogs and companions do: 80 Casting
-Totals and 12 full fifteen-Art lines on top of everything a companion prints, each
-one an independent chance for the statblock to disagree with the rules that
-generated it.
+arithmetic (MAG3, MAG6, MAG7, MAG9, MAG14). **Five (c) entries out of twelve
+templates** (MAG4 moved to **(a)** — X11, requisite folding, resolved it
+outright rather than confirming a book error) **is still the highest rate in
+this document**, and the reason is simply that magi print far more derived
+numbers than grogs and companions do: 80 Casting Totals and 12 full fifteen-Art
+lines on top of everything a companion prints, each one an independent chance
+for the statblock to disagree with the rules that generated it.

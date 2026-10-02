@@ -165,7 +165,8 @@
       "within_focus": true
     },
     {
-      "spell": "spell.the_earths_carbuncle"
+      "spell": "spell.the_earths_carbuncle",
+      "within_focus": true
     },
     {
       "spell": "spell.wall_of_protecting_stone",

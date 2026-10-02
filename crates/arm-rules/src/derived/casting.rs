@@ -154,23 +154,109 @@ impl CastingBase {
     }
 }
 
+/// The lesser-of-requisite-and-primary fold for one Art class (ArMDE:12309,
+/// `### Requisites`): the effective score used is the lowest of `primary_score`
+/// and every requisite in `requisites` whose own `ArtType` matches `art_type` —
+/// a requisite of the other class (e.g. a Technique requisite, while folding
+/// the Form side) is skipped, and several requisites of the same class fold to
+/// the lowest of the whole group (ArMDE:12311). Every side is read through
+/// [`effective_art_score`], so a Puissant Art bonus is included before the
+/// comparison on whichever side carries it (ArMDE:4820) — no separate
+/// case needed, since "use the lesser of the two bonus-inclusive scores"
+/// already produces exactly that rule's worked example.
+///
+/// `elemental_forms` is `Some` only for an entity holding Elemental Magic
+/// (`InPlayMods::elemental_forms`). When both `primary_id` and a candidate
+/// requisite are members of that set, the requisite is skipped outright
+/// (ArMDE:3737: "you use the primary Form to calculate totals, even if the
+/// requisite is lower") — Elemental Magic pools only Forms, so this can only
+/// ever matter when `art_type` is [`ArtType::Form`]; a Technique is never a
+/// member of `elemental_forms`, so the check is simply never true for the
+/// Technique side.
+///
+/// Deliberately does **not** reach Magic Resistance, vis-boosting, or any
+/// other "effects that affect spells based on their Arts" (ArMDE:12313) —
+/// those rely on the primary Arts only and call neither this function nor
+/// [`formulaic_casting_score`].
+fn fold_requisite(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    art_type: ArtType,
+    primary_id: &Id,
+    primary_score: i32,
+    requisites: &[Id],
+    elemental_forms: Option<&BTreeSet<Id>>,
+) -> i32 {
+    requisites.iter().fold(primary_score, |score, req| {
+        let Some(req_art) = ruleset.art(req) else {
+            // Referential integrity (`ruleset/integrity.rs::validate_spell_refs`)
+            // guarantees every requisite resolves in a loaded ruleset; this arm
+            // only protects a hand-edited save against a dangling id.
+            return score;
+        };
+        if req_art.art_type != art_type {
+            return score;
+        }
+        if let Some(forms) = elemental_forms
+            && forms.contains(primary_id)
+            && forms.contains(req)
+        {
+            return score;
+        }
+        score.min(effective_art_score(entity, ruleset, req))
+    })
+}
+
+/// The within-focus/within-potent-field toggles [`formulaic_casting_score`]
+/// applies, bundled into one struct purely to keep that function's parameter
+/// count under clippy's `too_many_arguments` threshold now that it also takes
+/// `requisites` — `cell`'s two Arts and this pair are otherwise unrelated, so a
+/// tuple would read as arbitrary; this groups exactly the two toggles that
+/// vary per call site (D79: independent of each other, since a Magical Focus
+/// and a Potent Magic field are two free-text themes that need not coincide).
+#[derive(Clone, Copy)]
+struct CastingVariant {
+    /// Doubles the folded lower Art (ArMDE:4403).
+    focus: bool,
+    /// Adds the Potent Magic field bonus (D79).
+    potent: bool,
+}
+
 /// The formulaic casting score of one `(Technique, Form)` cell, without the die,
-/// including the focus double when `focus` is set, the Potent Magic bonus
-/// when `potent` is set (D79 — independent of `focus`, since the two
-/// free-text themes need not coincide), and the Deficient-Art halving. Shared
-/// by the grid, by per-spell penetration, and by [`spell_casting_total`].
+/// including the requisite fold (`requisites`, empty for the grid — a cell has
+/// no specific spell to fold against), the focus double when `variant.focus` is
+/// set, the Potent Magic bonus when `variant.potent` is set (D79 — independent
+/// of focus, since the two free-text themes need not coincide), and the
+/// Deficient-Art halving. Shared by per-spell penetration and by
+/// [`spell_casting_total`].
 fn formulaic_casting_score(
     entity: &Entity,
     ruleset: &Ruleset,
     mods: &InPlayMods,
     cell: (&Id, &Id),
     base: CastingBase,
-    focus: bool,
-    potent: bool,
+    requisites: &[Id],
+    variant: CastingVariant,
 ) -> i32 {
     let (technique, form) = cell;
-    let te = effective_art_score(entity, ruleset, technique);
-    let fo = effective_art_score(entity, ruleset, form);
+    let te = fold_requisite(
+        entity,
+        ruleset,
+        ArtType::Technique,
+        technique,
+        effective_art_score(entity, ruleset, technique),
+        requisites,
+        None,
+    );
+    let fo = fold_requisite(
+        entity,
+        ruleset,
+        ArtType::Form,
+        form,
+        effective_art_score(entity, ruleset, form),
+        requisites,
+        mods.elemental_forms.as_ref(),
+    );
     let mut score = saturating_i32_sum([
         te,
         fo,
@@ -179,13 +265,13 @@ fn formulaic_casting_score(
         entity.aura,
         mods.casting_mod_for(CastType::Formulaic),
     ]);
-    if focus {
+    if variant.focus {
         score = saturating_i32_sum([score, te.min(fo)]);
     }
-    if potent {
+    if variant.potent {
         score = saturating_i32_sum([score, mods.potent_casting_mod_for(CastType::Formulaic)]);
     }
-    if mods.deficient(technique, form) {
+    if mods.deficient(technique, form, requisites) {
         score = halve(score);
     }
     score
@@ -207,7 +293,11 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
         let te = effective_art_score(entity, ruleset, &technique);
         for form in ruleset.art_ids_of(ArtType::Form) {
             let fo = effective_art_score(entity, ruleset, &form);
-            let deficient = mods.deficient(&technique, &form);
+            // No specific spell at this grid cell (it may host several, each
+            // with different or no requisites), so the fold is requisite-free
+            // here — same reasoning as the grid never calling `fold_requisite`
+            // at all, only `effective_art_score` directly, above.
+            let deficient = mods.deficient(&technique, &form, &[]);
             let addends = vec![
                 Addend::new("technique", te),
                 Addend::new("form", fo),
@@ -409,8 +499,11 @@ pub fn spell_casting_total(
         &mods,
         (&spell.technique, &spell.form),
         base,
-        chosen.within_focus,
-        chosen.within_potent_field,
+        &spell.requisites,
+        CastingVariant {
+            focus: chosen.within_focus,
+            potent: chosen.within_potent_field,
+        },
     ))
 }
 
@@ -496,8 +589,11 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
             &mods,
             (&spell.technique, &spell.form),
             base,
-            false,
-            false,
+            &spell.requisites,
+            CastingVariant {
+                focus: false,
+                potent: false,
+            },
         );
         let within_focus = mods.has_focus.then(|| {
             let focus_casting = formulaic_casting_score(
@@ -506,8 +602,11 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
                 &mods,
                 (&spell.technique, &spell.form),
                 base,
-                true,
-                false,
+                &spell.requisites,
+                CastingVariant {
+                    focus: true,
+                    potent: false,
+                },
             );
             pen(focus_casting)
         });
