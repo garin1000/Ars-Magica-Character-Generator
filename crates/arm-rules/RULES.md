@@ -1776,6 +1776,7 @@ carry `max_per_target: 255` in `rules/core/virtues_flaws.json`:
 | `virtue.strong_angelic_heritage` | `ArMDE:5030` | "multiple times. Each additional time … increases by thirty the number of levels of holy powers" |
 | `virtue.withstand_casting` | `ArMDE:5265` | "more than once, and withstand 1 Fatigue level for each level of the Virtue" |
 | `flaw.vulnerable_casting` | `ArMDE:6997` | "may have, or acquire, this Flaw more than once, losing 1 extra Fatigue level for each level" |
+| `flaw.incompatible_arts` | `ArMDE:6292` | "may be taken repeatedly with different combinations" — the one exception to the level-stack note below: each copy names a different combination, but the combinations are uncomputed text with no parameter, so copies cannot be told apart and are not capped |
 
 Each of these is a **level-stack**: identical repeats are exactly what the
 passage grants (numeric pools combine, or Fatigue/level counts add), so no

@@ -1589,6 +1589,8 @@
     "trained": true,
     "entity_kinds": ["character"],
     "prerequisites": { "kind": "hermetically_trained" },
+    "max_per_target": 255,
+    "max_total": 255,
     "source": { "anchor": "incompatible-arts", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [6290, 6292] }
   },
   {
