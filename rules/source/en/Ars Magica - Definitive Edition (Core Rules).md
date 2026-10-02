@@ -4232,7 +4232,7 @@ Your Size is +1 instead of 0, so you are between six and seven feet tall. This m
 
 #### Lasiq
 *Major, Social Status*<br>
-The character is an experienced assassin of the Nizari İsma'ilis, having successfully completed seven murders at the orders of his grand master, and commands a small band of up to six fida'is. Lasiq may take Martial Abilities at character creation. As for a fida'i, a lasiq may be far from home on a mission, either alone or with some fida'i. In such as case, he is pretending to have some other social status, which you should choose. For more details on the Nizaris, see The Cradle and the Crescent, from page 162.
+The character is an experienced assassin of the Nizari İsma'ilis, having successfully completed seven murders at the orders of his grand master, and commands a small band of up to six fida'is. Lasiq may take Martial Abilities at character creation. As for a fida'i, a lasiq may be far from home on a mission, either alone or with some fida'i. In such a case, he is pretending to have some other social status, which you should choose. For more details on the Nizaris, see The Cradle and the Crescent, from page 162.
 
 #### Latent Magic Ability
 *Minor, General*<br>

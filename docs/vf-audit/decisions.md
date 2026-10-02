@@ -839,6 +839,16 @@ presumption of correctness.
    an Art, through a new predicate.
 4. **Merinita's Warping Point** (ArMDE:2280) is a conditional grant: it applies
    to a magus of the House who holds no faerie-related Virtue or Flaw.
+5. **The creation level cap becomes per spell** (Q12). It folds the spell's
+   requisites (ArMDE:2465, :12313) and, for a spell within the Magical Focus,
+   applies the focus doubling (ArMDE:4403). The engine cannot match a spell to
+   a free-text focus, so the player decides. The picker offers an "add within
+   focus" action for a spell that fits only within the focus cap, so it is
+   added already marked.
+6. **Row 55 stays as built:** a granted copy's realm shows read-only, and a
+   stated grant realm beats the concept realm.
+7. **"In such as case" (ArMDE:4235)** is corrected here as a same-line edit,
+   and recorded upstream.
 
 ---
 
