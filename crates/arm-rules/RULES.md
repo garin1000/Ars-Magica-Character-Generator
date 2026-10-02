@@ -5104,6 +5104,22 @@ rather than recomputing it in JS. **Approximation:** requisite-Art reduction is 
 lab-total nuance out of M4 scope — requisites are stored on the spell for display
 but not folded into the cap.
 
+**Stat-line guard (`tests/spell_stat_line.rs`).** Every entry in
+`rules/core/spells.json` is cross-checked against the Technique, Form, Level,
+Range, Duration, Target, Ritual and requisites the book actually states at the
+entry's own cited `source.lines`. The guard reads a `Reg:` line the same as a
+`Req:` one: the book misspells "Req:" as "Reg:" in four places — `ArMDE:13222`
+(Rain of Stones), `ArMDE:14016` (inline, no separating comma — Thaumaturgical
+Transformation of Plants to Iron), `ArMDE:15448` (Obliteration of the Metallic
+Barrier) and `ArMDE:15545` (Hands of the Grasping Earth) — and the data's
+extraction pass had evidently looked only for `Req:`, so all four requisites
+were missing until this guard caught them (spell-guard Phase 1/2, 2026-10-02).
+One entry, `spell.piercing_the_magical_veil`, is a deliberate exception to the
+guard rather than a passing comparison: its citation (`ArMDE:1745`) is a
+sample character's spell-list bullet, not a stat block, so its level/R/D/T
+are an acknowledged inference (D68 item 6) rather than a parseable passage —
+see `RULED_EXCEPTIONS` in the test file.
+
 **D1 (`docs/vf-audit/decisions.md`): every flat `LabTotalMod` effect (Inventive
 Genius +3, Creative Block −3, Weak Scholar −6, Adept Laboratory Student +6,
 Aristotelian Training +1, Cyclic Magic ±3, Potent Magic Major/Minor +3/+6 —
