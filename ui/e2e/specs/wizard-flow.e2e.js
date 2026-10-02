@@ -448,17 +448,41 @@ describe('guided guidance and unspent-budget findings (slice 11)', () => {
     return codes;
   }
 
-  /** Wait until `code` is on screen, and hand back its rendered text. */
-  async function waitForFinding(code) {
+  /**
+   * Wait until `code` is on screen, and hand back its rendered text.
+   *
+   * If `expectedSubstring` is given, also wait for the row's text to contain it
+   * before returning — `code` alone is not enough when the row was ALREADY
+   * showing before the triggering change: `general_xp_unspent` is on screen from
+   * the moment the pool is non-zero, so its first appearance here is a STALE
+   * read left over from before the last buy, not evidence that this change's
+   * validation has landed. Validation settles on a debounced round trip to Rust
+   * (`VALIDATE_DEBOUNCE_MS`, `state.svelte.ts`), and ability scores update
+   * locally and synchronously ahead of it — so right after the third of three
+   * rapid buys, the row can still read the total from only one or two of them.
+   * Observed directly: the same read landed as "20 of 30" in one run and
+   * "25 of 30" in another, never "15 of 30" until this wait was added — the
+   * tell that it was a stale snapshot, not a wrong total.
+   */
+  async function waitForFinding(code, expectedSubstring) {
     let codes = [];
+    let text = '';
     await browser.waitUntil(
       async () => {
         codes = await shownCodes();
-        return codes.includes(code);
+        if (!codes.includes(code)) return false;
+        text = clean(await $(`[data-testid="issue-list"] li[data-code="${code}"]`).getText());
+        return expectedSubstring === undefined || text.includes(expectedSubstring);
       },
-      { timeout: STEP_TIMEOUT, timeoutMsg: () => `'${code}' never appeared; showing ${codes}` },
+      {
+        timeout: STEP_TIMEOUT,
+        timeoutMsg: () =>
+          expectedSubstring === undefined
+            ? `'${code}' never appeared; showing ${codes}`
+            : `'${code}' never showed '${expectedSubstring}'; last read '${text}'`,
+      },
     );
-    return clean(await $(`[data-testid="issue-list"] li[data-code="${code}"]`).getText());
+    return text;
   }
 
   // Shared with the other resizing describes; see `helpers.js` for why the
@@ -553,7 +577,7 @@ describe('guided guidance and unspent-budget findings (slice 11)', () => {
   it('warns about unspent experience and spell levels without blocking Finish (#30)', async () => {
     // 30 experience points buys the three minimums at 5 each, so 15 are left over.
     await satisfyMagusMinimums();
-    const xpWarning = await waitForFinding('general_xp_unspent');
+    const xpWarning = await waitForFinding('general_xp_unspent', '15');
     expect(xpWarning).not.toContain('issue-general_xp_unspent');
     expect(xpWarning).toContain('15');
     // Factual: a count, and no claim that the points are lost.
@@ -569,7 +593,7 @@ describe('guided guidance and unspent-budget findings (slice 11)', () => {
 
     // The whole 120-level grant is untouched on the Spells step.
     await advanceWizardTo('spells');
-    const spellWarning = await waitForFinding('spell_levels_unspent');
+    const spellWarning = await waitForFinding('spell_levels_unspent', '120');
     expect(spellWarning).not.toContain('issue-spell_levels_unspent');
     expect(spellWarning).toContain('120');
     expect(spellWarning.toLowerCase()).not.toContain('wast');
