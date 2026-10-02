@@ -477,7 +477,7 @@ fn f77_faerie_raised_magic_also_carries_spell_improvisation() {
     let grants_it = item
         .effects
         .iter()
-        .any(|e| matches!(e, Effect::GrantsSelection { items } if items.contains(&Id::new("virtue.spell_improvisation"))));
+        .any(|e| matches!(e, Effect::GrantsSelection { items, .. } if items.contains(&Id::new("virtue.spell_improvisation"))));
 
     assert!(
         carries_spell_improvisation || grants_it,

@@ -25,6 +25,29 @@
   function onRealmOverride(index: number, event: Event) {
     store.setParamAt(index, 'association', (event.currentTarget as HTMLSelectElement).value);
   }
+
+  // Row 55 (D74.4): looks up a granted row's resolved realm, if it has one.
+  // `EffectiveScores.granted_realm_associations.index` is NOT a position in
+  // `granted_selections` — it is a 0-based count of earlier entries sharing
+  // the same `ref` (see that field's own comment in `types.ts`), because an
+  // absolute position does not survive `grantedSelectionsForSide`'s
+  // virtue/flaw split. Recomputing that same count here is bookkeeping, not
+  // a re-derivation of the realm itself — the resolved value always comes
+  // from the engine.
+  function grantedRealmEntry(selection: Selection, grantIndex: number) {
+    const rs = store.ruleset;
+    if (!rs) return undefined;
+    const item = rs.ruleset.point_items[selection.ref];
+    if (!item) return undefined;
+    const side: Side = item.kind === 'flaw' || item.kind === 'hook' ? 'flaw' : 'virtue';
+    const sideGranted = grantedSelectionsForSide(rs, store.effective?.granted_selections, side);
+    const occurrence = sideGranted
+      .slice(0, grantIndex)
+      .filter((s) => s.ref === selection.ref).length;
+    return store.effective?.granted_realm_associations?.find(
+      (r) => r.item_ref === selection.ref && r.index === occurrence,
+    );
+  }
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
   import ParameterPicker from './ParameterPicker.svelte';
@@ -440,11 +463,22 @@
               <!-- The grant position is in the test id as well as in the key: the
                    same ref can be granted twice (see `rowKey`), and a duplicated
                    test id would make the two rows indistinguishable to a spec. -->
+              {@const grantRealmEntry = grantedRealmEntry(item.selection, item.grantIndex)}
               <li data-testid="granted-selection-{item.selection.ref}-{item.grantIndex}">
                 <div class="selection-row">
                   {@render nameWrap(item.selection.ref, displayParams(item.selection))}
                   <span class="row-marker">{store.t('house-granted-label')}</span>
                 </div>
+                {#if grantRealmEntry}
+                  <!-- Row 55/D74.4: always read-only — a granted row has no
+                       `entity.selections` index to attach an override control to. -->
+                  <span
+                    class="realm-fixed"
+                    data-testid="granted-realm-{item.selection.ref}-{item.grantIndex}"
+                  >
+                    {store.t('vf-realm-label')}: {store.t(`realm-${grantRealmEntry.realm}`)}
+                  </span>
+                {/if}
               </li>
             {/if}
           {/snippet}

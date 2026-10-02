@@ -434,7 +434,7 @@ fn leper_magus_grants_life_boost_via_grants_selection() {
     let grants_life_boost = item.effects.iter().any(|e| {
         matches!(
             e,
-            Effect::GrantsSelection { items } if items.contains(&Id::new("virtue.life_boost"))
+            Effect::GrantsSelection { items, .. } if items.contains(&Id::new("virtue.life_boost"))
         )
     });
     assert!(

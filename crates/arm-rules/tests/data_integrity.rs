@@ -10964,7 +10964,7 @@ fn no_gated_authorization_item_is_ever_granted() {
     // 1. `grants_selection` (nested V/F grants) never names one of the four.
     for item in rs.items() {
         for effect in &item.effects {
-            if let Effect::GrantsSelection { items } = effect {
+            if let Effect::GrantsSelection { items, .. } = effect {
                 for granted in items {
                     assert!(
                         !gated.contains(&granted.as_str()),
@@ -11098,7 +11098,7 @@ fn no_bound_or_link_declaring_item_is_ever_granted() {
     // 1. `grants_selection` (nested V/F grants) never names either item.
     for item in rs.items() {
         for effect in &item.effects {
-            if let Effect::GrantsSelection { items } = effect {
+            if let Effect::GrantsSelection { items, .. } = effect {
                 for granted in items {
                     assert!(
                         !bound_declaring.contains(&granted.as_str()),

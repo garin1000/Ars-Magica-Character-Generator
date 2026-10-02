@@ -274,6 +274,17 @@ pub struct EffectiveScores {
     /// without re-implementing `resolve_realm`'s chain in TypeScript. Empty
     /// for an entity holding none.
     pub realm_associations: Vec<ResolvedRealmEntry>,
+    /// D74.4/row 55 (`docs/open-todos.md`): the resolved realm for every GRANTED
+    /// selection (`Self::granted_selections`) that carries one. `index` here is
+    /// the position in `granted_selections` — a *different* numbering space from
+    /// `realm_associations`' `index` into the entity's own bought selections,
+    /// matching the frontend's existing `grantIndex`/`index` split
+    /// (`ui/src/lib/derive.ts` `SelectionRow`). `fixed` is unconditionally `true`:
+    /// a granted row has no stable `entity.selections` index for the player to
+    /// attach an override to, so every granted realm is read-only regardless of
+    /// whether the book states it outright or the item would otherwise default
+    /// through the plain chain. Empty for an entity holding none.
+    pub granted_realm_associations: Vec<ResolvedRealmEntry>,
 }
 
 /// One selection's resolved D42 realm, for the V/F row. `fixed` is `true`
@@ -298,8 +309,9 @@ pub struct ResolvedRealmEntry {
 }
 
 /// Builds [`EffectiveScores::realm_associations`] from the entity's own
-/// bought selections. Granted copies (a House/mythic-type grant) are not
-/// covered — see `docs/open-todos.md` row 55.
+/// bought selections. Granted copies (a House/mythic-type grant) are covered
+/// separately by [`granted_realm_associations_for_ui`] — see
+/// `docs/open-todos.md` row 55.
 fn realm_associations_for_ui(entity: &Entity, ruleset: &Ruleset) -> Vec<ResolvedRealmEntry> {
     entity
         .selections
@@ -318,6 +330,58 @@ fn realm_associations_for_ui(entity: &Entity, ruleset: &Ruleset) -> Vec<Resolved
                 item_ref: selection.item_ref.clone(),
                 realm: resolved.realm,
                 fixed,
+            })
+        })
+        .collect()
+}
+
+/// Builds [`EffectiveScores::granted_realm_associations`] from the entity's
+/// GRANTED selections (`granted`, i.e. [`entity_grants`]'s output — a House, a
+/// Mythic Companion type, or a `grants_selection` Virtue/Flaw). Row 55: the
+/// grant machinery (`grant::resolve_grant`, `effective::vf_granted_selections`)
+/// stamps a stated per-grant realm onto the row's own `association` param
+/// before this ever sees it, so [`resolve_realm`] resolves it correctly with
+/// no change of its own — a Strong-Faerie-Blood-granted Second Sight
+/// (ArMDE:5038, "faerie eyes") reads Faerie here, not the plain-chain
+/// fallback. `fixed` is always `true` — see the struct field's own doc
+/// comment for why.
+///
+/// `index` is deliberately NOT the row's position in `granted` — it is the
+/// 0-based count of EARLIER entries in `granted` sharing the same
+/// `item_ref` (so the first copy of a possibly-repeated grant is `0`, the
+/// second `1`, …). The frontend filters `granted_selections` by `ItemKind`
+/// into a Virtues column and a Flaws column before computing its own
+/// per-column `grantIndex` (`derive.ts::grantedSelectionsForSide`), which
+/// renumbers from zero in each column and so cannot be compared against an
+/// absolute position in the unfiltered list here. A same-`item_ref` occurrence
+/// count survives that split: every copy of one item shares its `kind`, so
+/// filtering by kind can never separate two copies of the same item from each
+/// other — only from copies of OTHER items — which makes the per-item
+/// occurrence count identical whether counted before or after the frontend's
+/// own filter.
+fn granted_realm_associations_for_ui(
+    granted: &[Selection],
+    ruleset: &Ruleset,
+    concept_realm: Option<Realm>,
+) -> Vec<ResolvedRealmEntry> {
+    let mut seen_per_ref: BTreeMap<Id, usize> = BTreeMap::new();
+    granted
+        .iter()
+        .filter_map(|selection| {
+            let occurrence = seen_per_ref.entry(selection.item_ref.clone()).or_insert(0);
+            let index = *occurrence;
+            *occurrence += 1;
+
+            let item = ruleset.item(&selection.item_ref)?;
+            if !item_has_realm_association(item, selection) {
+                return None;
+            }
+            let resolved = resolve_realm(item, selection, concept_realm);
+            Some(ResolvedRealmEntry {
+                index,
+                item_ref: selection.item_ref.clone(),
+                realm: resolved.realm,
+                fixed: true,
             })
         })
         .collect()
@@ -764,6 +828,11 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
     let spell = spell_fields(entity, ruleset, profile);
     let confidence = confidence_fields(entity, ruleset, profile);
     let grants = grant_budget_fields(entity, ruleset);
+    let granted_realm_associations = granted_realm_associations_for_ui(
+        &grants.granted_selections,
+        ruleset,
+        entity.concept_realm,
+    );
     let warping = warping_fields(entity, ruleset);
     let legacy_totals = decrepitude_faith_item_fields(entity, ruleset);
     let mastery = spell_mastery_fields(entity, ruleset);
@@ -842,6 +911,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         ability_parameter_options: ability_parameter_options(entity, ruleset),
 
         realm_associations: realm_associations_for_ui(entity, ruleset),
+        granted_realm_associations,
     }
 }
 
@@ -1132,5 +1202,100 @@ mod tests {
             vec![CreationPhase::Concept, CreationPhase::Arts],
             "trained-by-selection sees Arts but, correctly, not House (no Order membership)"
         );
+    }
+
+    /// Row 55 (`docs/open-todos.md`; D74.4): a granted Supernatural item's
+    /// stated per-grant realm (here a test fixture's `grants_selection`
+    /// effect with `realm: "faerie"`) surfaces through
+    /// `EffectiveScores::granted_realm_associations`, read-only (`fixed:
+    /// true` always — a granted row has no `entity.selections` index for the
+    /// player to attach an override to). `vf_granted_selections` stamps the
+    /// realm onto the granted row before this ever resolves it, so it reads
+    /// Faerie rather than falling through the plain chain to Magic.
+    #[test]
+    fn granted_realm_associations_surfaces_a_stated_per_grant_realm() {
+        use arm_rules::{EntityKind, RulesetRef, RulesetSources};
+
+        const ITEMS: &str = r#"[
+          { "id": "virtue.test_granted_supernatural", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": ["supernatural"], "entity_kinds": ["character"] },
+          { "id": "virtue.test_granter", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "grants_selection",
+                          "items": ["virtue.test_granted_supernatural"], "realm": "faerie" }] },
+          { "id": "flaw.filler", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
+        ]"#;
+        const TYPES: &str = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general", "supernatural"], "creation_phases": [] }
+        ]"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            ..RulesetSources::default()
+        })
+        .unwrap();
+
+        let mut e = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        e.selections = vec![Selection::new(Id::new("virtue.test_granter"))];
+
+        let scores = effective_scores_loaded(&e, &rs);
+        let entry = scores
+            .granted_realm_associations
+            .iter()
+            .find(|r| r.item_ref == Id::new("virtue.test_granted_supernatural"))
+            .expect("the granted Supernatural item must appear in granted_realm_associations");
+        assert_eq!(
+            entry.realm,
+            Realm::Faerie,
+            "RED until the grant stamps its stated realm: {entry:?}"
+        );
+        assert!(entry.fixed, "a granted row's realm is always read-only");
+    }
+
+    /// Already green, the regression-guard counterpart: a BOUGHT Supernatural
+    /// selection is untouched by row 55 and keeps appearing only in
+    /// `realm_associations` (the existing bought-row list), never in
+    /// `granted_realm_associations`.
+    #[test]
+    fn granted_realm_associations_is_empty_for_a_bought_only_entity() {
+        use arm_rules::{EntityKind, RulesetRef, RulesetSources};
+
+        const ITEMS: &str = r#"[
+          { "id": "virtue.test_bought_supernatural", "kind": "virtue", "classification": "narrative",
+            "magnitude": "minor", "categories": ["supernatural"], "entity_kinds": ["character"] },
+          { "id": "flaw.filler", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
+        ]"#;
+        const TYPES: &str = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general", "supernatural"], "creation_phases": [] }
+        ]"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            ..RulesetSources::default()
+        })
+        .unwrap();
+
+        let mut e = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        e.selections = vec![Selection::new(Id::new("virtue.test_bought_supernatural"))];
+
+        let scores = effective_scores_loaded(&e, &rs);
+        assert!(scores.granted_realm_associations.is_empty());
+        assert_eq!(scores.realm_associations.len(), 1);
     }
 }

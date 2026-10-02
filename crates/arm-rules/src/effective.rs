@@ -294,8 +294,15 @@ fn vf_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
             continue;
         };
         for effect in &item.effects {
-            if let Effect::GrantsSelection { items } = effect {
-                out.extend(items.iter().cloned().map(Selection::new));
+            // Row 55/D74.4: a `grants_selection` effect can state its own realm
+            // (Strong Faerie Blood's Second Sight is "faerie eyes", ArMDE:5038)
+            // independent of the granted item's own `realm_association`.
+            if let Effect::GrantsSelection { items, realm } = effect {
+                out.extend(items.iter().cloned().map(|id| {
+                    let mut selection = Selection::new(id);
+                    stamp_realm_override(&mut selection, *realm);
+                    selection
+                }));
             }
         }
     }

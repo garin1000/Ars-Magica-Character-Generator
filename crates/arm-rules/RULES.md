@@ -2902,11 +2902,87 @@ Inventing it for Student of (Realm) would forbid a build the book permits.
   compatibility); `crates/arm-rules/tests/export_golden.rs` (`a_fixed_
   supernatural_entrys_realm_rides_the_text_cell`, `a_non_supernatural_
   entrys_text_cell_gets_no_realm_line`).
-- **Not modelled**: a *granted* copy's realm (Strong Faerie Blood's "faerie
-  eyes" Second Sight, Faerie Doctor's Dowsing, mythic-type grants) — D74
-  accepted "only where stated" as the target shape, but nothing wires a
-  per-grant override onto `grants_selection` yet. Recorded, not invented
-  (`docs/open-todos.md`).
+- A *granted* copy's realm (Strong Faerie Blood's "faerie eyes" Second Sight,
+  Faerie Doctor's Dowsing, mythic-type grants) is a separate mechanism — see
+  "D74.4/Row 55" below.
+
+#### D74.4/Row 55 — a granted copy's realm override (`docs/open-todos.md` row 55; `docs/vf-audit/decisions.md` D74.4)
+
+> "Second, you have faerie eyes. This gives you the Virtue Second Sight (see
+> page 106) at no cost…" — `ArMDE:5038` (Strong Faerie Blood).
+
+> "The following types of Mythic Companions cover all the supernatural
+> realms." — `ArMDE:2641` (Devil Child=Infernal, Faerie Doctor=Faerie,
+> Nephilim=Divine, Spirit Votary=Magic, by the book's own naming).
+
+A granted copy of a Supernatural entry carried no realm of its own: D42's
+resolver treats a granted `Selection` exactly like a bought one, so the
+item's own `realm_association` (usually `None` — Second Sight and Dowsing are
+both book-open entries) decided it, silently dropping the stated per-GRANT
+association. D74.4: "granted copies carry a realm only where stated, and
+mythic-type grants default to the type's realm" — per-grant, not per-item,
+since the same item (Second Sight) resolves differently depending on which
+Virtue granted it (Strong Faerie Blood → Faerie; bought outright → the plain
+chain).
+
+- Data model: an optional `realm: Option<Realm>` field on
+  `types.rs::Effect::GrantsSelection` (the nested-grant effect a Virtue/Flaw
+  carries) and `grant.rs::Grant::Fixed` (the direct grant a House or Mythic
+  Companion type's own `grants` list carries) — two separate fields because
+  `vf_granted_selections` only scans **bought** selections, so a mythic-type's
+  marker Virtue (`virtue.faerie_doctor`/`virtue.spirit_votary`) is never
+  itself bought when granted via the type, and its own nested
+  `GrantsSelection` effect never fires for that path; the type's `Grant::Fixed`
+  entry grants the Supernatural item directly instead. Both paths need the
+  value when the marker Virtue is bought standalone too (`ArMDE:2704`: "A
+  character can be a faerie doctor without being a Mythic Companion").
+- Data: `rules/core/virtues_flaws.json` — `virtue.strong_faerie_blood`'s
+  `grants_selection` of `virtue.second_sight` carries `realm: "faerie"`;
+  `virtue.faerie_doctor`'s `grants_selection` of `virtue.dowsing` carries
+  `realm: "faerie"`; `virtue.spirit_votary`'s `grants_selection` of
+  `virtue.second_sight` carries `realm: "magic"`. `rules/core/
+  mythic_companion_types.json` — `mythic_type.faerie_doctor`'s direct
+  `Grant::Fixed` of `virtue.dowsing` carries `realm: "faerie"`;
+  `mythic_type.spirit_votary`'s of `virtue.second_sight` carries
+  `realm: "magic"`. No other grant (House or mythic-type) needed the field —
+  every other Supernatural grant target is already `Fixed`/`Default` at the
+  item level (Demonic Might/Powers, Strong Angelic Heritage), or is not
+  Supernatural at all (Templar Commander's Brother-Knight/Temporal
+  Influence).
+- Engine: `effective/realm.rs::stamp_realm_override` writes the stated realm
+  onto the granted `Selection`'s own `REALM_OVERRIDE_PARAM_KEY` param
+  (`"association"` — the exact key a player's own override uses), called from
+  `grant.rs::resolve_grant`'s `Grant::Fixed` arm and
+  `effective.rs::vf_granted_selections`'s `Effect::GrantsSelection` arm. This
+  is the whole mechanism: `effective/realm.rs::resolve_realm` itself needs
+  **no change**, since it already reads that param off any `Selection`,
+  bought or granted — reusing the existing override chain rather than adding
+  a parallel one. A grant that states nothing (`realm: None`) is a no-op, so
+  the granted copy resolves through the plain chain exactly like a bought
+  one (Templar Commander, unaffected).
+- Load-time integrity: `realm: Option<Realm>` is a typed enum field (mirroring
+  `Effect::MightGrant::realm`), so serde itself rejects an invalid realm id at
+  `Ruleset::from_sources` — no separate `ruleset/integrity.rs` check needed.
+- DTO: `arm_app::effective_dto::EffectiveScores::granted_realm_associations`
+  (`Vec<ResolvedRealmEntry>`, mirrored in `ui/src/lib/types.ts`) — the
+  granted-row counterpart to `realm_associations`, `index`-keyed into
+  `granted_selections` rather than `Entity::selections`. `fixed` is always
+  `true`: a granted row has no stable `entity.selections` index for the
+  player to attach an override control to, unlike a bought row's. Consumed by
+  `export/sections.rs::Doc::item_rows` for free (it already calls
+  `resolve_realm` on the granted table exactly like the bought one); the live
+  Svelte V/F editor does not yet render a granted row's realm at all
+  (`docs/open-todos.md` row 55's own note) — left for a follow-up slice.
+- Tests: `crates/arm-rules/tests/row55_grant_realm.rs` (the stamping chain,
+  per source, the mythic-type cases, the unaffected/bought-selection guards,
+  load-time integrity); `crates/arm-rules/tests/export_golden.rs`
+  (`a_granted_supernatural_entrys_realm_rides_the_granted_table_text_cell`);
+  `crates/arm-app/src/effective_dto.rs` tests
+  (`granted_realm_associations_surfaces_a_stated_per_grant_realm`,
+  `granted_realm_associations_is_empty_for_a_bought_only_entity`).
+- **Not modelled**: the live Svelte V/F editor does not show a granted row's
+  realm (bought rows do, via the existing `realm-fixed`/`<select>` control).
+  Recorded as an open question, not invented.
 
 #### Selection multiplicity — one copy per named power
 > "This Flaw may be taken once for each power the character possesses."

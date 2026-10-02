@@ -29,7 +29,7 @@
       "id": "mythic_type.faerie_doctor",
       "grants": [
         { "kind": "fixed", "item": "virtue.faerie_doctor" },
-        { "kind": "fixed", "item": "virtue.dowsing" }
+        { "kind": "fixed", "item": "virtue.dowsing", "realm": "faerie" }
       ],
       "required_virtues": [
         { "ref": "virtue.wise_one" },
@@ -67,7 +67,7 @@
       "id": "mythic_type.spirit_votary",
       "grants": [
         { "kind": "fixed", "item": "virtue.spirit_votary" },
-        { "kind": "fixed", "item": "virtue.second_sight" }
+        { "kind": "fixed", "item": "virtue.second_sight", "realm": "magic" }
       ],
       "required_virtues": [
         { "ref": "virtue.spiritual_pact" }

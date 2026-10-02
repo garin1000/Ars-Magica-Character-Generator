@@ -1122,6 +1122,19 @@ export interface EffectiveScores {
   // one, engine-authoritative — the UI must not re-implement `resolve_realm`'s
   // chain here. Empty for an entity holding no such entry.
   realm_associations: ResolvedRealmEntry[];
+  // Row 55 (D74.4): the resolved realm for every GRANTED selection
+  // (`EffectiveScores.granted_selections`) that carries one — a House, a
+  // Mythic Companion type, or a `grants_selection` Virtue/Flaw grant can
+  // state its own realm independent of the granted item's. `index` here is
+  // NOT a position in `granted_selections` — it is the 0-based count of
+  // earlier entries in `granted_selections` sharing the same `item_ref` (the
+  // first copy of a possibly-repeated grant is 0, the second 1, …), because
+  // that count survives being re-filtered into a Virtues/Flaws column
+  // (`derive.ts::grantedSelectionsForSide`) the way an absolute list
+  // position would not. `fixed` is always `true`: a granted row has no
+  // stable `entity.selections` index for the player to attach an override
+  // control to. Empty for an entity holding none.
+  granted_realm_associations: ResolvedRealmEntry[];
 }
 
 // One selection's resolved D42 realm association. `fixed` means the book
@@ -1129,9 +1142,11 @@ export interface EffectiveScores {
 // read-only rather than offering an override control. Mirrors the engine's
 // `arm_app::effective_dto::ResolvedRealmEntry`.
 export interface ResolvedRealmEntry {
-  // The selection's position in `Entity.selections` — a repeatable item
-  // (Folk Magic) can appear more than once, so this is the row key, not
-  // `item_ref` alone.
+  // For `EffectiveScores.realm_associations`: the selection's position in
+  // `Entity.selections` — a repeatable item (Folk Magic) can appear more than
+  // once, so this is the row key, not `item_ref` alone. For
+  // `EffectiveScores.granted_realm_associations` this is a DIFFERENT
+  // numbering — see that field's own comment.
   index: number;
   item_ref: string;
   realm: Realm;

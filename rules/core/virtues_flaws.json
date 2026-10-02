@@ -4696,7 +4696,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.devil_child", "virtue.nephilim", "virtue.spirit_votary", "virtue.the_gift"],
-    "effects": [{ "type": "grants_selection", "items": ["virtue.dowsing"] }],
+    "effects": [{ "type": "grants_selection", "items": ["virtue.dowsing"], "realm": "faerie" }],
     "source": { "anchor": "faerie-doctor", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3821, 3823] }
   },
   {
@@ -6920,7 +6920,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "incompatible_with": ["virtue.devil_child", "virtue.faerie_doctor", "virtue.nephilim", "virtue.the_gift"],
-    "effects": [{ "type": "grants_selection", "items": ["virtue.second_sight"] }],
+    "effects": [{ "type": "grants_selection", "items": ["virtue.second_sight"], "realm": "magic" }],
     "source": { "anchor": "spirit-votary-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5006, 5008] }
   },
   {
@@ -6964,7 +6964,7 @@
       { "key": "quirk", "type": "ref", "domain": "text" }
     ],
     "effects": [
-      { "type": "grants_selection", "items": ["virtue.second_sight"] },
+      { "type": "grants_selection", "items": ["virtue.second_sight"], "realm": "faerie" },
       { "type": "aging_mod", "kind": "aging_roll", "amount": -3 },
       { "type": "ability_authorization", "abilities": ["ability.faerie_lore"] },
       { "type": "characteristic_score_delta", "characteristic": "characteristic.pre", "amount": 1,

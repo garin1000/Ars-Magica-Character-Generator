@@ -417,6 +417,43 @@ fn a_non_supernatural_entrys_text_cell_gets_no_realm_line() {
     );
 }
 
+/// Row 55 (`docs/open-todos.md`; D74.4) — `write_virtues_flaws` renders the
+/// GRANTED table through the exact same [`item_rows`] helper as the bought
+/// one, so the realm line already appeared here before row 55 — just the
+/// WRONG realm. Faerie Doctor (ArMDE:2668-2704, buyable standalone: "A
+/// character can be a faerie doctor without being a Mythic Companion") grants
+/// Dowsing for free; Dowsing has no `realm_association` of its own and Faerie
+/// Doctor's OWN category is `mythic_companion`, not `supernatural`, so
+/// (unlike a Strong-Faerie-Blood fixture) the bought row contributes no
+/// "Realm:" text of its own — only the granted Dowsing row's resolution is
+/// under test here. `virtue.faerie_doctor`'s `grants_selection` effect now
+/// states `realm: "faerie"` (ArMDE:2641), stamped onto the granted Dowsing by
+/// `effective::vf_granted_selections`, so it resolves Faerie instead of
+/// falling through the plain chain to Magic.
+#[test]
+fn a_granted_supernatural_entrys_realm_rides_the_granted_table_text_cell() {
+    let ruleset = shipped_ruleset();
+    let mut entity = Entity::new(
+        EntityKind::Character,
+        Id::new("companion"),
+        RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+    );
+    entity.selections = vec![Selection::new(Id::new("virtue.faerie_doctor"))];
+
+    let mut labels = synthetic_labels();
+    labels.insert("export-vf-realm-label".to_string(), "Realm".to_string());
+    labels.insert("realm-faerie".to_string(), "Faerie".to_string());
+    labels.insert("realm-magic".to_string(), "Magic".to_string());
+
+    let rendered = character_markdown(&entity, &ruleset, &labels)
+        .expect("synthetic_labels resolves every chrome key and every id is real");
+    assert!(
+        rendered.contains("Realm: Faerie"),
+        "ArMDE:2641 — the granted Dowsing must show Faerie, not the Magic fallback; \
+         got:\n{rendered}"
+    );
+}
+
 #[test]
 fn rendering_the_same_magus_twice_is_byte_identical() {
     let ruleset = shipped_ruleset();

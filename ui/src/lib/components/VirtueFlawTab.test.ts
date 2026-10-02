@@ -705,3 +705,32 @@ describe('VirtueFlawTab D42 realm row', () => {
     expect(body).not.toContain('data-testid="realm-0"');
   });
 });
+
+// Row 55 (D74.4): a GRANTED item's resolved realm, via
+// `EffectiveScores.granted_realm_associations` — always read-only (no override
+// control; a granted row has no `entity.selections` index to attach one to).
+// Keyed by same-`item_ref` occurrence count, NOT list position — see that
+// field's own comment in `types.ts`.
+describe('VirtueFlawTab row 55 granted realm row', () => {
+  it("shows a granted item's realm read-only", () => {
+    grant({ ref: 'virtue.second_sight' });
+    store.effective!.granted_realm_associations = [
+      { index: 0, item_ref: 'virtue.second_sight', realm: 'faerie', fixed: true },
+    ];
+
+    const body = virtueColumn(html());
+    const realm =
+      /<[a-z]+[^>]*data-testid="granted-realm-virtue\.second_sight-0"[\s\S]*?<\/[a-z]+>/.exec(
+        body,
+      )![0];
+    expect(realm).not.toContain('<select');
+    expect(clean(realm)).toContain('Faerie');
+  });
+
+  it('renders no realm line for a granted item with no realm association', () => {
+    grant({ ref: 'virtue.heartbeast' });
+    store.effective!.granted_realm_associations = [];
+    const body = virtueColumn(html());
+    expect(body).not.toContain('data-testid="granted-realm-');
+  });
+});

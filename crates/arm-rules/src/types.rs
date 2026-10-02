@@ -2007,6 +2007,19 @@ pub enum Effect {
     GrantsSelection {
         /// The Virtue/Flaw ids granted for free.
         items: std::collections::BTreeSet<Id>,
+        /// D74.4/row 55 (`docs/open-todos.md`, `docs/vf-audit/decisions.md`): the
+        /// realm this specific grant stamps onto every granted item, where the
+        /// book states one — Strong Faerie Blood's Second Sight is "faerie eyes"
+        /// (ArMDE:5038), so this is `Some(Realm::Faerie)` there, while most
+        /// `GrantsSelection` effects (Templar Commander's Brother-Knight) carry
+        /// `None` and the granted copy resolves through the plain chain exactly
+        /// like a bought one. Consumed by `effective::vf_granted_selections`,
+        /// which stamps it onto the granted `Selection`'s own `association`
+        /// param (`effective::stamp_realm_override`) — `resolve_realm` itself
+        /// needs no change, since it already reads that param off any
+        /// `Selection`, bought or granted.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        realm: Option<Realm>,
     },
     /// An open, id-less grant that counts toward a category cap without
     /// naming a real point item (D68.11) — Mythic Blood's hereditary "the

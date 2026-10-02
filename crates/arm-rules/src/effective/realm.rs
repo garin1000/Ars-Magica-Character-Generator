@@ -74,6 +74,31 @@ fn override_realm(selection: &Selection) -> Option<Realm> {
         .and_then(Realm::from_id)
 }
 
+/// Stamps `realm`, if stated, onto `selection`'s [`REALM_OVERRIDE_PARAM_KEY`]
+/// param — row 55 (`docs/open-todos.md`; D74.4,
+/// `docs/vf-audit/decisions.md`): a granted copy of a Supernatural entry
+/// carries a realm only where the grant states one
+/// (`crate::types::Effect::GrantsSelection::realm`,
+/// `crate::grant::Grant::Fixed::realm`), independent of the granted item's
+/// own `realm_association`. A no-op when `realm` is `None`, so a grant that
+/// states nothing leaves the granted [`Selection`] exactly as
+/// [`Selection::new`]/[`Selection::with_params`] built it, resolving through
+/// the plain chain exactly like a bought copy.
+///
+/// The single call site for every grant mechanism that can carry a per-grant
+/// realm (`crate::grant::resolve_grant`, `crate::effective::vf_granted_selections`)
+/// so [`resolve_realm`] itself needs no change: it already reads
+/// [`REALM_OVERRIDE_PARAM_KEY`] off any [`Selection`], bought or granted,
+/// through the exact same [`override_realm`] step.
+pub fn stamp_realm_override(selection: &mut Selection, realm: Option<Realm>) {
+    if let Some(realm) = realm {
+        selection.params.insert(
+            REALM_OVERRIDE_PARAM_KEY.to_string(),
+            SelectionParamValue::Single(realm.id()),
+        );
+    }
+}
+
 /// Resolves the [`Realm`] `selection` (of `item`) is associated with, given
 /// the entity's `concept_realm`. Pure; no I/O; never panics (see the module
 /// doc comment).

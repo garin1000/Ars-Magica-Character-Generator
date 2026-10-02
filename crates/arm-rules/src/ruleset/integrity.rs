@@ -2815,7 +2815,7 @@ impl Ruleset {
                 }
                 // Fixed nested grant: every granted id must resolve to a point item
                 // (a Virtue/Flaw), like a House grant's `item`.
-                Effect::GrantsSelection { items } => {
+                Effect::GrantsSelection { items, .. } => {
                     self.validate_item_list_effect(items, "grants_selection", id, errors);
                     continue;
                 }

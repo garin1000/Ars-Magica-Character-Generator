@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ruleset::Ruleset;
-use crate::types::{Id, ItemKind, Magnitude, Selection};
+use crate::types::{Id, ItemKind, Magnitude, Realm, Selection};
 
 /// A constraint on a player-chosen open grant: the kind of item, an optional
 /// magnitude, and category allow/deny lists. Purely declarative — enforced in
@@ -52,6 +52,15 @@ pub enum Grant {
         /// Parameter values the grant fixes (e.g. `focus` = `certamen`).
         #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
         params: BTreeMap<String, Id>,
+        /// D74.4/row 55 (`docs/open-todos.md`, `docs/vf-audit/decisions.md`): a
+        /// mythic-type grant defaults to the type's realm — Faerie Doctor's
+        /// Dowsing, Spirit Votary's Second Sight (ArMDE:2641). `None` for every
+        /// other `Fixed` grant (a House's free Virtue has no realm of its own
+        /// to stamp). Consumed by `resolve_grant`, which stamps it onto the
+        /// resolved `Selection`'s own `association` param
+        /// (`effective::stamp_realm_override`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        realm: Option<Realm>,
     },
     /// A choice between a fixed set of options, e.g. Flambeau → Puissant Perdo
     /// **or** Puissant Ignem. The player's pick is stored on the entity keyed by
@@ -101,7 +110,18 @@ pub fn resolve_grants(grants: &[Grant], choices: &BTreeMap<String, Selection>) -
 /// Resolves one grant to the [`Selection`] it contributes, if any.
 fn resolve_grant(grant: &Grant, choices: &BTreeMap<String, Selection>) -> Option<Selection> {
     match grant {
-        Grant::Fixed { item, params } => Some(Selection::with_params(item.clone(), params.clone())),
+        // Row 55/D74.4: a mythic-type grant can state its own realm (Faerie
+        // Doctor's Dowsing, Spirit Votary's Second Sight) independent of the
+        // granted item's own `realm_association`.
+        Grant::Fixed {
+            item,
+            params,
+            realm,
+        } => {
+            let mut selection = Selection::with_params(item.clone(), params.clone());
+            crate::effective::stamp_realm_override(&mut selection, *realm);
+            Some(selection)
+        }
         Grant::Choice {
             choice_key,
             options,
@@ -202,6 +222,7 @@ mod tests {
             Grant::Fixed {
                 item: Id::new("virtue.self_confident"),
                 params: BTreeMap::new(),
+                realm: None,
             }
         );
         let back = serde_json::to_string(&grant).unwrap();
@@ -212,7 +233,7 @@ mod tests {
     fn fixed_grant_carries_params() {
         let json = r#"{ "kind": "fixed", "item": "virtue.minor_magical_focus",
                         "params": { "focus": "certamen" } }"#;
-        let Grant::Fixed { item, params } = serde_json::from_str(json).unwrap() else {
+        let Grant::Fixed { item, params, .. } = serde_json::from_str(json).unwrap() else {
             panic!("expected a fixed grant");
         };
         assert_eq!(item, Id::new("virtue.minor_magical_focus"));
@@ -272,6 +293,7 @@ mod tests {
             Grant::Fixed {
                 item: Id::new("virtue.self_confident"),
                 params: BTreeMap::new(),
+                realm: None,
             },
             Grant::Choice {
                 choice_key: "puissant".to_string(),
