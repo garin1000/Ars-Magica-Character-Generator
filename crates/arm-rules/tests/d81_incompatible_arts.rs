@@ -380,3 +380,143 @@ fn a_spell_using_no_barred_combination_is_not_flagged() {
         result.issues
     );
 }
+
+// --- 7. An incomplete copy never counts as a duplicate (finding 1) ---------
+//
+// tmp/review-incompat.json #1: an OLD SAVE may legally hold 2+ copies of this
+// Flaw from before this schema change, each with all four new params absent
+// (the old schema had none). `duplicate_key()` used to skip a group's
+// role-map entry whenever a key was missing ("missing_param already
+// reported"), so two such copies collapsed to the IDENTICAL empty
+// `DuplicateKey` and `max_per_target`'s new default of 1 raised a spurious
+// `duplicate_selection` on top of the expected `missing_param`s.
+
+#[test]
+fn two_param_less_copies_report_missing_param_but_not_duplicate_selection() {
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![
+        Selection::new(Id::new("flaw.incompatible_arts")),
+        Selection::new(Id::new("flaw.incompatible_arts")),
+    ];
+
+    let result = validate(&e, &ruleset);
+    let mut missing = missing_param_keys(&result.issues, "flaw.incompatible_arts");
+    missing.sort();
+    assert_eq!(
+        missing,
+        vec![
+            "form_1".to_string(),
+            "form_1".to_string(),
+            "form_2".to_string(),
+            "form_2".to_string(),
+            "technique_1".to_string(),
+            "technique_1".to_string(),
+            "technique_2".to_string(),
+            "technique_2".to_string(),
+        ],
+        "both copies must each still report all four missing params; got {missing:?}"
+    );
+    assert!(
+        !has_duplicate_selection(&result.issues, "flaw.incompatible_arts"),
+        "two param-less copies must never collide as a duplicate — an \
+         incomplete group is not comparable to another incomplete group: {:?}",
+        result.issues
+    );
+}
+
+/// Items WITHOUT `unordered_param_groups` must behave exactly as before the
+/// fix above: the early-return for an incomplete GROUP must never touch an
+/// ungrouped item's own duplicate detection. A real shipped ungrouped,
+/// parameterized Virtue naming the same target twice must still collide.
+#[test]
+fn an_ungrouped_item_still_collides_on_an_identical_repeat() {
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![
+        Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".to_string(), Id::new("ability.awareness"))]),
+        ),
+        Selection::with_params(
+            Id::new("virtue.puissant_ability"),
+            BTreeMap::from([("ability".to_string(), Id::new("ability.awareness"))]),
+        ),
+    ];
+
+    let result = validate(&e, &ruleset);
+    assert!(
+        has_duplicate_selection(&result.issues, "virtue.puissant_ability"),
+        "an ungrouped item naming the same target twice must still collide: {:?}",
+        result.issues
+    );
+}
+
+// --- 8. One copy repeating its own pair in both groups is refused (D81.16) -
+
+fn has_param_groups_not_distinct(issues: &[ValidationIssue], item: &str) -> bool {
+    issues.iter().any(|i| {
+        i.code == ValidationIssue::CODE_PARAM_GROUPS_NOT_DISTINCT
+            && i.args.get("item").map(String::as_str) == Some(item)
+    })
+}
+
+#[test]
+fn one_copy_naming_the_same_combination_in_both_groups_is_an_error() {
+    // D81.16: "One Incompatible Arts copy naming the same combination twice is
+    // an ERROR: its 'two combinations' (ArMDE:6292) must differ." Both groups
+    // resolve to the SAME (Technique, Form) pair.
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![incompatible_arts(
+        "art.intellego",
+        "art.herbam",
+        "art.intellego",
+        "art.herbam",
+    )];
+
+    let result = validate(&e, &ruleset);
+    assert!(
+        has_param_groups_not_distinct(&result.issues, "flaw.incompatible_arts"),
+        "D81.16: a copy whose two groups name the identical combination must \
+         be refused: {:?}",
+        result.issues
+    );
+}
+
+#[test]
+fn one_copy_naming_two_different_combinations_is_not_flagged() {
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![incompatible_arts(
+        "art.intellego",
+        "art.herbam",
+        "art.intellego",
+        "art.animal",
+    )];
+
+    let result = validate(&e, &ruleset);
+    assert!(
+        !has_param_groups_not_distinct(&result.issues, "flaw.incompatible_arts"),
+        "two genuinely different combinations must not be flagged: {:?}",
+        result.issues
+    );
+}
+
+#[test]
+fn an_incomplete_copy_is_not_flagged_as_repeating_itself() {
+    // A copy missing params for both groups must not ALSO draw
+    // `param_groups_not_distinct` on top of `missing_param` — an incomplete
+    // group is not comparable to anything, including another incomplete group
+    // within the SAME selection.
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![Selection::new(Id::new("flaw.incompatible_arts"))];
+
+    let result = validate(&e, &ruleset);
+    assert!(
+        !has_param_groups_not_distinct(&result.issues, "flaw.incompatible_arts"),
+        "an incomplete copy must not be flagged for repeating itself: {:?}",
+        result.issues
+    );
+}

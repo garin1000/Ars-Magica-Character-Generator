@@ -202,6 +202,8 @@
                       <ParameterPicker
                         selection={pick}
                         params={parameters}
+                        groups={store.ruleset?.ruleset.point_items[pick.ref]
+                          ?.unordered_param_groups}
                         idSuffix={slot.choice_key}
                         commit={(next) => store.setWarpingChoice(slot.choice_key, next)}
                       />

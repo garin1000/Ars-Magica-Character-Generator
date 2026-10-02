@@ -259,8 +259,12 @@ static EMPHASIS_BOLD_STAR_RE: LazyLock<Regex> =
 static EMPHASIS_STAR_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\*([^*\n]+)\*").unwrap());
 static EMPHASIS_UNDERSCORE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"_([^_\n]+)_").unwrap());
+// tmp/review-incompat.json #3: the exclusion class also excludes “ (U+201C),
+// the real typographic closer — not just „ (U+201E) and the ASCII `"` — so an
+// already-correctly-closed „…“ pair stops the capture dead rather than being
+// swallowed on the way to a later, unrelated ASCII-quoted span.
 static GERMAN_QUOTE_PAIR_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new("„([^„\"]*)\"").unwrap());
+    LazyLock::new(|| Regex::new("„([^„\"“]*)\"").unwrap());
 static EN_DASH_BEFORE_DIGIT_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\u{2013}(\d)").unwrap());
 
@@ -313,6 +317,15 @@ fn german_quote_pairs_fold_to_the_typographic_closing_quote() {
         normalize_quote_pairs("plain \"ascii\" stays"),
         "plain \"ascii\" stays"
     );
+    // tmp/review-incompat.json #3: the capture's exclusion class used to omit
+    // “ (U+201C), the real typographic closer, so on a string containing an
+    // already-correctly-closed „…“ pair followed LATER by an unrelated
+    // straight-quoted span, the regex greedily matched from the „ opener,
+    // through the already-correct “ (not excluded), all the way to the
+    // unrelated ASCII `"` — folding that stray quote as if it were the
+    // German closer. An already-correct pair, followed by an unrelated
+    // ASCII-quoted term, must be left exactly as it is.
+    assert_eq!(normalize_quote_pairs("„a“ and \"x\""), "„a“ and \"x\"");
 }
 
 /// Bug guard (fix-round, 2026-09-29): [`EMPHASIS_STAR_RE`] matches a single

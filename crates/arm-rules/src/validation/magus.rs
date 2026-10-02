@@ -473,6 +473,7 @@ pub(crate) fn validate_spells(
         validate_spell_ritual_legality(sel, spell, resolved, issues);
         validate_ritual_casting_restriction(sel, spell, effective_selections, ruleset, issues);
         validate_spell_incompatible_arts(sel, spell, ruleset, &barred, issues);
+        validate_spell_focus_marker_without_focus(entity, ruleset, sel, issues);
         if trained {
             validate_spell_level_cap(entity, ruleset, sel, spell, resolved, issues);
         }
@@ -671,6 +672,31 @@ fn validate_spell_incompatible_arts(
     if crate::effective::spell_touches_barred_combination(spell, ruleset, barred) {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_SPELL_USES_INCOMPATIBLE_ARTS,
+            CreationPhase::Spells,
+            args([("spell", sel.spell.to_string())]),
+            Some(sel.spell.clone()),
+        ));
+    }
+}
+
+/// D81.17 (`docs/vf-audit/decisions.md`): a known spell marked
+/// [`SpellSelection::within_focus`] while the entity holds no Magical Focus at
+/// all gets a non-blocking warning — the marker is already inert
+/// (`effective/spell.rs::spell_level_cap` and
+/// `derived/casting.rs::spell_casting_total` both gate the doubling on
+/// `crate::effective::has_magical_focus`, the SAME predicate read here, so
+/// this warning can never disagree with which spells the marker actually
+/// affects), but a stale marker with no visible sign confused the player.
+/// `args` carries `spell`.
+fn validate_spell_focus_marker_without_focus(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    sel: &SpellSelection,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    if sel.within_focus && !crate::effective::has_magical_focus(entity, ruleset) {
+        issues.push(ValidationIssue::warning(
+            ValidationIssue::CODE_SPELL_WITHIN_FOCUS_WITHOUT_MAGICAL_FOCUS,
             CreationPhase::Spells,
             args([("spell", sel.spell.to_string())]),
             Some(sel.spell.clone()),

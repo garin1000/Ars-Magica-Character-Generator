@@ -1031,6 +1031,10 @@ app-title-untitled = Unbenannt
 
 # Hinweis für einen nicht ausgefüllten Parameter-Platzhalter im Namen, z. B. „Begabung in (Fertigkeit)“.
 param-hint = ({ $label })
+# review-ui-today Fund 2: eine zugängliche Trenner-Beschriftung, die ParameterPicker
+# vor jeder Gruppe der `unordered_param_groups` eines Eintrags zeigt (Incompatible
+# Arts' zwei Technik+Form-Kombinationen) — generisch, nennt den Eintrag selbst nie.
+param-group-label = Kombination { $n }
 # Eine Forderung, die die Engine weiter prüft, als die Regeln sie formulieren. Das
 # Beispiel der Regeln steht vorn, damit der Wert unmittelbar folgt („Latein 1“, wie
 # das Regelwerk es schreibt), und DIESER Zusatz folgt dem Wert und nennt, was die
@@ -1322,6 +1326,7 @@ issue-same_choice_conflict = { $item } und { $other } dürfen nicht beide auf { 
 issue-wrong_entity_kind = { $item } ist für die Wesensart { $entity_kind } nicht zulässig.
 issue-duplicate_selection = { $item } ist { $count }-mal ausgewählt, darf aber höchstens { $max }-mal für dasselbe Ziel gewählt werden.
 issue-too_many_selections = { $item } ist insgesamt { $count }-mal über alle Ziele hinweg ausgewählt, darf aber insgesamt höchstens { $max }-mal gewählt werden.
+issue-param_groups_not_distinct = { $item } nennt dieselbe Gruppe zweimal; die Gruppen eines Exemplars müssen paarweise verschieden sein.
 issue-missing_required_trait = Eine erforderliche Eigenschaft fehlt: { $item }.
 issue-forbidden_trait = Eine verbotene Eigenschaft ist vorhanden: { $item }.
 issue-missing_param = { $item } fehlt der Parameter { $key }.
@@ -1439,6 +1444,7 @@ issue-spell_level_exceeds_cap = Zauber { $spell } hat Stufe { $level }, über de
 issue-spell_ritual_legality = Zauber { $spell } wird auf Stufe { $level } erlernt und verletzt die Ritualgrenzen (Rituale mindestens 20, Nicht-Rituale höchstens 50).
 issue-ritual_casting_restricted = { $spell } ist ein Ritual, und Starre Magie verbietet es, dabei Vis einzusetzen.
 issue-spell_uses_incompatible_arts = { $spell } verwendet zwei Techniken und Formen, deren gemeinsame Nutzung Unvereinbare Künste verbietet.
+issue-spell_within_focus_without_magical_focus = { $spell } ist als im Fokus markiert, aber es wird kein Magischer Fokus gehalten; die Markierung hat keine Wirkung.
 issue-unknown_mastery_ability = Unbekannte Meisterschaftsfähigkeit { $ability } für { $spell } gewählt.
 issue-too_many_mastery_abilities = { $spell } hat { $chosen } Meisterschaftsfähigkeiten, mehr als der Meisterschaftswert von { $mastery } (eine je Stufe).
 issue-duplicate_mastery_ability = Meisterschaftsfähigkeit { $ability } wurde { $count }-mal für { $spell } gewählt, darf aber nur einmal genommen werden.

@@ -2469,6 +2469,16 @@ ul {
   margin: 0.25rem 0 0.5rem 1rem;
 }
 
+/* review-ui-today finding 2: the small accessible separator ParameterPicker
+   shows before each of an item's `unordered_param_groups` groups (Incompatible
+   Arts' two Technique+Form combinations) — generic, never naming the item. */
+.param-group-label {
+  font-size: var(--font-chrome);
+  color: var(--muted);
+  font-weight: 600;
+  margin: 0.4rem 0 0 1rem;
+}
+
 .muted {
   color: var(--muted);
 }

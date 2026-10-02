@@ -430,7 +430,12 @@
                   {/if}
                 </div>
                 {#if pointItem?.parameters && pointItem.parameters.length > 0}
-                  <ParameterPicker {selection} {index} params={pointItem.parameters} />
+                  <ParameterPicker
+                    {selection}
+                    {index}
+                    params={pointItem.parameters}
+                    groups={pointItem.unordered_param_groups}
+                  />
                 {/if}
                 {#if realmEntry}
                   {#if realmEntry.fixed}

@@ -18,8 +18,11 @@
     header: string;
     /** Optional `data-testid` on the group header (only Spells sets one today). */
     headerTestid?: string;
-    /** Optional native-title hover hint on the group header (D81.5: the Spell
-     *  picker's quick Te/Fo-grid cap figure; omitted → no `title` attribute). */
+    /** Optional hover/focus tooltip hint on the group header (D81.5: the Spell
+     *  picker's quick Te/Fo-grid cap figure; omitted → the header carries no
+     *  tooltip and no `tabindex`). Rendered through `use:tooltip`, like every
+     *  other tooltip this component shows, so it is keyboard/screen-reader
+     *  reachable — never a bare `title` attribute (review-ui-today finding 3). */
     headerTooltip?: string;
     items: T[];
   }
@@ -71,9 +74,29 @@
         <p class="empty" data-testid="source-no-results">{store.t('filter-no-results')}</p>
       {/if}
       {#each groups as group (group.key)}
-        <h3 class="category" data-testid={group.headerTestid} title={group.headerTooltip}>
-          {group.header}
-        </h3>
+        <!-- review-ui-today finding 3: a bare `title` was mouse-hover-only and
+             unreachable by keyboard/screen reader (no `tabindex`, no
+             `aria-describedby`) — `use:tooltip` plus a focusable host is the
+             pattern every other tooltip in this codebase uses instead. A
+             header with no hint renders the plain branch below, out of the
+             tab order exactly as before — `tooltip-host-parity.test.ts`'s
+             static scan needs a literal `tabindex="0"` on the SAME start tag
+             as `use:tooltip`, which a ternary attribute value cannot give it. -->
+        {#if group.headerTooltip}
+          <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+          <h3
+            class="category"
+            data-testid={group.headerTestid}
+            tabindex="0"
+            use:tooltip={{ text: group.headerTooltip }}
+          >
+            {group.header}
+          </h3>
+        {:else}
+          <h3 class="category" data-testid={group.headerTestid}>
+            {group.header}
+          </h3>
+        {/if}
         <ul class="item-list">
           {#each group.items as item (getId(item))}
             {@const blocked = disabled?.(item) ?? false}

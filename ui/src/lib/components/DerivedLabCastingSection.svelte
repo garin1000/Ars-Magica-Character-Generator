@@ -102,13 +102,38 @@
       {:else}
         <dd>{labCell.total}{labCell.deficient ? ' ' + store.t('derived-deficient') : ''}</dd>
       {/if}
+      <!-- review-ui-today finding 1: `lab.rs::lab_totals` computes
+           `within_focus`/`within_potent_field`/`enchanting` unconditionally
+           (gated only on holding a Focus/Potent Magic Virtue, or on Weak
+           Enchanter, independent of `unusable`) — mirroring how
+           `casting.rs::casting_totals` computes its own within-focus/
+           within-potent-field figures. The Casting table below withholds
+           those via the shared `castValue` snippet; this snippet does the
+           same job for every row of the Lab Total `<dl>` below the main
+           total, so a barred cell cannot leak a real number through ANY of
+           them. -->
+      {#snippet labValue(value: number)}
+        {#if labCell?.unusable}
+          <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+          <span
+            class="derived-unusable"
+            tabindex="0"
+            use:tooltip={{ text: store.t('derived-unusable-tooltip') }}
+            data-testid="derived-lab-unusable"
+          >
+            {store.t('derived-unusable')}
+          </span>
+        {:else}
+          {value}
+        {/if}
+      {/snippet}
       {#if labCell.within_focus != null}
         <dt class="derived-focus">{store.t('derived-within-focus')}</dt>
-        <dd class="derived-focus">{labCell.within_focus}</dd>
+        <dd class="derived-focus">{@render labValue(labCell.within_focus)}</dd>
       {/if}
       {#if labCell.within_potent_field != null}
         <dt class="derived-focus">{store.t('derived-within-potent-field')}</dt>
-        <dd class="derived-focus">{labCell.within_potent_field}</dd>
+        <dd class="derived-focus">{@render labValue(labCell.within_potent_field)}</dd>
       {/if}
       {#if labCell.enchanting !== labCell.total}
         <!-- Only shown when Weak Enchanter halves this cell's total for
@@ -122,7 +147,7 @@
         >
           {store.t('derived-lab-enchanting')}
         </dt>
-        <dd class="derived-focus">{labCell.enchanting}</dd>
+        <dd class="derived-focus">{@render labValue(labCell.enchanting)}</dd>
       {/if}
     </dl>
   {/if}

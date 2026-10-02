@@ -371,7 +371,13 @@ fn has_short_ranged_magic(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// read here (not via `derived.rs::InPlayMods::has_focus`, which is private to
 /// that module) so [`spell_caps`] knows whether a within-focus figure is worth
 /// computing for the picker at all. Mirrors [`has_short_ranged_magic`]'s shape.
-fn has_magical_focus(entity: &Entity, ruleset: &Ruleset) -> bool {
+///
+/// `pub(crate)` (D81.17, `docs/vf-audit/decisions.md`): also read by
+/// `validation/magus.rs::validate_spell_focus_marker_without_focus`, so the
+/// warning for a stale `within_focus` marker can never disagree with the SAME
+/// predicate that already neutralizes the marker's effect on the cap and the
+/// Casting Total, right below.
+pub(crate) fn has_magical_focus(entity: &Entity, ruleset: &Ruleset) -> bool {
     selections_for_effects(entity, ruleset)
         .iter()
         .any(|selection| {

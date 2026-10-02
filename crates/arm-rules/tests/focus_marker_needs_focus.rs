@@ -13,7 +13,7 @@
 use arm_rules::derived::spell_casting_total;
 use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::*;
-use arm_rules::validation::validate;
+use arm_rules::validation::{IssueSeverity, ValidationIssue, validate};
 use std::collections::BTreeMap;
 
 /// The shipped core ruleset — duplicated per-binary per the established
@@ -132,5 +132,48 @@ fn casting_total_without_any_magical_focus_ignores_the_stale_marker() {
         marked, unmarked,
         "a within_focus marker with no Magical Focus held must not change the \
          Casting Total (marked: {marked}, unmarked: {unmarked})"
+    );
+}
+
+// --- D81.17 (`docs/vf-audit/decisions.md`): the stale marker also WARNS -----
+//
+// The cap/Casting-Total neutralization above (already fixed) leaves the
+// player with no visible sign that their `within_focus` marker is doing
+// nothing. D81.17 adds a non-blocking warning naming the spell.
+
+fn has_focus_marker_warning(entity: &Entity, ruleset: &Ruleset, spell: &str) -> bool {
+    validate(entity, ruleset).issues.iter().any(|i| {
+        i.code == ValidationIssue::CODE_SPELL_WITHIN_FOCUS_WITHOUT_MAGICAL_FOCUS
+            && i.severity == IssueSeverity::Warning
+            && i.args.get("spell").map(String::as_str) == Some(spell)
+    })
+}
+
+#[test]
+fn within_focus_marker_without_any_magical_focus_raises_a_warning() {
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.spells = vec![pilum_marked_within_focus()];
+
+    assert!(
+        has_focus_marker_warning(&e, &ruleset, "spell.pilum_of_fire"),
+        "D81.17: a stale within_focus marker with no Magical Focus held must \
+         raise a non-blocking warning"
+    );
+}
+
+#[test]
+fn within_focus_marker_with_a_held_magical_focus_raises_no_warning() {
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![Selection::with_params(
+        Id::new("virtue.major_magical_focus"),
+        BTreeMap::from([("focus".to_string(), Id::new("fire"))]),
+    )];
+    e.spells = vec![pilum_marked_within_focus()];
+
+    assert!(
+        !has_focus_marker_warning(&e, &ruleset, "spell.pilum_of_fire"),
+        "a genuinely held Magical Focus must not draw the stale-marker warning"
     );
 }

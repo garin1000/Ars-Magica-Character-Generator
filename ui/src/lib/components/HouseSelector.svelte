@@ -187,6 +187,8 @@
                           <ParameterPicker
                             selection={pick}
                             params={parameters}
+                            groups={store.ruleset.ruleset.point_items[pick.ref]
+                              ?.unordered_param_groups}
                             idSuffix={grant.choice_key}
                             commit={(next) => store.setHouseChoice(grant.choice_key, next)}
                           />

@@ -985,6 +985,10 @@ app-title-untitled = Untitled
 
 # Hint shown for an unfilled parameter slot in an item name, e.g. "Puissant (Ability)".
 param-hint = ({ $label })
+# review-ui-today finding 2: an accessible separator label ParameterPicker shows
+# before each of an item's `unordered_param_groups` groups (Incompatible Arts'
+# two Technique+Form combinations) — generic and never names the item itself.
+param-group-label = Combination { $n }
 # A requirement the engine enforces more widely than the rules word it. The rules'
 # own example heads the requirement so its score follows it directly ("Latin 1", as
 # the rulebook states it) and THIS note trails the score, saying what the engine
@@ -1243,6 +1247,7 @@ issue-same_choice_conflict = { $item } and { $other } may not both target { $tar
 issue-wrong_entity_kind = { $item } cannot be taken by a { $entity_kind }.
 issue-duplicate_selection = { $item } is selected { $count } times, but may be taken at most { $max } time(s) for the same target.
 issue-too_many_selections = { $item } is selected { $count } times in total across all targets, but may be taken at most { $max } time(s) altogether.
+issue-param_groups_not_distinct = { $item } names the same group twice; a copy's groups must be pairwise distinct.
 issue-missing_required_trait = A required trait is missing: { $item }.
 issue-forbidden_trait = A forbidden trait is present: { $item }.
 issue-missing_param = { $item } is missing the parameter { $key }.
@@ -1357,6 +1362,7 @@ issue-spell_level_exceeds_cap = Spell { $spell } is level { $level }, above the 
 issue-spell_ritual_legality = Spell { $spell } is learned at level { $level }, which breaks the ritual level bounds (rituals at least 20, non-rituals at most 50).
 issue-ritual_casting_restricted = { $spell } is a Ritual, and Rigid Magic forbids using vis to cast it.
 issue-spell_uses_incompatible_arts = { $spell } draws on two Techniques and Forms that Incompatible Arts forbids using together.
+issue-spell_within_focus_without_magical_focus = { $spell } is marked within focus, but no Magical Focus is held; the marking has no effect.
 issue-unknown_mastery_ability = Unknown Spell Mastery ability { $ability } chosen for { $spell }.
 issue-too_many_mastery_abilities = { $spell } has { $chosen } Mastery special abilities, above its Mastery score of { $mastery } (one per level).
 issue-duplicate_mastery_ability = Mastery ability { $ability } is chosen { $count } times for { $spell }, but may be taken only once.

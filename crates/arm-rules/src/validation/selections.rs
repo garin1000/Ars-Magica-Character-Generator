@@ -640,6 +640,39 @@ pub(crate) fn validate_entity_kind_applicability(
     }
 }
 
+/// The canonical role-map for ONE `unordered_param_groups` entry — re-keyed by
+/// each named parameter's [`ParameterDomain`] (`"technique"`, `"form"`, …)
+/// rather than by its literal key, so `technique_1`/`form_1` and
+/// `technique_2`/`form_2` both become the same two-entry map
+/// `{"technique": …, "form": …}` when they name the same Arts.
+///
+/// `None` when the group is missing any of its keys in `selection.params` —
+/// `missing_param` already reports the gap, and a role map built from only the
+/// PRESENT keys of an incomplete group must never be compared against
+/// anything: two selections both missing the same subset of a grouped item's
+/// keys are not provably the same target
+/// (`tmp/review-incompat.json` #1), and neither are two groups within the
+/// SAME selection that both happen to be incomplete
+/// ([`validate_param_groups_distinct`], D81.16). An unknown key (a group
+/// naming a parameter the item does not declare) is a load-time integrity
+/// defect, not an incompleteness, so it is simply skipped rather than making
+/// the whole group incomparable — unchanged from before this split.
+fn group_role_map(
+    group: &[String],
+    selection: &Selection,
+    item: &PointItem,
+) -> Option<BTreeMap<String, SelectionParamValue>> {
+    let mut role_map = BTreeMap::new();
+    for key in group {
+        let value = selection.params.get(key)?;
+        let Some(def) = item.parameters.iter().find(|p| &p.key == key) else {
+            continue; // unknown key — the integrity check already rejects this
+        };
+        role_map.insert(def.domain.to_string(), value.clone());
+    }
+    Some(role_map)
+}
+
 /// The order-independent comparison key one selection contributes to
 /// [`validate_duplicate_selections`]'s duplicate count (D81.8/Q3).
 ///
@@ -649,15 +682,21 @@ pub(crate) fn validate_entity_kind_applicability(
 /// existing item's duplicate detection is unaffected byte-for-byte.
 ///
 /// For an item that DOES declare groups (Incompatible Arts: two Technique+Form
-/// pairs), each group's named values are re-keyed by their
-/// [`ParameterDomain`] (`"technique"`, `"form"`, …) rather than by their
-/// literal parameter key — `technique_1`/`form_1` and `technique_2`/`form_2`
-/// both become the same two-entry map `{"technique": …, "form": …}` when they
-/// name the same Arts, so swapping which named group holds which pair changes
-/// nothing. The groups are then collected into a `BTreeSet`, so the ORDER the
-/// groups are declared/filled in no longer matters either — only the
-/// unordered SET of pairs does. Keys the groups do not cover stay in
-/// `ungrouped`, keyed by their own name as before.
+/// pairs), each group's named values are re-keyed via [`group_role_map`] —
+/// `technique_1`/`form_1` and `technique_2`/`form_2` both become the same
+/// two-entry map `{"technique": …, "form": …}` when they name the same Arts,
+/// so swapping which named group holds which pair changes nothing. The groups
+/// are then collected into a `BTreeSet`, so the ORDER the groups are
+/// declared/filled in no longer matters either — only the unordered SET of
+/// pairs does. Keys the groups do not cover stay in `ungrouped`, keyed by
+/// their own name as before.
+///
+/// `None` when any group is incomplete (`group_role_map` returns `None`) —
+/// such a selection contributes nothing to the duplicate count at all, so it
+/// can never collide with another incomplete selection missing the same
+/// subset of keys (`tmp/review-incompat.json` #1): `missing_param` is already
+/// this selection's own finding, and `duplicate_selection` must not pile a
+/// second, spurious finding on top of it.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct DuplicateKey {
     item_ref: Id,
@@ -665,25 +704,22 @@ struct DuplicateKey {
     ungrouped: BTreeMap<String, SelectionParamValue>,
 }
 
-fn duplicate_key(selection: &Selection, ruleset: &Ruleset) -> DuplicateKey {
+fn duplicate_key(selection: &Selection, ruleset: &Ruleset) -> Option<DuplicateKey> {
     let item = ruleset.point_items.get(&selection.item_ref);
     let groups: &[Vec<String>] = item.map_or(&[], |i| i.unordered_param_groups.as_slice());
 
     let mut grouped_keys: BTreeSet<&str> = BTreeSet::new();
     let mut canonical_groups = BTreeSet::new();
-    for group in groups {
-        let mut role_map = BTreeMap::new();
-        for key in group {
-            grouped_keys.insert(key.as_str());
-            let Some(value) = selection.params.get(key) else {
-                continue; // missing_param already reported
-            };
-            let Some(def) = item.and_then(|i| i.parameters.iter().find(|p| &p.key == key)) else {
-                continue; // unknown key — the integrity check already rejects this
-            };
-            role_map.insert(def.domain.to_string(), value.clone());
+    if !groups.is_empty() {
+        // Non-empty `groups` only arises when `item` resolved (`groups` is
+        // sliced out of it above), so this is never the `None` arm in
+        // practice — it is here only so the compiler, not an `unwrap`, proves
+        // `group_role_map` always gets a real item.
+        let item = item?;
+        for group in groups {
+            grouped_keys.extend(group.iter().map(String::as_str));
+            canonical_groups.insert(group_role_map(group, selection, item)?);
         }
-        canonical_groups.insert(role_map);
     }
 
     let ungrouped = selection
@@ -693,10 +729,50 @@ fn duplicate_key(selection: &Selection, ruleset: &Ruleset) -> DuplicateKey {
         .map(|(key, value)| (key.clone(), value.clone()))
         .collect();
 
-    DuplicateKey {
+    Some(DuplicateKey {
         item_ref: selection.item_ref.clone(),
         canonical_groups,
         ungrouped,
+    })
+}
+
+/// D81.16 (`docs/vf-audit/decisions.md`): within ONE selection, no two of an
+/// item's declared `unordered_param_groups` entries may canonicalize to the
+/// identical role map — Incompatible Arts' "two combinations" (ArMDE:6292,
+/// "You may not use these Arts together") generalized to any item that
+/// declares groups, with no item id named here. `args` carries `item`.
+///
+/// A group missing any of its keys is exempt from the comparison
+/// ([`group_role_map`] returns `None` for it and it is filtered out below) —
+/// `missing_param` already reports the gap, and an incomplete role map is not
+/// meaningfully comparable to anything, including another incomplete group in
+/// the SAME selection.
+pub(crate) fn validate_param_groups_distinct(
+    selections: &[Selection],
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    for selection in selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        if item.unordered_param_groups.len() < 2 {
+            continue;
+        }
+        let complete_groups: Vec<_> = item
+            .unordered_param_groups
+            .iter()
+            .filter_map(|group| group_role_map(group, selection, item))
+            .collect();
+        let distinct: BTreeSet<_> = complete_groups.iter().collect();
+        if distinct.len() < complete_groups.len() {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_PARAM_GROUPS_NOT_DISTINCT,
+                CreationPhase::VirtuesFlaws,
+                args([("item", selection.item_ref.to_string())]),
+                Some(selection.item_ref.clone()),
+            ));
+        }
     }
 }
 
@@ -719,7 +795,9 @@ pub(crate) fn validate_duplicate_selections(
     let mut seen: BTreeMap<DuplicateKey, usize> = BTreeMap::new();
 
     for selection in selections {
-        *seen.entry(duplicate_key(selection, ruleset)).or_insert(0) += 1;
+        if let Some(key) = duplicate_key(selection, ruleset) {
+            *seen.entry(key).or_insert(0) += 1;
+        }
     }
 
     for (key, count) in &seen {

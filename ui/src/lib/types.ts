@@ -661,10 +661,13 @@ export interface PointItem {
   // D81.8/Q3: groups of this item's own parameter keys that together name ONE
   // unordered "combination" for duplicate-detection purposes (Incompatible
   // Arts: `[["technique_1","form_1"],["technique_2","form_2"]]`). Omitted for
-  // every item except Incompatible Arts today. No frontend reader exists yet —
-  // duplicate detection is engine-side only — but the field is mirrored for
-  // fidelity, like every other `PointItem` field above. Mirrors the engine's
-  // `PointItem::unordered_param_groups` (`crates/arm-rules/src/types.rs`).
+  // every item except Incompatible Arts today. Duplicate detection itself is
+  // engine-side only; `ParameterPicker.svelte::paramGroups` is the one
+  // frontend reader (review-ui-today finding 2), reordering an item's
+  // `parameters` for DISPLAY — Technique before Form within each group — since
+  // the JSON array itself must stay alphabetical (canonical serialization).
+  // Mirrors the engine's `PointItem::unordered_param_groups`
+  // (`crates/arm-rules/src/types.rs`).
   unordered_param_groups?: string[][];
   // D81.14: an entry Merinita's conditional Warping Point (ArMDE:2280) reads
   // as "faerie-related" without carrying a Faerie realm association (Faerie

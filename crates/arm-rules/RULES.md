@@ -1178,7 +1178,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1774).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1852).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1722,7 +1722,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :714) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :790) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -1855,6 +1855,31 @@ versus `technique_2`/`form_2` swapped is the same copy, not a second one.
 `ParameterDomain` (`"technique"`/`"form"`) and compares as an unordered SET,
 so the swap collides as intended. Pinned by
 `crates/arm-rules/tests/d81_incompatible_arts.rs`.
+
+**An incomplete group never collides** (`tmp/review-incompat.json` #1): an old
+save may legally hold 2+ copies of this Flaw from before D81.8 added the four
+parameters, each with all of them absent. `validation/selections.rs::duplicate_key`
+used to skip a missing key silently while still building the rest of the role
+map, so two such copies collapsed to the IDENTICAL empty `DuplicateKey` and
+raised a spurious `duplicate_selection` on top of the expected four
+`missing_param`s per copy. `duplicate_key` now returns `Option<DuplicateKey>`,
+via the shared `group_role_map` helper: a group missing any of its keys makes
+the WHOLE key `None`, and such a selection is excluded from
+`validate_duplicate_selections`'s count entirely — it can never collide with
+anything, complete or not. Items with no `unordered_param_groups` are
+unaffected (the `None` path is only reachable when `groups` is non-empty).
+
+**D81.16 (`docs/vf-audit/decisions.md`): a copy's own groups must be pairwise
+distinct.** One Incompatible Arts copy naming the SAME `(Technique, Form)`
+pair in both of its two groups halves the Flaw's intended restriction
+("two combinations", `ArMDE:6292`) while paying the same Minor cost. A new
+`validate_param_groups_distinct` (`validation/selections.rs`) reuses
+`group_role_map` to canonicalize every one of an item's declared groups within
+ONE selection and errors (`CODE_PARAM_GROUPS_NOT_DISTINCT`,
+`"param_groups_not_distinct"`) when two resolve to the identical role map —
+generic over `unordered_param_groups`, with no item id named in the check
+itself. An incomplete group is exempt from the comparison (same reasoning as
+the duplicate-key fix above): `missing_param` already reports the gap.
 
 Items with a stated ceiling of two: `virtue.great_characteristic` (`ArMDE:3989`),
 `virtue.quiet_magic` ("You may take this Virtue twice, and eliminate the penalty
@@ -3312,7 +3337,7 @@ exemption is read off the effect's presence (age cap itself is M4/4e).
 - Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
   arithmetic, verified against the worked example below) + `ability_affinity`,
   folded into `effective/xp.rs::xp_allocation` and so into
-  `validation/magus.rs::validate_xp_pool` (:916). **Not** the simpler
+  `validation/magus.rs::validate_xp_pool` (:942). **Not** the simpler
   `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
   example below, but overcharges by one XP whenever `T·den mod num` falls
   strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
@@ -3390,7 +3415,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:916) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:942) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -5225,6 +5250,20 @@ gate, against its own already-computed `InPlayMods::has_focus`, for the same
 reason — the Casting Total a known spell shows was inflating the same way.
 Tests: `crates/arm-rules/tests/focus_marker_needs_focus.rs`.
 
+**D81.17 (`docs/vf-audit/decisions.md`): the now-inert marker also WARNS.**
+The correction above leaves the cap/Casting-Total figures right but gives the
+player no visible sign that their `within_focus` marker stopped doing
+anything once the Magical Focus Virtue was removed. `validate_spells`
+(`validation/magus.rs`) calls a new `validate_spell_focus_marker_without_focus`
+for every known spell: `sel.within_focus && !has_magical_focus(entity,
+ruleset)` raises a non-blocking warning (`CODE_SPELL_WITHIN_FOCUS_WITHOUT_MAGICAL_FOCUS`,
+`"spell_within_focus_without_magical_focus"`, `args` carries `spell`), reading
+`effective::has_magical_focus` — made `pub(crate)` for this — the SAME
+predicate `spell_level_cap`/`spell_casting_total` already gate the doubling
+on, so the warning can never disagree with which spells the marker actually
+affects. The mark stays saved; only the player's visibility into its
+inertness changes. Tests: `crates/arm-rules/tests/focus_marker_needs_focus.rs`.
+
 **The in-play Lab Total (`derived/lab.rs::lab_totals`) still does not fold
 requisites.** `ArMDE:12313` separates "learning" (this cap, now folded) from
 "inventing" (the in-play Lab Total family, still unfolded) — a genuinely
@@ -5476,7 +5515,7 @@ Two-level enforcement:
   `level`, ritual ⇒ `level ≥ 20`, non-ritual ⇒ `level ≤ 50`; a non-ritual spell
   may not have `duration = Year` or `target = Boundary`, nor be a Momentary Creo
   spell with `creates_lasting`. Vision target is exempt from the Boundary rule.
-- **Per-entity** (`validate_spell_ritual_legality`, `validation/magus.rs`, :591, called
+- **Per-entity** (`validate_spell_ritual_legality`, `validation/magus.rs`, :592, called
   from `validate_spells`, V51 split it into a named sub-check): the *resolved* learned
   level (General chosen level or fixed) must obey the same ≥20 / ≤50 bounds — a
   violation emits `spell_ritual_legality` (`CODE_SPELL_RITUAL_LEGALITY`). This
@@ -10938,11 +10977,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1009),
-  `validate_forbidden_traits` (:1030))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1087),
+  `validate_forbidden_traits` (:1108))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:619),
-  `validate_parameters` (:1230), `validate_duplicate_selections` (:714))
+  `validate_parameters` (:1308), `validate_duplicate_selections` (:790))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

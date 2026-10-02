@@ -139,6 +139,7 @@ impl fmt::Display for IssueSeverity {
 /// | `wrong_entity_kind` | error | virtues_flaws | `item`, `entity_kind` |
 /// | `duplicate_selection` | error | virtues_flaws | `item`, `count`, `max` |
 /// | `too_many_selections` | error | virtues_flaws | `item`, `count`, `max` |
+/// | `param_groups_not_distinct` | error | virtues_flaws | `item` |
 /// | `over_budget_virtues` | error | virtues_flaws | `points`, `budget` |
 /// | `over_budget_flaws` | error | virtues_flaws | `points`, `budget` |
 /// | `unbalanced_virtues` | error | virtues_flaws | `virtue_points`, `flaw_points` |
@@ -242,6 +243,7 @@ impl fmt::Display for IssueSeverity {
 /// | `spell_ritual_legality` | error | spells | `spell`, `level` |
 /// | `ritual_casting_restricted` | warning | spells | `spell` |
 /// | `spell_uses_incompatible_arts` | error | spells | `spell` |
+/// | `spell_within_focus_without_magical_focus` | warning | spells | `spell` |
 /// | `unknown_mastery_ability` | error | spells | `spell`, `ability` |
 /// | `too_many_mastery_abilities` | error | spells | `spell`, `chosen`, `mastery` |
 /// | `duplicate_mastery_ability` | error | spells | `spell`, `ability`, `count` |
@@ -1011,6 +1013,29 @@ impl ValidationIssue {
     /// override names a realm outside a `RealmAssociation::Subset` entry's
     /// allowed list. `args` carries `item` and `value`.
     pub const CODE_REALM_OVERRIDE_INVALID: &'static str = "realm_override_invalid";
+    /// See [`Self::CODE_UNKNOWN_TYPE`]. Error (D81.16, `docs/vf-audit/decisions.md`):
+    /// within ONE selection, two of an item's declared
+    /// [`crate::types::PointItem::unordered_param_groups`] entries canonicalize
+    /// to the identical role map — Incompatible Arts' "two combinations"
+    /// (ArMDE:6292) generalized to any item that declares groups, with no item
+    /// id named in the check itself. `args` carries `item`. A group missing any
+    /// of its keys is exempt from the comparison, the same way
+    /// [`Self::CODE_DUPLICATE_SELECTION`]'s own key-building exempts an
+    /// incomplete group from colliding with another selection's — see
+    /// `validation/selections.rs::group_role_map`.
+    pub const CODE_PARAM_GROUPS_NOT_DISTINCT: &'static str = "param_groups_not_distinct";
+    /// See [`Self::CODE_UNKNOWN_TYPE`]. Warning (D81.17, `docs/vf-audit/decisions.md`):
+    /// a known spell is marked [`crate::types::SpellSelection::within_focus`]
+    /// while the entity holds no Magical Focus at all. The marker is already
+    /// inert — `effective/spell.rs::spell_level_cap` and
+    /// `derived/casting.rs::spell_casting_total` both gate the doubling on
+    /// `effective::has_magical_focus`, the SAME predicate this warning reads —
+    /// but a stale marker with no visible sign confused the player, so this
+    /// surfaces it rather than silently ignoring it. Non-blocking: the mark
+    /// stays saved and the cap/Casting Total are unaffected either way.
+    /// `args` carries `spell`.
+    pub const CODE_SPELL_WITHIN_FOCUS_WITHOUT_MAGICAL_FOCUS: &'static str =
+        "spell_within_focus_without_magical_focus";
 
     /// Builds an issue with the given severity, code, phase, args, and context.
     pub fn new(
@@ -1163,6 +1188,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_known_refs(entity, ruleset, &mut issues);
     validate_entity_kind_applicability(entity, ruleset, &mut issues);
     validate_duplicate_selections(&effective_selections, ruleset, &mut issues);
+    validate_param_groups_distinct(&effective_selections, ruleset, &mut issues);
     validate_total_selection_cap(&effective_selections, ruleset, &mut issues);
     validate_per_value_cap(&effective_selections, ruleset, &mut issues);
     validate_exclusive_param_values(&effective_selections, ruleset, &mut issues);

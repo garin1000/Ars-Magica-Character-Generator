@@ -70,6 +70,7 @@ function pointItem(
   parameters: ParameterDef[],
   categories = ['hermetic'],
   tainted = false,
+  unorderedParamGroups?: string[][],
 ): PointItem {
   return {
     id,
@@ -80,6 +81,7 @@ function pointItem(
     entity_kinds: ['character'],
     tainted,
     parameters,
+    ...(unorderedParamGroups ? { unordered_param_groups: unorderedParamGroups } : {}),
   } as unknown as PointItem;
 }
 
@@ -103,6 +105,15 @@ const ITEMS: Record<string, PointItem> = {
       { key: 'technique_2', type: 'ref', domain: 'technique' },
     ],
     ['general'],
+    false,
+    // The real shipped shape (`rules/core/virtues_flaws.json`): two unordered
+    // Technique+Form combination groups. The `parameters` array above stays
+    // alphabetical (canonical serialization) — review-ui-today finding 2 is
+    // that the PICKER must reorder for display, not that the data should.
+    [
+      ['form_1', 'technique_1'],
+      ['form_2', 'technique_2'],
+    ],
   ),
   'virtue.item_domain_probe': pointItem('virtue.item_domain_probe', [
     { key: 'item', type: 'ref', domain: 'item' },
@@ -424,7 +435,12 @@ function resetEntity(): void {
 function pickerBody(ref: string, index = 0, params?: Record<string, string>): string {
   const selection: Selection = params ? { ref, params } : { ref };
   return render(ParameterPicker, {
-    props: { selection, index, params: ITEMS[ref].parameters! },
+    props: {
+      selection,
+      index,
+      params: ITEMS[ref].parameters!,
+      groups: ITEMS[ref].unordered_param_groups,
+    },
   }).body;
 }
 
@@ -707,6 +723,69 @@ describe('ParameterPicker domain branches (slice 7, #4)', () => {
       'param-virtue.folk_magic-category-0',
     );
     expect(ariaLabel(category!)).toBe('Kategorie');
+  });
+});
+
+// review-ui-today finding 2: Incompatible Arts' four selects rendered in the
+// JSON's own (alphabetical, canonical-serialization) key order — Form 1, Form
+// 2, Technique 1, Technique 2 — which interleaves the wrong pair: the two
+// adjacent Forms and the two adjacent Techniques give no visual cue for which
+// Form belongs with which Technique, for a Flaw whose whole mechanical effect
+// IS which two Arts are barred together. The fix reorders for DISPLAY only
+// (the data stays alphabetical, CLAUDE.md's canonical-serialization
+// invariant) using the item's own `unordered_param_groups` — group 1's
+// members first (Technique before Form within a group), then group 2.
+describe('ParameterPicker groups parameters by unordered_param_groups (review-ui-today finding 2)', () => {
+  /** The start tag of the first element whose attributes contain `marker`, with its position. */
+  function positionOf(body: string, testid: string): number {
+    const pos = body.indexOf(`data-testid="param-flaw.incompatible_arts_probe-${testid}-0"`);
+    expect(pos, `${testid} control not found`).toBeGreaterThan(-1);
+    return pos;
+  }
+
+  it('orders Technique before Form within each combination, group 1 then group 2', () => {
+    const body = pickerBody('flaw.incompatible_arts_probe');
+    const technique1 = positionOf(body, 'technique_1');
+    const form1 = positionOf(body, 'form_1');
+    const technique2 = positionOf(body, 'technique_2');
+    const form2 = positionOf(body, 'form_2');
+    expect(technique1).toBeLessThan(form1);
+    expect(form1).toBeLessThan(technique2);
+    expect(technique2).toBeLessThan(form2);
+  });
+
+  /** The text content of the Nth (1-based) `.param-group-label` element. */
+  function groupLabel(body: string, n: number): string | null {
+    const matches = [...body.matchAll(/<p class="param-group-label"[^>]*>([\s\S]*?)<\/p>/g)];
+    return matches[n - 1]?.[1]?.trim() ?? null;
+  }
+
+  it('shows a generic, item-agnostic label before each combination group', () => {
+    const body = pickerBody('flaw.incompatible_arts_probe');
+    expect(groupLabel(body, 1)).toBe(store.t('param-group-label', { n: 1 }));
+    expect(groupLabel(body, 2)).toBe(store.t('param-group-label', { n: 2 }));
+  });
+
+  it('localizes the group label to German', () => {
+    store.lang = 'de';
+    const body = pickerBody('flaw.incompatible_arts_probe');
+    expect(groupLabel(body, 1)).toBe(store.t('param-group-label', { n: 1 }));
+    expect(groupLabel(body, 2)).toBe(store.t('param-group-label', { n: 2 }));
+    // The rendered text itself, not just the key: proves the DE Fluent entry
+    // is wired, not merely that both sides fall back to the same bare key.
+    expect(groupLabel(body, 1)).toContain('Kombination');
+  });
+
+  it('leaves an ungrouped item in its original parameter order, with no group label', () => {
+    // `virtue.folk_magic` declares no `unordered_param_groups` — must behave
+    // exactly as before this fix: original order, no separator at all.
+    const body = pickerBody('virtue.folk_magic');
+    const category = body.indexOf('param-virtue.folk_magic-category-0');
+    const realm = body.indexOf('param-virtue.folk_magic-realm-0');
+    expect(category).toBeGreaterThan(-1);
+    expect(realm).toBeGreaterThan(-1);
+    expect(category).toBeLessThan(realm);
+    expect(groupLabel(body, 1)).toBeNull();
   });
 });
 

@@ -359,4 +359,44 @@ describe('DerivedLabCastingSection — unusable cells (D81.8)', () => {
     expect(table).not.toContain(store.t('derived-unusable'));
     expect(table).toContain('>25<');
   });
+
+  // review-ui-today finding 1: `lab.rs::lab_totals` computes `within_focus`/
+  // `within_potent_field` unconditionally (gated only on holding a Focus/Potent
+  // Magic Virtue, independent of `unusable`) — exactly like
+  // `casting.rs::casting_totals` does for its own within-focus/within-potent-field
+  // figures. The Casting table already withholds those numbers behind the SAME
+  // `castValue` snippet its base row uses; the Lab Total `<dl>` withheld the base
+  // `total` but rendered `within_focus`/`within_potent_field` as plain numbers —
+  // leaking the barred figure the main row correctly hides right above it.
+  it('shows the unusable marker instead of the within-focus Lab Total number when the cell is barred', () => {
+    const dl = labDl(
+      html(castingTotal(), labTotal({ unusable: true, total: 30, within_focus: 40 })),
+    );
+    expect(dl).toContain(store.t('derived-unusable'));
+    expect(dl).not.toContain('>40<');
+  });
+
+  it('shows the within-focus Lab Total number as normal when the cell is not barred', () => {
+    const dl = labDl(
+      html(castingTotal(), labTotal({ unusable: false, total: 30, within_focus: 40 })),
+    );
+    expect(dl).toContain('40');
+  });
+
+  it('shows the unusable marker instead of the within-potent-field Lab Total number when the cell is barred', () => {
+    const dl = labDl(
+      html(castingTotal(), labTotal({ unusable: true, total: 30, within_potent_field: 33 })),
+    );
+    expect(dl).toContain(store.t('derived-unusable'));
+    expect(dl).not.toContain('>33<');
+  });
+
+  it('shows the unusable marker instead of the enchanting Lab Total number when the cell is barred', () => {
+    // `enchanting` differs from `total` only when Weak Enchanter halves it — the
+    // row that renders it is itself gated on that difference, independent of
+    // `unusable`, so the halved number can leak exactly like the focus figures.
+    const dl = labDl(html(castingTotal(), labTotal({ unusable: true, total: 30, enchanting: 15 })));
+    expect(dl).toContain(store.t('derived-unusable'));
+    expect(dl).not.toContain('>15<');
+  });
 });

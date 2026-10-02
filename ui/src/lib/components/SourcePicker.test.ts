@@ -41,7 +41,13 @@ const emptySnippet = createRawSnippet(() => ({
 }));
 
 function html(
-  groups: { key: string; header: string; items: string[] }[],
+  groups: {
+    key: string;
+    header: string;
+    items: string[];
+    headerTestid?: string;
+    headerTooltip?: string;
+  }[],
   disabled?: (item: string) => boolean,
 ): string {
   return render(SourcePicker, {
@@ -122,5 +128,51 @@ describe('SourcePicker blocked rows (#18)', () => {
   it('marks nothing when the caller supplies no disabled predicate', () => {
     const body = html(twoRows);
     expect(body).not.toContain('aria-disabled="true"');
+  });
+});
+
+// review-ui-today finding 3: the Spells tab's group-header cap hint
+// (D81.5, SpellTab.svelte's `groupCapTooltip()`) was wired through a bare
+// native `title` attribute — mouse-hover-only, with no `tabindex` and no
+// `aria-describedby`, so a keyboard/screen-reader user could not reach it at
+// all. Every other tooltip this codebase ships uses `use:tooltip` with a
+// focusable host instead (DerivedLabCastingSection.svelte's own breakdown
+// tooltips, CharacteristicPicker's Sabine-3 hosts). `ssr`, not `client`: like
+// CharacteristicPicker's own "tooltip hosts are keyboard-reachable" block,
+// `tabindex` is static markup and the ACTION's outcome (focus opens the
+// popup) is proved once, for the whole action, in ArtGrid.client.test.ts —
+// re-mounting here would test the shared action again and the markup not at
+// all.
+describe('SourcePicker group header cap hint is keyboard-reachable (review-ui-today finding 3)', () => {
+  const groupWithHint = [
+    {
+      key: 'g',
+      header: 'Ignem',
+      headerTestid: 'spell-group-art.creo-art.ignem',
+      headerTooltip: 'Spell-level cap: 20',
+      items: ['a'],
+    },
+  ];
+
+  /** The opening `<h3>` tag of the group header carrying `testid`. */
+  function headerTag(body: string, testid: string): string {
+    const match = new RegExp(`<h3[^>]*data-testid="${testid}"[^>]*>`).exec(body);
+    expect(match, `no header rendered for ${testid}`).not.toBeNull();
+    return match![0];
+  }
+
+  it('does not use a bare title attribute for the cap hint', () => {
+    const tag = headerTag(html(groupWithHint), 'spell-group-art.creo-art.ignem');
+    expect(tag).not.toContain('title=');
+  });
+
+  it('puts the header in the tab order when it carries a hint', () => {
+    const tag = headerTag(html(groupWithHint), 'spell-group-art.creo-art.ignem');
+    expect(tag).toContain('tabindex="0"');
+  });
+
+  it('does not add a tabindex to a header with no hint', () => {
+    const body = html([{ key: 'g2', header: 'No Hint', items: ['b'] }]);
+    expect(body).not.toContain('tabindex="0"');
   });
 });
