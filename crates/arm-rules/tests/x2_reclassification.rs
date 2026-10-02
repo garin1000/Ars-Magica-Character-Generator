@@ -259,6 +259,8 @@ static EMPHASIS_BOLD_STAR_RE: LazyLock<Regex> =
 static EMPHASIS_STAR_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\*([^*\n]+)\*").unwrap());
 static EMPHASIS_UNDERSCORE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"_([^_\n]+)_").unwrap());
+static GERMAN_QUOTE_PAIR_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new("„([^„\"]*)\"").unwrap());
 static EN_DASH_BEFORE_DIGIT_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\u{2013}(\d)").unwrap());
 
@@ -282,12 +284,35 @@ static EN_DASH_BEFORE_DIGIT_RE: LazyLock<Regex> =
 /// the stray edge stars end up bracketing the whole run. Stripping `**...**`
 /// first removes the double-star pairs as units, so the later single-star
 /// pass has nothing left to misparse.
+/// Folds each `„…"` pair to `„…“`, the shipped i18n's normalised form (see
+/// [`german_quote_pairs_fold_to_the_typographic_closing_quote`]).
+fn normalize_quote_pairs(s: &str) -> String {
+    GERMAN_QUOTE_PAIR_RE.replace_all(s, "„$1“").into_owned()
+}
+
 fn normalize_markdown(s: &str) -> String {
     let s = LINK_RE.replace_all(s, "$1");
     let s = EMPHASIS_BOLD_STAR_RE.replace_all(&s, "$1");
     let s = EMPHASIS_STAR_RE.replace_all(&s, "$1");
     let s = EMPHASIS_UNDERSCORE_RE.replace_all(&s, "$1");
     EN_DASH_BEFORE_DIGIT_RE.replace_all(&s, "-$1").into_owned()
+}
+
+/// The German sources close `„` with an ASCII `"` (house style, which
+/// `rules/source/de/` keeps as published). Shipped i18n normalises the pair on
+/// the way out to `„…“` (`docs/open-todos.md`, "German quote glyphs are the
+/// corpus's house style"; guarded by `de_quote_pairs.rs`). So the expected
+/// text gets the same fold before comparison.
+#[test]
+fn german_quote_pairs_fold_to_the_typographic_closing_quote() {
+    assert_eq!(
+        normalize_quote_pairs("ein „Wort\" und „zwei\" hier"),
+        "ein „Wort“ und „zwei“ hier"
+    );
+    assert_eq!(
+        normalize_quote_pairs("plain \"ascii\" stays"),
+        "plain \"ascii\" stays"
+    );
 }
 
 /// Bug guard (fix-round, 2026-09-29): [`EMPHASIS_STAR_RE`] matches a single
@@ -854,6 +879,7 @@ fn x2_shipped_descriptions_match_their_cited_passage_verbatim() {
                     .join("\n\n"),
                 None => bracketed_verbatim_body(lines, start, end),
             };
+            let expected = normalize_quote_pairs(&expected);
             if shipped != expected {
                 offenders.push(format!(
                     "{lang}/{id} (lines {start}-{end}):\n    expected: {expected:?}\n    \

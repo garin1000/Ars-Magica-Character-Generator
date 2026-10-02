@@ -98,7 +98,7 @@ wizard-finish = Fertigstellen
 # Warum „Weiter" deaktiviert ist: der aktuelle Schritt enthält einen Fehler. Nur
 # Fehler blockieren — ein Hinweis nie — und der Prüfmodus „Beratend" hebt die
 # Sperre auf.
-wizard-blocked-hint = Behebe die Fehler dieses Schritts, um fortzufahren, oder wechsle den Prüfmodus auf „Beratend".
+wizard-blocked-hint = Behebe die Fehler dieses Schritts, um fortzufahren, oder wechsle den Prüfmodus auf „Beratend“.
 # Kennzeichnet einen Schritt in der Leiste, der noch einen Fehler enthält.
 wizard-step-blocked-label = enthält Fehler
 # Kennzeichnet einen Schritt in der Leiste, der noch eine WARNUNG enthält — offene
@@ -1289,7 +1289,7 @@ issue-severity-warning = Warnung
 # eine Eigenschaft ist). Ein solcher Hinweis liest sich als Fehler, deaktiviert
 # „Weiter" aber nicht — er muss also sagen, wo die Behebung liegt. `$step` ist
 # immer eine `phase-<slug>`-Bezeichnung, nie der Slug selbst.
-issue-other-step = Im Schritt „{ $step }" zu beheben.
+issue-other-step = Im Schritt „{ $step }“ zu beheben.
 
 # Ein Schlüssel je Prüfcode der Engine. Jede Nachricht interpoliert die `args`
 # der Engine (siehe crates/arm-rules/src/validation.rs); die Argumentnamen sind

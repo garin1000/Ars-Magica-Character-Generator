@@ -22,7 +22,7 @@
   "art.creo": {
     "name": "Creo",
     "abbreviation": "Cr",
-    "description": "„Ich erschaffe\". Macht Dinge zu besseren Exemplaren ihrer Art, einschließlich ihrer Erschaffung aus dem Nichts und ihrer Heilung."
+    "description": "„Ich erschaffe“. Macht Dinge zu besseren Exemplaren ihrer Art, einschließlich ihrer Erschaffung aus dem Nichts und ihrer Heilung."
   },
   "art.herbam": {
     "name": "Herbam",
@@ -42,27 +42,27 @@
   "art.intellego": {
     "name": "Intellego",
     "abbreviation": "In",
-    "description": "„Ich erkenne\". Die Kunst der Wahrnehmung: gewinnt Informationen direkt aus den Formen der Dinge, ungetäuscht von weltlichen Verkleidungen."
+    "description": "„Ich erkenne“. Die Kunst der Wahrnehmung: gewinnt Informationen direkt aus den Formen der Dinge, ungetäuscht von weltlichen Verkleidungen."
   },
   "art.mentem": {
     "name": "Mentem",
     "abbreviation": "Me",
-    "description": "Geister, Gedanken und Seelen; auch die „Körper\" unkörperlicher Wesen wie Geister."
+    "description": "Geister, Gedanken und Seelen; auch die „Körper“ unkörperlicher Wesen wie Geister."
   },
   "art.muto": {
     "name": "Muto",
     "abbreviation": "Mu",
-    "description": "„Ich verändere\". Verleiht oder entzieht Eigenschaften, die ein Ding von Natur aus nicht haben kann, etwa einer Person Flügel zu geben."
+    "description": "„Ich verändere“. Verleiht oder entzieht Eigenschaften, die ein Ding von Natur aus nicht haben kann, etwa einer Person Flügel zu geben."
   },
   "art.perdo": {
     "name": "Perdo",
     "abbreviation": "Pe",
-    "description": "„Ich zerstöre\". Das Gegenteil von Creo: macht Dinge zu schlechteren Exemplaren ihrer Art oder entfernt sie aus der Existenz."
+    "description": "„Ich zerstöre“. Das Gegenteil von Creo: macht Dinge zu schlechteren Exemplaren ihrer Art oder entfernt sie aus der Existenz."
   },
   "art.rego": {
     "name": "Rego",
     "abbreviation": "Re",
-    "description": "„Ich beherrsche\". Ändert den Zustand eines Dings in einen anderen, den es von Natur aus haben kann, etwa es zu bewegen oder eine Person einzuschläfern."
+    "description": "„Ich beherrsche“. Ändert den Zustand eines Dings in einen anderen, den es von Natur aus haben kann, etwa es zu bewegen oder eine Person einzuschläfern."
   },
   "art.terram": {
     "name": "Terram",
