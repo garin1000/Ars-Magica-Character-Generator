@@ -3422,7 +3422,7 @@ exemption is read off the effect's presence (age cap itself is M4/4e).
 - Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
   arithmetic, verified against the worked example below) + `ability_affinity`,
   folded into `effective/xp.rs::xp_allocation` and so into
-  `validation/magus.rs::validate_xp_pool` (:971). **Not** the simpler
+  `validation/magus.rs::validate_xp_pool` (:972). **Not** the simpler
   `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
   example below, but overcharges by one XP whenever `T·den mod num` falls
   strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
@@ -3500,7 +3500,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:971) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:972) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -5320,7 +5320,7 @@ is `available`, always. Printing the editable base there instead read "150 / 120
 Available: 0" for a magus the engine considers exactly balanced, so the two figures
 are now rendered in separate slots.
 
-**Per-spell cap — Technique + Form + Intelligence + Magic Theory + 3 + flat `lab_total_mod` (D1), with requisites folded and the Magical Focus doubling (X11b, D81.5).**
+**Per-spell cap — Technique + Form + Intelligence + Magic Theory + 3 + flat `lab_total_mod` (D1), with requisites folded, the Magical Focus doubling (X11b, D81.5) and Potent Magic only within its marked field (D83.3).**
 
 > `ArMDE:2465` "The highest level spell you can learn is equal to Technique + Form +
 > Intelligence + Magic Theory +3 … If the spell has requisites … they apply to
@@ -5329,7 +5329,7 @@ are now rendered in separate slots.
 > they would apply to a Lab Total in play."
 
 `spell_level_cap(entity, ruleset, technique, form, requisites, range_beyond_touch,
-within_focus)` (`effective/spell.rs`) computes it from the effective Art scores
+within_focus, within_potent_field)` (`effective/spell.rs`) computes it from the effective Art scores
 (folded against `requisites` — below), the **effective** Intelligence (after
 aging drops and free deltas such as Great (Intelligence),
 `effective_characteristic_after_aging` — the same reader the Lab Total uses, since
@@ -5339,8 +5339,8 @@ effective Magic Theory → a spell above it emits `spell_level_exceeds_cap`
 (validation, in `validation/magus.rs`). The grid function `spell_level_caps`
 → `EffectiveScores.spell_level_caps` (`effective_dto.rs`) has no specific spell
 at a Te/Fo cell (it may host several, with different or no requisites), so it
-calls the same function with `requisites: &[]`, `within_focus: false` — a no-op
-fold, unchanged from before X11b.
+calls the same function with `requisites: &[]`, `within_focus: false`,
+`within_potent_field: false` — a no-op fold, unchanged from before X11b.
 
 **X11b/D81.5 closes the approximation the previous paragraph used to record
 here.** `ArMDE:2465`'s own second sentence — "If the spell has requisites …
@@ -5481,7 +5481,8 @@ see `RULED_EXCEPTIONS` in the test file.
 Genius +3, Creative Block −3, Weak Scholar −6, Adept Laboratory Student +6,
 Aristotelian Training +1, Cyclic Magic ±3, Potent Magic Major/Minor +3/+6 —
 nine entries total) applies to this cap, its own book condition deliberately
-ignored.** Every one of the nine is individually conditional in the source text
+ignored.** (Potent Magic since D83.3 only for a spell marked within its field —
+see below.) Every one of the nine is individually conditional in the source text
 (a Laboratory Text, a season, a chosen focus, …); D4 resolves those conditions
 for the *in-play* Lab Total (`derived/lab.rs::lab_totals`), but this cap does
 not model lab situations at all — it is only a ceiling on which spells may be
@@ -5493,6 +5494,49 @@ sums the flat total; `derived.rs::in_play_mods` reuses the identical function
 for its own `lab_mod` addend, so the two can never compute this sum
 differently. Test: `lab_total_mod_applies_flat_to_the_spell_level_cap`
 (`effective.rs`).
+
+**D83.3 amends D1 for Potent Magic: its bonus counts only for a spell marked
+within its field** (Norbert, after-deadline answer 3).
+
+> `ArMDE:4742` "The maga's magic is particularly attuned to a narrow field, much as
+> in a Magical Focus. The benefits of Potent Magic are compatible with a Magical
+> Focus, unlike a Magical Focus, unlike a Magical Focus, a maga may have more than
+> one area of Potent Magic, although only one Potent Magic Virtue applies to any
+> single activity."
+>
+> `ArMDE:4744` "Potent Magic provides the maga with a bonus in her field of magic,
+> and permits her to devise Potent spells that gain a casting bonus from the
+> sympathetic magic in shapes and materials. Potent Magic can be taught as an
+> alternative to a Magical Focus."
+>
+> `ArMDE:4746` "Minor Potent Magic covers the same narrow fields as a Minor Magical
+> Focus, and grants a +3 bonus to Lab Totals and Casting Score."
+>
+> `ArMDE:4748` "Major Potent Magic covers the same wide fields as a Major Magical
+> Focus, and grants a +6 bonus to Lab Totals and Casting Score."
+>
+> (The doubled "unlike a Magical Focus" is in the source file as is.)
+
+`effective/spell.rs::lab_total_mod` now leaves out every carrier scoped
+`within_potent_field_only` (data: `virtue.potent_magic_major` +6,
+`virtue.potent_magic_minor` +3 in `rules/core/virtues_flaws.json`). Those carriers
+enter `spell_level_cap` only when `within_potent_field` is set **and**
+`effective/spell.rs::has_potent_magic` holds. That guard reads the data scope, not an
+item id, so a stale marker adds nothing (mirroring `has_magical_focus`). Across
+carriers it takes the **larger** bonus, not the sum: the same
+`derived.rs::in_play_lab_total_mod_within_potent_field` fold the in-play Lab Total
+reads (D79). The other D1 carriers stay flat. The order is unchanged: the flat term,
+the focus doubling and the Potent bonus all sum into `base` before any halving.
+`validate_spell_level_cap` passes `sel.within_potent_field`.
+
+`spell_caps` adds `within_potent_field_cap` (when Potent Magic is held) and
+`within_focus_and_potent_field_cap` (when both a Magical Focus and Potent Magic are
+held), serialized only when present. The combined figure is an engine figure because
+the halvings floor the sum. The plain `cap` never includes Potent Magic.
+
+Tests: `tests/r3_potent_magic_spell_cap.rs`, `tests/r3_potent_magic_spell_cap_fields.rs`,
+`composite_spell_five_dimensions.rs::level_cap_without_the_potent_field_mark_drops_the_potent_bonus`,
+and `arm-app/tests/spell_caps_dto.rs::effective_scores_surface_the_within_potent_field_caps`.
 
 **A Deficient Art halves the cap, because the cap *is* a Lab Total.** The closing
 sentence of `ArMDE:2465` above is what makes the per-spell cap subject to every Virtue

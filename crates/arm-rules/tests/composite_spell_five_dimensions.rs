@@ -39,13 +39,14 @@
 //! **Level cap** (`effective/spell.rs::spell_level_cap`):
 //! `tech = min(Cr 15, Re 5) = 5` (Aq is Form-class, skipped for the Technique
 //! fold). `form = min(Ig 12, Aq 20) = 12` (Aq does not win the min, but see
-//! below). `lab_total_mod = +6`: `virtue.potent_magic_major`'s own
-//! `lab_total_mod` effect is summed into the creation-time cap
-//! UNCONDITIONALLY — D1 (`effective/spell.rs::lab_total_mod`'s own doc
-//! comment) deliberately ignores every `LabTotalMod` carrier's `scope`
-//! (Potent Magic's is `within_potent_field_only`) because this fold feeds only
-//! the generous, condition-free creation-time CEILING, never an in-play
-//! result. `base = 5 + 12 + 0 (Int) + 0 (Magic Theory) + 3 + 6 = 26`.
+//! below). `+6`: `virtue.potent_magic_major`'s own `lab_total_mod` effect
+//! (scope `within_potent_field_only`) reaches the creation-time cap because
+//! the spell is marked `within_potent_field` — R3 (after-deadline answer 3,
+//! amending D1): Potent Magic is the one D1 carrier the cap gates on the
+//! player's marker, exactly as the Casting Total does (D79); the other eight
+//! stay flat. Unmarked, the +6 is absent — see
+//! `level_cap_without_the_potent_field_mark_drops_the_potent_bonus` below.
+//! `base = 5 + 12 + 0 (Int) + 0 (Magic Theory) + 3 + 6 = 26`.
 //! `within_focus` adds `min(tech, form) = min(5, 12) = 5` -> `31`. Deficient
 //! (Aq is a requisite in `deficient_arts`, regardless of whether it
 //! numerically bound the fold) halves: `31.div_euclid(2) = 15`. No Range set,
@@ -199,8 +200,38 @@ fn level_cap_folds_requisite_focus_potent_lab_mod_and_deficiency_together() {
         cap_arg,
         Some("15".to_string()),
         "hand-computed cap: min(15,5)+min(12,20)+0+0+3+6(Potent Magic lab_total_mod, \
-         unconditional per D1) = 26, +5 within_focus = 31, halved for the Deficient \
-         Aq requisite -> 15; got issues {:?}",
+         spell marked within_potent_field, R3) = 26, +5 within_focus = 31, halved for \
+         the Deficient Aq requisite -> 15; got issues {:?}",
+        result.issues
+    );
+}
+
+#[test]
+fn level_cap_without_the_potent_field_mark_drops_the_potent_bonus() {
+    // The same composite with only the `within_potent_field` marker cleared:
+    // R3 (after-deadline answer 3, amending D1) — Potent Magic's +6 counts
+    // toward a spell's cap only when the spell is marked within its field.
+    // min(15,5) + min(12,20) + 0 + 0 + 3 = 20, +5 within_focus = 25, halved
+    // for the Deficient Aq requisite -> 12.
+    let ruleset = ruleset_with_only_spell(SPELL_JSON);
+    let mut e = composite_entity();
+    e.spells[0].within_potent_field = false;
+
+    let result = validate(&e, &ruleset);
+    let cap_arg = result
+        .issues
+        .iter()
+        .find(|i| {
+            i.code == ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP
+                && i.context.as_ref() == Some(&Id::new("spell.test_composite"))
+        })
+        .map(|i| i.args.get("cap").cloned().expect("cap arg present"));
+
+    assert_eq!(
+        cap_arg,
+        Some("12".to_string()),
+        "hand-computed cap without the Potent mark: 5+12+0+0+3 = 20, +5 within_focus = 25, \
+         halved -> 12 (no Potent Magic +6); got issues {:?}",
         result.issues
     );
 }

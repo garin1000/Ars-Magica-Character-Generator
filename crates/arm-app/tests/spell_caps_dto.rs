@@ -92,3 +92,45 @@ fn effective_scores_surface_a_per_spell_level_cap_that_folds_requisites() {
          3), giving 16 + 3 = 19 — not the unfolded Perdo (10), which would wrongly reach 26"
     );
 }
+
+/// R3 (after-deadline answer 3, amends D1): Potent Magic's Lab Total bonus
+/// counts toward a spell's cap only for a spell marked within the Potent
+/// field, so the DTO surfaces it as its own `within_potent_field_cap` (and,
+/// with a Magical Focus too, `within_focus_and_potent_field_cap`) beside the
+/// plain `cap`, which no longer includes it. Same spell and Arts as above:
+/// plain cap 16; Major Potent Magic +6 (ArMDE:4748) -> 22; with a Major
+/// Magical Focus as well, 16 + 3 (doubling the folded requisite) + 6 = 25.
+#[test]
+fn effective_scores_surface_the_within_potent_field_caps() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut m = magus();
+    m.art_scores = vec![
+        ArtScore::new(Id::new("art.perdo"), 10),
+        ArtScore::new(Id::new("art.terram"), 10),
+        ArtScore::new(Id::new("art.rego"), 3),
+    ];
+    let potent = Selection::with_params(
+        Id::new("virtue.potent_magic_major"),
+        BTreeMap::from([("field".to_string(), Id::new("metal"))]),
+    );
+    let focus = Selection::with_params(
+        Id::new("virtue.major_magical_focus"),
+        BTreeMap::from([("focus".to_string(), Id::new("stone"))]),
+    );
+    let spell = Id::new("spell.obliteration_of_the_metallic_barrier");
+
+    m.selections = vec![potent.clone()];
+    let caps = effective_scores_loaded(&m, &ruleset).spell_caps;
+    let row = caps.iter().find(|c| c.spell == spell).expect("row present");
+    assert_eq!(row.cap, 16, "the plain cap excludes Potent Magic");
+    assert_eq!(row.within_potent_field_cap, Some(22));
+    assert_eq!(row.within_focus_and_potent_field_cap, None, "no Focus held");
+
+    m.selections = vec![focus, potent];
+    let caps = effective_scores_loaded(&m, &ruleset).spell_caps;
+    let row = caps.iter().find(|c| c.spell == spell).expect("row present");
+    assert_eq!(row.cap, 16);
+    assert_eq!(row.within_focus_cap, Some(19));
+    assert_eq!(row.within_potent_field_cap, Some(22));
+    assert_eq!(row.within_focus_and_potent_field_cap, Some(25));
+}

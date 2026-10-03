@@ -1548,11 +1548,13 @@ pub enum CharacteristicDeltaCap {
 
 /// Where a [`Effect::LabTotalMod`] amount is counted in the **in-play** (5b) Lab
 /// Total grid `derived.rs` builds (D4, `docs/vf-audit/decisions.md`) — data, not
-/// an id list the engine hardcodes. Independent of
-/// `effective::lab_total_mod` (D1), which folds every `LabTotalMod` amount flat
-/// and unconditionally regardless of this field, because D1 is a generous
-/// creation-time ceiling on which spells may be chosen, not a played-out number
-/// a character sheet prints.
+/// an id list the engine hardcodes. Largely independent of
+/// `effective::lab_total_mod` (D1), which folds every other `LabTotalMod`
+/// amount flat and unconditionally regardless of this field, because D1 is a
+/// generous creation-time ceiling on which spells may be chosen, not a
+/// played-out number a character sheet prints. The one scope D1 does read is
+/// [`Self::WithinPotentFieldOnly`]: the creation cap adds it only for a spell
+/// marked `within_potent_field` (D83.3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum LabTotalModScope {

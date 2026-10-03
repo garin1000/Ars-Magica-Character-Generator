@@ -765,6 +765,7 @@ fn validate_spell_level_cap(
         &spell.requisites,
         range_beyond_touch,
         sel.within_focus,
+        sel.within_potent_field,
     );
     if i64::from(level) > cap {
         issues.push(ValidationIssue::error(
