@@ -1578,6 +1578,7 @@ has nothing to choose there. The Flaw in the V/F phase is the whole of it.
    absent from `permitted_categories`, `flaw_category_caps` sets
    `{"category": "story", "max": 0}`, `max_major_flaws` is `0`, and
    `virtue.the_gift` is in `forbidden_traits` with `gift_policy: "forbidden"`.
+   *Amended 2026-10-03 (Norbert, F10):* `story` is now permitted for grogs and the story cap is warning-only, per "should not" (ArMDE:1009, :2826); `max_major_flaws: 0` still blocks this Major Flaw.
 3. The age parameter, the conditional-phase rule, and D12's gate reworded from
    `IsMagus` to *trained*.
 4. *"If the character knows the Parma Magica, he must join the Order or be

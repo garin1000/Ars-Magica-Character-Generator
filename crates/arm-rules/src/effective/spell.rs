@@ -494,13 +494,14 @@ pub fn spell_level_cap(
         requisites,
         elemental_forms.as_ref(),
     ));
-    let int = i64::from(
-        entity
-            .characteristics
-            .get(&Characteristic::Int)
-            .copied()
-            .unwrap_or(0),
-    );
+    // The cap IS the Lab Total at aura +3 (ArMDE:2465), so it reads the same
+    // effective Intelligence the Lab Total does — after aging drops and free
+    // deltas such as Great (Intelligence) — not the bought score.
+    let int = i64::from(effective_characteristic_after_aging(
+        entity,
+        ruleset,
+        Characteristic::Int,
+    ));
     let magic_theory = i64::from(effective_ability_score(
         entity,
         ruleset,

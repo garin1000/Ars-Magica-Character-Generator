@@ -23,6 +23,13 @@ pub struct CharacteristicBonus {
 /// selection carries for this Characteristic — Uninspirational's Presence/
 /// Communication cap of 0 (D69/X7b-e, ArMDE:6919-6922).
 ///
+/// That limit binds the character's *actual* score (ArMDE:6921 "His Presence
+/// and Communication may not be greater than 0"), so it is turned into a limit
+/// on the bought score by subtracting the free delta from
+/// [`characteristic_score_bonus`]: Sidhe Faerie Blood's +1 Presence lowers it
+/// to -1, Monstrous Blood's -1 raises it to +1. The base +3 cap is a cap on the
+/// bought score alone and is never shifted.
+///
 /// Nothing WIDENS it. Great (Characteristic) does not unlock a purchase — it
 /// *performs the raise itself* ("You may raise any Characteristic … by one
 /// point"), which the engine models as a free
@@ -39,22 +46,40 @@ pub fn characteristic_cap(
     entity: &Entity,
     characteristic: Characteristic,
 ) -> i32 {
-    let mut cap = ruleset
+    let base_cap = ruleset
         .characteristic_rules()
         .and_then(|rules| rules.base_max_score())
         .map_or(0, i32::from);
+    match lowest_actual_score_limit(ruleset, entity, characteristic) {
+        Some(limit) => {
+            let free_delta = characteristic_score_bonus(entity, ruleset, characteristic);
+            base_cap.min(limit - free_delta)
+        }
+        None => base_cap,
+    }
+}
+
+/// The lowest [`Effect::CharacteristicMax`] any effective selection places on
+/// `characteristic`'s actual score, or `None` when nothing limits it.
+fn lowest_actual_score_limit(
+    ruleset: &Ruleset,
+    entity: &Entity,
+    characteristic: Characteristic,
+) -> Option<i32> {
+    let mut lowest: Option<i32> = None;
     for_each_effect!(entity, ruleset, |_selection, effect| {
         match effect {
             Effect::CharacteristicMax {
                 characteristic: target,
                 max,
             } if Characteristic::from_id(target) == Some(characteristic) => {
-                cap = cap.min(i32::from(*max));
+                let max = i32::from(*max);
+                lowest = Some(lowest.map_or(max, |l| l.min(max)));
             }
             irrelevant_effect_variants!() => {}
         }
     });
-    cap
+    lowest
 }
 
 /// The lowest score `characteristic` may be **bought** to: the ruleset's base

@@ -1557,10 +1557,11 @@ pub(crate) fn validate_selection_parameters(
 /// question by construction. This validator asks a different one — *is the
 /// thing the Virtue modifies in a legal state* — which a grant says nothing
 /// about, so it is not exempt. Do not "align" this with B1 by reverting to
-/// `entity.selections`; that reopens D2. Whether the target ability is *held*
-/// stays read off `entity.ability_scores` (bought rows) regardless — a grant
-/// never adds a bought ability score, so that half of the question is
-/// unaffected.
+/// `entity.selections`; that reopens D2. The target ability is *held* when it
+/// is bought (a row in `entity.ability_scores`) **or** granted a floor
+/// ([`crate::effective::granted_ability_floor`], e.g. Second Sight 1,
+/// ArMDE:4890) — the same score `effective_ability_score` already adds the
+/// bonus to.
 pub(crate) fn validate_ability_bonus_targets(
     entity: &Entity,
     selections: &[Selection],
@@ -1597,13 +1598,18 @@ pub(crate) fn validate_ability_bonus_targets(
             // `validate_per_value_cap` composing one `(ability, instance)`
             // target rather than two spellings of it.
             let instance = ability_instance(ruleset, &selection.params, target);
+            // Held = bought OR granted a floor: Second Sight "confers the
+            // Ability Second Sight 1" (ArMDE:4890), so Puissant's +2
+            // (ArMDE:4816) has a target even with no bought row.
             let has_instance = entity.ability_scores.iter().any(|a| {
                 &a.ability == target
                     && a.parameter
                         .as_ref()
                         .and_then(AbilityParameterValue::match_key)
                         == instance
-            });
+            }) || crate::effective::granted_ability_floor(
+                entity, ruleset, target, instance,
+            ) > 0;
             if !has_instance {
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_ABILITY_BONUS_DANGLING_TARGET,

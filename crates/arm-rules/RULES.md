@@ -1178,7 +1178,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1852).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1858).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1294,9 +1294,9 @@ source:
 | grog | `virtue_points: 3`, `flaw_points: 3` | `ArMDE:2295`, `ArMDE:2824-2830`, `ArMDE:1009` |
 | grog | `max_major_virtues: 0`, `max_major_flaws: 0` | `ArMDE:2824-2830` ("may not take Major Virtues or Flaws"), `ArMDE:1009` |
 | grog | `max_minor_flaws: 3` | `ArMDE:1009` ("no more than three Minor Flaws") |
-| grog | `flaw_category_caps`: personality major_only/hard `max: 0`; personality `max: 1`; story `max: 0` | grogs take one Minor Personality Flaw, no Major Flaws, no Story Flaws `ArMDE:1009`, `ArMDE:2824-2830` |
+| grog | `flaw_category_caps`: personality major_only/hard `max: 0`; personality `max: 1`; story `max: 0` (soft); `permitted_categories` includes `story` | grogs take one Minor Personality Flaw, no Major Flaws; Story Flaws "should not" (`ArMDE:1009`, `ArMDE:2826`), so since Norbert's 2026-10-03 ruling (F10) a grog's Story Flaw draws only the `too_many_story_flaws` warning, never `category_not_permitted` `ArMDE:2824-2830` |
 | grog | `forbidden_categories` includes `hermetic`; `gift_policy: forbidden` | `ArMDE:2829` ("You may not take Hermetic Virtues and Flaws"), `ArMDE:2830` ("You may not take The Gift"), `ArMDE:2876` ("Grogs can never have The Gift"), `ArMDE:1009` ("grogs can never have The Gift") |
-| grog | `permitted_categories` includes `supernatural`, and `forbidden_categories` does **not** | **Removed as unsourced** — the entry it replaces forbade `supernatural`, and no passage supports that. `ArMDE:2822-2830` is the grog guidelines in full (up to 3 points of Flaws and an equal number of Virtues; must take one Social Status; should not take Story Flaws; not more than one Personality Flaw; may not take Major Virtues or Flaws; may not take Hermetic Virtues and Flaws; may not take The Gift) and Supernatural appears nowhere in it; `ArMDE:1009` likewise; the `### Supernatural` prose (`ArMDE:2958-2962`) explains realm association and Warping immunity and sets no character-type restriction. **Both halves had to go**: permitting is ANY, so removing only the forbid would have left every single-category Supernatural item refused with `category_not_permitted` — a change that looks like a fix and does nothing. `hermetic` stays forbidden (`ArMDE:2829`, row above). What still bounds a grog here is sourced: `ArMDE:2828`'s Major cap (`max_major_virtues`/`max_major_flaws: 0`), which catches every Major Supernatural item and so does most of the real work; `ArMDE:2830`'s Gift policy, untouched because Gift detection reads `gift_categories: ["hermetic"]`, so a Supernatural Virtue never confers The Gift; `ArMDE:2824`'s 3-point budget; and `ArMDE:2826`'s Story cap, which still refuses the two *Story, Supernatural* Flaws |
+| grog | `permitted_categories` includes `supernatural`, and `forbidden_categories` does **not** | **Removed as unsourced** — the entry it replaces forbade `supernatural`, and no passage supports that. `ArMDE:2822-2830` is the grog guidelines in full (up to 3 points of Flaws and an equal number of Virtues; must take one Social Status; should not take Story Flaws; not more than one Personality Flaw; may not take Major Virtues or Flaws; may not take Hermetic Virtues and Flaws; may not take The Gift) and Supernatural appears nowhere in it; `ArMDE:1009` likewise; the `### Supernatural` prose (`ArMDE:2958-2962`) explains realm association and Warping immunity and sets no character-type restriction. **Both halves had to go**: permitting is ANY, so removing only the forbid would have left every single-category Supernatural item refused with `category_not_permitted` — a change that looks like a fix and does nothing. `hermetic` stays forbidden (`ArMDE:2829`, row above). What still bounds a grog here is sourced: `ArMDE:2828`'s Major cap (`max_major_virtues`/`max_major_flaws: 0`), which catches every Major Supernatural item and so does most of the real work; `ArMDE:2830`'s Gift policy, untouched because Gift detection reads `gift_categories: ["hermetic"]`, so a Supernatural Virtue never confers The Gift; `ArMDE:2824`'s 3-point budget; and `ArMDE:2826`'s Story cap, which warns on the two *Story, Supernatural* Flaws (a soft cap since F10, 2026-10-03) |
 | companion | `virtue_points: 10`, `flaw_points: 10` | `ArMDE:2297`, `ArMDE:2834-2840` |
 | companion | `hermetic` is **permitted when** `Has(virtue.the_gift)` and **forbidden when** `Nor([Has(virtue.the_gift)])` | `ArMDE:2840` ("You may not take Hermetic Virtues and Flaws, unless you have The Gift (this would be highly unusual)"). The conditional is now modelled — see *A category rule may carry a condition* below. **Both halves carry the condition**, because permitting is ANY and forbidding is EVERY: relaxing only the forbid would have left every single-category Hermetic item refused with `category_not_permitted`, the same trap the grog `supernatural` row records. The two conditions are exact complements, so behaviour for an unGifted companion is unchanged (both issues still fire) and only the Gifted case moves |
 | companion | `max_major_virtues: null`, `max_major_flaws: null` (no count cap) | no Major-count cap for companions in the book |
@@ -1468,7 +1468,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
-  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:301).
+  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:315).
 
 ### Arts
 
@@ -1516,7 +1516,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:602).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:616).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -1577,8 +1577,11 @@ bleed onto the character's other areas.
   target-aware — a parameterized ability target also expects its instance key
   (else `missing_param`; a stray instance key on a plain target is
   `unexpected_param`). `validate_ability_bonus_targets` flags
-  `ability_bonus_dangling_target` when the targeted `(ability, parameter)` is not
-  among the character's bought abilities (e.g. the ability was later removed).
+  `ability_bonus_dangling_target` when the targeted `(ability, parameter)` is
+  neither among the character's bought abilities nor granted a floor
+  (`granted_ability_floor` — Second Sight "confers the Ability Second Sight 1",
+  `ArMDE:4890`; tests `tests/bve_s4_granted_ability_bonus_target.rs`) (e.g. the
+  ability was later removed).
   The rule names no precondition — "choose one Ability", not "one Ability you
   have" (`ArMDE:4814-4816`) — so the target may be picked before the score exists and
   the finding is filed on `CreationPhase::Abilities`, the step where the ability
@@ -5229,7 +5232,11 @@ are now rendered in separate slots.
 
 `spell_level_cap(entity, ruleset, technique, form, requisites, range_beyond_touch,
 within_focus)` (`effective/spell.rs`) computes it from the effective Art scores
-(folded against `requisites` — below), the Intelligence characteristic, and
+(folded against `requisites` — below), the **effective** Intelligence (after
+aging drops and free deltas such as Great (Intelligence),
+`effective_characteristic_after_aging` — the same reader the Lab Total uses, since
+`ArMDE:2465` calls the cap "the appropriate Lab Total"; tests
+`tests/spell_cap_effective_intelligence.rs`), and
 effective Magic Theory → a spell above it emits `spell_level_exceeds_cap`
 (validation, in `validation/magus.rs`). The grid function `spell_level_caps`
 → `EffectiveScores.spell_level_caps` (`effective_dto.rs`) has no specific spell
@@ -6502,7 +6509,13 @@ it computes). Full per-entry citation and D58 reasoning:
   not be greater than 0" is a new `Effect::CharacteristicMax { characteristic,
   max }`, folded by `effective/characteristic.rs::characteristic_cap`, which
   became **entity-aware** (previously ruleset-global only). Two instances (Pre,
-  Com), both `max: 0`. The four named Abilities' -3
+  Com), both `max: 0`. The `max` binds the **actual** score (bve S1,
+  2026-10-03): `characteristic_cap` subtracts the free delta
+  (`characteristic_score_bonus`) from it, so Sidhe Faerie Blood's +1 Presence
+  caps the bought score at -1 and Monstrous Blood's -1 lets it reach +1; the
+  base +3 cap is never shifted. `validation/scores.rs::validate_characteristics`
+  also checks the unbought Characteristics (no map entry, bought 0), so a free
+  +1 on an untouched Presence is flagged. The four named Abilities' -3
   ("Leadership, Charm, Intrigue, Etiquette") reuse the existing
   `Effect::AbilityRollMod`. The "Personality Rolls" clause has no Ability to
   attach to and stays text.

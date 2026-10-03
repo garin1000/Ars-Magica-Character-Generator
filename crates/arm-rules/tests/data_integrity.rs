@@ -5592,13 +5592,16 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
         .expect("the grog profile must ship");
     assert!(grog.names_forbidden_category("hermetic"));
     assert!(!grog.names_forbidden_category("story"));
-    assert!(!grog.names_permitted_category("story"));
+    // F10 (Norbert, 2026-10-03): grogs "should not" take Story Flaws
+    // (ArMDE:1009, :2826), so `story` is permitted and only the soft cap warns.
+    assert!(grog.names_permitted_category("story"));
 
     // Suppressed Gift is "*Major, Hermetic, Story*"
     // (ArMDE:6804, entry :6803-6810). A grog forbids
-    // only the first of those, so the item survives the forbidden check — and is
-    // still blocked, by the honest reason: neither category is on the grog's
-    // permitted list.
+    // only the first of those, so the item survives the forbidden check. Since
+    // F10 its `story` category is permitted too, so it also passes the
+    // permitted check — and is still refused, by the Major cap (ArMDE:2828),
+    // the Gift prerequisite and the soft Story cap.
     let suppressed = Id::new("flaw.suppressed_gift");
     let item = rs
         .item(&suppressed)
@@ -5617,15 +5620,20 @@ fn forbidding_fires_only_when_every_category_is_forbidden() {
         "one forbidden category out of two must no longer rule the item out: {:?}",
         result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
-    let not_permitted = result
-        .issues
-        .iter()
-        .find(|i| i.code == "category_not_permitted" && i.context.as_ref() == Some(&suppressed))
-        .expect("neither of Suppressed Gift's categories is on the grog's permitted list");
-    assert_eq!(
-        not_permitted.args.get("category").map(String::as_str),
-        Some("hermetic"),
-        "when every category failed, the issue names the first-listed"
+    assert!(
+        !result
+            .issues
+            .iter()
+            .any(|i| i.code == "category_not_permitted" && i.context.as_ref() == Some(&suppressed)),
+        "since F10 its `story` category is on the grog's permitted list"
+    );
+    assert!(
+        result
+            .issues
+            .iter()
+            .any(|i| i.code == "too_many_major_flaws"),
+        "a grog may not take a Major Flaw (ArMDE:2828): {:?}",
+        result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
     assert!(
         result

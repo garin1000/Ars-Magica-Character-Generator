@@ -57,6 +57,20 @@ pub(crate) fn validate_characteristics(
             issues,
         );
     }
+    // A Characteristic left at 0 has no map entry, yet a free delta on it can
+    // still break a cap on the actual score (Sidhe Blood under Uninspirational,
+    // ArMDE:6921), so the unbought ones are checked at a bought 0 too.
+    for characteristic in Characteristic::ALL {
+        if !entity.characteristics.contains_key(&characteristic) {
+            validate_characteristic_within_cap_and_floor(
+                entity,
+                ruleset,
+                characteristic,
+                0,
+                issues,
+            );
+        }
+    }
 
     validate_characteristic_point_spend(entity, rules, ruleset, issues);
 }
