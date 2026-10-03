@@ -10,6 +10,7 @@
 use std::collections::BTreeMap;
 
 use crate::characteristics::Characteristic;
+use crate::effective::{effective_characteristic_score, minimal_aging_points_for_drops};
 use crate::ruleset::Ruleset;
 use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityFunding, AbilityParameterValue, Entity, Id,
@@ -249,21 +250,6 @@ pub struct LoadedEntity {
     /// § 4.2 pins that no shipped grant ever duplicates a Bound/Link-declaring
     /// item; reachable only via a hand-edited or direct-unchecked save.
     pub ambiguous_links: LinkFoldReport,
-}
-
-/// The minimal lifetime aging-point total that forces exactly `drops`
-/// Characteristic drops starting from a `bought` score, under the derived rule
-/// (each drop needs one more point than the absolute value of the current
-/// aged-down score). Used to reconstruct a legacy `aging_reductions` count as
-/// `aging_points`. Source: ArMDE:16579.
-fn minimal_aging_points_for_drops(bought: i32, drops: u32) -> u32 {
-    let mut total = 0u32;
-    for i in 0..drops {
-        let aged = i64::from(bought) - i64::from(i);
-        let threshold = u32::try_from(aged.unsigned_abs()).unwrap_or(u32::MAX);
-        total = total.saturating_add(threshold.saturating_add(1));
-    }
-    total
 }
 
 /// Folds a legacy (schema ≤ 13) `talisman_attunements` value into
@@ -802,7 +788,8 @@ fn fold_dangling_and_ambiguous_links(
 /// Characteristic drops. The current model derives those drops from
 /// `aging_points` (ArMDE:16579), so any legacy reductions are folded into
 /// `aging_points` as the minimal point total that reproduces the same number of
-/// drops. Because every aging point counts toward Decrepitude — including those
+/// drops — counted from the actual score, free deltas included, by the same helper
+/// the live `effective/warping.rs::aging_drops` uses. Because every aging point counts toward Decrepitude — including those
 /// "lost" to a drop — this fold also corrects the old model's Decrepitude
 /// under-count.
 ///
@@ -992,12 +979,11 @@ pub fn load_entity_migrating(
             if drops == 0 {
                 continue;
             }
-            let bought = entity
-                .characteristics
-                .get(&characteristic)
-                .copied()
-                .map_or(0i32, i32::from);
-            let add = minimal_aging_points_for_drops(bought, u32::from(drops));
+            // Ruling F-A: the drops are reconstructed against the actual score
+            // (free deltas included), through the same cost sequence the live
+            // `effective/warping.rs::aging_drops` walks. Source: ArMDE:16579.
+            let actual = effective_characteristic_score(&entity, ruleset, characteristic);
+            let add = minimal_aging_points_for_drops(actual, u32::from(drops));
             let slot = entity.aging_points.entry(characteristic).or_insert(0);
             *slot = slot.saturating_add(u8::try_from(add).unwrap_or(u8::MAX));
             migrated_aging_characteristics.push(characteristic);
@@ -1093,6 +1079,75 @@ mod tests {
         // Re-serializing carries no `aging_reductions` field.
         let json = serde_json::to_string(&loaded.entity).unwrap();
         assert!(!json.contains("aging_reductions"));
+    }
+
+    /// Ruling F-A, in lockstep: the legacy fold reconstructs the drops against the
+    /// same threshold the live [`crate::effective::aging_drops`] uses — the actual
+    /// score, free delta included (ArMDE:16579). Great (Stamina) twice over a bought
+    /// +3 is an actual +5, so one legacy drop needs |5| + 1 = 6 points, and the
+    /// live computation reads exactly one drop back from them (and none from 5).
+    #[test]
+    fn legacy_aging_fold_agrees_with_the_live_drops_under_a_great_characteristic() {
+        let ruleset = Ruleset::from_sources(RulesetSources {
+            point_items: r#"[{
+              "id": "virtue.great_characteristic",
+              "kind": "virtue",
+              "classification": "narrative",
+              "magnitude": "minor",
+              "categories": ["general"],
+              "entity_kinds": ["character"],
+              "parameters": [{ "key": "characteristic", "type": "ref", "domain": "characteristic" }],
+              "effects": [
+                { "type": "characteristic_score_delta_param", "param": "characteristic", "amount": 1 }
+              ],
+              "max_per_target": 2
+            },
+            { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+              "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] }
+            ]"#,
+            type_profiles: "[]",
+            ..RulesetSources::default()
+        })
+        .expect("a Great Characteristic ruleset loads");
+        let old = r#"{
+          "schema_version": 9,
+          "ruleset": { "id": "arm5-core", "version": "2024.1" },
+          "entity_kind": "character",
+          "type_id": "companion",
+          "selections": [
+            { "ref": "virtue.great_characteristic", "params": { "characteristic": "characteristic.sta" } },
+            { "ref": "virtue.great_characteristic", "params": { "characteristic": "characteristic.sta" } }
+          ],
+          "characteristics": { "sta": 3 },
+          "aging_reductions": { "sta": 1 }
+        }"#;
+        let loaded =
+            load_entity_migrating(old, DEFAULT_SAGA_YEAR, &ruleset, &empty_catalogue_names())
+                .unwrap();
+        let mut entity = loaded.entity;
+        assert_eq!(
+            crate::effective::effective_characteristic_score(
+                &entity,
+                &ruleset,
+                Characteristic::Sta
+            ),
+            5,
+            "the fixture's actual Stamina is +5"
+        );
+        assert_eq!(
+            entity.aging_points.get(&Characteristic::Sta).copied(),
+            Some(6)
+        );
+        assert_eq!(
+            crate::effective::aging_drops(&entity, &ruleset, Characteristic::Sta),
+            1
+        );
+        // Minimal: one point fewer forces no drop at all.
+        entity.aging_points.insert(Characteristic::Sta, 5);
+        assert_eq!(
+            crate::effective::aging_drops(&entity, &ruleset, Characteristic::Sta),
+            0
+        );
     }
 
     /// A current save without `aging_reductions` migrates to a no-op report.

@@ -4329,7 +4329,9 @@ M5 only makes the raw state + effects enterable and computes the scores from poi
     `migration.rs::load_entity_migrating` migrates old saves by folding any
     legacy `aging_reductions[c] = R` into `aging_points[c]` as the *minimal*
     point total that reproduces `R` drops under the derived rule
-    (`migration.rs::minimal_aging_points_for_drops`), reporting which
+    (`effective/warping.rs::minimal_aging_points_for_drops`, fed the actual
+    pre-aging score — the same cost sequence the live `aging_drops` walks, ruling
+    F-A below), reporting which
     Characteristics were migrated. Because every aging point counts toward
     Decrepitude — including those "lost" to a drop — the fold also corrects the old
     model's Decrepitude under-count. A legacy map that cannot deserialize fails the
@@ -4477,15 +4479,24 @@ absolute value of the (already aged-down) score the Characteristic drops by one 
 the points reset, so the simulation consumes `|score| + 1` points per drop over the
 lifetime total. Worked examples encoded as tests (`ArMDE:16613`): a Communication of +2
 drops on its **3rd** aging point; a Stamina of −3 on its **4th**.
-`effective_characteristic_after_aging(entity, ruleset, char) = (bought − drops)`,
-**unfloored**, **plus** any free
-`CharacteristicScoreDelta` bonus (Giant Blood +1 Str/Sta, Dwarf −1) added on top —
-so an aged Giant-Blood score can still reach ±6. *Decision:* the drop lowers the
-*bought* score (its threshold is the bought score, per the rule text); the free
-delta is a separate additive layer. This is what DERIVED / play stats consume (5i);
+`effective_characteristic_after_aging(entity, ruleset, char) = (bought + delta) − drops`,
+**unfloored**, where `delta` is every free `CharacteristicScoreDelta` bonus (Giant
+Blood +1 Str/Sta, Dwarf −1, Great/Poor (Characteristic), the Blood Virtues).
+*Decision (ruling F-A, Norbert 2026-10-03, reversing the earlier bought-score
+reading):* the threshold is the absolute value of the **actual** Characteristic,
+`bought + delta` (`effective_characteristic_score`), and it is that score which drops.
+`ArMDE:16579` names one noun, "the Characteristic", for both, and a free delta raises
+the Characteristic itself (`ArMDE:3989`: "You may raise any Characteristic … by one
+point"). So Great (Stamina) twice over a bought +3 is +5, and four aging points do not
+drop it; Poor (Stamina) twice under −3 is −5 and first drops on the 6th point. The delta
+is a one-time raise and is not re-clamped against the aged score, so nothing is counted
+twice. The live derivation and the legacy migration fold share one cost sequence
+(`effective/warping.rs::drops_forced_by_aging_points` /
+`effective/warping.rs::minimal_aging_points_for_drops`). This is what DERIVED / play stats consume (5i);
 creation-legality validators keep reading the **un-aged bought score** from
 `entity.characteristics`, so entering an aged-down character can never
-retroactively make its point-buy illegal. Source: `ArMDE:16579`, `ArMDE:16613`.
+retroactively make its point-buy illegal. Source: `ArMDE:16579`, `ArMDE:16613`,
+`ArMDE:3989`.
 
 **No floor, and therefore no warning about one.** `ArMDE:16579` gives the drop
 condition and names **no minimum** for an aged Characteristic, so the engine states

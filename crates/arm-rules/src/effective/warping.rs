@@ -383,15 +383,69 @@ pub fn decrepitude_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
         .score_for_xp(decrepitude_points_total(entity))
 }
 
+/// The aging points the next drop of a Characteristic costs: one more than the
+/// absolute value of its current score, i.e. the `actual` score before aging
+/// lowered by the `drops_so_far`. "Once a character has a number of Aging Points
+/// greater than the absolute value of the Characteristic, the Characteristic drops
+/// by one point and all Aging Points are lost." Source: ArMDE:16579.
+fn aging_drop_cost(actual: i32, drops_so_far: u32) -> u32 {
+    let aged = i64::from(actual) - i64::from(drops_so_far);
+    u32::try_from(aged.unsigned_abs())
+        .unwrap_or(u32::MAX)
+        .saturating_add(1)
+}
+
+/// How many drops a lifetime total of `points` aging points forces on a
+/// Characteristic whose score before aging is `actual`. Each drop consumes
+/// [`aging_drop_cost`] points and lowers the score by one, so the cost shrinks
+/// toward 1 and then grows again; points left over do not yet exceed the current
+/// score. The inverse of [`minimal_aging_points_for_drops`] — both walk the same
+/// cost sequence, which is what keeps the live derivation and the legacy save
+/// migration in lockstep. Source: ArMDE:16579, :16613.
+pub(crate) fn drops_forced_by_aging_points(actual: i32, points: u32) -> u32 {
+    let mut remaining = points;
+    let mut drops = 0u32;
+    loop {
+        let cost = aging_drop_cost(actual, drops);
+        if remaining < cost {
+            return drops;
+        }
+        remaining -= cost;
+        drops += 1;
+    }
+}
+
+/// The minimal lifetime aging-point total that forces exactly `drops` drops on a
+/// Characteristic whose score before aging is `actual` — the sum of the first
+/// `drops` [`aging_drop_cost`]s. Used to reconstruct a legacy `aging_reductions`
+/// count as `aging_points`; the inverse of [`drops_forced_by_aging_points`].
+/// Source: ArMDE:16579.
+pub(crate) fn minimal_aging_points_for_drops(actual: i32, drops: u32) -> u32 {
+    (0..drops).fold(0u32, |total, drops_so_far| {
+        total.saturating_add(aging_drop_cost(actual, drops_so_far))
+    })
+}
+
 /// The number of Characteristic drops the accrued aging points force, DERIVED
 /// from [`Entity::aging_points`] (never stored). Per the rule, once a
 /// Characteristic's accrued points *exceed* the absolute value of its (already
 /// aged-down) score it drops by one and its aging points reset. Simulated over
-/// the lifetime point total: each drop consumes `|score| + 1` points and lowers
-/// the score by one, so the threshold shrinks toward 0 and then grows again.
+/// the lifetime point total by [`drops_forced_by_aging_points`]: each drop
+/// consumes `|score| + 1` points and lowers the score by one, so the threshold
+/// shrinks toward 0 and then grows again.
 /// Worked examples: a Communication of +2 drops on its 3rd aging point; a
 /// Stamina of −3 on its 4th.
 /// Source: ArMDE:16579, :16613.
+///
+/// # The threshold is the actual score (ruling F-A)
+///
+/// "The Characteristic" whose absolute value is the threshold is the score the
+/// character actually has — the bought score **plus** every free delta
+/// ([`effective_characteristic_score`]): Great (Characteristic) "raise[s]" the
+/// Characteristic itself (`ArMDE:3989`). So Great (Stamina) twice over a bought +3
+/// is a +5, and four aging points do not yet drop it. Norbert's ruling F-A
+/// (2026-10-03) reversed the earlier reading that used the bought score.
+/// Source: ArMDE:16579, :3989.
 ///
 /// Crate-internal primitive: the frontend consumes the surfaced
 /// [`characteristic_aging_drops`] map (which wraps this per-Characteristic), so
@@ -417,27 +471,15 @@ pub(crate) fn aging_drops(
     if suppresses_characteristic_aging(entity, ruleset) {
         return 0;
     }
-    let bought = entity
-        .characteristics
-        .get(&characteristic)
-        .copied()
-        .map_or(0i64, i64::from);
-    let mut remaining = entity
+    let points = entity
         .aging_points
         .get(&characteristic)
         .copied()
         .map_or(0u32, u32::from);
-    let mut drops = 0u32;
-    loop {
-        let aged = bought - i64::from(drops);
-        let threshold = u32::try_from(aged.unsigned_abs()).unwrap_or(u32::MAX);
-        if remaining > threshold {
-            remaining -= threshold + 1;
-            drops += 1;
-        } else {
-            return drops;
-        }
-    }
+    drops_forced_by_aging_points(
+        effective_characteristic_score(entity, ruleset, characteristic),
+        points,
+    )
 }
 
 /// Whether the character's Characteristics are exempt from aging drops — i.e.
@@ -465,12 +507,15 @@ fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
         })
 }
 
-/// The effective value of `characteristic` after aging: the bought score lowered
-/// by the DERIVED aging drops ([`aging_drops`]), with any free
-/// [`Effect::CharacteristicScoreDelta`] bonus (Giant
-/// Blood +1 Str/Sta, Dwarf -1) then added on top — so an aged Giant-Blood score
-/// can still reach ±6. The aging drop lowers the *bought* score (its threshold is
-/// the bought score); the free delta is a separate additive layer. This is what
+/// The effective value of `characteristic` after aging: the actual score before
+/// aging ([`effective_characteristic_score`] — the bought score plus any free
+/// [`Effect::CharacteristicScoreDelta`] bonus, Giant Blood +1 Str/Sta, Dwarf -1,
+/// Great/Poor (Characteristic)) lowered by the DERIVED aging drops
+/// ([`aging_drops`]). "The Characteristic drops by one point" (`ArMDE:16579`), and
+/// that Characteristic is the actual score — the same one whose absolute value is
+/// the threshold (ruling F-A). The free delta is a one-time raise of the score, not
+/// re-evaluated against the aged value, so the result is `(bought + delta) - drops`
+/// and nothing is counted twice. This is what
 /// DERIVED / play stats consume; it is deliberately **not** what creation-legality
 /// reads (the point-buy budget check in `validation.rs` reads the un-aged bought
 /// score from `entity.characteristics`), so entering an already-aged character
@@ -493,11 +538,6 @@ pub fn effective_characteristic_after_aging(
     ruleset: &Ruleset,
     characteristic: Characteristic,
 ) -> i32 {
-    let bought = entity
-        .characteristics
-        .get(&characteristic)
-        .copied()
-        .map_or(0, i32::from);
     let drops = i32::try_from(aging_drops(entity, ruleset, characteristic)).unwrap_or(i32::MAX);
-    bought.saturating_sub(drops) + characteristic_score_bonus(entity, ruleset, characteristic)
+    effective_characteristic_score(entity, ruleset, characteristic).saturating_sub(drops)
 }

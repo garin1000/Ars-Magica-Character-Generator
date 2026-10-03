@@ -1304,6 +1304,52 @@ mod tests {
         );
     }
 
+    /// Ruling F-A, the bve worked example: Great (Stamina) twice over a bought +3
+    /// is an actual +5, and four aging points do not exceed |+5| (ArMDE:16579), so
+    /// nothing drops. The sixth point does, and the +5 becomes +4.
+    #[test]
+    fn great_characteristic_raises_the_aging_threshold_to_the_actual_score() {
+        let rs = ruleset();
+        let mut e = entity(vec![great(Characteristic::Sta), great(Characteristic::Sta)]);
+        e.characteristics = BTreeMap::from([(Characteristic::Sta, 3)]);
+        e.aging_points.insert(Characteristic::Sta, 4);
+        assert_eq!(aging_drops(&e, &rs, Characteristic::Sta), 0);
+        assert_eq!(
+            effective_characteristic_after_aging(&e, &rs, Characteristic::Sta),
+            5
+        );
+        e.aging_points.insert(Characteristic::Sta, 5);
+        assert_eq!(aging_drops(&e, &rs, Characteristic::Sta), 0);
+        e.aging_points.insert(Characteristic::Sta, 6);
+        assert_eq!(aging_drops(&e, &rs, Characteristic::Sta), 1);
+        assert_eq!(
+            effective_characteristic_after_aging(&e, &rs, Characteristic::Sta),
+            4
+        );
+    }
+
+    /// Ruling F-A with a negative delta: Poor (Stamina) twice under a bought -3 is
+    /// an actual -5, so the first drop needs a sixth point, not a fourth
+    /// (ArMDE:16579; the -3 → -4 worked example at ArMDE:16613 is the same rule).
+    #[test]
+    fn poor_characteristic_raises_the_aging_threshold_to_the_actual_score() {
+        let rs = ruleset();
+        let mut e = entity(vec![poor(Characteristic::Sta), poor(Characteristic::Sta)]);
+        e.characteristics = BTreeMap::from([(Characteristic::Sta, -3)]);
+        e.aging_points.insert(Characteristic::Sta, 5);
+        assert_eq!(aging_drops(&e, &rs, Characteristic::Sta), 0);
+        assert_eq!(
+            effective_characteristic_after_aging(&e, &rs, Characteristic::Sta),
+            -5
+        );
+        e.aging_points.insert(Characteristic::Sta, 6);
+        assert_eq!(aging_drops(&e, &rs, Characteristic::Sta), 1);
+        assert_eq!(
+            effective_characteristic_after_aging(&e, &rs, Characteristic::Sta),
+            -6
+        );
+    }
+
     #[test]
     fn a_param_delta_targets_only_the_characteristic_its_selection_names() {
         let rs = ruleset();
@@ -2790,11 +2836,11 @@ mod tests {
     }
 
     #[test]
-    fn aging_drop_applies_to_bought_score_then_free_delta_stacks_on_top() {
-        // Decision: the aging drop lowers the *bought* score (its threshold uses
-        // the bought score per ArMDE:16579/:16613); the free
-        // CharacteristicScoreDelta bonus (Giant Blood +1 Str) is then added on
-        // top, so an aged Giant-Blood Strength can still reach +6.
+    fn aging_drop_threshold_is_the_actual_score_free_delta_included() {
+        // Norbert's ruling F-A (2026-10-03): the threshold is the absolute value of
+        // "the Characteristic" (ArMDE:16579) — the score the character actually
+        // has, the free CharacteristicScoreDelta (Giant Blood +1 Str) included —
+        // not the bought score. And it is that score which "drops by one point".
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![sel("virtue.giant_blood")]);
         e.characteristics.insert(Characteristic::Str, 5); // bought 5, +1 delta = 6
@@ -2802,8 +2848,15 @@ mod tests {
             effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
             6
         );
-        // One drop: bought 5 → 4, plus the +1 delta = 5.
-        e.aging_points.insert(Characteristic::Str, 6); // |5| = 5, sixth point drops
+        // Six points do not exceed |+6|: no drop yet.
+        e.aging_points.insert(Characteristic::Str, 6);
+        assert_eq!(aging_drops(&e, &rs, Characteristic::Str), 0);
+        assert_eq!(
+            effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
+            6
+        );
+        // The seventh point exceeds it: +6 drops to +5.
+        e.aging_points.insert(Characteristic::Str, 7);
         assert_eq!(aging_drops(&e, &rs, Characteristic::Str), 1);
         assert_eq!(
             effective_characteristic_after_aging(&e, &rs, Characteristic::Str),
