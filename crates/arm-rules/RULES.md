@@ -8200,8 +8200,10 @@ Abilities are bought with experience earned in blocks, not from one bank:
   gauntlet_age        = min(plan.gauntlet_age ?? age, age)     # magi only
   later_life_years    = gauntlet_age − childhood.years − apprenticeship.years
   post_gauntlet_years = age − gauntlet_age
-  charged_seasons     = min(plan.post_gauntlet_lab_seasons,
-                            max_charged_lab_seasons_per_year × post_gauntlet_years)
+  seasons             = min(plan.post_gauntlet_lab_seasons, 4 × post_gauntlet_years)
+  charged_seasons     = (seasons ÷ 4) × max_charged_lab_seasons_per_year
+                        + min(seasons mod 4, max_charged_lab_seasons_per_year)
+                        # F1 (Norbert 2026-10-03): packed into full lab years
   post_gauntlet_points      = post_gauntlet_years × points_per_year
                               − charged_seasons × lab_season_cost
   post_gauntlet_spell_levels = min(plan.post_gauntlet_spell_levels, post_gauntlet_points)
@@ -8299,8 +8301,12 @@ Abilities are bought with experience earned in blocks, not from one bank:
   (Optional)**" and on any other plan the values are ignored outright:
   - `life_stage_gauntlet_age_after_age` (`gauntlet_age`, `age`) — a Gauntlet in the
     character's future.
-  - `life_stage_lab_seasons_out_of_range` (`seasons`, `max`, `years`) — more charged
-    seasons than `max_charged_lab_seasons_per_year × post_gauntlet_years` (`ArMDE:2482`).
+  - `life_stage_lab_seasons_out_of_range` (`seasons`, `max`, `years`) — more lab
+    seasons than the `4 × post_gauntlet_years` the span holds (`ArMDE:2482`, "three or
+    four seasons"; F1, Norbert 2026-10-03). The book's Darius (`ArMDE:2486`, :2488; 9
+    years, one full lab year) is worth 240, because the stored total is read as packed
+    into full lab years by `charged_lab_seasons` in `crates/arm-rules/src/life_stage.rs`.
+    Recording seasons per year is planned; it needs a save-format change.
   - `life_stage_lab_seasons_without_years` (`seasons`) — the same rule (`ArMDE:2482`) on a
     plan with **no** post-Gauntlet year, which is a different fault told a different
     way. The branch is on `post_gauntlet_years == 0`, not on the ceiling being 0: a

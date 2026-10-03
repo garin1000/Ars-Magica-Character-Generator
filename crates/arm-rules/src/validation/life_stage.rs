@@ -332,10 +332,10 @@ fn validate_post_gauntlet_choices(
     // season at all (`max_charged_lab_seasons_per_year` of 0) still has years, so it
     // keeps the general finding and its "more than the 0 those years hold" reading
     // stays true.
-    if let Some(post_apprenticeship) = rules.post_apprenticeship.as_ref() {
-        let max = post_apprenticeship
-            .max_charged_lab_seasons_per_year
-            .saturating_mul(budget.post_gauntlet_years);
+    // Norbert 2026-10-03 (F1): a year holds four lab seasons, not three; the
+    // fourth costs nothing (`ArMDE:2482`), see `life_stage.rs::charged_lab_seasons`.
+    if rules.post_apprenticeship.is_some() {
+        let max = crate::life_stage::SEASONS_PER_YEAR.saturating_mul(budget.post_gauntlet_years);
         if plan.post_gauntlet_lab_seasons > max {
             let seasons = plan.post_gauntlet_lab_seasons.to_string();
             issues.push(if budget.post_gauntlet_years == 0 {
@@ -1032,10 +1032,10 @@ mod tests {
         }
     }
 
-    /// More charged lab seasons than the years can hold. Only three seasons a year
-    /// are ever charged — "to a minimum of 0 if three or four seasons are spent on
-    /// lab work" (ArMDE:2482) — so 35 years hold 105, and `budget()` caps
-    /// the stored total there. Beyond the cap the extra seasons cost nothing, which
+    /// More lab seasons than the years can hold. A year holds four seasons, all of
+    /// which may be lab work — "to a minimum of 0 if three or four seasons are spent
+    /// on lab work" (ArMDE:2482) — so 35 years hold 140 (F1, 2026-10-03), and
+    /// `budget()` caps the stored total there. Beyond the cap the extra seasons cost nothing, which
     /// reads as a bargain rather than a mistake unless it is said out loud.
     #[test]
     fn more_charged_lab_seasons_than_the_years_hold_is_an_error() {
@@ -1048,11 +1048,23 @@ mod tests {
         assert_eq!(issue.severity, IssueSeverity::Error);
         assert_eq!(issue.phase, CreationPhase::Experience);
         assert_eq!(issue.args.get("seasons").map(String::as_str), Some("200"));
-        assert_eq!(issue.args.get("max").map(String::as_str), Some("105"));
+        assert_eq!(issue.args.get("max").map(String::as_str), Some("140"));
         assert_eq!(issue.args.get("years").map(String::as_str), Some("35"));
 
         // Exactly the cap is legal: 35 years of nothing but charged lab work.
-        let issues = codes(&validate(&out_of_apprenticeship(60, 25, 105, 0), &rs()));
+        let issues = codes(&validate(&out_of_apprenticeship(60, 25, 140, 0), &rs()));
+        assert!(
+            !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE.into()),
+            "issues: {issues:?}"
+        );
+    }
+
+    /// Norbert 2026-10-03 (F1): a year holds four seasons, and a year spent wholly in
+    /// the lab is legal (`ArMDE:2482` "three or four seasons"), so one year with four
+    /// lab seasons is not out of range.
+    #[test]
+    fn one_year_of_four_lab_seasons_is_in_range() {
+        let issues = codes(&validate(&out_of_apprenticeship(26, 25, 4, 0), &rs()));
         assert!(
             !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE.into()),
             "issues: {issues:?}"
@@ -1101,7 +1113,7 @@ mod tests {
     /// number lives on the Abilities step.
     #[test]
     fn taking_more_spell_levels_than_the_years_grant_is_an_error() {
-        let result = validate(&out_of_apprenticeship(60, 25, 10, 5_000), &rs());
+        let result = validate(&out_of_apprenticeship(60, 25, 13, 5_000), &rs());
         let issue = result
             .issues
             .iter()
@@ -1114,7 +1126,7 @@ mod tests {
         assert_eq!(issue.args.get("points").map(String::as_str), Some("950"));
 
         // Taking every point as levels of spells is a legal split, not a fault.
-        let issues = codes(&validate(&out_of_apprenticeship(60, 25, 10, 950), &rs()));
+        let issues = codes(&validate(&out_of_apprenticeship(60, 25, 13, 950), &rs()));
         assert!(
             !issues.contains(
                 &ValidationIssue::CODE_LIFE_STAGE_SPELL_LEVEL_SPLIT_EXCEEDS_POINTS.into()
