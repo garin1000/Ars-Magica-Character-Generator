@@ -377,6 +377,13 @@ pub struct LocalizedRuleset {
     pub ruleset: Ruleset,
     /// Localized text keyed by item/profile id.
     pub i18n: BTreeMap<Id, I18nEntry>,
+    /// Every catalogue spell's book code without its level (`CrIm(Ig)`), keyed by
+    /// spell id: [`LocalizedRuleset::spell_code`] for each spell, serialized so the
+    /// UI shows the engine's code instead of composing one of its own. Derived at
+    /// construction, never authored. The `spell_codes` field name is a stable
+    /// public contract.
+    #[serde(default)]
+    pub(crate) spell_codes: BTreeMap<Id, String>,
 }
 
 /// A referential-integrity failure raised while loading a [`Ruleset`].
@@ -773,7 +780,24 @@ impl LocalizedRuleset {
     /// meant to be disjoint.
     pub fn from_merged(ruleset: Ruleset, i18n_sources: &[&str]) -> Result<Self, RulesetError> {
         let i18n = merge_i18n_sources(i18n_sources)?;
-        Ok(Self { ruleset, i18n })
+        Ok(Self::with_spell_codes(ruleset, i18n))
+    }
+
+    /// Pairs `ruleset` with `i18n` and derives [`LocalizedRuleset::spell_codes`]
+    /// from the two — the one place both constructors build the value.
+    fn with_spell_codes(ruleset: Ruleset, i18n: BTreeMap<Id, I18nEntry>) -> Self {
+        let mut localized = Self {
+            ruleset,
+            i18n,
+            spell_codes: BTreeMap::new(),
+        };
+        let codes: BTreeMap<Id, String> = localized
+            .ruleset
+            .spells()
+            .filter_map(|spell| Some((spell.id.clone(), localized.spell_code(&spell.id)?)))
+            .collect();
+        localized.spell_codes = codes;
+        localized
     }
 
     /// Like [`LocalizedRuleset::from_merged`], but fills each entry's missing
@@ -813,7 +837,7 @@ impl LocalizedRuleset {
                 }
             }
         }
-        Ok(Self { ruleset, i18n })
+        Ok(Self::with_spell_codes(ruleset, i18n))
     }
 
     /// Returns the full localized [`I18nEntry`] for the given id, if present.
@@ -839,9 +863,54 @@ impl LocalizedRuleset {
 
     /// Returns the localized short abbreviation for the given id, if both the entry
     /// and its (optional) abbreviation are present. Carried by the Arts (`Cr`, `Ig`),
-    /// whose sheet notation is the two abbreviations plus a level (`CrIg20`).
+    /// from which [`LocalizedRuleset::spell_code`] composes a spell's code.
     pub fn abbreviation(&self, id: &Id) -> Option<&str> {
         self.i18n.get(id).and_then(|e| e.abbreviation.as_deref())
+    }
+
+    /// A spell's code as the rulebook writes it, without the level: the Technique
+    /// abbreviation, its Technique requisites in parentheses, the Form abbreviation,
+    /// its Form requisites in parentheses, several requisites `", "`-separated in
+    /// data order. `None` for a spell no catalogue holds.
+    ///
+    /// Source: ArMDE:19301 ("Cr(Re)Ig 30"), :19166 ("ReAq(Co) 30"), :19241
+    /// ("MuTe(Aq, Co, An) 25").
+    pub fn spell_code(&self, spell: &Id) -> Option<String> {
+        let spell = self.ruleset.spell(spell)?;
+        Some(format!(
+            "{}{}{}{}",
+            self.art_code(&spell.technique),
+            self.requisite_codes(spell, ArtType::Technique),
+            self.art_code(&spell.form),
+            self.requisite_codes(spell, ArtType::Form),
+        ))
+    }
+
+    /// An Art's abbreviation; an Art whose entry ships none falls back to its
+    /// display name, which is long but still readable.
+    fn art_code<'s>(&'s self, art: &'s Id) -> &'s str {
+        self.abbreviation(art)
+            .or_else(|| self.display_name(art))
+            .unwrap_or(art.as_str())
+    }
+
+    /// The spell's requisites of one Art class, parenthesized, or nothing when it
+    /// has none of that class.
+    fn requisite_codes(&self, spell: &Spell, art_type: ArtType) -> String {
+        let codes: Vec<&str> = spell
+            .requisites
+            .iter()
+            .filter(|req| {
+                self.ruleset
+                    .art(req)
+                    .is_some_and(|art| art.art_type == art_type)
+            })
+            .map(|req| self.art_code(req))
+            .collect();
+        if codes.is_empty() {
+            return String::new();
+        }
+        format!("({})", codes.join(", "))
     }
 
     /// Returns the localized full description for the given id, if both the entry

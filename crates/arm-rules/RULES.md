@@ -10805,14 +10805,40 @@ read a *derived* value rather than the stored one, each from the function that o
   (`effective::decrepitude_score`, `effective::effective_characteristic_after_aging`);
   without them a reader sees a dropped score but not how close the next drop is.
 
-**A spell's Arts and level are one short code.** The spell list prints
-`<Technique abbreviation><Form abbreviation><resolved level>` (`CrIg20`), the notation
-the rulebook and the app's own spell list use, instead of three spelled-out columns.
-The abbreviations are localized rules data (`LocalizedRuleset::abbreviation`, from
-`rules/i18n/<lang>/arts.json` — see the Art catalogue rows above); nothing is composed
-in code. An unresolved General level keeps the localized marker a space apart
+**A spell's Arts and level are one short code, requisites included (I4, D83.11).**
+The rulebook writes a requisite in parentheses after the Art it belongs with — a
+Technique requisite after the Technique, a Form requisite after the Form, several
+comma-separated — and the level a space after the code:
+
+> Cr(Re)Ig 30 (Base 5, +1 Touch, +2 Sun, +1 requisite, +1 constant effect) — `ArMDE:19301`
+>
+> ReAq(Co) 30 (Base 5, +1 Touch, +2 Sun, +1 requisite, +1 constant effect) — `ArMDE:19166`
+>
+> MuTe(Aq, Co, An) 25 (Base 3, +2 Voice, +2 affect metal, +2 affect humans and animals) — `ArMDE:19241`
+
+`LocalizedRuleset::spell_code` (`ruleset.rs`) is the one place that composes the code,
+without the level: the Art abbreviations are localized rules data
+(`LocalizedRuleset::abbreviation`, from `rules/i18n/<lang>/arts.json` — Latin, the same
+in every locale; an Art shipping none falls back to its display name), the requisites
+are the spell's `requisites` ids in data order (`rules/core/spells.json`), each placed
+by its catalogue `art_type`. Phantasmal Fire ("Req: Ignem", `ArMDE:14554-14558`) reads
+`CrIm(Ig)`, Coat of Flame ("Req: Rego", `ArMDE:14262-14266`) `Cr(Re)Ig`, Fog of
+Confusion ("Req: Imaginem, Rego", `ArMDE:13241-13245`) `Mu(Re)Au(Im)`. The codes are
+serialized per spell as `LocalizedRuleset.spell_codes`, so the Spells tab shows the
+engine's code and only appends the level (`derive.ts::spellCodeWithLevel`). The export
+(`export/sections.rs::spell_code`) prints `<code> <resolved level>` (`CrIm(Ig) 20`); an
+unresolved General level takes the localized marker in the level's place
 (`MuVi General`), and a spell no catalogue holds leaves the cell empty rather than
-printing a half-written code.
+printing a half-written code. The book itself is not uniform — `ArMDE:4403` writes
+"MuAn (Ig)" with a space — and the code follows the stat-line form above.
+
+**A spell marked within a Magical Focus or a Potent Magic field says so** (after-deadline
+answer 4). The mark (`SpellSelection::within_focus`, `ArMDE:4399-4422`;
+`SpellSelection::within_potent_field`, `ArMDE:4740-4748`) is what makes such a spell
+above the plain level cap legal (D81.5), so the code cell appends the localized
+`export-spell-within-focus` ("· Focus" / "· Fokus") and `export-spell-within-potent-field`
+("· Potent") markers, Focus first, one space apart: `CrIg 20 · Focus · Potent`. No new
+column (D73.2 forbids a Casting Total column, and the mark needs none).
 
 **Granted Virtues/Flaws are listed but off-budget.** Each Virtue/Flaw section prints
 the point-bought rows from `entity.selections` and then, under a `export-granted`

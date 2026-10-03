@@ -5,6 +5,7 @@
 //! and `export/magic.rs` for the remaining (traits/magic/annotations) writers.
 
 use super::*;
+use crate::spell::Spell;
 
 /// X10b: the book's own "X (Z)" notation (ArMDE:1177/:1179) for a bought
 /// score with banked XP toward the next one — omitted at `banked_xp == 0` so
@@ -554,26 +555,55 @@ impl<'a> Doc<'a> {
     }
 
     /// A spell's Arts and level as the one short cell the rulebook and the app both
-    /// use: the Technique and Form abbreviations followed by the resolved level, with
-    /// no separator (`CrIg20`).
+    /// use: the engine's code ([`LocalizedRuleset::spell_code`], requisites included)
+    /// and the resolved level a space apart, as the book prints it — "Cr(Re)Ig 30"
+    /// (ArMDE:19301). An unresolved General level takes the localized General marker
+    /// in the level's place.
     ///
-    /// An unresolved General level keeps its localized marker a space apart, since
-    /// `CrIgGeneral` would not read as one figure. A spell no catalogue holds has no
-    /// Arts to abbreviate, and a bare level would read as a code, so its cell is empty
-    /// — the row still names the spell the character claims.
+    /// A spell the player marked within a Magical Focus or within a Potent Magic
+    /// field (D79) carries a short localized marker after the level, Focus first —
+    /// the mark is what makes such a spell above the plain cap legal, so the sheet
+    /// says so without a new column (D73.2).
+    ///
+    /// A spell no catalogue holds has no Arts to abbreviate, and a bare level would
+    /// read as a code, so its cell is empty — the row still names the spell the
+    /// character claims.
     fn spell_code(&self, chosen: &SpellSelection) -> String {
         let Some(spell) = self.rules().spell(&chosen.spell) else {
             return String::new();
         };
+        let Some(code) = self.ruleset.spell_code(&chosen.spell) else {
+            return String::new();
+        };
+        self.note_unnamed_arts(spell);
         let level = match resolved_spell_level(chosen, self.rules()) {
             Some(level) => level.to_string(),
-            None => format!(" {}", self.label("spell-level-general")),
+            None => self.label("spell-level-general"),
         };
-        format!(
-            "{}{}{level}",
-            self.art_code(&spell.technique),
-            self.art_code(&spell.form)
-        )
+        let mut cell = format!("{} {level}", escape_cell(&code));
+        if chosen.within_focus {
+            cell.push(' ');
+            cell.push_str(&self.label("export-spell-within-focus"));
+        }
+        if chosen.within_potent_field {
+            cell.push(' ');
+            cell.push_str(&self.label("export-spell-within-potent-field"));
+        }
+        cell
+    }
+
+    /// Records as missing every Art of `spell` that has neither an abbreviation nor
+    /// a display name, so a code that had to fall back to a raw Art id fails the
+    /// export instead of printing the slug.
+    fn note_unnamed_arts(&self, spell: &Spell) {
+        let arts = [&spell.technique, &spell.form]
+            .into_iter()
+            .chain(spell.requisites.iter());
+        for art in arts {
+            if self.ruleset.abbreviation(art).is_none() {
+                self.name(art);
+            }
+        }
     }
 
     /// Which catalogue holds `id`, or `None` when no catalogue does.

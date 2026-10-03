@@ -1759,8 +1759,15 @@ export-col-magnitude = Magnitude
 export-col-penalty = Abzug
 export-col-points = Punkte
 # Kopf der einen Kunst-und-Stufe-Spalte der exportierten Zauberliste: die Kürzel von
-# Technik und Form, gefolgt von der Stufe — die Kurzform des Regelwerks (CrIg20).
+# Technik und Form (Requisiten in Klammern), gefolgt von der Stufe — die Kurzform
+# des Regelwerks (Cr(Re)Ig 30).
 export-col-spell-code = TeFo/Stufe
+# Markierungen nach dem Kürzel eines Zaubers in der exportierten Zauberliste, für
+# einen Zauber, den der Spieler als im Magischen Fokus oder im Bereich der Potenten
+# Magie liegend markiert hat („CrIg 20 · Fokus · Potent“). Die Engine verbindet sie
+# mit einem Leerzeichen.
+export-spell-within-focus = · Fokus
+export-spell-within-potent-field = · Potent
 # Regeltext-Spalte der exportierten Tugend-/Fehler-Tabellen: die Beschreibung eines
 # unberechneten Eintrags (ersatzweise seine Zusammenfassung), oder die
 # Zusammenfassung eines berechneten Eintrags.

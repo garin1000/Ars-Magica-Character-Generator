@@ -76,6 +76,7 @@ import {
   sameParam,
   selectionDisplayName,
   singleValuedParams,
+  spellCodeWithLevel,
   spellDisplayName,
   spellLevelAllocation,
   totalCopies,
@@ -2405,6 +2406,46 @@ describe('art helpers', () => {
   it('reports the highest whole score the Art advancement table can price', () => {
     const rs = withArts([]);
     expect(maxArtScore(rs.ruleset.art_advancement)).toBe(5);
+  });
+});
+
+// I4 (try-out finding 22): the spell code, requisites included ("Cr(Re)Ig 30",
+// ArMDE:19301), is composed by the engine and arrives on the payload as
+// `spell_codes`. The TS side only appends the level, a space apart.
+describe('spellCodeWithLevel', () => {
+  function withCodes(spell_codes: Record<string, string>): LocalizedRuleset {
+    return {
+      ruleset: {
+        id: 't',
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        ...DERIVED_TAXONOMY,
+      },
+      i18n: {
+        'art.creo': { name: 'Creo', abbreviation: 'Cr' },
+        'art.imaginem': { name: 'Imaginem', abbreviation: 'Im' },
+        'art.ignem': { name: 'Ignem', abbreviation: 'Ig' },
+      },
+      spell_codes,
+    };
+  }
+
+  it("appends the level to the engine's code, a space apart", () => {
+    const rs = withCodes({ 'spell.phantasmal_fire': 'CrIm(Ig)' });
+    expect(spellCodeWithLevel(rs, 'spell.phantasmal_fire', '20')).toBe('CrIm(Ig) 20');
+  });
+
+  it('appends a General marker the same way', () => {
+    const rs = withCodes({ 'spell.wizards_boost': 'MuVi' });
+    expect(spellCodeWithLevel(rs, 'spell.wizards_boost', 'General')).toBe('MuVi General');
+  });
+
+  it('never composes a code of its own from the Art abbreviations', () => {
+    // The i18n carries Cr/Im/Ig, but the engine sent no code for this spell:
+    // the level stands alone rather than a second, requisite-blind composition.
+    const rs = withCodes({});
+    expect(spellCodeWithLevel(rs, 'spell.phantasmal_fire', '20')).toBe('20');
   });
 });
 
