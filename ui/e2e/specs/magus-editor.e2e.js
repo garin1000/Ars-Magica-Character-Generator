@@ -769,6 +769,14 @@ describe('totals tab', () => {
 // that the error stuck around even after every instance had a Characteristic.
 describe('repeated parameterized virtues', () => {
   const MISSING_PARAM = 'missing the parameter';
+  // One budget for every wait below, measured rather than guessed: under a
+  // concurrent CPU load the webview was observed to need well past 10s for a
+  // single DOM update (1db5731, companion-editor.e2e.js). The two finding waits
+  // used to allow 5s for a debounced validate (`VALIDATE_DEBOUNCE_MS`) plus three
+  // parallel IPC round trips, which is tighter than the row waits they follow.
+  const SETTLE_TIMEOUT = 20000;
+  const paramSelector = (i) =>
+    `[data-testid="param-virtue.great_characteristic-characteristic-${i}"]`;
 
   async function errorTexts() {
     const errors = await $$('[data-severity="error"]');
@@ -777,6 +785,25 @@ describe('repeated parameterized virtues', () => {
       texts.push(await errors[i].getText());
     }
     return texts;
+  }
+
+  /**
+   * Wait until the balance bar reports `points` Virtue points spent, against a
+   * budget the engine has already sent (non-zero). It reads `used / budget` in
+   * either language.
+   */
+  async function waitForVirtuePoints(points) {
+    await browser.waitUntil(
+      async () => {
+        const text = clean(await $('[data-testid="balance-virtues"]').getText());
+        const match = text.match(/(\d+)\s*\/\s*(\d+)/);
+        return match !== null && Number(match[1]) === points && Number(match[2]) > 0;
+      },
+      {
+        timeout: SETTLE_TIMEOUT,
+        timeoutMsg: `the balance bar never settled at ${points} Virtue point(s)`,
+      },
+    );
   }
 
   it('keeps a distinct target per Great Characteristic instance', async () => {
@@ -792,9 +819,35 @@ describe('repeated parameterized virtues', () => {
     await add.waitForExist({ timeout: 10000 });
 
     // Add six instances; the Add button must stay enabled across repeats.
+    //
+    // ONE CLICK, THEN ITS SETTLED VALIDATION, before the next click. These used
+    // to be six back-to-back clicks, and one of them now and then never reached
+    // the button: instance 5 (or, with the clicks spaced, instance 1) was "still
+    // not existing" after 20s. Caught with an in-page event probe: the lost
+    // click's mousedown landed on `li.issue.error` at the very point the Add
+    // button's centre had been. The issues panel is the app-wide footer
+    // (`App.svelte`, `.validation-bar`), and it grows as an add's debounced
+    // validation lands with new findings, squeezing the tab area from below —
+    // and this row sits at the bottom edge of the Available list. WebDriver
+    // checks for an obscuring element BEFORE it dispatches, so a validation that
+    // lands in between moves the footer under the pointer and the click goes to
+    // it with no error at all.
+    //
+    // So each click waits for the add before it to be fully validated. The
+    // balance bar reads `effective.virtue_points`, which `revalidate` publishes in
+    // the same guarded write as the issue list, so it showing `n` Virtue points
+    // means the footer already has its height for `n` instances. A Minor Virtue
+    // is one point and a fresh companion holds none, so `n` is the instance
+    // count. A zero budget means the first engine pass has not landed yet.
     const targets = ['int', 'per', 'str', 'sta', 'pre', 'com'];
+    await waitForVirtuePoints(0);
     for (let i = 0; i < targets.length; i++) {
       await add.click();
+      await $(paramSelector(i)).waitForExist({
+        timeout: SETTLE_TIMEOUT,
+        timeoutMsg: `Add click ${i + 1} of ${targets.length} never rendered instance ${i}`,
+      });
+      await waitForVirtuePoints(i + 1);
     }
 
     // While unfilled, a missing-parameter error must be reported (and the panel
@@ -802,35 +855,24 @@ describe('repeated parameterized virtues', () => {
     await browser.waitUntil(
       async () => (await errorTexts()).some((t) => t.includes(MISSING_PARAM)),
       {
-        timeout: 5000,
+        timeout: SETTLE_TIMEOUT,
         timeoutMsg: 'expected a missing-parameter error while instances are unfilled',
       },
     );
 
     // Each instance gets its own characteristic (all distinct, so under the cap).
-    // Six rapid-fire adds queue up six selection renders; under a real concurrent
-    // CPU load (a `cargo tarpaulin` pass sharing the machine) a later instance's
-    // row can settle well past the webdriverio default implicit wait, and past
-    // even a 10s (STEP_TIMEOUT) explicit one — measured on the sibling Puissant
-    // Ability flake in companion-editor.e2e.js, where the row genuinely had not
-    // rendered after 10s under that load, purely from the webview renderer being
-    // starved of CPU time (the add itself is client-side/synchronous — see
-    // ParameterPicker.svelte / VirtueFlawTab.svelte). Wait generously (20s), and
-    // confirm the control is enabled (not merely present) before selecting.
+    // Every row already exists (the add loop waited for it); confirm the control
+    // is enabled, not merely present, before selecting.
     for (let i = 0; i < targets.length; i++) {
-      const param = await $(
-        `[data-testid="param-virtue.great_characteristic-characteristic-${i}"]`,
-      );
-      await param.waitForExist({ timeout: 20000 });
-      await param.waitForEnabled({ timeout: 20000 });
+      const param = await $(paramSelector(i));
+      await param.waitForExist({ timeout: SETTLE_TIMEOUT });
+      await param.waitForEnabled({ timeout: SETTLE_TIMEOUT });
       await param.selectByAttribute('value', `characteristic.${targets[i]}`);
     }
 
     // The selected value must persist in the DOM for every instance.
     for (let i = 0; i < targets.length; i++) {
-      const param = await $(
-        `[data-testid="param-virtue.great_characteristic-characteristic-${i}"]`,
-      );
+      const param = await $(paramSelector(i));
       expect(await param.getValue()).toBe(`characteristic.${targets[i]}`);
     }
 
@@ -838,7 +880,7 @@ describe('repeated parameterized virtues', () => {
     await browser.waitUntil(
       async () => !(await errorTexts()).some((t) => t.includes(MISSING_PARAM)),
       {
-        timeout: 5000,
+        timeout: SETTLE_TIMEOUT,
         timeoutMsg: 'missing-parameter error did not clear after all targets were set',
       },
     );
