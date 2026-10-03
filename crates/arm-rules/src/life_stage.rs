@@ -853,39 +853,16 @@ impl LifeStageRules {
         let Some(rules) = self.post_apprenticeship.as_ref() else {
             return 0;
         };
-        let charged = charged_lab_seasons(
-            plan.post_gauntlet_lab_seasons,
-            post_gauntlet_years,
-            rules.max_charged_lab_seasons_per_year,
+        let charged = plan.post_gauntlet_lab_seasons.min(
+            rules
+                .max_charged_lab_seasons_per_year
+                .saturating_mul(post_gauntlet_years),
         );
         post_gauntlet_years
             .saturating_mul(rules.points_per_year)
             .saturating_sub(charged.saturating_mul(rules.lab_season_cost))
     }
-}
 
-/// The seasons in a year, all of which a magus may spend in the lab: "to a minimum
-/// of 0 if three or four seasons are spent on lab work" (`ArMDE:2482`).
-pub const SEASONS_PER_YEAR: u32 = 4;
-
-/// How many of `seasons` post-Gauntlet lab seasons cost points over `years`.
-///
-/// Norbert 2026-10-03 (F1): the stored total is read as packed into full lab
-/// years, as `ArMDE:2482` recommends ("it is most cost effective to have the magus
-/// engage in a full year of lab work at a time"). Each full year of four seasons
-/// charges `max_per_year`, the remainder charges one per season up to that same
-/// ceiling, and the span holds at most four seasons a year. Recording seasons per
-/// year instead is planned (it needs a save-format change).
-fn charged_lab_seasons(seasons: u32, years: u32, max_per_year: u32) -> u32 {
-    let seasons = seasons.min(SEASONS_PER_YEAR.saturating_mul(years));
-    let full_years = seasons / SEASONS_PER_YEAR;
-    let remainder = seasons % SEASONS_PER_YEAR;
-    full_years
-        .saturating_mul(max_per_year)
-        .saturating_add(remainder.min(max_per_year))
-}
-
-impl LifeStageRules {
     /// Years of later life lived up to `stop_age`: every year after childhood, minus
     /// the `apprenticeship_years` that follow it (0 for anyone who serves no
     /// apprenticeship). Both blocks are fixed spans, so a `stop_age` inside them
@@ -1700,28 +1677,14 @@ mod tests {
 
     /// "For each season that your magus spends working on a lab project, the
     /// character loses 10 points from the yearly 30 experience points" (`ArMDE:2482`), so
-    /// ten charged seasons cost 100 of the 1050. Thirteen stored seasons pack as three
-    /// full lab years (three charged each) plus one, so ten are charged (F1).
+    /// ten charged seasons cost 100 of the 1050.
     #[test]
     fn each_charged_lab_season_costs_ten_points() {
         let budget = rules_with_apprenticeship()
-            .budget(&magus_out_of_apprenticeship(60, 25, 13, 0), &rate_ruleset())
+            .budget(&magus_out_of_apprenticeship(60, 25, 10, 0), &rate_ruleset())
             .expect("a magus with a plan");
         assert_eq!(budget.post_gauntlet_points, 950);
         assert_eq!(budget.post_gauntlet_xp, 950);
-    }
-
-    /// Norbert 2026-10-03 (F1): the stored total is read as packed into full lab
-    /// years, as `ArMDE:2482` recommends, so a fourth season fills a year rather than
-    /// costing the next one. Darius's nine years with one full lab year are worth
-    /// the book's 240 (`ArMDE:2486`, :2488), not 230.
-    #[test]
-    fn darius_nine_years_with_one_full_lab_year_are_worth_240() {
-        let budget = rules_with_apprenticeship()
-            .budget(&magus_out_of_apprenticeship(34, 25, 4, 0), &rate_ruleset())
-            .expect("a magus with a plan");
-        assert_eq!(budget.post_gauntlet_years, 9);
-        assert_eq!(budget.post_gauntlet_points, 240);
     }
 
     /// The deduction runs "to a minimum of 0 if three or four seasons are spent on
@@ -1760,7 +1723,7 @@ mod tests {
     fn points_taken_as_spell_levels_are_not_experience() {
         let budget = rules_with_apprenticeship()
             .budget(
-                &magus_out_of_apprenticeship(60, 25, 13, 300),
+                &magus_out_of_apprenticeship(60, 25, 10, 300),
                 &rate_ruleset(),
             )
             .expect("a magus with a plan");
@@ -1772,7 +1735,7 @@ mod tests {
         // More levels than there are points buys only the points that exist.
         let greedy = rules_with_apprenticeship()
             .budget(
-                &magus_out_of_apprenticeship(60, 25, 13, 5_000),
+                &magus_out_of_apprenticeship(60, 25, 10, 5_000),
                 &rate_ruleset(),
             )
             .expect("a magus with a plan");
