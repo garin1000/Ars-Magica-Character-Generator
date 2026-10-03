@@ -813,3 +813,70 @@ describe('SpellTab Casting Total composed via one Fluent placeable (Sabine revie
     expect(source).toMatch(/store\.t\('spell-casting-total',\s*\{\s*total:/);
   });
 });
+
+// I4 (try-out finding 22): the catalogue list showed only the level under its
+// Te/Fo header and the selected list a requisite-blind "CrIg 20", so a player
+// could not see that Phantasmal Fire (CrIm, "Req: Ignem", ArMDE:14554-14558)
+// touches Ignem too. Both lists now show the engine's code — requisites in the
+// book's notation, "Cr(Re)Ig 30" (ArMDE:19301) — followed by the level.
+describe('SpellTab shows the engine spell code in both lists (I4)', () => {
+  const FIRE = 'spell.phantasmal_fire';
+  const BOOST = 'spell.wizards_boost_form';
+
+  function installRequisiteSpells(): void {
+    const rs = store.ruleset!;
+    rs.ruleset.arts = {
+      ...rs.ruleset.arts,
+      'art.muto': { id: 'art.muto', art_type: 'technique' },
+      'art.imaginem': { id: 'art.imaginem', art_type: 'form' },
+      'art.ignem': { id: 'art.ignem', art_type: 'form' },
+      'art.vim': { id: 'art.vim', art_type: 'form' },
+    };
+    rs.ruleset.spells = {
+      ...rs.ruleset.spells,
+      [FIRE]: {
+        id: FIRE,
+        technique: 'art.creo',
+        form: 'art.imaginem',
+        level: 20,
+        requisites: ['art.ignem'],
+      },
+      [BOOST]: { id: BOOST, technique: 'art.muto', form: 'art.vim' },
+    };
+    rs.i18n['art.muto'] = { name: 'Muto', abbreviation: 'Mu' };
+    rs.i18n['art.imaginem'] = { name: 'Imaginem', abbreviation: 'Im' };
+    rs.i18n['art.ignem'] = { name: 'Ignem', abbreviation: 'Ig' };
+    rs.i18n['art.vim'] = { name: 'Vim', abbreviation: 'Vi' };
+    rs.i18n[FIRE] = { name: 'Phantasmal Fire' };
+    rs.i18n[BOOST] = { name: "Wizard's Boost" };
+    // The engine-composed codes, as `LocalizedRuleset.spell_codes` carries them.
+    rs.spell_codes = { [SPELL]: 'CrAn', [FIRE]: 'CrIm(Ig)', [BOOST]: 'MuVi' };
+  }
+
+  it('shows code and level on a catalogue row', () => {
+    installRequisiteSpells();
+    expect(outer(html(), `add-${FIRE}`)).toContain('Phantasmal Fire (CrIm(Ig) 20)');
+  });
+
+  it('shows the same code and level on a selected row', () => {
+    installRequisiteSpells();
+    store.entity!.spells = [{ spell: FIRE }];
+    expect(outer(html(), `spell-name-${FIRE}-0`)).toContain('Phantasmal Fire (CrIm(Ig) 20)');
+  });
+
+  it("puts a General spell's marker where the level goes, in both lists", () => {
+    installRequisiteSpells();
+    store.entity!.spells = [{ spell: BOOST, level: 5 }];
+    const general = store.t('spell-level-general');
+    expect(outer(html(), `add-${BOOST}`)).toContain(`(MuVi ${general})`);
+    expect(outer(html(), `spell-name-${BOOST}-0`)).toContain(`(MuVi ${general})`);
+  });
+
+  it('composes no code of its own from the Art abbreviations', () => {
+    const source = readFileSync(
+      fileURLToPath(new URL('./SpellTab.svelte', import.meta.url)),
+      'utf-8',
+    );
+    expect(source).not.toContain('artAbbreviation');
+  });
+});

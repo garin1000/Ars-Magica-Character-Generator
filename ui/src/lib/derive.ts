@@ -2809,6 +2809,21 @@ export function artAbbreviation(localized: LocalizedRuleset, artId: string): str
   return localized.i18n[artId]?.abbreviation ?? '';
 }
 
+/**
+ * A spell's book code followed by its level, a space apart ("CrIm(Ig) 20"). The
+ * code is the engine's (`spell_codes`, requisites included); this only appends the
+ * level text (a number or the localized General marker). With no engine code the
+ * level stands alone — never a second, requisite-blind composition here.
+ */
+export function spellCodeWithLevel(
+  localized: LocalizedRuleset,
+  spellId: string,
+  level: string,
+): string {
+  const code = localized.spell_codes?.[spellId];
+  return code ? `${code} ${level}` : level;
+}
+
 /** Localized spell name (e.g. "Pilum of Fire"), falling back to the id. */
 export function spellName(localized: LocalizedRuleset, spellId: string): string {
   return localized.i18n[spellId]?.name ?? spellId;

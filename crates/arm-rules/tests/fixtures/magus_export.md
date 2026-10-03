@@ -100,7 +100,7 @@
 
 | identity-name | export-col-spell-code | spell-mastery-label | spell-mastery-abilities-label |
 | --- | --- | --- | --- |
-| Pilum of Fire | CrIg20 | 2 | Penetration |
+| Pilum of Fire | CrIg 20 | 2 | Penetration |
 
 ## tab-equipment
 

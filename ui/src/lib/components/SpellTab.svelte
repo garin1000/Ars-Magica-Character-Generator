@@ -1,7 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import {
-    artAbbreviation,
     artLabel,
     artsOfType,
     effectiveSpellMastery,
@@ -16,6 +15,7 @@
     ORDINARY_SPELL_MINIMUM_LEVEL,
     RITUAL_MINIMUM_LEVEL_FALLBACK,
     usedSpellForms,
+    spellCodeWithLevel,
     spellDisplayName,
     withinFocusAddable,
   } from '../derive';
@@ -156,10 +156,6 @@
   const advancement = $derived(store.ruleset?.ruleset.advancement ?? []);
   const masteryMax = $derived(maxAbilityScore(advancement));
 
-  function abbr(artId: string): string {
-    return store.ruleset ? artAbbreviation(store.ruleset, artId) : '';
-  }
-
   // The localized group header: the two Art names composed via Fluent (never a
   // raw id) — e.g. "Creo Ignem". Shared by the available and selected lists.
   function groupHeader(technique: string, form: string): string {
@@ -181,11 +177,16 @@
     return cap == null ? undefined : store.t('spell-group-cap-tooltip', { cap: String(cap) });
   }
 
-  // A spell's level tag for a source row: its fixed level, or the localized
-  // "General" marker (the level is chosen per character). The Technique/Form is
-  // already carried by the group header, so a source row shows only the level.
+  // A spell's level tag: its fixed level, or the localized "General" marker (the
+  // level is chosen per character).
   function levelTag(spell: Spell): string {
     return spell.level == null ? store.t('spell-level-general') : String(spell.level);
+  }
+
+  // The engine's spell code (requisites included, "CrIm(Ig)") plus the level tag —
+  // identical in the source and the selected list (I4).
+  function codeTag(spell: Spell): string {
+    return store.ruleset ? spellCodeWithLevel(store.ruleset, spell.id, levelTag(spell)) : '';
   }
 
   // The localized param label ("Form"), used as the unchosen-parameter hint. The
@@ -204,20 +205,17 @@
   function optionLabel(spell: Spell): string {
     const rs = store.ruleset;
     if (!rs) return spell.id;
-    return `${spellDisplayName(rs, spell.id, undefined, paramLabel)} (${levelTag(spell)})`;
+    return `${spellDisplayName(rs, spell.id, undefined, paramLabel)} (${codeTag(spell)})`;
   }
 
   // A chosen row's display: name (with the chosen target Form interpolated for a
-  // parametrized spell) + its TeFo tag (no grouping in the selected list, so the
-  // Technique/Form stays useful here). A fixed spell shows its catalogue level; a
-  // General spell shows the localized "General" marker.
+  // parametrized spell) + the same code tag as the source row. A fixed spell shows
+  // its catalogue level; a General spell shows the localized "General" marker.
   function rowLabel(chosen: SpellSelection): string {
     const rs = store.ruleset;
     const cat = rs?.ruleset.spells?.[chosen.spell];
     if (!rs || !cat) return chosen.spell;
-    const tf = `${abbr(cat.technique)}${abbr(cat.form)}`;
-    const lvl = cat.level == null ? store.t('spell-level-general') : String(cat.level);
-    return `${spellDisplayName(rs, chosen.spell, chosen.parameter, paramLabel)} (${tf} ${lvl})`;
+    return `${spellDisplayName(rs, chosen.spell, chosen.parameter, paramLabel)} (${codeTag(cat)})`;
   }
 
   // `minLearnableLevel`, `nonTakeableReason`, `isDisabled`, and

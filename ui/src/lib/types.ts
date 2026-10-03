@@ -2279,6 +2279,12 @@ export interface Ruleset {
 export interface LocalizedRuleset {
   ruleset: Ruleset;
   i18n: Record<string, I18nEntry>;
+  // Each catalogue spell's book code without its level ("CrIm(Ig)"), keyed by
+  // spell id — composed by the engine (`LocalizedRuleset::spell_code`), requisites
+  // included, so the UI never re-composes it from Art abbreviations (I4).
+  // Optional like `art_type_order`: a live payload always sends it, but hand-built
+  // test fixtures need not.
+  spell_codes?: Record<string, string>;
 }
 
 export interface RulesetRef {

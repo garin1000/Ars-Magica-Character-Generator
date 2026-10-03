@@ -1666,8 +1666,14 @@ export-col-magnitude = Magnitude
 export-col-penalty = Penalty
 export-col-points = Points
 # Header of the exported spell list's one Arts-and-level column: the Technique and
-# Form abbreviations followed by the level, the rulebook's own short form (CrIg20).
+# Form abbreviations (requisites in parentheses) followed by the level, the
+# rulebook's own short form (Cr(Re)Ig 30).
 export-col-spell-code = TeFo/Level
+# Markers after a spell's code in the exported spell list, for a spell the player
+# marked within their Magical Focus or within their Potent Magic field
+# ("CrIg 20 · Focus · Potent"). The engine joins them with a single space.
+export-spell-within-focus = · Focus
+export-spell-within-potent-field = · Potent
 # Rules-text column of the exported Virtue/Flaw tables: an uncomputed-rule entry's
 # description (falling back to its summary), or a computed entry's summary.
 export-col-summary = Summary

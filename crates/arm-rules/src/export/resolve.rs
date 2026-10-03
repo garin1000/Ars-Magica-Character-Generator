@@ -51,17 +51,6 @@ impl<'a> Doc<'a> {
         }
     }
 
-    /// The localized short abbreviation of an Art (`Cr`, `Ig`) — the notation the
-    /// rulebook and the app both use for a spell's Arts. It is rules i18n data, never
-    /// composed here; an Art whose entry ships none falls back to its display name,
-    /// which is long but still readable, rather than leaving the code half-written.
-    pub(super) fn art_code(&self, id: &Id) -> String {
-        match self.ruleset.abbreviation(id) {
-            Some(abbreviation) => escape_cell(abbreviation),
-            None => escape_cell(&self.name(id)),
-        }
-    }
-
     /// Appends an ATX heading whose text is the chrome label for `key`.
     pub(super) fn section(&self, out: &mut String, level: usize, key: &str) {
         heading(out, level, &self.label(key));

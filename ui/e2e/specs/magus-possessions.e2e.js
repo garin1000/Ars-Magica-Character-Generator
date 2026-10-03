@@ -1253,7 +1253,7 @@ describe('markdown export', () => {
     // with its short Art-and-level code (Creo + Ignem + level 20).
     expect(md).toMatch(/\| Single Weapon \| longsword \| 2 \|/);
     expect(md).toMatch(/\| Creo \| 5 \|/);
-    expect(md).toMatch(/\| Pilum of Fire \| CrIg20 \|/);
+    expect(md).toMatch(/\| Pilum of Fire \| CrIg 20 \|/);
     // Every Art is on the sheet, not only the two that were scored.
     expect(md).toMatch(/\| Terram \| 0 \|/);
     expect(section(md, 'Magic Items')).toContain('Ring of the Warding Flame');

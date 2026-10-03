@@ -188,6 +188,8 @@ pub const LABEL_KEYS: &[&str] = &[
     "export-granted",
     "export-items-boons",
     "export-items-hooks",
+    "export-spell-within-focus",
+    "export-spell-within-potent-field",
     "export-untitled",
     "export-vf-realm-label",
     "export-xp-restricted",
@@ -2215,8 +2217,9 @@ mod tests {
     // --- spells -----------------------------------------------------------
 
     /// The sheet names a spell's Arts and level the way the rulebook and the app do:
-    /// one short code, Technique and Form abbreviations followed by the level
-    /// (`CrIg20`), not three separate columns of spelled-out Art names.
+    /// one short code, Technique and Form abbreviations followed by the level a
+    /// space apart (`CrIg 20`, as in "Cr(Re)Ig 30", ArMDE:19301), not three separate
+    /// columns of spelled-out Art names.
     #[test]
     fn spells_list_their_art_code_and_mastery() {
         let mut e = magus();
@@ -2243,7 +2246,7 @@ mod tests {
             "{doc}"
         );
         assert!(
-            doc.contains("| Pilum of Fire | CrIg20 | 2 | Penetration |"),
+            doc.contains("| Pilum of Fire | CrIg 20 | 2 | Penetration |"),
             "{doc}"
         );
     }
@@ -2258,8 +2261,8 @@ mod tests {
         }];
         let doc = character_markdown(&e, &ruleset(), &labels(&[("spell-level-general", "Gen")]));
         assert!(doc.contains("| Wizard's Boost of Ignem |"), "{doc}");
-        // The marker sits a space after the Arts, where a resolved level would abut
-        // them: `MuVi15` is one figure, `MuVi Gen` two readable halves.
+        // The marker sits a space after the Arts, exactly where a resolved level
+        // would (`MuVi 15`).
         assert!(doc.contains("| MuVi Gen |"), "{doc}");
     }
 
