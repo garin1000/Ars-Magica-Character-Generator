@@ -13,9 +13,9 @@ describe('withReason', () => {
       listLabel: 'Specialties',
       list: ['fire'],
     };
-    expect(withReason(base, 'Above your casting cap (3)')).toEqual({
+    expect(withReason(base, 'Above the highest level you can learn (3)')).toEqual({
       ...base,
-      reason: 'Above your casting cap (3)',
+      reason: 'Above the highest level you can learn (3)',
     });
   });
 

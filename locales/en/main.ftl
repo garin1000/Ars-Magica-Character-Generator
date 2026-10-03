@@ -427,15 +427,15 @@ spell-group-header = { $technique } { $form }
 # Compact "General" tag on a spell with no fixed catalogue level (shown after the
 # Technique/Form abbreviations, e.g. "ReVi Gen").
 spell-level-general = Gen
-# Why a spell's add control is greyed: its level is above the magus's per-spell
-# casting cap, the remaining spell-levels budget cannot afford it, or the spell is
+# Why a spell's add control is greyed: its level is above the highest level the
+# magus can learn, the remaining spell-levels budget cannot afford it, or the spell is
 # already in the selected list (an ordinary fixed-level spell is taken only once).
-spell-cap-reason = Above your casting cap ({ $cap })
+spell-cap-reason = Above the highest level you can learn ({ $cap })
 # D81.5: the plain Add control's reason when the spell's level exceeds the
 # plain per-spell cap but still fits the Magical-Focus-doubled one — distinct
 # from spell-cap-reason so the tooltip points at the separate "add within
 # focus" action instead of calling the spell simply out of reach.
-spell-cap-within-focus-reason = Above your casting cap ({ $cap }); fits within your Magical Focus
+spell-cap-within-focus-reason = Above the highest level you can learn ({ $cap }); fits within your Magical Focus
 spell-budget-reason = Not enough spell levels remaining
 spell-already-taken-reason = Already selected
 # D81.5: a spell whose level exceeds the plain per-spell cap but fits the
@@ -445,7 +445,7 @@ spell-already-taken-reason = Already selected
 spell-add-within-focus = Add within focus
 spell-add-within-focus-label = Add { $name } within focus
 spell-add-within-focus-tooltip = Fits within your Magical Focus (cap { $cap })
-# The Technique/Form baseline casting cap (no spell-specific requisites
+# The Technique/Form baseline spell-level cap (no spell-specific requisites
 # folded in), shown as a hover hint on a source group's header — a quick
 # at-a-glance figure; the per-spell cap above is what actually gates a row.
 spell-group-cap-tooltip = Spell-level cap: { $cap }
@@ -870,7 +870,7 @@ longevity-hint-halved = halved
 longevity-focus-label = Focus
 longevity-focus-placeholder = How the ritual culminates
 # Shown as the reason a Supernatural Ability is greyed in the picker.
-ability-requires-virtue = Requires a granting Virtue (or the Gift's one free Ability)
+ability-requires-virtue = Requires a granting Virtue
 # Screen-reader-only text on a selected Ability row an error-severity issue
 # points at (S7, full-audit a11y) — pairs with a visible glyph so the row's
 # invalidity is never colour-only (WCAG 1.4.1).
@@ -1226,7 +1226,7 @@ issue-other-step = Resolve on the { $step } step.
 # arg names are stable per code and passed through verbatim by the UI.
 issue-over_budget_virtues = Virtue points ({ $points }) exceed budget ({ $budget }).
 issue-over_budget_flaws = Flaw points ({ $points }) exceed budget ({ $budget }).
-issue-unbalanced_virtues = Virtue points ({ $virtue_points }) exceed Flaw points ({ $flaw_points }); Virtues must be funded by Flaws.
+issue-unbalanced_virtues = Virtue points ({ $virtue_points }) exceed what your Flaw points ({ $flaw_points }) can fund.
 issue-too_many_major_virtues = Too many Major Virtues ({ $count } of max { $max }).
 issue-too_many_major_hermetic_virtues = Too many Major Hermetic Virtues ({ $count } of max { $max }).
 issue-too_few_social_status_virtues = Too few Social Status Virtues or Flaws ({ $count } of min { $min }).
@@ -1295,13 +1295,13 @@ issue-ruleset_mismatch = Saved under ruleset { $saved_ruleset } { $saved_version
 issue-characteristic_out_of_range = Characteristic { $characteristic } score { $score } is outside the allowed range ({ $min } to { $max }).
 issue-characteristic_overspent = Characteristics cost { $cost } points, over the { $points } available.
 issue-characteristic_points_unspent = Only { $cost } of { $points } Characteristic points spent.
-issue-characteristic_above_cap = Characteristic { $characteristic } score { $score } exceeds its maximum of { $cap }; raise the cap with Great Characteristic.
-issue-characteristic_below_floor = Characteristic { $characteristic } score { $score } is below its minimum of { $floor }; lower the floor with Poor Characteristic.
+issue-characteristic_above_cap = Characteristic { $characteristic } score { $score } exceeds its maximum of { $cap }.
+issue-characteristic_below_floor = Characteristic { $characteristic } score { $score } is below its minimum of { $floor }.
 issue-characteristic_max_base_too_low = { $item } requires { $characteristic } to be at least { $min } (currently { $base }).
 issue-characteristic_min_base_too_high = { $item } requires { $characteristic } to be at most { $max } (currently { $base }).
 issue-unknown_ability = Unknown ability: { $ability }.
-issue-duplicate_ability = { $ability } is listed { $count } times with the same specialty.
-issue-not_enough_xp = Abilities cost { $spent } XP, more than the { $pool } in the pool.
+issue-duplicate_ability = { $ability } is listed { $count } times.
+issue-not_enough_xp = Abilities, Arts and Spell Mastery need { $spent } XP in total, more than the { $pool } XP available for them.
 issue-xp_solve_bound_exceeded = This character has too many Ability and Art scores and mastered spells ({ $spends } bought scores across { $pools } experience pools, { $nodes } in total) for experience to be allocated — the limit is { $limit }. This usually means the save file is damaged.
 issue-restricted_xp_unspent = { $origin }: { $unspent } of { $amount } restricted experience points are unspent and will be wasted.
 # guided-creation-review-2026-08 #30. Purely a count, and deliberately so: the
@@ -1366,7 +1366,7 @@ issue-over_spell_levels = Spells total { $used } levels, over the budget of { $b
 issue-spell_level_exceeds_cap = Spell { $spell } is level { $level }, above the maximum you can learn ({ $cap }).
 issue-spell_ritual_legality = Spell { $spell } is learned at level { $level }, which breaks the ritual level bounds (rituals at least 20, non-rituals at most 50).
 issue-ritual_casting_restricted = { $spell } is a Ritual, and Rigid Magic forbids using vis to cast it.
-issue-spell_uses_incompatible_arts = { $spell } draws on two Techniques and Forms that Incompatible Arts forbids using together.
+issue-spell_uses_incompatible_arts = { $spell } uses a Technique and Form combination that Incompatible Arts forbids.
 issue-spell_within_focus_without_magical_focus = { $spell } is marked within focus, but no Magical Focus is held; the marking has no effect.
 issue-unknown_mastery_ability = Unknown Spell Mastery ability { $ability } chosen for { $spell }.
 issue-too_many_mastery_abilities = { $spell } has more Mastery special abilities ({ $chosen }) than its Mastery score of { $mastery } allows (one per level).
@@ -1378,7 +1378,7 @@ issue-specialty_forbidden = { $ability } may not have a specialty ({ $specialty 
 issue-ambiguous_bound_parameter = { $item } is held more than once; { $ability }'s linked value cannot be resolved until the duplicate is removed.
 issue-wrong_param_count = { $item } names { $count } value(s) for { $key }, but exactly { $expected } are required.
 issue-ability_outside_restricted_scope = { $item } restricts experience to { $allowed }; { $ability } is outside that list.
-issue-supernatural_ability_requires_virtue = { $ability } is a Supernatural Ability and requires a granting Virtue (or the Gift's one free Ability).
+issue-supernatural_ability_requires_virtue = { $ability } is a Supernatural Ability and requires a granting Virtue.
 issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) is outside the allowed range (±{ $max }).
 issue-fickle_nature_trait_pair_missing = { $item } requires at least two Personality Traits at exactly { $value } (a matched pair).
 issue-reputation_not_granted = A { $kind } Reputation ({ $content }) needs a Virtue or Flaw that grants one.

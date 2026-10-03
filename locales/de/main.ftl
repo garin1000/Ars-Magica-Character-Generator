@@ -909,7 +909,7 @@ longevity-focus-placeholder = Worin das Ritual gipfelt
 # Grund, warum eine Übernatürliche Fertigkeit im Auswähler ausgegraut ist.
 # "Fertigkeit", nie "Fähigkeit": Ability ist im Glossar und im Regelwerk
 # durchgehend die Fertigkeit (Basisregeln.md:1065, :1067, :2315, :2872).
-ability-requires-virtue = Erfordert eine verleihende Tugend (oder die eine freie Fertigkeit der Gabe)
+ability-requires-virtue = Erfordert eine verleihende Tugend
 # Nur für Screenreader: Text auf einer gewählten Fähigkeitszeile, auf die ein
 # Prüfhinweis mit Schweregrad „Fehler" zeigt (S7, full-audit a11y) — ergänzt ein
 # sichtbares Symbol, damit die Ungültigkeit nie allein über die Farbe vermittelt
@@ -1305,7 +1305,7 @@ issue-other-step = Im Schritt „{ $step }“ zu beheben.
 # je Code stabil und werden von der UI unverändert weitergereicht.
 issue-over_budget_virtues = Tugendpunkte ({ $points }) überschreiten das Budget ({ $budget }).
 issue-over_budget_flaws = Fehlerpunkte ({ $points }) überschreiten das Budget ({ $budget }).
-issue-unbalanced_virtues = Tugendpunkte ({ $virtue_points }) übersteigen die Fehlerpunkte ({ $flaw_points }); Tugenden müssen durch Fehler finanziert werden.
+issue-unbalanced_virtues = Tugendpunkte ({ $virtue_points }) übersteigen, was deine Fehlerpunkte ({ $flaw_points }) finanzieren können.
 issue-too_many_major_virtues = Zu viele Große Tugenden ({ $count } von max. { $max }).
 issue-too_many_major_hermetic_virtues = Zu viele Große Hermetische Tugenden ({ $count } von max. { $max }).
 issue-too_few_social_status_virtues = Zu wenige Tugenden oder Fehler des Sozialen Status ({ $count } von min. { $min }).
@@ -1376,13 +1376,13 @@ issue-ruleset_mismatch = Gespeichert unter Regelwerk { $saved_ruleset } { $saved
 issue-characteristic_out_of_range = Eigenschaft { $characteristic } mit Wert { $score } liegt außerhalb des erlaubten Bereichs ({ $min } bis { $max }).
 issue-characteristic_overspent = Eigenschaften kosten { $cost } Punkte, mehr als die verfügbaren { $points }.
 issue-characteristic_points_unspent = Nur { $cost } von { $points } Eigenschaftspunkten ausgegeben.
-issue-characteristic_above_cap = Eigenschaft { $characteristic } mit Wert { $score } überschreitet ihr Maximum von { $cap }; erhöhe die Grenze mit Hervorragende Eigenschaft.
-issue-characteristic_below_floor = Eigenschaft { $characteristic } mit Wert { $score } liegt unter ihrem Minimum von { $floor }; senke die Grenze mit Schlechte Eigenschaft.
+issue-characteristic_above_cap = Eigenschaft { $characteristic } mit Wert { $score } überschreitet ihr Maximum von { $cap }.
+issue-characteristic_below_floor = Eigenschaft { $characteristic } mit Wert { $score } liegt unter ihrem Minimum von { $floor }.
 issue-characteristic_max_base_too_low = { $item } erfordert { $characteristic } mindestens auf { $min } (derzeit { $base }).
 issue-characteristic_min_base_too_high = { $item } erfordert { $characteristic } höchstens auf { $max } (derzeit { $base }).
 issue-unknown_ability = Unbekannte Fertigkeit: { $ability }.
-issue-duplicate_ability = { $ability } ist { $count }-mal mit derselben Spezialisierung aufgeführt.
-issue-not_enough_xp = Fertigkeiten kosten { $spent } EP, mehr als die { $pool } im Vorrat.
+issue-duplicate_ability = { $ability } ist { $count }-mal aufgeführt.
+issue-not_enough_xp = Fertigkeiten, Künste und Zaubermeisterschaft brauchen insgesamt { $spent } EP, mehr als die { $pool } EP, die dafür verfügbar sind.
 issue-xp_solve_bound_exceeded = Dieser Charakter hat zu viele Fertigkeits- und Künste-Werte sowie gemeisterte Zaubersprüche ({ $spends } gekaufte Werte über { $pools } Erfahrungspunkte-Vorräte, { $nodes } insgesamt), um die Erfahrungspunkte zuzuteilen — die Grenze liegt bei { $limit }. Das deutet meist auf eine beschädigte Spielstand-Datei hin.
 issue-restricted_xp_unspent = { $origin }: { $unspent } von { $amount } eingeschränkten Erfahrungspunkten sind nicht ausgegeben und verfallen.
 # guided-creation-review-2026-08 #30. Bewusst nur eine Zählung: das eingeschränkte
@@ -1448,7 +1448,7 @@ issue-over_spell_levels = Die Zauber ergeben { $used } Stufen und überschreiten
 issue-spell_level_exceeds_cap = Zauber { $spell } hat Stufe { $level }, über der höchsten erlernbaren Stufe ({ $cap }).
 issue-spell_ritual_legality = Zauber { $spell } wird auf Stufe { $level } erlernt und verletzt die Ritualgrenzen (Rituale mindestens 20, Nicht-Rituale höchstens 50).
 issue-ritual_casting_restricted = { $spell } ist ein Ritual, und Starre Magie verbietet es, dabei Vis einzusetzen.
-issue-spell_uses_incompatible_arts = { $spell } verwendet zwei Techniken und Formen, deren gemeinsame Nutzung Unvereinbare Künste verbietet.
+issue-spell_uses_incompatible_arts = { $spell } verwendet eine Kombination aus Technik und Form, die der Fehler Unvereinbare Künste verbietet.
 issue-spell_within_focus_without_magical_focus = { $spell } ist als im Fokus markiert, aber der Charakter hat keinen Magischen Fokus; die Markierung hat keine Wirkung.
 issue-unknown_mastery_ability = Unbekannte Meisterschaftsfähigkeit { $ability } für { $spell } gewählt.
 issue-too_many_mastery_abilities = { $spell } hat mehr Meisterschaftsfähigkeiten ({ $chosen }), als der Meisterschaftswert von { $mastery } erlaubt (eine je Stufe).
@@ -1460,7 +1460,7 @@ issue-specialty_forbidden = { $ability } darf keine Spezialisierung haben ({ $sp
 issue-ambiguous_bound_parameter = { $item } wird mehr als einmal gehalten; der verknüpfte Wert von { $ability } kann erst aufgelöst werden, wenn das Duplikat entfernt wurde.
 issue-wrong_param_count = { $item }: Für { $key } sind genau { $expected } Werte erforderlich, genannt sind { $count }.
 issue-ability_outside_restricted_scope = { $item } beschränkt Erfahrungspunkte auf { $allowed }; { $ability } liegt außerhalb dieser Liste.
-issue-supernatural_ability_requires_virtue = { $ability } ist eine Übernatürliche Fertigkeit und erfordert eine verleihende Tugend (oder die eine freie Fertigkeit der Gabe).
+issue-supernatural_ability_requires_virtue = { $ability } ist eine Übernatürliche Fertigkeit und erfordert eine verleihende Tugend.
 issue-personality_trait_out_of_range = Persönlichkeitseigenschaft { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).
 issue-fickle_nature_trait_pair_missing = { $item } erfordert mindestens zwei Persönlichkeitseigenschaften mit genau dem Wert { $value } (ein zusammengehöriges Paar).
 issue-reputation_not_granted = Eine Reputation ({ $kind }, { $content }) benötigt eine Tugend oder einen Fehler, der sie verleiht.

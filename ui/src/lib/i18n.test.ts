@@ -504,13 +504,19 @@ describe('German UI bundle', () => {
   // *Fähigkeit* in its ordinary sense ("the ability to analyse"), and
   // `spell-mastery-abilities-label` is the rulebook's own heading verbatim
   // (`Basisregeln.md:9524` — "Besondere Fähigkeiten gemeisterter Zauber").
+  //
+  // F3 (tmp/ftl-rules-audit.md) dropped the "Gift's one free Ability" clause, so
+  // the picker tooltip no longer names the game term at all. It must still never
+  // say Fähigkeit; only the issue message is held to say Fertigkeit.
   it('calls an Ability a Fertigkeit wherever it names the game term', () => {
     const de = buildBundle('de');
     for (const key of ['ability-requires-virtue', 'issue-supernatural_ability_requires_virtue']) {
       const message = translate(de, key, { ability: 'Zweites Gesicht' });
       expect(message, `${key} still says Fähigkeit`).not.toContain('Fähigkeit');
-      expect(message, `${key} does not say Fertigkeit`).toContain('Fertigkeit');
     }
+    expect(
+      translate(de, 'issue-supernatural_ability_requires_virtue', { ability: 'Zweites Gesicht' }),
+    ).toContain('Fertigkeit');
   });
 
   // Round-1 audit, Sabine 4: the German Fatigue ladder is the rulebook's own
@@ -1122,5 +1128,170 @@ describe('German UI bundle, wording at a count of 1', () => {
 
   it('states a single Confidence Point correctly', () => {
     expect(say('confidence-readout', { score: '1', points: '1' })).toBe('Wert 1, Punkte 1');
+  });
+});
+
+// FTL rules-claim audit (tmp/ftl-rules-audit.md, 2026-10-03): messages that
+// claimed something the engine does not do. One case per key and locale, every
+// arg a STRING as `derive.ts::resolveIssueArgs` passes it, pinned to the whole
+// target sentence.
+describe('UI bundles, rules-claim audit fixes', () => {
+  const bundles = { en: buildBundle('en'), de: buildBundle('de') };
+  const say = (lang: 'en' | 'de', key: string, args?: Record<string, string>) =>
+    translate(bundles[lang], key, args).replace(/[⁦-⁩]/g, '');
+
+  const cases: {
+    finding: string;
+    lang: 'en' | 'de';
+    key: string;
+    args?: Record<string, string>;
+    want: string;
+  }[] = [
+    // F2: Great/Poor (Characteristic) never move the buy cap or floor
+    // (`effective/characteristic.rs::characteristic_cap`, ArMDE:3987-3989); the
+    // only shipped cap-lowerer is Uninspirational (ArMDE:6919-6921).
+    {
+      finding: 'F2',
+      lang: 'en',
+      key: 'issue-characteristic_above_cap',
+      args: { characteristic: 'Presence', score: '1', cap: '0' },
+      want: 'Characteristic Presence score 1 exceeds its maximum of 0.',
+    },
+    {
+      finding: 'F2',
+      lang: 'de',
+      key: 'issue-characteristic_above_cap',
+      args: { characteristic: 'Präsenz', score: '1', cap: '0' },
+      want: 'Eigenschaft Präsenz mit Wert 1 überschreitet ihr Maximum von 0.',
+    },
+    {
+      finding: 'F2',
+      lang: 'en',
+      key: 'issue-characteristic_below_floor',
+      args: { characteristic: 'Presence', score: '-4', floor: '-3' },
+      want: 'Characteristic Presence score -4 is below its minimum of -3.',
+    },
+    {
+      finding: 'F2',
+      lang: 'de',
+      key: 'issue-characteristic_below_floor',
+      args: { characteristic: 'Präsenz', score: '-4', floor: '-3' },
+      want: 'Eigenschaft Präsenz mit Wert -4 liegt unter ihrem Minimum von -3.',
+    },
+    // F3: a magus has no free Gift slot (ArMDE:2874,
+    // `effective/reputation_and_caps.rs::supernatural_free_slots`), and the
+    // tooltip shows only when no slot is free.
+    {
+      finding: 'F3',
+      lang: 'en',
+      key: 'ability-requires-virtue',
+      want: 'Requires a granting Virtue',
+    },
+    {
+      finding: 'F3',
+      lang: 'de',
+      key: 'ability-requires-virtue',
+      want: 'Erfordert eine verleihende Tugend',
+    },
+    {
+      finding: 'F3',
+      lang: 'en',
+      key: 'issue-supernatural_ability_requires_virtue',
+      args: { ability: 'Second Sight' },
+      want: 'Second Sight is a Supernatural Ability and requires a granting Virtue.',
+    },
+    {
+      finding: 'F3',
+      lang: 'de',
+      key: 'issue-supernatural_ability_requires_virtue',
+      args: { ability: 'Zweites Gesicht' },
+      want: 'Zweites Gesicht ist eine Übernatürliche Fertigkeit und erfordert eine verleihende Tugend.',
+    },
+    // F4: a Mythic Companion's Flaws fund twice their points (ArMDE:2844,
+    // `validation/balance.rs::validate_balance` via `funded`), so the sentence
+    // must not state 1:1. 7 Virtue / 3 Flaw fires at both rates.
+    {
+      finding: 'F4',
+      lang: 'en',
+      key: 'issue-unbalanced_virtues',
+      args: { virtue_points: '7', flaw_points: '3' },
+      want: 'Virtue points (7) exceed what your Flaw points (3) can fund.',
+    },
+    {
+      finding: 'F4',
+      lang: 'de',
+      key: 'issue-unbalanced_virtues',
+      args: { virtue_points: '7', flaw_points: '3' },
+      want: 'Tugendpunkte (7) übersteigen, was deine Fehlerpunkte (3) finanzieren können.',
+    },
+    // F8: `spent` is the flow solve's whole demand, Abilities + Arts + Spell
+    // Mastery (`validation/magus.rs::validate_xp_pool`, `effective/xp.rs::build_spends`).
+    {
+      finding: 'F8',
+      lang: 'en',
+      key: 'issue-not_enough_xp',
+      args: { spent: '300', pool: '240', shortfall: '60' },
+      want: 'Abilities, Arts and Spell Mastery need 300 XP in total, more than the 240 XP available for them.',
+    },
+    {
+      finding: 'F8',
+      lang: 'de',
+      key: 'issue-not_enough_xp',
+      args: { spent: '300', pool: '240', shortfall: '60' },
+      want: 'Fertigkeiten, Künste und Zaubermeisterschaft brauchen insgesamt 300 EP, mehr als die 240 EP, die dafür verfügbar sind.',
+    },
+    // F9: duplicates are keyed on (Ability, instance parameter), never on the
+    // specialty (`validation/scores.rs::validate_abilities`).
+    {
+      finding: 'F9',
+      lang: 'en',
+      key: 'issue-duplicate_ability',
+      args: { ability: 'Brawl', count: '2' },
+      want: 'Brawl is listed 2 times.',
+    },
+    {
+      finding: 'F9',
+      lang: 'de',
+      key: 'issue-duplicate_ability',
+      args: { ability: 'Raufen', count: '2' },
+      want: 'Raufen ist 2-mal aufgeführt.',
+    },
+    // L1: the cap is the highest level a magus can LEARN (ArMDE:2465), worded as
+    // `issue-spell_level_exceeds_cap` already words it. DE's neutral
+    // „Zaubergrenze“ makes no casting claim and stays (pinned by S6 above).
+    {
+      finding: 'L1',
+      lang: 'en',
+      key: 'spell-cap-reason',
+      args: { cap: '15' },
+      want: 'Above the highest level you can learn (15)',
+    },
+    {
+      finding: 'L1',
+      lang: 'en',
+      key: 'spell-cap-within-focus-reason',
+      args: { cap: '15' },
+      want: 'Above the highest level you can learn (15); fits within your Magical Focus',
+    },
+    // L2: the Flaw bars Technique+Form combinations (ArMDE:6292), and a spell
+    // trips it by touching one (`effective/spell.rs::spell_touches_barred_combination`).
+    {
+      finding: 'L2',
+      lang: 'en',
+      key: 'issue-spell_uses_incompatible_arts',
+      args: { spell: 'Pilum of Fire' },
+      want: 'Pilum of Fire uses a Technique and Form combination that Incompatible Arts forbids.',
+    },
+    {
+      finding: 'L2',
+      lang: 'de',
+      key: 'issue-spell_uses_incompatible_arts',
+      args: { spell: 'Pilum des Feuers' },
+      want: 'Pilum des Feuers verwendet eine Kombination aus Technik und Form, die der Fehler Unvereinbare Künste verbietet.',
+    },
+  ];
+
+  it.each(cases)('$finding: $lang/$key states what the engine does', (c) => {
+    expect(say(c.lang, c.key, c.args)).toBe(c.want);
   });
 });
