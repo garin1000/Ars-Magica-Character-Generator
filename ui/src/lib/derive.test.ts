@@ -51,6 +51,7 @@ import {
   invalidSelectionIds,
   isDisabled,
   minLearnableLevel,
+  movedAbilityParameterNotice,
   nonTakeableReason,
   orderSelectedSpells,
   usedSpellForms,
@@ -3111,6 +3112,155 @@ describe('agingMigrationNotice (slice-2 handoff)', () => {
     expect(notice.toLowerCase()).toMatch(
       lang === 'en' ? /smallest|minimal|approximat/ : /kleinstm|minimal|näherung/,
     );
+  });
+});
+
+// --- L1b: the one-time notice for the 21 -> 22 language move ------------------
+
+/**
+ * L1b (try-out finding 6, decisions C5): loading a pre-22 save moves a language
+ * instance from the Ability whose catalogue no longer holds its value (Dead vs
+ * Living Language) to the one that does, and tells the player once. The engine
+ * reports ids and scores only; this composes the sentence. Every Ability and
+ * value is named by its localized name, never the raw id, and a collision names
+ * both scores.
+ */
+describe('movedAbilityParameterNotice (L1b)', () => {
+  const bundles = { en: buildBundle('en'), de: buildBundle('de') } as const;
+  const translator =
+    (lang: Lang): Translate =>
+    (key, a) =>
+      formatMessage(bundles[lang], key, a);
+
+  /** Just enough ruleset for the two language Abilities and their values, per locale. */
+  function languageRuleset(lang: Lang): LocalizedRuleset {
+    const names =
+      lang === 'en'
+        ? { dead: 'Dead Language', living: 'Living Language', arabic: 'Arabic', latin: 'Latin' }
+        : { dead: 'Tote Sprache', living: 'Lebende Sprache', arabic: 'Arabisch', latin: 'Latein' };
+    const localized = makeRuleset([], {
+      i18n: {
+        'ability.dead_language': { name: `{language} (${names.dead})`, name_unfilled: names.dead },
+        'ability.living_language': {
+          name: `{language} (${names.living})`,
+          name_unfilled: names.living,
+        },
+        'language.arabic': { name: names.arabic },
+        'language.latin': { name: names.latin },
+      },
+    });
+    localized.ruleset.abilities = {
+      'ability.dead_language': {
+        id: 'ability.dead_language',
+        category: 'academic',
+        parameter: 'language',
+      },
+      'ability.living_language': {
+        id: 'ability.living_language',
+        category: 'general',
+        parameter: 'language',
+      },
+    } as unknown as LocalizedRuleset['ruleset']['abilities'];
+    return localized;
+  }
+
+  /** Strips Fluent's bidi isolation marks so a substring check reads plainly. */
+  const plain = (s: string | null) => s?.replace(/[⁨⁩]/g, '') ?? null;
+
+  it('says nothing when nothing moved, or before a ruleset is loaded', () => {
+    expect(movedAbilityParameterNotice(languageRuleset('en'), [], translator('en'))).toBeNull();
+    expect(
+      movedAbilityParameterNotice(
+        null,
+        [
+          {
+            from: 'ability.dead_language',
+            to: 'ability.living_language',
+            value: 'language.arabic',
+            score: 3,
+          },
+        ],
+        translator('en'),
+      ),
+    ).toBeNull();
+  });
+
+  it.each([
+    ['en', 'Arabic', 'Dead Language', 'Living Language'],
+    ['de', 'Arabisch', 'Tote Sprache', 'Lebende Sprache'],
+  ] as const)(
+    'names the value and both Abilities, never an id (%s)',
+    (lang, value, dead, living) => {
+      const notice = plain(
+        movedAbilityParameterNotice(
+          languageRuleset(lang),
+          [
+            {
+              from: 'ability.dead_language',
+              to: 'ability.living_language',
+              value: 'language.arabic',
+              score: 3,
+            },
+          ],
+          translator(lang),
+        ),
+      );
+      expect(notice).not.toBeNull();
+      expect(notice).toContain(value);
+      expect(notice).toContain(dead);
+      expect(notice).toContain(living);
+      expect(notice).not.toContain('language.arabic');
+      expect(notice).not.toContain('ability.');
+      expect(notice).not.toContain('{');
+    },
+  );
+
+  it.each(['en', 'de'] as const)('names both scores on a collision (%s)', (lang) => {
+    const notice = plain(
+      movedAbilityParameterNotice(
+        languageRuleset(lang),
+        [
+          {
+            from: 'ability.living_language',
+            to: 'ability.dead_language',
+            value: 'language.latin',
+            score: 7,
+            existing_score: 3,
+          },
+        ],
+        translator(lang),
+      ),
+    );
+    expect(notice).not.toBeNull();
+    expect(notice).toContain('7');
+    expect(notice).toContain('3');
+    expect(notice).toContain(lang === 'en' ? 'Latin' : 'Latein');
+    expect(notice).not.toContain('{');
+  });
+
+  it('lists every moved entry in one notice', () => {
+    const notice = plain(
+      movedAbilityParameterNotice(
+        languageRuleset('en'),
+        [
+          {
+            from: 'ability.dead_language',
+            to: 'ability.living_language',
+            value: 'language.arabic',
+            score: 3,
+          },
+          {
+            from: 'ability.living_language',
+            to: 'ability.dead_language',
+            value: 'language.latin',
+            score: 1,
+          },
+        ],
+        translator('en'),
+      ),
+    );
+    expect(notice).toContain('Arabic');
+    expect(notice).toContain('Latin');
   });
 });
 

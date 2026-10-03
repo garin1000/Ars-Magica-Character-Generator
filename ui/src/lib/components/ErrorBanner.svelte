@@ -85,3 +85,15 @@
     >
   </div>
 {/if}
+
+{#if store.movedAbilityParameterNotice}
+  <!-- L1b (try-out finding 6): a pre-22 save held a value under the sibling
+       Ability whose list no longer has it (Dead vs Living Language), and the load
+       moved it. A polite sibling block like the two above, shown once: the next
+       save writes schema 22, which the move never touches. -->
+  <div class="error-banner-block">
+    <span class="migration-notice" role="status" data-testid="moved-ability-notice"
+      >{store.movedAbilityParameterNotice}</span
+    >
+  </div>
+{/if}

@@ -592,6 +592,15 @@ unresolved-catalogued-parameter-list-separator = ,
 migrated-catalogued-parameter-notice = { $items } were recognized from what you typed and are now linked to their catalogue entry.
 migrated-catalogued-parameter-item = { $ability }: "{ $text }" → { $resolved }
 migrated-catalogued-parameter-list-separator = ,
+# L1b (try-out finding 6): shown once after opening a save written before an
+# Ability's value list was split (Dead / Living Language). Each entry moved to the
+# Ability whose list holds its value. $from / $to are the instance's full names
+# ("Arabic (Dead Language)"); on a collision $score is the moved entry's score,
+# $existing the one already there, and $kept the score that was kept.
+moved-ability-parameter-notice = This character was saved before a list of values was split, so these entries were moved to the Ability whose list holds them: { $items }. Saving keeps the change.
+moved-ability-parameter-item = { $from } → { $to }
+moved-ability-parameter-collision-item = { $from } ({ $score }) → { $to }, which already had it at { $existing }; the higher score, { $kept }, was kept
+moved-ability-parameter-list-separator = ;
 warping-points-label = Warping points
 twilight-scars-label = Twilight Scars
 twilight-scar-placeholder = Describe the scar
@@ -1335,6 +1344,7 @@ issue-childhood_slot_unfilled = Fill in the { $key } for { $ability } before app
 issue-childhood_slot_is_native_language = The { $key } for { $ability } must differ from the native language { $language }.
 issue-childhood_slot_duplicate_value = The { $key } { $value } for { $ability } is already used by another entry of the childhood package; choose a different one.
 issue-ability_parameter_required = { $ability } needs a value (e.g. the specific Area or Language).
+issue-ability_parameter_outside_catalogue = { $ability }: this value is not on this Ability's list. Choose it again from the list.
 issue-ability_score_out_of_range = Ability { $ability } score { $score } is outside the allowed range (0 to { $max }).
 # `$ability` is the WHOLE Ability name, instance included ("Craft: Carpentry",
 # "Brandenburg-Kunde"): the engine's `parameter` arg is folded into it by

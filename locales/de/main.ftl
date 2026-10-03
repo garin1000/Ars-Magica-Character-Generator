@@ -616,6 +616,14 @@ unresolved-catalogued-parameter-list-separator = ,
 migrated-catalogued-parameter-notice = { $items } wurden anhand des eingegebenen Textes erkannt und mit ihrem Katalogeintrag verknüpft.
 migrated-catalogued-parameter-item = { $ability }: „{ $text }“ → { $resolved }
 migrated-catalogued-parameter-list-separator = ,
+# L1b (Befund 6): einmalig nach dem Öffnen eines Spielstands, der vor der Aufteilung
+# einer Werteliste (Tote / Lebende Sprache) gespeichert wurde. $from / $to sind die
+# vollen Namen („Arabisch (Tote Sprache)“); bei einer Kollision ist $score der Wert
+# des verschobenen Eintrags, $existing der schon vorhandene, $kept der behaltene.
+moved-ability-parameter-notice = Dieser Charakter wurde gespeichert, bevor eine Werteliste aufgeteilt wurde. Diese Einträge wurden deshalb zu der Fertigkeit verschoben, deren Liste sie führt: { $items }. Beim Speichern bleibt die Änderung erhalten.
+moved-ability-parameter-item = { $from } → { $to }
+moved-ability-parameter-collision-item = { $from } ({ $score }) → { $to }, wo der Eintrag schon mit { $existing } vorhanden war; der höhere Wert, { $kept }, wurde behalten
+moved-ability-parameter-list-separator = ;
 warping-points-label = Verzerrungspunkte
 twilight-scars-label = Zwielichtnarben
 twilight-scar-placeholder = Beschreibe die Narbe
@@ -1418,6 +1426,7 @@ issue-childhood_slot_unfilled = Trage { $key } für { $ability } ein, bevor das 
 issue-childhood_slot_is_native_language = { $key } für { $ability } muss sich von der Muttersprache { $language } unterscheiden.
 issue-childhood_slot_duplicate_value = { $key } { $value } für { $ability } ist bereits von einem anderen Eintrag des Fertigkeitspakets belegt; wähle einen anderen Wert.
 issue-ability_parameter_required = { $ability } braucht einen Wert (z. B. das konkrete Gebiet oder die Sprache).
+issue-ability_parameter_outside_catalogue = { $ability }: Dieser Eintrag steht nicht in der Liste dieser Fertigkeit. Wähle ihn erneut aus der Liste.
 issue-ability_score_out_of_range = Fertigkeit { $ability } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
 # `$ability` ist der VOLLSTÄNDIGE Fertigkeitsname samt Instanz („Handwerk:
 # Zimmerei“, „Brandenburg-Kunde“): das Argument `parameter` der Engine wird von

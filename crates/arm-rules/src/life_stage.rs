@@ -2059,7 +2059,7 @@ mod tests {
             json.contains(r#""childhood_package": "childhood.athletic""#),
             "{json}"
         );
-        assert!(json.contains(r#""schema_version": 21"#), "{json}");
+        assert!(json.contains(r#""schema_version": 22"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
@@ -2120,10 +2120,11 @@ mod tests {
         // the widened aging log, 16 from the funding discriminator, 17 from the
         // per-document saga year, 18 from CV4's ability-parameter widening, 19
         // from C5a's multi-valued parameter type, 20 from F1's
-        // `EquipmentSlot::loadout` move, and 21 from X9b's `virtue.rard` ->
-        // `virtue.bard` id rename, not from this plan).
-        assert_eq!(SCHEMA_VERSION, 21);
-        assert!(json.contains(r#""schema_version": 21"#), "{json}");
+        // `EquipmentSlot::loadout` move, 21 from X9b's `virtue.rard` ->
+        // `virtue.bard` id rename, and 22 from L1b's Dead/Living Language move,
+        // not from this plan).
+        assert_eq!(SCHEMA_VERSION, 22);
+        assert!(json.contains(r#""schema_version": 22"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(back.life_stages, Some(out_of_apprenticeship));

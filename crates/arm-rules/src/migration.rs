@@ -193,7 +193,19 @@ use crate::types::{
 /// hostile-input surface (`CLAUDE.md` → "This is a DESKTOP APPLICATION"), so
 /// every place an item id can hide is swept, not only the one the shipped
 /// catalogue happens to use.
-pub const SCHEMA_VERSION: u32 = 21;
+///
+/// Bumped 21 → 22 for L1b (try-out finding 6, decisions C5): L1a split the
+/// shared language catalogue into separate Dead and Living Language lists, so a
+/// pre-22 save may hold a value under the sibling Ability whose list no longer
+/// has it. [`move_values_to_their_catalogue`] moves each such instance to the
+/// sibling whose catalogue holds the value, and the load reports every move
+/// ([`LoadedEntity::moved_ability_parameters`]). Unlike the folds above, it is
+/// gated on the file's RAW `schema_version` (< 22), read before any fold stamps
+/// it. A 22 file was written after the split, so a misplaced value there is a
+/// hand edit and validation reports it
+/// (`ability_parameter_outside_catalogue`); moving it would rewrite a
+/// deliberate choice. The version is stamped only when something moved.
+pub const SCHEMA_VERSION: u32 = 22;
 
 /// `(ability, original text, resolved catalogue id)` — see
 /// [`LoadedEntity::migrated_catalogued_parameters`]. A named alias rather than
@@ -208,6 +220,25 @@ type UnresolvedCatalogueParameters = Vec<(Id, String)>;
 /// one, design § 4.1) are reported identically, just filed under different
 /// fields.
 type LinkFoldReport = Vec<(Id, Id, String)>;
+
+/// One parameterized Ability instance the 21 → 22 load moved to the sibling
+/// Ability whose catalogue holds its value — see
+/// [`LoadedEntity::moved_ability_parameters`].
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct MovedAbilityParameter {
+    /// The Ability the instance was stored under (e.g. `ability.dead_language`).
+    pub from: Id,
+    /// The Ability it now sits under (e.g. `ability.living_language`).
+    pub to: Id,
+    /// The catalogue value it holds (e.g. `language.arabic`).
+    pub value: Id,
+    /// The moved instance's score.
+    pub score: u8,
+    /// On a collision, the score of the instance that already held `value`
+    /// under `to`; `None` when there was none. The higher one was kept.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub existing_score: Option<u8>,
+}
 
 /// The outcome of loading an entity save, including any schema migration applied.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -250,6 +281,12 @@ pub struct LoadedEntity {
     /// § 4.2 pins that no shipped grant ever duplicates a Bound/Link-declaring
     /// item; reachable only via a hand-edited or direct-unchecked save.
     pub ambiguous_links: LinkFoldReport,
+    /// Parameterized Ability instances a pre-22 save stored under an Ability
+    /// whose catalogue no longer holds their value, moved to the sibling
+    /// Ability whose catalogue does (L1b) — empty for a save at 22 or later and
+    /// for one with nothing to move. The caller surfaces it as a one-time
+    /// localized notice.
+    pub moved_ability_parameters: Vec<MovedAbilityParameter>,
 }
 
 /// Folds a legacy (schema ≤ 13) `talisman_attunements` value into
@@ -669,6 +706,140 @@ fn fold_legacy_equipment_loadout(value: &mut serde_json::Value) -> bool {
     equipment_loadout_absent
 }
 
+/// The first schema written after L1a split one parameter key's catalogue
+/// between sibling Abilities (Dead / Living Language). Only a save written
+/// BEFORE it can hold a value under the wrong sibling by accident, so
+/// [`move_values_to_their_catalogue`] runs only below it. A literal, not
+/// [`SCHEMA_VERSION`]: a later bump must not widen the move to saves that were
+/// written after the split.
+const CATALOGUE_SPLIT_SCHEMA_VERSION: u32 = 22;
+
+/// The catalogue an Ability draws its parameter values from, if it is
+/// catalogued and the catalogue exists.
+fn catalogue_of<'a>(ruleset: &'a Ruleset, ability: &Id) -> Option<&'a crate::catalogue::Catalogue> {
+    let catalogue_id = ruleset.ability(ability)?.catalogue_id()?;
+    ruleset.parameter_catalogues().get(&catalogue_id)
+}
+
+/// The id of the value in `catalogue` that `parameter` names: a `Catalogued` id
+/// the catalogue holds, or `Text` spelling out one of its values' names in
+/// either locale (the same trimmed, case-folded match as
+/// [`fold_catalogue_matching`]). `Linked` names no value of its own.
+fn value_in_catalogue(
+    catalogue: &crate::catalogue::Catalogue,
+    parameter: Option<&AbilityParameterValue>,
+    catalogue_names: &BTreeMap<Id, Vec<String>>,
+) -> Option<Id> {
+    match parameter? {
+        AbilityParameterValue::Catalogued { id } => catalogue.value(id).map(|v| v.id.clone()),
+        AbilityParameterValue::Text { text } => {
+            let folded = crate::catalogue::fold_name(text);
+            catalogue
+                .values
+                .iter()
+                .find(|value| {
+                    catalogue_names
+                        .get(&value.id)
+                        .into_iter()
+                        .flatten()
+                        .any(|name| crate::catalogue::fold_name(name) == folded)
+                })
+                .map(|value| value.id.clone())
+        }
+        AbilityParameterValue::Linked { .. } => None,
+    }
+}
+
+/// Where a misplaced instance belongs: `(sibling Ability, catalogue value)`.
+/// `None` when the value is in the instance's own catalogue (or names nothing
+/// recognizable), and when it is not in exactly ONE sibling's catalogue — a
+/// sibling being another catalogued Ability with the same parameter key. Never
+/// guessed: zero or several candidates leave the instance where it is.
+fn misplaced_value_target(
+    score: &crate::types::AbilityScore,
+    ruleset: &Ruleset,
+    catalogue_names: &BTreeMap<Id, Vec<String>>,
+) -> Option<(Id, Id)> {
+    let own_ability = ruleset.ability(&score.ability)?;
+    let own_catalogue = catalogue_of(ruleset, &score.ability)?;
+    if value_in_catalogue(own_catalogue, score.parameter.as_ref(), catalogue_names).is_some() {
+        return None;
+    }
+    let mut candidates = ruleset.abilities().filter_map(|sibling| {
+        if sibling.id == own_ability.id || sibling.parameter != own_ability.parameter {
+            return None;
+        }
+        let catalogue = catalogue_of(ruleset, &sibling.id)?;
+        let value = value_in_catalogue(catalogue, score.parameter.as_ref(), catalogue_names)?;
+        Some((sibling.id.clone(), value))
+    });
+    let target = candidates.next()?;
+    candidates.next().is_none().then_some(target)
+}
+
+/// L1b (try-out finding 6, decisions C5): after L1a split the shared language
+/// catalogue into Dead and Living Language lists, a pre-22 save may hold a
+/// value under the sibling Ability whose list no longer has it (Arabic under
+/// Dead Language, Latin under Living Language). Each such instance moves to the
+/// one sibling whose catalogue holds the value, as that value's `Catalogued`
+/// id, keeping its score, banked XP and specialty.
+///
+/// Collision (C5a): when the target already holds the same value, the instance
+/// with the greater `(score, banked_xp)` is kept whole and the other is
+/// dropped; on a full tie the instance already in place stays.
+///
+/// Generic over the data: no Ability id appears here. Untrusted input: each
+/// row is examined once against the ruleset's Abilities, with no recursion.
+fn move_values_to_their_catalogue(
+    entity: &mut Entity,
+    ruleset: &Ruleset,
+    catalogue_names: &BTreeMap<Id, Vec<String>>,
+) -> Vec<MovedAbilityParameter> {
+    let mut moved = Vec::new();
+    let mut index = 0;
+    while index < entity.ability_scores.len() {
+        let Some((to, value)) =
+            misplaced_value_target(&entity.ability_scores[index], ruleset, catalogue_names)
+        else {
+            index += 1;
+            continue;
+        };
+        let mut instance = entity.ability_scores.remove(index);
+        let from = std::mem::replace(&mut instance.ability, to.clone());
+        instance.parameter = Some(AbilityParameterValue::Catalogued { id: value.clone() });
+        let target_catalogue = catalogue_of(ruleset, &to);
+        let existing = entity.ability_scores.iter().position(|row| {
+            row.ability == to
+                && target_catalogue.is_some_and(|catalogue| {
+                    value_in_catalogue(catalogue, row.parameter.as_ref(), catalogue_names).as_ref()
+                        == Some(&value)
+                })
+        });
+        let existing_score = existing.map(|at| entity.ability_scores[at].score);
+        moved.push(MovedAbilityParameter {
+            from,
+            to,
+            value,
+            score: instance.score,
+            existing_score,
+        });
+        match existing {
+            // Removed at `index`, so the next row now sits there: do not advance.
+            Some(at) => {
+                let current = &entity.ability_scores[at];
+                if (instance.score, instance.banked_xp) > (current.score, current.banked_xp) {
+                    entity.ability_scores[at] = instance;
+                }
+            }
+            None => {
+                entity.ability_scores.insert(index, instance);
+                index += 1;
+            }
+        }
+    }
+    moved
+}
+
 /// The catalogue-matching fold (design § 5.3): upgrades a parameterized
 /// Ability's `Text { text }` value to `Catalogued { id }` where `text`
 /// case-insensitively, trimmed-ly spells out one of the ability's catalogue's
@@ -893,6 +1064,9 @@ pub fn load_entity_migrating(
         .as_object()
         .is_some_and(|obj| obj.contains_key("saga_year"));
     let mut entity: Entity = serde_json::from_value(value)?;
+    // The file's own claim, read before any fold below stamps the current version
+    // over it: the L1b move is decided by what the file says it was written as.
+    let raw_schema_version = entity.schema_version;
 
     // A save from a build that does not exist yet is REFUSED, not migrated. Every
     // fold below was written against a shape this build knows; running them over a
@@ -991,6 +1165,18 @@ pub fn load_entity_migrating(
     }
 
     migrated_aging_characteristics.sort();
+    // L1b: version-gated on the RAW version (a file written at 22 or later is a
+    // hand edit, which validation reports instead), and run BEFORE the
+    // catalogue-matching fold so typed text naming a sibling's value moves rather
+    // than being reported as unrecognized.
+    let moved_ability_parameters = if raw_schema_version < CATALOGUE_SPLIT_SCHEMA_VERSION {
+        move_values_to_their_catalogue(&mut entity, ruleset, catalogue_names)
+    } else {
+        Vec::new()
+    };
+    if !moved_ability_parameters.is_empty() {
+        entity.schema_version = SCHEMA_VERSION;
+    }
     let (migrated_catalogued_parameters, unresolved_catalogued_parameters) =
         fold_catalogue_matching(&mut entity, ruleset, catalogue_names);
     let (dangling_links, ambiguous_links) = fold_dangling_and_ambiguous_links(&mut entity, ruleset);
@@ -1001,6 +1187,7 @@ pub fn load_entity_migrating(
         unresolved_catalogued_parameters,
         dangling_links,
         ambiguous_links,
+        moved_ability_parameters,
     })
 }
 
@@ -1835,7 +2022,7 @@ mod tests {
     /// talisman folds do. The aging log itself is still untouched.
     #[test]
     fn a_schema_fourteen_save_loads_without_migration() {
-        assert_eq!(SCHEMA_VERSION, 21);
+        assert_eq!(SCHEMA_VERSION, 22);
         let schema_14 = r#"{
           "schema_version": 14,
           "ruleset": { "id": "arm5-core", "version": "2024.1" },
@@ -1867,12 +2054,13 @@ mod tests {
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 
-    /// The current-version pin, advanced at every bump (most recently 20 → 21 for
-    /// X9b's `virtue.rard` -> `virtue.bard` id rename — see [`SCHEMA_VERSION`]'s own
-    /// doc comment for why that bump owns a fold, unlike C5a's 18 → 19 pure marker).
+    /// The current-version pin, advanced at every bump (most recently 21 → 22 for
+    /// L1b's language move after L1a split the Dead/Living Language catalogues —
+    /// see [`SCHEMA_VERSION`]'s own doc comment for why that bump owns a fold,
+    /// unlike C5a's 18 → 19 pure marker).
     #[test]
-    fn schema_version_is_21() {
-        assert_eq!(SCHEMA_VERSION, 21);
+    fn schema_version_is_22() {
+        assert_eq!(SCHEMA_VERSION, 22);
     }
 
     /// C5a's bump is a **pure version marker**: no shape moved, so no fold

@@ -433,6 +433,28 @@ export interface OpenedDocument {
    * — a positive counterpart to {@link OpenedDocument.unresolved_catalogued_parameters}.
    */
   migrated_catalogued_parameters?: MigratedCatalogueParameter[];
+  /**
+   * Ability instances a pre-22 save stored under the sibling Ability whose
+   * catalogue no longer holds their value, moved by the load (L1b, try-out
+   * finding 6). Ids and scores only; `derive.ts::movedAbilityParameterNotice`
+   * composes the one-time notice. Optional for the same reason as its CV4b
+   * siblings: older test doubles need not spell it out.
+   */
+  moved_ability_parameters?: MovedAbilityParameter[];
+}
+
+/**
+ * One Ability instance the load moved to the sibling Ability whose catalogue
+ * holds its value. Mirrors `migration.rs::MovedAbilityParameter`:
+ * `existing_score` is present only on a collision, and is the score of the
+ * instance that already held `value` under `to` (the higher one was kept).
+ */
+export interface MovedAbilityParameter {
+  from: string;
+  to: string;
+  value: string;
+  score: number;
+  existing_score?: number;
 }
 
 /**

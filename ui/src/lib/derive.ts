@@ -2295,6 +2295,55 @@ export function migratedCatalogueParameterNotice(
   return t('migrated-catalogued-parameter-notice', { items: named });
 }
 
+/** One row {@link movedAbilityParameterNotice} composes a sentence from. */
+export interface MovedAbilityParameterLike {
+  from: string;
+  to: string;
+  value: string;
+  score: number;
+  existing_score?: number;
+}
+
+/**
+ * The localized one-time notice for a pre-22 save whose language instances the
+ * load moved between sibling Abilities (L1b, try-out finding 6), or `null` when
+ * nothing moved or no ruleset is loaded yet.
+ *
+ * Each entry names the instance under both Abilities ("Arabic (Dead Language)
+ * → Arabic (Living Language)"), resolving the catalogue value through
+ * {@link abilityParamDisplay} first, so neither the value id nor an Ability id
+ * is ever printed. A collision also names both scores and the one kept (the
+ * higher; the engine keeps the existing instance on a tie, at the same score).
+ * Scores travel to Fluent as strings, so the wording never relies on a plural
+ * selector.
+ */
+export function movedAbilityParameterNotice(
+  localized: LocalizedRuleset | null,
+  items: readonly MovedAbilityParameterLike[],
+  t: Translate,
+): string | null {
+  if (items.length === 0 || !localized) return null;
+  const separator = `${t('moved-ability-parameter-list-separator')} `;
+  const named = items
+    .map((item) => {
+      const value = abilityParamDisplay({ id: item.value }, localized);
+      const from = abilityDisplayName(localized, item.from, value, paramHint(t));
+      const to = abilityDisplayName(localized, item.to, value, paramHint(t));
+      if (item.existing_score === undefined) {
+        return t('moved-ability-parameter-item', { from, to });
+      }
+      return t('moved-ability-parameter-collision-item', {
+        from,
+        to,
+        score: String(item.score),
+        existing: String(item.existing_score),
+        kept: String(Math.max(item.score, item.existing_score)),
+      });
+    })
+    .join(separator);
+  return t('moved-ability-parameter-notice', { items: named });
+}
+
 /** How a magus's spent spell levels split between the base budget, its V/F modifier and its years as a magus. */
 export interface SpellLevelAllocation {
   /**

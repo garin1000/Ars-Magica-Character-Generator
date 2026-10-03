@@ -1516,7 +1516,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:616).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:655).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -11493,6 +11493,27 @@ Link resolution) lands in CV3 onward.
   speak", ArMDE:5181; Q-X6-2) narrows to the dead list. Saves holding a living
   value under Dead Language are not moved here (that is slice L1b). Tests:
   `tests/l1a_language_catalogues.rs`.
+- **L1b — pre-split saves move their languages** (try-out finding 6, decisions
+  C5; `SCHEMA_VERSION` 21 → 22). A save migration, not a rule: it carries no
+  rulebook number of its own and follows L1a's lists (ArMDE:7432, :3565).
+  `migration.rs::move_values_to_their_catalogue` runs only when the file's RAW
+  `schema_version` is below 22, read in `load_entity_migrating` before any fold
+  stamps it. An instance whose value (a `Catalogued` id, or text naming a value
+  in EN or DE) is outside its own Ability's catalogue, but inside exactly one
+  catalogue of a sibling Ability with the same parameter key, moves there as
+  that `Catalogued` id. It keeps its score, banked XP and specialty. No Ability
+  id is hard-coded; on shipped data only Dead ↔ Living Language qualify. On a
+  collision the greater `(score, banked_xp)` is kept whole (C5a), and on a full
+  tie the instance already in place stays. Each move is reported once through
+  `LoadedEntity::moved_ability_parameters`, then `OpenedDocument` in arm-app,
+  then `derive.ts::movedAbilityParameterNotice` in the UI. The version is
+  stamped only when something moved. A save at 22 or later is never moved:
+  `validation/scores.rs::validate_ability_parameter_in_catalogue` reports a
+  `Catalogued` id outside its Ability's catalogue as
+  `ability_parameter_outside_catalogue`. Turb Trained's recorded `language`
+  choice is never rewritten ("whichever single dead language the magi speak",
+  ArMDE:5181): a living one is reported as `unknown_param_value`. Tests:
+  `tests/l1b_language_save_migration.rs`, `tests/l1b_language_move_notice.rs`.
 - Load-time integrity: catalogue ids and value ids unique, both sorted by id,
   each catalogue non-empty; every value has both an `en` and a `de` name; no
   two values within one catalogue collide under trimmed, case-folded

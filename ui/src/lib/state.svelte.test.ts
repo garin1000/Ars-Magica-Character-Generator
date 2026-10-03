@@ -1246,6 +1246,85 @@ describe('open() and the startup view', () => {
     });
   });
 
+  // L1b (try-out finding 6, decisions C5): the load reports each language
+  // instance it moved between Dead and Living Language. Like the CV4b notices it
+  // travels as ids and re-composes per language, and it belongs to the document:
+  // a new document or a successful save clears it.
+  describe('the moved-ability-parameter notice', () => {
+    const arabicMove = {
+      from: 'ability.dead_language',
+      to: 'ability.living_language',
+      value: 'language.arabic',
+      score: 3,
+    };
+
+    function installLanguages(): void {
+      installRuleset(
+        [],
+        [
+          ability('ability.dead_language', 'language'),
+          ability('ability.living_language', 'language'),
+        ],
+      );
+      store.ruleset!.i18n['ability.dead_language'] = {
+        name: '{language} (Dead Language)',
+        name_unfilled: 'Dead Language',
+      };
+      store.ruleset!.i18n['ability.living_language'] = {
+        name: '{language} (Living Language)',
+        name_unfilled: 'Living Language',
+      };
+      store.ruleset!.i18n['language.arabic'] = { name: 'Arabic' };
+    }
+
+    it('carries the moves from the opened document to the notice', async () => {
+      installLanguages();
+      vi.mocked(ipc.loadEntity).mockResolvedValue({
+        path: '/tmp/marcus.armc',
+        entity: loadedEntity(),
+        migrated_aging_characteristics: [],
+        moved_ability_parameters: [arabicMove],
+      });
+
+      await openAndConfirm();
+
+      expect(store.movedAbilityParameters).toEqual([arabicMove]);
+      const notice = store.movedAbilityParameterNotice;
+      expect(notice).not.toBeNull();
+      expect(notice).toContain('Arabic');
+      expect(notice).not.toContain('language.arabic');
+    });
+
+    it('stays silent for a document whose load moved nothing', async () => {
+      installLanguages();
+      vi.mocked(ipc.loadEntity).mockResolvedValue({
+        path: '/tmp/marcus.armc',
+        entity: loadedEntity(),
+        migrated_aging_characteristics: [],
+      });
+
+      await openAndConfirm();
+
+      expect(store.movedAbilityParameterNotice).toBeNull();
+    });
+
+    it('clears the notice when the document is replaced', async () => {
+      installLanguages();
+      vi.mocked(ipc.loadEntity).mockResolvedValue({
+        path: '/tmp/marcus.armc',
+        entity: loadedEntity(),
+        migrated_aging_characteristics: [],
+        moved_ability_parameters: [arabicMove],
+      });
+      await openAndConfirm();
+      expect(store.movedAbilityParameterNotice).not.toBeNull();
+
+      await store.newDocument();
+
+      expect(store.movedAbilityParameterNotice).toBeNull();
+    });
+  });
+
   // Sabine #1/#2 (full-audit round 3). A component mounted inside the editor is
   // NOT recreated when the document is replaced: `open()` leaves
   // `view === 'editor'` and never touches the active tab, so `App.svelte`'s

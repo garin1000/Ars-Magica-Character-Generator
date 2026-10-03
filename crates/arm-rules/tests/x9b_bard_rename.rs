@@ -276,15 +276,16 @@ fn no_example_save_names_virtue_rard() {
 
 // --- 3. Migration: an old save's virtue.rard selection becomes virtue.bard -
 
-/// The target this bump must reach. Written as an assertion on the constant
-/// rather than bumping it here (phase 1 is tests + minimal stub signatures
-/// only; the bump itself lands with the fold body in phase 2).
+/// The target this bump had to reach was 21 (X9b's virtue.rard -> virtue.bard
+/// id rename, phase-2-plan.md § 1: "X9b ... bump"). L1b has since moved the
+/// constant to 22 for the Dead/Living Language move, so this tracks the current
+/// value; X9b's own contribution is still the 20 -> 21 step.
 #[test]
 fn schema_version_target_is_one_past_todays() {
     assert_eq!(
-        SCHEMA_VERSION, 21,
-        "X9b bumps SCHEMA_VERSION for the virtue.rard -> virtue.bard id rename \
-         (phase-2-plan.md § 1: \"X9b ... bump\"); today's build is still at {SCHEMA_VERSION}"
+        SCHEMA_VERSION, 22,
+        "L1b bumps SCHEMA_VERSION past X9b's 21 for the language move; today's build \
+         is still at {SCHEMA_VERSION}"
     );
 }
 
@@ -316,7 +317,7 @@ fn a_bought_virtue_rard_selection_migrates_to_virtue_bard() {
         "a bought virtue.rard selection must migrate to virtue.bard"
     );
     assert_eq!(
-        loaded.entity.schema_version, 21,
+        loaded.entity.schema_version, SCHEMA_VERSION,
         "the id rename is a genuine value move, so the version must be stamped \
          to the new SCHEMA_VERSION, exactly like every other meaning-changing \
          fold in load_entity_migrating"
@@ -363,7 +364,7 @@ fn a_granted_virtue_rard_choice_migrates_in_every_resolved_pick_map() {
             "{field}'s \"slot\" pick must migrate virtue.rard -> virtue.bard"
         );
         assert_eq!(
-            loaded.entity.schema_version, 21,
+            loaded.entity.schema_version, SCHEMA_VERSION,
             "{field}'s rename must stamp the new SCHEMA_VERSION"
         );
     }
@@ -421,7 +422,7 @@ fn a_linked_ability_parameter_naming_virtue_rard_migrates_too() {
         "a Linked parameter naming virtue.rard as its declaring item must be \
          renamed to virtue.bard, same as the selection itself"
     );
-    assert_eq!(loaded.entity.schema_version, 21);
+    assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
 }
 
 /// A save already written by a build at the new version (id already
@@ -473,31 +474,35 @@ fn a_save_already_at_the_new_version_with_virtue_bard_is_untouched() {
 /// exactly as a save from `SCHEMA_VERSION + 1` is refused today. This is
 /// "green on arrival" (the refusal already holds against any number above
 /// today's 20) and is kept as a lock against the bump silently widening the
-/// accepted range further than intended.
+/// accepted range further than intended. Written against `SCHEMA_VERSION + 1`
+/// since L1b's 21 -> 22 bump made the literal 22 a version this build reads.
 #[test]
 fn a_save_one_past_the_new_target_version_is_still_refused() {
-    let future = r#"{
-      "schema_version": 22,
-      "ruleset": { "id": "arm5-core", "version": "2024.1" },
+    let one_past = SCHEMA_VERSION + 1;
+    let future = format!(
+        r#"{{
+      "schema_version": {one_past},
+      "ruleset": {{ "id": "arm5-core", "version": "2024.1" }},
       "entity_kind": "character",
       "type_id": "companion",
       "ability_funding": "pool",
       "saga_year": 1197
-    }"#;
+    }}"#
+    );
     let result = load_entity_migrating(
-        future,
+        &future,
         DEFAULT_SAGA_YEAR,
         &empty_ruleset(),
         &empty_catalogue_names(),
     );
     assert!(
         result.is_err(),
-        "schema_version 22 is one past the X9b target (21) and must be refused, \
+        "schema_version {one_past} is one past the current target and must be refused, \
          not half-migrated"
     );
     let message = result.unwrap_err().to_string();
     assert!(
-        message.contains("22"),
+        message.contains(&one_past.to_string()),
         "the refusal must name the version it read: {message}"
     );
 }
