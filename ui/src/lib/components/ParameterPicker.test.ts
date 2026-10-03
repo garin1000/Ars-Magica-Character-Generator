@@ -822,6 +822,59 @@ describe('ParameterPicker groups parameters by unordered_param_groups (review-ui
     ]);
   });
 
+  // Try-out finding 18 (U2): each combination's two selects sit on ONE row under
+  // its label. The row is an inner wrapper (`.param-group-row`, laid out in
+  // app.css) INSIDE the `role="group"`, after the label — so the group's
+  // accessible name, its testids and the Technique-before-Form order are all
+  // unchanged; only the members gain a row container of their own.
+  /** Every `.param-group-row` wrapper's inner markup, in document order. */
+  function memberRows(body: string): string[] {
+    return [...body.matchAll(/<div class="param-group-row"[^>]*>([\s\S]*?)<\/div>/g)].map(
+      (m) => m[1],
+    );
+  }
+
+  it('puts the selects of each combination in one row wrapper beneath its label', () => {
+    const body = pickerBody('flaw.incompatible_arts_probe');
+    const rows = memberRows(body);
+    expect(rows).toHaveLength(2);
+    const selectIds = (inner: string) =>
+      [...inner.matchAll(/<select[^>]*data-testid="([^"]*)"/g)].map((m) => m[1]);
+    expect(selectIds(rows[0])).toEqual([
+      'param-flaw.incompatible_arts_probe-technique_1-0',
+      'param-flaw.incompatible_arts_probe-form_1-0',
+    ]);
+    expect(selectIds(rows[1])).toEqual([
+      'param-flaw.incompatible_arts_probe-technique_2-0',
+      'param-flaw.incompatible_arts_probe-form_2-0',
+    ]);
+    // The label stays above the row, outside it.
+    for (const inner of rows) expect(inner).not.toContain('param-group-label');
+    const label1 = body.indexOf('data-testid="param-group-flaw.incompatible_arts_probe-0-0"');
+    const row1 = body.indexOf('<div class="param-group-row"');
+    const label2 = body.indexOf('data-testid="param-group-flaw.incompatible_arts_probe-1-0"');
+    const row2 = body.indexOf('<div class="param-group-row"', row1 + 1);
+    expect(label1).toBeGreaterThan(-1);
+    expect(label1).toBeLessThan(row1);
+    expect(row1).toBeLessThan(label2);
+    expect(label2).toBeLessThan(row2);
+  });
+
+  it('keeps each row inside its own role="group"', () => {
+    const body = pickerBody('flaw.incompatible_arts_probe');
+    const groupStarts = [...body.matchAll(/<div[^>]*\brole="group"/g)].map((m) => m.index!);
+    const rowStarts = [...body.matchAll(/<div class="param-group-row"/g)].map((m) => m.index!);
+    expect(groupStarts).toHaveLength(2);
+    expect(rowStarts).toHaveLength(2);
+    expect(groupStarts[0]).toBeLessThan(rowStarts[0]);
+    expect(rowStarts[0]).toBeLessThan(groupStarts[1]);
+    expect(groupStarts[1]).toBeLessThan(rowStarts[1]);
+  });
+
+  it('wraps no row around the controls of an ungrouped item', () => {
+    expect(memberRows(pickerBody('virtue.folk_magic'))).toHaveLength(0);
+  });
+
   it('leaves an ungrouped item in its original parameter order, with no group label', () => {
     // `virtue.folk_magic` declares no `unordered_param_groups` — must behave
     // exactly as before this fix: original order, no separator at all.

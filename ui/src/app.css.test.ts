@@ -1370,6 +1370,22 @@ describe('app.css', () => {
     expect(selectorBody('.ability-selection .ability-param')).toMatch(/flex:\s*1\s+0\s+100%;/);
   });
 
+  // Try-out finding 18 (U2): a labelled parameter group — Incompatible Arts'
+  // "Combination N" — stacked its Technique and Form selects one under the other,
+  // because each `.param` label is a column-flex block. The members now share ONE
+  // row beneath the group label (the markup half is pinned in
+  // `lib/components/ParameterPicker.test.ts`), so each pair reads as a pair.
+  it('lays a labelled parameter group out as one row of its member controls', () => {
+    const row = ruleBody('param-group-row');
+    expect(row).toMatch(/display:\s*flex;/);
+    // A row, not the column every `.param` label is.
+    expect(row).not.toMatch(/flex-direction:\s*column/);
+    // ONE line: a wrapping row would drop the Form back under its Technique.
+    expect(row).not.toMatch(/flex-wrap:\s*wrap/);
+    // The selects line up on their tops, not stretched to the tallest member.
+    expect(row).toMatch(/align-items:\s*flex-start;/);
+  });
+
   // ── The issues footer is a FIXED band (U3, after-deadline answer 8) ─────────
   //
   // `.validation-bar` was `max-height: 30vh`, i.e. as tall as its issue list up to
