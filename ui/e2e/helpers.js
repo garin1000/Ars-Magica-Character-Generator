@@ -659,6 +659,49 @@ export async function isRowBlocked(element) {
   return (await element.getAttribute('aria-disabled')) === 'true';
 }
 
+const TOOLTIP_POP = '.tooltip-pop';
+
+/**
+ * Hover an element and wait for its description tooltip to open. The popup opens
+ * only after a 500 ms rest delay (try-out finding 3, `actions.ts::tooltip`), so a
+ * spec must never read it straight after the hover — every spec opens tooltips
+ * through this one helper. The hover is a synthetic `mouseenter`: pointer
+ * `moveTo` / `el.focus()` are unreliable under parallel webdriver runs because the
+ * webview window may be blurred, which suppresses OS hover/focus events, while a
+ * synthetic event is focus-independent and still exercises the real wiring.
+ *
+ * @param {WebdriverIO.Element} element the tooltip's trigger
+ */
+export async function hoverForTooltip(element) {
+  await browser.execute((el) => {
+    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+  }, element);
+  await $(TOOLTIP_POP).waitForExist({
+    timeout: 5000,
+    timeoutMsg: 'the tooltip should open after its hover delay',
+  });
+}
+
+/**
+ * Leave the element again and wait until its tooltip has closed. The popup takes
+ * the pointer (so a long description can be scrolled) and outlives the pointer
+ * leaving by a short close grace (try-out finding 2) — one left lingering would
+ * swallow the next click aimed at whatever it covers, so a spec dismisses it here
+ * before moving on.
+ *
+ * @param {WebdriverIO.Element} element the tooltip's trigger
+ */
+export async function dismissTooltip(element) {
+  await browser.execute((el) => {
+    el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+  }, element);
+  await $(TOOLTIP_POP).waitForExist({
+    reverse: true,
+    timeout: 5000,
+    timeoutMsg: 'the tooltip should close once the pointer has left',
+  });
+}
+
 /**
  * `browser.waitUntil`, with a failure message built AFTER the timeout, from the
  * last reading the condition stored.

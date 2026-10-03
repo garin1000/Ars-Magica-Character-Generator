@@ -96,6 +96,7 @@ afterEach(() => {
   if (app) unmount(app);
   app = undefined;
   target?.remove();
+  vi.useRealTimers();
 });
 
 // S14 (full-audit i18n): the addend-breakdown tooltip joined its parts with a
@@ -122,7 +123,11 @@ describe('DerivedTotalsPanel addend breakdown separator (S14)', () => {
 
     const soakDd = target.querySelector('[data-testid="derived-soak"]') as HTMLElement;
     const soakDt = soakDd.previousElementSibling as HTMLElement;
+    // The tooltip opens only after its 500 ms rest delay (try-out finding 3,
+    // `actions.ts::tooltip`), so the clock is faked from here and run past it.
+    vi.useFakeTimers();
     soakDt.dispatchEvent(new Event('focusin', { bubbles: true }));
+    vi.advanceTimersByTime(500);
     flushSync();
 
     const tip = document.querySelector('[data-testid="tooltip-text"]');

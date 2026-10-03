@@ -2684,7 +2684,9 @@ ul {
 /* Hover/focus tooltip carrying an item's description + example specialties
    (see actions.ts `tooltip`). Appended to <body> and positioned in viewport
    coordinates, so it is never clipped by a scrolling panel. High contrast and a
-   comfortable reading size. */
+   comfortable reading size. It takes the pointer: the action opens it flush
+   against its trigger and keeps it open while hovered, so a long description's
+   scrollbar can be reached (try-out finding 2). */
 .tooltip-pop {
   position: fixed;
   z-index: 1000;
@@ -2697,7 +2699,7 @@ ul {
   font-size: var(--font-small);
   line-height: 1.45;
   box-shadow: var(--shadow-pop);
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .tooltip-pop .tooltip-reason {
@@ -2722,10 +2724,13 @@ ul {
 .tooltip-pop .tooltip-text {
   /* Rules descriptions carry `\n` paragraph breaks — honor them instead of
      collapsing to a run-on line, and cap the height so a long spell description
-     scrolls inside the popup rather than overflowing the viewport. */
+     scrolls inside the popup rather than overflowing the viewport. A wheel
+     scroll reaching its end must not chain to the page: a page scroll closes
+     the popup. */
   white-space: pre-line;
   max-height: 40vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .tooltip-pop .tooltip-list {

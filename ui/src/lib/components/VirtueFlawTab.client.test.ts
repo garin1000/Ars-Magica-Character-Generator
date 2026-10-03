@@ -115,6 +115,7 @@ afterEach(() => {
   app = undefined;
   target?.remove();
   store.effective = null;
+  vi.useRealTimers();
 });
 
 describe('VirtueFlawTab survives a doubly-granted Virtue (#9)', () => {
@@ -231,7 +232,11 @@ describe('VirtueFlawTab gives the at-cap block a reason', () => {
 
     const row = target.querySelector('[data-testid="add-virtue.puissant_art"]');
     expect(row).not.toBeNull();
+    // The tooltip opens only after its 500 ms rest delay (try-out finding 3,
+    // `actions.ts::tooltip`), so the clock is faked from here and run past it.
+    vi.useFakeTimers();
     row!.dispatchEvent(new Event('focusin', { bubbles: true }));
+    vi.advanceTimersByTime(500);
     flushSync();
 
     const reason = document.querySelector('[data-testid="tooltip-reason"]');

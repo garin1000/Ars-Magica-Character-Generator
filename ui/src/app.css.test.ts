@@ -1450,4 +1450,27 @@ describe('app.css', () => {
       /\.validation-docked \.issue-list\s*\{[^}]*(max-height|overflow)/,
     );
   });
+
+  // Try-out finding 2: a long description scrolls inside the tooltip, but the
+  // popup ignored the pointer, so its scrollbar could never be reached. The
+  // hover bridge (`actions.ts::tooltip`) lets the pointer travel into it; the
+  // popup must therefore accept the pointer, and its text must keep scrolling.
+  it('lets the pointer into the tooltip popup, whose text scrolls', () => {
+    const pop = selectorBody('.tooltip-pop');
+    expect(pop, 'the popup must not let the pointer fall through it').not.toMatch(
+      /pointer-events:\s*none/,
+    );
+    expect(pop).toMatch(/pointer-events:\s*auto;/);
+
+    const text = selectorBody('.tooltip-pop .tooltip-text');
+    expect(text).toMatch(/max-height:\s*[^;]+;/);
+    expect(text).toMatch(/overflow-y:\s*auto;/);
+  });
+
+  // A wheel scroll that reaches the end of the tooltip text would otherwise chain
+  // to the page — and a page scroll closes the popup under the reader's pointer.
+  it('keeps a wheel scroll inside the tooltip text from scrolling the page', () => {
+    const text = selectorBody('.tooltip-pop .tooltip-text');
+    expect(text).toMatch(/overscroll-behavior:\s*contain;/);
+  });
 });

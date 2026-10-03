@@ -26,16 +26,34 @@ export function withReason(content: TooltipContent, reason: string | undefined):
 
 let tooltipSeq = 0;
 
+/** How long hover or keyboard focus must rest on a trigger before its tooltip
+ *  opens (try-out finding 3, decided by Norbert: the same for both). */
+const OPEN_DELAY_MS = 500;
+/** How long the popup survives the pointer leaving it or its trigger, so the
+ *  pointer can travel from one to the other (try-out finding 2). */
+const CLOSE_GRACE_MS = 150;
+/** The popup overlaps its trigger by this much, so no gap lies between them. */
+const OVERLAP_PX = 1;
+
 /**
  * Show a styled, high-contrast tooltip on hover or keyboard focus. The popup is
  * appended to `document.body` and positioned with `getBoundingClientRect`, so it
- * is never clipped by a scrolling panel. Reveals on `mouseenter`/`focusin`,
- * hides on `mouseleave`/`focusout`/click and on scroll or resize. A no-op when
- * there is no content, so plain rows stay tooltip-free.
+ * is never clipped by a scrolling panel. It opens after `OPEN_DELAY_MS` of hover
+ * or focus; leaving or blurring first cancels it. It sits flush against the
+ * trigger and takes the pointer: leaving the trigger or the popup closes it after
+ * `CLOSE_GRACE_MS`, unless the pointer reaches the other one first. Focus loss,
+ * a click on the trigger, Escape, a page scroll (not one inside the popup) and a
+ * resize close it at once. While it is open, PageUp/PageDown on the focused
+ * trigger scroll its text. A no-op when there is no content, so plain rows stay
+ * tooltip-free.
  */
 export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, content) => {
   let current: TooltipContent | undefined = content;
   let pop: HTMLDivElement | null = null;
+  let openTimer: ReturnType<typeof setTimeout> | undefined;
+  let closeTimer: ReturnType<typeof setTimeout> | undefined;
+  /** The trigger's own `aria-describedby` from before the popup opened. */
+  let ownDescribedBy: string | null = null;
   const id = `tooltip-${(tooltipSeq += 1)}`;
 
   const hasContent = (c: TooltipContent | undefined): boolean =>
@@ -49,12 +67,22 @@ export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, c
       margin,
       Math.min(rect.left, window.innerWidth - pop.offsetWidth - margin),
     );
-    let top = rect.bottom + 6;
+    let top = rect.bottom - OVERLAP_PX;
     if (top + pop.offsetHeight > window.innerHeight - margin) {
-      top = Math.max(margin, rect.top - pop.offsetHeight - 6);
+      top = Math.max(margin, rect.top - pop.offsetHeight + OVERLAP_PX);
     }
     pop.style.left = `${left}px`;
     pop.style.top = `${top}px`;
+  };
+
+  const cancelOpen = () => {
+    clearTimeout(openTimer);
+    openTimer = undefined;
+  };
+
+  const cancelClose = () => {
+    clearTimeout(closeTimer);
+    closeTimer = undefined;
   };
 
   const show = () => {
@@ -84,15 +112,59 @@ export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, c
       list.textContent = `${label}${current.list.join(', ')}`;
       pop.appendChild(list);
     }
+    pop.addEventListener('mouseenter', cancelClose);
+    pop.addEventListener('mouseleave', scheduleClose);
     document.body.appendChild(pop);
-    node.setAttribute('aria-describedby', id);
+    ownDescribedBy = node.getAttribute('aria-describedby');
+    node.setAttribute('aria-describedby', ownDescribedBy ? `${ownDescribedBy} ${id}` : id);
     position();
   };
 
-  const hide = () => {
-    pop?.remove();
+  /** Close at once, dropping any pending open or close. */
+  function hide() {
+    cancelOpen();
+    cancelClose();
+    if (!pop) return;
+    pop.remove();
     pop = null;
-    node.removeAttribute('aria-describedby');
+    // Put back the trigger's own description rather than wiping it.
+    if (ownDescribedBy === null) node.removeAttribute('aria-describedby');
+    else node.setAttribute('aria-describedby', ownDescribedBy);
+    ownDescribedBy = null;
+  }
+
+  function scheduleClose() {
+    cancelClose();
+    closeTimer = setTimeout(hide, CLOSE_GRACE_MS);
+  }
+
+  /** Hover or focus arrived: keep an open popup, or open one after the delay. */
+  const scheduleOpen = () => {
+    cancelClose();
+    if (pop || openTimer !== undefined || !hasContent(current)) return;
+    openTimer = setTimeout(() => {
+      openTimer = undefined;
+      show();
+    }, OPEN_DELAY_MS);
+  };
+
+  const onTriggerLeave = () => {
+    if (pop) scheduleClose();
+    else cancelOpen();
+  };
+
+  /** A scroll inside the popup is the reader scrolling it; any other closes it. */
+  const onScroll = (event: Event) => {
+    if (pop && event.target instanceof Node && pop.contains(event.target)) return;
+    hide();
+  };
+
+  /** Scroll the open popup's text by about one page (keyboard half of finding 2). */
+  const scrollText = (direction: 1 | -1): boolean => {
+    const text = pop?.querySelector<HTMLElement>('.tooltip-text');
+    if (!text) return false;
+    text.scrollTop += direction * Math.max(1, text.clientHeight * 0.9);
+    return true;
   };
 
   // S2 (full-audit a11y): hover/focus opens the popup, but nothing offered a
@@ -101,16 +173,21 @@ export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, c
   // keyboard user gets the same escape hatch a mouse user already had via
   // mouseleave.
   const onKeydown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') hide();
+    if (event.key === 'Escape') {
+      hide();
+      return;
+    }
+    const direction = event.key === 'PageDown' ? 1 : event.key === 'PageUp' ? -1 : 0;
+    if (direction !== 0 && scrollText(direction)) event.preventDefault();
   };
 
-  node.addEventListener('mouseenter', show);
-  node.addEventListener('mouseleave', hide);
-  node.addEventListener('focusin', show);
+  node.addEventListener('mouseenter', scheduleOpen);
+  node.addEventListener('mouseleave', onTriggerLeave);
+  node.addEventListener('focusin', scheduleOpen);
   node.addEventListener('focusout', hide);
   node.addEventListener('click', hide);
   node.addEventListener('keydown', onKeydown);
-  window.addEventListener('scroll', hide, true);
+  window.addEventListener('scroll', onScroll, true);
   window.addEventListener('resize', hide);
 
   return {
@@ -123,13 +200,13 @@ export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, c
     },
     destroy() {
       hide();
-      node.removeEventListener('mouseenter', show);
-      node.removeEventListener('mouseleave', hide);
-      node.removeEventListener('focusin', show);
+      node.removeEventListener('mouseenter', scheduleOpen);
+      node.removeEventListener('mouseleave', onTriggerLeave);
+      node.removeEventListener('focusin', scheduleOpen);
       node.removeEventListener('focusout', hide);
       node.removeEventListener('click', hide);
       node.removeEventListener('keydown', onKeydown);
-      window.removeEventListener('scroll', hide, true);
+      window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', hide);
     },
   };

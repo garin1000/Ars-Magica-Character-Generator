@@ -28,6 +28,8 @@ import fs from 'node:fs';
 
 import {
   clean,
+  dismissTooltip,
+  hoverForTooltip,
   isRowBlocked,
   runDocumentAction,
   setValidationMode,
@@ -130,17 +132,13 @@ describe('characteristic grant + ability bonus', () => {
 
     // The app says as much in its own words: the badge's breakdown attributes the
     // gap to the Virtue, over a bought score it still reports as +3.
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-    }, badge);
+    await hoverForTooltip(badge);
     const summary = await $('[data-testid="tooltip-text"]');
     await summary.waitForExist({ timeout: 5000 });
     expect(clean(await summary.getText())).toContain('Bought +3, effective +4');
     expect(clean(await $('.tooltip-pop .tooltip-list').getText())).toContain('Virtue +1');
     // Dismiss the popup so it does not linger over the tabs clicked below.
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
-    }, badge);
+    await dismissTooltip(badge);
 
     // Buy Awareness up to 2, then add Puissant Ability targeting it.
     await $('[data-testid="tab-abilities"]').click();
@@ -853,11 +851,7 @@ describe('character editor', () => {
       timeout: 5000,
       timeoutMsg: 'Second Sight should be greyed for a companion',
     });
-    // Dispatch mouseenter directly: synthetic events are focus-independent under
-    // parallel wdio (the webview window may be blurred), unlike pointer moveTo.
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-    }, row);
+    await hoverForTooltip(row);
     const reason = await $('[data-testid="tooltip-reason"]');
     await reason.waitForExist({ timeout: 5000 });
     expect((await reason.getText()).trim().length).toBeGreaterThan(0);
@@ -865,9 +859,7 @@ describe('character editor', () => {
     await desc.waitForExist({ timeout: 5000 });
     expect((await desc.getText()).trim().length).toBeGreaterThan(0);
     // Dismiss the popup so it does not linger into later specs.
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
-    }, row);
+    await dismissTooltip(row);
   });
 });
 

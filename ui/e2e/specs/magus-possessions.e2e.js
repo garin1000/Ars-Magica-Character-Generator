@@ -17,6 +17,8 @@ import fs from 'node:fs';
 
 import {
   clean,
+  dismissTooltip,
+  hoverForTooltip,
   isRowBlocked,
   runDocumentAction,
   setLanguage,
@@ -145,11 +147,7 @@ describe('spells', () => {
     const row = await $('[data-testid="add-spell.pilum_of_fire"]');
     await row.waitForExist({ timeout: 5000 });
     expect(await isRowBlocked(row)).toBe(true);
-    // Dispatch mouseenter directly (same rationale as the description-tooltip
-    // test below: synthetic events are focus-independent under parallel wdio).
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-    }, row);
+    await hoverForTooltip(row);
     const reason = await $('[data-testid="tooltip-reason"]');
     await reason.waitForExist({ timeout: 5000 });
     expect((await reason.getText()).trim().length).toBeGreaterThan(0);
@@ -158,9 +156,7 @@ describe('spells', () => {
     expect((await desc.getText()).trim().length).toBeGreaterThan(0);
     // Dismiss the popup so it does not linger into the next step, which raises
     // the Arts and re-enables Pilum.
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
-    }, row);
+    await dismissTooltip(row);
   });
 
   it('adds Pilum onto the 120 budget once the Arts are high enough', async () => {
@@ -202,17 +198,13 @@ describe('spells', () => {
     // list. Hovering its row appends the description popup to <body>.
     const row = await $('[data-testid="add-spell.pilum_of_fire"]');
     await row.waitForExist({ timeout: 5000 });
-    // Dispatch mouseenter directly: the `tooltip` action binds to it, so this
-    // exercises the real wiring (action attached + description present + popup
-    // built) deterministically. Pointer moveTo / el.focus() are unreliable under
-    // parallel webdriver runs because the webview window is blurred, which
-    // suppresses OS hover/focus events; a synthetic event is focus-independent.
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-    }, row);
+    await hoverForTooltip(row);
     const pop = await $('[data-testid="tooltip-text"]');
     await pop.waitForExist({ timeout: 5000 });
     expect((await pop.getText()).trim().length).toBeGreaterThan(0);
+    // Dismiss it: the popup now takes the pointer, so left open it could
+    // swallow a click the next test aims at the tabs.
+    await dismissTooltip(row);
   });
 
   it('raises the spell-levels budget with Skilled Parens', async () => {
