@@ -41,14 +41,14 @@ Regeln aufstellte, die sie gar nicht hätte treffen müssen.
 
 ### Rangfolge bei Widerspruch
 
-Maßgeblich ist `docs/vf-audit/decisions.md`, **D6** und **D7**. Kurzfassung:
+Maßgeblich ist `docs/vf-audit/decisions.md`, **D6**, **D7** und **D31**. Kurzfassung:
 
 1. **Sachaussage über die Regeln** → das **Regelbuch** gewinnt, immer.
-2. **Name eines Eintrags** → die **Überschrift des zitierten Regelbuchs**
-   gewinnt. Das Glossar gewinnt nur dort, wo die Überschrift **defekt** ist —
-   etwa wenn sie mit der eines anderen Eintrags kollidiert (`Gefesselte Magie`
-   überschreibt im deutschen Grundregelwerk zwei verschiedene Einträge) oder wenn
-   das Regelbuch den Begriff gar nicht wiedergibt.
+2. **Name eines Eintrags** → die **Tabelle** gewinnt (D31). Das kehrt die
+   ursprüngliche Regel um: unsere deutsche Regelbuchkopie ist **älter** als die
+   Tabellen, eine Tabellenzeile mit einer veralteten Überschrift zu widerlegen
+   wäre zirkulär. Die Überschrift gewinnt erst wieder, wenn ein aktuelles
+   deutsches Regelbuch vorliegt; dann entfällt D31.
 3. **Sonstige Terminologie** → thematische Tabelle vor `tugenden-fehler.md`
    (die breiteste Tabelle, und damit die mit der höchsten Fehlerwahrscheinlichkeit).
 4. **Eine Zeile mit Buchkürzel eines *anderen* Buches** (`HdH:WL`, `SdM:G`)
