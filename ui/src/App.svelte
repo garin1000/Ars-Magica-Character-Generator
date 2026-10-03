@@ -2,8 +2,9 @@
   import { onMount, tick } from 'svelte';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { store } from './lib/state.svelte';
-  import { onMenuAction, setAppMenu, updateCloseGuard } from './lib/ipc';
+  import { menuShortcuts, onMenuAction, setAppMenu, updateCloseGuard } from './lib/ipc';
   import { FULLSCREEN_ACTION_ID, MENU_ACTIONS, menuLabels } from './lib/menu';
+  import { installMenuShortcuts, menuActionEnabled } from './lib/menu-shortcuts';
   import type { AppError } from './lib/types';
   import SettingsDialog from './lib/components/SettingsDialog.svelte';
   import StartScreen from './lib/components/StartScreen.svelte';
@@ -223,9 +224,29 @@
       if (torndown) stop();
       else unlisten = stop;
     });
+
+    // U4: on Windows only, the webview mirrors the menu's chords, which
+    // WebView2 keeps from the menu there. Rust sends `[]` everywhere else,
+    // which installs nothing (see the shortcut note below). The mirror is
+    // gated by the flags the native menu is built with, and runs the same
+    // `runMenuAction` a menu click runs. A rejection is swallowed, as for the
+    // window title: without the mirror the menu itself still works.
+    let stopShortcuts: (() => void) | undefined;
+    void menuShortcuts()
+      .then((shortcuts) => {
+        if (torndown) return;
+        stopShortcuts = installMenuShortcuts(
+          window,
+          shortcuts,
+          (action) => menuActionEnabled(action, store.menuFlags()),
+          runMenuAction,
+        );
+      })
+      .catch(() => {});
     return () => {
       torndown = true;
       unlisten?.();
+      stopShortcuts?.();
     };
   });
 
@@ -356,7 +377,11 @@
       .catch(() => {});
   });
 
-  // NO KEYBOARD SHORTCUT HANDLER LIVES HERE (C7), and that is the design.
+  // NO KEYBOARD SHORTCUT HANDLER LIVES HERE (C7), and that is the design,
+  // with one exception: Windows (U4, the `menuShortcuts` mirror in `onMount`).
+  // WebView2 keeps the keys from the menu there, so the webview answers the
+  // menu's own chords from a list Rust sends. That list is empty on every other
+  // desktop, so everything below still holds there.
   //
   // Every document chord — Ctrl/Cmd+N/O/S, Shift+S for Save As, Shift+E for
   // Export, Ctrl/Cmd+, for Settings — is declared as the native menu item's

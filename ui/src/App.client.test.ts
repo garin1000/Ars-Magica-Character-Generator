@@ -61,6 +61,7 @@ vi.mock('./lib/ipc', () => ({
   applyChildhoodPackage: vi.fn(),
   setAppMenu: vi.fn(),
   onMenuAction: vi.fn(),
+  menuShortcuts: vi.fn(),
 }));
 
 import * as ipc from './lib/ipc';
@@ -168,6 +169,9 @@ beforeEach(() => {
   vi.mocked(ipc.onMenuAction)
     .mockReset()
     .mockResolvedValue(() => {});
+  // `[]` is what `menu_shortcuts` answers on Linux and macOS, where the menu's
+  // accelerators fire natively; the U4 describe overrides it with Windows' list.
+  vi.mocked(ipc.menuShortcuts).mockReset().mockResolvedValue([]);
   vi.mocked(ipc.updateCloseGuard).mockReset().mockResolvedValue(undefined);
   vi.mocked(ipc.saveEntity).mockReset().mockResolvedValue(null);
   vi.mocked(ipc.loadEntity).mockReset().mockResolvedValue(null);
@@ -1245,6 +1249,11 @@ describe('the native application menu', () => {
 // this. What the chords DO is now proved against the shipped binary, by the
 // accelerator describe in `ui/e2e/specs/app-shell.e2e.js`, which is the only
 // layer where a real accel group exists to press.
+//
+// U4 (finding 16) carves out Windows, where WebView2 keeps the keys from the
+// host's accelerator table: there the webview mirrors the chords from the list
+// Rust's `menu_shortcuts` returns (next describe). Everywhere else that list is
+// empty — the default `beforeEach` stubs — and this describe still holds.
 describe('the document chords belong to the native menu, not the webview', () => {
   function press(key: string, options: KeyboardEventInit = {}): void {
     window.dispatchEvent(
@@ -1300,6 +1309,99 @@ describe('the document chords belong to the native menu, not the webview', () =>
     press('e');
 
     expect(ipc.exportMarkdown).not.toHaveBeenCalled();
+  });
+});
+
+// U4 (try-out finding 16): on Windows, Ctrl+O and Ctrl+N did nothing. The File
+// menu draws the chords, but WebView2's child window keeps the keys, so the
+// host's accelerator table never sees them. The decided fix (Norbert, option a)
+// is a Windows-only webview mirror: Rust's `menu_shortcuts` returns the menu's
+// own chords on Windows and `[]` elsewhere, and the app runs a press through the
+// same `runMenuAction` a menu click takes, gated by the same flags
+// `set_app_menu` receives. The list here is what Windows would return.
+describe('on Windows the webview mirrors the menu chords (U4)', () => {
+  const WINDOWS_LIST = [
+    { action: 'menu.new', accelerator: 'CmdOrCtrl+N' },
+    { action: 'menu.open', accelerator: 'CmdOrCtrl+O' },
+    { action: 'menu.save', accelerator: 'CmdOrCtrl+S' },
+    { action: 'menu.save-as', accelerator: 'CmdOrCtrl+Shift+S' },
+    { action: 'menu.export', accelerator: 'CmdOrCtrl+Shift+E' },
+    { action: 'menu.settings', accelerator: 'CmdOrCtrl+,' },
+  ];
+
+  function press(key: string, options: KeyboardEventInit = {}): KeyboardEvent {
+    const event = new KeyboardEvent('keydown', {
+      key,
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+      ...options,
+    });
+    window.dispatchEvent(event);
+    flushSync();
+    return event;
+  }
+
+  /** Mount with Windows' list and wait until the app has asked for it. */
+  async function mountOnWindows(): Promise<void> {
+    vi.mocked(ipc.menuShortcuts).mockResolvedValue(WINDOWS_LIST);
+    await mountApp();
+    await vi.waitFor(() => expect(ipc.menuShortcuts).toHaveBeenCalled(), {
+      timeout: 300,
+      interval: 20,
+    });
+    await Promise.resolve();
+  }
+
+  it('asks Rust for the list exactly once', async () => {
+    await mountOnWindows();
+
+    expect(ipc.menuShortcuts).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs the open action once on Ctrl+O, as a menu click would', async () => {
+    await mountOnWindows();
+    const dispatch = vi.spyOn(store, 'runDocumentAction').mockResolvedValue();
+
+    const event = press('o');
+
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatch).toHaveBeenCalledWith('open');
+    expect(event.defaultPrevented).toBe(true);
+    dispatch.mockRestore();
+  });
+
+  // The startup screen withholds Save (`store.menuFlags().save === false`), and
+  // the native item is greyed out there; the mirror must not fire either — and
+  // must leave the key alone, since nothing claimed it.
+  it('runs nothing and cancels nothing for an action the menu withholds', async () => {
+    await mountOnWindows();
+    store.view = 'start';
+    flushSync();
+    expect(store.menuFlags().save).toBe(false);
+    const dispatch = vi.spyOn(store, 'runDocumentAction').mockResolvedValue();
+
+    const event = press('s');
+
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+    dispatch.mockRestore();
+  });
+
+  it('stops listening when the app goes away', async () => {
+    await mountOnWindows();
+    const dispatch = vi.spyOn(store, 'runDocumentAction').mockResolvedValue();
+    // The positive control first, so the negative below is not vacuous.
+    press('o');
+    expect(dispatch).toHaveBeenCalledTimes(1);
+
+    unmount(app!);
+    app = undefined;
+    flushSync();
+    press('o');
+
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    dispatch.mockRestore();
   });
 });
 

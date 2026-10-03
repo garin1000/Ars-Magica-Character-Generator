@@ -275,7 +275,9 @@ pub struct MenuSection {
 /// it, and the OS draws it beside the label — which is also what makes the
 /// shortcuts discoverable at all. The webview deliberately carries no competing
 /// keydown handler for any of these, because two owners for one chord means one
-/// press runs the action twice.
+/// press runs the action twice. Windows is the one exception (U4). WebView2
+/// keeps the keys from the menu there, so the webview mirrors this list instead.
+/// It receives the list through [`menu_shortcuts`] and holds no copy of its own.
 ///
 /// `CmdOrCtrl` rather than a branch on [`Platform`]: muda parses it to `SUPER`
 /// on macOS and to `CONTROL` on every other desktop
@@ -301,6 +303,43 @@ fn accelerator_for(id: &str) -> Option<&'static str> {
         ACTION_SETTINGS => Some("CmdOrCtrl+,"),
         _ => None,
     }
+}
+
+/// One chord the webview must answer to itself, and the menu action it runs.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MenuShortcut {
+    /// One of the `ACTION_*` constants.
+    pub action: String,
+    /// The chord, in muda's notation, exactly as [`accelerator_for`] declares it.
+    pub accelerator: String,
+}
+
+/// The chords the webview has to mirror on `platform` (U4, try-out finding 16).
+///
+/// On Windows the menu draws its accelerators but never receives them:
+/// WebView2's child window keeps the key presses, so the host window's
+/// accelerator table never sees them. There, and only there, the frontend
+/// mirrors the chords (`ui/src/lib/menu-shortcuts.ts`) from this list, which
+/// is [`accelerator_for`] itself, so the chord is still declared once.
+///
+/// Everywhere else the list is empty, and the frontend then installs no
+/// listener at all. GTK and macOS dispatch the accelerator natively, so a
+/// webview handler there would be a second owner of the chord and one press
+/// would run the action twice. The platform decision is made here, so the UI
+/// never has to check which platform it runs on.
+pub fn menu_shortcuts(platform: Platform) -> Vec<MenuShortcut> {
+    if platform != Platform::Windows {
+        return Vec::new();
+    }
+    ACTION_IDS
+        .iter()
+        .filter_map(|id| {
+            accelerator_for(id).map(|chord| MenuShortcut {
+                action: id.to_string(),
+                accelerator: chord.to_string(),
+            })
+        })
+        .collect()
 }
 
 fn action(id: &str, label: &str, enabled: bool) -> MenuEntry {

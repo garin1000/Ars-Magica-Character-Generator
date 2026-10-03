@@ -244,6 +244,13 @@ pub fn set_app_menu(labels: MenuLabels, flags: MenuFlags, app: AppHandle) -> Res
     })
 }
 
+/// The chords the webview must answer to itself on this desktop. Empty
+/// everywhere but Windows; see [`crate::menu::menu_shortcuts`].
+#[tauri::command]
+pub fn menu_shortcuts() -> Vec<crate::menu::MenuShortcut> {
+    crate::menu::menu_shortcuts(crate::menu::Platform::current())
+}
+
 /// Locks the cached ruleset for reading. Every command that needs a loaded
 /// ruleset starts here, one line before [`require_loaded`].
 ///
