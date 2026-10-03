@@ -75,6 +75,7 @@ import {
   resolvedLinksFrom,
   sameParam,
   selectionDisplayName,
+  singleValuedParams,
   spellDisplayName,
   spellLevelAllocation,
   totalCopies,
@@ -3874,6 +3875,232 @@ describe('grantItemLabel', () => {
     expect(
       grantItemLabel(ruleset, 'virtue.necessary_aura', domainStub, { realm: 'realm.nowhere' }),
     ).toBe('Necessary realm.nowhere Aura');
+  });
+});
+
+// --- I5 (try-out finding 1): a grant's fixed parameter the name does not name ---
+//
+// House Tremere grants "Minor Magical Focus (certamen)" (ArMDE:2281) as a fixed
+// grant whose `focus` is set by the data (`rules/core/houses.json`). The name
+// template "Minor Magical Focus" has no `{focus}` token, so `displayName` had
+// nowhere to put the value and the row read only "Minor Magical Focus". A granted
+// row has no ParameterPicker, so the label is the ONLY place the value can show:
+// the grant label appends every parameter its template does not consume, each
+// localized by its domain, in parentheses. A bought row keeps its unsuffixed name,
+// because its ParameterPicker already shows the value (no double display).
+
+describe('grantItemLabel: fixed parameters the name template does not consume (I5)', () => {
+  const read = (path: string) =>
+    JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf-8'));
+
+  /** The SHIPPED point items, Abilities and rules i18n for one language. */
+  function shippedRuleset(lang: Lang): LocalizedRuleset {
+    const items = read('../../../rules/core/virtues_flaws.json') as PointItem[];
+    const core = read('../../../rules/core/abilities.json') as { abilities: Ability[] };
+    const i18n: LocalizedRuleset['i18n'] = {
+      ...(read(`../../../rules/i18n/${lang}/virtues_flaws.json`) as LocalizedRuleset['i18n']),
+      ...(read(`../../../rules/i18n/${lang}/abilities.json`) as LocalizedRuleset['i18n']),
+      ...(read(`../../../rules/i18n/${lang}/arts.json`) as LocalizedRuleset['i18n']),
+    };
+    const localized = makeRuleset(items, { i18n });
+    localized.ruleset.abilities = Object.fromEntries(core.abilities.map((a) => [a.id, a]));
+    return localized;
+  }
+
+  /** A translator over the REAL shipped Fluent bundle, as the app builds it. */
+  function translator(lang: Lang): Translate {
+    const bundle = buildBundle(lang);
+    return (key, args) => formatMessage(bundle, key, args);
+  }
+
+  interface GrantedPick {
+    source: string;
+    ref: string;
+    params: Record<string, string>;
+  }
+
+  /**
+   * Every pick a shipped grant source can turn into a GRANTED row: each House's
+   * and each Mythic Companion type's fixed grants, plus every option of their
+   * choice grants (an option, once chosen, is granted exactly as given). Open
+   * grants carry no fixed params (the player picks through a ParameterPicker),
+   * and a Mythic type's `required_virtues`/`required_flaws` are seeded as BOUGHT
+   * selections (`mythic-workflow.svelte.ts`), so neither is a granted row here.
+   */
+  function shippedGrantedPicks(): GrantedPick[] {
+    const houses = read('../../../rules/core/houses.json').houses as {
+      id: string;
+      grants?: Grant[];
+    }[];
+    const types = read('../../../rules/core/mythic_companion_types.json').types as {
+      id: string;
+      grants?: Grant[];
+    }[];
+    const picks: GrantedPick[] = [];
+    for (const owner of [...houses, ...types]) {
+      for (const grant of owner.grants ?? []) {
+        if (grant.kind === 'fixed') {
+          picks.push({ source: owner.id, ref: grant.item, params: grant.params ?? {} });
+        } else if (grant.kind === 'choice') {
+          for (const option of grant.options) {
+            picks.push({
+              source: owner.id,
+              ref: option.ref,
+              params: singleValuedParams(option.params),
+            });
+          }
+        }
+      }
+    }
+    return picks;
+  }
+
+  /**
+   * The label a player should read for one parameter value, worked out from the
+   * parameter's DECLARED domain — an independent oracle, deliberately not the
+   * resolver under test. Free text (and a number) is shown as typed; the engine
+   * taxonomies go through their Fluent families; every id-valued domain through
+   * its own rules-i18n name. A domain with no label fails loudly instead of
+   * letting a raw id through.
+   */
+  function expectedValueLabel(
+    localized: LocalizedRuleset,
+    t: Translate,
+    domain: string,
+    value: string,
+  ): string {
+    const slug = value.slice(value.indexOf('.') + 1);
+    switch (domain) {
+      case 'text':
+      case 'number':
+        return value;
+      case 'characteristic':
+        return t(`characteristic-${slug}`);
+      case 'realm':
+        return t(`realm-${slug}`);
+      case 'ability_category':
+        return t(`ability-category-${slug}`);
+      default: {
+        const name = localized.i18n[value]?.name;
+        expect(name, `no localized label for ${domain} value ${value}`).toBeTruthy();
+        return name!;
+      }
+    }
+  }
+
+  const occurrences = (haystack: string, needle: string) => haystack.split(needle).length - 1;
+
+  for (const lang of ['en', 'de'] as Lang[]) {
+    it(`every shipped granted row names each fixed parameter, localized, exactly once (${lang})`, () => {
+      const localized = shippedRuleset(lang);
+      const t = translator(lang);
+      let unconsumedChecked = 0;
+
+      for (const pick of shippedGrantedPicks()) {
+        const item = localized.ruleset.point_items[pick.ref];
+        expect(item, `${pick.source}: ${pick.ref} is not a shipped point item`).toBeDefined();
+        const template = localized.i18n[pick.ref]?.name ?? '';
+        const consumed = new Set([...template.matchAll(/\{(\w+)\}/g)].map((m) => m[1]));
+        const label = grantItemLabel(localized, pick.ref, t, pick.params);
+
+        for (const [key, value] of Object.entries(pick.params)) {
+          const where = `${lang} ${pick.source} ${pick.ref} ${key}=${value} -> "${label}"`;
+          const domain = item!.parameters?.find((p) => p.key === key)?.domain;
+          expect(domain, `${where}: no parameter "${key}" declared`).toBeDefined();
+          const expected = expectedValueLabel(localized, t, domain!, value);
+
+          // Shown once: a consumed value fills its token and is NOT repeated in a
+          // suffix; an unconsumed one appears in the suffix.
+          expect(occurrences(label, expected), where).toBe(1);
+          if (!consumed.has(key)) {
+            expect(label.endsWith(')'), `${where}: no parenthesised suffix`).toBe(true);
+            unconsumedChecked += 1;
+          }
+          // Never a raw id.
+          if (value.includes('.')) expect(label, where).not.toContain(value);
+        }
+      }
+
+      // Guard against a vacuous pass: House Tremere's focus is (at least) one.
+      expect(
+        unconsumedChecked,
+        'no shipped grant carries an unconsumed fixed parameter',
+      ).toBeGreaterThan(0);
+    });
+  }
+
+  // The try-out case itself, pinned in both locales. The value is free text and
+  // shown as typed — exactly as the shipped data stores it, which matches the
+  // English book's "Minor Magical Focus (certamen)." (ArMDE:2281).
+  it("names House Tremere's certamen focus on its granted Minor Magical Focus", () => {
+    const tremere = (
+      read('../../../rules/core/houses.json').houses as { id: string; grants?: Grant[] }[]
+    ).find((h) => h.id === 'house.tremere');
+    expect(tremere?.grants).toContainEqual({
+      kind: 'fixed',
+      item: 'virtue.minor_magical_focus',
+      params: { focus: 'certamen' },
+    });
+
+    expect(
+      grantItemLabel(shippedRuleset('en'), 'virtue.minor_magical_focus', translator('en'), {
+        focus: 'certamen',
+      }),
+    ).toBe('Minor Magical Focus (certamen)');
+    expect(
+      grantItemLabel(shippedRuleset('de'), 'virtue.minor_magical_focus', translator('de'), {
+        focus: 'certamen',
+      }),
+    ).toBe('Kleiner Magischer Fokus (certamen)');
+  });
+
+  // An unconsumed id-valued parameter resolves through its own domain (never the
+  // raw id); several share ONE parenthesis, in the item's `parameters` order (not
+  // the params object's key order); an empty value is not a value and adds nothing.
+  it('localizes several unconsumed values into one suffix, in parameter order', () => {
+    const localized = makeRuleset(
+      [
+        item({
+          id: 'virtue.test_grant',
+          parameters: [
+            { key: 'art', type: 'ref', domain: 'art' },
+            { key: 'characteristic', type: 'ref', domain: 'characteristic' },
+            { key: 'note', type: 'ref', domain: 'text' },
+          ],
+        }),
+      ],
+      { i18n: { 'virtue.test_grant': { name: 'Test Grant' }, 'art.ignem': { name: 'Ignem' } } },
+    );
+    expect(
+      grantItemLabel(localized, 'virtue.test_grant', translator('en'), {
+        note: '',
+        characteristic: 'characteristic.sta',
+        art: 'art.ignem',
+      }),
+    ).toBe('Test Grant (Ignem, Stamina)');
+  });
+
+  // A consumed token is filled and never repeated as a suffix.
+  it('adds no suffix when the template consumes every parameter', () => {
+    expect(
+      grantItemLabel(shippedRuleset('en'), 'virtue.puissant_art', translator('en'), {
+        art: 'art.ignem',
+      }),
+    ).toBe('Puissant Ignem');
+  });
+
+  // The bought row keeps its plain name: its ParameterPicker already shows the
+  // value, so a suffix there would show it twice. Passes today; pinned so the I5
+  // fix lands on the GRANT label only.
+  it('leaves a bought row (selectionDisplayName) without the suffix', () => {
+    expect(
+      selectionDisplayName(
+        shippedRuleset('en'),
+        'virtue.minor_magical_focus',
+        { focus: 'certamen' },
+        translator('en'),
+      ),
+    ).toBe('Minor Magical Focus');
   });
 });
 

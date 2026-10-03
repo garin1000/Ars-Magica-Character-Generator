@@ -363,6 +363,16 @@ relevant surface MUST preserve them and keep their tests green.
   an activation of the item itself, never by `browser.keys`. Widget-local keys
   — arrow navigation in a tablist, Escape in a dialog — are not shortcuts in
   this sense and stay in the component that owns them.
+  **Windows exception (try-out finding 16).** On Windows the menu draws the chord,
+  but WebView2's child window keeps the key press away from the host's accelerator
+  table, so the menu never receives it. On Windows only, the webview mirrors the
+  chords. Rust's `menu.rs::menu_shortcuts` returns the menu's own `accelerator_for`
+  list there and `[]` everywhere else. `ui/src/lib/menu-shortcuts.ts` turns a
+  matching press into the same `runMenuAction` a menu click takes, gated by the same
+  `MenuFlags`. There is still one owner: the chord is declared only in
+  `accelerator_for`, and `menu-shortcuts.test.ts` guards that the TS holds no chord
+  literal. The accelerator test still proves the chord, vitest proves the mirror, and
+  a manual press on Windows is the runtime proof.
 - **English** for all code, identifiers, comments, commit messages, and all
   assistant communication (chat responses, PR descriptions, status updates) —
   regardless of the language the user writes in.

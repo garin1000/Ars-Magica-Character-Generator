@@ -2516,6 +2516,15 @@ ul {
   margin: 0.4rem 0 0 1rem;
 }
 
+/* Try-out finding 18: a labelled group's members (Incompatible Arts' Technique
+   and Form) sit on ONE row beneath the group label, so each pair reads as a
+   pair. Each `.param` keeps its 1rem left margin: the first member lines up
+   with the label's indent and the next is spaced by the same 1rem. */
+.param-group-row {
+  display: flex;
+  align-items: flex-start;
+}
+
 .muted {
   color: var(--muted);
 }

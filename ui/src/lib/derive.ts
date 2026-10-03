@@ -591,6 +591,13 @@ export function localizedSortKey(localized: LocalizedRuleset, id: string): strin
  * — the very thing the paragraph above promises it never does (Sabine 13,
  * round-1 audit). One resolver, so a domain added to one surface cannot go
  * missing on the other.
+ *
+ * A parameter the template has no `{token}` for is appended in parentheses
+ * (I5): House Tremere grants "Minor Magical Focus" with `focus` = certamen, and
+ * a grant has no ParameterPicker to show that value, so the label is its only
+ * home — "Minor Magical Focus (certamen)". A *bought* row's name
+ * ({@link selectionDisplayName}) deliberately gets no suffix: its picker already
+ * shows the value.
  */
 export function grantItemLabel(
   localized: LocalizedRuleset,
@@ -598,9 +605,31 @@ export function grantItemLabel(
   t: Translate,
   params: Record<string, string> = {},
 ): string {
-  return displayName(localized, ref, params, paramHint(t), (_key, value) =>
-    selectionParamLabel(localized, params, value, t),
-  );
+  const resolve = (value: string) => selectionParamLabel(localized, params, value, t);
+  const name = displayName(localized, ref, params, paramHint(t), (_key, value) => resolve(value));
+  const unconsumed = unconsumedParamValues(localized, ref, params).map(resolve);
+  if (unconsumed.length === 0) return name;
+  // The separator the export's `Doc::list_separator` joins the same suffix with.
+  return `${name} (${unconsumed.join(`${t('restricted-xp-list-separator')} `)})`;
+}
+
+/**
+ * The filled values of `ref`'s parameters that its localized name template has
+ * no `{token}` for, in the item's declared `parameters` order. An empty value is
+ * not a value and is skipped.
+ */
+function unconsumedParamValues(
+  localized: LocalizedRuleset,
+  ref: string,
+  params: Record<string, string>,
+): string[] {
+  const template = localized.i18n[ref]?.name ?? '';
+  const consumed = new Set([...template.matchAll(/\{(\w+)\}/g)].map((m) => m[1]));
+  const declared = localized.ruleset.point_items[ref]?.parameters ?? [];
+  return declared
+    .filter((parameter) => !consumed.has(parameter.key))
+    .map((parameter) => params[parameter.key])
+    .filter((value): value is string => value !== undefined && value !== '');
 }
 
 /** Extra filtering an open-grant picker may need beyond the engine constraint. */

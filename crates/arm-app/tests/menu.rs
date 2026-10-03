@@ -12,8 +12,9 @@ use std::collections::BTreeSet;
 use arm_app::menu::{
     ACTION_EXPORT, ACTION_FULLSCREEN, ACTION_IDS, ACTION_NEW, ACTION_OPEN, ACTION_SAVE,
     ACTION_SAVE_AS, ACTION_SETTINGS, InstalledMenuItem, InstalledMenuSection, MENU_ACTION_EVENT,
-    MenuEntry, MenuFlags, MenuLabels, MenuSection, Platform, PredefinedRole, SECTION_APP,
-    SECTION_EDIT, SECTION_FILE, SECTION_WINDOW, is_menu_action_id, menu_model,
+    MenuEntry, MenuFlags, MenuLabels, MenuSection, MenuShortcut, Platform, PredefinedRole,
+    SECTION_APP, SECTION_EDIT, SECTION_FILE, SECTION_WINDOW, is_menu_action_id, menu_model,
+    menu_shortcuts,
 };
 
 /// A [`MenuLabels`] whose every field carries a unique, recognisable sentinel,
@@ -343,6 +344,105 @@ fn the_chords_name_the_cross_platform_modifier_rather_than_branching_by_hand() {
             "the same action must answer to the same chord on every desktop"
         );
     }
+}
+
+// U4 (finding 16). On Windows the accelerators above are drawn beside the File
+// items but never fire: the keys go to the WebView2 child window, not to the
+// host window's accelerator table. So on Windows ONLY the webview mirrors the
+// chords — and it mirrors THIS list, not a copy of its own: the frontend gets
+// `menu_shortcuts`, built from the same `accelerator_for`, and holds no chord
+// literal (`ui/src/lib/menu-shortcuts.test.ts` guards that half). This test is
+// what keeps the mirror equal to what the OS draws.
+#[test]
+fn on_windows_the_webview_mirror_carries_exactly_the_chords_the_menu_declares() {
+    let declared: BTreeSet<(String, String)> =
+        action_accelerators(&model_for(Platform::Windows, &all_enabled()))
+            .into_iter()
+            .filter_map(|(id, chord)| chord.map(|chord| (id, chord)))
+            .collect();
+    let mirrored: Vec<(String, String)> = menu_shortcuts(Platform::Windows)
+        .into_iter()
+        .map(|shortcut| (shortcut.action, shortcut.accelerator))
+        .collect();
+    let mirrored_set: BTreeSet<(String, String)> = mirrored.iter().cloned().collect();
+
+    assert!(
+        !declared.is_empty(),
+        "the Windows menu declares no chord at all"
+    );
+    assert_eq!(
+        mirrored_set, declared,
+        "the Windows webview mirror must answer to exactly the chords the menu draws"
+    );
+    assert_eq!(
+        mirrored.len(),
+        mirrored_set.len(),
+        "the mirror lists a chord twice, so one press would run its action twice"
+    );
+}
+
+// The other half of "one owner per platform": on GTK and macOS the accelerator
+// genuinely fires, so a webview handler there would be a SECOND owner and one
+// Ctrl+N on a dirty document would raise two discard prompts. The list is the
+// switch — an empty one means the frontend installs no listener at all — so the
+// platform decision is made here, once, and the UI does no sniffing.
+#[test]
+fn no_desktop_but_windows_gets_a_webview_mirror() {
+    for platform in [Platform::MacOs, Platform::Other] {
+        assert_eq!(
+            menu_shortcuts(platform),
+            Vec::<MenuShortcut>::new(),
+            "{platform:?} dispatches its accelerators natively and must get no webview mirror"
+        );
+    }
+}
+
+// The command answers for the desktop it was compiled on, through the same
+// function the two tests above pin per platform.
+#[test]
+fn the_menu_shortcuts_command_answers_for_the_compiled_desktop() {
+    assert_eq!(
+        arm_app::commands::menu_shortcuts(),
+        menu_shortcuts(Platform::current())
+    );
+}
+
+// The list crosses IPC into `ui/src/lib/menu-shortcuts.ts`, which the compiler
+// never sees, so its wire shape is pinned here.
+#[test]
+fn a_mirrored_shortcut_reaches_the_frontend_in_the_shape_it_parses() {
+    let shortcut = MenuShortcut {
+        action: ACTION_OPEN.to_string(),
+        accelerator: "CmdOrCtrl+O".to_string(),
+    };
+
+    assert_eq!(
+        serde_json::to_value(&shortcut).expect("a shortcut serializes"),
+        serde_json::json!({ "action": "menu.open", "accelerator": "CmdOrCtrl+O" })
+    );
+}
+
+/// `ui/src/lib/ipc.ts`, read as text for the same reason as
+/// [`frontend_menu_module`].
+fn frontend_ipc_module() -> String {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../ui/src/lib/ipc.ts");
+    std::fs::read_to_string(path).expect("ui/src/lib/ipc.ts is readable")
+}
+
+// A command missing from `generate_handler!` compiles, passes every unit test,
+// and rejects at runtime — on Windows only, the one desktop no gate here runs
+// on. Both ends of the name are pinned.
+#[test]
+fn the_shortcut_list_is_registered_and_invoked_under_one_name() {
+    let main = include_str!("../src/main.rs");
+    assert!(
+        main.contains("commands::menu_shortcuts,"),
+        "main.rs does not register commands::menu_shortcuts in the invoke handler"
+    );
+    assert!(
+        frontend_ipc_module().contains("invoke('menu_shortcuts')"),
+        "ipc.ts does not invoke menu_shortcuts"
+    );
 }
 
 // Stated placement, not guessed: macOS puts Settings in the application menu,

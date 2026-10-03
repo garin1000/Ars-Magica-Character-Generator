@@ -4,6 +4,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { MENU_ACTION_EVENT, type MenuFlags, type MenuLabels } from './menu';
+import type { MenuShortcut } from './menu-shortcuts';
 import type {
   AgeInSagaYear,
   Characteristic,
@@ -506,6 +507,15 @@ export function confirmDiscard(labels: CloseGuardLabels): Promise<boolean | null
  */
 export function setAppMenu(labels: MenuLabels, flags: MenuFlags): Promise<void> {
   return invoke('set_app_menu', { labels, flags });
+}
+
+/**
+ * The menu chords the webview must answer to itself: the menu's own
+ * accelerators on Windows, where WebView2 keeps the keys from the menu, and
+ * `[]` on every other desktop (U4). See `menu-shortcuts.ts`.
+ */
+export function menuShortcuts(): Promise<MenuShortcut[]> {
+  return invoke('menu_shortcuts');
 }
 
 /**

@@ -245,6 +245,64 @@ describe('VirtueFlawTab gives the at-cap block a reason', () => {
   });
 });
 
+// R6/D83.7: a Mythic Companion's status Virtue is greyed out on the Available
+// list (VirtueFlawTab.test.ts), and the greyed row says why — the player is sent
+// to the Type step, where the type that grants it is chosen.
+describe('VirtueFlawTab gives the status-Virtue block a reason', () => {
+  const STATUS: PointItem = {
+    id: 'virtue.devil_child',
+    kind: 'virtue',
+    magnitude: 'free',
+    categories: ['mythic_companion'],
+    classification: 'narrative',
+    entity_kinds: ['character'],
+    mythic_status: true,
+  } as PointItem;
+
+  it('tells the player to choose the type on the Type step', () => {
+    store.ruleset = {
+      ruleset: {
+        id: 'test',
+        version: '1',
+        point_items: { [STATUS.id]: STATUS },
+        type_profiles: {
+          mythic_companion: {
+            id: 'mythic_companion',
+            budget: { virtue_points: 20, flaw_points: 10 },
+            has_mythic_type: true,
+            gift_policy: 'forbidden',
+            creation_phases: [],
+          },
+        },
+        abilities: {},
+        magnitude_points: { free: 0, minor: 1, major: 3 },
+        ability_category_order: ['general'],
+        art_type_order: ['technique', 'form'],
+      },
+      i18n: { [STATUS.id]: { name: 'Devil Child' } },
+    } as unknown as LocalizedRuleset;
+    store.entity.type_id = 'mythic_companion';
+
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(VirtueFlawTab, { target });
+    flushSync();
+
+    const row = target.querySelector('[data-testid="add-virtue.devil_child"]');
+    expect(row).not.toBeNull();
+    vi.useFakeTimers();
+    row!.dispatchEvent(new Event('focusin', { bubbles: true }));
+    vi.advanceTimersByTime(500);
+    flushSync();
+
+    const reason = document.querySelector('[data-testid="tooltip-reason"]');
+    const expected = store.t('vf-blocked-mythic-status');
+    expect(reason?.textContent?.replace(/[⁦-⁩]/g, '')).toBe(expected);
+    // …and that text is a real message, not the raw key.
+    expect(expected).not.toBe('vf-blocked-mythic-status');
+  });
+});
+
 // D42/D70/D74: picking a realm in the override `<select>` must write it as the
 // `association` parameter on the selection at that row's INDEX (via the same
 // `setParamAt` path `ParameterPicker`'s own realm dropdown uses) — a real DOM

@@ -868,6 +868,14 @@ presumption of correctness.
    The threshold for each drop is |bought + delta - drops so far|, and the value
    after aging is bought + delta - drops. The legacy `aging_reductions` fold
    shares the helper. Aged saves with a free delta read higher than before.
+7. **A Mythic Companion must choose a type, and only the type grants its
+   status Virtue** (ruling F7; ArMDE:2846 "You must take the Free Virtue
+   defining which type of Mythic Companion you are", :2637). An unset type is
+   the error `mythic_type_unset`, filed under the Type step. Norbert: "Devil
+   Child and all the other Vs for myth comps should only be granted by
+   selecting the appropriate mythic companion type. not selectable by just
+   anyone." The four status Virtues carry `mythic_status: true`. A bought copy
+   is the error `mythic_status_virtue_bought`, and the picker greys them out.
 
 ---
 

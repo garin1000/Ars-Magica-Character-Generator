@@ -167,6 +167,12 @@ vf-blocked-incompatible = Unvereinbar mit { $other }
 # ValidationMode. { $max } ist das für die Auswahl geltende Maximum.
 vf-blocked-max-total = Maximum von { $max } bereits erreicht
 
+# Grund, der bei der freien Tugend angezeigt wird, die den Typ eines Mythischen
+# Gefährten bestimmt (Teufelskind, Nephilim, …), und die die Verfügbar-Liste in
+# jedem ValidationMode ausgraut: Sie wird nur durch den Typ gewährt, der im
+# Schritt „Typ“ gewählt wird (D83.7).
+vf-blocked-mythic-status = Nur mit dem Typ des Mythischen Gefährten erhältlich, gewählt im Schritt „Typ“
+
 # Filter-/Suchsteuerung für lange Auswahllisten.
 filter-search-placeholder = Suchen…
 filter-magnitude-all = Alle Stufen
@@ -1438,7 +1444,8 @@ issue-realm_unset_subset = { $item } benötigt eine Sphäre aus der eingeschrän
 issue-realm_override_invalid = Die Sphäre von { $item } muss eine der erlaubten Sphären sein, nicht { $value }.
 issue-house_unset = Ein Magus sollte einem hermetischen Haus angehören.
 issue-missing_hermetic_flaw = Ein Magus sollte mindestens einen hermetischen Fehler wählen.
-issue-mythic_type_unset = Ein mythischer Gefährte sollte einen Typ wählen.
+issue-mythic_type_unset = Ein Mythischer Gefährte muss einen Typ wählen.
+issue-mythic_status_virtue_bought = { $item } kann nicht gekauft werden: Die Tugend gibt es nur mit dem Typ des Mythischen Gefährten, der im Schritt „Typ“ gewählt wird.
 issue-mythic_choice_unresolved = Der mythische Gefährtentyp { $mythic_type } hat eine offene Wahl ({ $choice_key }).
 issue-mythic_grant_constraint = Mythischer Gefährtentyp { $mythic_type }: Die Wahl { $choice_key } fällt auf { $item }, was die Vorgabe nicht erfüllt.
 issue-mythic_required_trait_missing = Eine erforderliche Tugend oder ein erforderlicher Fehler (oder ein geeigneter Ersatz) fehlt: { $item }.

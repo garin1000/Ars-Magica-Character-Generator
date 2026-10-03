@@ -312,6 +312,38 @@ describe('German UI bundle', () => {
     expect(translate(de, 'category-mythic_companion')).toBe(translate(de, 'type-mythic_companion'));
   });
 
+  // F7/D83.7: "You must take the Free Virtue defining which type of Mythic
+  // Companion you are" (ArMDE:2846). The engine reports an unchosen type as an
+  // error, so the message may not soften it to a "should". The German names the
+  // character type with the glossary's term (translation-tables/grundbegriffe.md:83).
+  it('says a Mythic Companion must choose a type, in both locales', () => {
+    const en = translate(buildBundle('en'), 'issue-mythic_type_unset');
+    expect(en).toMatch(/\bmust\b/);
+    expect(en).not.toMatch(/\bshould\b/);
+    const de = translate(buildBundle('de'), 'issue-mythic_type_unset');
+    expect(de).toMatch(/\bmuss\b/);
+    expect(de).not.toMatch(/\bsollte\b/);
+    expect(de).toContain('Mythischer Gefährte');
+  });
+
+  // R6/D83.7: a bought status Virtue is an error, and the Available list greys it
+  // out with a reason. Both strings exist in both locales — a key missing from
+  // both is perfectly symmetrical, so parity alone would not catch it — and the
+  // error names the Virtue it reports.
+  it('names the bought status-Virtue finding and its picker reason in both locales', () => {
+    for (const lang of ['en', 'de']) {
+      const keys = messageKeys(sourceForLang(lang));
+      expect(keys, `${lang}`).toContain('issue-mythic_status_virtue_bought');
+      expect(keys, `${lang}`).toContain('vf-blocked-mythic-status');
+    }
+    for (const lang of ['en', 'de'] as const) {
+      const message = translate(buildBundle(lang), 'issue-mythic_status_virtue_bought', {
+        item: 'Devil Child',
+      }).replace(/[⁦-⁩]/g, '');
+      expect(message).toContain('Devil Child');
+    }
+  });
+
   // B7 (ArMDE:3919): a new validation code, `exclusive_param_values`.
   // A code with no `issue-<code>` message renders as its own slug, and parity
   // alone would not catch it — a code missing from BOTH locales is perfectly

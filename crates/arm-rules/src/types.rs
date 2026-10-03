@@ -3774,6 +3774,14 @@ pub struct PointItem {
     /// Source: ArMDE:2998-3002.
     #[serde(default, skip_serializing_if = "is_false")]
     pub tainted: bool,
+    /// `true` for a Mythic Companion's **status** Virtue — the Free Virtue
+    /// "defining which type of Mythic Companion you are" (ArMDE:2846), which "specifies
+    /// their status" (ArMDE:2637). Held only as the grant of the type that defines it
+    /// (Norbert, 2026-10-03; D83.7): a bought copy is
+    /// `mythic_status_virtue_bought`, and the Available list never offers one.
+    /// Load-time integrity ties every such item to a mythic type's `fixed` grant.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub mythic_status: bool,
     /// D42/D70/D74: how this entry's realm association resolves beyond the
     /// plain override/concept/Magic chain. `None` for every Supernatural
     /// entry the book leaves free. See [`RealmAssociation`].
@@ -4104,6 +4112,8 @@ struct PointItemRepr {
     #[serde(default)]
     tainted: bool,
     #[serde(default)]
+    mythic_status: bool,
+    #[serde(default)]
     realm_association: Option<RealmAssociation>,
     #[serde(default)]
     faerie_related: bool,
@@ -4156,6 +4166,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             index_categories,
             classification,
             tainted,
+            mythic_status,
             realm_association,
             faerie_related,
             trained,
@@ -4199,6 +4210,7 @@ impl TryFrom<PointItemRepr> for PointItem {
             index_categories,
             classification,
             tainted,
+            mythic_status,
             realm_association,
             faerie_related,
             trained,

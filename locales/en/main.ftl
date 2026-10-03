@@ -158,6 +158,11 @@ vf-blocked-incompatible = Incompatible with { $other }
 # item's stated maximum.
 vf-blocked-max-total = Maximum of { $max } already reached
 
+# Reason shown on a Mythic Companion's status Virtue (Devil Child, Nephilim, …),
+# which the Available list greys out in every ValidationMode: it is held only
+# as the grant of the type that defines it, chosen on the Type step (D83.7).
+vf-blocked-mythic-status = Comes only with its Mythic Companion type, chosen on the Type step
+
 # Filter/search controls for long selectable lists.
 filter-search-placeholder = Search…
 filter-magnitude-all = All levels
@@ -1356,7 +1361,8 @@ issue-realm_unset_subset = { $item } needs a realm chosen from its restricted li
 issue-realm_override_invalid = { $item }'s realm must be one of its allowed realms, not { $value }.
 issue-house_unset = A magus should belong to a Hermetic House.
 issue-missing_hermetic_flaw = A magus should take at least one Hermetic Flaw.
-issue-mythic_type_unset = A Mythic Companion should choose a type.
+issue-mythic_type_unset = A Mythic Companion must choose a type.
+issue-mythic_status_virtue_bought = { $item } cannot be bought: it comes only with its Mythic Companion type, chosen on the Type step.
 issue-mythic_choice_unresolved = The Mythic Companion type { $mythic_type } has an unresolved choice ({ $choice_key }).
 issue-mythic_grant_constraint = The Mythic Companion type { $mythic_type } grant { $choice_key } picks { $item }, which does not meet its constraint.
 issue-mythic_required_trait_missing = A required Virtue or Flaw (or a suitable substitute) is missing: { $item }.

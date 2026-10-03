@@ -223,7 +223,8 @@ impl fmt::Display for IssueSeverity {
 /// | `house_grant_constraint` | error | house_specialisation | `house`, `choice_key`, `item` |
 /// | `house_unset` | warning | house_specialisation | (none) |
 /// | `missing_hermetic_flaw` | warning | virtues_flaws | (none) |
-/// | `mythic_type_unset` | warning | mythic_type | (none) |
+/// | `mythic_type_unset` | error | mythic_type | (none) |
+/// | `mythic_status_virtue_bought` | error | virtues_flaws | `item` |
 /// | `mythic_choice_unresolved` | error | mythic_type | `mythic_type`, `choice_key` |
 /// | `mythic_grant_constraint` | error | mythic_type | `mythic_type`, `choice_key`, `item` |
 /// | `mythic_required_trait_missing` | warning | virtues_flaws | `item` |
@@ -736,10 +737,14 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a magus has taken no
     /// Hermetic Flaw (the rules recommend at least one).
     pub const CODE_MISSING_HERMETIC_FLAW: &'static str = "missing_hermetic_flaw";
-    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: a mythic-companion
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a mythic-companion
     /// type has not been chosen yet (its free status/Minor Virtue + package are
-    /// unresolved).
+    /// unresolved). ArMDE:2846's "must" (D83.7).
     pub const CODE_MYTHIC_TYPE_UNSET: &'static str = "mythic_type_unset";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Mythic Companion
+    /// status Virtue (`PointItem::mythic_status`) was bought; it is held only as
+    /// the grant of the type that defines it (D83.7).
+    pub const CODE_MYTHIC_STATUS_VIRTUE_BOUGHT: &'static str = "mythic_status_virtue_bought";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a Mythic Companion
     /// type's Choice/Open grant has no pick, or one not among the offered
     /// options.
@@ -1224,6 +1229,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_gift_policy(entity, ruleset, type_profile, &mut issues);
     validate_house(entity, ruleset, type_profile, &mut issues);
     validate_mythic_type(entity, ruleset, type_profile, &mut issues);
+    validate_mythic_status_not_bought(entity, ruleset, &mut issues);
 
     // Characteristics and Abilities are character-only concerns; a covenant has
     // neither. Gate them on the entity kind so the engine respects EntityKind
@@ -9129,12 +9135,21 @@ mod tests {
         );
     }
 
+    /// F7/D83.7: "You must take the Free Virtue defining which type of Mythic
+    /// Companion you are" (ArMDE:2846) — a "must", so an unchosen type is an
+    /// error, filed under the `mythic_type` step that offers the choice.
     #[test]
-    fn unchosen_mythic_type_warns() {
+    fn unchosen_mythic_type_is_an_error() {
         let rs = mythic_ruleset();
         let e = make_entity("mythic_companion", vec![]); // has_mythic_type but no type
-        let codes = all_codes(&validate(&e, &rs));
-        assert!(codes.contains(&ValidationIssue::CODE_MYTHIC_TYPE_UNSET.to_string()));
+        let result = validate(&e, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_MYTHIC_TYPE_UNSET)
+            .expect("an unchosen mythic type is reported");
+        assert_eq!(issue.severity, IssueSeverity::Error);
+        assert_eq!(issue.phase, CreationPhase::MythicType);
     }
 
     #[test]

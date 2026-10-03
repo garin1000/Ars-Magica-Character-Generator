@@ -29,6 +29,7 @@ fn main() {
             commands::set_app_menu,
             commands::activate_menu_item,
             commands::installed_menu,
+            commands::menu_shortcuts,
             commands::read_settings,
             commands::write_settings,
             commands::derive_age,

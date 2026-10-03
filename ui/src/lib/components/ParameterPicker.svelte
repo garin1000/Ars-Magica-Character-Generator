@@ -899,7 +899,10 @@
       >
         {group.label}
       </p>
-      {@render memberControls(group.members)}
+      <!-- Try-out finding 18: the members share one row beneath the label. -->
+      <div class="param-group-row">
+        {@render memberControls(group.members)}
+      </div>
     </div>
   {:else}
     {@render memberControls(group.members)}

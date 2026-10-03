@@ -261,6 +261,38 @@ describe('VirtueFlawTab merges granted Virtues into the category list (#9)', () 
   });
 });
 
+// I5 (try-out finding 1): House Tremere's fixed grant is Minor Magical Focus with
+// `focus` = "certamen" (`rules/core/houses.json`, ArMDE:2281), but the name has no
+// `{focus}` token, so the granted row read only "Minor Magical Focus". A granted
+// row has no ParameterPicker, so its NAME must carry the value; a bought row
+// already shows it in its picker and keeps the plain name (no double display).
+describe("VirtueFlawTab names a granted row's fixed parameter (I5)", () => {
+  const focus = item({
+    id: 'virtue.minor_magical_focus',
+    categories: ['hermetic'],
+    parameters: [{ key: 'focus', type: 'ref', domain: 'text' }],
+  });
+
+  beforeEach(() => {
+    const rs = store.ruleset!;
+    store.ruleset = {
+      ...rs,
+      ruleset: { ...rs.ruleset, point_items: { ...rs.ruleset.point_items, [focus.id]: focus } },
+      i18n: { ...rs.i18n, [focus.id]: { name: 'Minor Magical Focus' } },
+    };
+  });
+
+  it('appends the granted value in parentheses', () => {
+    grant({ ref: focus.id, params: { focus: 'certamen' } });
+    expect(columnOutline(html())).toEqual(['# Hermetic', 'Minor Magical Focus (certamen)']);
+  });
+
+  it('leaves a bought row of the same item unsuffixed', () => {
+    resetEntity([{ ref: focus.id, params: { focus: 'certamen' } }]);
+    expect(columnOutline(html())).toEqual(['# Hermetic', 'Minor Magical Focus']);
+  });
+});
+
 // The rulebook's Virtue index lists Sufi twice — at
 // `ArMDE:3179` under
 // "### Supernatural, Minor" and at :3230 under "### Social Status, Minor" — so
@@ -609,6 +641,76 @@ describe('VirtueFlawTab enforces max_total on the Available list', () => {
   it('leaves an item with zero copies enabled (never over-filters)', () => {
     resetEntity([]);
     expect(addRow(html())).toContain('aria-disabled="false"');
+  });
+});
+
+// R6/D83.7 (Norbert, 2026-10-03): a Mythic Companion's status Virtue is held only
+// as the grant of the type that defines it, so the Available list never offers it
+// for purchase — in any mode, like the max_total leg. Which items those are is
+// rules data (`mythic_status` on the item), never an id the component knows.
+describe('VirtueFlawTab never offers a Mythic Companion status Virtue for purchase', () => {
+  const STATUS = item({
+    id: 'virtue.devil_child',
+    magnitude: 'free',
+    categories: ['mythic_companion'],
+    mythic_status: true,
+  } as Partial<PointItem> & Pick<PointItem, 'id'>);
+  // A free Virtue a mythic type also grants, but not its status: still buyable.
+  const OTHER_FREE = item({ id: 'virtue.second_sight', categories: ['supernatural'] });
+
+  function installStatusRuleset(): void {
+    store.ruleset = {
+      ruleset: {
+        id: 'test',
+        version: '1',
+        point_items: { [STATUS.id]: STATUS, [OTHER_FREE.id]: OTHER_FREE },
+        type_profiles: {
+          mythic_companion: {
+            id: 'mythic_companion',
+            budget: { virtue_points: 20, flaw_points: 10 },
+            has_mythic_type: true,
+            gift_policy: 'forbidden',
+            creation_phases: [],
+          },
+        },
+        abilities: {},
+        magnitude_points: { free: 0, minor: 1, major: 3 },
+        ability_category_order: ['general'],
+        art_type_order: ['technique', 'form'],
+      },
+      i18n: {
+        [STATUS.id]: { name: 'Devil Child' },
+        [OTHER_FREE.id]: { name: 'Second Sight' },
+      },
+    } as unknown as LocalizedRuleset;
+  }
+
+  function addRow(body: string, id: string): string {
+    const escaped = id.replace('.', '\\.');
+    return new RegExp(`<button[^>]*data-testid="add-${escaped}"[^>]*>`).exec(body)![0];
+  }
+
+  beforeEach(() => {
+    installStatusRuleset();
+    resetEntity([]);
+    store.entity.type_id = 'mythic_companion';
+  });
+
+  it('greys out the status Virtue', () => {
+    expect(addRow(html(), STATUS.id)).toContain('aria-disabled="true"');
+  });
+
+  it('greys it out in advisory mode too', () => {
+    store.mode = 'advisory';
+    try {
+      expect(addRow(html(), STATUS.id)).toContain('aria-disabled="true"');
+    } finally {
+      store.mode = 'enforced';
+    }
+  });
+
+  it('leaves an ordinary Virtue a type also grants buyable', () => {
+    expect(addRow(html(), OTHER_FREE.id)).toContain('aria-disabled="false"');
   });
 });
 
