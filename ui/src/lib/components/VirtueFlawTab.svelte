@@ -4,6 +4,7 @@
     atMaxTotalRefs,
     displayName,
     filterItems,
+    grantItemLabel,
     grantedSelectionsForSide,
     groupByCategory,
     groupSelectionsByCategory,
@@ -264,6 +265,18 @@
     return store.ruleset ? selectionDisplayName(store.ruleset, ref, params, store.t) : ref;
   }
 
+  // I5: a granted row has no ParameterPicker, so its name also carries the
+  // parameters its template does not name ("Minor Magical Focus (certamen)");
+  // a bought row keeps `selectionName`, since its picker already shows them.
+  function rowName(
+    ref: string,
+    params: Record<string, string> | undefined,
+    granted: boolean,
+  ): string {
+    if (!granted) return selectionName(ref, params);
+    return store.ruleset ? grantItemLabel(store.ruleset, ref, store.t, params) : ref;
+  }
+
   // C5b: a `multi_ref` value (D9 part 3) must show as a joined, localized list
   // ("Pilum of Fire, Aegis of the Hearth"), never dropped the way
   // `singleValuedParams` alone drops it. Falls back to the plain single-valued
@@ -301,7 +314,7 @@
      the FIRST badge names, which is what magus-editor.e2e.js compares the two
      against. The Available picker has no selection to narrow against and lists a
      dual-category item under both headings. -->
-{#snippet nameWrap(ref: string, params: Record<string, string> | undefined)}
+{#snippet nameWrap(ref: string, params: Record<string, string> | undefined, granted = false)}
   {@const item = store.ruleset?.ruleset.point_items[ref]}
   {@const categories = item ? selectionCategories(item, params) : []}
   <!-- Deliberately focusable: `use:tooltip` opens on `focusin`, and both of this
@@ -325,7 +338,7 @@
       </span>
     {/if}
     <span class="item-name">
-      {selectionName(ref, params)}
+      {rowName(ref, params, granted)}
     </span>
   </span>
 {/snippet}
@@ -478,7 +491,7 @@
               {@const grantRealmEntry = grantedRealmEntry(item.selection, item.grantIndex)}
               <li data-testid="granted-selection-{item.selection.ref}-{item.grantIndex}">
                 <div class="selection-row">
-                  {@render nameWrap(item.selection.ref, displayParams(item.selection))}
+                  {@render nameWrap(item.selection.ref, displayParams(item.selection), true)}
                   <span class="row-marker">{store.t('house-granted-label')}</span>
                 </div>
                 {#if grantRealmEntry}

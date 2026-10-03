@@ -261,6 +261,38 @@ describe('VirtueFlawTab merges granted Virtues into the category list (#9)', () 
   });
 });
 
+// I5 (try-out finding 1): House Tremere's fixed grant is Minor Magical Focus with
+// `focus` = "certamen" (`rules/core/houses.json`, ArMDE:2281), but the name has no
+// `{focus}` token, so the granted row read only "Minor Magical Focus". A granted
+// row has no ParameterPicker, so its NAME must carry the value; a bought row
+// already shows it in its picker and keeps the plain name (no double display).
+describe("VirtueFlawTab names a granted row's fixed parameter (I5)", () => {
+  const focus = item({
+    id: 'virtue.minor_magical_focus',
+    categories: ['hermetic'],
+    parameters: [{ key: 'focus', type: 'ref', domain: 'text' }],
+  });
+
+  beforeEach(() => {
+    const rs = store.ruleset!;
+    store.ruleset = {
+      ...rs,
+      ruleset: { ...rs.ruleset, point_items: { ...rs.ruleset.point_items, [focus.id]: focus } },
+      i18n: { ...rs.i18n, [focus.id]: { name: 'Minor Magical Focus' } },
+    };
+  });
+
+  it('appends the granted value in parentheses', () => {
+    grant({ ref: focus.id, params: { focus: 'certamen' } });
+    expect(columnOutline(html())).toEqual(['# Hermetic', 'Minor Magical Focus (certamen)']);
+  });
+
+  it('leaves a bought row of the same item unsuffixed', () => {
+    resetEntity([{ ref: focus.id, params: { focus: 'certamen' } }]);
+    expect(columnOutline(html())).toEqual(['# Hermetic', 'Minor Magical Focus']);
+  });
+});
+
 // The rulebook's Virtue index lists Sufi twice — at
 // `ArMDE:3179` under
 // "### Supernatural, Minor" and at :3230 under "### Social Status, Minor" — so
