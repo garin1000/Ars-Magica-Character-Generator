@@ -849,6 +849,25 @@ presumption of correctness.
    repeatable text items, none may repeat a value. Norbert ruled the three unclear
    ones: Deteriorating Power, Potent Magic and Special Circumstances each take a
    different value per copy.
+4. **An unset Characteristic is 0** (amends D81.2; ruling S2).
+   `Prereq::CharacteristicMin` evaluates every Characteristic: the stored score,
+   or 0 when there is no entry, plus all free deltas. The UI deletes the entry
+   at 0, so "unset" and "0" are one state. Supernatural Beauty and Envied Beauty
+   with Presence unset are now `prereq_not_met` (ArMDE:5095, :6014).
+   Uncontrollable Strength with Strength unset is legal, and refused under Dwarf
+   (ArMDE:6909, :5998).
+5. **Ability and Art minimums test the held score** (ruling F-B).
+   `AbilityMin`/`ArtMin` compare the bought score or a grant floor (Second Sight
+   1, ArMDE:4890), never `ability_bonus`/`art_bonus`. Puissant applies "whenever
+   you use it" (ArMDE:4816), and holding a minimum is not a use (ArMDE:4389).
+   Broken Vessel's category and Art floors (ArMDE:5755) use the same held score.
+   `AbilityMin{dead_language, 5}` stays instance-blind for now.
+6. **The aging drop threshold is the actual Characteristic** (ruling F-A).
+   ArMDE:16579 compares the aging points with "the absolute value of the
+   Characteristic"; a free delta raises the Characteristic itself (ArMDE:3989).
+   The threshold for each drop is |bought + delta - drops so far|, and the value
+   after aging is bought + delta - drops. The legacy `aging_reductions` fold
+   shares the helper. Aged saves with a free delta read higher than before.
 
 ---
 

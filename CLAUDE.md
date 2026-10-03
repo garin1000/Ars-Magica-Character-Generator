@@ -625,8 +625,8 @@ enum Prereq {
     Nor(Vec<Prereq>),        // NOR — none may be present (serde tag "none")
     Has(Id),
     House(Id),
-    AbilityMin { ability: Id, score: u8 },
-    ArtMin { art: Id, score: u8 },
+    AbilityMin { ability: Id, score: u8 },  // held score: bought or grant floor, no Puissant (D83.5)
+    ArtMin { art: Id, score: u8 },          // bought score, no Puissant Art (D83.5)
     HermeticallyTrained,
     OrderMember,
     IsCompanion,       // profile flag, true for companion + mythic_companion
@@ -637,10 +637,10 @@ enum Prereq {
         // magnitude/kind-filtered twin of HasCategory (e.g. "a Major Supernatural Virtue")
     CharacterType(Id),  // entity's own type profile id equals this, literally (D38/D75)
     CharacteristicMin { characteristic: Id, score: i8 },
-        // entity's effective Characteristic score >= this; unset is Unknown, not False (D81.2)
+        // entity's effective Characteristic score >= this; unset counts as 0 plus free deltas (D83.4)
     AbilityCategoryScoreMin { category: String, score: u8 },
-        // holds an Ability of this category at effective score >= this (D81.3)
-    AnyArtMin { score: u8 }, // holds any Art at effective score >= this (D81.3)
+        // holds an Ability of this category at held score (bought or grant floor, no Puissant) >= this (D83.5)
+    AnyArtMin { score: u8 }, // holds any Art at bought score >= this (D83.5)
 }
 ```
 
