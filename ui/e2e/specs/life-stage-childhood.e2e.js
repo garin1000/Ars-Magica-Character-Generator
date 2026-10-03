@@ -210,11 +210,18 @@ describe('life-stage funding and Sample Childhoods', () => {
     const unset = await textOf(`${DOCKED_ISSUES} [data-code="life_stage_native_language_unset"]`);
     expect(unset.length).toBeGreaterThan(0);
     expect(unset).not.toContain('life_stage_native_language_unset');
-    // And it gates the step, exactly like any other phase finding.
-    await browser.waitUntil(async () => !(await $(NEXT).isEnabled()), {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'the unset native language did not block the Experience step',
-    });
+    // And it blocks the step, exactly like any other phase finding. The rail's mark is
+    // the signal, not a disabled Next: the first test already walked on to Abilities,
+    // and since tryout-findings #9a a step already visited stays reachable whatever
+    // errors stand (`wizard-flow.e2e.js` covers the gate onto ground never reached).
+    const experienceStep = $('[data-testid="wizard-step-experience"]');
+    await browser.waitUntil(
+      async () => (await experienceStep.getAttribute('data-blocked')) === 'true',
+      {
+        timeout: STEP_TIMEOUT,
+        timeoutMsg: 'the unset native language did not block the Experience step',
+      },
+    );
 
     await $(NATIVE_LANGUAGE).setValue('German');
 
@@ -231,10 +238,11 @@ describe('life-stage funding and Sample Childhoods', () => {
         timeoutMsg: 'a named but unbought native language should warn that its block is unspent',
       },
     );
-    await browser.waitUntil(async () => await $(NEXT).isEnabled(), {
+    await browser.waitUntil(async () => !(await experienceStep.getAttribute('data-blocked')), {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'naming the native language did not re-enable Next',
+      timeoutMsg: 'naming the native language did not lift the Experience step block',
     });
+    expect(await $(NEXT).isEnabled()).toBe(true);
   });
 
   it('counts later life from the age and shows the two childhood blocks', async () => {

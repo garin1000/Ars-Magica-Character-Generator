@@ -3,9 +3,23 @@
   import { I32_MAX } from '../derive';
   import { REALMS, type Realm } from '../types';
 
-  function onBirthYear(event: Event) {
+  // The store clamps the birth year below at saga year - max_age (slice A1), and
+  // every prefix of an ordinary year ("1", "11", "119") lies under that bound. So a
+  // keystroke only reaches the store once the typed value is in bounds; a partial
+  // value below it stays in the field as typed, and is clamped when committed.
+  function onBirthYearInput(event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw !== '' && Number(raw) < store.earliestBirthYear) return;
     store.setBirthYear(raw === '' ? null : Number(raw));
+  }
+
+  // Commit (blur or Enter): whatever is typed goes to the store, which clamps it, and
+  // the field shows the stored value — written back by hand, because a clamp that
+  // leaves the stored year unchanged gives Svelte nothing to re-render.
+  function onBirthYearChange(event: Event) {
+    const input = event.currentTarget as HTMLInputElement;
+    store.setBirthYear(input.value === '' ? null : Number(input.value));
+    input.value = String(store.entity.birth_year ?? '');
   }
 
   function onConceptRealm(event: Event) {
@@ -46,7 +60,8 @@
       min={store.earliestBirthYear}
       max={I32_MAX}
       value={store.entity.birth_year ?? ''}
-      oninput={onBirthYear}
+      oninput={onBirthYearInput}
+      onchange={onBirthYearChange}
       data-testid="identity-birth-year"
     />
   </label>
