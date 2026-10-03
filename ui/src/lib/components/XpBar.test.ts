@@ -171,7 +171,11 @@ function magusBudget(years = 5, rate = 15): LifeStageBudget {
  * raise `xp_general_pool` to match.
  */
 function pastGauntletBudget(years: number, seasons = 0, spellLevels = 0): LifeStageBudget {
-  const points = years * 30 - Math.min(seasons, 3 * years) * 10;
+  // Mirrors `life_stage.rs::charged_lab_seasons` (F1): the stored seasons pack into
+  // full lab years of four, three of them charged, plus a remainder.
+  const held = Math.min(seasons, 4 * years);
+  const charged = Math.floor(held / 4) * 3 + Math.min(held % 4, 3);
+  const points = years * 30 - charged * 10;
   return {
     ...magusBudget(),
     post_gauntlet_years: years,
@@ -591,7 +595,7 @@ describe('XpBar under a guided magus plan (slice 6b4)', () => {
 });
 
 describe('XpBar for a magus past its Gauntlet (slice 6b5)', () => {
-  /** A magus of 55 gauntleted at 25: 30 years, 6 charged lab seasons, 120 spell levels. */
+  /** A magus of 55 gauntleted at 25: 30 years, 6 lab seasons, 120 spell levels. */
   function installPastGauntlet(): void {
     resetEntity(0);
     installPlan({
@@ -602,19 +606,21 @@ describe('XpBar for a magus past its Gauntlet (slice 6b5)', () => {
     installPostApprenticeshipRules();
     setEffective(0, laterLifePool(75), pastGauntletBudget(30, 6, 120));
     // Those years' experience joins apprenticeship in the general pool (the engine's
-    // `base_general`), so the total the bar charges against is 240 + 720.
-    store.effective!.xp_general_pool = 240 + 720;
+    // `base_general`), so the total the bar charges against is 240 + 730.
+    store.effective!.xp_general_pool = 240 + 730;
   }
 
   it('names the years past the Gauntlet with the rate, the lab deduction and the experience', () => {
     installPastGauntlet();
     const { text } = element(html(), 'life-stage-post-gauntlet');
-    // 30 years × 30 = 900, less 6 charged seasons × 10 = 840 points, 120 of them
-    // taken as levels of spells, leaving 720 XP.
+    // 30 years × 30 = 900. The 6 stored lab seasons pack as one full lab year (3
+    // charged) plus 2 (F1, `life_stage.rs::charged_lab_seasons`), so 5 charged × 10
+    // = 50, leaving 850 points; 120 of them taken as levels of spells leave 730 XP.
     expect(text).toContain('30');
-    expect(text).toContain('60');
-    expect(text).toContain('840');
-    expect(text).toContain('720');
+    expect(text).toContain('50');
+    expect(text).not.toContain('60');
+    expect(text).toContain('850');
+    expect(text).toContain('730');
     expect(text).not.toContain('post_gauntlet');
     // ASCII hyphen-minus only; nothing here is negative but no U+2212 may leak in.
     expect(text).not.toContain('−');
@@ -652,7 +658,7 @@ describe('XpBar for a magus past its Gauntlet (slice 6b5)', () => {
     const body = html('art-');
     // Those points buy Arts as readily as Abilities (ArMDE:2471), so the Arts
     // bar carries the same row — the two instances differ only in their testid prefix.
-    expect(element(body, 'art-life-stage-post-gauntlet').text).toContain('720');
+    expect(element(body, 'art-life-stage-post-gauntlet').text).toContain('730');
   });
 });
 

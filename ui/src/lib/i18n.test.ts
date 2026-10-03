@@ -845,16 +845,14 @@ describe('German UI bundle, DE .ftl audit fixes', () => {
   });
 
   it('D2: states the lab-season limit correctly for one year as a magus', () => {
+    // Wording since F1 (tmp/ftl-rules-audit.md): `max` is the seasons the years
+    // hold, four a year, not the seasons that can be charged.
     expect(
       say('issue-life_stage_lab_seasons_out_of_range', { seasons: '5', max: '4', years: '1' }),
-    ).toBe(
-      '5 Quartale Laborarbeit sind mehr als die 4, die auf die Jahre als Magus (1) angerechnet werden können.',
-    );
+    ).toBe('5 Quartale Laborarbeit sind mehr als die 4 Quartale in den Jahren als Magus (1).');
     expect(
       say('issue-life_stage_lab_seasons_out_of_range', { seasons: '9', max: '8', years: '2' }),
-    ).toBe(
-      '9 Quartale Laborarbeit sind mehr als die 8, die auf die Jahre als Magus (2) angerechnet werden können.',
-    );
+    ).toBe('9 Quartale Laborarbeit sind mehr als die 8 Quartale in den Jahren als Magus (2).');
   });
 
   // Same defect as D2, outside the audit: LifeStagePanel.svelte passes
@@ -1320,6 +1318,24 @@ describe('UI bundles, rules-claim audit fixes', () => {
       key: 'issue-spell_uses_incompatible_arts',
       args: { spell: 'Pilum des Feuers' },
       want: 'Pilum des Feuers verwendet eine Kombination aus Technik und Form, die der Fehler Unvereinbare Künste verbietet.',
+    },
+    // F1: a year holds four lab seasons, of which at most three are charged
+    // (ArMDE:2482, `life_stage.rs::charged_lab_seasons`), so `max` counts the
+    // seasons the years HOLD (`validation/life_stage.rs::validate_post_gauntlet_choices`),
+    // not the seasons that can be charged.
+    {
+      finding: 'F1',
+      lang: 'en',
+      key: 'issue-life_stage_lab_seasons_out_of_range',
+      args: { seasons: '200', max: '140', years: '35' },
+      want: '200 lab seasons is more than the 140 seasons in 35 year(s) as a magus.',
+    },
+    {
+      finding: 'F1',
+      lang: 'de',
+      key: 'issue-life_stage_lab_seasons_out_of_range',
+      args: { seasons: '200', max: '140', years: '35' },
+      want: '200 Quartale Laborarbeit sind mehr als die 140 Quartale in den Jahren als Magus (35).',
     },
   ];
 

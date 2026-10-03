@@ -3586,7 +3586,7 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         // optional field here is: `skip_serializing_if` would otherwise drop them
         // from the serialization and hide them from the check.
         gauntlet_age: Some(25),
-        post_gauntlet_lab_seasons: 10,
+        post_gauntlet_lab_seasons: 13,
         post_gauntlet_spell_levels: 300,
     };
     let budget = arm_rules::LifeStageBudget {
@@ -3597,7 +3597,8 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         later_life_xp: 300,
         apprenticeship_years: 15,
         apprenticeship_xp: 240,
-        // A magus of 60 gauntleted at 25, ten of its lab seasons charged and 300 of
+        // A magus of 60 gauntleted at 25, ten of its 13 lab seasons charged (three
+        // full lab years of three, plus one: F1) and 300 of
         // the remaining points taken as spell levels. Unlike the plan's choices
         // above, these five are unconditional fields of the derived budget: the
         // engine sends them on every payload, so `types.ts` mirrors them here.

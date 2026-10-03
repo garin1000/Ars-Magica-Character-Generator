@@ -876,6 +876,12 @@ presumption of correctness.
    selecting the appropriate mythic companion type. not selectable by just
    anyone." The four status Virtues carry `mythic_status: true`. A bought copy
    is the error `mythic_status_virtue_bought`, and the picker greys them out.
+8. **Post-Gauntlet lab seasons pack into full lab years** (ruling F1). A year
+   holds four seasons, all of which may be lab work (ArMDE:2482), and at most
+   three of them are charged. The stored total is read as packed into full
+   years: charged = floor(s/4)*3 + min(s mod 4, 3), with s capped at 4 x years.
+   The book's Darius is worth 240 (ArMDE:2486, :2488). Storing real per-year
+   seasons is open-todos row 56 (a save-format change, later).
 
 ---
 

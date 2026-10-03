@@ -154,10 +154,14 @@ function setLifeStageBudget(budget: LifeStageBudget | null): void {
   } as unknown as EffectiveScores;
 }
 
-/** A magus gauntleted at 25 and now `age`, with `seasons` charged lab seasons. */
+/** A magus gauntleted at 25 and now `age`, with `seasons` lab seasons. */
 function magusBudget(age: number, seasons = 0, spellLevels = 0): LifeStageBudget {
   const years = age - 25;
-  const points = years * 30 - Math.min(seasons, 3 * years) * 10;
+  // Mirrors `life_stage.rs::charged_lab_seasons` (F1): the stored seasons pack into
+  // full lab years of four, three of them charged, plus a remainder.
+  const held = Math.min(seasons, 4 * years);
+  const charged = Math.floor(held / 4) * 3 + Math.min(held % 4, 3);
+  const points = years * 30 - charged * 10;
   return {
     childhood_native_xp: 75,
     childhood_spread_xp: 45,
@@ -501,12 +505,13 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
     store.entity.age = 40;
     setLifeStageBudget(magusBudget(40, 6, 40));
     const summary = element(html(), 'life-stage-post-gauntlet-summary');
-    // 15 years × 30 = 450, less 6 charged seasons × 10 = 390 points, 40 of them
-    // taken as levels of spells.
+    // 15 years × 30 = 450. The 6 stored lab seasons pack as one full lab year (3
+    // charged) plus 2 (F1, `life_stage.rs::charged_lab_seasons`), so 5 charged × 10
+    // leave 400 points, 40 of them taken as levels of spells.
     expect(summary.open).toMatch(/role="status"/);
     expect(summary.text).toContain('15');
-    expect(summary.text).toContain('390');
-    expect(summary.text).toContain('350');
+    expect(summary.text).toContain('400');
+    expect(summary.text).toContain('360');
     expect(summary.text).toContain('40');
     // Engine numbers through a Fluent key, never a slug and never a U+2212.
     expect(summary.text).not.toContain('post_gauntlet');

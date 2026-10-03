@@ -12,7 +12,10 @@
 //
 //   later life    (25 - 5 - 15) x 15 = 75   — unchanged by the years that followed
 //   post-Gauntlet 60 - 25 = 35 years  = 35 x 30 = 1050 points
-//   lab work      10 charged seasons  = 1050 - 100 = 950 points
+//   lab work      13 seasons = 3 full lab years (3 charged each) + 1 = 10 charged
+//                                     = 1050 - 100 = 950 points
+//                 (F1, Norbert 2026-10-03: a year holds 4 seasons, 3 charged, and
+//                 the stored total packs into full lab years; 35 years hold 140)
 //   the split     300 levels of spells → 650 experience
 //   general pool  240 apprenticeship + 650 = 890
 //   spell levels  120 profile base + 300 = 420
@@ -142,20 +145,21 @@ describe('a magus past its Gauntlet', () => {
   });
 
   it('charges lab seasons against the yearly points, and refuses more than the years hold', async () => {
-    await $(LAB_SEASONS_INPUT).setValue('10');
+    await $(LAB_SEASONS_INPUT).setValue('13');
 
-    // 10 charged seasons cost 10 points each: 1050 - 100 = 950.
+    // 13 seasons pack as 3 full lab years plus 1 (F1), so 10 are charged at 10
+    // points each: 1050 - 100 = 950.
     await browser.waitUntil(async () => (await textOf(SUMMARY)).includes('950 points'), {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'ten charged lab seasons should take 100 off the 1050',
+      timeoutMsg: 'thirteen lab seasons (ten charged) should take 100 off the 1050',
     });
     // (The XP bar shows the deduction itself, derived from the engine's points rather
     // than recomputed from the season count — read on the Abilities step, which is
     // where the bar is mounted.)
 
-    // Only three seasons a year are ever charged (`ArMDE:2482`), so 35 years hold 105 and
-    // 200 is not a plan — past the cap the extra seasons are simply free, which reads
-    // as a bargain unless it is said out loud.
+    // A year holds four seasons (`ArMDE:2482`, "three or four seasons"; F1), so 35
+    // years hold 140 and 200 is not a plan — past the cap the extra seasons are simply
+    // free, which reads as a bargain unless it is said out loud.
     await $(LAB_SEASONS_INPUT).setValue('200');
     await browser.waitUntil(
       async () => (await issueCount('life_stage_lab_seasons_out_of_range')) === 1,
@@ -167,19 +171,19 @@ describe('a magus past its Gauntlet', () => {
     const refusal = await issue('life_stage_lab_seasons_out_of_range');
     // Reads as a sentence, never as its code, and names the ceiling it is about.
     expect(refusal.text).not.toContain('life_stage_lab_seasons_out_of_range');
-    expect(refusal.text).toContain('105');
+    expect(refusal.text).toContain('140');
     expect(refusal.severity).toBe('error');
     await browser.waitUntil(async () => !(await $(NEXT).isEnabled()), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'lab seasons beyond the cap must block the Experience step',
     });
 
-    await $(LAB_SEASONS_INPUT).setValue('10');
+    await $(LAB_SEASONS_INPUT).setValue('13');
     await browser.waitUntil(
       async () => (await issueCount('life_stage_lab_seasons_out_of_range')) === 0,
       {
         timeout: STEP_TIMEOUT,
-        timeoutMsg: 'restoring ten seasons should clear the refusal',
+        timeoutMsg: 'restoring thirteen seasons should clear the refusal',
       },
     );
     await browser.waitUntil(async () => await $(NEXT).isEnabled(), {
@@ -404,7 +408,7 @@ describe('a magus past its Gauntlet', () => {
     expect(saved.life_stages).toEqual({
       native_language: 'German',
       gauntlet_age: 25,
-      post_gauntlet_lab_seasons: 10,
+      post_gauntlet_lab_seasons: 13,
       post_gauntlet_spell_levels: 300,
     });
     expect(saved.xp_pool ?? 0).toBe(0);
@@ -429,7 +433,7 @@ describe('a magus past its Gauntlet', () => {
     expect(await $(XP_POOL_INPUT).isExisting()).toBe(false);
     expect(await textOf(XP_POOL_TOTAL)).toBe('890');
     expect(await $(GAUNTLET_AGE_INPUT).getValue()).toBe('25');
-    expect(await $(LAB_SEASONS_INPUT).getValue()).toBe('10');
+    expect(await $(LAB_SEASONS_INPUT).getValue()).toBe('13');
     expect(await $(SPELL_LEVELS_INPUT).getValue()).toBe('300');
     expect(await textOf(SUMMARY)).toContain('650 XP');
     expect(await textOf(LATER_LIFE)).toContain('75');
