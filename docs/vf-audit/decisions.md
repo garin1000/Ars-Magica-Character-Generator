@@ -898,6 +898,14 @@ presumption of correctness.
    together; the next save writes the clamped values, as with the aura clamp,
    and the schema is not bumped. Moving the saga year forward recomputes nothing
    (D3.3), so the birth year can fall out of step until the file is reopened.
+11. **Spell codes show their requisites** (try-out finding 22; after-deadline
+    answer 4). The engine builds a spell's code once in
+    `LocalizedRuleset::spell_code`. Technique requisites go in parentheses after
+    the Technique and Form requisites after the Form, several separated by ", ",
+    in data order: "Cr(Re)Ig 30" (ArMDE:19301), "MuTe(Aq, Co, An) 25"
+    (ArMDE:19241). The Spells tab and the export add the level a space apart.
+    The export puts "· Focus"/"· Fokus" and "· Potent" after the code of a
+    marked spell; there is no new column (D73.2).
 
 ---
 
