@@ -424,8 +424,8 @@ export async function useFlatPoolFunding() {
  *
  * A no-op when the wizard is already there. Fails loudly rather than spinning: an
  * undeclared or unvisited phase is reported at once (its rail entry is disabled
- * until reached), and a forward jump over a phase holding an error clamps there —
- * `wizardGoTo` gates exactly as Next does — so the wait reports where it stopped.
+ * until reached). A jump to a visited phase is never clamped by an error (#9a), so
+ * the wait only covers the click landing.
  *
  * @param {string} phase creation-phase id
  */
@@ -437,15 +437,13 @@ export async function standOnWizardStep(phase) {
   if (!(await entry.isEnabled())) {
     throw new Error(`the wizard rail has not reached '${phase}' yet, so it cannot be jumped to`);
   }
-  // Re-click inside the wait, rather than clicking once and then waiting. A forward
-  // rail jump is CLAMPED at the first blocking phase (`firstBlockedPhaseIndex`), and
-  // validation settles on a round trip to Rust — so a jump issued in the frame after
-  // an edit can be clamped short by a finding that is about to clear, and that single
-  // click is then spent. Waiting alone would spin to the timeout while the rail sat
-  // one step short. Clicking again each poll lets the jump land as soon as the
-  // transient block lifts, and rail navigation is idempotent so a repeat is free.
-  // (Observed twice on `life-stage-childhood`'s funding-switch test, both times
-  // passing on the spec retry — a flake that was really a missing settle.)
+  // Re-click inside the wait, rather than clicking once and then waiting. This was
+  // added while a forward rail jump was still CLAMPED at the first blocking phase: a
+  // jump issued in the frame after an edit could be clamped short by a finding about
+  // to clear. #9a removed that clamp, but the re-click is kept as cheap insurance
+  // against a click lost while the step re-renders, and rail navigation is
+  // idempotent so a repeat is free. (The flake was seen twice on
+  // `life-stage-childhood`'s funding-switch test.)
   await browser.waitUntil(
     async () => {
       if ((await currentWizardPhase()) === phase) return true;
@@ -661,6 +659,49 @@ export async function isRowBlocked(element) {
   return (await element.getAttribute('aria-disabled')) === 'true';
 }
 
+const TOOLTIP_POP = '.tooltip-pop';
+
+/**
+ * Hover an element and wait for its description tooltip to open. The popup opens
+ * only after a 500 ms rest delay (try-out finding 3, `actions.ts::tooltip`), so a
+ * spec must never read it straight after the hover — every spec opens tooltips
+ * through this one helper. The hover is a synthetic `mouseenter`: pointer
+ * `moveTo` / `el.focus()` are unreliable under parallel webdriver runs because the
+ * webview window may be blurred, which suppresses OS hover/focus events, while a
+ * synthetic event is focus-independent and still exercises the real wiring.
+ *
+ * @param {WebdriverIO.Element} element the tooltip's trigger
+ */
+export async function hoverForTooltip(element) {
+  await browser.execute((el) => {
+    el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+  }, element);
+  await $(TOOLTIP_POP).waitForExist({
+    timeout: 5000,
+    timeoutMsg: 'the tooltip should open after its hover delay',
+  });
+}
+
+/**
+ * Leave the element again and wait until its tooltip has closed. The popup takes
+ * the pointer (so a long description can be scrolled) and outlives the pointer
+ * leaving by a short close grace (try-out finding 2) — one left lingering would
+ * swallow the next click aimed at whatever it covers, so a spec dismisses it here
+ * before moving on.
+ *
+ * @param {WebdriverIO.Element} element the tooltip's trigger
+ */
+export async function dismissTooltip(element) {
+  await browser.execute((el) => {
+    el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+  }, element);
+  await $(TOOLTIP_POP).waitForExist({
+    reverse: true,
+    timeout: 5000,
+    timeoutMsg: 'the tooltip should close once the pointer has left',
+  });
+}
+
 /**
  * `browser.waitUntil`, with a failure message built AFTER the timeout, from the
  * last reading the condition stored.
@@ -694,12 +735,14 @@ export const SETTLE_TIMEOUT = 20000;
  *
  * WHY A SPEC WAITS FOR THIS BETWEEN TWO ADD CLICKS (9632426). Each add's debounced
  * validation can bring new findings, and the app-wide issues footer (`App.svelte`,
- * `.validation-bar`) then grows and squeezes the tab area from below. WebDriver
- * checks for an obscuring element BEFORE it dispatches a click, so a validation
- * landing in between moves the footer under the pointer and the click goes to an
- * issue `<li>` with no error at all. `revalidate` publishes the balance in the same
+ * `.validation-bar`) used to grow with them and squeeze the tab area from below.
+ * WebDriver checks for an obscuring element BEFORE it dispatches a click, so a
+ * validation landing in between moved the footer under the pointer and the click
+ * went to an issue `<li>` with no error at all. The footer is a fixed height now
+ * (U3), so that cause is gone; the wait stays as the cheap guarantee that each add
+ * is fully validated before the next. `revalidate` publishes the balance in the same
  * guarded write as the issue list, so the bar showing the expected total means the
- * footer already has its final height and the next click is safe.
+ * add's validation has fully landed.
  *
  * @param {'virtues'|'flaws'} side which half of the bar to read
  * @param {number} points the expected spent total

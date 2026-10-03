@@ -1253,6 +1253,7 @@ issue-wrong_entity_kind = { $item } cannot be taken by a { $entity_kind }.
 issue-duplicate_selection = { $item } is selected { $count } times, but may be taken at most { $max } time(s) for the same target.
 issue-too_many_selections = { $item } is selected { $count } times in total across all targets, but may be taken at most { $max } time(s) altogether.
 issue-param_groups_not_distinct = { $item } names the same group twice; a copy's groups must be pairwise distinct.
+issue-param_group_shared_across_copies = Two copies of { $item } name the same combination; each copy must name different combinations.
 issue-missing_required_trait = A required trait is missing: { $item }.
 issue-forbidden_trait = A forbidden trait is present: { $item }.
 issue-missing_param = { $item } is missing the parameter { $key }.

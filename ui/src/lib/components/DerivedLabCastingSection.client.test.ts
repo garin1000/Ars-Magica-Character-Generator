@@ -131,6 +131,7 @@ afterEach(() => {
   if (app) unmount(app);
   app = undefined;
   target?.remove();
+  vi.useRealTimers();
 });
 
 /** Mount the section and open the casting row header's breakdown tooltip. */
@@ -147,7 +148,11 @@ function castingRowTooltipText(cell: CastingTotal): string {
     '[data-testid="derived-casting-total"] th[scope="row"]',
   ) as HTMLElement;
   expect(rowHeader, 'the casting row header should render').not.toBeNull();
+  // The tooltip opens only after its 500 ms rest delay (try-out finding 3,
+  // `actions.ts::tooltip`), so the clock is faked from here and run past it.
+  vi.useFakeTimers();
   rowHeader.dispatchEvent(new Event('focusin', { bubbles: true }));
+  vi.advanceTimersByTime(500);
   flushSync();
 
   const tip = document.querySelector('[data-testid="tooltip-text"]');

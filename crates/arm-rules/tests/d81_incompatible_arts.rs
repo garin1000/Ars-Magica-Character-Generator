@@ -556,6 +556,228 @@ fn an_incomplete_copy_is_not_flagged_as_repeating_itself() {
     );
 }
 
+// --- 8b. Two copies may not share ANY combination (D83.1, amends D81.8) -----
+//
+// ArMDE:6292: "This Flaw may be taken repeatedly with different combinations".
+// D81.8 was built as "a copy may not repeat another's WHOLE pair", so a second
+// copy sharing just ONE combination with the first passed (try-out finding 21).
+// The data feature `unordered_param_groups` now means: two copies of the item
+// may not share any group, in either position. Exactly one finding per
+// mistake — a copy pair whose whole tuple already collided is
+// `duplicate_selection`'s finding alone.
+
+const INCOMPATIBLE_ARTS: &str = "flaw.incompatible_arts";
+
+fn shared_group_findings<'a>(
+    issues: &'a [ValidationIssue],
+    item: &str,
+) -> Vec<&'a ValidationIssue> {
+    issues
+        .iter()
+        .filter(|i| {
+            i.code == ValidationIssue::CODE_PARAM_GROUP_SHARED_ACROSS_COPIES
+                && i.args.get("item").map(String::as_str) == Some(item)
+        })
+        .collect()
+}
+
+/// Every finding that reports copies as repeating each other: the whole tuple
+/// (`duplicate_selection`), one shared group (the new code), or one single
+/// parameter value (`too_many_for_param_value`). A grouped key's repeat rule
+/// is its group's (try-out finding 20): a single Art may recur across copies,
+/// only a whole combination may not.
+fn repeat_findings(issues: &[ValidationIssue], item: &str) -> usize {
+    issues
+        .iter()
+        .filter(|i| {
+            [
+                ValidationIssue::CODE_DUPLICATE_SELECTION,
+                ValidationIssue::CODE_PARAM_GROUP_SHARED_ACROSS_COPIES,
+                ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE,
+            ]
+            .contains(&i.code.as_str())
+                && i.args.get("item").map(String::as_str) == Some(item)
+        })
+        .count()
+}
+
+#[test]
+fn a_second_copy_sharing_a_combination_in_the_other_position_is_an_error() {
+    // Copy 1: Creo+Ignem / Rego+Corpus. Copy 2: Creo+Auram / Creo+Ignem — CrIg
+    // is copy 1's Combination 1 and copy 2's Combination 2.
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![
+        incompatible_arts("art.creo", "art.ignem", "art.rego", "art.corpus"),
+        incompatible_arts("art.creo", "art.auram", "art.creo", "art.ignem"),
+    ];
+
+    let result = validate(&e, &ruleset);
+    let shared = shared_group_findings(&result.issues, INCOMPATIBLE_ARTS);
+    assert_eq!(
+        shared.len(),
+        1,
+        "ArMDE:6292 'different combinations': a second copy repeating Creo+Ignem \
+         in the other position must be refused once: {:?}",
+        result.issues
+    );
+    assert_eq!(shared[0].severity, IssueSeverity::Error);
+    assert_eq!(
+        repeat_findings(&result.issues, INCOMPATIBLE_ARTS),
+        1,
+        "one mistake, one finding: {:?}",
+        result.issues
+    );
+}
+
+#[test]
+fn a_second_copy_sharing_a_combination_in_the_same_position_is_an_error() {
+    // Copy 2: Creo+Ignem / Perdo+Aquam — CrIg is Combination 1 in both copies.
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![
+        incompatible_arts("art.creo", "art.ignem", "art.rego", "art.corpus"),
+        incompatible_arts("art.creo", "art.ignem", "art.perdo", "art.aquam"),
+    ];
+
+    let result = validate(&e, &ruleset);
+    let shared = shared_group_findings(&result.issues, INCOMPATIBLE_ARTS);
+    assert_eq!(
+        shared.len(),
+        1,
+        "a second copy repeating Creo+Ignem in the same position must be \
+         refused once: {:?}",
+        result.issues
+    );
+    assert_eq!(shared[0].severity, IssueSeverity::Error);
+    assert_eq!(
+        repeat_findings(&result.issues, INCOMPATIBLE_ARTS),
+        1,
+        "one mistake, one finding — not one more per repeated single Art: {:?}",
+        result.issues
+    );
+}
+
+#[test]
+fn a_second_copy_sharing_only_single_arts_is_legal() {
+    // Copy 2: Creo+Auram / Perdo+Aquam — it reuses the Technique Creo, but no
+    // Technique+Form COMBINATION of copy 1 (try-out finding 20).
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![
+        incompatible_arts("art.creo", "art.ignem", "art.rego", "art.corpus"),
+        incompatible_arts("art.creo", "art.auram", "art.perdo", "art.aquam"),
+    ];
+
+    let result = validate(&e, &ruleset);
+    assert_eq!(
+        repeat_findings(&result.issues, INCOMPATIBLE_ARTS),
+        0,
+        "copies sharing single Arts but no combination are legal: {:?}",
+        result.issues
+    );
+}
+
+#[test]
+fn identical_copies_draw_exactly_one_finding() {
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![
+        incompatible_arts("art.creo", "art.ignem", "art.rego", "art.corpus"),
+        incompatible_arts("art.creo", "art.ignem", "art.rego", "art.corpus"),
+    ];
+
+    let result = validate(&e, &ruleset);
+    assert!(has_duplicate_selection(&result.issues, INCOMPATIBLE_ARTS));
+    assert_eq!(
+        repeat_findings(&result.issues, INCOMPATIBLE_ARTS),
+        1,
+        "one mistake, one finding: identical copies are duplicate_selection's \
+         finding alone: {:?}",
+        result.issues
+    );
+}
+
+#[test]
+fn a_whole_pair_repeated_with_combinations_swapped_draws_exactly_one_finding() {
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![
+        incompatible_arts("art.creo", "art.animal", "art.rego", "art.herbam"),
+        incompatible_arts("art.rego", "art.herbam", "art.creo", "art.animal"),
+    ];
+
+    let result = validate(&e, &ruleset);
+    assert!(has_duplicate_selection(&result.issues, INCOMPATIBLE_ARTS));
+    assert_eq!(
+        repeat_findings(&result.issues, INCOMPATIBLE_ARTS),
+        1,
+        "the swapped whole pair is duplicate_selection's finding alone: {:?}",
+        result.issues
+    );
+}
+
+#[test]
+fn each_offending_copy_pair_draws_its_own_finding() {
+    // Copy 1 shares CrIg with copy 2 and ReCo with copy 3; copies 2 and 3
+    // share nothing. Two offending pairs, two findings.
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![
+        incompatible_arts("art.creo", "art.ignem", "art.rego", "art.corpus"),
+        incompatible_arts("art.creo", "art.ignem", "art.perdo", "art.aquam"),
+        incompatible_arts("art.muto", "art.animal", "art.rego", "art.corpus"),
+    ];
+
+    let result = validate(&e, &ruleset);
+    assert_eq!(
+        shared_group_findings(&result.issues, INCOMPATIBLE_ARTS).len(),
+        2,
+        "one finding per offending copy pair: {:?}",
+        result.issues
+    );
+    assert_eq!(
+        repeat_findings(&result.issues, INCOMPATIBLE_ARTS),
+        2,
+        "nothing beyond the two pair findings: {:?}",
+        result.issues
+    );
+}
+
+#[test]
+fn a_half_filled_copy_sharing_its_filled_combination_is_an_error() {
+    // Copy 2 has only Combination 1 chosen (Creo+Ignem), Combination 2 still
+    // empty. Its complete combination is comparable and already repeats copy
+    // 1's; the empty one is `missing_param`'s finding and compares with nothing.
+    let ruleset = full_ruleset();
+    let mut e = magus();
+    e.selections = vec![
+        incompatible_arts("art.creo", "art.ignem", "art.rego", "art.corpus"),
+        Selection::with_params(
+            Id::new(INCOMPATIBLE_ARTS),
+            BTreeMap::from([
+                ("technique_1".to_string(), Id::new("art.creo")),
+                ("form_1".to_string(), Id::new("art.ignem")),
+            ]),
+        ),
+    ];
+
+    let result = validate(&e, &ruleset);
+    assert_eq!(
+        shared_group_findings(&result.issues, INCOMPATIBLE_ARTS).len(),
+        1,
+        "a filled combination repeating another copy's is refused even while \
+         the copy's other combination is still empty: {:?}",
+        result.issues
+    );
+    assert_eq!(
+        repeat_findings(&result.issues, INCOMPATIBLE_ARTS),
+        1,
+        "one mistake, one finding: {:?}",
+        result.issues
+    );
+}
+
 // --- 9. Save/load round-trip (G1, `tmp/export-audit.md`) --------------------
 
 /// Two copies with distinct pairs survive save -> load: `Entity::normalize`

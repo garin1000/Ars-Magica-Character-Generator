@@ -36,6 +36,8 @@ import {
   activateMenuItem,
   clean,
   closeSettings,
+  dismissTooltip,
+  hoverForTooltip,
   openSettings,
   returnToStartScreen,
   runDocumentAction,
@@ -335,12 +337,11 @@ describe('German localization', () => {
     // translated, English fallback otherwise) — never the empty tooltip bug.
     const row = await $('[data-testid="add-spell.pilum_of_fire"]');
     await row.waitForExist({ timeout: 10000 });
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-    }, row);
+    await hoverForTooltip(row);
     const pop = await $('[data-testid="tooltip-text"]');
     await pop.waitForExist({ timeout: 5000 });
     expect((await pop.getText()).trim().length).toBeGreaterThan(0);
+    await dismissTooltip(row);
   });
 });
 

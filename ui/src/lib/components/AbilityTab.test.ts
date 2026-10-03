@@ -650,6 +650,51 @@ describe('AbilityTab parameter picker (CV7)', () => {
 
     expect(html()).not.toContain('data-testid="ability-param-hint-ability.dead_language-0"');
   });
+
+  // L4 (try-out finding 5): the combo box and the free text its "Other…" entry
+  // opens are ONE control in two parts, so they share one wrapper — the box
+  // app.css lays out as a single line (dropdown left at its content width, text
+  // field right taking the rest). Without the wrapper the text field is a bare
+  // item of the row's wrap line, and its full-width basis drops it onto a line
+  // of its own under the dropdown.
+  it('wraps the combo box and its "Other…" text field in one combo container', () => {
+    store.entity.ability_scores = [
+      { ability: 'ability.dead_language', score: 1, parameter: { text: 'Klingon' } },
+    ];
+    store.effective = {
+      ability_parameter_options: [
+        {
+          ability: 'ability.dead_language',
+          catalogued: ['language.latin'],
+          linked: [],
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+
+    const body = html();
+    const start = body.indexOf('class="ability-param-combo"');
+    expect(start, 'the row should render an .ability-param-combo wrapper').toBeGreaterThan(-1);
+    // Nothing inside the combo is a <div>, so the first close after it is its own.
+    const combo = body.slice(start, body.indexOf('</div>', start));
+    const select = combo.indexOf('data-testid="ability-param-select-ability.dead_language-0"');
+    const field = combo.indexOf('data-testid="ability-param-ability.dead_language-0"');
+    expect(select, 'the dropdown sits inside the combo').toBeGreaterThan(-1);
+    expect(field, 'the "Other…" text field sits inside the combo').toBeGreaterThan(-1);
+    // Dropdown left, text field right.
+    expect(select).toBeLessThan(field);
+  });
+
+  it('leaves a parameter with no catalogue as a bare text field, outside any combo', () => {
+    store.entity.ability_scores = [
+      { ability: 'ability.dead_language', score: 1, parameter: { text: 'Klingon' } },
+    ];
+    store.effective = { ability_parameter_options: [] } as unknown as EffectiveScores;
+
+    const body = html();
+    expect(body).toContain('data-testid="ability-param-ability.dead_language-0"');
+    expect(body).not.toContain('ability-param-combo');
+  });
 });
 
 // X10b (design-x10bc-save-format.md § 3): a banked-XP number input beside

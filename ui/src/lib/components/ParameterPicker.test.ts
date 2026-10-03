@@ -835,6 +835,45 @@ describe('ParameterPicker groups parameters by unordered_param_groups (review-ui
   });
 });
 
+// Try-out finding 20 / D83.1: Incompatible Arts bars a Technique+Form
+// COMBINATION across copies (ArMDE:6292, "different combinations"), never a single
+// Art, so a grouped key's select greys nothing per value (Norbert, C2). A shared
+// combination is the engine's `param_group_shared_across_copies` finding.
+describe('ParameterPicker greys nothing per select for unordered_param_groups (finding 20)', () => {
+  const REF = 'flaw.incompatible_arts_probe';
+  const COPY_1 = {
+    technique_1: 'art.creo',
+    form_1: 'art.ignem',
+    technique_2: 'art.rego',
+    form_2: 'art.aquam',
+  };
+
+  function select(body: string, key: string): string {
+    const found = selectFor(body, `param-${REF}-${key}-1`);
+    expect(found, `${key} select not found`).not.toBeNull();
+    return found!;
+  }
+
+  it('keeps Creo and Ignem selectable in copy 2 while copy 1 holds Creo+Ignem', () => {
+    store.entity.selections = [{ ref: REF, params: COPY_1 }, { ref: REF }];
+    const body = pickerBody(REF, 1);
+    expect(optionByText(select(body, 'technique_1'), 'Creo')).not.toContain('disabled');
+    expect(optionByText(select(body, 'form_1'), 'Ignem')).not.toContain('disabled');
+    expect(optionByText(select(body, 'technique_2'), 'Rego')).not.toContain('disabled');
+    expect(optionByText(select(body, 'form_2'), 'Aquam')).not.toContain('disabled');
+  });
+
+  it('greys nothing even when copy 2 matches copy 1 on every other key', () => {
+    const rest = { technique_1: 'art.creo', technique_2: 'art.rego', form_2: 'art.aquam' };
+    store.entity.selections = [
+      { ref: REF, params: COPY_1 },
+      { ref: REF, params: rest },
+    ];
+    const body = pickerBody(REF, 1, rest);
+    expect(optionByText(select(body, 'form_1'), 'Ignem')).not.toContain('disabled');
+  });
+});
+
 // Folk Magic's spell category and the three (Beings) classes are closed lists the
 // rulebook prints in full, declared on the parameter itself. The picker's option
 // set is therefore the DATA's list — nothing narrows a catalogue.

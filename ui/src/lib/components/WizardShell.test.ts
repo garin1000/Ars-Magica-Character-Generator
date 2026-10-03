@@ -185,6 +185,50 @@ describe('WizardShell', () => {
     expect(tag(html(), 'wizard-next')).toContain('disabled');
   });
 
+  // tryout-findings-2026-10-03 #9(a): an overspend on a later step can file its
+  // error back on an earlier one, so the gate must not hold the player there when
+  // the next step has already been visited. Ground never reached stays gated.
+  describe('a blocked step with the next step already visited (#9a)', () => {
+    function backOnABlockedStep(): void {
+      store.wizardStep = 1;
+      store.wizardFurthest = 2;
+      store.result = {
+        issues: [{ severity: 'error', code: 'not_enough_xp', phase: 'experience', args: {} }],
+      };
+    }
+
+    it('leaves Next live', () => {
+      backOnABlockedStep();
+      expect(tag(html(), 'wizard-next')).not.toContain('disabled');
+    });
+
+    it('drops the footer hint that says the step must be fixed to continue', () => {
+      backOnABlockedStep();
+      expect(html()).not.toContain('data-testid="wizard-blocked-hint"');
+    });
+
+    it('still marks the step itself as holding an error, in words', () => {
+      backOnABlockedStep();
+      const body = html();
+      expect(tag(body, 'wizard-step-experience')).toContain('data-blocked="true"');
+      expect(text(body, 'wizard-blocked-hint-experience')).not.toBe('');
+    });
+
+    it('keeps the visited step beyond it clickable and unmarked', () => {
+      backOnABlockedStep();
+      const step = tag(html(), 'wizard-step-characteristics');
+      expect(step).not.toContain('disabled');
+      expect(step).not.toContain('data-blocked');
+    });
+
+    it('still shuts Next once the blocked step is the furthest reached', () => {
+      backOnABlockedStep();
+      store.wizardFurthest = 1;
+      expect(tag(html(), 'wizard-next')).toContain('disabled');
+      expect(html()).toContain('data-testid="wizard-blocked-hint"');
+    });
+  });
+
   it('allows Next over a warning — an advisory is not an illegal state', () => {
     store.result = {
       issues: [{ severity: 'warning', code: 'x', phase: 'concept', args: {} }],

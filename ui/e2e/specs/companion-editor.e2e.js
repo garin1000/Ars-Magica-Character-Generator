@@ -28,6 +28,8 @@ import fs from 'node:fs';
 
 import {
   clean,
+  dismissTooltip,
+  hoverForTooltip,
   isRowBlocked,
   runDocumentAction,
   setValidationMode,
@@ -130,17 +132,13 @@ describe('characteristic grant + ability bonus', () => {
 
     // The app says as much in its own words: the badge's breakdown attributes the
     // gap to the Virtue, over a bought score it still reports as +3.
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-    }, badge);
+    await hoverForTooltip(badge);
     const summary = await $('[data-testid="tooltip-text"]');
     await summary.waitForExist({ timeout: 5000 });
     expect(clean(await summary.getText())).toContain('Bought +3, effective +4');
     expect(clean(await $('.tooltip-pop .tooltip-list').getText())).toContain('Virtue +1');
     // Dismiss the popup so it does not linger over the tabs clicked below.
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
-    }, badge);
+    await dismissTooltip(badge);
 
     // Buy Awareness up to 2, then add Puissant Ability targeting it.
     await $('[data-testid="tab-abilities"]').click();
@@ -210,9 +208,10 @@ describe('Puissant Ability targets one ability instance', () => {
     // These used to be two back-to-back clicks, and the second row was now and
     // then "still not existing" after 10s and even 20s. Same race as 9632426's
     // Great Characteristic adds (magus-editor.e2e.js): an add's debounced
-    // validation grows the issues footer under the pointer and the next click
-    // lands on an issue `<li>`, silently — see `waitForBalancePoints` in
-    // helpers.js. Puissant Ability is a Minor Virtue (one point) and this
+    // validation grew the issues footer under the pointer and the next click
+    // landed on an issue `<li>`, silently — see `waitForBalancePoints` in
+    // helpers.js. The footer is a fixed height now (U3); the wait stays so each
+    // add is settled first. Puissant Ability is a Minor Virtue (one point) and this
     // companion holds no Virtue yet, so the Virtue points count the instances.
     const ROW_RENDER_TIMEOUT = SETTLE_TIMEOUT;
     await waitForBalancePoints('virtues', 0);
@@ -788,8 +787,8 @@ describe('character editor', () => {
     // Virtues & Flaws tab: a minor virtue funded by a minor flaw is balanced.
     await $('[data-testid="tab-virtues_flaws"]').click();
     await $('[data-testid="add-virtue.keen_vision"]').waitForExist({ timeout: 10000 });
-    // Each add settles (row + balance) before the next click, so the issues
-    // footer cannot grow under the pointer mid-click (`waitForBalancePoints`).
+    // Each add settles (row + balance) before the next click
+    // (`waitForBalancePoints`); the issues footer itself is a fixed height (U3).
     await waitForBalancePoints('virtues', 0);
     await $('[data-testid="add-virtue.keen_vision"]').click();
     // Match by testid prefix: the suffix is the entity-array index, which shifts
@@ -852,11 +851,7 @@ describe('character editor', () => {
       timeout: 5000,
       timeoutMsg: 'Second Sight should be greyed for a companion',
     });
-    // Dispatch mouseenter directly: synthetic events are focus-independent under
-    // parallel wdio (the webview window may be blurred), unlike pointer moveTo.
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-    }, row);
+    await hoverForTooltip(row);
     const reason = await $('[data-testid="tooltip-reason"]');
     await reason.waitForExist({ timeout: 5000 });
     expect((await reason.getText()).trim().length).toBeGreaterThan(0);
@@ -864,9 +859,7 @@ describe('character editor', () => {
     await desc.waitForExist({ timeout: 5000 });
     expect((await desc.getText()).trim().length).toBeGreaterThan(0);
     // Dismiss the popup so it does not linger into later specs.
-    await browser.execute((el) => {
-      el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
-    }, row);
+    await dismissTooltip(row);
   });
 });
 

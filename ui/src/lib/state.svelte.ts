@@ -2870,12 +2870,9 @@ class AppStore {
   }
 
   /**
-   * Jump to an already-visited step from the rail.
-   *
-   * Forward jumps are held to the same gate as Next: the jump clamps to the first
-   * blocking phase between here and there, **including the step being left**.
-   * Otherwise the rail would be a way around the very gate that blocks Next.
-   * Backward jumps are free, like {@link wizardBack}.
+   * Jump to an already-visited step from the rail, in either direction. Never
+   * clamped by an error (#9a); a step never reached is refused.
+   * @see WizardNavigation.goTo
    */
   wizardGoTo(step: number): void {
     this.#wizardNav.goTo(step);
@@ -2894,10 +2891,9 @@ class AppStore {
     // The guided run is over, so the record of how far it got stops being true and
     // goes with it (#31). Leaving it would gate a *completed* character on reopen:
     // it would take the restored branch, and if the player had since introduced an
-    // error in the editor the clamp would lock them out of the steps past the break
-    // — exactly the steps they would be reopening the wizard to fix. The ungated
-    // branch is for a character that is not mid-run, and a finished one is not.
-    // Nothing is lost: the clamp only stops skipping ahead, and `wizardCanFinish`
+    // error in the editor, Finish would stay shut over it — although that character
+    // already finished once. The ungated branch is for a character that is not
+    // mid-run, and a finished one is not. Nothing is lost: `wizardCanFinish`
     // guarantees this character already reached every step with no error anywhere.
     delete this.entity.wizard_furthest_phase;
     this.#resetWizardNav();

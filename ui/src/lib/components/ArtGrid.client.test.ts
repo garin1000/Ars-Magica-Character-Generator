@@ -193,6 +193,9 @@ describe('ArtGrid rules text is reachable by keyboard (Sabine 3)', () => {
     expect(nameCell().tabIndex).toBeGreaterThanOrEqual(0);
 
     nameCell().focus();
+    // The tooltip opens only after its 500 ms rest delay (try-out finding 3,
+    // `actions.ts::tooltip`); this file already runs on fake timers.
+    vi.advanceTimersByTime(500);
     flushSync();
 
     const describedBy = nameCell().getAttribute('aria-describedby');

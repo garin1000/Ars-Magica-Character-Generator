@@ -53,8 +53,9 @@ function issue(
 /** A magus wizard with the real phase order `wizardPhases` resolves for the
  * `magus` profile (`rules/core/character_types.json`): `virtues_flaws` sits
  * well before both `abilities` and `arts`. `issues` is mutable so a test can
- * swap the engine's reported findings mid-run without rebuilding the host. */
-function makeHost(issues: ValidationIssue[]): WizardNavigationHost {
+ * swap the engine's reported findings mid-run without rebuilding the host.
+ * `recorded` collects every phase the navigation reports as newly reached. */
+function makeHost(issues: ValidationIssue[], recorded: CreationPhase[] = []): WizardNavigationHost {
   const p = profile(['concept', 'virtues_flaws', 'experience', 'abilities', 'arts']);
   const rs = rulesetWith(p);
   return {
@@ -62,7 +63,7 @@ function makeHost(issues: ValidationIssue[]): WizardNavigationHost {
     entityTypeId: () => p.id,
     result: () => ({ issues }),
     phasesInForce: () => null,
-    recordFurthestPhase: () => {},
+    recordFurthestPhase: (phase) => recorded.push(phase),
   };
 }
 
@@ -93,7 +94,7 @@ describe('WizardNavigation / a prereq issue attributed to a LATER phase (the fix
     expect(nav.canAdvance).toBe(false);
   });
 
-  it('goTo clamps a forward rail jump at the owning phase, not earlier', () => {
+  it('a forward rail jump from virtues_flaws reaches the owning phase (arts)', () => {
     const nav = new WizardNavigation(makeHost(fixedIssues));
     nav.furthest = nav.phases.indexOf('arts');
     nav.step = nav.phases.indexOf('virtues_flaws');
@@ -133,5 +134,105 @@ describe("WizardNavigation / the pre-fix shape, for contrast (today's engine bef
     nav.step = nav.phases.indexOf('virtues_flaws');
     nav.back();
     expect(nav.step).toBe(nav.phases.indexOf('concept'));
+  });
+});
+
+// tryout-findings-2026-10-03 #9(a) (HIGH): Abilities, Arts and Spell Mastery draw on
+// ONE experience pool, and the engine files the pool's `not_enough_xp` on the
+// Abilities step. So overspending on Arts put an error on Abilities, and the old
+// gate then held the player on Abilities: Next was shut, and a rail click to the
+// already-visited Arts step was clamped back to Abilities. The only way out was to
+// lower Abilities, go to Arts, lower Arts, come back and re-raise Abilities.
+//
+// The rule now: a step already visited (index <= `furthest`) is reachable in both
+// directions, by Next and by the rail, whatever errors stand. A blocking error
+// gates only a move PAST `furthest`, onto a step never reached. Finish keeps its
+// own, wider gate (`canFinish`: no error anywhere).
+describe('WizardNavigation / a visited step stays reachable while an error stands (#9a)', () => {
+  const overspend = [issue('not_enough_xp', 'abilities', '')];
+
+  /** The repro: Abilities and Arts both visited, the player back on Abilities. */
+  function backOnAbilities(issues: ValidationIssue[], recorded: CreationPhase[] = []) {
+    const nav = new WizardNavigation(makeHost(issues, recorded));
+    nav.furthest = nav.phases.indexOf('arts');
+    nav.step = nav.phases.indexOf('abilities');
+    return nav;
+  }
+
+  it('canAdvance is true on a blocked step when the next step was already visited', () => {
+    const nav = backOnAbilities(overspend);
+    expect(nav.canAdvance).toBe(true);
+  });
+
+  it('next() moves from the blocked Abilities step onto the visited Arts step', () => {
+    const nav = backOnAbilities(overspend);
+    nav.next();
+    expect(nav.phase).toBe('arts');
+  });
+
+  it('a rail jump from the blocked Abilities step lands on the visited Arts step', () => {
+    const nav = backOnAbilities(overspend);
+    nav.goTo(nav.phases.indexOf('arts'));
+    expect(nav.phase).toBe('arts');
+  });
+
+  it('a rail jump forward crosses a blocked step in between, up to furthest', () => {
+    const nav = new WizardNavigation(makeHost([issue('unbalanced_virtues', 'virtues_flaws')]));
+    nav.furthest = nav.phases.indexOf('arts');
+    nav.step = nav.phases.indexOf('concept');
+    nav.goTo(nav.phases.indexOf('arts'));
+    expect(nav.phase).toBe('arts');
+  });
+
+  it('next() walks across a blocked step in between, up to furthest', () => {
+    const nav = new WizardNavigation(makeHost([issue('unbalanced_virtues', 'virtues_flaws')]));
+    nav.furthest = nav.phases.indexOf('arts');
+    nav.step = nav.phases.indexOf('virtues_flaws');
+    nav.next(); // -> experience
+    nav.next(); // -> abilities
+    nav.next(); // -> arts
+    expect(nav.phase).toBe('arts');
+  });
+
+  it('moving within visited ground records no new progress', () => {
+    const recorded: CreationPhase[] = [];
+    const nav = backOnAbilities(overspend, recorded);
+    nav.next();
+    expect(nav.furthest).toBe(nav.phases.indexOf('arts'));
+    expect(recorded).toEqual([]);
+  });
+
+  it('still refuses to advance past furthest from a step holding an error', () => {
+    const nav = new WizardNavigation(makeHost(overspend));
+    nav.furthest = nav.phases.indexOf('abilities');
+    nav.step = nav.phases.indexOf('abilities');
+    expect(nav.canAdvance).toBe(false);
+    nav.next();
+    expect(nav.phase).toBe('abilities');
+  });
+
+  it('reaches furthest by next(), then stops there while that step holds an error', () => {
+    const nav = backOnAbilities([issue('not_enough_xp', 'abilities', ''), issue('x', 'arts', '')]);
+    nav.next(); // -> arts, already visited
+    expect(nav.phase).toBe('arts');
+    expect(nav.canAdvance).toBe(false);
+    nav.next(); // review was never reached, and arts holds an error
+    expect(nav.phase).toBe('arts');
+  });
+
+  it('still refuses a rail jump past furthest', () => {
+    const nav = new WizardNavigation(makeHost([]));
+    nav.furthest = nav.phases.indexOf('abilities');
+    nav.step = nav.phases.indexOf('abilities');
+    nav.goTo(nav.phases.indexOf('arts'));
+    expect(nav.phase).toBe('abilities');
+  });
+
+  it('keeps Finish shut while the error stands, wherever the player is', () => {
+    const nav = backOnAbilities(overspend);
+    nav.furthest = nav.phases.indexOf('review');
+    nav.goTo(nav.phases.indexOf('review'));
+    expect(nav.phase).toBe('review');
+    expect(nav.canFinish).toBe(false);
   });
 });

@@ -544,8 +544,8 @@ describe('German locale: a full companion sheet and its export', () => {
     expect(typeLabel).toContain('Gefährte');
 
     await clickTab(VF_TAB);
-    // Each add settles (row + balance) before the next click, so the issues
-    // footer cannot grow under the pointer mid-click (`waitForBalancePoints`).
+    // Each add settles (row + balance) before the next click
+    // (`waitForBalancePoints`); the issues footer itself is a fixed height (U3).
     await waitForBalancePoints('virtues', 0);
     await (await $('[data-testid="add-virtue.keen_vision"]')).click();
     await $('[data-testid^="remove-virtue.keen_vision-"]').waitForExist({
