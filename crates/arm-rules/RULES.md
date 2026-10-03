@@ -11780,7 +11780,7 @@ narrowing IS the domain, no code of its own.
 
 **e4 — `exact_count: Option<u8>` on `MultiRef`.** New code
 `wrong_param_count` (`issue-wrong_param_count = { $item } names { $count }
-values for { $key }, but exactly { $expected } are required.`, both locales).
+value(s) for { $key }, but exactly { $expected } are required.`, both locales).
 Counts DISTINCT members of the selection's `BTreeSet<Id>`, so a repeated value
 never inflates the count.
 

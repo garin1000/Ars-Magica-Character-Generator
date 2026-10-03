@@ -696,7 +696,7 @@ aging-outcome-points_fixed = { $points ->
     [one] 1 Alterungspunkt in { $characteristic }.
    *[other] { $points } Alterungspunkte in { $characteristic }.
 }
-aging-outcome-decrepitude_and_crisis = { $points } Alterungspunkte — genug für die nächste Stufe Gebrechlichkeit — und eine Krise.
+aging-outcome-decrepitude_and_crisis = Alterungspunkte: { $points } — genug für die nächste Stufe Gebrechlichkeit — und eine Krise.
 aging-outcome-decrepitude_unpriceable = Genug Alterungspunkte für die nächste Stufe Gebrechlichkeit, und eine Krise. Die Steigerungstabelle reicht nicht bis zu dieser Stufe; legt die Zahl am Tisch fest.
 # Die Krise (Core Rules.md:16619-16638). Zwei Würfe, beide vom Spieler: der
 # Stresswürfel oben hat das Jahr hierher geschickt, und auf der Krisentabelle wird
@@ -1395,8 +1395,8 @@ issue-life_stage_age_before_gauntlet = Kein Magus legt die Lehrlingsprüfung mit
 issue-life_stage_age_before_truncation = Alter { $age } ist zu jung, um { $min } Jahre aus Kindheit und lehrlingszeit-förmiger Ausbildung durchlaufen zu haben.
 issue-life_stage_gauntlet_age_after_age = Die Lehrlingsprüfung mit { $gauntlet_age } liegt für diesen Magus mit { $age } Jahren noch in der Zukunft; die Jahre als Magus werden ab der Lehrlingsprüfung gezählt.
 issue-life_stage_lab_seasons_out_of_range = { $seasons } Quartale Laborarbeit sind mehr als die { $max }, die auf die Jahre als Magus ({ $years }) angerechnet werden können.
-issue-life_stage_lab_seasons_without_years = { $seasons } Quartale Laborarbeit sind eingetragen, aber dieser Charakter hat keine Jahre als Magus, in denen sie stattfinden könnten.
-issue-life_stage_spell_level_split_exceeds_points = { $levels } Zauberstufen aus den Jahren als Magus zu nehmen übersteigt, was diese Jahre gewähren: Sie sind { $points } Punkte wert, die zwischen Erfahrung und Zauberstufen aufzuteilen sind.
+issue-life_stage_lab_seasons_without_years = Eingetragene Quartale Laborarbeit: { $seasons }; dieser Charakter hat aber keine Jahre als Magus, in denen sie stattfinden könnten.
+issue-life_stage_spell_level_split_exceeds_points = Die aus den Jahren als Magus genommenen Zauberstufen ({ $levels }) übersteigen, was diese Jahre gewähren: Sie sind { $points } Punkte wert, die zwischen Erfahrung und Zauberstufen aufzuteilen sind.
 issue-life_stage_native_language_unset = Wähle eine Muttersprache: der größte Erfahrungsblock der Kindheit kann für nichts anderes ausgegeben werden.
 issue-life_stage_native_language_missing_score = Kein Wert in { $language } gekauft, daher bleibt die Erfahrung der Kindheit für die Muttersprache unausgegeben.
 issue-magus_minimum_ability = Kein Magus wird unter { $ability } { $min }{ $qualifier } in den Orden aufgenommen; dieser Charakter hat { $score }.
@@ -1418,7 +1418,7 @@ issue-art_score_out_of_range = Kunst { $art } mit Wert { $score } liegt außerha
 # X10b. Wird sowohl für eine Fertigkeit als auch für eine Kunst ausgelöst; die
 # Argumente tragen `ability` bzw. `art` — nie beide zugleich —, daher
 # interpoliert die Nachricht keines davon direkt.
-issue-banked_xp_at_or_above_next_level = { $banked } angesparte Erfahrungspunkte reichen bereits aus, um diesen Wert zu steigern — nur { $needed } werden für die nächste Stufe gebraucht.
+issue-banked_xp_at_or_above_next_level = Die angesparten Erfahrungspunkte ({ $banked }) reichen bereits aus, um diesen Wert zu steigern — die nächste Stufe braucht nur { $needed }.
 issue-house_choice_unresolved = Haus { $house } hat eine offene Spezialisierungswahl ({ $choice_key }).
 issue-house_grant_constraint = Haus { $house }: Die Wahl { $choice_key } fällt auf { $item }, was die Vorgabe nicht erfüllt.
 issue-warping_owed_minor_flaws = Noch offene Kleine Fehler aus der Verzerrung: { $count }.
@@ -1446,14 +1446,14 @@ issue-ritual_casting_restricted = { $spell } ist ein Ritual, und Starre Magie ve
 issue-spell_uses_incompatible_arts = { $spell } verwendet zwei Techniken und Formen, deren gemeinsame Nutzung Unvereinbare Künste verbietet.
 issue-spell_within_focus_without_magical_focus = { $spell } ist als im Fokus markiert, aber der Charakter hat keinen Magischen Fokus; die Markierung hat keine Wirkung.
 issue-unknown_mastery_ability = Unbekannte Meisterschaftsfähigkeit { $ability } für { $spell } gewählt.
-issue-too_many_mastery_abilities = { $spell } hat { $chosen } Meisterschaftsfähigkeiten, mehr als der Meisterschaftswert von { $mastery } (eine je Stufe).
+issue-too_many_mastery_abilities = { $spell } hat mehr Meisterschaftsfähigkeiten ({ $chosen }), als der Meisterschaftswert von { $mastery } erlaubt (eine je Stufe).
 issue-duplicate_mastery_ability = Meisterschaftsfähigkeit { $ability } wurde { $count }-mal für { $spell } gewählt, darf aber nur einmal genommen werden.
 issue-too_many_of_mastery_ability = Meisterschaftsfähigkeit { $ability } wurde { $count }-mal für { $spell } gewählt, mehr als ihr Maximum von { $max }.
 issue-mastery_ability_forbidden_for_ritual = Meisterschaftsfähigkeit { $ability } darf nicht für { $spell } gewählt werden, einen Ritualzauber.
 issue-ability_above_age_cap = { $ability } mit Wert { $score } überschreitet das Maximum von { $cap } für Alter { $age }.
 issue-specialty_forbidden = { $ability } darf keine Spezialisierung haben ({ $specialty }) — Nicht spezialisiert verbietet jede Spezialisierung einer Fertigkeit.
 issue-ambiguous_bound_parameter = { $item } wird mehr als einmal gehalten; der verknüpfte Wert von { $ability } kann erst aufgelöst werden, wenn das Duplikat entfernt wurde.
-issue-wrong_param_count = { $item } nennt { $count } Werte für { $key }, es sind aber genau { $expected } erforderlich.
+issue-wrong_param_count = { $item }: Für { $key } sind genau { $expected } Werte erforderlich, genannt sind { $count }.
 issue-ability_outside_restricted_scope = { $item } beschränkt Erfahrungspunkte auf { $allowed }; { $ability } liegt außerhalb dieser Liste.
 issue-supernatural_ability_requires_virtue = { $ability } ist eine Übernatürliche Fertigkeit und erfordert eine verleihende Tugend (oder die eine freie Fertigkeit der Gabe).
 issue-personality_trait_out_of_range = Persönlichkeitseigenschaft { $name } ({ $value }) liegt außerhalb des zulässigen Bereichs (±{ $max }).

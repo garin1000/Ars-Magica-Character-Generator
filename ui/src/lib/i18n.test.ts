@@ -967,3 +967,129 @@ describe('German UI bundle, DE .ftl audit fixes', () => {
     }
   });
 });
+
+// EN messages that rendered "1 levels", "1 values" … at a count of 1. Args are
+// passed exactly as the app passes them: STRINGS for every `issue-*` message
+// (`derive.ts::resolveIssueArgs`), and a NUMBER for the Aging outcome, which
+// AgingRollCalculator.svelte passes raw.
+// A string arg can never select `[one]`, so each fix is worded to read correctly
+// at every count (an "(s)" hedge, or the count moved out of the noun's way).
+describe('English UI bundle, wording at a count of 1', () => {
+  const en = buildBundle('en');
+  const say = (key: string, args?: Record<string, string | number>) =>
+    translate(en, key, args).replace(/[⁦-⁩]/g, '');
+
+  it('states a one-point Decrepitude-and-Crisis outcome correctly', () => {
+    expect(say('aging-outcome-decrepitude_and_crisis', { points: 1 })).toBe(
+      '1 Aging Point(s) — enough to reach the next level of Decrepitude — and a Crisis.',
+    );
+  });
+
+  it('states a single lab season without years as a magus correctly', () => {
+    expect(say('issue-life_stage_lab_seasons_without_years', { seasons: '1' })).toBe(
+      '1 lab season(s) recorded, but this character has no years as a magus to work them in.',
+    );
+  });
+
+  it('states a one-level spell split beyond the points correctly', () => {
+    expect(
+      say('issue-life_stage_spell_level_split_exceeds_points', { levels: '1', points: '0' }),
+    ).toBe(
+      'Taking 1 level(s) of spells out of the years as a magus is more than those years grant: they are worth 0 points, to be divided between experience and levels of spells.',
+    );
+  });
+
+  // An Art at 0 needs 1 XP for its next level, so banked 1 / needed 1 is reachable.
+  it('states one banked experience point against one needed correctly', () => {
+    expect(
+      say('issue-banked_xp_at_or_above_next_level', { art: 'Creo', banked: '1', needed: '1' }),
+    ).toBe(
+      'Banked experience points (1) are already enough to raise this score — the next level needs only 1.',
+    );
+  });
+
+  it('states one Mastery special ability above a Mastery score of 0 correctly', () => {
+    expect(
+      say('issue-too_many_mastery_abilities', {
+        spell: 'Pilum of Fire',
+        chosen: '1',
+        mastery: '0',
+      }),
+    ).toBe(
+      'Pilum of Fire has more Mastery special abilities (1) than its Mastery score of 0 allows (one per level).',
+    );
+  });
+
+  it('states a single named parameter value correctly', () => {
+    expect(
+      say('issue-wrong_param_count', {
+        item: 'Restricted Learning',
+        key: 'Abilities',
+        count: '1',
+        expected: '5',
+      }),
+    ).toBe('Restricted Learning names 1 value(s) for Abilities, but exactly 5 are required.');
+  });
+});
+
+// The German twins of the EN messages above, which rendered „1 Werte“,
+// „1 Alterungspunkte“ … the same way. Fixed count-neutrally, as in e66c0ce: the
+// count moves out of the noun's way, since a string arg can never select `[one]`.
+describe('German UI bundle, wording at a count of 1', () => {
+  const de = buildBundle('de');
+  const say = (key: string, args?: Record<string, string | number>) =>
+    translate(de, key, args).replace(/[⁦-⁩]/g, '');
+
+  it('states a one-point Decrepitude-and-Crisis outcome correctly', () => {
+    expect(say('aging-outcome-decrepitude_and_crisis', { points: 1 })).toBe(
+      'Alterungspunkte: 1 — genug für die nächste Stufe Gebrechlichkeit — und eine Krise.',
+    );
+  });
+
+  it('states a single lab season without years as a magus correctly', () => {
+    expect(say('issue-life_stage_lab_seasons_without_years', { seasons: '1' })).toBe(
+      'Eingetragene Quartale Laborarbeit: 1; dieser Charakter hat aber keine Jahre als Magus, in denen sie stattfinden könnten.',
+    );
+  });
+
+  it('states a one-level spell split beyond the points correctly', () => {
+    expect(
+      say('issue-life_stage_spell_level_split_exceeds_points', { levels: '1', points: '0' }),
+    ).toBe(
+      'Die aus den Jahren als Magus genommenen Zauberstufen (1) übersteigen, was diese Jahre gewähren: Sie sind 0 Punkte wert, die zwischen Erfahrung und Zauberstufen aufzuteilen sind.',
+    );
+  });
+
+  it('states one banked experience point against one needed correctly', () => {
+    expect(
+      say('issue-banked_xp_at_or_above_next_level', { art: 'Creo', banked: '1', needed: '1' }),
+    ).toBe(
+      'Die angesparten Erfahrungspunkte (1) reichen bereits aus, um diesen Wert zu steigern — die nächste Stufe braucht nur 1.',
+    );
+  });
+
+  it('states one Mastery special ability above a Mastery score of 0 correctly', () => {
+    expect(
+      say('issue-too_many_mastery_abilities', {
+        spell: 'Pilum des Feuers',
+        chosen: '1',
+        mastery: '0',
+      }),
+    ).toBe(
+      'Pilum des Feuers hat mehr Meisterschaftsfähigkeiten (1), als der Meisterschaftswert von 0 erlaubt (eine je Stufe).',
+    );
+  });
+
+  it('states a single named parameter value correctly', () => {
+    expect(
+      say('issue-wrong_param_count', {
+        item: 'Eingeschränktes Lernen',
+        key: 'Fertigkeiten',
+        count: '1',
+        expected: '5',
+      }),
+    ).toBe(
+      'Eingeschränktes Lernen: Für Fertigkeiten sind genau 5 Werte erforderlich, genannt sind 1.',
+    );
+  });
+});

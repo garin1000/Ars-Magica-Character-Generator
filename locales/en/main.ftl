@@ -671,7 +671,7 @@ aging-outcome-points_fixed = { $points ->
     [one] 1 Aging Point in { $characteristic }.
    *[other] { $points } Aging Points in { $characteristic }.
 }
-aging-outcome-decrepitude_and_crisis = { $points } Aging Points — enough to reach the next level of Decrepitude — and a Crisis.
+aging-outcome-decrepitude_and_crisis = { $points } Aging Point(s) — enough to reach the next level of Decrepitude — and a Crisis.
 aging-outcome-decrepitude_unpriceable = Enough Aging Points to reach the next level of Decrepitude, and a Crisis. The advancement table does not reach that level, so agree the number at the table.
 # The Crisis (Core Rules.md:16619-16638). Two dice, both the player's: the stress
 # die above sent the year here, and a simple die is thrown at the Crisis Table.
@@ -1313,8 +1313,8 @@ issue-life_stage_age_before_gauntlet = No magus is gauntleted at { $age }: the G
 issue-life_stage_age_before_truncation = Age { $age } is too young to have completed { $min } years of childhood and apprenticeship-shaped training.
 issue-life_stage_gauntlet_age_after_age = The Gauntlet at { $gauntlet_age } is still ahead of this magus, who is { $age }; the years as a magus are counted forward from the Gauntlet.
 issue-life_stage_lab_seasons_out_of_range = { $seasons } lab seasons is more than the { $max } that { $years } year(s) as a magus can be charged for.
-issue-life_stage_lab_seasons_without_years = { $seasons } lab seasons are recorded, but this character has no years as a magus to work them in.
-issue-life_stage_spell_level_split_exceeds_points = Taking { $levels } levels of spells out of the years as a magus is more than those years grant: they are worth { $points } points, to be divided between experience and levels of spells.
+issue-life_stage_lab_seasons_without_years = { $seasons } lab season(s) recorded, but this character has no years as a magus to work them in.
+issue-life_stage_spell_level_split_exceeds_points = Taking { $levels } level(s) of spells out of the years as a magus is more than those years grant: they are worth { $points } points, to be divided between experience and levels of spells.
 issue-life_stage_native_language_unset = Choose a native language: childhood's largest block of experience can be spent on nothing else.
 issue-life_stage_native_language_missing_score = No { $language } score is bought, so childhood's native-language experience is unspent.
 issue-magus_minimum_ability = No magus is admitted to the Order below { $ability } { $min }{ $qualifier }; this character has { $score }.
@@ -1336,7 +1336,7 @@ issue-art_score_out_of_range = Art { $art } score { $score } is outside the allo
 # X10b. Shared by an Ability and an Art score, whose args carry `ability` or
 # `art` respectively — never both — so the message interpolates neither
 # directly and names only the two figures both cases share.
-issue-banked_xp_at_or_above_next_level = { $banked } banked experience points are already enough to raise this score — only { $needed } are needed for the next level.
+issue-banked_xp_at_or_above_next_level = Banked experience points ({ $banked }) are already enough to raise this score — the next level needs only { $needed }.
 issue-house_choice_unresolved = House { $house } has an unresolved specialisation choice ({ $choice_key }).
 issue-house_grant_constraint = The House { $house } grant { $choice_key } picks { $item }, which does not meet its constraint.
 issue-warping_owed_minor_flaws = You still owe { $count } Minor Flaw(s) from Warping.
@@ -1364,14 +1364,14 @@ issue-ritual_casting_restricted = { $spell } is a Ritual, and Rigid Magic forbid
 issue-spell_uses_incompatible_arts = { $spell } draws on two Techniques and Forms that Incompatible Arts forbids using together.
 issue-spell_within_focus_without_magical_focus = { $spell } is marked within focus, but no Magical Focus is held; the marking has no effect.
 issue-unknown_mastery_ability = Unknown Spell Mastery ability { $ability } chosen for { $spell }.
-issue-too_many_mastery_abilities = { $spell } has { $chosen } Mastery special abilities, above its Mastery score of { $mastery } (one per level).
+issue-too_many_mastery_abilities = { $spell } has more Mastery special abilities ({ $chosen }) than its Mastery score of { $mastery } allows (one per level).
 issue-duplicate_mastery_ability = Mastery ability { $ability } is chosen { $count } times for { $spell }, but may be taken only once.
 issue-too_many_of_mastery_ability = Mastery ability { $ability } is chosen { $count } times for { $spell }, above its maximum of { $max }.
 issue-mastery_ability_forbidden_for_ritual = Mastery ability { $ability } may not be chosen for { $spell }, a Ritual spell.
 issue-ability_above_age_cap = { $ability } score { $score } exceeds the age-{ $age } maximum of { $cap }.
 issue-specialty_forbidden = { $ability } may not have a specialty ({ $specialty }) — Unspecialized forbids any Ability specialty.
 issue-ambiguous_bound_parameter = { $item } is held more than once; { $ability }'s linked value cannot be resolved until the duplicate is removed.
-issue-wrong_param_count = { $item } names { $count } values for { $key }, but exactly { $expected } are required.
+issue-wrong_param_count = { $item } names { $count } value(s) for { $key }, but exactly { $expected } are required.
 issue-ability_outside_restricted_scope = { $item } restricts experience to { $allowed }; { $ability } is outside that list.
 issue-supernatural_ability_requires_virtue = { $ability } is a Supernatural Ability and requires a granting Virtue (or the Gift's one free Ability).
 issue-personality_trait_out_of_range = Personality Trait { $name } ({ $value }) is outside the allowed range (±{ $max }).
