@@ -257,6 +257,7 @@ fn aristotelian_trainings_lab_bonus_must_never_apply_anywhere() {
             &Id::new("art.ignem"),
             &[],
             false,
+            false,
             false
         ),
         // Int(0) + MagicTheory(0) + Creo(0) + Ignem(0) + 3 (ArMDE:2465) + 0 (no lab_mod)

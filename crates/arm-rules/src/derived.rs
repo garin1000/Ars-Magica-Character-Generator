@@ -234,8 +234,9 @@ struct InPlayMods {
 /// D4's per-entry-resolved Lab-Total-modifier fold for the in-play Lab Total
 /// grid (`derived/lab.rs::lab_totals`, `creo_corpus_lab_total`, and via those,
 /// the familiar and Masterpiece read-outs) — **separate** from
-/// `effective::lab_total_mod` (D1), which stays flat and condition-free and is
-/// consumed only by `effective/spell.rs::spell_level_cap`. The two folds walk
+/// `effective::lab_total_mod` (D1), which stays flat and condition-free (bar
+/// Potent Magic's marker-gated term, D83.3) and is consumed only by
+/// `effective/spell.rs::spell_level_cap`. The two folds walk
 /// the same selections but disagree on purpose: D1 is a generous ceiling on
 /// which spells may be chosen, D4 is a played-out number a character sheet
 /// prints.
@@ -294,7 +295,12 @@ fn in_play_lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
 /// Before D79 this same amount was folded into `within_focus`
 /// (`in_play_lab_total_mod_within_focus`), gated on holding a Magical Focus
 /// rather than on holding Potent Magic itself.
-fn in_play_lab_total_mod_within_potent_field(entity: &Entity, ruleset: &Ruleset) -> i32 {
+///
+/// `pub(crate)` (D83.3): also the Potent Magic term of
+/// `effective/spell.rs::spell_level_cap` for a spell marked
+/// `within_potent_field`, so the creation cap and the in-play Lab Total can
+/// never disagree about which Potent Magic bonus applies.
+pub(crate) fn in_play_lab_total_mod_within_potent_field(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0i32;
     for selection in selections_for_effects(entity, ruleset).iter() {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {

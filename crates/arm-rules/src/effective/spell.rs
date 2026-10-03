@@ -8,6 +8,7 @@
 use super::*;
 use crate::art::ArtType;
 use crate::spell::SpellRange;
+use crate::types::LabTotalModScope;
 
 /// Sums the [`Effect::SpellLevels`] amounts across the entity's selections (may
 /// be negative; Skilled Parens +30, Weak Parens −30).
@@ -308,11 +309,16 @@ pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32
 /// D1 (`docs/vf-audit/decisions.md`): every one of the nine carriers is
 /// individually *conditional* in the book (Inventive Genius only "if you are
 /// not using a Laboratory Text or being taught"; Potent Magic only within its
-/// focus; …), and D4 resolves those conditions for the in-play Lab Total. This
+/// field; …), and D4 resolves those conditions for the in-play Lab Total. This
 /// function is consumed **only** by [`spell_level_cap`], which deliberately
-/// ignores every condition and always adds the flat sum — it is only a ceiling
+/// ignores those conditions and always adds the flat sum — it is only a ceiling
 /// on which spells may be *chosen*, never a number printed as a play result, so
 /// the generous condition-free reading is acceptable there and nowhere else.
+///
+/// **Except Potent Magic (D83.3, amending D1).** A carrier scoped
+/// [`LabTotalModScope::WithinPotentFieldOnly`] is left out here: the cap adds
+/// it only for a spell the player marked `within_potent_field`, exactly as the
+/// Casting Total reads that marker (D79) — see [`spell_level_cap`].
 pub(crate) fn lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0i32;
     for selection in selections_for_effects(entity, ruleset).iter() {
@@ -320,15 +326,45 @@ pub(crate) fn lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
             continue;
         };
         for effect in &item.effects {
-            // D1 deliberately ignores `scope`/`suppressed_when`: those resolve
-            // D4's in-play conditions, and D1 stays the flat, condition-free
-            // ceiling regardless of them (this function's own doc comment).
-            if let Effect::LabTotalMod { amount, .. } = effect {
+            // D1 deliberately ignores the other scopes and `suppressed_when`:
+            // those resolve D4's in-play conditions, and D1 stays the flat,
+            // condition-free ceiling regardless of them. Only the Potent
+            // Magic scope is gated, by the spell's own marker (D83.3).
+            if let Effect::LabTotalMod { amount, scope, .. } = effect
+                && *scope != LabTotalModScope::WithinPotentFieldOnly
+            {
                 total += i32::from(*amount);
             }
         }
     }
     total
+}
+
+/// Whether the entity holds a Lab-Total carrier scoped
+/// [`LabTotalModScope::WithinPotentFieldOnly`] (Potent Magic) at all — read off
+/// the data scope, never an item id. Mirrors [`has_magical_focus`]: it gates
+/// the `within_potent_field` term of [`spell_level_cap`], so a stale marker
+/// (the Virtue removed after the spell was marked) adds nothing, and tells
+/// [`spell_caps`] whether a within-Potent-field figure is worth computing.
+pub(crate) fn has_potent_magic(entity: &Entity, ruleset: &Ruleset) -> bool {
+    selections_for_effects(entity, ruleset)
+        .iter()
+        .any(|selection| {
+            ruleset
+                .point_items
+                .get(&selection.item_ref)
+                .is_some_and(|item| {
+                    item.effects.iter().any(|effect| {
+                        matches!(
+                            effect,
+                            Effect::LabTotalMod {
+                                scope: LabTotalModScope::WithinPotentFieldOnly,
+                                ..
+                            }
+                        )
+                    })
+                })
+        })
 }
 
 /// Whether a spell's Range makes it subject to Short-Ranged Magic's Lab-Total
@@ -398,7 +434,9 @@ pub(crate) fn has_magical_focus(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// way the Casting Total is (ArMDE:12309-12313, X11b — see below), **doubled**
 /// by the lowest folded score when `within_focus` is set (ArMDE:4403),
 /// **halved** if either Art or any requisite is deficient, plus the flat
-/// [`lab_total_mod`] term (D1, `docs/vf-audit/decisions.md`), and **halved
+/// [`lab_total_mod`] term (D1, `docs/vf-audit/decisions.md`), plus Potent
+/// Magic's bonus when `within_potent_field` is set and Potent Magic is held
+/// (D83.3, ArMDE:4742-4748 — the larger bonus, never the sum), and **halved
 /// again** if `range_beyond_touch` is set and the character holds Short-Ranged
 /// Magic (D28). Returns an `i64` (small or negative for a beginning magus).
 /// Single source of truth: both the validation cap and the UI-surfaced cap
@@ -442,8 +480,12 @@ pub(crate) fn has_magical_focus(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// [`range_beyond_touch`]; [`spell_level_caps`] instead iterates both range
 /// classes directly (`false`, `true`) to synthesize the two surfaced rows.
 ///
-/// **Order of operations**, from the passages: the flat D1 term and the
-/// within-focus double both sum into `base` first (they are part of what the
+/// `within_potent_field` is likewise the player's own claim
+/// (`SpellSelection::within_potent_field`, D79): the Potent Magic field is
+/// free text the engine cannot match to a spell either.
+///
+/// **Order of operations**, from the passages: the flat D1 term, the
+/// within-focus double and the within-Potent-field bonus all sum into `base` first (they are part of what the
 /// Lab Total *is* — `ArMDE:2465`'s closing sentence, and `ArMDE:4403`'s own
 /// worked example adds the doubled Art alongside the rest before anything else
 /// applies), then the two conditional halvings apply. The halving is not a
@@ -462,7 +504,7 @@ pub(crate) fn has_magical_focus(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// through the same [`arts_deficient`] predicate [`crate::derived::InPlayMods::deficient`]
 /// applies to its own cached set, so the creation-time cap and the in-play Lab
 /// Totals can never disagree about which Arts are deficient.
-// Source: ArMDE:2465, :12309-12313, :3737, :4403, :4820, :5911, :5915, :547, :6739
+// Source: ArMDE:2465, :12309-12313, :3737, :4403, :4742-4748, :4820, :5911, :5915, :547, :6739
 pub fn spell_level_cap(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -471,6 +513,7 @@ pub fn spell_level_cap(
     requisites: &[Id],
     range_beyond_touch: bool,
     within_focus: bool,
+    within_potent_field: bool,
 ) -> i64 {
     // Read before the Art *scores* shadow `technique`/`form` with their totals.
     let deficiencies = deficient_arts(entity, ruleset);
@@ -516,6 +559,16 @@ pub fn spell_level_cap(
     // effect here is gated.
     if within_focus && has_magical_focus(entity, ruleset) {
         base += tech.min(fo);
+    }
+    // D83.3: Potent Magic's bonus only for a spell marked within its field,
+    // and only while a Potent Magic carrier is still held (same stale-marker
+    // rule as the focus doubling above). The larger bonus, never the sum —
+    // "only one Potent Magic Virtue applies to any single activity"
+    // (ArMDE:4742) — through the same fold the in-play Lab Total reads.
+    if within_potent_field && has_potent_magic(entity, ruleset) {
+        base += i64::from(crate::derived::in_play_lab_total_mod_within_potent_field(
+            entity, ruleset,
+        ));
     }
     // Floor, not truncate, for both halvings below. No halving rule names a
     // rounding direction, so the rulebook default governs — "if it does not,
@@ -584,6 +637,7 @@ pub fn spell_level_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellLevelCap
                         &[],
                         range_beyond_touch,
                         false,
+                        false,
                     ),
                 });
             }
@@ -612,6 +666,18 @@ pub struct SpellCap {
     /// [`crate::derived::CastingTotal::within_focus`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub within_focus_cap: Option<i64>,
+    /// The cap with the spell marked within the Potent Magic field (D83.3,
+    /// ArMDE:4746-4748), present only when the entity holds Potent Magic at
+    /// all — the plain [`Self::cap`] never includes that bonus. Same shape as
+    /// [`Self::within_focus_cap`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub within_potent_field_cap: Option<i64>,
+    /// The cap with BOTH markers set, present only when the entity holds a
+    /// Magical Focus and Potent Magic. An engine figure in its own right: the
+    /// Deficient and Short-Ranged halvings floor the SUM, so it cannot be
+    /// derived from the two single-marker figures.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub within_focus_and_potent_field_cap: Option<i64>,
 }
 
 /// [`spell_level_cap`] for every spell in the catalogue, folding each spell's
@@ -620,23 +686,17 @@ pub struct SpellCap {
 /// [`SpellCap::cap`] and, when only [`SpellCap::within_focus_cap`] admits the
 /// spell's level, offers an "add within focus" action that adds it already
 /// marked (`SpellSelection::within_focus = true`) — D81.5: "The engine cannot
-/// match a spell to a free-text focus, so the player decides."
+/// match a spell to a free-text focus, so the player decides." D83.3 adds the
+/// same pair of figures for Potent Magic's field (`within_potent_field_cap`,
+/// and `within_focus_and_potent_field_cap` for both markers at once).
 pub fn spell_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellCap> {
     let has_focus = has_magical_focus(entity, ruleset);
+    let has_potent = has_potent_magic(entity, ruleset);
     ruleset
         .spells()
         .map(|spell| {
             let range_beyond_touch = spell.range.is_some_and(range_beyond_touch);
-            let cap = spell_level_cap(
-                entity,
-                ruleset,
-                &spell.technique,
-                &spell.form,
-                &spell.requisites,
-                range_beyond_touch,
-                false,
-            );
-            let within_focus_cap = has_focus.then(|| {
+            let marked_cap = |within_focus: bool, within_potent_field: bool| {
                 spell_level_cap(
                     entity,
                     ruleset,
@@ -644,13 +704,17 @@ pub fn spell_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellCap> {
                     &spell.form,
                     &spell.requisites,
                     range_beyond_touch,
-                    true,
+                    within_focus,
+                    within_potent_field,
                 )
-            });
+            };
             SpellCap {
                 spell: spell.id.clone(),
-                cap,
-                within_focus_cap,
+                cap: marked_cap(false, false),
+                within_focus_cap: has_focus.then(|| marked_cap(true, false)),
+                within_potent_field_cap: has_potent.then(|| marked_cap(false, true)),
+                within_focus_and_potent_field_cap: (has_focus && has_potent)
+                    .then(|| marked_cap(true, true)),
             }
         })
         .collect()

@@ -85,6 +85,7 @@ fn creo_ignem_cap(e: &Entity, rs: &Ruleset) -> i64 {
         &[],
         false,
         false,
+        false,
     )
 }
 
@@ -181,6 +182,7 @@ fn the_books_bonisagus_template_gets_both_great_intelligence_points_in_its_cap()
             &Id::new("art.creo"),
             &Id::new("art.auram"),
             &[],
+            false,
             false,
             false,
         )
