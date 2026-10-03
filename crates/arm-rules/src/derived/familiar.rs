@@ -129,7 +129,12 @@ pub fn familiar_binding_level(familiar: &Familiar) -> i32 {
 /// [`crate::effective::powers_used`] this sum is compared against no budget and can
 /// raise no issue.
 pub fn familiar_invested_power_levels(familiar: &Familiar) -> u32 {
-    familiar.powers.iter().map(|p| u32::from(p.level)).sum()
+    // Saturating, not `sum()`: the save controls the row count, and enough maxed
+    // `u16` levels overflow `u32` (a panic in release).
+    familiar
+        .powers
+        .iter()
+        .fold(0u32, |sum, p| sum.saturating_add(u32::from(p.level)))
 }
 
 /// The magus's side of the bonding season: the Lab Total he can bring to it, and

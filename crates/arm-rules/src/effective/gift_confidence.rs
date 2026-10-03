@@ -100,7 +100,12 @@ pub fn item_level_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
 /// side of the item-level budget bar. Summed across every device. Source:
 /// ArMDE:4347-4349.
 pub fn item_level_used(entity: &Entity) -> u32 {
-    entity.devices.iter().map(|d| u32::from(d.level)).sum()
+    // Saturating, not `sum()`: the rows come from the save, and enough maxed
+    // `u16` levels overflow `u32` (a panic in release).
+    entity
+        .devices
+        .iter()
+        .fold(0u32, |sum, d| sum.saturating_add(u32::from(d.level)))
 }
 
 /// The character's derived power-levels budget: base 0 plus every
@@ -145,7 +150,9 @@ pub fn focus_points_used(entity: &Entity) -> u32 {
         .focus_powers
         .iter()
         .map(|p| 2 * u32::from(p.max_level) + u32::from(p.penetration))
-        .sum()
+        // Saturating, as in `item_level_used`: each row fits easily, but the save
+        // controls how many rows there are.
+        .fold(0u32, u32::saturating_add)
 }
 
 /// The total power level the being's `powers` consume — the "used" side of the
@@ -165,5 +172,6 @@ pub fn powers_used(entity: &Entity) -> u32 {
         .powers
         .iter()
         .map(|p| u32::from(p.level) + u32::from(p.penetration))
-        .sum()
+        // Saturating, as in `item_level_used`: the save controls the row count.
+        .fold(0u32, u32::saturating_add)
 }

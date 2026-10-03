@@ -28,7 +28,7 @@ fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
         for effect in &item.effects {
             match effect {
                 Effect::WarpingGrant { points: p } => {
-                    points += u32::from(*p);
+                    points = points.saturating_add(u32::from(*p));
                 }
                 Effect::WarpingGrantParam { param, base_points } => {
                     let years = selection
@@ -37,7 +37,13 @@ fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
                         .and_then(SelectionParamValue::as_single)
                         .and_then(|v| v.as_str().parse::<u32>().ok())
                         .unwrap_or(0);
-                    points += u32::from(*base_points) + years;
+                    // Saturating: `years` is parsed straight from the save, and
+                    // the computation runs before validation refuses a value
+                    // outside the parameter's declared range, so a crafted
+                    // `u32::MAX` must not overflow (a panic in release).
+                    points = points
+                        .saturating_add(u32::from(*base_points))
+                        .saturating_add(years);
                 }
                 // Every other Effect variant grants no Warping Points. Listed
                 // explicitly (not a wildcard `_`) so a new variant is a compile

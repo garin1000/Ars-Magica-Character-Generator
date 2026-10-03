@@ -444,8 +444,16 @@ pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Op
         }
     }
 
-    let uncapped_total =
-        die + age_modifier - living_conditions.total - longevity_bonus + trait_modifier;
+    // Summed in i64 and clamped back to i32: the die is typed in with no ceiling
+    // (a stress die explodes), so `i32::MAX` + the age term would overflow — a
+    // panic in release. Every realistic total is far inside i32 and unchanged;
+    // a clamped one still lands on the table's top (or bottom) row.
+    let uncapped_total = clamp_to_i32(
+        i64::from(die) + i64::from(age_modifier)
+            - i64::from(living_conditions.total)
+            - i64::from(longevity_bonus)
+            + i64::from(trait_modifier),
+    );
 
     // "treats all rolls of 10 or more as rolls of 9 until he reaches the age of
     // 35" (`ArMDE:16575`) — a ceiling on the total, applied only to a ritual-holder
@@ -753,8 +761,16 @@ pub fn crisis_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> O
         die,
         age_modifier,
         decrepitude_score: score,
-        total: die + age_modifier + i32::from(score),
+        // Widened and clamped, as in `aging_total`: the typed die has no ceiling.
+        total: clamp_to_i32(i64::from(die) + i64::from(age_modifier) + i64::from(score)),
     })
+}
+
+/// Narrows an i64 sum back to i32, saturating at either end, so that a typed
+/// die at the edge of i32 never overflows a total. Used by [`aging_total`] and
+/// [`crisis_total`].
+fn clamp_to_i32(value: i64) -> i32 {
+    i32::try_from(value).unwrap_or(if value < 0 { i32::MIN } else { i32::MAX })
 }
 
 /// The Aging Points that had reached Decrepitude by the end of the character's

@@ -1568,7 +1568,15 @@ pub fn checked_xp_allocation(
 pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation {
     let spends = build_spends(entity, ruleset);
     let flow_pools = build_flow_pools(entity, ruleset);
-    let total_demand: u32 = spends.iter().map(|s| s.cost).sum();
+    // Saturating, not `sum()`: `build_spends` already saturates each cost, so two
+    // banked-XP rows typed at `u32::MAX` would overflow a plain sum (a panic in
+    // release, which has overflow checks on). A saturated demand still exceeds any
+    // supply below `u32::MAX`, so `not_enough_xp` still fires. Accepted edge case:
+    // if the supply ALSO reaches `u32::MAX` (an XP pool typed at ~4.29e9), both
+    // sides saturate, compare equal, and the shortfall goes unreported.
+    let total_demand = spends
+        .iter()
+        .fold(0u32, |sum, s| sum.saturating_add(s.cost));
 
     let (general_pool, general_bonus) = general_pool_and_bonus(entity, ruleset);
 
@@ -1852,7 +1860,14 @@ fn two_phase_max_flow(
     let n = layout.n();
     let restricted_flow = max_flow(n, FlowGraphLayout::SOURCE, FlowGraphLayout::SINK, cap);
     cap[FlowGraphLayout::SOURCE][FlowGraphLayout::GENERAL] = general_pool;
-    let total = restricted_flow + max_flow(n, FlowGraphLayout::SOURCE, FlowGraphLayout::SINK, cap);
+    // Saturating: a general pool near `u32::MAX` plus any restricted pool can fund
+    // more than `u32` holds (see the edge case noted on `total_demand`).
+    let total = restricted_flow.saturating_add(max_flow(
+        n,
+        FlowGraphLayout::SOURCE,
+        FlowGraphLayout::SINK,
+        cap,
+    ));
     let general_used = general_pool - cap[FlowGraphLayout::SOURCE][FlowGraphLayout::GENERAL];
     (total, general_used)
 }
@@ -1923,7 +1938,8 @@ fn max_flow(n: usize, source: usize, sink: usize, cap: &mut [Vec<u32>]) -> u32 {
             cap[v][u] += bottleneck;
             v = u;
         }
-        total += bottleneck;
+        // Saturating: the summed supply of several pools can exceed `u32`.
+        total = total.saturating_add(bottleneck);
     }
 }
 
