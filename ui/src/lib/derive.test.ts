@@ -57,6 +57,8 @@ import {
   groupAbilitySelectionsByCategory,
   unboughtModifiedAbilities,
   UNBOUGHT_ROW_INDEX,
+  abilityFloor,
+  nextAbilityScore,
   mandatoryTraitRefs,
   maxAbilityScore,
   maxArtScore,
@@ -3325,6 +3327,51 @@ describe('groupAbilitySelectionsByCategory', () => {
 // Ability the character has not bought, but the Selected list is built from bought
 // rows, so the Abilities surface said nothing about it. These are the rows that
 // carry it — display-only, hence UNBOUGHT_ROW_INDEX rather than an entity index.
+// R7 (try-out finding 24): one "+" press on an Ability must visibly raise it.
+// The shown score is max(bought, floor), so a press from at or below a granted
+// floor jumps to floor + 1; above it, it is the ordinary +1. Capped at max.
+describe('nextAbilityScore', () => {
+  it('jumps from below the floor to one above it', () => {
+    expect(nextAbilityScore(0, 1, 10)).toBe(2);
+  });
+
+  it('jumps from the floor itself to one above it', () => {
+    expect(nextAbilityScore(1, 1, 10)).toBe(2);
+  });
+
+  it('adds one above the floor, and with no floor', () => {
+    expect(nextAbilityScore(2, 1, 10)).toBe(3);
+    expect(nextAbilityScore(3, 0, 10)).toBe(4);
+  });
+
+  it('never exceeds max', () => {
+    expect(nextAbilityScore(5, 0, 5)).toBe(5);
+    expect(nextAbilityScore(0, 5, 5)).toBe(5);
+  });
+});
+
+// The granted floor for ONE Ability instance, matched like the tab's badge
+// (`sameParam`), so a parameter-bound grant lands only on its own instance.
+describe('abilityFloor', () => {
+  const floors = [
+    { ability: 'ability.second_sight', floor: 1 },
+    { ability: 'ability.enchanting', parameter: 'Wood', floor: 1 },
+  ];
+
+  it('finds a plain grant for the unparameterized Ability', () => {
+    expect(abilityFloor(floors, 'ability.second_sight', undefined, {})).toBe(1);
+  });
+
+  it('finds a parameter-bound grant only on its own instance', () => {
+    expect(abilityFloor(floors, 'ability.enchanting', { text: 'Wood' }, {})).toBe(1);
+    expect(abilityFloor(floors, 'ability.enchanting', { text: 'Metal' }, {})).toBe(0);
+  });
+
+  it('is 0 for an Ability nothing grants', () => {
+    expect(abilityFloor(floors, 'ability.awareness', undefined, {})).toBe(0);
+  });
+});
+
 describe('unboughtModifiedAbilities', () => {
   const bought = [{ ability: 'ability.awareness', score: 2 }];
 

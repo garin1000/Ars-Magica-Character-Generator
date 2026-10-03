@@ -520,6 +520,34 @@ describe('phase-3 virtue/flaw effects', () => {
     expect(await $('[data-testid="ability-score-ability.second_sight-0"]').getText()).toBe('0');
   });
 
+  // Try-out finding 24 (R7): "+" on the granted, not-yet-bought row buys the
+  // Ability in one press and raises it from the free floor (1) to 2.
+  it('"+" on the granted Second Sight row buys it and raises the score', async () => {
+    await startCharacter('companion');
+    await addVirtue('virtue.second_sight');
+
+    await $(ABILITIES_TAB).click();
+    const inc = await $('[data-testid="ability-inc-ability.second_sight-unbought"]');
+    await inc.waitForExist({ timeout: 10000 });
+    await browser.waitUntil(async () => await inc.isEnabled(), {
+      timeout: 5000,
+      timeoutMsg: '"+" on the unbought granted Second Sight row should be enabled',
+    });
+    await inc.click();
+
+    const score = await $('[data-testid="ability-score-ability.second_sight-0"]');
+    await score.waitForExist({ timeout: 10000 });
+    await browser.waitUntil(async () => clean(await score.getText()).trim() === '2', {
+      timeout: 5000,
+      timeoutMsg: 'one "+" should buy Second Sight one step above its free floor of 1',
+    });
+    await $('[data-testid="ability-inc-ability.second_sight-unbought"]').waitForExist({
+      timeout: 5000,
+      reverse: true,
+      timeoutMsg: 'the unbought row should give way to the bought one',
+    });
+  });
+
   it('Affinity with Art reduces the XP charged for that Art', async () => {
     await startCharacter('magus');
 

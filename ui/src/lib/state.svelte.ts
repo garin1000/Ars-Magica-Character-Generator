@@ -28,9 +28,11 @@ import {
   type ChildhoodDraft,
 } from './childhood-workflow.svelte';
 import {
+  abilityFloor,
   agingMigrationNotice,
   mandatoryTraitRefs,
   migratedCatalogueParameterNotice,
+  resolvedLinksFrom,
   unresolvedCatalogueParameterNotice,
 } from './derive';
 import { EquipmentWorkflow } from './equipment-workflow.svelte';
@@ -1164,6 +1166,38 @@ class AppStore {
    *  @see AbilityWorkflow.removeAt */
   removeAbilityAt(index: number): void {
     this.#abilityWorkflow.removeAt(index);
+  }
+
+  /**
+   * "+" on the tab's unbought row (a granted floor or bonus, no bought entry):
+   * buys the Ability raised one visible step, as one edit (R7).
+   *
+   * @see AbilityWorkflow.buyUnbought
+   */
+  raiseUnboughtAbility(ability: string, max: number): void {
+    this.#abilityWorkflow.buyUnbought(ability, this.#abilityFloor(ability, undefined), max);
+  }
+
+  /**
+   * "+" on a bought row: one visible step, so a row at or below its granted
+   * floor jumps to floor + 1 (R7).
+   *
+   * @see AbilityWorkflow.raiseAt
+   */
+  raiseAbilityAt(index: number, max: number): void {
+    const row = this.entity.ability_scores?.[index];
+    if (!row) return;
+    this.#abilityWorkflow.raiseAt(index, this.#abilityFloor(row.ability, row.parameter), max);
+  }
+
+  /** The granted floor on one Ability instance, from the last engine pass. */
+  #abilityFloor(ability: string, parameter: AbilityParamValue | null | undefined): number {
+    return abilityFloor(
+      this.effective?.ability_score_floors ?? [],
+      ability,
+      parameter,
+      resolvedLinksFrom(this.effective?.ability_parameter_options ?? []),
+    );
   }
 
   /** @see AbilityWorkflow.adjustAt */

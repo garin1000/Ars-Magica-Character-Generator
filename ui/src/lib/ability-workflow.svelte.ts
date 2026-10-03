@@ -14,6 +14,7 @@
 // keeps comparing the very object these methods mutate.
 
 import { clampInt, U32_MAX } from './clamp';
+import { nextAbilityScore } from './derive';
 import type { AbilityParamValue, Entity, LocalizedRuleset } from './types';
 
 /** The slice of `AppStore` the Ability workflow needs, as live accessors so it
@@ -41,11 +42,40 @@ export class AbilityWorkflow {
    */
   add(ability: string): void {
     const entity = this.#host.entity();
-    const parameterized = !!this.#host.ruleset()?.ruleset.abilities?.[ability]?.parameter;
     const present = (entity.ability_scores ?? []).some((a) => a.ability === ability);
-    if (!parameterized && present) return;
+    if (present && !this.#isParameterized(ability)) return;
     entity.ability_scores = [...(entity.ability_scores ?? []), { ability, score: 0 }];
     this.#host.scheduleValidate();
+  }
+
+  /**
+   * Buy an Ability that has no row yet but carries a granted floor or a bonus
+   * (the tab's unbought row), as ONE edit: the row enters already raised to
+   * {@link nextAbilityScore}, never at 0 for a second press to lift. A plain
+   * Ability that is already bought is left alone.
+   */
+  buyUnbought(ability: string, floor: number, max: number): void {
+    const entity = this.#host.entity();
+    const present = (entity.ability_scores ?? []).some((a) => a.ability === ability);
+    if (present && !this.#isParameterized(ability)) return;
+    entity.ability_scores = [
+      ...(entity.ability_scores ?? []),
+      { ability, score: nextAbilityScore(0, floor, max) },
+    ];
+    this.#host.scheduleValidate();
+  }
+
+  /** "+" on a bought row: {@link nextAbilityScore} against the row's granted floor. */
+  raiseAt(index: number, floor: number, max: number): void {
+    const entity = this.#host.entity();
+    entity.ability_scores = (entity.ability_scores ?? []).map((a, i) =>
+      i === index ? { ...a, score: nextAbilityScore(a.score, floor, max) } : a,
+    );
+    this.#host.scheduleValidate();
+  }
+
+  #isParameterized(ability: string): boolean {
+    return !!this.#host.ruleset()?.ruleset.abilities?.[ability]?.parameter;
   }
 
   /** Ability edits are by row index, since a parameterized ability has several rows. */

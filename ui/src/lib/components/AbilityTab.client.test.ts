@@ -327,6 +327,186 @@ describe('AbilityTab parameter picker combo box (CV7)', () => {
   });
 });
 
+// Try-out finding 24 (R7, decided by Norbert): a Virtue-granted Ability with no
+// bought entry (Second Sight 1 from the Second Sight Virtue, ArMDE:4890) renders
+// as the unbought row with a greyed "+". Pressing "+" on that row must buy it in
+// one action, one step above the free floor (the engine shows max(bought, floor),
+// so a bought 1 under a floor of 1 would change nothing). A `client` test because
+// it clicks the real button and watches the row turn into a bought one.
+describe('AbilityTab "+" on an unbought Virtue-granted row (R7, finding 24)', () => {
+  const SECOND_SIGHT = 'ability.second_sight';
+  const UNBOUGHT_INC = `ability-inc-${SECOND_SIGHT}-unbought`;
+
+  function grantedEffective(): EffectiveScores {
+    return {
+      ability_bonuses: [],
+      ability_score_floors: [{ ability: SECOND_SIGHT, floor: 1 }],
+    } as unknown as EffectiveScores;
+  }
+
+  function byTestid<T extends Element>(testid: string): T | null {
+    return target.querySelector<T>(`[data-testid="${testid}"]`);
+  }
+
+  function unboughtInc(): HTMLButtonElement {
+    const el = byTestid<HTMLButtonElement>(UNBOUGHT_INC);
+    if (!el) throw new Error(`unbought row not rendered: no [data-testid="${UNBOUGHT_INC}"]`);
+    return el;
+  }
+
+  function text(testid: string): string | null {
+    const el = byTestid(testid);
+    return el ? (el.textContent ?? '').replace(/[⁦-⁩]/g, '').trim() : null;
+  }
+
+  beforeEach(() => {
+    store.ruleset!.ruleset.abilities = {
+      ...store.ruleset!.ruleset.abilities,
+      [SECOND_SIGHT]: { id: SECOND_SIGHT, category: 'supernatural' },
+    };
+    // The shared fixture lists only 'general'; without 'supernatural' the
+    // grouping silently drops the whole row.
+    store.ruleset!.ruleset.ability_category_order = [
+      ...store.ruleset!.ruleset.ability_category_order,
+      'supernatural',
+    ];
+    store.ruleset!.i18n = { ...store.ruleset!.i18n, [SECOND_SIGHT]: { name: 'Second Sight' } };
+    store.entity.ability_scores = [];
+    store.effective = grantedEffective();
+    flushSync();
+  });
+
+  it('enables "+" on the unbought granted row', () => {
+    expect(unboughtInc().disabled).toBe(false);
+  });
+
+  it('pressing "+" buys the Ability and raises its shown score from the floor to the next step', async () => {
+    // Before: the unbought row, bought 0 with the floor's effective 1 as its badge.
+    expect(text(`ability-eff-${SECOND_SIGHT}-unbought`)).toBe('1');
+
+    unboughtInc().click();
+    flushSync();
+    expect(store.entity.ability_scores).toEqual([{ ability: SECOND_SIGHT, score: 2 }]);
+
+    // Let the recompute settle with the same floor.
+    await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
+    inFlight[inFlight.length - 1].resolve(grantedEffective());
+    await vi.advanceTimersByTimeAsync(0);
+    flushSync();
+
+    // After: a normal bought row at index 0 showing 2, which is also its
+    // effective score, so no badge; the unbought row and its marker are gone.
+    expect(text(`ability-score-${SECOND_SIGHT}-0`)).toBe('2');
+    expect(byTestid(`ability-eff-${SECOND_SIGHT}-0`)).toBeNull();
+    expect(byTestid(UNBOUGHT_INC)).toBeNull();
+    expect(target.querySelector('.ability-unbought')).toBeNull();
+    expect(byTestid(`remove-${SECOND_SIGHT}-0`)).not.toBeNull();
+  });
+
+  it('one press is one change: it dirties a clean document', async () => {
+    // A clean baseline only a load can give (mirrors the banked-XP dirty test).
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/saga.armc',
+      entity: { ...store.entity, ability_scores: [] },
+      migrated_aging_characteristics: [],
+    });
+    vi.mocked(ipc.effectiveScores).mockResolvedValueOnce(grantedEffective());
+    const opening = store.open();
+    if (store.discardPromptOpen) store.resolveDiscardPrompt(true);
+    await opening;
+    flushSync();
+    expect(store.dirty).toBe(false);
+
+    unboughtInc().click();
+    flushSync();
+    expect(store.dirty).toBe(true);
+    expect(store.entity.ability_scores).toEqual([{ ability: SECOND_SIGHT, score: 2 }]);
+  });
+
+  it('keeps "+" disabled when the granted floor already sits at the score cap', () => {
+    store.effective = {
+      ability_bonuses: [],
+      ability_score_floors: [{ ability: SECOND_SIGHT, floor: MAX }],
+    } as unknown as EffectiveScores;
+    flushSync();
+    expect(unboughtInc().disabled).toBe(true);
+  });
+
+  // R7 (a): the old workaround, Second Sight bought at 0 under the floor of 1.
+  it('"+" on a row bought below the floor jumps straight to one above it', () => {
+    store.entity.ability_scores = [{ ability: SECOND_SIGHT, score: 0 }];
+    flushSync();
+    byTestid<HTMLButtonElement>(`ability-inc-${SECOND_SIGHT}-0`)!.click();
+    flushSync();
+    expect(store.entity.ability_scores).toEqual([{ ability: SECOND_SIGHT, score: 2 }]);
+    expect(text(`ability-score-${SECOND_SIGHT}-0`)).toBe('2');
+  });
+
+  it('disables "+" on a bought row whose floor already sits at the score cap', () => {
+    store.entity.ability_scores = [{ ability: SECOND_SIGHT, score: 0 }];
+    store.effective = {
+      ability_bonuses: [],
+      ability_score_floors: [{ ability: SECOND_SIGHT, floor: MAX }],
+    } as unknown as EffectiveScores;
+    flushSync();
+    expect(byTestid<HTMLButtonElement>(`ability-inc-${SECOND_SIGHT}-0`)!.disabled).toBe(true);
+  });
+});
+
+// R7 (b): the picker greys a Supernatural Ability with "requires a Virtue" unless
+// a Virtue grants it. A GRANTED Virtue counts too: Strong Faerie Blood grants the
+// Second Sight Virtue (`grants_selection`), Houses grant theirs, and the engine
+// reports both in `effective.granted_selections`.
+describe('AbilityTab picker counts granted Virtues (R7 b)', () => {
+  const SECOND_SIGHT = 'ability.second_sight';
+  const SECOND_SIGHT_VIRTUE = 'virtue.second_sight';
+
+  function pickRow(): HTMLElement {
+    const testid = `add-${SECOND_SIGHT}`;
+    const el = target.querySelector<HTMLElement>(`[data-testid="${testid}"]`);
+    if (!el) throw new Error(`picker row not rendered: no [data-testid="${testid}"]`);
+    return el;
+  }
+
+  beforeEach(() => {
+    store.ruleset!.ruleset.abilities = {
+      ...store.ruleset!.ruleset.abilities,
+      [SECOND_SIGHT]: { id: SECOND_SIGHT, category: 'supernatural' },
+    };
+    store.ruleset!.ruleset.ability_category_order = [
+      ...store.ruleset!.ruleset.ability_category_order,
+      'supernatural',
+    ];
+    store.ruleset!.ruleset.point_items = {
+      [SECOND_SIGHT_VIRTUE]: {
+        id: SECOND_SIGHT_VIRTUE,
+        kind: 'virtue',
+        magnitude: 'minor',
+        categories: ['supernatural'],
+        effects: [{ type: 'ability_score_grant', ability: SECOND_SIGHT, amount: 1 }],
+      },
+    } as unknown as LocalizedRuleset['ruleset']['point_items'];
+    store.ruleset!.i18n = { ...store.ruleset!.i18n, [SECOND_SIGHT]: { name: 'Second Sight' } };
+    store.entity.ability_scores = [];
+    store.entity.selections = [];
+  });
+
+  it('greys Second Sight when nothing grants it (baseline)', () => {
+    store.effective = { ability_bonuses: [], granted_selections: [] } as unknown as EffectiveScores;
+    flushSync();
+    expect(pickRow().getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('does not grey Second Sight when a granted Virtue confers it', () => {
+    store.effective = {
+      ability_bonuses: [],
+      granted_selections: [{ ref: SECOND_SIGHT_VIRTUE }],
+    } as unknown as EffectiveScores;
+    flushSync();
+    expect(pickRow().getAttribute('aria-disabled')).toBe('false');
+  });
+});
+
 // X10b: the banked-XP input writes through the store like every other picker
 // edit, and dirties the document exactly as any other entity edit does. A
 // `client` test because it exercises the real `oninput` wiring, not just the
