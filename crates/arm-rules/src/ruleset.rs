@@ -6705,6 +6705,53 @@ mod tests {
         }
     }
 
+    /// One Free status Virtue (`mythic_status`) for the D83.7 integrity tests,
+    /// spliced into [`VALID_ITEMS`] so the rest of the catalogue stays loadable.
+    const STATUS_ITEM: &str = r#"
+      { "id": "virtue.test_status", "kind": "virtue", "classification": "narrative",
+        "magnitude": "free", "categories": ["mythic_companion"], "mythic_status": true,
+        "entity_kinds": ["character"] }"#;
+
+    fn load_with_mythic_types(mythic: &str) -> Result<Ruleset, RulesetError> {
+        let base = VALID_ITEMS.trim_end().trim_end_matches(']');
+        let items = format!("{base},{STATUS_ITEM}]");
+        Ruleset::from_sources(RulesetSources {
+            id: "t",
+            version: "1",
+            point_items: &items,
+            type_profiles: VALID_TYPES,
+            mythic_types: Some(mythic),
+            ..RulesetSources::default()
+        })
+    }
+
+    /// D83.7: a status Virtue is held only as a mythic type's `fixed` grant, so
+    /// one that no type grants could never be held at all. With mythic types
+    /// loaded, that must fail integrity, naming the item.
+    #[test]
+    fn a_status_virtue_no_mythic_type_grants_is_rejected() {
+        let mythic = r#"{ "types": [ { "id": "mythic_type.test" } ] }"#;
+        let err = load_with_mythic_types(mythic).unwrap_err();
+        match err {
+            RulesetError::Integrity(e) => assert!(
+                e.errors()
+                    .iter()
+                    .any(|m| m.contains("virtue.test_status") && m.contains("mythic_status")),
+                "expected an ungranted-status-Virtue error, got {:?}",
+                e.errors()
+            ),
+            other => panic!("expected integrity error, got {other:?}"),
+        }
+    }
+
+    /// The same item, granted `fixed` by a type, loads.
+    #[test]
+    fn a_status_virtue_a_mythic_type_grants_loads() {
+        let mythic = r#"{ "types": [ { "id": "mythic_type.test",
+          "grants": [ { "kind": "fixed", "item": "virtue.test_status" } ] } ] }"#;
+        load_with_mythic_types(mythic).expect("a granted status Virtue loads");
+    }
+
     /// A Spell Mastery ability whose source line range is inverted (start > end)
     /// must fail integrity at load.
     #[test]

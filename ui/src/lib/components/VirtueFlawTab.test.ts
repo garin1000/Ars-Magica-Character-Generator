@@ -612,6 +612,76 @@ describe('VirtueFlawTab enforces max_total on the Available list', () => {
   });
 });
 
+// R6/D83.7 (Norbert, 2026-10-03): a Mythic Companion's status Virtue is held only
+// as the grant of the type that defines it, so the Available list never offers it
+// for purchase — in any mode, like the max_total leg. Which items those are is
+// rules data (`mythic_status` on the item), never an id the component knows.
+describe('VirtueFlawTab never offers a Mythic Companion status Virtue for purchase', () => {
+  const STATUS = item({
+    id: 'virtue.devil_child',
+    magnitude: 'free',
+    categories: ['mythic_companion'],
+    mythic_status: true,
+  } as Partial<PointItem> & Pick<PointItem, 'id'>);
+  // A free Virtue a mythic type also grants, but not its status: still buyable.
+  const OTHER_FREE = item({ id: 'virtue.second_sight', categories: ['supernatural'] });
+
+  function installStatusRuleset(): void {
+    store.ruleset = {
+      ruleset: {
+        id: 'test',
+        version: '1',
+        point_items: { [STATUS.id]: STATUS, [OTHER_FREE.id]: OTHER_FREE },
+        type_profiles: {
+          mythic_companion: {
+            id: 'mythic_companion',
+            budget: { virtue_points: 20, flaw_points: 10 },
+            has_mythic_type: true,
+            gift_policy: 'forbidden',
+            creation_phases: [],
+          },
+        },
+        abilities: {},
+        magnitude_points: { free: 0, minor: 1, major: 3 },
+        ability_category_order: ['general'],
+        art_type_order: ['technique', 'form'],
+      },
+      i18n: {
+        [STATUS.id]: { name: 'Devil Child' },
+        [OTHER_FREE.id]: { name: 'Second Sight' },
+      },
+    } as unknown as LocalizedRuleset;
+  }
+
+  function addRow(body: string, id: string): string {
+    const escaped = id.replace('.', '\\.');
+    return new RegExp(`<button[^>]*data-testid="add-${escaped}"[^>]*>`).exec(body)![0];
+  }
+
+  beforeEach(() => {
+    installStatusRuleset();
+    resetEntity([]);
+    store.entity.type_id = 'mythic_companion';
+  });
+
+  it('greys out the status Virtue', () => {
+    expect(addRow(html(), STATUS.id)).toContain('aria-disabled="true"');
+  });
+
+  it('greys it out in advisory mode too', () => {
+    store.mode = 'advisory';
+    try {
+      expect(addRow(html(), STATUS.id)).toContain('aria-disabled="true"');
+    } finally {
+      store.mode = 'enforced';
+    }
+  });
+
+  it('leaves an ordinary Virtue a type also grants buyable', () => {
+    expect(addRow(html(), OTHER_FREE.id)).toContain('aria-disabled="false"');
+  });
+});
+
 // Sabine 3 (full-audit round 1): `nameWrap` is the Selected side's row name, and it
 // is where `use:tooltip` hangs the Virtue/Flaw's rules text. Both its call sites are
 // plain rows (a chosen selection and a House grant) — never inside a button, the way

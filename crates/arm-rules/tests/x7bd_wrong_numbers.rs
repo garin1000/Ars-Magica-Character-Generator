@@ -314,9 +314,11 @@ fn f463_magical_air_is_incompatible_with_the_gift() {
 /// (ArMDE:4596) is a fixed, single-item, free grant — `Effect::GrantsSelection`'s
 /// exact shape, already carried by the sibling Mythic Companion Virtues
 /// `virtue.faerie_doctor`/`virtue.spirit_votary`. `virtue.nephilim` carries no
-/// effects at all, so a Nephilim built by picking the Virtue directly from the
-/// V/F list (legal: `mythic_companion`'s profile permits the `mythic_companion`
-/// category) never receives it.
+/// effects at all, so an entity holding the Virtue in its own selections never
+/// receives it. Since D83.7 such a bought copy is itself an error
+/// (`mythic_status_virtue_bought`: a status Virtue comes only with its type); this
+/// test still uses one because it checks the item's own effect, which applies to
+/// the Virtue however it is held.
 #[test]
 fn f208_nephilim_grants_strong_angelic_heritage() {
     let rs = load_ruleset();

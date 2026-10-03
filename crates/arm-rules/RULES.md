@@ -1269,15 +1269,15 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2251, shared by
-  `validate_prereq_refs` :2128 and `validate_effect_refs` :2666) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2279, shared by
+  `validate_prereq_refs` :2156 and `validate_effect_refs` :2694) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
   prerequisites/effects and claim the catalogue as it stands). Every
   `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
   rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
-  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :773).
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :774).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -3422,7 +3422,7 @@ exemption is read off the effect's presence (age cap itself is M4/4e).
 - Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
   arithmetic, verified against the worked example below) + `ability_affinity`,
   folded into `effective/xp.rs::xp_allocation` and so into
-  `validation/magus.rs::validate_xp_pool` (:942). **Not** the simpler
+  `validation/magus.rs::validate_xp_pool` (:971). **Not** the simpler
   `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
   example below, but overcharges by one XP whenever `T·den mod num` falls
   strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
@@ -3500,7 +3500,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:942) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:971) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -5145,6 +5145,37 @@ contradicted the Spirit Votary derivation printed directly beneath it.
   **advisory** (unenforced) for M4 — a candidate for a future "minimum category
   points" rule (M5).
 
+#### The type is mandatory, and the only source of its status Virtue (D83.7)
+> `ArMDE:2846` "- You must take the Free Virtue defining which type of Mythic
+> Companion you are"
+>
+> `ArMDE:2637` "- All Mythic Companions take a Free Virtue which specifies their
+> status. These Virtues are incompatible with each other, and with The Gift, and are
+> not available to grogs."
+
+- **Unset type → error.** `validate_mythic_type` (`validation/magus.rs`) reports
+  `mythic_type_unset` as an **error** under the `mythic_type` phase. It was a warning
+  before, and no reason for that was ever recorded. The book says "must". The guided
+  wizard gates only on errors in the *current* step. The Type step is the second step
+  of the `mythic_companion` profile's `creation_phases` and is unconditional, so the
+  error blocks only leaving that step, where the type is chosen.
+- **Status Virtues are grant-only** (Norbert, 2026-10-03: "Devil Child and all the
+  other Vs for myth comps should only be granted by selecting the appropriate mythic
+  companion type. not selectable by just anyone."). The four status Virtues carry
+  `"mythic_status": true` in `rules/core/virtues_flaws.json` (`PointItem::mythic_status`).
+  `validate_mythic_status_not_bought` (`validation/magus.rs`) reports every bought copy
+  (one in `entity.selections`) as the error `mythic_status_virtue_bought`
+  (`virtues_flaws` phase), for every character type. The copy the type grants is the
+  legal one. The V/F picker (`VirtueFlawTab.svelte`) greys the row out in every
+  validation mode, with the reason `vf-blocked-mythic-status`.
+- The types' **other** free Virtues (Dowsing, Strong Angelic Heritage, Second Sight)
+  are not flagged and stay buyable.
+- Load-time integrity (`ruleset/integrity.rs::validate_mythic_status_granted`): with
+  mythic types loaded, every `mythic_status` item must be some type's `fixed` grant,
+  or it could never be held. `tests/r6_mythic_status_virtue.rs` also checks the
+  shipped data: the flag marks exactly the `mythic_companion` category, and each type
+  grants exactly one flagged Virtue.
+
 #### New V/F & Ability definitions (structural; core effects M5, supplement effects M9)
 Per CLAUDE.md each is sourced from the authoritative Markdown by book. The
 supernatural **Might** effects (Infernal/Divine Might + power levels) for Demonic
@@ -5622,7 +5653,7 @@ Two-level enforcement:
   `level`, ritual ⇒ `level ≥ 20`, non-ritual ⇒ `level ≤ 50`; a non-ritual spell
   may not have `duration = Year` or `target = Boundary`, nor be a Momentary Creo
   spell with `creates_lasting`. Vision target is exempt from the Boundary rule.
-- **Per-entity** (`validate_spell_ritual_legality`, `validation/magus.rs`, :592, called
+- **Per-entity** (`validate_spell_ritual_legality`, `validation/magus.rs`, :621, called
   from `validate_spells`, V51 split it into a named sub-check): the *resolved* learned
   level (General chosen level or fixed) must obey the same ≥20 / ≤50 bounds — a
   violation emits `spell_ritual_legality` (`CODE_SPELL_RITUAL_LEGALITY`). This

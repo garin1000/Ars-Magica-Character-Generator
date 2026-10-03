@@ -292,12 +292,40 @@ pub(crate) fn validate_magus_minimum_abilities(
     }
 }
 
+/// A Mythic Companion's status Virtue — the Free Virtue "defining which type of
+/// Mythic Companion you are" (ArMDE:2846) — is held only as the grant of the type
+/// that defines it (Norbert, 2026-10-03; D83.7). Every BOUGHT copy, i.e. one in
+/// `entity.selections`, is an error, for any character type: the type, chosen on
+/// its own step, is the one way to take it. Which items these are is rules data
+/// (`PointItem::mythic_status`), never an id here.
+pub(crate) fn validate_mythic_status_not_bought(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    for selection in &entity.selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        if !item.mythic_status {
+            continue;
+        }
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_MYTHIC_STATUS_VIRTUE_BOUGHT,
+            CreationPhase::VirtuesFlaws,
+            args([("item", selection.item_ref.to_string())]),
+            Some(selection.item_ref.clone()),
+        ));
+    }
+}
+
 /// Validates a Mythic Companion's chosen *type* (Devil Child, Faerie Doctor, …):
 /// its free-Virtue grants resolve and its required V/F package is present. Gated
 /// on the profile's `has_mythic_type` capability flag (never a hardcoded type
 /// id), mirroring how [`validate_house`] gates on `order_member`.
 ///
-/// - No type chosen → `mythic_type_unset` warning (a "should", not a hard rule).
+/// - No type chosen → `mythic_type_unset` error: "You must take the Free Virtue
+///   defining which type of Mythic Companion you are" (ArMDE:2846; D83.7).
 /// - Each `Choice`/`Open` grant pick is resolved from `entity.mythic_choices`
 ///   (identical machinery to House grants); a missing/off-menu pick →
 ///   `mythic_choice_unresolved`, an Open pick violating its constraint →
@@ -326,9 +354,10 @@ pub(crate) fn validate_mythic_type(
         return;
     }
 
-    // No type chosen: a soft warning, and there are no grants/package to resolve.
+    // No type chosen: an error (ArMDE:2846's "must"), and there are no
+    // grants/package to resolve.
     let Some(type_id) = &entity.mythic_type else {
-        issues.push(ValidationIssue::warning(
+        issues.push(ValidationIssue::error(
             ValidationIssue::CODE_MYTHIC_TYPE_UNSET,
             CreationPhase::MythicType,
             args([]),

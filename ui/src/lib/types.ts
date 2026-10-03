@@ -622,6 +622,10 @@ export interface PointItem {
   classification: Classification;
   // Descriptor "Type" tag: a Tainted (Infernal-associated) V/F. Omitted when false.
   tainted?: boolean;
+  // D83.7: a Mythic Companion's status Virtue (Devil Child, Nephilim, …), held
+  // only as the grant of the type that defines it — never offered for purchase.
+  // Omitted when false.
+  mythic_status?: boolean;
   // D42/D70/D74: how this entry's realm association resolves beyond the plain
   // override/concept/Magic chain. Omitted for every Supernatural entry the
   // book leaves free, and for a Tainted entry (which resolves Infernal from

@@ -73,6 +73,7 @@ impl Ruleset {
         for mtype in self.mythic_companion_types.values() {
             self.validate_mythic_type_refs(mtype, &mut errors);
         }
+        self.validate_mythic_status_granted(&mut errors);
 
         for spell in self.spells.values() {
             self.validate_spell_refs(spell, &mut errors);
@@ -1983,6 +1984,33 @@ impl Ruleset {
             &format!("mythic companion type '{id}'"),
             errors,
         );
+    }
+
+    /// D83.7: a status Virtue (`PointItem::mythic_status`) is held only as a mythic
+    /// type's `fixed` grant — a bought copy is an error — so one that no type
+    /// grants could never be held at all. Judged only when mythic types are
+    /// loaded: a partial ruleset without them has no Type step to judge against.
+    fn validate_mythic_status_granted(&self, errors: &mut Vec<String>) {
+        if self.mythic_companion_types.is_empty() {
+            return;
+        }
+        let granted: BTreeSet<&Id> = self
+            .mythic_companion_types
+            .values()
+            .flat_map(|mtype| &mtype.grants)
+            .filter_map(|grant| match grant {
+                Grant::Fixed { item, .. } => Some(item),
+                _ => None,
+            })
+            .collect();
+        for (id, item) in &self.point_items {
+            if item.mythic_status && !granted.contains(id) {
+                errors.push(format!(
+                    "{id}: mythic_status item is no mythic companion type's fixed grant, \
+                     so it can never be held"
+                ));
+            }
+        }
     }
 
     /// Validates a spell: its Technique must resolve to a Technique-class Art, its
