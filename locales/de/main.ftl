@@ -96,9 +96,9 @@ wizard-back = Zurück
 wizard-next = Weiter
 wizard-finish = Fertigstellen
 # Warum „Weiter" deaktiviert ist: der aktuelle Schritt enthält einen Fehler. Nur
-# Fehler blockieren — ein Hinweis nie — und der Prüfmodus „Beratend" hebt die
+# Fehler blockieren — ein Hinweis nie — und der Prüfmodus „Hinweise" hebt die
 # Sperre auf.
-wizard-blocked-hint = Behebe die Fehler dieses Schritts, um fortzufahren, oder wechsle den Prüfmodus auf „Beratend“.
+wizard-blocked-hint = Behebe die Fehler dieses Schritts, um fortzufahren, oder stelle die Prüfung unter „Einstellungen“ auf „Hinweise“.
 # Kennzeichnet einen Schritt in der Leiste, der noch einen Fehler enthält.
 wizard-step-blocked-label = enthält Fehler
 # Kennzeichnet einen Schritt in der Leiste, der noch eine WARNUNG enthält — offene
@@ -110,7 +110,7 @@ wizard-step-pending-label = enthält offene Warnungen
 # Regelkonform ist nicht dasselbe wie fertig: ein leerer Schritt wird gekennzeichnet,
 # aber nie blockiert.
 wizard-step-incomplete-label = nicht begonnen
-# Wird angezeigt, solange der Prüfmodus „Beratend" oder „Stumm" ist: es wird nichts
+# Wird angezeigt, solange der Prüfmodus „Hinweise" oder „Aus" ist: es wird nichts
 # erzwungen, also blockiert kein Schritt und „Fertigstellen" ist immer möglich.
 wizard-unchecked-hint = Die Prüfung wird nicht erzwungen, daher blockiert kein Schritt.
 
@@ -344,7 +344,7 @@ life-stage-spell-levels-label = Zauberstufen
 # schreibgeschützten Zustand, den die Felder selbst nicht treffen können; sie ist
 # das `aria-describedby`-Ziel beider Felder.
 life-stage-post-gauntlet-no-years-note = Noch keine Jahre als Magus, daher können Laborquartale und Zauberstufen nichts aufnehmen.
-life-stage-post-gauntlet-summary = { $years } Jahre als Magus: { $points } Punkte = { $xp } EP + { $levels } Zauberstufen
+life-stage-post-gauntlet-summary = Jahre als Magus: { $years }; { $points } Punkte = { $xp } EP + { $levels } Zauberstufen
 # Notausgang für eine von Hand bearbeitete Datei: ein Charakter, der über seine
 # Lebensabschnitte finanziert wird, darf keinen eingetragenen Vorrat führen, und die
 # geführte Erstellung bietet kein Feld, um ihn zu berichtigen — dies leert ihn.
@@ -457,7 +457,7 @@ spell-cap-reason = Über deiner Zaubergrenze ({ $cap })
 # durch den Magischen Fokus verdoppelten Grenze liegt — getrennt von
 # spell-cap-reason, damit der Tooltip auf die eigene „Im Fokus hinzufügen“-
 # Aktion verweist, statt den Zauber als schlicht unerreichbar darzustellen.
-spell-cap-within-focus-reason = Über deiner Zaubergrenze ({ $cap }); passt innerhalb deines Magischen Fokus
+spell-cap-within-focus-reason = Über deiner Zaubergrenze ({ $cap }); im Rahmen deines Magischen Fokus erlaubt
 spell-budget-reason = Nicht genug Zauberstufen übrig
 spell-already-taken-reason = Bereits ausgewählt
 # D81.5: ein Zauber, dessen Stufe die normale Zaubergrenze pro Zauber
@@ -467,7 +467,7 @@ spell-already-taken-reason = Bereits ausgewählt
 # selbstständig einem frei formulierten Magischen Fokus zuordnen kann.
 spell-add-within-focus = Im Fokus hinzufügen
 spell-add-within-focus-label = { $name } im Fokus hinzufügen
-spell-add-within-focus-tooltip = Passt innerhalb deines Magischen Fokus (Grenze { $cap })
+spell-add-within-focus-tooltip = Im Rahmen deines Magischen Fokus erlaubt (Grenze { $cap })
 # Die Te/Fo-Basisgrenze (ohne gefaltete Voraussetzungen des einzelnen
 # Zaubers), als Hover-Hinweis auf der Gruppenüberschrift — ein schneller
 # Richtwert; die Grenze pro Zauber oben entscheidet tatsächlich über die Zeile.
@@ -510,8 +510,8 @@ spell-mastery-floor = Alle Zauber gemeistert auf { $score }
 spell-mastery-label = Meisterschaft
 # Je Zeile benannt ($name ist der Anzeigename des Zaubers) — dieselbe
 # Begründung wie bei ability-increment/-decrement oben.
-spell-mastery-increment = Zauber-Meisterschaft für { $name } erhöhen
-spell-mastery-decrement = Zauber-Meisterschaft für { $name } verringern
+spell-mastery-increment = Zaubermeisterschaft für { $name } erhöhen
+spell-mastery-decrement = Zaubermeisterschaft für { $name } verringern
 # Die Kurzform aus der Glossartabelle (grundbegriffe.md:671): die Vollform
 # „Besondere Fähigkeiten gemeisterter Zauber" ist für eine Zeilenbeschriftung zu
 # lang, und „Besondere Fähigkeiten" allein teilte kein Wort mehr mit den drei
@@ -753,8 +753,8 @@ reputation-content-placeholder = Wofür
 # Hinzufügen-Schaltfläche mehr: die Verleihung IST die Zeile.
 reputation-granted-by = Stufe { $score } von { $source }
 reputation-granted-by-ranged = von { $source }
-reputation-level-increment = { $source }-Reputation erhöhen
-reputation-level-decrement = { $source }-Reputation verringern
+reputation-level-increment = Reputation von { $source } erhöhen
+reputation-level-decrement = Reputation von { $source } verringern
 # Eine Verleihung ohne festen Typ (Berühmt) überlässt den Typ dem Spieler.
 # Glossar: „Typ" für type (of a Reputation), nicht „Art"
 # (rules/source/de/translation-tables/reputationen.md:24).
@@ -1157,7 +1157,7 @@ param-label-quirk = Körperliche Eigenheit
 # Der Entweder-Oder-Unterscheider von Fähigkeitsblock zwischen einer ganzen
 # Kategorie und einer eigenen, engeren Auswahl (ArMDE:5651-5654).
 param-label-scope = Umfang
-param-label-class = Fertigkeitsklasse
+param-label-class = Fertigkeitskategorie
 # Das gemeinsame "oder erschaffe/beschreibe deine eigene" Freitextfeld —
 # Feenbluts Abstammung, Monströsem Bluts Blutlinie, Fähigkeitsblocks engere
 # Auswahl und Abstoßends Merkmal teilen sich diesen einen Schlüssel (D9's
@@ -1301,13 +1301,13 @@ issue-other-step = Im Schritt „{ $step }“ zu beheben.
 issue-over_budget_virtues = Tugendpunkte ({ $points }) überschreiten das Budget ({ $budget }).
 issue-over_budget_flaws = Fehlerpunkte ({ $points }) überschreiten das Budget ({ $budget }).
 issue-unbalanced_virtues = Tugendpunkte ({ $virtue_points }) übersteigen die Fehlerpunkte ({ $flaw_points }); Tugenden müssen durch Fehler finanziert werden.
-issue-too_many_major_virtues = Zu viele große Tugenden ({ $count } von max. { $max }).
-issue-too_many_major_hermetic_virtues = Zu viele große hermetische Tugenden ({ $count } von max. { $max }).
-issue-too_few_social_status_virtues = Zu wenige Tugenden oder Fehler des sozialen Status ({ $count } von min. { $min }).
-issue-too_many_social_status_virtues = Mehr als eine Tugend oder ein Fehler des sozialen Status gewählt ({ $item }, { $other }).
-issue-too_many_major_flaws = Zu viele große Fehler ({ $count } von max. { $max }).
-issue-too_many_minor_flaws = Zu viele kleine Fehler ({ $count } von max. { $max }).
-issue-too_many_major_personality_flaws = Zu viele große Persönlichkeitsfehler ({ $count } von max. { $max }).
+issue-too_many_major_virtues = Zu viele Große Tugenden ({ $count } von max. { $max }).
+issue-too_many_major_hermetic_virtues = Zu viele Große Hermetische Tugenden ({ $count } von max. { $max }).
+issue-too_few_social_status_virtues = Zu wenige Tugenden oder Fehler des Sozialen Status ({ $count } von min. { $min }).
+issue-too_many_social_status_virtues = Mehr als eine Tugend oder ein Fehler des Sozialen Status gewählt ({ $item }, { $other }).
+issue-too_many_major_flaws = Zu viele Große Fehler ({ $count } von max. { $max }).
+issue-too_many_minor_flaws = Zu viele Kleine Fehler ({ $count } von max. { $max }).
+issue-too_many_major_personality_flaws = Zu viele Große Persönlichkeitsfehler ({ $count } von max. { $max }).
 issue-too_many_personality_flaws = Mehr Persönlichkeitsfehler als empfohlen ({ $count } von { $max }).
 issue-too_many_story_flaws = Mehr Geschichte-Fehler als empfohlen ({ $count } von { $max }).
 issue-too_many_tainted_virtues = Mehr als die Hälfte deiner Tugendpunkte sind befleckt ({ $tainted } von { $total }).
@@ -1394,7 +1394,7 @@ issue-life_stage_age_before_childhood = Alter { $age } liegt innerhalb der Kindh
 issue-life_stage_age_before_gauntlet = Kein Magus legt die Lehrlingsprüfung mit { $age } Jahren ab: Sie kommt frühestens mit { $min } — Kindheit plus fünfzehn Jahre Lehrlingszeit.
 issue-life_stage_age_before_truncation = Alter { $age } ist zu jung, um { $min } Jahre aus Kindheit und lehrlingszeit-förmiger Ausbildung durchlaufen zu haben.
 issue-life_stage_gauntlet_age_after_age = Die Lehrlingsprüfung mit { $gauntlet_age } liegt für diesen Magus mit { $age } Jahren noch in der Zukunft; die Jahre als Magus werden ab der Lehrlingsprüfung gezählt.
-issue-life_stage_lab_seasons_out_of_range = { $seasons } Quartale Laborarbeit sind mehr als die { $max }, die { $years } Jahre als Magus tragen können.
+issue-life_stage_lab_seasons_out_of_range = { $seasons } Quartale Laborarbeit sind mehr als die { $max }, die auf die Jahre als Magus ({ $years }) angerechnet werden können.
 issue-life_stage_lab_seasons_without_years = { $seasons } Quartale Laborarbeit sind eingetragen, aber dieser Charakter hat keine Jahre als Magus, in denen sie stattfinden könnten.
 issue-life_stage_spell_level_split_exceeds_points = { $levels } Zauberstufen aus den Jahren als Magus zu nehmen übersteigt, was diese Jahre gewähren: Sie sind { $points } Punkte wert, die zwischen Erfahrung und Zauberstufen aufzuteilen sind.
 issue-life_stage_native_language_unset = Wähle eine Muttersprache: der größte Erfahrungsblock der Kindheit kann für nichts anderes ausgegeben werden.
@@ -1421,14 +1421,14 @@ issue-art_score_out_of_range = Kunst { $art } mit Wert { $score } liegt außerha
 issue-banked_xp_at_or_above_next_level = { $banked } angesparte Erfahrungspunkte reichen bereits aus, um diesen Wert zu steigern — nur { $needed } werden für die nächste Stufe gebraucht.
 issue-house_choice_unresolved = Haus { $house } hat eine offene Spezialisierungswahl ({ $choice_key }).
 issue-house_grant_constraint = Haus { $house }: Die Wahl { $choice_key } fällt auf { $item }, was die Vorgabe nicht erfüllt.
-issue-warping_owed_minor_flaws = Dir fehlen noch { $count } Kleine Fehler aus der Verzerrung.
-issue-warping_owed_supernatural_virtues = Dir fehlen noch { $count } Übernatürliche Kleine Tugenden aus der Verzerrung.
-issue-warping_owed_major_flaws = Dir fehlen noch { $count } Große Fehler aus der Verzerrung.
+issue-warping_owed_minor_flaws = Noch offene Kleine Fehler aus der Verzerrung: { $count }.
+issue-warping_owed_supernatural_virtues = Noch offene Übernatürliche Kleine Tugenden aus der Verzerrung: { $count }.
+issue-warping_owed_major_flaws = Noch offene Große Fehler aus der Verzerrung: { $count }.
 issue-warping_fill_constraint = Die Verzerrungswahl { $choice_key } fällt auf { $item }, was nicht zum geschuldeten Platz passt.
-issue-warping_fill_ineligible = Die Verzerrungswahl { $choice_key } fällt auf { $item }, das selbst Verzerrung gewährt und keinen Verzerrungsplatz füllen kann.
+issue-warping_fill_ineligible = Die Verzerrungswahl { $choice_key } fällt auf { $item }; dieser Eintrag gewährt selbst Verzerrung und kann keinen Verzerrungsplatz füllen.
 issue-warping_fill_excess = Die Verzerrungswahl { $choice_key } wird nicht geschuldet und sollte entfernt werden.
-issue-realm_changed_default = { $item } weicht von seiner üblichen Sphäre ab; bitte bestätigen, dass dies beabsichtigt ist.
-issue-realm_unset_subset = { $item } benötigt eine Sphäre aus seiner eingeschränkten Liste; ein Rückfall auf Magie ist hier nicht möglich.
+issue-realm_changed_default = { $item } weicht von der üblichen Sphäre ab; bitte bestätigen, dass dies beabsichtigt ist.
+issue-realm_unset_subset = { $item } benötigt eine Sphäre aus der eingeschränkten Liste dieses Eintrags; ein Rückfall auf Magie ist hier nicht möglich.
 issue-realm_override_invalid = Die Sphäre von { $item } muss eine der erlaubten Sphären sein, nicht { $value }.
 issue-house_unset = Ein Magus sollte einem hermetischen Haus angehören.
 issue-missing_hermetic_flaw = Ein Magus sollte mindestens einen hermetischen Fehler wählen.
@@ -1444,7 +1444,7 @@ issue-spell_level_exceeds_cap = Zauber { $spell } hat Stufe { $level }, über de
 issue-spell_ritual_legality = Zauber { $spell } wird auf Stufe { $level } erlernt und verletzt die Ritualgrenzen (Rituale mindestens 20, Nicht-Rituale höchstens 50).
 issue-ritual_casting_restricted = { $spell } ist ein Ritual, und Starre Magie verbietet es, dabei Vis einzusetzen.
 issue-spell_uses_incompatible_arts = { $spell } verwendet zwei Techniken und Formen, deren gemeinsame Nutzung Unvereinbare Künste verbietet.
-issue-spell_within_focus_without_magical_focus = { $spell } ist als im Fokus markiert, aber es wird kein Magischer Fokus gehalten; die Markierung hat keine Wirkung.
+issue-spell_within_focus_without_magical_focus = { $spell } ist als im Fokus markiert, aber der Charakter hat keinen Magischen Fokus; die Markierung hat keine Wirkung.
 issue-unknown_mastery_ability = Unbekannte Meisterschaftsfähigkeit { $ability } für { $spell } gewählt.
 issue-too_many_mastery_abilities = { $spell } hat { $chosen } Meisterschaftsfähigkeiten, mehr als der Meisterschaftswert von { $mastery } (eine je Stufe).
 issue-duplicate_mastery_ability = Meisterschaftsfähigkeit { $ability } wurde { $count }-mal für { $spell } gewählt, darf aber nur einmal genommen werden.
@@ -1462,7 +1462,7 @@ issue-reputation_not_granted = Eine Reputation ({ $kind }, { $content }) benöti
 issue-reputation_score_out_of_range = Eine Reputation ({ $kind }, { $content }) mit Stufe { $score } liegt außerhalb des verliehenen Bereichs ({ $min } bis { $max }).
 issue-over_item_level = Artefakte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
 issue-over_power_levels = Übernatürliche Kräfte umfassen { $used } Stufen, über dem Budget von { $budget } (um { $over }).
-issue-over_focus_points = Fokussierte Mächte verbrauchen { $used } Punkte, über dem Pool von { $budget } (um { $over }).
+issue-over_focus_points = Fokussierte Mächte verbrauchen { $used } Punkte, über dem Vorrat von { $budget } (um { $over }).
 # Der genannte Kraftname ist Freitext, den der Spieler im Reiter „Übernatürlich“
 # eingetragen hat; die Meldung gibt ihn deshalb wörtlich wieder.
 issue-power_dangling_target = { $item } nennt die Kraft { $power }, die dieser Charakter nicht besitzt; trage sie unter „Übernatürliche Kräfte“ ein oder berichtige den Namen.
@@ -1473,10 +1473,10 @@ issue-might_realm_mismatch = Die eingegebene Macht-Sphäre ({ $base }) stimmt ni
 # kann sie nur anmahnen; ein eingetragenes Alterungsprotokoll erledigt den
 # Hinweis, gleich was die Würfe ergeben haben.
 issue-aging_rolls_pending = Dieser Charakter ist { $age } Jahre alt, und ein Charakter über 35 muss vor Spielbeginn Alterungswürfe ablegen; bisher ist keiner eingetragen.
-issue-unknown_living_condition = Der Lebensumstand '{ $condition }' entspricht keiner Zeile der Lebensumstände-Tabelle und geht daher nicht in den Alterungswurf ein.
+issue-unknown_living_condition = Der Lebensumstand „{ $condition }“ entspricht keiner Zeile der Lebensumstände-Tabelle und geht daher nicht in den Alterungswurf ein.
 # Nur die mit Sternchen markierten Zeilen der Tabelle sind untereinander kumulativ
 # (`:16594`); die übrigen beschreiben je eine Situation, es gilt also nur eine.
-issue-living_conditions_conflict = Die Lebensumstände '{ $condition }' und '{ $other }' schließen einander aus, es kann also nur einer davon gelten.
+issue-living_conditions_conflict = Die Lebensumstände „{ $condition }“ und „{ $other }“ schließen einander aus, es kann also nur einer davon gelten.
 # Ein Alterungswurf erhöht das scheinbare Alter um höchstens ein Jahr pro Jahr
 # (`:16577`), kann es also von sich aus nicht über das tatsächliche Alter treiben —
 # `:5189` sagt allerdings nur, es "sollte" höchstens so hoch sein, und lässt
@@ -1497,7 +1497,7 @@ issue-aging_distribution_mismatch = Dieser Wurf lässt { $owed } Alterungspunkt(
 issue-aging_distribution_not_open = Die Eigenschaften dieses Wurfs gibt die Tabelle selbst vor, daher lassen sich die { $count } verteilten Punkte nicht anwenden.
 issue-aging_award_unpriceable = Die nächste Stufe der Gebrechlichkeit liegt jenseits der Steigerungstabelle, daher lassen sich ihre Kosten nicht bestimmen.
 issue-aging_year_not_recorded = Für das Alter { $age } ist kein Alterungswurf eingetragen, es gibt also nichts zurückzunehmen.
-issue-unknown_equipment = Ausrüstung '{ $item }' passt zu keiner Waffe, keinem Schild und keiner Rüstung.
+issue-unknown_equipment = Ausrüstung „{ $item }“ passt zu keiner Waffe, keinem Schild und keiner Rüstung.
 issue-equipment_min_strength = { $item } benötigt Stärke { $required }, aber dieser Charakter hat { $strength }.
 issue-shield_with_two_handed_weapon = Ein Schild kann nicht mit einer zweihändigen Waffe geführt werden, daher gelten seine Angriffs- und Verteidigungsmodifikatoren nicht (er zählt weiterhin zur Last).
 
@@ -1537,7 +1537,7 @@ error-io = Eine Datei konnte nicht gelesen oder geschrieben werden.
 error-ruleset = Das Regelwerk konnte nicht geladen werden.
 error-not_loaded = Es ist noch kein Regelwerk geladen.
 error-serialize = Die Charakterdatei konnte nicht verarbeitet werden.
-error-export = Das Charakterblatt konnte nicht exportiert werden: In der aktuellen Sprache fehlt Text für { $missing }. Versuchen Sie es mit Englisch als Sprache erneut, oder melden Sie dies als Fehler.
+error-export = Das Charakterblatt konnte nicht exportiert werden: In der aktuellen Sprache fehlt Text für { $missing }. Versuche es mit Englisch als Sprache erneut, oder melde dies als Fehler.
 error-menu = Die Menüleiste der Anwendung konnte nicht erstellt werden.
 # Beschriftung der eingeklappten Detailanzeige mit den Integritätsmeldungen eines
 # fehlgeschlagenen Regelwerks (E4). Die BESCHRIFTUNG ist übersetzt, die Meldungen
@@ -1574,7 +1574,7 @@ derived-within-focus = Im Fokus
 # besitzt.
 derived-within-potent-field = Im Bereich der Potenten Magie
 derived-deficient = (defizitär, halbiert)
-# D81.8: eine Zelle der Labor-/Zauberwirkungssumme (oder ein Zauber), deren
+# D81.8: eine Zelle der Labor-/Zaubersumme (oder ein Zauber), deren
 # Technik+Form-Paar durch eine gehaltene Unvereinbare-Künste-Schwäche verbaut
 # ist. Das Raster ersetzt die Zahl der Zelle ganz durch diese Markierung (0 ist
 # eine gültige Summe und wäre davon nicht zu unterscheiden); die

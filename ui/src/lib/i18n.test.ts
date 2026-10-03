@@ -780,3 +780,190 @@ describe('German UI bundle', () => {
     expect(summary).toContain(label);
   });
 });
+
+// DE .ftl audit (tmp/ftl-audit.md, 2026-10-03): D1-D3, S1-S6 and the pre-existing
+// items 1-6. Each message is formatted through the real German bundle and pinned
+// to its whole target sentence, because the defects are in the wording itself.
+//
+// Every `issue-*` arg is passed as a STRING, as the app passes it: the engine's
+// `ValidationIssue::args` is one string per key, and `resolveIssueArgs` (derive.ts)
+// returns `Record<string, string>`. @fluent/bundle only selects a plural category
+// (`[one]`) for a FluentNumber, so a selector on an issue arg would always fall to
+// `*[other]` in the shipped app. That is why the count-bearing fixes below
+// (D2, item 1) are worded to read correctly at every count, including 1.
+describe('German UI bundle, DE .ftl audit fixes', () => {
+  const de = buildBundle('de');
+  // Fluent wraps each interpolated value in bidi isolation marks; strip them.
+  const say = (key: string, args?: Record<string, string>) =>
+    translate(de, key, args).replace(/[⁦-⁩]/g, '');
+
+  it('D1: points the blocked wizard at the mode labels the app really shows', () => {
+    expect(say('wizard-blocked-hint')).toBe(
+      'Behebe die Fehler dieses Schritts, um fortzufahren, oder stelle die Prüfung unter „Einstellungen“ auf „Hinweise“.',
+    );
+    // The hint and the controls it names must agree, whichever side moves later.
+    expect(say('wizard-blocked-hint')).toContain(`„${say('mode-advisory')}“`);
+    expect(say('wizard-blocked-hint')).toContain(`„${say('settings-title')}“`);
+  });
+
+  it('D2: states the lab-season limit correctly for one year as a magus', () => {
+    expect(
+      say('issue-life_stage_lab_seasons_out_of_range', { seasons: '5', max: '4', years: '1' }),
+    ).toBe(
+      '5 Quartale Laborarbeit sind mehr als die 4, die auf die Jahre als Magus (1) angerechnet werden können.',
+    );
+    expect(
+      say('issue-life_stage_lab_seasons_out_of_range', { seasons: '9', max: '8', years: '2' }),
+    ).toBe(
+      '9 Quartale Laborarbeit sind mehr als die 8, die auf die Jahre als Magus (2) angerechnet werden können.',
+    );
+  });
+
+  // Same defect as D2, outside the audit: LifeStagePanel.svelte passes
+  // `String(budget.post_gauntlet_years)`, so a selector could not help here either.
+  it('states the post-Gauntlet summary correctly for one year as a magus', () => {
+    expect(
+      say('life-stage-post-gauntlet-summary', { years: '1', points: '30', xp: '30', levels: '0' }),
+    ).toBe('Jahre als Magus: 1; 30 Punkte = 30 EP + 0 Zauberstufen');
+  });
+
+  it('D3: never guesses the grammatical gender of a Virtue or Flaw name', () => {
+    expect(say('issue-realm_changed_default', { item: 'Verfluchte Täuschung' })).toBe(
+      'Verfluchte Täuschung weicht von der üblichen Sphäre ab; bitte bestätigen, dass dies beabsichtigt ist.',
+    );
+    expect(say('issue-realm_unset_subset', { item: 'Offenbarte Sünde' })).toBe(
+      'Offenbarte Sünde benötigt eine Sphäre aus der eingeschränkten Liste dieses Eintrags; ein Rückfall auf Magie ist hier nicht möglich.',
+    );
+  });
+
+  it('S1: names the Reputation source without hyphen-compounding a data name', () => {
+    const source = { source: 'Außenseiter (Groß)' };
+    expect(say('reputation-level-increment', source)).toBe(
+      'Reputation von Außenseiter (Groß) erhöhen',
+    );
+    expect(say('reputation-level-decrement', source)).toBe(
+      'Reputation von Außenseiter (Groß) verringern',
+    );
+  });
+
+  it('S2: calls the Focus Power budget a Vorrat, as the rest of the bundle does', () => {
+    expect(say('issue-over_focus_points', { used: '12', budget: '10', over: '2' })).toBe(
+      'Fokussierte Mächte verbrauchen 12 Punkte, über dem Vorrat von 10 (um 2).',
+    );
+  });
+
+  it('S3: names the Ability Category parameter as its domain and filter do', () => {
+    expect(say('param-label-class')).toBe('Fertigkeitskategorie');
+    expect(say('param-label-class')).toBe(say('param-domain-ability_category'));
+  });
+
+  it('S4: capitalises Sozialer Status as the category label does', () => {
+    expect(say('issue-too_few_social_status_virtues', { count: '0', min: '1' })).toBe(
+      'Zu wenige Tugenden oder Fehler des Sozialen Status (0 von min. 1).',
+    );
+    expect(say('issue-too_many_social_status_virtues', { item: 'Ritter', other: 'Bauer' })).toBe(
+      'Mehr als eine Tugend oder ein Fehler des Sozialen Status gewählt (Ritter, Bauer).',
+    );
+  });
+
+  it('S5: says the character has no Magical Focus, not that none is held', () => {
+    expect(
+      say('issue-spell_within_focus_without_magical_focus', { spell: 'Ball des Abyssalen Feuers' }),
+    ).toBe(
+      'Ball des Abyssalen Feuers ist als im Fokus markiert, aber der Charakter hat keinen Magischen Fokus; die Markierung hat keine Wirkung.',
+    );
+  });
+
+  it('S6: says a spell above the cap is allowed within the Magical Focus', () => {
+    expect(say('spell-cap-within-focus-reason', { cap: '15' })).toBe(
+      'Über deiner Zaubergrenze (15); im Rahmen deines Magischen Fokus erlaubt',
+    );
+    expect(say('spell-add-within-focus-tooltip', { cap: '15' })).toBe(
+      'Im Rahmen deines Magischen Fokus erlaubt (Grenze 15)',
+    );
+  });
+
+  it('item 1: states owed Warping choices correctly at a count of 1', () => {
+    expect(say('issue-warping_owed_minor_flaws', { count: '1' })).toBe(
+      'Noch offene Kleine Fehler aus der Verzerrung: 1.',
+    );
+    expect(say('issue-warping_owed_supernatural_virtues', { count: '1' })).toBe(
+      'Noch offene Übernatürliche Kleine Tugenden aus der Verzerrung: 1.',
+    );
+    expect(say('issue-warping_owed_major_flaws', { count: '1' })).toBe(
+      'Noch offene Große Fehler aus der Verzerrung: 1.',
+    );
+    expect(say('issue-warping_owed_major_flaws', { count: '3' })).toBe(
+      'Noch offene Große Fehler aus der Verzerrung: 3.',
+    );
+  });
+
+  it('item 2: never assumes a neuter item in the Warping-fill finding', () => {
+    expect(
+      say('issue-warping_fill_ineligible', { choice_key: 'Kleiner Fehler 1', item: 'Verhexung' }),
+    ).toBe(
+      'Die Verzerrungswahl Kleiner Fehler 1 fällt auf Verhexung; dieser Eintrag gewährt selbst Verzerrung und kann keinen Verzerrungsplatz füllen.',
+    );
+  });
+
+  it('item 3: addresses the user with du in the export error', () => {
+    expect(say('error-export', { missing: 'Tugenden' })).toBe(
+      'Das Charakterblatt konnte nicht exportiert werden: In der aktuellen Sprache fehlt Text für Tugenden. Versuche es mit Englisch als Sprache erneut, oder melde dies als Fehler.',
+    );
+  });
+
+  it('item 4: quotes data values with German typographic quotes', () => {
+    expect(say('issue-unknown_living_condition', { condition: 'Palast' })).toBe(
+      'Der Lebensumstand „Palast“ entspricht keiner Zeile der Lebensumstände-Tabelle und geht daher nicht in den Alterungswurf ein.',
+    );
+    expect(say('issue-living_conditions_conflict', { condition: 'Palast', other: 'Hütte' })).toBe(
+      'Die Lebensumstände „Palast“ und „Hütte“ schließen einander aus, es kann also nur einer davon gelten.',
+    );
+    expect(say('issue-unknown_equipment', { item: 'Lanze' })).toBe(
+      'Ausrüstung „Lanze“ passt zu keiner Waffe, keinem Schild und keiner Rüstung.',
+    );
+  });
+
+  it('item 5: capitalises Große/Kleine in the Virtue and Flaw cap findings', () => {
+    const cap = { count: '2', max: '1' };
+    expect(say('issue-too_many_major_virtues', cap)).toBe(
+      'Zu viele Große Tugenden (2 von max. 1).',
+    );
+    expect(say('issue-too_many_major_hermetic_virtues', cap)).toBe(
+      'Zu viele Große Hermetische Tugenden (2 von max. 1).',
+    );
+    expect(say('issue-too_many_major_flaws', cap)).toBe('Zu viele Große Fehler (2 von max. 1).');
+    expect(say('issue-too_many_minor_flaws', cap)).toBe('Zu viele Kleine Fehler (2 von max. 1).');
+    expect(say('issue-too_many_major_personality_flaws', cap)).toBe(
+      'Zu viele Große Persönlichkeitsfehler (2 von max. 1).',
+    );
+  });
+
+  it('item 6: writes Zaubermeisterschaft as the glossary does', () => {
+    expect(say('spell-mastery-increment', { name: 'Pilum des Feuers' })).toBe(
+      'Zaubermeisterschaft für Pilum des Feuers erhöhen',
+    );
+    expect(say('spell-mastery-decrement', { name: 'Pilum des Feuers' })).toBe(
+      'Zaubermeisterschaft für Pilum des Feuers verringern',
+    );
+  });
+
+  // The mechanism behind D2/item 1, pinned so a later edit cannot reintroduce a
+  // plural selector that the shipped app would never take: no `issue-*` message
+  // in either locale selects on an argument.
+  it('puts no plural selector in any issue message, since issue args are strings', () => {
+    // The library behaviour this rests on: the same count selects `[one]` as a
+    // number and falls to `*[other]` as a string.
+    expect(say('warping-owed-minor-flaws', { count: '1' })).toBe('1 Kleine Fehler');
+    expect(translate(de, 'warping-owed-minor-flaws', { count: 1 }).replace(/[⁦-⁩]/g, '')).toBe(
+      '1 Kleiner Fehler',
+    );
+    for (const lang of ['en', 'de']) {
+      const src = sourceForLang(lang);
+      const selecting = [...messageKeys(src)].filter(
+        (key) => key.startsWith('issue-') && /\{\s*\$[\w-]+\s*->/.test(messageValue(src, key)),
+      );
+      expect(selecting, `${lang} issue messages with a selector`).toEqual([]);
+    }
+  });
+});
