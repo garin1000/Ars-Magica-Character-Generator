@@ -1184,7 +1184,7 @@ reason: a category condition would license itself.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :435) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :421) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2293`), encoded as a `Prereq` on the relevant
   items.
@@ -1525,7 +1525,15 @@ target ability/characteristic is named by the selection's parameter value — th
 engine hardcodes no Virtue/Flaw IDs):
 
 - `ability_bonus` — adds to an ability's *effective* score (bought + bonus,
-  always computed, never stored), used for `AbilityMin` prerequisites and display.
+  always computed, never stored), used whenever the Ability is used, and for display.
+  It does **not** count toward a minimum-score prerequisite (`AbilityMin`,
+  `AbilityCategoryScoreMin`; likewise `art_bonus` for `ArtMin`/`AnyArtMin`): Puissant
+  adds its bonus "whenever you use it" (`ArMDE:4816, :4820`), and meeting a minimum
+  is not a use (`ArMDE:4389`). Those prerequisites test the *held* score — the bought
+  score or a granted floor (Second Sight 1, `ArMDE:4890`) — in
+  `validation/prereq.rs::PrereqCtx::build` (D83.5, Norbert 2026-10-03; consistent
+  with the magus-minimums general ruling below). Pinned by
+  `tests/r4_prereq_score_basis.rs`.
 - `characteristic_limit` — shifts a characteristic's *buy limit*. It grants no
   points: the score must still be bought against the cost table. A positive
   amount raises the cap (Great Characteristic), a negative one lowers the floor
@@ -1558,9 +1566,9 @@ bleed onto the character's other areas.
   `(ability, parameter)` — a plain ability by id, a parameterized one only when
   the selection names the same instance; a selection missing the instance key
   matches nothing. `ability_bonuses` returns a per-instance `Vec<AbilityBonus>`
-  (serialized directly to the frontend by `arm-app::effective_dto`). `validation/scores.rs`
-  folds the per-instance bonus into the score map so `AbilityMin` is met by the
-  strongest instance.
+  (serialized directly to the frontend by `arm-app::effective_dto`). The bonus no
+  longer reaches `AbilityMin`: since D83.5 a prerequisite minimum tests the held
+  score (strongest bought instance or granted floor), never a Puissant bonus.
 - `ability_bonuses` iterates the **union of the Ability catalogue and the bought
   instances**, deduped on `(id, parameter)` (Issue 17 — the Ability twin of the
   Art fix below). The catalogue half surfaces a Puissant on a plain ability at 0
@@ -8572,7 +8580,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
   Parma row at all, and `ArMDE:2437`'s "scores" cannot mean a Virtue's +2 to *use*. The same
   `entry.score >= min_score` test `validate_academic_language` applies. General ruling:
   the age caps constrain the bought score, and the minimums test it. Pinned by
-  `puissant_parma_magica_does_not_admit_a_magus_to_the_order`.
+  `puissant_parma_magica_does_not_admit_a_magus_to_the_order`. Virtue/Flaw
+  prerequisite minimums follow the same ruling (D83.5; see the Effect layer's
+  `ability_bonus` bullet), except that they also count a granted floor.
 - **A minimum age of 20 follows** from the same block: childhood (5) plus
   apprenticeship (15), `LifeStageRules::minimum_gauntlet_age`. A younger magus with a
   life-stage plan gets `life_stage_age_before_gauntlet` (error, `experience`, args
@@ -12509,11 +12519,16 @@ documented. Behavioral tests in `crates/arm-rules/tests/d81_exclusions.rs`.
   floors (score 1 or 0) rather than shipping two near-identical ones.
   Evaluated against the entity's effective score
   (`effective/characteristic.rs::effective_characteristic_score`) for every
-  Characteristic it has actually SET (`Entity::characteristics`); a
-  Characteristic never touched is genuinely unknown — `Tri::Unknown`,
-  surfaced as `prereq_unevaluated` — mirroring `Prereq::AgeMin`'s own
-  unset-is-Unknown contract, never a silent pass. Referential integrity
-  requires `characteristic` to resolve via `Characteristic::from_id`.
+  Characteristic. **D83.4 (Norbert 2026-10-03, amends D81.2's original
+  "unset is Unknown"):** a Characteristic with no entry in
+  `Entity::characteristics` is a real 0 plus its free deltas — the UI deletes
+  the entry at 0, so "never set" and "0" are one state. So Supernatural Beauty
+  with Presence unset is `prereq_not_met`; Uncontrollable Strength with
+  Strength unset is legal, and refused under Dwarf's free -1 (`ArMDE:5998`).
+  `prereq_unevaluated` no longer arises from this variant (only from an
+  unresolvable id, which load-time integrity rejects). Referential integrity
+  requires `characteristic` to resolve via `Characteristic::from_id`. Pinned
+  by `tests/r4_prereq_score_basis.rs` and `d81_exclusions.rs`.
 - **Broken Vessel — two new variants composed under `Prereq::Any`, not one
   hard-coded predicate.** `flaw.broken_vessel` (`ArMDE:5755`): "Characters may
   only take this Flaw if they have at least one Supernatural Ability or Art
@@ -12523,14 +12538,15 @@ documented. Behavioral tests in `crates/arm-rules/tests/d81_exclusions.rs`.
   `HasSupernaturalAbilityOrArt`-shaped variant — that was the Phase-1 draft,
   replaced before Phase 2 landed. Instead:
   - `Prereq::AbilityCategoryScoreMin { category, score }` — holds an Ability
-    of the named [`AbilityCategory`] at effective score ≥ `score`. Unlike
+    of the named [`AbilityCategory`] at held score ≥ `score` (bought or
+    granted, never Puissant — D83.5). Unlike
     `Prereq::HasCategory`'s open `PointItem::categories` vocabulary, the
     Ability-category taxonomy is closed (five fixed variants), so load-time
     integrity requires `category` to resolve via
     `AbilityCategory::from_slug` — a new bare-slug parse (no
     `ability_category.` prefix) alongside the existing `from_id`.
-  - `Prereq::AnyArtMin { score }` — holds ANY Hermetic Art at effective score
-    ≥ `score`. Every entry in the Art registry IS a Hermetic Art (no other
+  - `Prereq::AnyArtMin { score }` — holds ANY Hermetic Art at bought score
+    ≥ `score` (never Puissant Art — D83.5). Every entry in the Art registry IS a Hermetic Art (no other
     kind exists in this engine), so no category filter is needed.
   - Both are static (never `Unknown`), matching `Prereq::HasCategory`'s own
     nature: an Ability/Art the entity does not hold simply scores 0.

@@ -5,7 +5,6 @@
 
 use super::*;
 use crate::ability::AbilityCategory;
-use crate::types::AbilityParameterValue;
 
 /// Tri-state outcome of evaluating a prerequisite expression.
 ///
@@ -131,8 +130,8 @@ fn prereq_resolution_phase(prereq: &Prereq) -> CreationPhase {
 
 /// The read-only context a prerequisite is evaluated against: which items are
 /// selected, whether the entity is Hermetically trained and/or an Order
-/// member, and the effective Ability/Art score
-/// maps the `AbilityMin`/`ArtMin` thresholds compare against. Bundled so the
+/// member, and the held Ability/Art score
+/// maps the `AbilityMin`/`ArtMin` thresholds compare against (D83.5). Bundled so the
 /// recursive evaluator and its fold helper take one context rather than a long
 /// positional argument list.
 ///
@@ -177,7 +176,11 @@ pub(crate) struct PrereqCtx<'a> {
     /// it: matching → True, differing → False, absent → Unknown (mirrors how
     /// `trained`/`order` yield Unknown when the profile is missing).
     house: Option<&'a Id>,
+    /// `Prereq::AbilityMin`'s fact (D83.5): the HELD score per Ability — the
+    /// highest bought row or granted floor, never a Puissant bonus.
     ability_scores: BTreeMap<Id, u8>,
+    /// `Prereq::ArtMin`'s fact (D83.5): the bought score per Art, never a
+    /// Puissant Art bonus.
     art_scores: BTreeMap<Id, u8>,
     /// `Prereq::HasCategory`'s fact (B1/D21/F-502): every in-force category
     /// ([`PointItem::categories_for`]) of every bought-OR-granted item this
@@ -208,20 +211,20 @@ pub(crate) struct PrereqCtx<'a> {
     /// `held_categories`) so `Prereq::HasCategory`'s existing kind-blind
     /// query is unaffected.
     held_categories_by_kind: BTreeMap<(String, ItemKind), BTreeMap<Id, Magnitude>>,
-    /// `Prereq::CharacteristicMin`'s fact (D81.2): the entity's effective score
-    /// (bought + free deltas, via [`crate::effective::characteristic::effective_characteristic_score`])
-    /// for every Characteristic the entity has actually SET
-    /// ([`Entity::characteristics`]). A Characteristic absent from this map is
-    /// genuinely unknown (unset), mirroring `age`'s own `None` handling —
-    /// never a definite failure.
+    /// `Prereq::CharacteristicMin`'s fact (D83.4, amending D81.2): the
+    /// entity's effective score (bought + free deltas, via
+    /// [`crate::effective::characteristic::effective_characteristic_score`])
+    /// for EVERY Characteristic. One with no stored entry
+    /// ([`Entity::characteristics`]) is a bought 0 — the UI deletes the entry
+    /// at 0 — so this map is total and the evaluator never reads it as unknown.
     characteristic_scores: BTreeMap<Characteristic, i32>,
-    /// `Prereq::AbilityCategoryScoreMin`'s fact (D81.3): the highest effective
-    /// score among this entity's Abilities, per [`AbilityCategory`] — folded
-    /// from `ability_scores` above via each ability's catalogue entry. Static
-    /// (like `held_categories`), never `Unknown`: a category with no held
-    /// Ability is simply absent, read as 0.
+    /// `Prereq::AbilityCategoryScoreMin`'s fact (D81.3, D83.5): the highest
+    /// HELD score among this entity's Abilities, per [`AbilityCategory`] —
+    /// folded from `ability_scores` above via each ability's catalogue entry.
+    /// Static (like `held_categories`), never `Unknown`: a category with no
+    /// held Ability is simply absent, read as 0.
     ability_category_max_score: BTreeMap<AbilityCategory, u8>,
-    /// `Prereq::AnyArtMin`'s fact (D81.3): the highest effective score among
+    /// `Prereq::AnyArtMin`'s fact (D81.3, D83.5): the highest held score among
     /// this entity's Arts — every entry in the Art registry IS a Hermetic
     /// Art, so no category filter is needed (unlike the Ability side). `0`
     /// when the entity holds no Art.
@@ -229,11 +232,12 @@ pub(crate) struct PrereqCtx<'a> {
 }
 
 impl<'a> PrereqCtx<'a> {
-    /// Builds the context once from an entity/ruleset pair: folds bought +
-    /// virtue-boosted Ability and Art scores, and unions bought selections
-    /// with `granted` rows into the `Has`-satisfying id set.
+    /// Builds the context once from an entity/ruleset pair: folds the held
+    /// (bought or granted, never Puissant-boosted) Ability and Art scores, and
+    /// unions bought selections with `granted` rows into the `Has`-satisfying
+    /// id set.
     ///
-    /// This is the effective-score folding that used to run inside
+    /// This is the score folding that used to run inside
     /// `validate_prerequisites` on every call; hoisting it here lets
     /// `validation::validate` build one `PrereqCtx` and share it with
     /// `validate_prerequisites` and any later sibling validator, instead of
@@ -258,55 +262,39 @@ impl<'a> PrereqCtx<'a> {
         let is_grog: Option<bool> = type_profile.map(|p| p.is_grog);
         let type_profile_id: Option<Id> = type_profile.map(|p| p.id.clone());
 
-        // Effective score per ability: the max bought score (a parameterized
-        // ability may appear more than once with different specialties; the
-        // highest wins) plus any virtue bonus (Puissant Ability +2, which now
-        // includes a House-granted Puissant via the combined selection list).
-        // `AbilityMin` thresholds are checked against the effective score so a
-        // boosted ability satisfies them. Keyed by owned `Id` so House-granted
-        // ability *floors* (below) can be folded in even for abilities that
-        // were never bought.
+        // Held score per ability (D83.5): the max bought score (a
+        // parameterized ability may appear more than once with different
+        // specialties; an `AbilityMin` is keyed by id, so the highest wins).
+        // No `ability_bonus`: Puissant Ability adds 2 only "whenever you use
+        // it" (ArMDE:4816), and meeting a minimum is not a use (ArMDE:4389).
+        // Keyed by owned `Id` so granted floors (below) fold in even for
+        // abilities that were never bought.
         let mut ability_scores: BTreeMap<Id, u8> = BTreeMap::new();
         for a in &entity.ability_scores {
-            // Per-instance bonus (Puissant targets one (ability, parameter));
-            // an `AbilityMin` is keyed by id, so the strongest instance wins.
-            let bonus = crate::effective::ability_bonus(
-                entity,
-                ruleset,
-                &a.ability,
-                a.parameter
-                    .as_ref()
-                    .and_then(AbilityParameterValue::match_key),
-            );
-            let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
             let entry = ability_scores.entry(a.ability.clone()).or_insert(0);
-            *entry = (*entry).max(effective);
+            *entry = (*entry).max(a.score);
         }
-        // A free ability-score floor from an `AbilityScoreGrant` effect —
-        // including a House-granted Mystery Ability (Bjornaer → Heartbeast 1)
-        // — counts toward `AbilityMin` even with no bought row, so fold each
-        // granted floor in.
+        // A conferred score from an `AbilityScoreGrant` effect — Second Sight
+        // 1 (ArMDE:4890), a House-granted Mystery Ability (Bjornaer →
+        // Heartbeast 1) — is a held score, so it counts even with no bought
+        // row.
         for floor in crate::effective::ability_score_floors(entity, ruleset) {
-            let bonus = crate::effective::ability_bonus(entity, ruleset, &floor.ability, None);
-            let effective = (floor.floor + bonus).clamp(0, i32::from(u8::MAX)) as u8;
+            let held = floor.floor.clamp(0, i32::from(u8::MAX)) as u8;
             let entry = ability_scores.entry(floor.ability).or_insert(0);
-            *entry = (*entry).max(effective);
+            *entry = (*entry).max(held);
         }
 
-        // Effective score per Art: max bought score plus any virtue bonus
-        // (Puissant Art +3, including a House-granted Puissant). `ArtMin`
-        // thresholds are checked against the effective score.
+        // Held score per Art (D83.5): the max bought score. No `art_bonus`:
+        // Puissant Art adds 3 only "whenever you use it" (ArMDE:4820).
         let mut art_scores: BTreeMap<Id, u8> = BTreeMap::new();
         for a in &entity.art_scores {
-            let bonus = crate::effective::art_bonus(entity, ruleset, &a.art);
-            let effective = (i32::from(a.score) + bonus).clamp(0, i32::from(u8::MAX)) as u8;
             let entry = art_scores.entry(a.art.clone()).or_insert(0);
-            *entry = (*entry).max(effective);
+            *entry = (*entry).max(a.score);
         }
 
-        // `Prereq::AbilityCategoryScoreMin`'s fact (D81.3): fold each held
-        // ability's EFFECTIVE score (already computed above) into the max for
-        // its catalogue category. An ability absent from the catalogue
+        // `Prereq::AbilityCategoryScoreMin`'s fact (D81.3, D83.5): fold each
+        // ability's HELD score (computed above) into the max for its
+        // catalogue category. An ability absent from the catalogue
         // contributes nothing (nowhere to file it) rather than panicking.
         let mut ability_category_max_score: BTreeMap<AbilityCategory, u8> = BTreeMap::new();
         for (ability_id, score) in &ability_scores {
@@ -315,19 +303,17 @@ impl<'a> PrereqCtx<'a> {
                 *entry = (*entry).max(*score);
             }
         }
-        // `Prereq::AnyArtMin`'s fact (D81.3): the single highest effective Art
-        // score — every Art in the registry is Hermetic, so no category
+        // `Prereq::AnyArtMin`'s fact (D81.3, D83.5): the single highest held
+        // Art score — every Art in the registry is Hermetic, so no category
         // filter is needed (unlike the Ability side above).
         let max_art_score = art_scores.values().copied().max().unwrap_or(0);
 
-        // `Prereq::CharacteristicMin`'s fact (D81.2): the entity's effective
-        // score for every Characteristic it has actually SET. A Characteristic
-        // never touched (`entity.characteristics` has no entry) stays OUT of
-        // this map entirely, so the evaluator reads it as unknown rather than
-        // as a bought 0 — mirroring `age`'s own `Option` handling just below.
-        let characteristic_scores: BTreeMap<Characteristic, i32> = entity
-            .characteristics
-            .keys()
+        // `Prereq::CharacteristicMin`'s fact (D83.4, amending D81.2): the
+        // effective score of EVERY Characteristic. One with no stored entry is
+        // a real 0 plus its free deltas — the UI deletes the entry at 0, so
+        // "never set" and "0" are one state.
+        let characteristic_scores: BTreeMap<Characteristic, i32> = Characteristic::ALL
+            .iter()
             .map(|&c| {
                 (
                     c,
@@ -523,9 +509,9 @@ fn evaluate_prereq(
             Some(_) => (Tri::False, false),
             None => (Tri::Unknown, true),
         },
-        // AbilityMin compares against the entity's max *effective* score for
-        // that ability (bought score plus virtue bonuses such as Puissant
-        // Ability), as supplied by the caller. An ability the entity does not
+        // AbilityMin compares against the entity's max *held* score for that
+        // ability (bought or granted; D83.5 — Puissant Ability counts only
+        // "whenever you use it", ArMDE:4816). An ability the entity does not
         // have counts as score 0, so any positive threshold is False.
         Prereq::AbilityMin { ability, score } => {
             let have = ctx.ability_scores.get(ability).copied().unwrap_or(0);
@@ -535,8 +521,9 @@ fn evaluate_prereq(
                 (Tri::False, false)
             }
         }
-        // ArtMin compares against the entity's max *effective* Art score (bought
-        // plus Puissant Art). An Art the entity does not have counts as 0.
+        // ArtMin compares against the entity's bought Art score (D83.5 —
+        // Puissant Art counts only "whenever you use it", ArMDE:4820). An Art
+        // the entity does not have counts as 0.
         Prereq::ArtMin { art, score } => {
             let have = ctx.art_scores.get(art).copied().unwrap_or(0);
             if have >= *score {
@@ -605,12 +592,13 @@ fn evaluate_prereq(
                 (Tri::False, false)
             }
         }
-        // D81.2: an unset Characteristic is genuinely unknown (mirrors
-        // `AgeMin`'s own `None` handling above), never a definite failure.
-        // `Characteristic::from_id` failing to resolve is unreachable for any
-        // ruleset that passed load-time integrity (which requires it to), so
-        // it degrades to `Unknown` rather than panicking — the same K8
-        // defense-in-depth posture `PREREQ_MAX_DEPTH` uses.
+        // D83.4 (amending D81.2): `characteristic_scores` holds every
+        // Characteristic (unset = 0 + free deltas), so a resolved id always
+        // yields a definite True/False. `Characteristic::from_id` failing to
+        // resolve is unreachable for any ruleset that passed load-time
+        // integrity (which requires it to), so it degrades to `Unknown` rather
+        // than panicking — the same K8 defense-in-depth posture
+        // `PREREQ_MAX_DEPTH` uses.
         Prereq::CharacteristicMin {
             characteristic,
             score,

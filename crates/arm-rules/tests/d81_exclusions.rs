@@ -131,10 +131,13 @@ fn incompatible_arts_excludes_deficient_form() {
 // `prerequisites` field today, so nothing enforces this yet.
 // ---------------------------------------------------------------------------
 
-/// Exercises all three states a `CharacteristicMin` floor must distinguish:
-/// refused one below the floor, accepted exactly at the floor, and Unknown
-/// (a warning, not a silent pass) when the Characteristic was never set —
-/// mirroring `Prereq::AgeMin`'s own unset-is-Unknown contract.
+/// Exercises the three cases a `CharacteristicMin` floor must get right:
+/// refused one below the floor, accepted exactly at the floor, and — R4/S2
+/// (Norbert 2026-10-03, amending D81.2) — a Characteristic that was never set
+/// evaluated as a real 0 (plus free deltas, none here): refused when the floor
+/// is above 0, accepted when it is 0 or below, and never an unevaluated
+/// warning. The UI deletes the stored entry at 0, so "unset" and "0" are the
+/// same state.
 fn assert_characteristic_floor(
     rs: &Ruleset,
     item_id: &str,
@@ -166,9 +169,16 @@ fn assert_characteristic_floor(
     let unset = entity("companion", vec![sel(item_id)]);
     let codes = issue_codes(&unset, rs);
     assert!(
-        codes.contains(&"prereq_unevaluated".to_string()),
-        "{item_id}: an unset {characteristic} is genuinely unknown and must warn as \
-         unevaluated, not silently pass, got: {codes:?}"
+        !codes.contains(&"prereq_unevaluated".to_string()),
+        "{item_id}: an unset {characteristic} is a real 0, never unknown, so it must not \
+         warn as unevaluated, got: {codes:?}"
+    );
+    let zero_meets_floor = floor <= 0;
+    assert_eq!(
+        !codes.contains(&"prereq_not_met".to_string()),
+        zero_meets_floor,
+        "{item_id}: an unset {characteristic} evaluates as 0 against the floor of {floor} \
+         (accepted iff 0 >= {floor}), got: {codes:?}"
     );
 }
 

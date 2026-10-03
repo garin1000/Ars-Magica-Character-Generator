@@ -5423,8 +5423,10 @@ mod tests {
             .unwrap()
     }
 
+    /// R4/F-B (D83.5): a minimum tests the held score. Puissant adds 2 only
+    /// "whenever you use it" (ArMDE:4816), so it does not lift a bought 1 to 3.
     #[test]
-    fn ability_min_met_via_puissant_bonus() {
+    fn ability_min_not_met_via_puissant_bonus() {
         let rs = effective_ruleset();
         let mut entity = make_entity(
             "companion",
@@ -5436,8 +5438,8 @@ mod tests {
         entity.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 1)];
         let result = validate(&entity, &rs);
         assert!(
-            !codes(&result).contains(&"prereq_not_met".to_string()),
-            "Awareness base 1 + Puissant +2 = 3 meets the min: {:?}",
+            codes(&result).contains(&"prereq_not_met".to_string()),
+            "Awareness bought 1 + Puissant +2 does not meet the min of 3: {:?}",
             codes(&result)
         );
     }
@@ -6608,7 +6610,7 @@ mod tests {
     }
 
     #[test]
-    fn prereq_art_min_is_evaluated_against_effective_score() {
+    fn prereq_art_min_is_evaluated_against_bought_score() {
         let rs = art_min_ruleset();
 
         // Creo 5 satisfies the threshold: no prereq error or unevaluated warning.
