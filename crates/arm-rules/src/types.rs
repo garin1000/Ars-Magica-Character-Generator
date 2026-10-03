@@ -732,8 +732,12 @@ pub enum ParameterDomain {
     /// than an unknown value (there is nothing to print). Values are trimmed at
     /// load ([`load_entity_migrating`](crate::load_entity_migrating)) and at every
     /// write path, so a padded
-    /// descriptor is the same choice as an unpadded one — but case is the player's,
-    /// and is never folded.
+    /// descriptor is the same choice as an unpadded one. Case is the player's and
+    /// is **stored** as typed; but the checks that weigh an item's copies against
+    /// each other (`max_per_target`, `max_per_value`) **compare** text values
+    /// case-folded with inner whitespace collapsed (D83.2,
+    /// `catalogue.rs::fold_free_text`), so retyping "Fire" as "fire" is still a
+    /// repeat.
     Text,
     /// Value is a bounded integer count (D35: Simple Student's 1-2 finished
     /// years). **This is the redundant half of the [`ParamType::Number`] pair.**
@@ -883,9 +887,14 @@ pub struct ParameterDef {
     ///
     /// Enforced by `validation::selections::validate_per_value_cap`, which
     /// raises
-    /// [`crate::validation::ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE`]
-    /// and counts **distinct parameter tuples**, so an identical repeat stays
-    /// `max_per_target`'s finding and one mistake draws one finding. It tests
+    /// [`crate::validation::ValidationIssue::CODE_TOO_MANY_FOR_PARAM_VALUE`].
+    /// It counts every copy naming the value, except that copies sharing one
+    /// whole tuple count at most `max_per_target` times: the excess of an
+    /// identical repeat is `max_per_target`'s finding, so one mistake draws one
+    /// finding. Free-text values (and a parameterized Ability's instance text)
+    /// compare case- and whitespace-insensitively (D83.2), so `"Fire"` and
+    /// `" fire "` are one value. Focus Power declares `255` on its `focus`
+    /// ("may be taken more than once", ArMDE:3903). It tests
     /// for the `u8::MAX` sentinel rather than comparing against it, so a
     /// crafted save holding 256 copies of one value cannot trip a ceiling the
     /// rules never state. Load-time integrity rejects a cap of `0`, which no

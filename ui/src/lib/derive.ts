@@ -2715,6 +2715,34 @@ export function groupAbilitySelectionsByCategory(
 export const UNBOUGHT_ROW_INDEX = -1;
 
 /**
+ * The bought score one "+" press sets (R7, try-out finding 24). The shown score
+ * is max(bought, granted floor), and only the score above the floor costs XP
+ * (ArMDE:2639), so a press from at or below the floor jumps to floor + 1:
+ * stepping a bought 0 to 1 under a floor of 1 would change nothing visible.
+ * Above the floor it is the ordinary +1. Never past `max`.
+ */
+export function nextAbilityScore(score: number, floor: number, max: number): number {
+  return Math.min(max, Math.max(score, floor) + 1);
+}
+
+/**
+ * The Virtue-granted free floor on one Ability instance (Second Sight 1), or 0.
+ * Matched by ability + parameter via {@link sameParam}, so a parameter-bound
+ * grant (Enchanting Ability's medium) lands on its own instance only.
+ */
+export function abilityFloor(
+  floors: AbilityFloor[],
+  ability: string,
+  parameter: AbilityParamValue | null | undefined,
+  resolvedLinks: Record<string, string>,
+): number {
+  const match = floors.find(
+    (f) => f.ability === ability && sameParam(f.parameter ?? null, parameter, resolvedLinks),
+  );
+  return match?.floor ?? 0;
+}
+
+/**
  * Display-only rows for Abilities the engine reports an effective-score modifier
  * for — a flat bonus (Puissant Ability) or a granted free floor (Second Sight) —
  * that the character has not bought (Issue 17).

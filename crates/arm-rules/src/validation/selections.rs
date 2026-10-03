@@ -673,6 +673,58 @@ fn group_role_map(
     Some(role_map)
 }
 
+/// `selection.params` as the across-copies checks compare them (R2, D83.2):
+/// every value the player TYPED is folded through
+/// [`crate::catalogue::fold_free_text`], so `"Fire"`, `"fire"` and `" Fire  "`
+/// are one value and no per-target or per-value cap can be dodged by retyping
+/// it. Typed values are those of a [`ParameterDomain::Text`] parameter and the
+/// instance key of a parameterized Ability an `ability`-domain parameter names
+/// (Craft's `craft`: "Carpentry" and "carpentry" are one Ability). Every id —
+/// `enumerated`, `ability`, `art`, … — and every `multi_ref` set is left exact:
+/// an id is not something the player types. Stored values are untouched; only
+/// the comparison folds.
+fn comparable_params(
+    selection: &Selection,
+    ruleset: &Ruleset,
+) -> BTreeMap<String, SelectionParamValue> {
+    let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+        return selection.params.clone();
+    };
+    let mut typed_keys: BTreeSet<&str> = BTreeSet::new();
+    for param in &item.parameters {
+        match param.domain {
+            ParameterDomain::Text => {
+                typed_keys.insert(param.key.as_str());
+            }
+            ParameterDomain::Ability => {
+                let instance_key = selection
+                    .params
+                    .get(&param.key)
+                    .and_then(SelectionParamValue::as_single)
+                    .and_then(|target| ruleset.abilities.get(target))
+                    .and_then(|ability| ability.parameter.as_deref());
+                typed_keys.extend(instance_key);
+            }
+            _ => {}
+        }
+    }
+    selection
+        .params
+        .iter()
+        .map(|(key, value)| {
+            let folded = match value {
+                SelectionParamValue::Single(text) if typed_keys.contains(key.as_str()) => {
+                    SelectionParamValue::Single(Id::new(crate::catalogue::fold_free_text(
+                        text.as_str(),
+                    )))
+                }
+                _ => value.clone(),
+            };
+            (key.clone(), folded)
+        })
+        .collect()
+}
+
 /// The order-independent comparison key one selection contributes to
 /// [`validate_duplicate_selections`]'s duplicate count (D81.8/Q3).
 ///
@@ -705,6 +757,10 @@ struct DuplicateKey {
 }
 
 fn duplicate_key(selection: &Selection, ruleset: &Ruleset) -> Option<DuplicateKey> {
+    let selection = &Selection {
+        item_ref: selection.item_ref.clone(),
+        params: comparable_params(selection, ruleset),
+    };
     let item = ruleset.point_items.get(&selection.item_ref);
     let groups: &[Vec<String>] = item.map_or(&[], |i| i.unordered_param_groups.as_slice());
 
@@ -913,15 +969,20 @@ pub(crate) fn validate_per_value_cap(
 ) {
     // Grouped by item so each item is judged over all of its own copies, and by
     // tuple within it so the per-tuple count can be capped — see "copies the
-    // duplicate check did not already report" above.
-    let mut copies_by_item: BTreeMap<&Id, BTreeMap<&BTreeMap<String, SelectionParamValue>, usize>> =
-        BTreeMap::new();
+    // duplicate check did not already report" above. The tuple is the FOLDED
+    // one ([`comparable_params`]), exactly the key `validate_duplicate_selections`
+    // groups by, so a case variant of one tuple is the neighbour's finding and
+    // not a second tuple here; the first copy's own spelling is kept to name
+    // the value in the finding.
+    type Params = BTreeMap<String, SelectionParamValue>;
+    let mut copies_by_item: BTreeMap<&Id, BTreeMap<Params, (usize, &Params)>> = BTreeMap::new();
     for selection in selections {
-        *copies_by_item
+        copies_by_item
             .entry(&selection.item_ref)
             .or_default()
-            .entry(&selection.params)
-            .or_insert(0) += 1;
+            .entry(comparable_params(selection, ruleset))
+            .or_insert((0, &selection.params))
+            .0 += 1;
     }
 
     for (item_ref, copies_by_tuple) in copies_by_item {
@@ -939,23 +1000,20 @@ pub(crate) fn validate_per_value_cap(
                 continue;
             }
             let max = usize::from(param.max_per_value);
-            let mut counts: BTreeMap<(&Id, Option<&str>), usize> = BTreeMap::new();
-            for (params, copies) in &copies_by_tuple {
-                let Some(value) = params
-                    .get(&param.key)
-                    .and_then(SelectionParamValue::as_single)
-                else {
+            // Keyed by the folded target; the value carries the count and the
+            // first copy's own spelling of that target, for the finding.
+            let mut counts: BTreeMap<(&Id, Option<&str>), (usize, (&Id, Option<&str>))> =
+                BTreeMap::new();
+            for (folded, (copies, original)) in &copies_by_tuple {
+                let Some(target) = param_target(ruleset, param, folded) else {
                     continue; // missing_param already reported
                 };
-                // Only an `ability` domain names an Ability; on any other, a
-                // value that happened to spell one would pick up an instance
-                // key that is not part of its target at all.
-                let instance = matches!(param.domain, ParameterDomain::Ability)
-                    .then(|| ability_instance(ruleset, params, value))
-                    .flatten();
-                *counts.entry((value, instance)).or_insert(0) += (*copies).min(per_target);
+                let Some(spelled) = param_target(ruleset, param, original) else {
+                    continue; // unreachable: folding never removes a key
+                };
+                counts.entry(target).or_insert((0, spelled)).0 += (*copies).min(per_target);
             }
-            for ((value, instance), count) in counts {
+            for (count, (value, instance)) in counts.into_values() {
                 if count <= max {
                     continue;
                 }
@@ -986,6 +1044,27 @@ pub(crate) fn validate_per_value_cap(
             }
         }
     }
+}
+
+/// The whole target one copy names for `param`: its single value, plus — for
+/// an `ability`-domain parameter aimed at a parameterized Ability — that
+/// Ability's instance. `None` when the key is absent or holds a `multi_ref`
+/// set ([`validate_per_value_cap`] counts single targets only).
+fn param_target<'a>(
+    ruleset: &Ruleset,
+    param: &ParameterDef,
+    params: &'a BTreeMap<String, SelectionParamValue>,
+) -> Option<(&'a Id, Option<&'a str>)> {
+    let value = params
+        .get(&param.key)
+        .and_then(SelectionParamValue::as_single)?;
+    // Only an `ability` domain names an Ability; on any other, a value that
+    // happened to spell one would pick up an instance key that is not part of
+    // its target at all.
+    let instance = matches!(param.domain, ParameterDomain::Ability)
+        .then(|| ability_instance(ruleset, params, value))
+        .flatten();
+    Some((value, instance))
 }
 
 /// The instance discriminator that completes an `ability`-domain parameter's

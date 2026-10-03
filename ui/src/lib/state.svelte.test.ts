@@ -3933,6 +3933,118 @@ describe('addAbility', () => {
   });
 });
 
+// --- raiseUnboughtAbility() -------------------------------------------------
+
+// Try-out finding 24 (R7): a Virtue-granted Ability (Second Sight 1, ArMDE:4890)
+// shows as an unbought row whose "+" did nothing. Decided: "+" on that row buys
+// it, as ONE action. The engine charges only the score above the free floor
+// (`effective/xp.rs::build_spends`, ArMDE:2639) and shows max(bought, floor), so a
+// bought 1 under a floor of 1 would change nothing visible: the first real step
+// is floor + 1.
+describe('raiseUnboughtAbility', () => {
+  const SECOND_SIGHT = 'ability.second_sight';
+
+  function grantFloor(floor: number): void {
+    store.effective = {
+      ability_bonuses: [],
+      ability_score_floors: [{ ability: SECOND_SIGHT, floor }],
+    } as unknown as EffectiveScores;
+  }
+
+  beforeEach(() => {
+    installRuleset([], [{ id: SECOND_SIGHT, category: 'supernatural' }]);
+  });
+
+  it('creates the bought entry one step above the granted floor', () => {
+    grantFloor(1);
+    store.raiseUnboughtAbility(SECOND_SIGHT, 10);
+    expect(store.entity.ability_scores).toEqual([{ ability: SECOND_SIGHT, score: 2 }]);
+  });
+
+  it('never buys past the score cap', () => {
+    grantFloor(5);
+    store.raiseUnboughtAbility(SECOND_SIGHT, 5);
+    expect(store.entity.ability_scores).toEqual([{ ability: SECOND_SIGHT, score: 5 }]);
+  });
+
+  it('buys a bonus-only unbought row (no floor) at score 1', () => {
+    store.effective = {
+      ability_bonuses: [{ ability: SECOND_SIGHT, bonus: 2 }],
+      ability_score_floors: [],
+    } as unknown as EffectiveScores;
+    store.raiseUnboughtAbility(SECOND_SIGHT, 10);
+    expect(store.entity.ability_scores).toEqual([{ ability: SECOND_SIGHT, score: 1 }]);
+  });
+
+  it('is a no-op once the plain Ability is already bought', () => {
+    grantFloor(1);
+    store.entity.ability_scores = [{ ability: SECOND_SIGHT, score: 3 }];
+    store.raiseUnboughtAbility(SECOND_SIGHT, 10);
+    expect(store.entity.ability_scores).toEqual([{ ability: SECOND_SIGHT, score: 3 }]);
+  });
+});
+
+// --- raiseAbilityAt() -------------------------------------------------------
+
+// R7 (a): an entry bought at or below its granted floor (the old workaround:
+// Second Sight added from the list at 0 under the Virtue's floor of 1) used to
+// need a press that changed nothing visible. "+" now jumps to floor + 1.
+describe('raiseAbilityAt', () => {
+  const SECOND_SIGHT = 'ability.second_sight';
+  const ENCHANTING = 'ability.enchanting';
+
+  beforeEach(() => {
+    store.effective = {
+      ability_bonuses: [],
+      ability_score_floors: [
+        { ability: SECOND_SIGHT, floor: 1 },
+        { ability: ENCHANTING, parameter: 'Wood', floor: 1 },
+      ],
+    } as unknown as EffectiveScores;
+  });
+
+  it('jumps a row bought below its floor to one above it', () => {
+    store.entity.ability_scores = [{ ability: SECOND_SIGHT, score: 0 }];
+    store.raiseAbilityAt(0, 10);
+    expect(store.entity.ability_scores![0].score).toBe(2);
+  });
+
+  it('jumps a row bought at its floor to one above it', () => {
+    store.entity.ability_scores = [{ ability: SECOND_SIGHT, score: 1 }];
+    store.raiseAbilityAt(0, 10);
+    expect(store.entity.ability_scores![0].score).toBe(2);
+  });
+
+  it('adds one above the floor and on an Ability with no floor, leaving other rows alone', () => {
+    store.entity.ability_scores = [
+      { ability: SECOND_SIGHT, score: 2 },
+      { ability: 'ability.awareness', score: 3 },
+    ];
+    store.raiseAbilityAt(0, 10);
+    store.raiseAbilityAt(1, 10);
+    expect(store.entity.ability_scores).toEqual([
+      { ability: SECOND_SIGHT, score: 3 },
+      { ability: 'ability.awareness', score: 4 },
+    ]);
+  });
+
+  it('applies a parameter-bound floor only to its own instance', () => {
+    store.entity.ability_scores = [
+      { ability: ENCHANTING, score: 0, parameter: { text: 'Metal' } },
+      { ability: ENCHANTING, score: 0, parameter: { text: 'Wood' } },
+    ];
+    store.raiseAbilityAt(0, 10);
+    store.raiseAbilityAt(1, 10);
+    expect(store.entity.ability_scores!.map((a) => a.score)).toEqual([1, 2]);
+  });
+
+  it('never exceeds max', () => {
+    store.entity.ability_scores = [{ ability: SECOND_SIGHT, score: 5 }];
+    store.raiseAbilityAt(0, 5);
+    expect(store.entity.ability_scores![0].score).toBe(5);
+  });
+});
+
 // --- removeAbilityAt() ------------------------------------------------------
 
 describe('removeAbilityAt', () => {

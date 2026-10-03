@@ -2,6 +2,7 @@
   import { store } from '../state.svelte';
   import {
     abilityDisplayName,
+    abilityFloor,
     abilityLabel,
     abilityParamDisplay,
     displayName,
@@ -58,11 +59,16 @@
   // The picker greys any Supernatural Ability the character can't currently take,
   // with a "requires a Virtue" reason. "Granted" is read straight from the
   // selected virtues (synchronous, like `selected`) so a just-added granting
-  // Virtue enables its Ability without waiting for the async effective scores.
+  // Virtue enables its Ability without waiting for the async effective scores —
+  // plus the Virtues the engine reports as granted (a House's, or the Second
+  // Sight that Strong Faerie Blood grants), which only it can resolve (R7 b).
   const grantedSupernatural = $derived.by(() => {
     const granted = new Set<string>();
     const items = store.ruleset?.ruleset.point_items ?? {};
-    for (const selection of store.entity.selections ?? []) {
+    for (const selection of [
+      ...(store.entity.selections ?? []),
+      ...(store.effective?.granted_selections ?? []),
+    ]) {
       for (const effect of items[selection.ref]?.effects ?? []) {
         if (effect.type === 'ability_score_grant') granted.add(effect.ability);
       }
@@ -240,11 +246,18 @@
   // `bonusOf`, via `sameParam`, so a parameter-bound grant (Enchanting) lands
   // on the chosen instance's row and never on every instance of the ability.
   function floorOf(abilityId: string, parameter: AbilityParamValue | null | undefined): number {
-    return (
-      store.effective?.ability_score_floors?.find(
-        (f) => f.ability === abilityId && sameParam(f.parameter ?? null, parameter, resolvedLinks),
-      )?.floor ?? 0
+    return abilityFloor(
+      store.effective?.ability_score_floors ?? [],
+      abilityId,
+      parameter,
+      resolvedLinks,
     );
+  }
+
+  // "+" is one visible step (R7): it is spent once the shown score — the bought
+  // score or the granted floor above it — has reached the cap.
+  function raiseBlocked(entry: AbilityScore): boolean {
+    return Math.max(entry.score, floorOf(entry.ability, entry.parameter)) >= max;
   }
 
   // X10b: the "Z" of the book's own "X (Z)" notation (ArMDE:1177) — XP already
@@ -410,10 +423,11 @@
           {#snippet row(item: IndexedAbilityScore)}
             {@const entry = item.entry}
             {@const i = item.index}
-            <!-- A display-only row (#17): the character has a bonus or a granted
+            <!-- An unbought row (#17): the character has a bonus or a granted
                  floor for this Ability but has not bought it, so there is no
-                 entity row behind it. Every mutator below is index-addressed and
-                 no-ops at UNBOUGHT_ROW_INDEX (no array position matches), but the
+                 entity row behind it. Only "+" works here — it buys the Ability
+                 (R7, finding 24). Every other mutator below is index-addressed and
+                 no-ops at UNBOUGHT_ROW_INDEX (no array position matches), so those
                  controls are withheld rather than left to fail silently. -->
             {@const unbought = i === UNBOUGHT_ROW_INDEX}
             {@const id = rowSuffix(i)}
@@ -451,8 +465,11 @@
                   name: selectedName(entry.ability, entry.parameter),
                 })}
                 incTestid="ability-inc-{entry.ability}-{id}"
-                incDisabled={unbought || entry.score >= max}
-                onInc={() => store.adjustAbilityAt(i, 1, max)}
+                incDisabled={raiseBlocked(entry)}
+                onInc={() =>
+                  unbought
+                    ? store.raiseUnboughtAbility(entry.ability, max)
+                    : store.raiseAbilityAt(i, max)}
               >
                 {#snippet children()}
                   <span class="spinner-value" data-testid="ability-score-{entry.ability}-{id}">

@@ -203,6 +203,16 @@ pub(crate) fn fold_name(name: &str) -> String {
     name.trim().to_lowercase()
 }
 
+/// Folds a free-text parameter value for comparison (R2, D83.2): case-folded,
+/// trimmed, and every inner run of whitespace collapsed to one space, so
+/// `"Fire"`, `" fire  "` and `"hot   fire"`/`"Hot Fire"` compare as the value
+/// the player meant. Stricter than [`fold_name`] (which keeps inner runs) and
+/// deliberately separate from it, so the catalogue-matching callers of that
+/// fold are untouched. Only for text the player TYPES — never for an id.
+pub(crate) fn fold_free_text(text: &str) -> String {
+    fold_name(&text.split_whitespace().collect::<Vec<_>>().join(" "))
+}
+
 /// Loads and validates both locales' catalogue value names against an
 /// already-loaded set of catalogues (design note § 2.2/§ 7):
 ///
@@ -276,4 +286,19 @@ pub fn load_catalogue_names(
     }
 
     Ok(result)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fold_free_text_ignores_case_padding_and_inner_whitespace_runs() {
+        assert_eq!(fold_free_text("  Hot \t  FIRE \n"), "hot fire");
+    }
+
+    #[test]
+    fn fold_free_text_keeps_different_words_different() {
+        assert_ne!(fold_free_text("hot fire"), fold_free_text("hotfire"));
+    }
 }
