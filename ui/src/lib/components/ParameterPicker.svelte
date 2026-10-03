@@ -551,15 +551,16 @@
   }
 
   const renderedGroups = $derived(paramGroups(params, groups));
+
+  // Per-instance prefix for the group-label ids `aria-labelledby` points at, so
+  // two pickers on one page never share an id.
+  const uid = $props.id();
 </script>
 
-{#each renderedGroups as group, groupIndex (groupIndex)}
-  {#if group.label}
-    <p class="param-group-label" data-testid="param-group-{selection.ref}-{groupIndex}-{suffix}">
-      {group.label}
-    </p>
-  {/if}
-  {#each group.members as param (param.key)}
+<!-- One group's parameter controls. A snippet so a labelled group can wrap it in
+     its `role="group"` container without the markup being written twice. -->
+{#snippet memberControls(members: ParameterDef[])}
+  {#each members as param (param.key)}
     {@const used = usage(param.key)}
     {@const blocked = blockedValues(param.key)}
     <!-- The parameter type (Characteristic, Art, Language…) doubles as the empty
@@ -730,17 +731,22 @@
             >
               <option value="" disabled>{typeLabel}</option>
               {#each param.values ?? [] as value (value)}
+                {@const label = store.ruleset
+                  ? (abilityCategoryLabel(store.ruleset, value, store.t) ??
+                    displayName(store.ruleset, value, undefined, (key) =>
+                      store.t('param-hint', { label: store.t(`param-label-${key}`) }),
+                    ))
+                  : value}
+                <!-- a11y-d81 finding 2: a blocked option names its reason in its own
+                     text — an <option>'s `title` reaches mouse users only. -->
                 <option
                   {value}
                   disabled={full(used, value) || blocked.has(value)}
                   title={blocked.has(value) ? blockedValueReason() : undefined}
                 >
-                  {store.ruleset
-                    ? (abilityCategoryLabel(store.ruleset, value, store.t) ??
-                      displayName(store.ruleset, value, undefined, (key) =>
-                        store.t('param-hint', { label: store.t(`param-label-${key}`) }),
-                      ))
-                    : value}
+                  {blocked.has(value)
+                    ? store.t('param-option-blocked', { label, reason: blockedValueReason() })
+                    : label}
                 </option>
               {/each}
             </select>
@@ -864,4 +870,27 @@
       </label>
     {/if}
   {/each}
+{/snippet}
+
+<!-- a11y-d81 finding 1: a labelled group (Incompatible Arts' "Combination N") is a
+     `role="group"` named by its own label, so a screen reader announces which
+     Technique pairs with which Form. A plain unstyled `<div>`, not a
+     `<fieldset>`: it adds no box of its own, so the layout is unchanged. The
+     label id comes from `$props.id()`, unique per picker instance. -->
+{#each renderedGroups as group, groupIndex (groupIndex)}
+  {#if group.label}
+    {@const labelId = `${uid}-group-${groupIndex}`}
+    <div role="group" aria-labelledby={labelId}>
+      <p
+        class="param-group-label"
+        id={labelId}
+        data-testid="param-group-{selection.ref}-{groupIndex}-{suffix}"
+      >
+        {group.label}
+      </p>
+      {@render memberControls(group.members)}
+    </div>
+  {:else}
+    {@render memberControls(group.members)}
+  {/if}
 {/each}

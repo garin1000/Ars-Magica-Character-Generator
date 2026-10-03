@@ -989,6 +989,11 @@ param-hint = ({ $label })
 # before each of an item's `unordered_param_groups` groups (Incompatible Arts'
 # two Technique+Form combinations) — generic and never names the item itself.
 param-group-label = Combination { $n }
+# a11y-d81 finding 2: a parameter option a sibling copy of the same item blocks.
+# The reason sits in the option's own text, since an <option>'s title is
+# mouse-hover only. { $label } is the option's name, { $reason } the
+# vf-blocked-incompatible text.
+param-option-blocked = { $label } ({ $reason })
 # A requirement the engine enforces more widely than the rules word it. The rules'
 # own example heads the requirement so its score follows it directly ("Latin 1", as
 # the rulebook states it) and THIS note trails the score, saying what the engine

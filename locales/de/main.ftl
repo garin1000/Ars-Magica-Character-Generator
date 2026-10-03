@@ -1035,6 +1035,11 @@ param-hint = ({ $label })
 # vor jeder Gruppe der `unordered_param_groups` eines Eintrags zeigt (Incompatible
 # Arts' zwei Technik+Form-Kombinationen) — generisch, nennt den Eintrag selbst nie.
 param-group-label = Kombination { $n }
+# a11y-d81 Fund 2: eine Parameter-Option, die eine Geschwisterkopie desselben
+# Eintrags sperrt. Der Grund steht im Text der Option selbst, weil der title einer
+# <option> nur beim Überfahren mit der Maus erscheint. { $label } ist der Name der
+# Option, { $reason } der Text von vf-blocked-incompatible.
+param-option-blocked = { $label } ({ $reason })
 # Eine Forderung, die die Engine weiter prüft, als die Regeln sie formulieren. Das
 # Beispiel der Regeln steht vorn, damit der Wert unmittelbar folgt („Latein 1“, wie
 # das Regelwerk es schreibt), und DIESER Zusatz folgt dem Wert und nennt, was die

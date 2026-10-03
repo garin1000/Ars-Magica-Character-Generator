@@ -776,6 +776,52 @@ describe('ParameterPicker groups parameters by unordered_param_groups (review-ui
     expect(groupLabel(body, 1)).toContain('Kombination');
   });
 
+  // a11y-d81 finding 1: the visible "Combination N" label must also be the
+  // PROGRAMMATIC name of its pair, or a screen reader announces "Technique,
+  // Form, Technique, Form" with nothing saying which Form pairs with which
+  // Technique. Each group is a `role="group"` container named by its own
+  // label via `aria-labelledby`.
+  /** Every `role="group"` element: its `aria-labelledby` and its inner markup. */
+  function roleGroups(body: string): { labelledBy: string | null; inner: string }[] {
+    return [...body.matchAll(/<(\w+)([^>]*\brole="group"[^>]*)>([\s\S]*?)<\/\1>/g)].map((m) => ({
+      labelledBy: /aria-labelledby="([^"]*)"/.exec(m[2])?.[1] ?? null,
+      inner: m[3],
+    }));
+  }
+
+  /** The text content of the element carrying `id`, or null when no element does. */
+  function textOfId(body: string, id: string): string | null {
+    const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const m = new RegExp(`<(\\w+)[^>]*\\bid="${escaped}"[^>]*>([\\s\\S]*?)</\\1>`).exec(body);
+    return m ? m[2].replace(/<[^>]*>/g, '').trim() : null;
+  }
+
+  it('wraps each combination in a role="group" named by its own label', () => {
+    const body = pickerBody('flaw.incompatible_arts_probe');
+    const groups = roleGroups(body);
+    expect(groups).toHaveLength(2);
+    expect(groups[0].labelledBy).not.toBeNull();
+    expect(groups[1].labelledBy).not.toBeNull();
+    expect(groups[0].labelledBy).not.toBe(groups[1].labelledBy);
+    expect(textOfId(body, groups[0].labelledBy!)).toBe(store.t('param-group-label', { n: 1 }));
+    expect(textOfId(body, groups[1].labelledBy!)).toBe(store.t('param-group-label', { n: 2 }));
+  });
+
+  it('puts exactly its own Technique and Form select inside each group', () => {
+    const groups = roleGroups(pickerBody('flaw.incompatible_arts_probe'));
+    expect(groups).toHaveLength(2);
+    const testids = (inner: string) =>
+      [...inner.matchAll(/<select[^>]*data-testid="([^"]*)"/g)].map((m) => m[1]);
+    expect(testids(groups[0].inner)).toEqual([
+      'param-flaw.incompatible_arts_probe-technique_1-0',
+      'param-flaw.incompatible_arts_probe-form_1-0',
+    ]);
+    expect(testids(groups[1].inner)).toEqual([
+      'param-flaw.incompatible_arts_probe-technique_2-0',
+      'param-flaw.incompatible_arts_probe-form_2-0',
+    ]);
+  });
+
   it('leaves an ungrouped item in its original parameter order, with no group label', () => {
     // `virtue.folk_magic` declares no `unordered_param_groups` — must behave
     // exactly as before this fix: original order, no separator at all.
@@ -1374,10 +1420,28 @@ describe('ParameterPicker enumerated domain — blocked same-item values (qa rev
     ];
   });
 
+  /** The `<option value="…">` element, or null when absent — by value, since a
+   *  blocked option's visible text carries its reason too (a11y-d81 finding 2). */
+  function optionByValue(select: string, value: string): string | null {
+    const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return (
+      new RegExp(`<option[^>]*value="${escaped}"[^>]*>[\\s\\S]*?</option>`).exec(select)?.[0] ??
+      null
+    );
+  }
+
+  /** An option's visible text, Fluent isolation marks stripped. */
+  function visibleText(option: string): string {
+    return option
+      .replace(/<[^>]*>/g, '')
+      .replace(/[⁦-⁩]/g, '')
+      .trim();
+  }
+
   it('disables the forbidden sibling value and carries the localized incompatibility title', () => {
     const select = selectFor(pickerBody('flaw.warped_senses_probe', 1), TESTID);
     expect(select).not.toBeNull();
-    const option = optionByText(select!, 'Sensitive Sight');
+    const option = optionByValue(select!, 'affliction.sensitive_sight');
     expect(option).not.toBeNull();
     expect(option).toContain('disabled');
     // The rendered English text, not the raw `vf-blocked-incompatible` key or
@@ -1385,6 +1449,26 @@ describe('ParameterPicker enumerated domain — blocked same-item values (qa rev
     // blocking item through `displayName`, the same localized string the
     // Available picker's own incompatibility reason uses.
     expect(option).toContain(store.t('vf-blocked-incompatible', { other: 'Warped Senses Probe' }));
+  });
+
+  // a11y-d81 finding 2: a `title` on an `<option>` is mouse-hover only — a
+  // keyboard or screen-reader user arrowing onto the disabled option never
+  // learns WHY it is unavailable. The reason must be in the option's own
+  // visible text (which is also its accessible name), next to its label.
+  it('names the blocking reason in the disabled option’s own visible text', () => {
+    const select = selectFor(pickerBody('flaw.warped_senses_probe', 1), TESTID);
+    const option = optionByValue(select!, 'affliction.sensitive_sight');
+    expect(option).not.toBeNull();
+    const text = visibleText(option!);
+    expect(text).toContain('Sensitive Sight');
+    expect(text).toContain(
+      visibleText(store.t('vf-blocked-incompatible', { other: 'Warped Senses Probe' })),
+    );
+  });
+
+  it('leaves an unblocked option’s visible text as its bare label', () => {
+    const select = selectFor(pickerBody('flaw.warped_senses_probe', 1), TESTID);
+    expect(visibleText(optionByValue(select!, 'affliction.unrelated')!)).toBe('Unrelated');
   });
 
   it('does not disable a second copy of the SAME gate value (equal values stay legal)', () => {
