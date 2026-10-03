@@ -699,13 +699,12 @@ fn fold_catalogue_matching(
         let Some(ability) = ruleset.ability(&score.ability) else {
             continue;
         };
-        if !ability.catalogued {
-            continue;
-        }
-        let Some(key) = ability.parameter.as_deref() else {
+        // L1a: the ability's OWN catalogue (Dead and Living Language share a
+        // parameter key but not a list), so "Arabic" typed on Dead Language
+        // matches nothing in the dead-language list and stays text.
+        let Some(catalogue_id) = ability.catalogue_id() else {
             continue;
         };
-        let catalogue_id = Id::new(format!("catalogue.{key}"));
         let Some(catalogue) = ruleset.parameter_catalogues().get(&catalogue_id) else {
             continue;
         };

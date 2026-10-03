@@ -83,8 +83,8 @@ fn ruleset_from_sources_fails_the_real_load_on_a_broken_catalogue() {
     );
 }
 
-/// Design note § 1.3: `ability.dead_language`/`ability.living_language` share
-/// the `language` catalogue; `ability.profession` uses `profession`;
+/// Design note § 1.3: `ability.dead_language`/`ability.living_language` each
+/// name their own language catalogue (L1a); `ability.profession` uses `profession`;
 /// `ability.organization_lore` uses `organization`. `ability.craft`,
 /// `ability.area_lore`, `ability.mystery_cult_lore` stay uncatalogued.
 #[test]

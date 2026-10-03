@@ -217,23 +217,26 @@ impl Ruleset {
     }
 
     /// A `catalogued: true` Ability (design note § 2.2, CV2) must declare a
-    /// `parameter` key (there is nothing to catalogue otherwise) and that key
-    /// must name a catalogue that actually exists (`catalogue.<key>`) — a
-    /// referential check, so it runs here rather than in `parse.rs`'s
-    /// pre-integrity pass, exactly like every other cross-catalogue reference.
+    /// `parameter` key (there is nothing to catalogue otherwise) and its
+    /// catalogue — the one its `catalogue` field names, else `catalogue.<key>`
+    /// (L1a, [`Ability::catalogue_id`]) — must actually exist. A referential
+    /// check, so it runs here rather than in `parse.rs`'s pre-integrity pass,
+    /// exactly like every other cross-catalogue reference.
     fn validate_catalogued_abilities(&self, errors: &mut Vec<String>) {
         for ability in self.abilities.values() {
             if !ability.catalogued {
                 continue;
             }
-            let Some(parameter) = &ability.parameter else {
+            if ability.parameter.is_none() {
                 errors.push(format!(
                     "ability '{}' is catalogued but takes no parameter",
                     ability.id
                 ));
                 continue;
+            }
+            let Some(catalogue_id) = ability.catalogue_id() else {
+                continue;
             };
-            let catalogue_id = Id::new(format!("catalogue.{parameter}"));
             if !self.parameter_catalogues.contains_key(&catalogue_id) {
                 errors.push(format!(
                     "ability '{}' is catalogued against '{catalogue_id}', which does not exist",
@@ -2524,8 +2527,9 @@ impl Ruleset {
     }
 
     /// A [`ParamValue::Literal`] restricting a `catalogued: true` Ability must
-    /// name a real value in the catalogue that Ability's own `parameter` key
-    /// selects — fail loudly with the offending literal id and the ability id
+    /// name a real value in that Ability's own catalogue
+    /// ([`Ability::catalogue_id`](crate::ability::Ability::catalogue_id), L1a)
+    /// — fail loudly with the offending literal id and the ability id
     /// (design note § 7, CV3), mirroring how the `Bound` branch above fails
     /// loudly on a dangling parameter key. An ability that does not resolve,
     /// is not catalogued, or is catalogued against a shape
@@ -2543,13 +2547,12 @@ impl Ruleset {
         let Some(ability) = self.abilities.get(ability_id) else {
             return;
         };
-        if !ability.catalogued {
+        if ability.parameter.is_none() {
             return;
         }
-        let Some(parameter) = &ability.parameter else {
+        let Some(catalogue_id) = ability.catalogue_id() else {
             return;
         };
-        let catalogue_id = Id::new(format!("catalogue.{parameter}"));
         let Some(catalogue) = self.parameter_catalogues.get(&catalogue_id) else {
             return;
         };

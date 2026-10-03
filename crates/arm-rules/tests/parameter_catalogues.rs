@@ -232,13 +232,14 @@ fn shipped_catalogues_and_names_load_clean() {
     let catalogues =
         load_parameter_catalogues(catalogues_json).expect("shipped catalogue file loads clean");
 
-    // Known ids present — never a total count.
+    // Known ids present — never a total count. L1a: Dead and Living Language
+    // have separate catalogues (try-out finding 6).
     for (catalogue_id, value_id) in [
-        ("catalogue.language", "language.latin"),
-        ("catalogue.language", "language.arabic"),
-        ("catalogue.language", "language.persian"),
-        ("catalogue.language", "language.greek"),
-        ("catalogue.language", "language.aramaic"),
+        ("catalogue.language_dead", "language.latin"),
+        ("catalogue.language_living", "language.arabic"),
+        ("catalogue.language_living", "language.persian"),
+        ("catalogue.language_living", "language.greek"),
+        ("catalogue.language_living", "language.aramaic"),
         ("catalogue.organization", "organization.house_bjornaer"),
         ("catalogue.organization", "organization.order_of_hermes"),
         ("catalogue.profession", "profession.merchant"),

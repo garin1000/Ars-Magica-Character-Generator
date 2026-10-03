@@ -120,16 +120,12 @@ pub fn ability_parameter_options(
 }
 
 /// This ability's catalogue values, in catalogue order (empty if uncatalogued
-/// or if its own `parameter` key names no shipped catalogue) — a property of
+/// or if [`Ability::catalogue_id`] names no shipped catalogue) — a property of
 /// the ruleset alone, independent of what any character holds.
 fn catalogued_values(ability: &Ability, ruleset: &Ruleset) -> Vec<Id> {
-    if !ability.catalogued {
-        return Vec::new();
-    }
-    let Some(key) = ability.parameter.as_deref() else {
+    let Some(catalogue_id) = ability.catalogue_id() else {
         return Vec::new();
     };
-    let catalogue_id = Id::new(format!("catalogue.{key}"));
     ruleset
         .parameter_catalogues()
         .get(&catalogue_id)

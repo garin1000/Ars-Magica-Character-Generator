@@ -1269,15 +1269,15 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2279, shared by
-  `validate_prereq_refs` :2156 and `validate_effect_refs` :2694) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2282, shared by
+  `validate_prereq_refs` :2159 and `validate_effect_refs` :2697) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
   prerequisites/effects and claim the catalogue as it stands). Every
   `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
   rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
-  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :774).
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :777).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -11438,8 +11438,10 @@ load-time integrity; CV2 wires all of it into the real `Ruleset` load path and
 adds `Ability.catalogued` — the `AbilityScore`-side matching fix itself (Bound/
 Link resolution) lands in CV3 onward.
 
-- Data: `rules/core/parameter_catalogues.json` — three catalogues
-  (`catalogue.language`, `catalogue.organization`, `catalogue.profession`),
+- Data: `rules/core/parameter_catalogues.json` — four catalogues
+  (`catalogue.language_dead`, `catalogue.language_living`,
+  `catalogue.organization`, `catalogue.profession`; the language list split by
+  L1a, below),
   each value citing the ArMDE passage that names it as a fixed, universal
   value rather than a character-specific one (the design note § 1.1 explains
   why "Organization Lore: Guild" was rejected as a catalogue candidate on
@@ -11467,6 +11469,30 @@ Link resolution) lands in CV3 onward.
   uncatalogued. `catalogued: true` does **not** forbid free text: a picker
   offers the catalogue's values plus an "Other…" escape (CV6/CV7), and an
   unrecognised typed value simply stays `Text`, never guessed.
+- **L1a — Dead and Living Language draw on separate catalogues** (try-out
+  finding 6, Norbert 2026-10-03; amends D59). "In other areas of the world,
+  Arabic, Greek and Hebrew fill similar functions, although of these only
+  Hebrew is a dead language" (ArMDE:7432); "Gothic, the dead language that the
+  House uses for all of its rituals" (ArMDE:3565). Data:
+  `catalogue.language_dead` = `language.gothic/hebrew/latin`,
+  `catalogue.language_living` = `language.arabic/aramaic/greek/persian`, each
+  value in exactly one list; value ids and their i18n names unchanged.
+  `rules/core/abilities.json`: `ability.dead_language` / `ability.living_language`
+  name theirs with `"catalogue"`. Implementation: `Ability.catalogue:
+  Option<Id>` read only through `ability.rs::Ability::catalogue_id` (the field,
+  else `catalogue.<parameter key>`), which all four readers call:
+  `effective/parameter_options.rs::catalogued_values`,
+  `migration.rs::fold_catalogue_matching`,
+  `ruleset/integrity.rs::validate_catalogued_abilities` (a named catalogue
+  must exist) and `validate_literal_instance` (a literal must sit in the
+  ability's own catalogue). Pool literals follow their value: Educated
+  (Islamic) "Arabic, Persian, Greek, Latin" (ArMDE:3721) funds Living Language
+  Arabic/Greek/Persian and Dead Language Latin; Educated (Hebrew) "Hebrew,
+  Aramaic" (ArMDE:3725) funds Dead Language Hebrew and Living Language Aramaic.
+  Turb Trained's `language` choice ("whichever single dead language the magi
+  speak", ArMDE:5181; Q-X6-2) narrows to the dead list. Saves holding a living
+  value under Dead Language are not moved here (that is slice L1b). Tests:
+  `tests/l1a_language_catalogues.rs`.
 - Load-time integrity: catalogue ids and value ids unique, both sorted by id,
   each catalogue non-empty; every value has both an `en` and a `de` name; no
   two values within one catalogue collide under trimmed, case-folded
@@ -11799,7 +11825,9 @@ each state the broader sentence too, so each gets
 (`ArMDE:3723-3725`, its "Characters from Iberia or the East may also spend some of
 these points on Arabic" clause is stated in `description`/`summary` rather
 than computed — the condition is regional, not a fact the engine tracks),
-`virtue.educated_vernacular` (`ArMDE:3727-3729`). German heading anchors added to
+`virtue.educated_vernacular` (`ArMDE:3727-3729`). Since L1a, the Islamic and Hebrew
+pools' Arabic/Greek/Persian/Aramaic instances target `ability.living_language`
+(see "L1a" under Catalogued parameter values). German heading anchors added to
 `rules/i18n/de/source_anchors.json` (`gebildet-bardisch`, `gebildet-islamisch`,
 `gebildet-hebräisch`, `gebildet-weltlich`), same lines as the English
 (`ArMDE`-parallel German source).
@@ -12121,9 +12149,10 @@ required/negative pair) per entry, against the SHIPPED `rules/core/*.json`.
   established: a gated, computed effect can sit on an `uncomputed_rule`
   entry when the REST of the passage (the -6 trust penalty here) stays
   uncomputed.
-- **`virtue.turb_trained`** — `language` enumerated over the existing
-  `catalogue.language` values (`language.arabic/aramaic/gothic/greek/hebrew/latin/persian`
-  — D70/Q-X6-2 confirms reusing the catalogue as-is, no new subset). The
+- **`virtue.turb_trained`** — `language` enumerated over the dead-language
+  catalogue's values (`language.gothic/hebrew/latin`; D70/Q-X6-2: "a parameter
+  over the catalogue's dead languages", ArMDE:5181 "whichever single dead
+  language the magi speak" — the full seven-value list until L1a split it). The
   `ability_authorization` effect gains `abilities:
   [{ability: ability.dead_language, instance: {param: "language"}}]`
   alongside its existing `categories: [martial]` — D14 shape 2, the
