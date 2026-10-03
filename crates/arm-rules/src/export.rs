@@ -1351,20 +1351,21 @@ mod tests {
         );
     }
 
-    /// Aging and a free Virtue delta are separate layers: the drop lowers the bought
-    /// score, the delta then adds on top.
+    /// Aging and a free Virtue delta combine: the delta is part of the actual score,
+    /// which is both the drop threshold and what drops (ruling F-A, ArMDE:16579).
     #[test]
     fn the_effective_column_combines_an_aging_drop_with_a_virtue_delta() {
         let mut e = magus();
         e.characteristics.insert(Characteristic::Str, 2);
         e.selections = vec![Selection::new(Id::new("virtue.giant_blood"))];
-        e.aging_points = BTreeMap::from([(Characteristic::Str, 5)]);
+        e.aging_points = BTreeMap::from([(Characteristic::Str, 7)]);
         let doc = character_markdown(
             &e,
             &ruleset(),
             &labels(&[("characteristic-str", "Strength")]),
         );
-        // Bought +2, two aging drops → 0, Giant Blood +1 → +1 effective.
+        // Bought +2, Giant Blood +1 → actual +3. The drops cost |3|+1 = 4, then
+        // |2|+1 = 3: seven points force two drops → +1 effective.
         assert!(
             doc.contains("| Strength | +2 | +1 |  |"),
             "unexpected row: {doc}"
