@@ -86,19 +86,27 @@ use std::path::PathBuf;
 /// would contradict a working, checked convention rather than add to it. The
 /// two guards must never fight, so this one stays out of that document.
 ///
-/// **Outside, incidentally: `ui/e2e`.** No comment there cites a source line
-/// today; it is walked only so a citation *of* an e2e spec resolves (see
-/// [`resolvable_source_files`]).
-fn scanned_roots() -> (Vec<PathBuf>, Vec<PathBuf>) {
+/// **Inside, too: `ui/e2e`** (`.js` comments, the same `//` and `/** */` syntax
+/// [`web_comment_blocks`] reads for `ui/src`). It was once left out on the
+/// claim that no comment there cited a source line; `magus-editor.e2e.js`
+/// pinning `derived.rs` by line proved otherwise. The e2e specs are live code
+/// that moves with the tree like any other.
+fn scanned_roots() -> (Vec<PathBuf>, Vec<WebRoot>) {
     let rust = vec![
         repo_root().join("crates/arm-rules/src"),
         repo_root().join("crates/arm-app/src"),
         repo_root().join("crates/arm-rules/tests"),
         repo_root().join("crates/arm-app/tests"),
     ];
-    let web = vec![repo_root().join("ui/src")];
+    let web: Vec<WebRoot> = vec![
+        (repo_root().join("ui/src"), &["ts", "svelte", "css"]),
+        (repo_root().join("ui/e2e"), &["js"]),
+    ];
     (rust, web)
 }
+
+/// A web root and the file extensions scanned under it.
+type WebRoot = (PathBuf, &'static [&'static str]);
 
 /// This guard's own test file, excluded from every scan below: its fixtures are
 /// deliberately malformed citations — `` `types.rs:3329` ``, an elided symbol —
@@ -134,8 +142,8 @@ fn scanned_comment_blocks() -> Vec<(PathBuf, usize, String)> {
         }
     }
     let mut web = Vec::new();
-    for root in &web_roots {
-        source_files_in(root, &["ts", "svelte", "css"], &mut web);
+    for (root, extensions) in &web_roots {
+        source_files_in(root, extensions, &mut web);
     }
     web.sort();
     for path in web {
@@ -445,13 +453,11 @@ fn every_external_crate_reference_names_a_package_cargo_lock_pins() {
     );
 }
 
-/// Every file a citation's path can resolve against: the scanned roots plus
-/// `ui/e2e`, which carries no citations of its own but is a legitimate *target*
-/// of one.
+/// Every file a citation's path can resolve against: every file of a
+/// [`SOURCE_EXTENSIONS`] type under the scanned roots.
 fn resolvable_source_files() -> Vec<PathBuf> {
-    let (rust_roots, mut roots) = scanned_roots();
-    roots.extend(rust_roots);
-    roots.push(repo_root().join("ui/e2e"));
+    let (mut roots, web_roots) = scanned_roots();
+    roots.extend(web_roots.into_iter().map(|(root, _)| root));
     let mut files = Vec::new();
     for root in &roots {
         source_files_in(root, SOURCE_EXTENSIONS, &mut files);
@@ -575,6 +581,25 @@ fn the_self_exclusion_is_load_bearing_and_keeps_this_file_out_of_both_sweeps() {
             "{excluded} must be excluded from the scan (it is this guard's own test file)"
         );
     }
+}
+
+#[test]
+fn ui_e2e_files_scan_a_nonzero_floor() {
+    // `ui/e2e` was once left out on the claim that no comment there cited a
+    // source line; `magus-editor.e2e.js` pinning `derived.rs` by line proved
+    // otherwise. The same vacuous-pass guard as the other roots: the e2e
+    // helpers and specs must actually be walked and their comments scanned.
+    let e2e_root = repo_root().join("ui/e2e");
+    let e2e_files: BTreeSet<PathBuf> = scanned_comment_blocks()
+        .into_iter()
+        .filter(|(path, _, _)| path.starts_with(&e2e_root))
+        .map(|(path, _, _)| path)
+        .collect();
+    assert!(
+        e2e_files.len() > 10,
+        "expected `ui/e2e` to contribute many commented .js files, found {}",
+        e2e_files.len()
+    );
 }
 
 #[test]

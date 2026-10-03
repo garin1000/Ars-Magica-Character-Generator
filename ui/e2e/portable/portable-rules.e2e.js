@@ -68,9 +68,9 @@ const repoRoot = path.resolve(dirname, '../../..');
  * config dir. `workerConfigHome` reads `process.env.WDIO_WORKER_ID` (via
  * `workerSuffix`) to pick that directory, and this can never disagree with
  * what `beforeSession` read: `@wdio/local-runner` sets `WDIO_WORKER_ID` once,
- * at worker-process spawn, in the child's env (`runnerEnv` in
- * `@wdio/local-runner/build/index.js::startProcess`), and both `beforeSession`
- * and this spec body execute inside that same forked worker process for the
+ * at worker-process spawn, in the child's env (`runnerEnv` in the
+ * `startProcess` method of `@wdio/local-runner`'s `build/index.js`), and both
+ * `beforeSession` and this spec body execute inside that same forked worker process for the
  * whole run.
  *
  * `crates/arm-app/src/commands.rs::settings_candidates` asks Tauri for

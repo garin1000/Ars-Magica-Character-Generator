@@ -466,8 +466,8 @@ relevant surface MUST preserve them and keep their tests green.
   citation (`ArMDE:3899`): this one requires a source extension before its `::`
   and carries no digits. Naming a file with **no** line and no symbol is also
   fine — imprecise, but it cannot rot. `crates/arm-rules/tests/source_citations.rs`
-  enforces both halves: no comment in `crates/*/src`, `crates/*/tests` or
-  `ui/src` may pin a source file by line, and every `::` symbol it does name
+  enforces both halves: no comment in `crates/*/src`, `crates/*/tests`,
+  `ui/src` or `ui/e2e` may pin a source file by line, and every `::` symbol it does name
   must still be declared in the named file. Two things are deliberately outside
   that guard and must stay so. **`docs/`** — its several hundred line citations
   sit in dated historical records (implementation plans, reviews, findings

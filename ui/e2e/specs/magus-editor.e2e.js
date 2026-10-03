@@ -678,8 +678,9 @@ describe('selected frame', () => {
 
 // End-to-end: the Totals tab must render for a character who carries the SAME
 // weapon twice. `combat_totals` emits one line per equipped slot
-// (crates/arm-rules/src/derived.rs:899) and `addEquipment` never dedups, so two
-// slots holding one catalogue id produce two combat lines with the same
+// (`crates/arm-rules/src/derived/combat.rs::combat_totals`) and
+// `addEquipment` never dedups, so two slots holding one catalogue id
+// produce two combat lines with the same
 // `line.weapon`. Keying that `{#each}` by `line.weapon` made Svelte throw
 // `each_key_duplicate` — in production as well as dev — which aborted the whole
 // panel's render: the tab button lit up, the Totals panel never mounted, and the
