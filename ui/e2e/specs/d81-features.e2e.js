@@ -259,14 +259,11 @@ describe('Incompatible Arts: barred pairs, the Unusable cell, and the spell erro
 // menu-filtering (that only narrows on House) — so taking it must report
 // `prereq_not_met` once Presence is definitely below the floor.
 //
-// Presence at its UNTOUCHED default reads "+0" on screen, but
 // `AppStore.setCharacteristic` deletes the map entry whenever a score resolves
-// to 0 (`state.svelte.ts`), and the engine's own `PrereqCtx` then reads an
-// ABSENT Characteristic as genuinely unknown, not as a definite 0 — mirroring
-// how an unset `age` is "Unknown, not False" (CLAUDE.md). So 0 can never be
-// definite-False for this prereq; the test instead decrements Presence to -1
-// (still "<= 0"), which DOES write an explicit entry and so settles the
-// evaluation to a definite False.
+// to 0 (`state.svelte.ts`); since D83.4 the engine's `PrereqCtx` reads an
+// ABSENT Characteristic as a definite 0 (plus free deltas), so an untouched
+// Presence is refused too. The test decrements Presence to -1 so it also
+// covers an explicitly stored entry below the floor.
 describe('Characteristic-floor prerequisite reports its issue (Supernatural Beauty)', () => {
   it('flags Supernatural Beauty once Presence is explicitly below the floor', async () => {
     await startCharacter('companion');

@@ -310,22 +310,23 @@ pub enum Prereq {
     /// is genuinely unknown.
     House(Id),
     /// The entity must have the referenced ability at or above the given score.
-    /// Evaluated against the entity's effective ability score (bought score
-    /// plus virtue bonuses such as Puissant Ability); an ability the entity
-    /// lacks counts as 0.
+    /// Evaluated against the entity's HELD ability score — the bought score or
+    /// a granted floor (Second Sight 1, `ArMDE:4890`), never a Puissant
+    /// Ability bonus, which applies only "whenever you use it" (`ArMDE:4816`;
+    /// D83.5). An ability the entity lacks counts as 0.
     AbilityMin {
         /// The required Ability's id.
         ability: Id,
-        /// The minimum effective score required.
+        /// The minimum held score required.
         score: u8,
     },
     /// The entity must have the referenced art at or above the given score.
-    /// Evaluated against the entity's max effective Art score (bought score plus
-    /// virtue bonuses such as Puissant Art); an art the entity lacks counts as 0.
+    /// Evaluated against the entity's max bought Art score, never a Puissant
+    /// Art bonus (`ArMDE:4820`; D83.5); an art the entity lacks counts as 0.
     ArtMin {
         /// The required Art's id.
         art: Id,
-        /// The minimum effective score required.
+        /// The minimum bought score required.
         score: u8,
     },
     /// The entity must be Hermetically trained. Evaluated against
@@ -431,10 +432,10 @@ pub enum Prereq {
     /// `score: 1`), and Uncontrollable Strength requires Strength not below 0
     /// ("may not be taken if the character's Strength is below 0",
     /// `ArMDE:6909`, i.e. `score: 0`) — one variant covers both floors rather
-    /// than shipping two near-identical ones. Evaluated against
-    /// [`Entity::characteristics`]: a Characteristic the entity has not yet
-    /// set is genuinely unknown (mirrors [`Self::AgeMin`]'s own unset-age
-    /// handling), never a definite failure.
+    /// than shipping two near-identical ones. Evaluated against the effective
+    /// score (bought + free deltas): a Characteristic with no entry in
+    /// [`Entity::characteristics`] is a bought 0 (D83.4, amending D81.2 — the
+    /// UI deletes the entry at 0), so this is always a definite answer.
     CharacteristicMin {
         /// The required Characteristic's id (e.g. `characteristic.pre`).
         characteristic: Id,
@@ -450,11 +451,12 @@ pub enum Prereq {
     /// [`PointItem::categories`]' open vocabulary, so load-time integrity
     /// requires it to resolve via [`crate::ability::AbilityCategory`]'s own
     /// snake_case spelling. Static (like `HasCategory`), never `Unknown`: an
-    /// Ability the entity does not have counts as score 0.
+    /// Ability the entity does not have counts as score 0. Tests the held
+    /// score (bought or granted, never Puissant; D83.5).
     AbilityCategoryScoreMin {
         /// The Ability category to match, e.g. `"supernatural"`.
         category: String,
-        /// The minimum effective score required.
+        /// The minimum held score required.
         score: u8,
     },
     /// The entity must hold some Hermetic Art at or above this score (D81.3,
@@ -463,8 +465,9 @@ pub enum Prereq {
     /// Art — there is no other kind in this engine — so this ranges over the
     /// whole registry, the Art-side twin of [`Self::AbilityCategoryScoreMin`].
     /// Static, never `Unknown`: an Art the entity does not have counts as 0.
+    /// Tests the bought score, never Puissant Art (D83.5).
     AnyArtMin {
-        /// The minimum effective score required.
+        /// The minimum bought score required.
         score: u8,
     },
 }
