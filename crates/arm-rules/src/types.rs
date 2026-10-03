@@ -3926,6 +3926,16 @@ pub struct PointItem {
     /// this it cannot tell "pair A in slot 1, pair B in slot 2" from "pair B
     /// in slot 1, pair A in slot 2".
     ///
+    /// **Two copies of the item may not share any group** (D83.1, amends
+    /// D81.8): Incompatible Arts "may be taken repeatedly with different
+    /// combinations" (ArMDE:6292), so a second copy naming one of the first
+    /// copy's pairs, in either position, is refused —
+    /// `validation/selections.rs::validate_param_groups_shared_across_copies`,
+    /// one error per offending copy pair, skipping a pair whose whole tuple the
+    /// duplicate check already reported. A key inside a group therefore repeats
+    /// by its group's rule, not its own [`ParameterDef::max_per_value`]: two
+    /// copies may both name Creo, only not the same combination.
+    ///
     /// Load-time integrity requires every named key to be one of this item's
     /// own declared [`Self::parameters`]
     /// (`ruleset/integrity.rs::validate_unordered_param_groups`).

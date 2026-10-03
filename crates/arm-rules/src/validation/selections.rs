@@ -832,6 +832,68 @@ pub(crate) fn validate_param_groups_distinct(
     }
 }
 
+/// D83.1 (amends D81.8): two copies of an item may not share any of its
+/// declared `unordered_param_groups` entries, in either position —
+/// Incompatible Arts "may be taken repeatedly with different combinations"
+/// (ArMDE:6292), generalized to any item that declares groups, with no item id
+/// named here. One error per offending copy pair; `args` carries `item`.
+///
+/// Each copy is judged on its COMPLETE groups only ([`group_role_map`]), so a
+/// copy with one combination still empty is already refused when its filled
+/// one repeats another copy's; the empty one is `missing_param`'s finding.
+///
+/// **Copy pairs the duplicate check already reported are skipped.** Two copies
+/// whose whole canonical tuple is equal ([`duplicate_key`]) are
+/// [`validate_duplicate_selections`]'s finding, and reporting them here as
+/// well would draw two findings for one mistake — the same division of labour
+/// [`validate_per_value_cap`] keeps with that neighbour.
+///
+/// O(n²) over each item's copies, uncapped — the accepted gap
+/// [`validate_excluded_if_holds`] documents.
+pub(crate) fn validate_param_groups_shared_across_copies(
+    selections: &[Selection],
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    type RoleMap = BTreeMap<String, SelectionParamValue>;
+    let mut copies_by_item: BTreeMap<&Id, Vec<(BTreeSet<RoleMap>, Option<DuplicateKey>)>> =
+        BTreeMap::new();
+    for selection in selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        if item.unordered_param_groups.is_empty() {
+            continue;
+        }
+        let complete_groups = item
+            .unordered_param_groups
+            .iter()
+            .filter_map(|group| group_role_map(group, selection, item))
+            .collect();
+        copies_by_item
+            .entry(&selection.item_ref)
+            .or_default()
+            .push((complete_groups, duplicate_key(selection, ruleset)));
+    }
+
+    for (item_ref, copies) in copies_by_item {
+        for (i, (groups, key)) in copies.iter().enumerate() {
+            for (other_groups, other_key) in &copies[i + 1..] {
+                let whole_tuple_repeated = key.is_some() && key == other_key;
+                if whole_tuple_repeated || groups.is_disjoint(other_groups) {
+                    continue;
+                }
+                issues.push(ValidationIssue::error(
+                    ValidationIssue::CODE_PARAM_GROUP_SHARED_ACROSS_COPIES,
+                    CreationPhase::VirtuesFlaws,
+                    args([("item", item_ref.to_string())]),
+                    Some(item_ref.clone()),
+                ));
+            }
+        }
+    }
+}
+
 /// Enforces `max_per_target`: how many copies of an item may share one
 /// identical `(id, params)` target — canonicalized per [`DuplicateKey`] when
 /// the item declares `unordered_param_groups` (D81.8/Q3). Grant-aware —
@@ -997,6 +1059,16 @@ pub(crate) fn validate_per_value_cap(
             // bounds the counting below to the parameters that actually
             // declare a cap.
             if param.max_per_value == u8::MAX {
+                continue;
+            }
+            // A key inside an `unordered_param_groups` entry repeats by its
+            // group's rule, not its own (D83.1): two Incompatible Arts copies
+            // may both name Creo, only not the same combination (ArMDE:6292).
+            if item
+                .unordered_param_groups
+                .iter()
+                .any(|group| group.contains(&param.key))
+            {
                 continue;
             }
             let max = usize::from(param.max_per_value);

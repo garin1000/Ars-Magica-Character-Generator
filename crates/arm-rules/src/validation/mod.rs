@@ -140,6 +140,7 @@ impl fmt::Display for IssueSeverity {
 /// | `duplicate_selection` | error | virtues_flaws | `item`, `count`, `max` |
 /// | `too_many_selections` | error | virtues_flaws | `item`, `count`, `max` |
 /// | `param_groups_not_distinct` | error | virtues_flaws | `item` |
+/// | `param_group_shared_across_copies` | error | virtues_flaws | `item` |
 /// | `over_budget_virtues` | error | virtues_flaws | `points`, `budget` |
 /// | `over_budget_flaws` | error | virtues_flaws | `points`, `budget` |
 /// | `unbalanced_virtues` | error | virtues_flaws | `virtue_points`, `flaw_points` |
@@ -1024,6 +1025,15 @@ impl ValidationIssue {
     /// incomplete group from colliding with another selection's — see
     /// `validation/selections.rs::group_role_map`.
     pub const CODE_PARAM_GROUPS_NOT_DISTINCT: &'static str = "param_groups_not_distinct";
+    /// See [`Self::CODE_UNKNOWN_TYPE`]. Error (D83.1, amends D81.8): two copies
+    /// of an item share one of its
+    /// [`crate::types::PointItem::unordered_param_groups`] entries, in either
+    /// position — Incompatible Arts "may be taken repeatedly with different
+    /// combinations" (ArMDE:6292). One finding per offending copy pair; a pair
+    /// whose whole tuple already collided is [`Self::CODE_DUPLICATE_SELECTION`]'s
+    /// finding alone. `args` carries `item`.
+    pub const CODE_PARAM_GROUP_SHARED_ACROSS_COPIES: &'static str =
+        "param_group_shared_across_copies";
     /// See [`Self::CODE_UNKNOWN_TYPE`]. Warning (D81.17, `docs/vf-audit/decisions.md`):
     /// a known spell is marked [`crate::types::SpellSelection::within_focus`]
     /// while the entity holds no Magical Focus at all. The marker is already
@@ -1189,6 +1199,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     validate_entity_kind_applicability(entity, ruleset, &mut issues);
     validate_duplicate_selections(&effective_selections, ruleset, &mut issues);
     validate_param_groups_distinct(&effective_selections, ruleset, &mut issues);
+    validate_param_groups_shared_across_copies(&effective_selections, ruleset, &mut issues);
     validate_total_selection_cap(&effective_selections, ruleset, &mut issues);
     validate_per_value_cap(&effective_selections, ruleset, &mut issues);
     validate_exclusive_param_values(&effective_selections, ruleset, &mut issues);

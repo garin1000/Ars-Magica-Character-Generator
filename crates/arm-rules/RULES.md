@@ -1178,7 +1178,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1937).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:2009).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1725,7 +1725,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :846) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :908) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -1899,6 +1899,25 @@ ONE selection and errors (`CODE_PARAM_GROUPS_NOT_DISTINCT`,
 generic over `unordered_param_groups`, with no item id named in the check
 itself. An incomplete group is exempt from the comparison (same reasoning as
 the duplicate-key fix above): `missing_param` already reports the gap.
+
+**D83.1 (amends D81.8): two copies may not share a combination.** Verbatim
+(`ArMDE:6292`): "For some reason you are completely unable to use two
+combinations of Techniques and Forms. For example, you may be unable to use
+Intellego Herbam and Intellego Animal. You may not use these Arts together even
+if one or both are requisites. This Flaw may be taken repeatedly with different
+combinations, but may not be combined with a Deficiency (see page 125)."
+"Different combinations" bars a second copy from naming ANY pair the first
+names, in either position — not only the whole pair of pairs D81.8 was built
+as (try-out finding 21). `validation/selections.rs::validate_param_groups_shared_across_copies`
+compares each copy's complete groups (`group_role_map`) against every other
+copy's and raises `CODE_PARAM_GROUP_SHARED_ACROSS_COPIES`
+(`"param_group_shared_across_copies"`, error) once per offending copy pair —
+generic over `unordered_param_groups`, no item id in the check. A pair whose
+whole canonical tuple is equal is skipped: that is `duplicate_selection`'s
+finding, so one mistake draws one finding. A single Art may recur across
+copies (finding 20): `validate_per_value_cap` skips a key inside a group, whose
+repeat rule is the group's, so D10's default `max_per_value: 1` no longer
+refuses copy 2's Creo. Pinned by `crates/arm-rules/tests/d81_incompatible_arts.rs`.
 
 **D81.8, the exported name pairs each group.** The Markdown sheet used to
 append the four Arts in key order, `Incompatible Arts (Ignem, Aquam, Creo,
@@ -11052,11 +11071,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1166),
-  `validate_forbidden_traits` (:1187))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1238),
+  `validate_forbidden_traits` (:1259))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:619),
-  `validate_parameters` (:1387), `validate_duplicate_selections` (:846))
+  `validate_parameters` (:1459), `validate_duplicate_selections` (:908))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

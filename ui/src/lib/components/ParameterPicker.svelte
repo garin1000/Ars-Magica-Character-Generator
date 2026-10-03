@@ -436,7 +436,18 @@
   // and `ArMDE:3919` lets a second copy "align it to the same Realm as before or
   // pick a different one", so a copy sharing this row's spell category in a
   // different Realm is legal and must not grey anything out here.
+  //
+  // A key inside one of the item's `unordered_param_groups` counts nothing
+  // (D83.1, try-out finding 20): Incompatible Arts bars a whole Technique+Form
+  // combination across copies, never a single Art (ArMDE:6292), so its selects
+  // grey no value and a shared combination is left to the engine's
+  // `param_group_shared_across_copies` finding — the same skip
+  // `validate_per_value_cap` makes for a grouped key.
   function usage(key: string): Map<string, number> {
+    const item = store.ruleset?.ruleset.point_items[selection.ref];
+    if (item?.unordered_param_groups?.some((group) => group.includes(key))) {
+      return new Map();
+    }
     const siblings = selection.params;
     const bought = paramValueUsage(
       store.entity.selections ?? [],

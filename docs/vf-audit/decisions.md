@@ -832,6 +832,14 @@ presumption of correctness.
 
 **Norbert, 2026-10-03** (`tmp/questions-after-deadline.md`, `tmp/tryout-findings-2026-10-03.md`).
 
+1. **Incompatible Arts copies may not share a combination** (amends D81.8;
+   try-out findings 20, 21). Per ArMDE:6292, "may be taken repeatedly with
+   different combinations". A copy naming any Technique+Form pair that another
+   copy names, in either position, is an error
+   (`param_group_shared_across_copies`), one per offending copy pair. A copy is
+   judged on its completed combinations only. A whole repeated pair stays
+   `duplicate_selection` alone. Single Arts may recur: grouped keys skip
+   `max_per_value`, and the picker greys nothing.
 2. **Repeated free text compares folded** (amends D81.9; try-out finding 25).
    Every across-copies check (`max_per_target` duplicates, `max_per_value`)
    compares a free-text value, and a parameterized Ability's instance text,
