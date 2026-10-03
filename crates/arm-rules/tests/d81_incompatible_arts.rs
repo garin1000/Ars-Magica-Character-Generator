@@ -555,3 +555,53 @@ fn an_incomplete_copy_is_not_flagged_as_repeating_itself() {
         result.issues
     );
 }
+
+// --- 9. Save/load round-trip (G1, `tmp/export-audit.md`) --------------------
+
+/// Two copies with distinct pairs survive save -> load: `Entity::normalize`
+/// sorts `selections` but must not dedup two copies of one ref, and each copy
+/// must keep all four combination keys. Loaded through both plain serde and the
+/// real migrating load path (which trims every selection param on the way in).
+#[test]
+fn two_incompatible_arts_copies_round_trip_through_save() {
+    let mut e = magus();
+    e.selections = vec![
+        incompatible_arts("art.creo", "art.animal", "art.rego", "art.herbam"),
+        incompatible_arts("art.muto", "art.aquam", "art.perdo", "art.ignem"),
+    ];
+    e.normalize();
+
+    let json = serde_json::to_string(&e).expect("Entity always serializes");
+    let plain: Entity = serde_json::from_str(&json)
+        .unwrap_or_else(|err| panic!("a saved Entity must load: {err}\n{json}"));
+    let migrated = arm_rules::migration::load_entity_migrating(
+        &json,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        &full_ruleset(),
+        &BTreeMap::new(),
+    )
+    .unwrap_or_else(|err| panic!("a current save must load through migration: {err}"))
+    .entity;
+
+    for (path, back) in [("serde", &plain), ("load_entity_migrating", &migrated)] {
+        assert_eq!(&e, back, "{path}: the two copies must round-trip unchanged");
+        let copies: Vec<&Selection> = back
+            .selections
+            .iter()
+            .filter(|s| s.item_ref == Id::new("flaw.incompatible_arts"))
+            .collect();
+        assert_eq!(
+            copies.len(),
+            2,
+            "{path}: both copies must survive; got {copies:?}"
+        );
+        for copy in copies {
+            let keys: Vec<&str> = copy.params.keys().map(String::as_str).collect();
+            assert_eq!(
+                keys,
+                vec!["form_1", "form_2", "technique_1", "technique_2"],
+                "{path}: every copy must keep all four combination keys"
+            );
+        }
+    }
+}

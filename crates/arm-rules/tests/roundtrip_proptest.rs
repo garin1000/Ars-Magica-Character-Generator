@@ -85,6 +85,16 @@ fn arb_prereq() -> impl Strategy<Value = Prereq> {
                 }
             }
         ),
+        // G4 (`tmp/export-audit.md`): the three D81 variants.
+        (arb_id(), any::<i8>()).prop_map(|(characteristic, score)| {
+            Prereq::CharacteristicMin {
+                characteristic,
+                score,
+            }
+        }),
+        ("[a-z]{1,8}", any::<u8>())
+            .prop_map(|(category, score)| Prereq::AbilityCategoryScoreMin { category, score }),
+        any::<u8>().prop_map(|score| Prereq::AnyArtMin { score }),
     ];
     leaf.prop_recursive(3, 16, 4, |inner| {
         prop_oneof![
@@ -162,15 +172,26 @@ fn arb_spell() -> impl Strategy<Value = SpellSelection> {
         prop::option::of(arb_name()),
         prop::collection::vec(arb_small_id(), 0..4),
         any::<bool>(),
+        // G3 (`tmp/export-audit.md`): D79's independent Potent Magic mark.
+        any::<bool>(),
     )
         .prop_map(
-            |(spell, level, mastery, parameter, mastery_abilities, within_focus)| {
+            |(
+                spell,
+                level,
+                mastery,
+                parameter,
+                mastery_abilities,
+                within_focus,
+                within_potent_field,
+            )| {
                 let mut s = SpellSelection::new(spell);
                 s.level = level;
                 s.mastery = mastery;
                 s.parameter = parameter;
                 s.mastery_abilities = mastery_abilities;
                 s.within_focus = within_focus;
+                s.within_potent_field = within_potent_field;
                 s
             },
         )

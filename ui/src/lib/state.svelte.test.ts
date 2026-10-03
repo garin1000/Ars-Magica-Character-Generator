@@ -4364,10 +4364,10 @@ describe('unsaved-changes tracking', () => {
   }
 
   /** Drive a real open so the store captures a clean saved-baseline. */
-  async function loadClean(path = '/tmp/marcus.armc'): Promise<void> {
+  async function loadClean(path = '/tmp/marcus.armc', entity = cleanEntity()): Promise<void> {
     vi.mocked(ipc.loadEntity).mockResolvedValue({
       path,
-      entity: cleanEntity(),
+      entity,
       migrated_aging_characteristics: [],
     });
     const opening = store.open();
@@ -4418,6 +4418,68 @@ describe('unsaved-changes tracking', () => {
     await loadClean();
     store.setWarpingEffect('A stigmatic scar');
     expect(store.dirty).toBe(true);
+  });
+
+  // G7 (tmp/export-audit.md): the D81 edit paths. Each reassigns a nested list
+  // on the entity; the snapshot compare must see it, and clearing a mark writes
+  // `undefined`, which JSON.stringify drops, so un-marking returns to baseline.
+  function cleanEntityWithOneSpell(): Entity {
+    return { ...cleanEntity(), type_id: 'magus', spells: [{ spell: 'spell.pilum_of_fire' }] };
+  }
+
+  it('marking a spell within focus dirties the document; unmarking clears it again', async () => {
+    await loadClean(undefined, cleanEntityWithOneSpell());
+    expect(store.dirty).toBe(false);
+
+    store.setSpellWithinFocusAt(0, true);
+    expect(store.dirty).toBe(true);
+
+    store.setSpellWithinFocusAt(0, false);
+    expect(store.dirty).toBe(false);
+  });
+
+  it('marking a spell within the Potent Magic field dirties the document; unmarking clears it again', async () => {
+    await loadClean(undefined, cleanEntityWithOneSpell());
+    expect(store.dirty).toBe(false);
+
+    store.setSpellWithinPotentFieldAt(0, true);
+    expect(store.dirty).toBe(true);
+
+    store.setSpellWithinPotentFieldAt(0, false);
+    expect(store.dirty).toBe(false);
+  });
+
+  it('addSpellWithinFocus dirties the document', async () => {
+    await loadClean(undefined, { ...cleanEntity(), type_id: 'magus' });
+    expect(store.dirty).toBe(false);
+
+    store.addSpellWithinFocus('spell.pilum_of_fire');
+    expect(store.dirty).toBe(true);
+  });
+
+  it('setting an Incompatible Arts combination dirties the document; setting it back clears it', async () => {
+    await loadClean(undefined, {
+      ...cleanEntity(),
+      type_id: 'magus',
+      selections: [
+        {
+          ref: 'flaw.incompatible_arts',
+          params: {
+            technique_1: 'art.creo',
+            form_1: 'art.ignem',
+            technique_2: 'art.perdo',
+            form_2: 'art.aquam',
+          },
+        },
+      ],
+    });
+    expect(store.dirty).toBe(false);
+
+    await store.setParamAt(0, 'technique_1', 'art.rego');
+    expect(store.dirty).toBe(true);
+
+    await store.setParamAt(0, 'technique_1', 'art.creo');
+    expect(store.dirty).toBe(false);
   });
 
   it('clears dirty after a successful save (non-null path)', async () => {

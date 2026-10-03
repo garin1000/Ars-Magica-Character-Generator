@@ -87,15 +87,24 @@ fn fully_populated_entity() -> Entity {
     e.ability_scores = vec![{
         let mut a = AbilityScore::new(Id::new("ability.awareness"), 3);
         a.specialty = Some("searching".to_string());
+        // G2 (`tmp/export-audit.md`): the nested row flags are skipped at their
+        // defaults, so the fixture must set them for the round trip to see them.
+        a.banked_xp = 4;
         a
     }];
-    e.art_scores = vec![ArtScore::new(Id::new("art.creo"), 5)];
+    e.art_scores = vec![{
+        let mut a = ArtScore::new(Id::new("art.creo"), 5);
+        a.banked_xp = 3;
+        a
+    }];
     e.spells = vec![{
         let mut s = SpellSelection::new(Id::new("spell.pilum_of_fire"));
         s.level = Some(20);
         s.mastery = Some(1);
         s.parameter = Some("art.ignem".to_string());
         s.mastery_abilities = vec![Id::new("spell_mastery_ability.penetration")];
+        s.within_focus = true;
+        s.within_potent_field = true;
         s
     }];
 
@@ -337,6 +346,38 @@ fn a_fully_populated_entity_round_trips_unchanged() {
         entity, back,
         "a fully-populated Entity did not survive a save/load round trip — some \
          field is dropped or altered on the way back in.\nJSON was: {json}"
+    );
+}
+
+/// G2 (`tmp/export-audit.md`): the nested per-row choice flags — a spell's
+/// within-focus and within-Potent-field marks, and the banked XP on an Ability
+/// and an Art row — are each `skip_serializing_if` at their default, so the
+/// whole-struct round trip above only covers them while the fixture sets them.
+/// This pins both halves: the fixture sets them, and each comes back as set.
+#[test]
+fn the_nested_row_flags_survive_the_round_trip() {
+    let entity = fully_populated_entity();
+    let json = serde_json::to_string(&entity).expect("Entity always serializes");
+    let back: Entity = serde_json::from_str(&json)
+        .unwrap_or_else(|e| panic!("a saved Entity must load: {e}\n{json}"));
+
+    let flags = |e: &Entity| {
+        (
+            e.spells[0].within_focus,
+            e.spells[0].within_potent_field,
+            e.ability_scores[0].banked_xp,
+            e.art_scores[0].banked_xp,
+        )
+    };
+    assert_eq!(
+        flags(&entity),
+        (true, true, 4, 3),
+        "fixture premise: fully_populated_entity sets every nested row flag"
+    );
+    assert_eq!(
+        flags(&back),
+        (true, true, 4, 3),
+        "a nested row flag was dropped on the way back in.\nJSON was: {json}"
     );
 }
 

@@ -28,10 +28,11 @@
 //! GREEN because it only pins wiring that was already correct — same shape as
 //! `d42_realms.rs`'s phase-1 note.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use arm_rules::effective::warping;
-use arm_rules::ruleset::{Ruleset, RulesetSources};
+use arm_rules::export::{LABEL_KEYS, character_markdown};
+use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
 
 fn full_ruleset() -> Ruleset {
@@ -296,5 +297,84 @@ fn merinita_bound_to_magic_realm_still_gets_one_warping_point() {
         outcome.points, 1,
         "Bound to (Realm) at Magic is not faerie-related and must NOT \
          exempt the magus from ArMDE:2280's initiation point, got {outcome:?}"
+    );
+}
+
+// --- G6 (`tmp/export-audit.md`): the point reaches the Markdown export ------
+
+fn localized_en() -> LocalizedRuleset {
+    LocalizedRuleset::from_merged(
+        full_ruleset(),
+        &[
+            include_str!("../../../rules/i18n/en/virtues_flaws.json"),
+            include_str!("../../../rules/i18n/en/abilities.json"),
+            include_str!("../../../rules/i18n/en/arts.json"),
+            include_str!("../../../rules/i18n/en/houses.json"),
+        ],
+    )
+    .expect("shipped English rules text loads")
+}
+
+/// Every chrome key resolved to itself, so a section heading prints as its key
+/// (`### warping-label`) and a bullet as `- **warping-points-label**: N`.
+fn identity_labels(rs: &LocalizedRuleset) -> BTreeMap<String, String> {
+    let mut keys: BTreeSet<String> = LABEL_KEYS.iter().map(|k| k.to_string()).collect();
+    for profile in rs.ruleset.profiles() {
+        keys.insert(format!("type-{}", profile.id));
+    }
+    for item in rs.ruleset.items() {
+        for category in &item.categories {
+            keys.insert(format!("category-{category}"));
+        }
+        for param in &item.parameters {
+            keys.insert(format!("param-label-{}", param.key));
+        }
+    }
+    keys.into_iter().map(|k| (k.clone(), k)).collect()
+}
+
+fn exported(entity: &Entity) -> String {
+    let rs = localized_en();
+    character_markdown(entity, &rs, &identity_labels(&rs))
+        .expect("a Merinita magus of shipped ids exports")
+}
+
+/// `export/magic.rs::Doc::write_annotations` prints the Warping section from
+/// `effective::warping`, so the House's conditional point (ArMDE:2280) must
+/// show on the sheet even though nothing is stored in `warping_points`.
+#[test]
+fn merinita_initiation_point_appears_in_the_exported_warping_section() {
+    let entity = magus("house.merinita", vec![]);
+    assert_eq!(
+        entity.warping_points, 0,
+        "fixture premise: no stored points"
+    );
+
+    let rendered = exported(&entity);
+
+    assert!(
+        rendered.lines().any(|l| l == "### warping-label"),
+        "the Warping section must be printed for the initiation point, got:\n{rendered}"
+    );
+    assert!(
+        rendered
+            .lines()
+            .any(|l| l == "- **warping-points-label**: 1"),
+        "the exported Warping Points must include ArMDE:2280's point, got:\n{rendered}"
+    );
+}
+
+/// The twin: Faerie Friend is faerie-related (D81.14), so no point is owed,
+/// and with no other Warping the sheet prints no Warping section at all.
+#[test]
+fn merinita_with_faerie_friend_exports_no_warping_section() {
+    let entity = magus("house.merinita", vec![sel("flaw.faerie_friend")]);
+
+    let rendered = exported(&entity);
+
+    assert!(
+        !rendered.lines().any(|l| l == "### warping-label"),
+        "an exempt Merinita magus owes no Warping, so the sheet must not print \
+         a Warping section, got:\n{rendered}"
     );
 }

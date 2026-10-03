@@ -1062,6 +1062,119 @@ fn a_pre_17_save_inherits_the_configured_default_through_the_real_load_path() {
     assert_eq!(reopened.saga_year, 1197);
 }
 
+/// G5 (`tmp/export-audit.md`): `within_focus` predates schema 21, so a schema-20
+/// save can carry it. The `virtue.rard` selection forces the 20 -> 21 rename
+/// fold to run, and the mark must come through it, and through a re-save, intact.
+#[test]
+fn a_schema_20_save_keeps_a_within_focus_mark_through_migration() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("schema-20-magus.json");
+    fs::write(
+        &path,
+        format!(
+            r#"{{
+              "schema_version": 20,
+              "ruleset": {{ "id": "{RULESET_ID}", "version": "{RULESET_VERSION}" }},
+              "entity_kind": "character",
+              "type_id": "magus",
+              "ability_funding": "pool",
+              "saga_year": 1220,
+              "selections": [{{ "ref": "virtue.rard" }}],
+              "spells": [{{ "spell": "spell.pilum_of_fire", "within_focus": true }}]
+            }}"#
+        ),
+    )
+    .unwrap();
+
+    let (ruleset, names) = shipped_ruleset_and_names();
+    let migrated = load_entity_from_path(
+        &path,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
+    )
+    .unwrap()
+    .entity;
+    assert_eq!(
+        migrated.selections,
+        vec![Selection::new(Id::new("virtue.bard"))],
+        "fixture premise: the 20 -> 21 fold ran"
+    );
+    assert_eq!(migrated.schema_version, 21);
+    assert_eq!(migrated.spells.len(), 1);
+    assert!(
+        migrated.spells[0].within_focus,
+        "the within-focus mark must survive the schema-21 migration"
+    );
+
+    save_entity_to_path(&migrated, &path).unwrap();
+    let reopened = load_entity_from_path(
+        &path,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
+    )
+    .unwrap()
+    .entity;
+    assert!(
+        reopened.spells[0].within_focus,
+        "the mark must survive the re-save of the migrated document too"
+    );
+}
+
+/// G1 (`tmp/export-audit.md`), through the app's real save and load doors: two
+/// Incompatible Arts copies with distinct pairs both survive, each with all four
+/// combination keys, and the canonical output is byte-stable.
+#[test]
+fn two_incompatible_arts_copies_survive_save_then_load() {
+    let copy = |t1: &str, f1: &str, t2: &str, f2: &str| {
+        Selection::with_params(
+            Id::new("flaw.incompatible_arts"),
+            BTreeMap::from([
+                ("technique_1".to_string(), Id::new(t1)),
+                ("form_1".to_string(), Id::new(f1)),
+                ("technique_2".to_string(), Id::new(t2)),
+                ("form_2".to_string(), Id::new(f2)),
+            ]),
+        )
+    };
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("incompatible-arts.json");
+    let mut entity = sample_entity();
+    entity.type_id = Id::new("magus");
+    entity.selections = vec![
+        copy("art.perdo", "art.ignem", "art.muto", "art.aquam"),
+        copy("art.creo", "art.animal", "art.rego", "art.herbam"),
+    ];
+    entity.normalize();
+    let (ruleset, names) = shipped_ruleset_and_names();
+
+    save_entity_to_path(&entity, &path).unwrap();
+    let first = fs::read_to_string(&path).unwrap();
+    let reloaded = load_entity_from_path(
+        &path,
+        arm_rules::DEFAULT_SAGA_YEAR,
+        Some(&ruleset),
+        Some(&names),
+    )
+    .unwrap()
+    .entity;
+
+    assert_eq!(reloaded, entity, "both copies must round-trip unchanged");
+    assert_eq!(reloaded.selections.len(), 2, "neither copy may be dropped");
+    for selection in &reloaded.selections {
+        let keys: Vec<&str> = selection.params.keys().map(String::as_str).collect();
+        assert_eq!(
+            keys,
+            vec!["form_1", "form_2", "technique_1", "technique_2"],
+            "every copy must keep all four combination keys"
+        );
+    }
+    save_entity_to_path(&reloaded, &path).unwrap();
+    let second = fs::read_to_string(&path).unwrap();
+    assert_eq!(first, second, "canonical output must be byte-stable");
+}
+
 #[test]
 fn save_stamps_current_schema_version() {
     let tmp = tempfile::tempdir().unwrap();
