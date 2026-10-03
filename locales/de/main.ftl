@@ -344,7 +344,7 @@ life-stage-spell-levels-label = Zauberstufen
 # schreibgeschützten Zustand, den die Felder selbst nicht treffen können; sie ist
 # das `aria-describedby`-Ziel beider Felder.
 life-stage-post-gauntlet-no-years-note = Noch keine Jahre als Magus, daher können Laborquartale und Zauberstufen nichts aufnehmen.
-life-stage-post-gauntlet-summary = Jahre als Magus: { $years }; { $points } Punkte = { $xp } EP + { $levels } Zauberstufen
+life-stage-post-gauntlet-summary = Jahre als Magus: { $years }; { $points } Punkte = { $xp } EP + Zauberstufen ({ $levels })
 # Notausgang für eine von Hand bearbeitete Datei: ein Charakter, der über seine
 # Lebensabschnitte finanziert wird, darf keinen eingetragenen Vorrat führen, und die
 # geführte Erstellung bietet kein Feld, um ihn zu berichtigen — dies leert ihn.
@@ -529,9 +529,9 @@ remove-item = { $name } entfernen
 age-label = Alter
 apparent-age-label = Scheinbares Alter
 confidence-label = Selbstvertrauen
-confidence-readout = Wert { $score }, { $points } Punkte
+confidence-readout = Wert { $score }, Punkte { $points }
 warping-label = Verzerrung
-warping-readout = Wert { $score }, { $points } Punkte
+warping-readout = Wert { $score }, Punkte { $points }
 warping-effect-label = Verzerrungseffekt
 warping-owed-label = Verzerrungs-Tugenden & -Fehler
 warping-owed-minor-flaws = { $count ->

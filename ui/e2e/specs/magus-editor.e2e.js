@@ -17,7 +17,15 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
-import { clean, isRowBlocked, setLanguage, startCharacter, STEP_TIMEOUT } from '../helpers.js';
+import {
+  clean,
+  isRowBlocked,
+  setLanguage,
+  SETTLE_TIMEOUT,
+  startCharacter,
+  STEP_TIMEOUT,
+  waitForBalancePoints,
+} from '../helpers.js';
 
 // End-to-end: Hermetic Arts (magus-only). The Arts tab appears only for a magus,
 // an Art is bought against the shared XP pool, and Puissant Art adds +3 to the
@@ -641,7 +649,19 @@ describe('selected frame', () => {
     // how many weapons/shields/armor the rules ship.
     const [addId] = await enabledAddIds('add-', 1);
     const add = await $(`[data-testid="${addId}"]`);
-    for (let i = 0; i < EQUIPMENT_ROWS; i++) await add.click();
+    // One click, then its row, before the next: back-to-back clicks can lose one
+    // to the issues footer growing under the pointer (see `waitForBalancePoints`
+    // in helpers.js). Equipment spends no Virtue points, so the row count is the
+    // settle signal here.
+    const carried = async () => (await $$('[data-testid^="equipment-name-"]')).length;
+    const before = await carried();
+    for (let i = 0; i < EQUIPMENT_ROWS; i++) {
+      await add.click();
+      await browser.waitUntil(async () => (await carried()) === before + i + 1, {
+        timeout: SETTLE_TIMEOUT,
+        timeoutMsg: `Add click ${i + 1} of ${EQUIPMENT_ROWS} never rendered carried item ${i}`,
+      });
+    }
     await browser.waitUntil(
       async () => (await $$('[data-testid^="equipment-name-"]')).length >= EQUIPMENT_ROWS,
       {
@@ -769,12 +789,9 @@ describe('totals tab', () => {
 // that the error stuck around even after every instance had a Characteristic.
 describe('repeated parameterized virtues', () => {
   const MISSING_PARAM = 'missing the parameter';
-  // One budget for every wait below, measured rather than guessed: under a
-  // concurrent CPU load the webview was observed to need well past 10s for a
-  // single DOM update (1db5731, companion-editor.e2e.js). The two finding waits
-  // used to allow 5s for a debounced validate (`VALIDATE_DEBOUNCE_MS`) plus three
-  // parallel IPC round trips, which is tighter than the row waits they follow.
-  const SETTLE_TIMEOUT = 20000;
+  // Every wait below uses the shared SETTLE_TIMEOUT (helpers.js). The two finding
+  // waits used to allow 5s for a debounced validate (`VALIDATE_DEBOUNCE_MS`) plus
+  // three parallel IPC round trips, which is tighter than the row waits they follow.
   const paramSelector = (i) =>
     `[data-testid="param-virtue.great_characteristic-characteristic-${i}"]`;
 
@@ -787,24 +804,7 @@ describe('repeated parameterized virtues', () => {
     return texts;
   }
 
-  /**
-   * Wait until the balance bar reports `points` Virtue points spent, against a
-   * budget the engine has already sent (non-zero). It reads `used / budget` in
-   * either language.
-   */
-  async function waitForVirtuePoints(points) {
-    await browser.waitUntil(
-      async () => {
-        const text = clean(await $('[data-testid="balance-virtues"]').getText());
-        const match = text.match(/(\d+)\s*\/\s*(\d+)/);
-        return match !== null && Number(match[1]) === points && Number(match[2]) > 0;
-      },
-      {
-        timeout: SETTLE_TIMEOUT,
-        timeoutMsg: `the balance bar never settled at ${points} Virtue point(s)`,
-      },
-    );
-  }
+  const waitForVirtuePoints = (points) => waitForBalancePoints('virtues', points);
 
   it('keeps a distinct target per Great Characteristic instance', async () => {
     // The instance indices below are the selections-array positions, so this needs

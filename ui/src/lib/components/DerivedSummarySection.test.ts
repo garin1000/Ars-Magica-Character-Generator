@@ -109,14 +109,14 @@ describe('DerivedSummarySection — warping read-out (Sabine 8)', () => {
   it('labels score and points rather than juxtaposing them in parentheses', () => {
     store.lang = 'en';
     const cell = warpingCell(html());
-    expect(cell).toBe('Score 3, 12 points');
+    expect(cell).toBe('Score 3, Points 12');
     expect(cell).not.toContain('(');
   });
 
   it('uses the German wording under the German bundle', () => {
     store.lang = 'de';
     const cell = warpingCell(html());
-    expect(cell).toBe('Wert 3, 12 Punkte');
+    expect(cell).toBe('Wert 3, Punkte 12');
     expect(cell).not.toContain('(');
   });
 

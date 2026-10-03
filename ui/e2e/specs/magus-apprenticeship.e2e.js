@@ -14,11 +14,11 @@
 //
 // The arithmetic is the rulebook's: "The fifteen years of apprenticeship give the
 // character 240 experience points … These experience points can be spent on Arts or
-// Abilities" (Core Rules.md:2435), which makes apprenticeship the general pool; later
-// life stops where it begins (`:2214`), so a magus of 25 lived five later-life years
+// Abilities" (ArMDE:2435), which makes apprenticeship the general pool; later
+// life stops where it begins (`ArMDE:2214`), so a magus of 25 lived five later-life years
 // worth 75, spendable on Abilities alone; and "Magi must have the following minimum
 // Abilities: Parma Magica 1, Magic Theory 1, Latin 1. Characters with lower scores
-// would not be admitted to the Order" (`:2437`) is an error on every magus.
+// would not be admitted to the Order" (`ArMDE:2437`) is an error on every magus.
 //
 // NOTE: requires the production binary; the display comes from your desktop session
 // or, when DISPLAY is unset, the Xvfb one WebdriverIO starts (see e2e/README.md). The
@@ -228,7 +228,7 @@ describe('magus apprenticeship through the life stages', () => {
 
     // Under life-stage funding the pools are derived from the stages, so the editable
     // field is gone and the total is read-only: apprenticeship's 240,
-    // the pool the spend is charged against (`:2435`).
+    // the pool the spend is charged against (`ArMDE:2435`).
     expect(await $(XP_POOL_INPUT).isExisting()).toBe(false);
     expect(await textOf(XP_POOL_TOTAL)).toBe('240');
     expect(await textOf(APPRENTICESHIP)).toContain('240');
@@ -240,7 +240,7 @@ describe('magus apprenticeship through the life stages', () => {
     // language is named), childhood's spread, and, for a magus alone, later life —
     // and each is folded into the chip for its own block rather than listed a second
     // time as a generic restricted row. So the bar shows four chips in the order the
-    // rules state the periods (`:2213-2216`, `:2364`) and NO restricted rows at all,
+    // rules state the periods (`ArMDE:2213-2216`, `ArMDE:2364`) and NO restricted rows at all,
     // this magus having no V/F that grants an experience pool.
     await browser.waitUntil(async () => (await rowsOf(LIFE_STAGE_CHIPS)).length === 3, {
       timeout: STEP_TIMEOUT,
@@ -254,13 +254,13 @@ describe('magus apprenticeship through the life stages', () => {
       'life-stage-later-life',
       'life-stage-apprenticeship',
     ]);
-    // Childhood's two figures under the one heading (`:2378`), in one chip.
+    // Childhood's two figures under the one heading (`ArMDE:2378`), in one chip.
     expect(chips[0].text).toContain('Early childhood');
     expect(chips[0].text).toContain('Native language');
     expect(chips[0].text).toContain('0 / 75');
     expect(chips[0].text).toContain('0 / 45');
     // Later life, with the ages it spans and the pool it forms merged into one line:
-    // a magus gauntleted at 25 lived ages 5-10 (`:2402`), 5 × 15 = 75.
+    // a magus gauntleted at 25 lived ages 5-10 (`ArMDE:2402`), 5 × 15 = 75.
     expect(chips[1].text).toContain('Later life');
     expect(chips[1].text).toContain('ages 5-10');
     expect(chips[1].text).toContain('0 / 75');
@@ -346,8 +346,8 @@ describe('magus apprenticeship through the life stages', () => {
       expect(row.text).not.toContain(ability);
       expect(row.text).toContain('is not met');
     }
-    // Seven rows in all: the three of `:2437` plus the four recommended ones of
-    // `:2451-2461`, none of them met yet.
+    // Seven rows in all: the three of `ArMDE:2437` plus the four recommended ones of
+    // `ArMDE:2451-2461`, none of them met yet.
     expect(await textOf(SUMMARY)).toContain('7 of 7');
 
     // And they block the step: "Characters with lower scores would not be admitted to
@@ -390,7 +390,7 @@ describe('magus apprenticeship through the life stages', () => {
 
   it('leaves the recommended Abilities as warnings that do not gate', async () => {
     // Latin 4, Magic Theory 3 and Artes Liberales 1 are advice, not admission
-    // (`:2451-2461`), so they stay unmet …
+    // (`ArMDE:2451-2461`), so they stay unmet …
     const latin = await checklistRow('magus-recommended-ability.dead_language');
     expect(latin.met).toBe('false');
     expect(latin.text).toContain('is not met');
@@ -407,7 +407,7 @@ describe('magus apprenticeship through the life stages', () => {
   it('lets the Arts step spend the same apprenticeship experience', async () => {
     await advanceWizardTo('arts');
 
-    // "These experience points can be spent on Arts or Abilities" (`:2435`): the Arts
+    // "These experience points can be spent on Arts or Abilities" (`ArMDE:2435`): the Arts
     // bar shows the same 240, already charged 15 for the three Abilities.
     await $('[data-testid="art-xp-pool-total"]').waitForExist({ timeout: STEP_TIMEOUT });
     expect(await textOf('[data-testid="art-xp-pool-total"]')).toBe('240');

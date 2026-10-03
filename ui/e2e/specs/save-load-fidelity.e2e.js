@@ -36,9 +36,12 @@ import {
   runDocumentAction,
   setLanguage,
   setValidationMode,
+  SETTLE_TIMEOUT,
   startCharacter,
   STEP_TIMEOUT,
+  waitForBalancePoints,
   waitForIdle,
+  waitUntilExplained,
 } from '../helpers.js';
 import { e2eExportFile, e2eFile } from '../wdio.conf.js';
 
@@ -69,12 +72,13 @@ async function issueCodes() {
 /** Wait until the listed finding codes satisfy `predicate`, naming them on failure. */
 async function waitForCodes(predicate, message) {
   let codes = [];
-  await browser.waitUntil(
+  await waitUntilExplained(
     async () => {
       codes = await issueCodes();
       return predicate(codes);
     },
-    { timeout: STEP_TIMEOUT, timeoutMsg: () => `${message}; showing [${codes.join(', ')}]` },
+    STEP_TIMEOUT,
+    () => `${message}; showing [${codes.join(', ')}]`,
   );
   return codes;
 }
@@ -280,15 +284,13 @@ describe('D81 parameters survive a save and an Open', () => {
       timeout: STEP_TIMEOUT,
     });
     let pairs = [];
-    await browser.waitUntil(
+    await waitUntilExplained(
       async () => {
         pairs = await shownPairs();
         return JSON.stringify(pairs) === JSON.stringify(EXPECTED_PAIRS);
       },
-      {
-        timeout: STEP_TIMEOUT,
-        timeoutMsg: () => `the reopened Incompatible Arts pairs read ${pairs.join(', ')}`,
-      },
+      STEP_TIMEOUT,
+      () => `the reopened Incompatible Arts pairs read ${pairs.join(', ')}`,
     );
 
     await clickTab(SPELLS_TAB);
@@ -542,9 +544,17 @@ describe('German locale: a full companion sheet and its export', () => {
     expect(typeLabel).toContain('Gefährte');
 
     await clickTab(VF_TAB);
+    // Each add settles (row + balance) before the next click, so the issues
+    // footer cannot grow under the pointer mid-click (`waitForBalancePoints`).
+    await waitForBalancePoints('virtues', 0);
     await (await $('[data-testid="add-virtue.keen_vision"]')).click();
+    await $('[data-testid^="remove-virtue.keen_vision-"]').waitForExist({
+      timeout: SETTLE_TIMEOUT,
+    });
+    await waitForBalancePoints('virtues', 1);
     await (await $('[data-testid="add-flaw.poor_student"]')).click();
     await $('[data-testid^="remove-flaw.poor_student-"]').waitForExist({ timeout: STEP_TIMEOUT });
+    await waitForBalancePoints('flaws', 1);
     const virtues = await textContentOf('[data-testid="selection-list-virtue"]');
     const flaws = await textContentOf('[data-testid="selection-list-flaw"]');
     expect(virtues).toContain('Scharfe Sicht');

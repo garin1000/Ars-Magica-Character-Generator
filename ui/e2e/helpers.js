@@ -527,7 +527,7 @@ async function addAbilityAtScoreOne(ability, index, parameter) {
  *
  * "Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory 1,
  * Latin 1. Characters with lower scores would not be admitted to the Order."
- * (Ars Magica - Definitive Edition (Core Rules).md:2437.) Those three are BLOCKING
+ * (ArMDE:2437.) Those three are BLOCKING
  * findings on the `abilities` phase for every magus, guided or flat — and an empty
  * experience pool leaves `not_enough_xp` blocking just as effectively — so any spec
  * walking a magus past that step has to settle both. Extracted rather than copied into
@@ -539,7 +539,7 @@ async function addAbilityAtScoreOne(ability, index, parameter) {
  * pools are derived and no input is offered, and apprenticeship funds these three
  * many times over anyway.
  *
- * @param {string} language the dead language to name (any dead language satisfies `:2437`)
+ * @param {string} language the dead language to name (any dead language satisfies `ArMDE:2437`)
  */
 export async function satisfyMagusMinimums(language = 'Latin') {
   const pool = await $('[data-testid="xp-pool"]');
@@ -659,4 +659,61 @@ export async function resizeWindowTo(width, height) {
  */
 export async function isRowBlocked(element) {
   return (await element.getAttribute('aria-disabled')) === 'true';
+}
+
+/**
+ * `browser.waitUntil`, with a failure message built AFTER the timeout, from the
+ * last reading the condition stored.
+ *
+ * wdio 9's `waitUntil` throws `timeoutMsg` only `if (typeof timeoutMsg ===
+ * "string")`, so a function passed there is silently dropped and the failure
+ * reads a generic timeout. A string, though, is fixed at call time and cannot
+ * hold the last reading — so the timeout is caught and rethrown with it.
+ *
+ * @param {() => Promise<boolean>} condition
+ * @param {number} timeout
+ * @param {() => string | Promise<string>} explain the failure message
+ */
+export async function waitUntilExplained(condition, timeout, explain) {
+  try {
+    await browser.waitUntil(condition, { timeout, timeoutMsg: `timed out after ${timeout}ms` });
+  } catch (error) {
+    throw new Error(`${await explain()} (${error.message})`);
+  }
+}
+
+// One budget for an add's row and its validation to settle, measured rather than
+// guessed: under a concurrent CPU load the webview was observed to need well past
+// 10s for a single DOM update (1db5731, companion-editor.e2e.js).
+export const SETTLE_TIMEOUT = 20000;
+
+/**
+ * Wait until the balance bar reports `points` spent on one side, against a budget
+ * the engine has already sent (non-zero). Reads `used / budget`, so it works in
+ * either language.
+ *
+ * WHY A SPEC WAITS FOR THIS BETWEEN TWO ADD CLICKS (9632426). Each add's debounced
+ * validation can bring new findings, and the app-wide issues footer (`App.svelte`,
+ * `.validation-bar`) then grows and squeezes the tab area from below. WebDriver
+ * checks for an obscuring element BEFORE it dispatches a click, so a validation
+ * landing in between moves the footer under the pointer and the click goes to an
+ * issue `<li>` with no error at all. `revalidate` publishes the balance in the same
+ * guarded write as the issue list, so the bar showing the expected total means the
+ * footer already has its final height and the next click is safe.
+ *
+ * @param {'virtues'|'flaws'} side which half of the bar to read
+ * @param {number} points the expected spent total
+ */
+export async function waitForBalancePoints(side, points) {
+  await browser.waitUntil(
+    async () => {
+      const text = clean(await $(`[data-testid="balance-${side}"]`).getText());
+      const match = text.match(/(\d+)\s*\/\s*(\d+)/);
+      return match !== null && Number(match[1]) === points && Number(match[2]) > 0;
+    },
+    {
+      timeout: SETTLE_TIMEOUT,
+      timeoutMsg: `the balance bar never settled at ${points} ${side} point(s)`,
+    },
+  );
 }

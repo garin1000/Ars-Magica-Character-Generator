@@ -22,6 +22,7 @@ import {
   setLanguage,
   startCharacter,
   waitForIdle,
+  waitUntilExplained,
 } from '../helpers.js';
 import { e2eExportFile, e2eFile } from '../wdio.conf.js';
 
@@ -240,7 +241,7 @@ describe('spells', () => {
   });
 
   // Slice 6b8c: the OTHER half of the same Virtue. "You gain an additional 60
-  // experience points and 30 spell levels during apprenticeship" (`:4966`) — the
+  // experience points and 30 spell levels during apprenticeship" (`ArMDE:4966`) — the
   // engine has always granted the 60, but the XP bar charged the spend against the
   // typed pool alone, so this legal magus read a negative Available with no error
   // anywhere. Real-binary arithmetic, because only the live payload carries the
@@ -425,7 +426,7 @@ describe('spells', () => {
 // are all enterable; the totals panel's bonding level folds the negative Size in;
 // the cord points follow the 5/15/30/50/75 curve; NO validation issue appears (the
 // guidance-only contract, end to end); and NO power-levels budget bar is rendered
-// (Core:10866 — there is no limit). Then the whole statblock round-trips through
+// (ArMDE:10866 — there is no limit). Then the whole statblock round-trips through
 // save + Open.
 describe('familiar', () => {
   const VF_TAB = '[data-testid="tab-virtues_flaws"]';
@@ -438,17 +439,15 @@ describe('familiar', () => {
 
   /** Wait for a (debounced) engine read-out to contain every fragment. */
   async function waitForText(selector, ...fragments) {
-    await browser.waitUntil(
+    await waitUntilExplained(
       async () => {
         const text = clean(await $(selector).getText());
         return fragments.every((f) => text.includes(f));
       },
-      {
-        timeout: 10000,
-        timeoutMsg: async () =>
-          `${selector} never showed ${fragments.join(' + ')}; read ` +
-          `"${clean(await $(selector).getText())}"`,
-      },
+      10000,
+      async () =>
+        `${selector} never showed ${fragments.join(' + ')}; read ` +
+        `"${clean(await $(selector).getText())}"`,
     );
   }
 
@@ -500,7 +499,7 @@ describe('familiar', () => {
 
     await set('familiar-name', 'Corvus');
     await set('familiar-animal', 'raven');
-    // A raven is Size -4 (Core:17829-17856). The rendered value must carry the
+    // A raven is Size -4 (ArMDE:17829-17856). The rendered value must carry the
     // ASCII hyphen-minus, never the mathematical minus U+2212.
     await set('familiar-size', '-4');
     const size = await $('[data-testid="familiar-size"]');
@@ -513,7 +512,7 @@ describe('familiar', () => {
     await $('[data-testid="familiar-might-realm"]').selectByAttribute('value', 'magic');
     await set('familiar-might-score', '10');
 
-    // Human intelligence at Int -3, gained from the bond (Core:10854).
+    // Human intelligence at Int -3, gained from the bond (ArMDE:10854).
     await set('familiar-char-int', '-3');
     expect(await $('[data-testid="familiar-char-int"]').getValue()).toBe('-3');
 
@@ -524,7 +523,7 @@ describe('familiar', () => {
     for (let i = 0; i < 3; i++) await inc.click();
     expect(clean(await $('[data-testid="familiar-personality-value-0"]').getText())).toBe('+3');
 
-    // Cords 3 / 2 / 1 → 30 + 15 + 5 = 50 points off the curve (Core:10836).
+    // Cords 3 / 2 / 1 → 30 + 15 + 5 = 50 points off the curve (ArMDE:10836).
     await set('familiar-cord-gold', '3');
     await set('familiar-cord-silver', '2');
     await set('familiar-cord-bronze', '1');
@@ -535,7 +534,7 @@ describe('familiar', () => {
     await set('familiar-power-level-0', '20');
 
     // NO budget bar for the invested powers: the character's own powers get a
-    // `power-levels-used` read-out, but Core:10866 sets no limit on what may be
+    // `power-levels-used` read-out, but ArMDE:10866 sets no limit on what may be
     // invested in a familiar, so a bar here would invent one. The absent bar is the
     // whole statement — manual-testing-findings #21 removed the sentence too.
     expect(await $('[data-testid="power-levels-used"]').isExisting()).toBe(false);
@@ -649,17 +648,15 @@ describe('talisman', () => {
 
   /** Wait for a (debounced) engine read-out to contain every fragment. */
   async function waitForText(selector, ...fragments) {
-    await browser.waitUntil(
+    await waitUntilExplained(
       async () => {
         const text = clean(await $(selector).getText());
         return fragments.every((f) => text.includes(f));
       },
-      {
-        timeout: 10000,
-        timeoutMsg: async () =>
-          `${selector} never showed ${fragments.join(' + ')}; read ` +
-          `"${clean(await $(selector).getText())}"`,
-      },
+      10000,
+      async () =>
+        `${selector} never showed ${fragments.join(' + ')}; read ` +
+        `"${clean(await $(selector).getText())}"`,
     );
   }
 
@@ -906,16 +903,13 @@ describe('longevity ritual', () => {
 
   /** Wait for the engine's (debounced) read-out to contain every fragment. */
   async function waitForHint(...fragments) {
-    await browser.waitUntil(
+    await waitUntilExplained(
       async () => {
         const text = await hintText();
         return fragments.every((f) => text.includes(f));
       },
-      {
-        timeout: 10000,
-        timeoutMsg: async () =>
-          `hint never showed ${fragments.join(' + ')}; read "${await hintText()}"`,
-      },
+      10000,
+      async () => `hint never showed ${fragments.join(' + ')}; read "${await hintText()}"`,
     );
   }
 

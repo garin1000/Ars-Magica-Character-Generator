@@ -31,7 +31,9 @@ import {
   isRowBlocked,
   runDocumentAction,
   setValidationMode,
+  SETTLE_TIMEOUT,
   startCharacter,
+  waitForBalancePoints,
 } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
 
@@ -203,27 +205,32 @@ describe('Puissant Ability targets one ability instance', () => {
     await $('[data-testid="tab-virtues_flaws"]').click();
     const add = await $('[data-testid="add-virtue.puissant_ability"]');
     await add.waitForExist({ timeout: 10000 });
-    await add.click();
-    await add.click();
 
-    // Generous wait, and measured rather than guessed: under a real concurrent
-    // CPU load (a `cargo tarpaulin` pass sharing the machine, load average into
-    // the teens on 8 cores) the SECOND instance's row was still observed missing
-    // after a 10s wait, even though the add is purely client-side/synchronous
-    // (confirmed by reading ParameterPicker.svelte / VirtueFlawTab.svelte — no
-    // IPC gates a row's existence). That is the webview renderer itself being
-    // starved of CPU time, not a logic race, so the fix is a longer wait on the
-    // right condition, not a sleep or a global default bump.
-    const ROW_RENDER_TIMEOUT = 20000;
+    // ONE CLICK, THEN ITS ROW AND ITS SETTLED VALIDATION, before the next click.
+    // These used to be two back-to-back clicks, and the second row was now and
+    // then "still not existing" after 10s and even 20s. Same race as 9632426's
+    // Great Characteristic adds (magus-editor.e2e.js): an add's debounced
+    // validation grows the issues footer under the pointer and the next click
+    // lands on an issue `<li>`, silently — see `waitForBalancePoints` in
+    // helpers.js. Puissant Ability is a Minor Virtue (one point) and this
+    // companion holds no Virtue yet, so the Virtue points count the instances.
+    const ROW_RENDER_TIMEOUT = SETTLE_TIMEOUT;
+    await waitForBalancePoints('virtues', 0);
+    for (let i = 0; i < 2; i++) {
+      await add.click();
+      await $(`[data-testid="param-virtue.puissant_ability-ability-${i}"]`).waitForExist({
+        timeout: ROW_RENDER_TIMEOUT,
+        timeoutMsg: `Add click ${i + 1} of 2 never rendered Puissant Ability instance ${i}`,
+      });
+      await waitForBalancePoints('virtues', i + 1);
+    }
+
     const first = await $('[data-testid="param-virtue.puissant_ability-ability-0"]');
     await first.waitForExist({ timeout: ROW_RENDER_TIMEOUT });
     await first.waitForEnabled({ timeout: ROW_RENDER_TIMEOUT });
     await first.selectByVisibleText('Brandenburg Lore');
-    // The second instance's row is added by the SAME two clicks above, but its
-    // render lands on a later tick than the first's. Unlike `first`, this element
-    // used to have no explicit wait at all and fell through to webdriverio's
-    // implicit default (5000ms), which is exactly the "wasn't found"/"still not
-    // existing after 5000ms" flake this guards against.
+    // The add loop already waited for this row; the explicit wait stays as a
+    // guard against falling through to webdriverio's implicit 5000ms default.
     const second = await $('[data-testid="param-virtue.puissant_ability-ability-1"]');
     await second.waitForExist({ timeout: ROW_RENDER_TIMEOUT });
     await second.waitForEnabled({ timeout: ROW_RENDER_TIMEOUT });
@@ -637,7 +644,7 @@ describe('mutually exclusive Virtues/Flaws', () => {
 });
 
 // End-to-end (Issue E): the off-budget Virtues/Flaws a character owes from its
-// Warping Score ("Effects of Warping", Core:16547-16561). A warped non-magus
+// Warping Score ("Effects of Warping", ArMDE:16547-16561). A warped non-magus
 // surfaces one picker per owed slot on the Details tab; a magus (exempt — Twilight
 // instead) never shows the section, even at the same Warping Score.
 //
@@ -682,7 +689,7 @@ describe('warping-owed Virtues/Flaws', () => {
     await $(DETAILS_TAB).click();
 
     // 75 Warping Points → Warping Score 5 → owes 2 Minor Flaws + 1 supernatural
-    // Minor Virtue (Core:16553-16559), in two labelled groups.
+    // Minor Virtue (ArMDE:16553-16559), in two labelled groups.
     await $(WARPING_POINTS).waitForExist({ timeout: 10000 });
     await $(WARPING_POINTS).setValue('75');
     await $(MINOR_FLAW_GROUP).waitForExist({ timeout: 10000 });
@@ -753,12 +760,18 @@ describe('character editor', () => {
     // Virtues & Flaws tab: a minor virtue funded by a minor flaw is balanced.
     await $('[data-testid="tab-virtues_flaws"]').click();
     await $('[data-testid="add-virtue.keen_vision"]').waitForExist({ timeout: 10000 });
+    // Each add settles (row + balance) before the next click, so the issues
+    // footer cannot grow under the pointer mid-click (`waitForBalancePoints`).
+    await waitForBalancePoints('virtues', 0);
     await $('[data-testid="add-virtue.keen_vision"]').click();
-    await $('[data-testid="add-flaw.poor_student"]').click();
     // Match by testid prefix: the suffix is the entity-array index, which shifts
     // after canonical save/load reordering of selections.
     const removeKeenVision = await $('[data-testid^="remove-virtue.keen_vision"]');
-    await removeKeenVision.waitForExist({ timeout: 5000 });
+    await removeKeenVision.waitForExist({ timeout: SETTLE_TIMEOUT });
+    await waitForBalancePoints('virtues', 1);
+    await $('[data-testid="add-flaw.poor_student"]').click();
+    await $('[data-testid^="remove-flaw.poor_student"]').waitForExist({ timeout: SETTLE_TIMEOUT });
+    await waitForBalancePoints('flaws', 1);
 
     // Abilities tab: give an XP pool, then buy Awareness up to 2 (15 xp).
     await $('[data-testid="tab-abilities"]').click();

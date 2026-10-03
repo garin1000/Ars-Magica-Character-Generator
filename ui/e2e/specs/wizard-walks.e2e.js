@@ -53,7 +53,7 @@ describe('guided wizard: grog', () => {
     // #33 gave grogs the `personality_reputations` phase, which their profile had been
     // missing. 'Loyal' is the rules' own example for the type: "'Loyal' is a
     // particularly important Trait, as it reflects the grog's attachment to the
-    // covenant" (Core Rules.md:1075) — the same passage that says a grog's traits
+    // covenant" (ArMDE:1075) — the same passage that says a grog's traits
     // matter more than a magus's, which is why leaving the phase out was backwards.
     personalityTrait: 'Loyal',
     age: '25',
@@ -219,7 +219,7 @@ describe('guided wizard: mythic companion', () => {
 // (placed before Virtues & Flaws, because its free Minor Virtue lands in that
 // budget), Arts, and Spells. It is also the only type the Order holds to minimum
 // Abilities — Parma Magica 1, Magic Theory 1 and a dead language 1 are blocking
-// findings for every magus (Core Rules.md:2437) — so the Abilities step here has
+// findings for every magus (ArMDE:2437) — so the Abilities step here has
 // to settle a real error rather than merely record a choice.
 //
 // `wizard-flow.e2e.js`'s `wizard` describe already drives a magus through the
@@ -235,7 +235,7 @@ describe('guided wizard: magus', () => {
   const HOUSE = 'house.tytalus';
 
   // Creo 3 + Corpus 3, with Int +2 and Magic Theory 1, puts the Te+Fo+Int+MT+3 cap
-  // (Core Rules.md:2465) at 12 — enough for Bind Wound, a level 10 Creo Corpus spell
+  // (ArMDE:2465) at 12 — enough for Bind Wound, a level 10 Creo Corpus spell
   // and not a ritual. The 120 spell levels a magus starts with cover it many times.
   const SPELL = 'spell.bind_wound';
 

@@ -299,7 +299,7 @@ describe('Characteristic-floor prerequisite reports its issue (Supernatural Beau
 // magus in this House without a faerie-related Virtue or Flaw has a Warping
 // Point" — appears the moment the House is chosen and disappears once a
 // faerie-related Flaw (Faerie Friend) is taken. Read off the Totals tab's
-// `derived-warping` readout ("Score { $score }, { $points } points"), which is
+// `derived-warping` readout ("Score { $score }, Points { $points }"), which is
 // the engine-computed TOTAL (entity.warping_points + grants + the House's
 // conditional point), never the raw input field.
 describe("Merinita's Warping Point appears and disappears with a faerie-related V/F (D81.14)", () => {
@@ -315,7 +315,9 @@ describe("Merinita's Warping Point appears and disappears with a faerie-related 
     await $(TOTALS_TAB).click();
     const warping = await $('[data-testid="derived-warping"]');
     await warping.waitForExist({ timeout: STEP_TIMEOUT });
-    await browser.waitUntil(async () => clean(await warping.getText()).includes('1 points'), {
+    // `endsWith`: the points are the readout's last figure, so 'Points 12' cannot pass.
+    const warpingPoints = async () => clean(await warping.getText()).trim();
+    await browser.waitUntil(async () => (await warpingPoints()).endsWith('Points 1'), {
       timeout: STEP_TIMEOUT,
       timeoutMsg:
         'a fresh Merinita magus with no faerie-related V/F should carry the conditional Warping Point',
@@ -327,7 +329,7 @@ describe("Merinita's Warping Point appears and disappears with a faerie-related 
     await addFaerieFriend.click();
 
     await $(TOTALS_TAB).click();
-    await browser.waitUntil(async () => clean(await warping.getText()).includes('0 points'), {
+    await browser.waitUntil(async () => (await warpingPoints()).endsWith('Points 0'), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'taking a faerie-related Flaw should clear the conditional Warping Point',
     });

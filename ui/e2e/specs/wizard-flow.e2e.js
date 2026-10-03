@@ -35,6 +35,7 @@ import {
   startWizard,
   STEP_TIMEOUT,
   useFlatPoolFunding,
+  waitUntilExplained,
   wizardRailPhases,
 } from '../helpers.js';
 import { e2eFile } from '../wdio.conf.js';
@@ -245,7 +246,7 @@ describe('guided creation wizard', () => {
     await useFlatPoolFunding();
 
     // The Abilities step owes the Order its minimums — Parma Magica 1, Magic Theory 1
-    // and Latin 1 (Core Rules.md:2437) — which are blocking errors for every magus, so
+    // and Latin 1 (ArMDE:2437) — which are blocking errors for every magus, so
     // the walk to the closing step has to settle them (and the experience to pay for
     // them) rather than passing through.
     await advanceWizardTo('abilities');
@@ -467,20 +468,18 @@ describe('guided guidance and unspent-budget findings (slice 11)', () => {
   async function waitForFinding(code, expectedSubstring) {
     let codes = [];
     let text = '';
-    await browser.waitUntil(
+    await waitUntilExplained(
       async () => {
         codes = await shownCodes();
         if (!codes.includes(code)) return false;
         text = clean(await $(`[data-testid="issue-list"] li[data-code="${code}"]`).getText());
         return expectedSubstring === undefined || text.includes(expectedSubstring);
       },
-      {
-        timeout: STEP_TIMEOUT,
-        timeoutMsg: () =>
-          expectedSubstring === undefined
-            ? `'${code}' never appeared; showing ${codes}`
-            : `'${code}' never showed '${expectedSubstring}'; last read '${text}'`,
-      },
+      STEP_TIMEOUT,
+      () =>
+        expectedSubstring === undefined
+          ? `'${code}' never appeared; showing ${codes}`
+          : `'${code}' never showed '${expectedSubstring}'; last read '${text}'`,
     );
     return text;
   }

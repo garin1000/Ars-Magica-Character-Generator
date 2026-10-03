@@ -824,7 +824,7 @@ describe('German UI bundle, DE .ftl audit fixes', () => {
   it('states the post-Gauntlet summary correctly for one year as a magus', () => {
     expect(
       say('life-stage-post-gauntlet-summary', { years: '1', points: '30', xp: '30', levels: '0' }),
-    ).toBe('Jahre als Magus: 1; 30 Punkte = 30 EP + 0 Zauberstufen');
+    ).toBe('Jahre als Magus: 1; 30 Punkte = 30 EP + Zauberstufen (0)');
   });
 
   it('D3: never guesses the grammatical gender of a Virtue or Flaw name', () => {
@@ -1030,6 +1030,23 @@ describe('English UI bundle, wording at a count of 1', () => {
       }),
     ).toBe('Restricted Learning names 1 value(s) for Abilities, but exactly 5 are required.');
   });
+
+  // LifeStagePanel.svelte passes every figure as a string. The points are 30 a
+  // year less 10 per lab season, so never 1; the years and levels can be.
+  it('states one year as a magus and one level of spells correctly', () => {
+    expect(
+      say('life-stage-post-gauntlet-summary', { years: '1', points: '30', xp: '29', levels: '1' }),
+    ).toBe('Years as a magus: 1; 30 points = 29 XP + 1 level(s) of spells');
+  });
+
+  // DerivedSummarySection.svelte and CharacterDetails.svelte pass strings.
+  it('states a single Warping Point correctly', () => {
+    expect(say('warping-readout', { score: '0', points: '1' })).toBe('Score 0, Points 1');
+  });
+
+  it('states a single Confidence Point correctly', () => {
+    expect(say('confidence-readout', { score: '1', points: '1' })).toBe('Score 1, Points 1');
+  });
 });
 
 // The German twins of the EN messages above, which rendered „1 Werte“,
@@ -1091,5 +1108,19 @@ describe('German UI bundle, wording at a count of 1', () => {
     ).toBe(
       'Eingeschränktes Lernen: Für Fertigkeiten sind genau 5 Werte erforderlich, genannt sind 1.',
     );
+  });
+
+  it('states one year as a magus and one level of spells correctly', () => {
+    expect(
+      say('life-stage-post-gauntlet-summary', { years: '1', points: '30', xp: '29', levels: '1' }),
+    ).toBe('Jahre als Magus: 1; 30 Punkte = 29 EP + Zauberstufen (1)');
+  });
+
+  it('states a single Warping Point correctly', () => {
+    expect(say('warping-readout', { score: '0', points: '1' })).toBe('Wert 0, Punkte 1');
+  });
+
+  it('states a single Confidence Point correctly', () => {
+    expect(say('confidence-readout', { score: '1', points: '1' })).toBe('Wert 1, Punkte 1');
   });
 });

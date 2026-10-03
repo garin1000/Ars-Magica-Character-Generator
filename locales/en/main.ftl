@@ -323,7 +323,7 @@ life-stage-spell-levels-label = Levels of spells
 # Why both fields above are read-only: it states a read-only state the controls
 # cannot state for themselves, and it is the `aria-describedby` target of both.
 life-stage-post-gauntlet-no-years-note = No years as a magus yet, so lab seasons and levels of spells can take nothing.
-life-stage-post-gauntlet-summary = { $years } years as a magus: { $points } points = { $xp } XP + { $levels } levels of spells
+life-stage-post-gauntlet-summary = Years as a magus: { $years }; { $points } points = { $xp } XP + { $levels } level(s) of spells
 # Escape hatch for a hand-edited save: a character funded by its life stages must
 # not also carry an entered pool, and guided mode offers no field to correct one,
 # so this empties it.
@@ -510,9 +510,9 @@ remove-item = Remove { $name }
 age-label = Age
 apparent-age-label = Apparent age
 confidence-label = Confidence
-confidence-readout = Score { $score }, { $points } points
+confidence-readout = Score { $score }, Points { $points }
 warping-label = Warping
-warping-readout = Score { $score }, { $points } points
+warping-readout = Score { $score }, Points { $points }
 warping-effect-label = Warping effect
 warping-owed-label = Warping Virtues & Flaws
 warping-owed-minor-flaws = { $count ->

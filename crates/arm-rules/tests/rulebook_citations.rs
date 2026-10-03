@@ -24,10 +24,11 @@
 //! [`web_source_files`] (`ui/src`'s `.ts`/`.svelte`/`.css`, via the
 //! [`web_comment_blocks`] multi-comment-syntax pipeline) and
 //! [`docs_markdown_files`] (every `.md` directly under `docs/`, folded into
-//! [`markdown_citation_files`]). **The root list is now complete** — every
-//! Rust, TypeScript/Svelte/CSS, and Markdown source of a rulebook citation
-//! in this repository is scanned by one of the four pipelines above, and no
-//! further slice widens it.
+//! [`markdown_citation_files`]). D1c called the root list complete, but it
+//! missed `ui/e2e`: P8-0's census (`docs/vf-audit/p8-0-census.md` § 1c) found
+//! some sixty full-basename, `Core Rules.md`, `Core:` and bare citations there,
+//! unseen by any guard. **P8-0** folds [`ui_e2e_root`]'s `.js` files into
+//! [`web_source_files`], whose comment syntax they share.
 //!
 //! This is a different subject from `rules_md_citations.rs`, which guards
 //! *implementation-site* citations (`RULES.md` pointing at Rust code, and
@@ -347,10 +348,19 @@ fn ui_src_root() -> PathBuf {
     repo_root().join("ui/src")
 }
 
-/// Every `.ts`, `.svelte`, or `.css` file under [`ui_src_root`], recursively.
+/// `ui/e2e` — the WebdriverIO helpers and specs, plain `.js`. P8-0 adds it: its
+/// `//` and `/** */` comments are the same syntax [`web_comment_blocks`] already
+/// reads for `ui/src`, so it joins that pipeline rather than getting its own.
+fn ui_e2e_root() -> PathBuf {
+    repo_root().join("ui/e2e")
+}
+
+/// Every `.ts`, `.svelte`, or `.css` file under [`ui_src_root`], and every `.js`
+/// file under [`ui_e2e_root`], recursively.
 fn web_source_files() -> Vec<PathBuf> {
     let mut files = Vec::new();
     source_files_in(&ui_src_root(), &["ts", "svelte", "css"], &mut files);
+    source_files_in(&ui_e2e_root(), &["js"], &mut files);
     files.sort();
     files
 }
@@ -1614,6 +1624,37 @@ fn ui_src_files_scan_a_nonzero_floor() {
     assert!(
         citations > 50,
         "expected many acronym'd rulebook citations across ui/src, found {}",
+        citations
+    );
+}
+
+#[test]
+fn ui_e2e_files_scan_a_nonzero_floor() {
+    // P8-0's census (`docs/vf-audit/p8-0-census.md` § 1c) found `ui/e2e` outside
+    // every root, so its citations had drifted to the full-basename and
+    // `Core Rules.md` forms unseen. The same vacuous-pass guard as the other
+    // roots: the e2e helpers and specs must actually be walked and scanned.
+    let e2e_root = ui_e2e_root();
+    let files: Vec<PathBuf> = web_source_files()
+        .into_iter()
+        .filter(|f| f.starts_with(&e2e_root))
+        .collect();
+    assert!(
+        files.len() > 10,
+        "expected `ui/e2e` to contribute many .js files, found {}",
+        files.len()
+    );
+
+    let mut citations = 0usize;
+    for path in &files {
+        let content = fs::read_to_string(path).unwrap();
+        for (_, text) in web_comment_blocks(&content) {
+            citations += find_citations(&text).len();
+        }
+    }
+    assert!(
+        citations > 10,
+        "expected many acronym'd rulebook citations across ui/e2e, found {}",
         citations
     );
 }
