@@ -1793,7 +1793,7 @@
   },
   "virtue.affinity_ability": {
     "name": "Affinity with {ability}",
-    "summary": "Experience put into one Ability counts for half again, and that Ability is exempt from the age-based cap.",
+    "summary": "Experience put into one Ability counts for half again, and you may exceed the normal age-based cap during character generation by two points for that Ability.",
     "description": "All Advancement Totals for one Ability are increased by half, rounded up, as are any experience points you put in that Ability at character creation. You may only take this Virtue once for a given Ability, but may take it again for different Abilities. If you take this Virtue for an Ability, you may exceed the normal age-based cap during character generation (see page 48) by two points for that Ability."
   },
   "virtue.affinity_art": {
@@ -2300,7 +2300,7 @@
   "virtue.greater_immunity": {
     "name": "Greater Immunity ({hazard})",
     "name_unfilled": "Greater Immunity",
-    "summary": "You are completely immune to one common, potentially deadly hazard.",
+    "summary": "You are completely immune to one common, potentially deadly hazard. You may not take immunity to aging — see the Unaging Minor Virtue instead.",
     "description": "You are completely immune to one hazard which is both common and potentially deadly. For example, you might be immune to fire or to iron (and only iron) weapons. You may not take immunity to aging — see the Unaging Minor Virtue (page 114) instead. This immunity applies to mundane and magical versions of the thing. If you are immune to fire, you are also immune to magically created fire.\n\nOne important possibility is immunity to deprivation, which means that you suffer no loss of Fatigue or wounds from going without air, food or drink. However, you cannot regain long-term Fatigue without rest and sustenance, and if you are injured deprivation could cause your wounds to worsen.\n\nYou may take this Virtue more than once, with a different immunity each time."
   },
   "virtue.greater_power": {
@@ -2458,7 +2458,7 @@
   },
   "virtue.keen_vision": {
     "name": "Keen Vision",
-    "summary": "+3 to sight-based rolls.",
+    "summary": "+3 to all rolls involving sight, not including attacks with missile weapons.",
     "description": "You can see farther and more clearly than most. You get a +3 bonus to all rolls involving sight, not including attacks with missile weapons."
   },
   "virtue.knight": {
@@ -2850,7 +2850,7 @@
   },
   "virtue.privileged_upbringing": {
     "name": "Privileged Upbringing",
-    "summary": "+50 experience points, spent only on General, Academic, or Martial Abilities."
+    "summary": "+50 experience points, spent only on General, Academic, or Martial Abilities. You may not, however, buy Academic or Martial Abilities with your normal pool of experience points unless you have another Virtue or Flaw permitting that."
   },
   "virtue.protection": {
     "name": "Protection",
@@ -2864,7 +2864,7 @@
   },
   "virtue.puissant_art": {
     "name": "Puissant {art}",
-    "summary": "+3 to all totals using one Art. May be taken twice, for two Arts.",
+    "summary": "+3 to all totals using one Art; it does not apply when learning, teaching, or writing about the Art. May be taken twice, for two Arts.",
     "description": "You add 3 to the value of one Art whenever you use it. This means all totals in which the score of the Art is part of the total. It does not apply when learning, teaching, or writing about the Art. You may take this Virtue twice, for two different Arts. If a spell has requisites, include the bonus from Puissant Art with that Art when calculating which Art is higher. If the Puissant Art is higher, the bonus does not apply to the requisite."
   },
   "virtue.quiet_magic": {
@@ -3215,7 +3215,7 @@
   },
   "virtue.verditius_magic": {
     "name": "Verditius Magic",
-    "summary": "Initiation into the Outer Mystery of House Verditius, enabling the casting of enchantments through craft.",
+    "summary": "Initiation into the Outer Mystery of House Verditius, which allows you to incorporate craft Abilities into your magic. You need casting tools to cast Formulaic or Ritual spells.",
     "description": "You have been initiated into the Outer Mystery of Verditius Magic (see page 240), and thus are a member of House Verditius. Note that all Verditius magi gain this Virtue for free at character creation."
   },
   "virtue.voice_of_the_land": {

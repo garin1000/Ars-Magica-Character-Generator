@@ -1795,7 +1795,7 @@
   },
   "virtue.affinity_ability": {
     "name": "Affinität zu {ability}",
-    "summary": "Erfahrung, die du in eine Fertigkeit steckst, zählt anderthalbfach, und diese Fertigkeit ist von der altersbedingten Obergrenze ausgenommen.",
+    "summary": "Erfahrung, die du in eine Fertigkeit steckst, zählt anderthalbfach, und du darfst während der Charaktererschaffung die normale altersbedingte Obergrenze für diese Fertigkeit um zwei Punkte überschreiten.",
     "description": "Alle Fortschrittssummen für eine Fertigkeit werden um die Hälfte erhöht, aufgerundet, ebenso wie alle Erfahrungspunkte, die du bei der Charaktererschaffung in diese Fertigkeit investierst. Du kannst diese Tugend für eine bestimmte Fertigkeit nur einmal nehmen, aber für verschiedene Fertigkeiten erneut. Wenn du diese Tugend für eine Fertigkeit nimmst, darfst du während der Charaktererschaffung die normale altersbedingte Obergrenze (siehe Seite 48) für diese Fertigkeit um zwei Punkte überschreiten."
   },
   "virtue.affinity_art": {
@@ -2302,7 +2302,7 @@
   "virtue.greater_immunity": {
     "name": "Große Immunität ({hazard})",
     "name_unfilled": "Große Immunität",
-    "summary": "Du bist gegen eine verbreitete, potenziell tödliche Gefahr völlig immun.",
+    "summary": "Du bist gegen eine verbreitete, potenziell tödliche Gefahr völlig immun. Du darfst keine Immunität gegen Altern nehmen – siehe stattdessen die Kleine Tugend Nicht alternd.",
     "description": "Du bist vollständig immun gegen eine Gefahr, die sowohl häufig als auch potenziell tödlich ist. Du könntest beispielsweise gegen Feuer oder gegen Eisenwaffen (und nur Eisenwaffen) immun sein. Du darfst keine Immunität gegen Altern nehmen – siehe stattdessen die kleine Tugend Nicht alternd (Seite 114). Diese Immunität gilt für gewöhnliche und magische Varianten der Sache. Wenn du gegen Feuer immun bist, bist du auch gegen magisch erschaffenes Feuer immun.\n\nEine wichtige Möglichkeit ist die Immunität gegen Entbehrung, was bedeutet, dass du keinen Erschöpfungs- oder Wundenverlust durch den Mangel an Luft, Nahrung oder Wasser erleidest. Du kannst jedoch keine Langzeit-Erschöpfungsstufen ohne Ruhe und Versorgung wiedererlangen, und wenn du verletzt bist, könnte Entbehrung dazu führen, dass sich deine Wunden verschlechtern.\n\nDu kannst diese Tugend mehr als einmal nehmen, jedes Mal mit einer anderen Immunität."
   },
   "virtue.greater_power": {
@@ -2460,7 +2460,7 @@
   },
   "virtue.keen_vision": {
     "name": "Scharfe Sicht",
-    "summary": "+3 auf sichtbasierte Würfe.",
+    "summary": "+3 auf alle Würfe, die das Sehen beinhalten, ausgenommen Angriffe mit Fernkampfwaffen.",
     "description": "Du kannst weiter und klarer sehen als die meisten. Du erhältst einen +3-Bonus auf alle Würfe, die das Sehen beinhalten, ausgenommen Angriffe mit Fernkampfwaffen."
   },
   "virtue.knight": {
@@ -2852,7 +2852,7 @@
   },
   "virtue.privileged_upbringing": {
     "name": "Privilegierte Erziehung",
-    "summary": "+50 Erfahrungspunkte, nur für Allgemeine, Akademische oder Kampf-Fertigkeiten."
+    "summary": "+50 Erfahrungspunkte, nur für Allgemeine, Akademische oder Kampffertigkeiten. Du kannst jedoch Akademische oder Kampffertigkeiten nicht mit deinem normalen EP-Vorrat erwerben, sofern du keine andere Tugend oder keinen anderen Fehler hast, der dies erlaubt."
   },
   "virtue.protection": {
     "name": "Schutz",
@@ -2866,7 +2866,7 @@
   },
   "virtue.puissant_art": {
     "name": "Begabung in {art}",
-    "summary": "+3 auf alle Summen mit einer Kunst. Kann zweimal gewählt werden, für zwei Künste.",
+    "summary": "+3 auf alle Summen mit einer Kunst; es gilt nicht beim Lernen, Unterrichten oder Schreiben über die Kunst. Kann zweimal gewählt werden, für zwei Künste.",
     "description": "Du addierst 3 zum Wert einer Kunst, wann immer Du sie einsetzt. Das bedeutet alle Summen, in denen der Wert der Kunst Teil der Summe ist. Es gilt nicht beim Lernen, Unterrichten oder Schreiben über die Kunst. Du kannst diese Tugend zweimal wählen, für zwei verschiedene Künste. Wenn ein Zauber Requisiten hat, beziehe den Bonus aus Begabung in (Kunst) mit dieser Kunst ein, wenn Du berechnest, welche Kunst höher ist. Wenn die Kunst mit Begabung höher ist, gilt der Bonus nicht für das Requisit."
   },
   "virtue.quiet_magic": {
@@ -3218,7 +3218,7 @@
   },
   "virtue.verditius_magic": {
     "name": "Verditius-Magie",
-    "summary": "Einweihung in das Äußere Mysterium des Hauses Verditius, das das Wirken von Verzauberungen durch Handwerk ermöglicht.",
+    "summary": "Einweihung in das Äußere Mysterium des Hauses Verditius, das es dir erlaubt, Handwerksfertigkeiten in deine Magie zu integrieren. Du benötigst Zauberwerkzeuge, um Formulaische Zauber oder Ritualzauber zu wirken.",
     "description": "Du wurdest in das Äußere Mysterium der Verditius-Magie eingeweiht (siehe Seite 240) und bist damit Mitglied des Hauses Verditius. Beachte, dass alle Verditius-Magi diese Tugend bei der Charaktererschaffung kostenlos erhalten."
   },
   "virtue.voice_of_the_land": {
