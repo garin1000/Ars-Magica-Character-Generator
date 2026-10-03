@@ -1337,7 +1337,7 @@ issue-same_choice_conflict = { $item } und { $other } dürfen nicht beide auf { 
 issue-wrong_entity_kind = { $item } ist für die Wesensart { $entity_kind } nicht zulässig.
 issue-duplicate_selection = { $item } ist { $count }-mal ausgewählt, darf aber höchstens { $max }-mal für dasselbe Ziel gewählt werden.
 issue-too_many_selections = { $item } ist insgesamt { $count }-mal über alle Ziele hinweg ausgewählt, darf aber insgesamt höchstens { $max }-mal gewählt werden.
-issue-param_groups_not_distinct = { $item } nennt dieselbe Gruppe zweimal; die Gruppen eines Exemplars müssen paarweise verschieden sein.
+issue-param_groups_not_distinct = { $item } nennt dieselbe Kombination zweimal; die Kombinationen eines Exemplars müssen paarweise verschieden sein.
 issue-param_group_shared_across_copies = Zwei Exemplare von { $item } nennen dieselbe Kombination; jedes Exemplar muss andere Kombinationen nennen.
 issue-missing_required_trait = Eine erforderliche Eigenschaft fehlt: { $item }.
 issue-forbidden_trait = Eine verbotene Eigenschaft ist vorhanden: { $item }.
@@ -1530,10 +1530,11 @@ equipment-group-filter-label = Nach Ausrüstungstyp filtern
 equipment-loadout-label = Trageweise
 # Die drei Trageweisen (K5): Verstaut liefert weder Kampfwerte-Zeile noch
 # Traglast; Mitgeführt liefert eine Kampfwerte-Zeile, aber keine Traglast;
-# Angelegt liefert beides.
+# Geführt / Angelegt liefert beides. Doppelname, weil derselbe Zustand für
+# Waffen (geführt) wie für Rüstungen (angelegt) gilt.
 equipment-loadout-stowed = Verstaut
 equipment-loadout-carried = Mitgeführt
-equipment-loadout-wielded = Angelegt
+equipment-loadout-wielded = Geführt / Angelegt
 equipment-specialization-label = Spezialisierung greift (+1)
 equipment-empty = Keine Ausrüstung.
 # K3 (design-f0-book-template-engine.md § 2b): Umschalter für den ganzen

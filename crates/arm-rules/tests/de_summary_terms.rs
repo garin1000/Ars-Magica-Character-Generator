@@ -126,12 +126,14 @@ const CASES: &[SummaryCase] = &[
         en: "A level-4 bad Reputation for horrible deeds of your choosing.",
         de: "Eine schlechte Reputation der Stufe 4 für frei wählbare schändliche Taten.",
     },
-    // Term only (F-65's first defect): Fähigkeit -> Fertigkeit. The English
-    // carries no granted score, so neither does the German (ArMDE:4928).
+    // Term (F-65's first defect): Fähigkeit -> Fertigkeit. Since T1
+    // (after-deadline answer 5) both locales also carry the granted score, as
+    // F-65 gave Dowsing; the Ability is named by its glossary term
+    // (`fertigkeiten.md:83`) rather than as „die gleichnamige“ (ArMDE:4928).
     SummaryCase {
         id: "virtue.sense_holiness_and_unholiness",
-        en: "Feel the presence of good and evil. Confers the Sense Holiness and Unholiness Ability.",
-        de: "Spüre die Gegenwart von Gut und Böse. Verleiht die gleichnamige Fertigkeit.",
+        en: "Feel the presence of good and evil. Confers the Sense Holiness and Unholiness Ability at 1.",
+        de: "Spüre die Gegenwart von Gut und Böse. Verleiht die Fertigkeit Gespür für Heiliges und Unheiliges auf 1.",
     },
 ];
 

@@ -1838,7 +1838,7 @@
   },
   "virtue.animal_ken": {
     "name": "Tierverständnis",
-    "summary": "Du kannst mit Tieren kommunizieren, als wären sie Menschen."
+    "summary": "Du kannst mit Tieren kommunizieren, als wären sie Menschen. Verleiht die Fertigkeit Tierverständnis auf 1."
   },
   "virtue.apprentice": {
     "name": "Lehrling",
@@ -1992,7 +1992,7 @@
   },
   "virtue.crafters_healing": {
     "name": "Handwerkerheiler",
-    "summary": "Wie die Schmiede der alten Überlieferungen kann der Charakter Wunden auf magische Weise heilen, indem er sie mit den Werkzeugen seines Handwerks berührt."
+    "summary": "Wie die Schmiede der alten Überlieferungen kann der Charakter Wunden auf magische Weise heilen, indem er sie mit den Werkzeugen seines Handwerks berührt. Verleiht die Fertigkeit Handwerkerheiler auf 1."
   },
   "virtue.craftsman": {
     "name": "Handwerker",
@@ -2088,7 +2088,7 @@
   },
   "virtue.embitterment": {
     "name": "Verbitterung",
-    "summary": "Du kannst jemanden gegenüber einem Ziel deiner Wahl feindlich stimmen."
+    "summary": "Du kannst jemanden gegenüber einem Ziel deiner Wahl feindlich stimmen. Verleiht die Fertigkeit Verbitterung auf 1."
   },
   "virtue.emir": {
     "name": "Emir",
@@ -2097,7 +2097,7 @@
   },
   "virtue.enchanting_ability": {
     "name": "Bezaubernde Fertigkeit, {medium}",
-    "summary": "Wenn du dich darauf konzentrierst, kannst du mit einer bestimmten Art künstlerischen Ausdrucks magisch Gefühle und Überzeugungen in anderen hervorrufen: Musik, Tanz, Zeichnen, Geschichtenerzählen oder sogar Handwerk."
+    "summary": "Wenn du dich darauf konzentrierst, kannst du mit einer bestimmten Art künstlerischen Ausdrucks magisch Gefühle und Überzeugungen in anderen hervorrufen: Musik, Tanz, Zeichnen, Geschichtenerzählen oder sogar Handwerk. Verleiht die Fertigkeit Bezaubernde (Fertigkeit) auf 1, für die gewählte Art des Ausdrucks."
   },
   "virtue.enduring_constitution": {
     "name": "Ausdauernde Konstitution",
@@ -2116,7 +2116,7 @@
   },
   "virtue.entrancement": {
     "name": "Betörung",
-    "summary": "Du besitzt die Macht, den Willen einer anderen Person zu beherrschen, indem du ihr in die Augen starrst und ihr einen verbalen Befehl erteilst."
+    "summary": "Du besitzt die Macht, den Willen einer anderen Person zu beherrschen, indem du ihr in die Augen starrst und ihr einen verbalen Befehl erteilst. Verleiht die Fertigkeit Betörung auf 1."
   },
   "virtue.eunuch": {
     "name": "Eunuch",
@@ -2228,7 +2228,7 @@
   },
   "virtue.font_of_knowledge": {
     "name": "Quell des Wissens",
-    "summary": "Du hast übernatürlichen Zugang zu Informationen, die du nie erlernt hast."
+    "summary": "Du hast übernatürlichen Zugang zu Informationen, die du nie erlernt hast. Verleiht die Fertigkeit Quell des Wissens auf 1."
   },
   "virtue.forge_companion": {
     "name": "Schmiedegefährte",
@@ -2361,7 +2361,7 @@
   },
   "virtue.hex": {
     "name": "Verhexung",
-    "summary": "Der Charakter hat die Fähigkeit, ihre Feinde zu verfluchen, indem sie unheilvolle Prophezeiungen über deren Zukunft ausspricht, die sich zu bewahrheiten pflegen."
+    "summary": "Der Charakter hat die Fähigkeit, ihre Feinde zu verfluchen, indem sie unheilvolle Prophezeiungen über deren Zukunft ausspricht, die sich zu bewahrheiten pflegen. Verleiht die Fertigkeit Verhexung auf 1."
   },
   "virtue.homing_instinct": {
     "name": "Ortsgespür",
@@ -2398,7 +2398,7 @@
   },
   "virtue.induction": {
     "name": "Einflüstern",
-    "summary": "Der Charakter hat die übernatürliche Fähigkeit, Menschen Dinge erleben zu lassen, die nicht vorhanden sind."
+    "summary": "Der Charakter hat die übernatürliche Fähigkeit, Menschen Dinge erleben zu lassen, die nicht vorhanden sind. Verleiht die Fertigkeit Einflüstern auf 1."
   },
   "virtue.ineslemen": {
     "name": "Ineslemen",
@@ -2598,7 +2598,7 @@
   },
   "virtue.magic_sensitivity": {
     "name": "Magiegespür",
-    "summary": "Du kannst einen Ort oder Gegenstand häufig als magisch identifizieren."
+    "summary": "Du kannst einen Ort oder Gegenstand häufig als magisch identifizieren. Verleiht die Fertigkeit Magiegespür auf 1."
   },
   "virtue.magical_blood": {
     "name": "Magisches Blut",
@@ -2803,7 +2803,7 @@
   },
   "virtue.persona": {
     "name": "Persona",
-    "summary": "Der Charakter kann eine oder mehrere makellose Verkleidungen annehmen und dabei sowohl sein äußeres Erscheinungsbild als auch sein Auftreten verändern."
+    "summary": "Der Charakter kann eine oder mehrere makellose Verkleidungen annehmen und dabei sowohl sein äußeres Erscheinungsbild als auch sein Auftreten verändern. Verleiht die Fertigkeit Persona auf 1."
   },
   "virtue.personal_power": {
     "name": "Persönliche Kraft",
@@ -2958,12 +2958,12 @@
   },
   "virtue.sense_holiness_and_unholiness": {
     "name": "Gespür für Heiliges und Unheiliges",
-    "summary": "Spüre die Gegenwart von Gut und Böse. Verleiht die gleichnamige Fertigkeit.",
+    "summary": "Spüre die Gegenwart von Gut und Böse. Verleiht die Fertigkeit Gespür für Heiliges und Unheiliges auf 1.",
     "description": "Du kannst die Anwesenheit von Gut und Böse spüren. In Auren von besonders starkem göttlichem oder infernalen Einfluss kann Deine Sensibilität Dich überwältigen. Die Wahl dieser Tugend verleiht die Fertigkeit Gespür für Heiliges und Unheiliges 1 (Seite 170)."
   },
   "virtue.sense_passions": {
     "name": "Gespür für Leidenschaft",
-    "summary": "Der Charakter kann in die Herzen und Gedanken anderer blicken und ihre Schwächen, Ängste und bösen Gedanken erkennen."
+    "summary": "Der Charakter kann in die Herzen und Gedanken anderer blicken und ihre Schwächen, Ängste und bösen Gedanken erkennen. Verleiht die Fertigkeit Gespür für Leidenschaft auf 1."
   },
   "virtue.shadchan": {
     "name": "Schadchen",
@@ -2976,7 +2976,7 @@
   },
   "virtue.shapeshifter": {
     "name": "Gestaltwandler",
-    "summary": "Du kannst Deine Gestalt in die eines oder mehrerer gewöhnlicher Tiere verwandeln."
+    "summary": "Du kannst Deine Gestalt in die eines oder mehrerer gewöhnlicher Tiere verwandeln. Verleiht die Fertigkeit Gestaltwandler auf 1."
   },
   "virtue.sharp_ears": {
     "name": "Scharfe Ohren",
@@ -3076,7 +3076,7 @@
   },
   "virtue.summon_animals": {
     "name": "Tiere rufen",
-    "summary": "Du bist in der Lage, Tiere zu dir zu rufen."
+    "summary": "Du bist in der Lage, Tiere zu dir zu rufen. Verleiht die Fertigkeit Tiere rufen auf 1."
   },
   "virtue.supernatural_beauty": {
     "name": "Übernatürliche Schönheit",
@@ -3249,11 +3249,11 @@
   },
   "virtue.whistle_up_the_wind": {
     "name": "Den Wind herbeipfeifen",
-    "summary": "Du kannst durch Pfeifen Winde erzeugen."
+    "summary": "Du kannst durch Pfeifen Winde erzeugen. Verleiht die Fertigkeit Den Wind herbeipfeifen auf 1."
   },
   "virtue.wilderness_sense": {
     "name": "Natursinn",
-    "summary": "Du bist auf mystische Weise mit der Natur der Wildnis verbunden."
+    "summary": "Du bist auf mystische Weise mit der Natur der Wildnis verbunden. Verleiht die Fertigkeit Natursinn auf 1."
   },
   "virtue.wisdom_from_ignorance": {
     "name": "Weisheit aus Unwissen",

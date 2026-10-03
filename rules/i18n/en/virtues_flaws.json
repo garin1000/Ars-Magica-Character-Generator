@@ -1836,7 +1836,7 @@
   },
   "virtue.animal_ken": {
     "name": "Animal Ken",
-    "summary": "You can communicate with animals as if they were human beings."
+    "summary": "You can communicate with animals as if they were human beings. Confers the Animal Ken Ability at 1."
   },
   "virtue.apprentice": {
     "name": "Apprentice",
@@ -1990,7 +1990,7 @@
   },
   "virtue.crafters_healing": {
     "name": "Crafter's Healing",
-    "summary": "Like the smiths of ancient lore, the character can magically heal wounds by touching them with the tools of his trade."
+    "summary": "Like the smiths of ancient lore, the character can magically heal wounds by touching them with the tools of his trade. Confers the Crafter's Healing Ability at 1."
   },
   "virtue.craftsman": {
     "name": "Craftsman",
@@ -2086,7 +2086,7 @@
   },
   "virtue.embitterment": {
     "name": "Embitterment",
-    "summary": "You may make someone hostile to a target of your choice."
+    "summary": "You may make someone hostile to a target of your choice. Confers the Embitterment Ability at 1."
   },
   "virtue.emir": {
     "name": "Emir",
@@ -2095,7 +2095,7 @@
   },
   "virtue.enchanting_ability": {
     "name": "Enchanting {medium}",
-    "summary": "When you set your mind to it, you can magically induce emotions and beliefs in others with a particular kind of artistic expression: music, dance, drawing, storytelling, even craftwork."
+    "summary": "When you set your mind to it, you can magically induce emotions and beliefs in others with a particular kind of artistic expression: music, dance, drawing, storytelling, even craftwork. Confers the Ability Enchanting (Ability) at 1, for the chosen kind of expression."
   },
   "virtue.enduring_constitution": {
     "name": "Enduring Constitution",
@@ -2114,7 +2114,7 @@
   },
   "virtue.entrancement": {
     "name": "Entrancement",
-    "summary": "You have the power to control another's will by staring into their eyes and giving them a verbal command."
+    "summary": "You have the power to control another's will by staring into their eyes and giving them a verbal command. Confers the Entrancement Ability at 1."
   },
   "virtue.eunuch": {
     "name": "Eunuch",
@@ -2226,7 +2226,7 @@
   },
   "virtue.font_of_knowledge": {
     "name": "Font of Knowledge",
-    "summary": "You have supernatural access to information you have never learned."
+    "summary": "You have supernatural access to information you have never learned. Confers the Font of Knowledge Ability at 1."
   },
   "virtue.forge_companion": {
     "name": "Forge-Companion",
@@ -2359,7 +2359,7 @@
   },
   "virtue.hex": {
     "name": "Hex",
-    "summary": "The character has the ability to curse her enemies, making dire predictions about their future, which tend to come true."
+    "summary": "The character has the ability to curse her enemies, making dire predictions about their future, which tend to come true. Confers the Hex Ability at 1."
   },
   "virtue.homing_instinct": {
     "name": "Homing Instinct",
@@ -2396,7 +2396,7 @@
   },
   "virtue.induction": {
     "name": "Induction",
-    "summary": "The character has the supernatural power to make people experience things that are not there."
+    "summary": "The character has the supernatural power to make people experience things that are not there. Confers the Induction Ability at 1."
   },
   "virtue.ineslemen": {
     "name": "Ineslemen",
@@ -2596,7 +2596,7 @@
   },
   "virtue.magic_sensitivity": {
     "name": "Magic Sensitivity",
-    "summary": "You are often able to identify a place or object as magical."
+    "summary": "You are often able to identify a place or object as magical. Confers the Magic Sensitivity Ability at 1."
   },
   "virtue.magical_blood": {
     "name": "Magical Blood",
@@ -2801,7 +2801,7 @@
   },
   "virtue.persona": {
     "name": "Persona",
-    "summary": "The character may adopt one or more flawless disguises, changing both his physical appearance and mannerisms."
+    "summary": "The character may adopt one or more flawless disguises, changing both his physical appearance and mannerisms. Confers the Persona Ability at 1."
   },
   "virtue.personal_power": {
     "name": "Personal Power",
@@ -2956,12 +2956,12 @@
   },
   "virtue.sense_holiness_and_unholiness": {
     "name": "Sense Holiness and Unholiness",
-    "summary": "Feel the presence of good and evil. Confers the Sense Holiness and Unholiness Ability.",
+    "summary": "Feel the presence of good and evil. Confers the Sense Holiness and Unholiness Ability at 1.",
     "description": "You are able to feel the presence of good and evil. In auras of particularly strong divine or infernal influence, your sensitivity may overwhelm you. Choosing this Virtue confers the Ability Sense Holiness and Unholiness 1 (page 170)."
   },
   "virtue.sense_passions": {
     "name": "Sense Passions",
-    "summary": "The character can see into the hearts and minds of others, learning their weaknesses, fears, and evil thoughts."
+    "summary": "The character can see into the hearts and minds of others, learning their weaknesses, fears, and evil thoughts. Confers the Sense Passions Ability at 1."
   },
   "virtue.shadchan": {
     "name": "Shadchan",
@@ -2974,7 +2974,7 @@
   },
   "virtue.shapeshifter": {
     "name": "Shapeshifter",
-    "summary": "You may change your shape into that of one or more mundane animals."
+    "summary": "You may change your shape into that of one or more mundane animals. Confers the Shapeshifter Ability at 1."
   },
   "virtue.sharp_ears": {
     "name": "Sharp Ears",
@@ -3073,7 +3073,7 @@
   },
   "virtue.summon_animals": {
     "name": "Summon Animals",
-    "summary": "You are able to summon animals to your side."
+    "summary": "You are able to summon animals to your side. Confers the Summon Animals Ability at 1."
   },
   "virtue.supernatural_beauty": {
     "name": "Supernatural Beauty",
@@ -3246,11 +3246,11 @@
   },
   "virtue.whistle_up_the_wind": {
     "name": "Whistle Up The Wind",
-    "summary": "You can create winds by whistling."
+    "summary": "You can create winds by whistling. Confers the Whistle Up The Wind Ability at 1."
   },
   "virtue.wilderness_sense": {
     "name": "Wilderness Sense",
-    "summary": "You are mystically attuned to the ways of the wilderness."
+    "summary": "You are mystically attuned to the ways of the wilderness. Confers the Wilderness Sense Ability at 1."
   },
   "virtue.wisdom_from_ignorance": {
     "name": "Wisdom from Ignorance",

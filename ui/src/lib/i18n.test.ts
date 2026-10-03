@@ -1343,3 +1343,33 @@ describe('UI bundles, rules-claim audit fixes', () => {
     expect(say(c.lang, c.key, c.args)).toBe(c.want);
   });
 });
+
+// T1 (post-deadline round, 2026-10-03): wording the try-out and the
+// after-deadline answers asked for.
+describe('UI bundles, post-deadline wording fixes', () => {
+  // Try-out finding 19 / ftl-audit S7: the Incompatible Arts picker labels each
+  // parameter group "Combination N" / „Kombination N“ (`param-group-label`), so
+  // the error about two identical groups must use the same word, or the player
+  // cannot map it onto anything on screen. Read out of the label itself, so the
+  // pairing holds whichever side is reworded later.
+  it.each(['en', 'de'])(
+    'calls a repeated parameter group a combination, as the picker does (%s)',
+    (lang) => {
+      const src = sourceForLang(lang);
+      const word = messageValue(src, 'param-group-label')
+        .replace(/\{\s*\$n\s*\}/, '')
+        .trim()
+        .toLowerCase();
+      expect(word).toBe(lang === 'en' ? 'combination' : 'kombination');
+      const message = messageValue(src, 'issue-param_groups_not_distinct').toLowerCase();
+      expect(message).toContain(word);
+      expect(message).not.toMatch(lang === 'en' ? /\bgroup/ : /gruppe/);
+    },
+  );
+
+  // After-deadline answer 6: „Angelegt“ fits armour, but a weapon is „geführt“,
+  // and the one loadout state covers both.
+  it('names the wielded loadout for weapons and armour alike in German', () => {
+    expect(translate(buildBundle('de'), 'equipment-loadout-wielded')).toBe('Geführt / Angelegt');
+  });
+});
