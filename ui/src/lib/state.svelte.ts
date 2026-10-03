@@ -385,6 +385,30 @@ class AppStore {
     return this.#agingWorkflow.year;
   }
 
+  /**
+   * The app maximum age the ruleset's aging block states (an app limit, not a rule;
+   * slice A1), or `null` when it states none. Read from data, never restated here.
+   */
+  get maxAge(): number | null {
+    return this.ruleset?.ruleset.aging?.max_age ?? null;
+  }
+
+  /** The highest age the age inputs accept: {@link maxAge}, or the stored u32 width. */
+  get ageInputMax(): number {
+    return this.maxAge ?? U32_MAX;
+  }
+
+  /**
+   * The earliest birth year the birth-year input accepts: the saga year less
+   * {@link maxAge}, so the birth year — the age's other view — is held to the same
+   * bound and the two cannot drift apart. The stored i32 width without a maximum.
+   */
+  get earliestBirthYear(): number {
+    const maxAge = this.maxAge;
+    if (maxAge == null) return I32_MIN;
+    return Math.max(I32_MIN, this.entity.saga_year - maxAge);
+  }
+
   // --- Entity-mutator workflows -------------------------------------------
   //
   // The per-domain document editors, continuing the extraction the four
@@ -1584,7 +1608,7 @@ class AppStore {
    */
   setAge(age: number | null): void {
     this.entity.age =
-      age != null && Number.isFinite(age) && age > 0 ? clampInt(age, 1, U32_MAX) : null;
+      age != null && Number.isFinite(age) && age > 0 ? clampInt(age, 1, this.ageInputMax) : null;
     this.#deriveBirthYearFromAge();
     this.#scheduleValidate();
   }
@@ -1592,7 +1616,7 @@ class AppStore {
   /** Set (or clear) the character's apparent age (annotation; no mechanic). */
   setApparentAge(age: number | null): void {
     this.entity.apparent_age =
-      age != null && Number.isFinite(age) && age > 0 ? clampInt(age, 1, U32_MAX) : null;
+      age != null && Number.isFinite(age) && age > 0 ? clampInt(age, 1, this.ageInputMax) : null;
     this.#scheduleValidate();
   }
 
@@ -2404,7 +2428,9 @@ class AppStore {
 
   setBirthYear(year: number | null): void {
     this.entity.birth_year =
-      year != null && Number.isFinite(year) ? clampInt(year, I32_MIN, I32_MAX) : null;
+      year != null && Number.isFinite(year)
+        ? clampInt(year, this.earliestBirthYear, I32_MAX)
+        : null;
     this.#deriveAgeFromBirthYear();
     this.#scheduleValidate();
   }
@@ -2533,7 +2559,7 @@ class AppStore {
     }
     const seq = ++this.#sagaSeq;
     void ipc
-      .deriveAge(sagaYear, birthYear)
+      .deriveAge(sagaYear, birthYear, this.maxAge)
       .then((derived) => {
         if (seq !== this.#sagaSeq) return;
         // Assigned straight to the entity, not through `setAge`: that setter reads a

@@ -2,6 +2,7 @@
   "start_age": 35,
   "age_divisor": 10,
   "apparent_age_increase_min": 3,
+  "max_age": 500,
   "longevity_clamp": { "max_total": 9, "until_age": 35 },
   "living_conditions": [
     {

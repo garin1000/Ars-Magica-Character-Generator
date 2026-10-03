@@ -3024,14 +3024,22 @@ fn export_label_keys_command_returns_the_engine_list() {
 #[test]
 fn derive_age_command_delegates_to_the_engine_computation() {
     assert_eq!(
-        arm_app::commands::derive_age(1220, 1190),
-        arm_rules::age_in_saga_year(1220, 1190)
+        arm_app::commands::derive_age(1220, 1190, None),
+        arm_rules::age_in_saga_year(1220, 1190, None)
     );
     // The underflow-clamp branch too: a saga year before the birth year.
     assert_eq!(
-        arm_app::commands::derive_age(1150, 1190),
-        arm_rules::age_in_saga_year(1150, 1190)
+        arm_app::commands::derive_age(1150, 1190, None),
+        arm_rules::age_in_saga_year(1150, 1190, None)
     );
+}
+
+/// Slice A1: the frontend hands the ruleset's maximum age along, and the command
+/// passes it to the engine, so an age derived from a far-past birth year clamps
+/// at the maximum instead of reaching the aging schedule unbounded.
+#[test]
+fn derive_age_command_clamps_at_the_max_age_it_is_handed() {
+    assert_eq!(arm_app::commands::derive_age(1220, 120, Some(500)).age, 500);
 }
 
 /// The other view of the same fact: `derive_birth_year` delegates to

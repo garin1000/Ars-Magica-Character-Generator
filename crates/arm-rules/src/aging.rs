@@ -84,6 +84,15 @@ pub struct AgingRules {
     /// (`ArMDE:16617`) — 5 in the core rules.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fatal_decrepitude_score: Option<u8>,
+    /// The app's maximum age — an **app limit, not a rule**: no rulebook passage
+    /// sets one (Norbert 2026-10-03, after-deadline answer 7). It bounds
+    /// [`aging_schedule`], which builds one row per year, so a typed or crafted
+    /// age cannot freeze the app. The age and birth-year inputs are capped by it,
+    /// and `migration.rs::load_entity_migrating` clamps a save to it. `None` (an
+    /// aging block that states none) applies no cap; the integrity check refuses
+    /// one below [`Self::first_roll_age`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_age: Option<u32>,
 }
 
 impl AgingRules {
@@ -202,12 +211,17 @@ fn logged_year(entity: &Entity, age: u32) -> Option<&AgingLogEntry> {
 /// still scheduled from [`AgingRules::first_roll_age`]. It would need a per-trait
 /// override of [`AgingRules::start_age`], which no other shipped item asks for.
 ///
+/// **Bounded by [`AgingRules::max_age`]** (an app limit, not a rule): the schedule
+/// never walks past it, even for an entity that skipped the load clamp, so an
+/// absurd age cannot materialize billions of rows.
+///
 /// Source: ArMDE:16565, :16575, :2232,
 /// :5036.
 pub fn aging_schedule(entity: &Entity, ruleset: &Ruleset) -> Vec<AgingYear> {
     let (Some(rules), Some(age)) = (ruleset.aging(), entity.age) else {
         return Vec::new();
     };
+    let age = rules.max_age.map_or(age, |max_age| age.min(max_age));
     (rules.first_roll_age()..=age)
         .map(|age| AgingYear {
             age,

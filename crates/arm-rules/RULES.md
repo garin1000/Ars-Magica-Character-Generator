@@ -1269,8 +1269,8 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2279, shared by
-  `validate_prereq_refs` :2156 and `validate_effect_refs` :2694) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2292, shared by
+  `validate_prereq_refs` :2169 and `validate_effect_refs` :2707) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
@@ -9800,6 +9800,20 @@ end of this section.
   calendar year (`birth_year + age`, `None` without a birth year) and with whether
   the log already records it. Empty at or under the threshold, with no age entered,
   and under a ruleset shipping no aging rules.
+- **Maximum age 500 — an app limit, NOT a rule** (slice A1, Norbert 2026-10-03,
+  after-deadline answer 7; robustness finding F2). No rulebook passage sets a maximum
+  age, so this row cites none. The schedule builds one row per year, so an unbounded
+  typed or crafted age froze or OOM-crashed the app. Data:
+  `rules/core/aging.json` `max_age: 500` → `AgingRules::max_age` (optional; an aging
+  block stating none applies no cap), surfaced on the Ruleset the UI receives.
+  Enforced by: `aging_schedule` (never walks past it), `age_in_saga_year` (a derived
+  age clamps at it), `migration.rs::clamp_ages_to_max_age` (a save's `age` and
+  `apparent_age` clamp to it, and a `birth_year` earlier than `saga_year - max_age`
+  clamps in step; value-driven and version-free like the aura clamp, so the next save
+  writes the clamped values), the integrity check (a `max_age` below
+  `first_roll_age()` fails the load), and the UI (age and apparent-age inputs capped
+  at it, birth-year input floored at `saga_year - max_age`). Guards:
+  `tests/a1_max_age.rs`.
 - **A Longevity Ritual holder under 35 is not scheduled** — a decision, not an
   oversight. `ArMDE:16575`'s "should roll on the table no matter what his age" is
   unbounded downward, nothing records *when* the ritual was made, and those rolls

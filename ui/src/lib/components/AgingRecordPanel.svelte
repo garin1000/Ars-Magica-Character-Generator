@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { displayName, I32_MAX, I32_MIN, paramHint, U32_MAX } from '../derive';
+  import { displayName, I32_MAX, I32_MIN, paramHint } from '../derive';
   import { CHARACTERISTICS, type AgingLogEntry, type Characteristic } from '../types';
 
   const apparentAge = $derived(store.entity.apparent_age ?? null);
@@ -245,7 +245,7 @@
         <input
           type="number"
           min="1"
-          max={U32_MAX}
+          max={store.ageInputMax}
           value={apparentAge ?? ''}
           oninput={onApparentAge}
           data-testid="apparent-age-input"

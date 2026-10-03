@@ -968,6 +968,10 @@ export interface AgingRules {
   // Absent for an aging block that ships no Crisis Table, which stands the Crisis
   // down exactly as an absent aging block stands the whole subsystem down.
   crisis?: CrisisRules | null;
+  // The app maximum age (an app limit, not a rule). Caps the age and apparent-age
+  // inputs, and puts the birth-year input's lower bound at saga year - max_age.
+  // Absent for an aging block that states none, which applies no cap.
+  max_age?: number | null;
 }
 
 // One year of a character's aging schedule: the age the roll is owed at, the

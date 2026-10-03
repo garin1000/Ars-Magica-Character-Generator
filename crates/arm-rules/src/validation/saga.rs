@@ -58,7 +58,12 @@ pub struct AgeInSagaYear {
 ///
 /// Like the calendar year the aging engine computes as `birth_year + age`, this
 /// ignores birthdays within the year; the two approximations are the same one.
-pub fn age_in_saga_year(saga_year: i32, birth_year: i32) -> AgeInSagaYear {
+///
+/// `max_age` is the ruleset's app maximum age (`AgingRules::max_age`, an app limit
+/// rather than a rule): the derived age clamps at it, silently — the birth-year
+/// input is capped at `saga_year - max_age`, so only a crafted call reaches the
+/// clamp. `None` applies no cap.
+pub fn age_in_saga_year(saga_year: i32, birth_year: i32, max_age: Option<u32>) -> AgeInSagaYear {
     let years = i64::from(saga_year) - i64::from(birth_year);
     if years < 0 {
         return AgeInSagaYear {
@@ -74,10 +79,11 @@ pub fn age_in_saga_year(saga_year: i32, birth_year: i32) -> AgeInSagaYear {
             )],
         };
     }
+    // The widest legal span (i32::MAX - i32::MIN) exceeds u32::MAX by one, so
+    // saturate rather than wrap on a hand-edited extreme.
+    let age = u32::try_from(years).unwrap_or(u32::MAX);
     AgeInSagaYear {
-        // The widest legal span (i32::MAX - i32::MIN) exceeds u32::MAX by one, so
-        // saturate rather than wrap on a hand-edited extreme.
-        age: u32::try_from(years).unwrap_or(u32::MAX),
+        age: max_age.map_or(age, |max_age| age.min(max_age)),
         issues: Vec::new(),
     }
 }
@@ -99,7 +105,7 @@ mod tests {
 
     #[test]
     fn a_possible_pair_advises_nothing() {
-        let derived = age_in_saga_year(DEFAULT_SAGA_YEAR, 1190);
+        let derived = age_in_saga_year(DEFAULT_SAGA_YEAR, 1190, None);
         assert_eq!(derived.age, 30);
         assert!(derived.issues.is_empty());
     }
@@ -107,14 +113,14 @@ mod tests {
     #[test]
     fn the_same_year_is_age_zero_without_an_advisory() {
         // Born this year: unusual for a player character, but not impossible.
-        let derived = age_in_saga_year(DEFAULT_SAGA_YEAR, DEFAULT_SAGA_YEAR);
+        let derived = age_in_saga_year(DEFAULT_SAGA_YEAR, DEFAULT_SAGA_YEAR, None);
         assert_eq!(derived.age, 0);
         assert!(derived.issues.is_empty(), "{:?}", derived.issues);
     }
 
     #[test]
     fn a_saga_year_one_before_the_birth_year_already_warns() {
-        let derived = age_in_saga_year(DEFAULT_SAGA_YEAR, DEFAULT_SAGA_YEAR + 1);
+        let derived = age_in_saga_year(DEFAULT_SAGA_YEAR, DEFAULT_SAGA_YEAR + 1, None);
         assert_eq!(derived.age, 0);
         assert_eq!(derived.issues.len(), 1);
         assert_eq!(derived.issues[0].severity, IssueSeverity::Warning);

@@ -116,6 +116,35 @@ describe('IdentityFields reflects stored entity values', () => {
   });
 });
 
+// Slice A1: the birth year is the age's other view, so its input's lower bound is
+// saga year - the ruleset's maximum age; the two cannot drift apart. 321, not the
+// shipped 500, proves the bound comes from the ruleset.
+describe('IdentityFields birth-year lower bound (slice A1)', () => {
+  function minOf(body: string): string | null {
+    const tag = /<input[^>]*data-testid="identity-birth-year"[^>]*>/.exec(body);
+    if (!tag) throw new Error('no birth-year input');
+    return /\bmin="([^"]*)"/.exec(tag[0])?.[1] ?? null;
+  }
+
+  it('is the saga year less the ruleset maximum age', () => {
+    (store.ruleset!.ruleset as unknown as Record<string, unknown>).aging = {
+      start_age: 35,
+      age_divisor: 10,
+      apparent_age_increase_min: 3,
+      living_conditions: [],
+      outcomes: [],
+      max_age: 321,
+    };
+    expect(minOf(html())).toBe('899');
+    store.entity.saga_year = 1300;
+    expect(minOf(html())).toBe('979');
+  });
+
+  it('falls back to the stored width when the ruleset states no maximum age', () => {
+    expect(minOf(html())).toBe('-2147483648');
+  });
+});
+
 // D42: the concept's optional default realm, a free identity field exactly
 // like the six above — set in the concept step, read back on reopen.
 describe('IdentityFields concept realm', () => {

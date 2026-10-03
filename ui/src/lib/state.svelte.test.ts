@@ -1738,6 +1738,37 @@ describe('setAge', () => {
     store.setAge(0);
     expect(store.entity.age).toBe(null);
   });
+
+  // Slice A1 (after-deadline answer 7, robustness F2): the app maximum age is rules
+  // data on the aging block, and the store clamps to it rather than to the u32 width.
+  // A value other than the shipped 500 proves it is read from the ruleset, not from a
+  // constant in this file's subject.
+  it('clamps the age and the apparent age to the ruleset maximum age', () => {
+    const ruleset = installRuleset([]);
+    ruleset.ruleset.aging = {
+      start_age: 35,
+      age_divisor: 10,
+      apparent_age_increase_min: 3,
+      living_conditions: [],
+      outcomes: [],
+      max_age: 321,
+    } as LocalizedRuleset['ruleset']['aging'];
+
+    store.setAge(5e9);
+    expect(store.entity.age).toBe(321);
+    store.setAge(322);
+    expect(store.entity.age).toBe(321);
+    // The maximum itself is legal, and an ordinary age is left alone.
+    store.setAge(321);
+    expect(store.entity.age).toBe(321);
+    store.setAge(40);
+    expect(store.entity.age).toBe(40);
+
+    store.setApparentAge(5e9);
+    expect(store.entity.apparent_age).toBe(321);
+    store.setApparentAge(45);
+    expect(store.entity.apparent_age).toBe(45);
+  });
 });
 
 // --- Slice 12 (#25): the saga year, and age ↔ birth year as two views ------
@@ -1771,9 +1802,40 @@ describe('the saga year and the age ↔ birth-year link', () => {
     store.setBirthYear(1190);
     await vi.runAllTimersAsync();
 
-    expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1220, 1190);
+    // The third argument is the ruleset's maximum age; this file's ruleset ships no
+    // aging block, so there is none to hand along.
+    expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1220, 1190, null);
     expect(store.entity.birth_year).toBe(1190);
     expect(store.entity.age).toBe(30);
+  });
+
+  // Slice A1: the birth year is the age's other view, so it is held to the same
+  // maximum — no earlier than saga year - max_age — and the engine derivation is
+  // handed the maximum so the age it returns clamps there too. 321, not the
+  // shipped 500, proves both come from the ruleset.
+  it('clamps the birth year at saga year - max_age and hands the maximum to the derivation', async () => {
+    const ruleset = installRuleset([]);
+    ruleset.ruleset.aging = {
+      start_age: 35,
+      age_divisor: 10,
+      apparent_age_increase_min: 3,
+      living_conditions: [],
+      outcomes: [],
+      max_age: 321,
+    } as LocalizedRuleset['ruleset']['aging'];
+    vi.mocked(ipc.deriveAge).mockResolvedValue({ age: 321, issues: [] });
+
+    store.setBirthYear(100);
+    await vi.runAllTimersAsync();
+    expect(store.entity.birth_year).toBe(1220 - 321);
+    expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1220, 1220 - 321, 321);
+    expect(store.entity.age).toBe(321);
+
+    // The earliest legal year itself, and an ordinary one, are left alone.
+    store.setBirthYear(1220 - 321);
+    expect(store.entity.birth_year).toBe(899);
+    store.setBirthYear(1190);
+    expect(store.entity.birth_year).toBe(1190);
   });
 
   it('derives the birth year from a typed age, against the saga year', async () => {
