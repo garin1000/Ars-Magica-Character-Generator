@@ -22,7 +22,7 @@
 
 use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::*;
-use arm_rules::{SpellCap, spell_caps, spell_level_cap};
+use arm_rules::{SpellCap, SpellMarks, spell_caps, spell_level_cap};
 use std::collections::BTreeMap;
 
 fn ruleset_with_only_spell(spell_json: &str) -> Ruleset {
@@ -105,8 +105,10 @@ fn cap(e: &Entity, ruleset: &Ruleset, within_focus: bool, within_potent_field: b
         &Id::new("art.ignem"),
         &[],
         false,
-        within_focus,
-        within_potent_field,
+        SpellMarks {
+            within_focus,
+            within_potent_field,
+        },
     )
 }
 

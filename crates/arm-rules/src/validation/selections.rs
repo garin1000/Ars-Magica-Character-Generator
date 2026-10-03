@@ -856,8 +856,9 @@ pub(crate) fn validate_param_groups_shared_across_copies(
     issues: &mut Vec<ValidationIssue>,
 ) {
     type RoleMap = BTreeMap<String, SelectionParamValue>;
-    let mut copies_by_item: BTreeMap<&Id, Vec<(BTreeSet<RoleMap>, Option<DuplicateKey>)>> =
-        BTreeMap::new();
+    /// One copy's complete groups, plus its whole-tuple key for the duplicate skip.
+    type CopyGroups = (BTreeSet<RoleMap>, Option<DuplicateKey>);
+    let mut copies_by_item: BTreeMap<&Id, Vec<CopyGroups>> = BTreeMap::new();
     for selection in selections {
         let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
             continue;
@@ -1074,8 +1075,7 @@ pub(crate) fn validate_per_value_cap(
             let max = usize::from(param.max_per_value);
             // Keyed by the folded target; the value carries the count and the
             // first copy's own spelling of that target, for the finding.
-            let mut counts: BTreeMap<(&Id, Option<&str>), (usize, (&Id, Option<&str>))> =
-                BTreeMap::new();
+            let mut counts: BTreeMap<ParamTarget<'_>, (usize, ParamTarget<'_>)> = BTreeMap::new();
             for (folded, (copies, original)) in &copies_by_tuple {
                 let Some(target) = param_target(ruleset, param, folded) else {
                     continue; // missing_param already reported
@@ -1118,6 +1118,9 @@ pub(crate) fn validate_per_value_cap(
     }
 }
 
+/// A parameter's whole target: its value id, plus the Ability instance if any.
+type ParamTarget<'a> = (&'a Id, Option<&'a str>);
+
 /// The whole target one copy names for `param`: its single value, plus — for
 /// an `ability`-domain parameter aimed at a parameterized Ability — that
 /// Ability's instance. `None` when the key is absent or holds a `multi_ref`
@@ -1126,7 +1129,7 @@ fn param_target<'a>(
     ruleset: &Ruleset,
     param: &ParameterDef,
     params: &'a BTreeMap<String, SelectionParamValue>,
-) -> Option<(&'a Id, Option<&'a str>)> {
+) -> Option<ParamTarget<'a>> {
     let value = params
         .get(&param.key)
         .and_then(SelectionParamValue::as_single)?;

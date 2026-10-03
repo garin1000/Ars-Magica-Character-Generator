@@ -3415,8 +3415,7 @@ mod tests {
                 &Id::new("art.ignem"),
                 &[],
                 false,
-                false,
-                false
+                SpellMarks::default()
             ),
             4
         );
@@ -3437,8 +3436,7 @@ mod tests {
                 &Id::new("art.ignem"),
                 &[],
                 false,
-                false,
-                false
+                SpellMarks::default()
             ),
             4
         );
@@ -3463,8 +3461,7 @@ mod tests {
                 &Id::new("art.ignem"),
                 &[],
                 false,
-                false,
-                false
+                SpellMarks::default()
             ),
             4
         );
@@ -3487,14 +3484,14 @@ mod tests {
         // 0 + 0 + (-5) + 0 + 3 = -2, halved → -1: the halving applies below zero.
         e.characteristics.insert(Characteristic::Int, -5);
         assert_eq!(
-            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, false, false),
+            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, SpellMarks::default()),
             -1
         );
         // 0 + 0 + (-4) + 0 + 3 = -1; floor(-1/2) = -1, where a truncating `/ 2`
         // would report 0 and hand the character a free level-0 spell.
         e.characteristics.insert(Characteristic::Int, -4);
         assert_eq!(
-            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, false, false),
+            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, SpellMarks::default()),
             -1
         );
     }
@@ -3516,8 +3513,7 @@ mod tests {
                 &Id::new("art.ignem"),
                 &[],
                 false,
-                false,
-                false
+                SpellMarks::default()
             ),
             12
         );
@@ -3534,12 +3530,12 @@ mod tests {
         let ignem = Id::new("art.ignem");
         // 2 + 3 + 1 + 0 + 3 = 9, unaffected at Touch or nearer.
         assert_eq!(
-            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, false, false),
+            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, SpellMarks::default()),
             9
         );
         // Halved beyond Touch (Eye, Voice, Sight, Arcane Connection): floor(9/2) = 4.
         assert_eq!(
-            spell_level_cap(&e, &rs, &creo, &ignem, &[], true, false, false),
+            spell_level_cap(&e, &rs, &creo, &ignem, &[], true, SpellMarks::default()),
             4
         );
     }
@@ -3554,11 +3550,11 @@ mod tests {
         let creo = Id::new("art.creo");
         let ignem = Id::new("art.ignem");
         assert_eq!(
-            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, false, false),
+            spell_level_cap(&e, &rs, &creo, &ignem, &[], false, SpellMarks::default()),
             9
         );
         assert_eq!(
-            spell_level_cap(&e, &rs, &creo, &ignem, &[], true, false, false),
+            spell_level_cap(&e, &rs, &creo, &ignem, &[], true, SpellMarks::default()),
             9
         );
     }

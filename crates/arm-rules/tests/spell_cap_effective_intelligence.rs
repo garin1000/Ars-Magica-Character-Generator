@@ -14,7 +14,7 @@ use arm_rules::characteristics::Characteristic;
 use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::{
-    effective_characteristic_after_aging, lab_totals, spell_level_cap, spell_level_caps,
+    SpellMarks, effective_characteristic_after_aging, lab_totals, spell_level_cap, spell_level_caps,
 };
 use std::collections::BTreeMap;
 
@@ -84,8 +84,7 @@ fn creo_ignem_cap(e: &Entity, rs: &Ruleset) -> i64 {
         &Id::new("art.ignem"),
         &[],
         false,
-        false,
-        false,
+        SpellMarks::default(),
     )
 }
 
@@ -183,8 +182,7 @@ fn the_books_bonisagus_template_gets_both_great_intelligence_points_in_its_cap()
             &Id::new("art.auram"),
             &[],
             false,
-            false,
-            false,
+            SpellMarks::default(),
         )
     };
     assert_eq!(

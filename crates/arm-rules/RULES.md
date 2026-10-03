@@ -1178,7 +1178,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:2009).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:2012).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1733,7 +1733,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :908) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :909) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -3422,7 +3422,7 @@ exemption is read off the effect's presence (age cap itself is M4/4e).
 - Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
   arithmetic, verified against the worked example below) + `ability_affinity`,
   folded into `effective/xp.rs::xp_allocation` and so into
-  `validation/magus.rs::validate_xp_pool` (:972). **Not** the simpler
+  `validation/magus.rs::validate_xp_pool` (:971). **Not** the simpler
   `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
   example below, but overcharges by one XP whenever `T·den mod num` falls
   strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
@@ -3500,7 +3500,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:972) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:971) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named).
@@ -5329,7 +5329,8 @@ are now rendered in separate slots.
 > they would apply to a Lab Total in play."
 
 `spell_level_cap(entity, ruleset, technique, form, requisites, range_beyond_touch,
-within_focus, within_potent_field)` (`effective/spell.rs`) computes it from the effective Art scores
+marks)` (`effective/spell.rs`; `marks: SpellMarks` carries the spell's
+`within_focus` / `within_potent_field` markers) computes it from the effective Art scores
 (folded against `requisites` — below), the **effective** Intelligence (after
 aging drops and free deltas such as Great (Intelligence),
 `effective_characteristic_after_aging` — the same reader the Lab Total uses, since
@@ -11172,11 +11173,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1238),
-  `validate_forbidden_traits` (:1259))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1241),
+  `validate_forbidden_traits` (:1262))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:619),
-  `validate_parameters` (:1459), `validate_duplicate_selections` (:908))
+  `validate_parameters` (:1462), `validate_duplicate_selections` (:909))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

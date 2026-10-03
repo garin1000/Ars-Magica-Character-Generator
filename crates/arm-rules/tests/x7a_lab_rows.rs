@@ -33,7 +33,7 @@ use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::{
     Entity, EntityKind, Id, LongevityRitual, LongevitySource, RulesetRef, Selection,
 };
-use arm_rules::{LifeStageRules, spell_level_cap};
+use arm_rules::{LifeStageRules, SpellMarks, spell_level_cap};
 use std::collections::BTreeMap;
 
 /// The shipped core ruleset, loaded exactly as `f2_conditional_modifiers.rs`
@@ -257,8 +257,7 @@ fn aristotelian_trainings_lab_bonus_must_never_apply_anywhere() {
             &Id::new("art.ignem"),
             &[],
             false,
-            false,
-            false
+            SpellMarks::default()
         ),
         // Int(0) + MagicTheory(0) + Creo(0) + Ignem(0) + 3 (ArMDE:2465) + 0 (no lab_mod)
         3,

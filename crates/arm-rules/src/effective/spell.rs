@@ -428,14 +428,36 @@ pub(crate) fn has_magical_focus(entity: &Entity, ruleset: &Ruleset) -> bool {
         })
 }
 
+/// The player's own per-spell markers that raise [`spell_level_cap`]: whether
+/// the spell falls within the character's Magical Focus and within its Potent
+/// Magic field. Both are free-text themes the engine cannot match to a spell
+/// (MAG8, D79), so they are recorded choices on [`SpellSelection`], read back
+/// here. [`SpellMarks::default`] is "neither" — the unmarked cap.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct SpellMarks {
+    /// Mirrors `SpellSelection::within_focus` (ArMDE:4403's doubling).
+    pub within_focus: bool,
+    /// Mirrors `SpellSelection::within_potent_field` (D83.3's bonus).
+    pub within_potent_field: bool,
+}
+
+impl From<&SpellSelection> for SpellMarks {
+    fn from(sel: &SpellSelection) -> Self {
+        Self {
+            within_focus: sel.within_focus,
+            within_potent_field: sel.within_potent_field,
+        }
+    }
+}
+
 /// The maximum level a magus may learn of a spell of the given Technique/Form:
 /// the sum of Technique, Form, Intelligence, Magic Theory and 3 (ArMDE:2465),
 /// using effective Art/Ability scores, **folded with `requisites`** the same
 /// way the Casting Total is (ArMDE:12309-12313, X11b — see below), **doubled**
-/// by the lowest folded score when `within_focus` is set (ArMDE:4403),
+/// by the lowest folded score when `marks.within_focus` is set (ArMDE:4403),
 /// **halved** if either Art or any requisite is deficient, plus the flat
 /// [`lab_total_mod`] term (D1, `docs/vf-audit/decisions.md`), plus Potent
-/// Magic's bonus when `within_potent_field` is set and Potent Magic is held
+/// Magic's bonus when `marks.within_potent_field` is set and Potent Magic is held
 /// (D83.3, ArMDE:4742-4748 — the larger bonus, never the sum), and **halved
 /// again** if `range_beyond_touch` is set and the character holds Short-Ranged
 /// Magic (D28). Returns an `i64` (small or negative for a beginning magus).
@@ -468,7 +490,7 @@ pub(crate) fn has_magical_focus(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// *already-folded* scores, a requisite that won the fold is automatically
 /// eligible, with no separate case needed (confirmed by hand against the
 /// passage's own worked example and by
-/// `crates/arm-rules/tests/requisite_level_cap.rs`'s focus test). `within_focus`
+/// `crates/arm-rules/tests/requisite_level_cap.rs`'s focus test). `marks.within_focus`
 /// is the caller's own claim (`SpellSelection::within_focus`, X10c) — the
 /// engine cannot match a free-text focus theme to a spell (MAG8), so the
 /// player decides and the validator reads that choice back
@@ -480,7 +502,7 @@ pub(crate) fn has_magical_focus(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// [`range_beyond_touch`]; [`spell_level_caps`] instead iterates both range
 /// classes directly (`false`, `true`) to synthesize the two surfaced rows.
 ///
-/// `within_potent_field` is likewise the player's own claim
+/// `marks.within_potent_field` is likewise the player's own claim
 /// (`SpellSelection::within_potent_field`, D79): the Potent Magic field is
 /// free text the engine cannot match to a spell either.
 ///
@@ -512,8 +534,7 @@ pub fn spell_level_cap(
     form: &Id,
     requisites: &[Id],
     range_beyond_touch: bool,
-    within_focus: bool,
-    within_potent_field: bool,
+    marks: SpellMarks,
 ) -> i64 {
     // Read before the Art *scores* shadow `technique`/`form` with their totals.
     let deficiencies = deficient_arts(entity, ruleset);
@@ -557,7 +578,7 @@ pub fn spell_level_cap(
     // only while the entity actually holds a Magical Focus right now. Saves
     // store choices, so `within_focus` itself is never scrubbed; only its
     // effect here is gated.
-    if within_focus && has_magical_focus(entity, ruleset) {
+    if marks.within_focus && has_magical_focus(entity, ruleset) {
         base += tech.min(fo);
     }
     // D83.3: Potent Magic's bonus only for a spell marked within its field,
@@ -565,7 +586,7 @@ pub fn spell_level_cap(
     // rule as the focus doubling above). The larger bonus, never the sum —
     // "only one Potent Magic Virtue applies to any single activity"
     // (ArMDE:4742) — through the same fold the in-play Lab Total reads.
-    if within_potent_field && has_potent_magic(entity, ruleset) {
+    if marks.within_potent_field && has_potent_magic(entity, ruleset) {
         base += i64::from(crate::derived::in_play_lab_total_mod_within_potent_field(
             entity, ruleset,
         ));
@@ -636,8 +657,7 @@ pub fn spell_level_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellLevelCap
                         form,
                         &[],
                         range_beyond_touch,
-                        false,
-                        false,
+                        SpellMarks::default(),
                     ),
                 });
             }
@@ -704,8 +724,10 @@ pub fn spell_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellCap> {
                     &spell.form,
                     &spell.requisites,
                     range_beyond_touch,
-                    within_focus,
-                    within_potent_field,
+                    SpellMarks {
+                        within_focus,
+                        within_potent_field,
+                    },
                 )
             };
             SpellCap {
