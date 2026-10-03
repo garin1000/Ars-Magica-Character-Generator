@@ -271,6 +271,14 @@ language/window state, a terminal describe), why it is ordered the way it is.
   the player (guidance text, the Hermetic-minimums disclosure, unspent-budget
   warnings), layout stability under a step's first interaction, and the tab
   area at a short window height.
+- `d81-features.e2e.js` — the D81 rules features through the release binary:
+  the requisite fold in a Casting Total, "Add within focus" and the stale-mark
+  warning, Incompatible Arts' four selects and "Unusable" cell, a
+  Characteristic-floor prerequisite, and Merinita's conditional Warping Point.
+- `save-load-fidelity.e2e.js` — save → New → Open round trips: the D81
+  parameters (Incompatible Arts, a Magical Focus, a spell marked within focus),
+  a Mythic Companion's type choices, an illegal companion kept in Silent mode,
+  and the German names on screen plus a German companion export.
 
 Every spec requires the same display + release-build prerequisites: none of them
 can run without `WebKitWebDriver` and a display.
