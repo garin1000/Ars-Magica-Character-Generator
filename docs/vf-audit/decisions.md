@@ -840,6 +840,14 @@ presumption of correctness.
    judged on its completed combinations only. A whole repeated pair stays
    `duplicate_selection` alone. Single Arts may recur: grouped keys skip
    `max_per_value`, and the picker greys nothing.
+3. **Potent Magic counts toward the creation cap only within its field**
+   (amends D1; after-deadline answer 3). Its Lab Total bonus (+3 Minor / +6
+   Major, ArMDE:4746, :4748) counts only for a spell marked
+   `within_potent_field`, and only while a Potent Magic Virtue is held, so a
+   stale mark adds nothing. Across Virtues the larger bonus applies, not the
+   sum (ArMDE:4742). The other eight D1 entries stay flat. `spell_caps` gains
+   `within_potent_field_cap` and `within_focus_and_potent_field_cap`. A save
+   that was legal can become invalid; validation reports it, with no migration.
 2. **Repeated free text compares folded** (amends D81.9; try-out finding 25).
    Every across-copies check (`max_per_target` duplicates, `max_per_value`)
    compares a free-text value, and a parameterized Ability's instance text,
