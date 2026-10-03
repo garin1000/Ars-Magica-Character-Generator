@@ -1914,7 +1914,7 @@ describe('the saga year and the age ↔ birth-year link', () => {
     vi.mocked(ipc.deriveAge).mockResolvedValue({ age: 40, issues: [] });
     store.setBirthYear(1190);
     await vi.runAllTimersAsync();
-    expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1230, 1190);
+    expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1230, 1190, null);
   });
 });
 
@@ -1966,7 +1966,7 @@ describe('the saga year is document state, and settings keep only a default', ()
     await vi.runAllTimersAsync();
 
     // 1220 — the document's — even though the installation's default is 1197.
-    expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1220, 1190);
+    expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1220, 1190, null);
   });
 
   it('dirties the document when the saga year moves, and rewrites nothing', async () => {

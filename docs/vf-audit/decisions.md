@@ -890,6 +890,14 @@ presumption of correctness.
    years: charged = floor(s/4)*3 + min(s mod 4, 3), with s capped at 4 x years.
    The book's Darius is worth 240 (ArMDE:2486, :2488). Storing real per-year
    seasons is open-todos row 56 (a save-format change, later).
+9. **Maximum age 500** (after-deadline answer 7). This is an app limit, not a
+   rule. `rules/core/aging.json` declares `max_age: 500`, and a value below the
+   first aging-roll age fails the load. The age, apparent-age and birth-year
+   inputs take their bounds from it, as do the derived age and
+   `aging_schedule`. Loading clamps age, apparent age and a too-early birth year
+   together; the next save writes the clamped values, as with the aura clamp,
+   and the schema is not bumped. Moving the saga year forward recomputes nothing
+   (D3.3), so the birth year can fall out of step until the file is reopened.
 
 ---
 
