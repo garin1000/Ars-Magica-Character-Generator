@@ -269,6 +269,74 @@ describe('guided creation wizard', () => {
     expect(await $(WIZARD_RAIL).isExisting()).toBe(false);
     expect(await $(NAME_INPUT).getValue()).toBe('Marcus of Bonisagus');
   });
+
+  // tryout-findings-2026-10-03 #9(a) (HIGH). Abilities, Arts and Spell Mastery draw
+  // on one experience pool, and the engine files the pool's `not_enough_xp` on the
+  // Abilities step. Overspending on Arts therefore put an error on Abilities, and the
+  // old gate then held the player there: Next was dead and a rail click to the
+  // already-visited Arts step clamped back to Abilities. Visited ground is now open
+  // both ways; the gate only guards steps never reached.
+  it('lets the player move between visited Abilities and Arts after an overspend', async () => {
+    await startWizard('magus');
+    await $(WIZARD_RAIL).waitForExist({ timeout: BOOT_TIMEOUT });
+    await useFlatPoolFunding();
+
+    // A pool of 30 with the Order's three minimums bought (5 XP each) leaves 15.
+    await advanceWizardTo('abilities');
+    await satisfyMagusMinimums();
+    await advanceWizardTo('arts');
+
+    // Creo 6 costs 21 XP (1+2+…+6), more than the 15 left: the shared pool is
+    // overspent, and the Art steppers do not stop it.
+    const inc = await $('[data-testid="art-inc-art.creo"]');
+    await inc.waitForClickable({ timeout: STEP_TIMEOUT });
+    for (let i = 0; i < 6; i++) await inc.click();
+    await browser.waitUntil(
+      async () => (await $('[data-testid="art-score-art.creo"]').getText()) === '6',
+      { timeout: STEP_TIMEOUT, timeoutMsg: 'Creo did not reach 6' },
+    );
+
+    // Back on Abilities, the overspend is that step's error.
+    await $(BACK).click();
+    await browser.waitUntil(async () => (await currentWizardPhase()) === 'abilities', {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'Back from Arts did not land on Abilities',
+    });
+    const abilitiesStep = await $('[data-testid="wizard-step-abilities"]');
+    await browser.waitUntil(
+      async () => (await abilitiesStep.getAttribute('data-blocked')) === 'true',
+      {
+        timeout: STEP_TIMEOUT,
+        timeoutMsg: 'the Arts overspend did not raise a blocking error on Abilities',
+      },
+    );
+    await expect($('[data-code="not_enough_xp"]')).toExist();
+
+    // Next still leads on to the visited Arts step ...
+    await advanceWizardTo('arts');
+    expect(await currentWizardPhase()).toBe('arts');
+
+    // ... and so does the rail, from the blocked step, in one click.
+    await $(BACK).click();
+    await browser.waitUntil(async () => (await currentWizardPhase()) === 'abilities', {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'Back from Arts did not land on Abilities a second time',
+    });
+    await $('[data-testid="wizard-step-arts"]').click();
+    await browser.waitUntil(async () => (await currentWizardPhase()) === 'arts', {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg:
+        'a rail click from the blocked Abilities step did not reach the visited Arts step',
+    });
+
+    // Lowering the Art from where it was raised clears the error on Abilities.
+    const dec = await $('[data-testid="art-dec-art.creo"]');
+    for (let i = 0; i < 6; i++) await dec.click();
+    await browser.waitUntil(async () => !(await abilitiesStep.getAttribute('data-blocked')), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'lowering Creo did not clear the overspend on Abilities',
+    });
+  });
 });
 
 // End-to-end: opening an EXISTING character into the guided wizard (Slice 5, #31).
@@ -406,8 +474,7 @@ describe('opening a saved character into the guided wizard', () => {
     expect(await currentWizardPhase()).toBe('review');
     await $('[data-code="unbalanced_virtues"]').waitForExist({ timeout: STEP_TIMEOUT });
 
-    // ...and it gates nothing: the jump above crossed the offending step instead of
-    // clamping at it, and Finish is live.
+    // ...and it gates nothing: Finish is live over it.
     await $(FINISH).waitForExist({ timeout: STEP_TIMEOUT });
     expect(await $(FINISH).isEnabled()).toBe(true);
   });

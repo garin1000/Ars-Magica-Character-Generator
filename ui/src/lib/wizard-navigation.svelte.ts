@@ -4,12 +4,7 @@
 // the ruleset/entity-type/validation-result it is given through `host`, so the
 // caller (AppStore) stays the single owner of that shared state.
 
-import {
-  firstBlockedPhaseIndex,
-  incompletePhases,
-  phaseHasBlockingIssue,
-  wizardPhases,
-} from './derive';
+import { incompletePhases, phaseHasBlockingIssue, wizardPhases } from './derive';
 import type { CreationPhase, LocalizedRuleset, ValidationResult } from './types';
 
 /** The read-only slice of `AppStore` the wizard rail needs, as live accessors
@@ -56,12 +51,18 @@ export class WizardNavigation {
    * The furthest step reached by advancing. Raised only by {@link next}, never
    * lowered by going back, so the rail can offer every step the user has
    * already seen while still refusing to skip ahead into unseen ones.
+   *
+   * It is also the line the error gate guards (tryout-findings-2026-10-03 #9a):
+   * every step up to it is open both ways, by Next and by the rail, whatever
+   * errors stand, and an error gates only a move past it. A shared-pool error
+   * such as `not_enough_xp` is filed on Abilities whichever XP step overspent
+   * it, so a gate on visited ground trapped the player on Abilities.
    */
   furthest = $state(0);
 
   /**
    * Whether this run is exempt from the flow's gates: every step reachable, no
-   * forward jump clamped, no Next or Finish held shut, findings still shown.
+   * Next or Finish held shut, findings still shown.
    *
    * Set only by {@link restore}, and only for a character the wizard never built —
    * one with no stored phase slug, or one whose slug this build no longer declares
@@ -103,7 +104,8 @@ export class WizardNavigation {
   }
 
   /**
-   * Whether the wizard may advance: the current phase carries no error.
+   * Whether the wizard may advance: the next step was already visited, or the
+   * current phase carries no error. Only a move past {@link furthest} is gated.
    *
    * Errors only, so a warning never gates — which means a phase can be legal but
    * empty (a magus may pass the House step with no House, since `house_unset` is
@@ -113,6 +115,7 @@ export class WizardNavigation {
    */
   get canAdvance(): boolean {
     if (this.ungated) return true;
+    if (this.step < this.furthest) return true;
     return !phaseHasBlockingIssue(this.#host.result()?.issues ?? [], this.phase);
   }
 
@@ -142,7 +145,8 @@ export class WizardNavigation {
   }
 
   /**
-   * Advance one step, unless the current phase holds an error.
+   * Advance one step, unless {@link canAdvance} says no: the current phase holds
+   * an error and the next step was never reached.
    *
    * The only place {@link furthest} rises, and therefore the only place the
    * progress written onto the entity changes (#31). That is deliberate: `back()`
@@ -169,26 +173,15 @@ export class WizardNavigation {
   }
 
   /**
-   * Jump to an already-visited step from the rail.
+   * Jump to an already-visited step from the rail, in either direction.
    *
-   * Forward jumps are held to the same gate as Next: the jump clamps to the
-   * first blocking phase between here and there, **including the step being
-   * left**. Otherwise the rail would be a way around the very gate that blocks
-   * Next. Backward jumps are free, like {@link back}.
+   * Never clamped (#9a): every target is at or below {@link furthest}, which is
+   * ground Next itself may cross whatever errors stand, so the rail is no way
+   * around the gate. A step never reached is refused outright.
    */
   goTo(step: number): void {
     if (step < 0 || step > this.furthest) return;
-    if (step <= this.step || this.ungated) {
-      this.step = step;
-      return;
-    }
-    const blocked = firstBlockedPhaseIndex(
-      this.phases,
-      this.#host.result()?.issues ?? [],
-      this.step,
-      step,
-    );
-    this.step = blocked ?? step;
+    this.step = step;
   }
 
   /** Send the rail back to the first step, gates on. */
@@ -207,14 +200,14 @@ export class WizardNavigation {
    *
    * - **It does** — the character was built by the wizard. Land on that phase and
    *   make it the ceiling, so the run resumes exactly as it was left: nothing past
-   *   it was ever reached, and a forward jump clamps at the first blocking phase
-   *   just as it did the first time through.
+   *   it was ever reached, and an error on it gates the move past it just as it
+   *   did the first time through.
    * - **It does not, or there is none** — the character was built in the editor, or
    *   comes from a build whose phase list differed (Slice 2 removed `type`, so saves
    *   carrying it exist). It never passed these gates, so it is not held to them:
-   *   the whole rail is open and {@link ungated} lifts the clamp. Both halves are
-   *   needed — `furthest` alone leaves every step refused by `goTo`'s own guard,
-   *   and the flag alone leaves them all locked at step 0.
+   *   the whole rail is open and {@link ungated} lifts the gates, Finish's included.
+   *   Both halves are needed — `furthest` alone still holds Finish shut over an
+   *   error, and the flag alone leaves every step refused by `goTo`'s own guard.
    *
    * Resolved against {@link phases} rather than the profile's `creation_phases`
    * alone, so the wizard's own terminal `review` step round-trips too.

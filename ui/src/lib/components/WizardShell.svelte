@@ -63,9 +63,10 @@
 
 <!-- The guided flow: a rail of the character type's creation phases, one step's
      input surface, that step's own findings, and the navigation. Back is always
-     available; forward is Next (gated on this step's errors) or a rail click to an
-     already-visited step, which the store clamps at the first blocking phase in
-     between. The closing Review step swaps Next for Finish. -->
+     available; forward is Next or a rail click. Every already-visited step is open
+     both ways whatever errors stand; only a move onto a step never reached is gated
+     on the current step's errors (#9a). The closing Review step swaps Next for
+     Finish. -->
 <div class="wizard" data-testid="wizard">
   <nav class="wizard-rail" aria-label={store.t('wizard-rail-label')} data-testid="wizard-rail">
     <ol>

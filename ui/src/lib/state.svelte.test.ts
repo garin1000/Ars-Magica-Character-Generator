@@ -646,7 +646,10 @@ describe('the guided wizard', () => {
       expect(store.wizardStep).toBe(0);
     });
 
-    it('clamps a forward jump at a broken step in between', () => {
+    // tryout-findings-2026-10-03 #9(a): visited ground is open both ways. This
+    // used to clamp at the broken step, which is what trapped a player whose
+    // overspend on Arts filed `not_enough_xp` back on Abilities.
+    it('crosses a broken step in between on a forward jump to a visited step', () => {
       store.wizardNext();
       store.wizardNext();
       store.wizardNext();
@@ -655,7 +658,7 @@ describe('the guided wizard', () => {
       store.wizardBack();
       issues({ phase: 'characteristics' }); // step 1, between 0 and 3
       store.wizardGoTo(3);
-      expect(store.wizardStep).toBe(1);
+      expect(store.wizardStep).toBe(3);
     });
 
     // Slice 5 (#31): the counter is now mirrored onto the entity as a phase slug,
@@ -681,15 +684,29 @@ describe('the guided wizard', () => {
       expect(store.entity.wizard_furthest_phase).toBe('house_specialisation');
     });
 
-    // The departure step counts too: Next is blocked when the current phase is
-    // broken, so a rail jump must not be a way around that same gate.
-    it('clamps a forward jump at the step being left, when that step is broken', () => {
+    // #9(a): leaving a broken step for one already visited is allowed, by the rail
+    // and by Next alike — the gate only guards ground never reached.
+    it('leaves a broken step for an already-visited one, by the rail and by Next', () => {
       store.wizardNext();
       store.wizardNext();
       store.wizardBack();
       issues({ phase: 'characteristics' }); // the step the user is standing on
+      expect(store.wizardCanAdvance).toBe(true);
       store.wizardGoTo(2);
+      expect(store.wizardStep).toBe(2);
+      store.wizardBack();
+      store.wizardNext();
+      expect(store.wizardStep).toBe(2);
+    });
+
+    // The other half of #9(a): ground never reached stays behind the gate.
+    it('still refuses to advance past the furthest step from a broken step', () => {
+      store.wizardNext();
+      issues({ phase: 'characteristics' }); // step 1 === furthest
+      expect(store.wizardCanAdvance).toBe(false);
+      store.wizardNext();
       expect(store.wizardStep).toBe(1);
+      expect(store.wizardFurthest).toBe(1);
     });
   });
 
@@ -763,11 +780,10 @@ describe('the guided wizard', () => {
     // Finishing ends the guided run, so the record of how far it got stops being
     // true and is cleared. Keeping it would gate a *completed* character: reopened
     // later it would take the restored branch, and if the player had meanwhile
-    // introduced an error in the editor the clamp would lock them out of the very
-    // steps past the break they needed to reach. The ungated branch exists for a
-    // character that is not mid-run, and a finished one is not. Nothing is lost —
-    // the clamp only stops skipping ahead, and a finished character has already been
-    // everywhere (`canFinish` requires no errors anywhere).
+    // introduced an error in the editor, Finish would stay shut over it. The ungated
+    // branch exists for a character that is not mid-run, and a finished one is not.
+    // Nothing is lost — a finished character has already been everywhere
+    // (`canFinish` requires no errors anywhere).
     it('clears the recorded wizard progress, because the run is over', () => {
       reachReview();
       expect(store.entity.wizard_furthest_phase).toBeDefined();
@@ -945,11 +961,10 @@ describe('the guided wizard', () => {
       expect(store.wizardPhase).toBe('review');
     });
 
-    // Mechanism (b), and deliberately a SEPARATE test: (a) alone yields a rail that
-    // looks reachable and still refuses to move, because a forward jump clamps at
-    // the first blocking phase. A character built in the editor never passed those
-    // gates, so it must not be held to them.
-    it('an absent slug is exempt from the blocking clamp', async () => {
+    // Mechanism (b), and deliberately a SEPARATE test: (a) alone opens the rail but
+    // still holds Finish shut over an error. A character built in the editor never
+    // passed those gates, so it must not be held to them.
+    it('an absent slug is exempt from the error gates', async () => {
       await openIntoWizardWith();
       issues({ phase: 'characteristics' }); // a step in between, holding an error
 
@@ -960,15 +975,22 @@ describe('the guided wizard', () => {
       expect(store.wizardCanFinish).toBe(true);
     });
 
-    // The complement of the two above: a wizard-saved character IS still clamped, so
-    // the exemption is the absent-slug branch's and not a hole in the gate.
-    it('keeps the clamp for a character whose slug restores', async () => {
+    // The complement of the two above: a wizard-saved character is still GATED, so
+    // the exemption is the absent-slug branch's and not a hole in the gate. Since
+    // #9(a) the gate guards only ground past the restored phase: a jump within it
+    // crosses a broken step, but the step past `furthest` stays shut.
+    it('keeps the gate past furthest for a character whose slug restores', async () => {
       await openIntoWizardWith({ wizard_furthest_phase: 'abilities' });
       issues({ phase: 'characteristics' });
 
       store.wizardGoTo(0);
       store.wizardGoTo(store.wizardFurthest);
-      expect(store.wizardPhase).toBe('characteristics');
+      expect(store.wizardPhase).toBe('abilities');
+
+      issues({ phase: 'abilities' });
+      expect(store.wizardCanAdvance).toBe(false);
+      store.wizardNext();
+      expect(store.wizardPhase).toBe('abilities');
     });
 
     it('opening a saved character into the wizard does not instantiate a blank one', async () => {

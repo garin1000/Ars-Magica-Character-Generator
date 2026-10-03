@@ -424,8 +424,8 @@ export async function useFlatPoolFunding() {
  *
  * A no-op when the wizard is already there. Fails loudly rather than spinning: an
  * undeclared or unvisited phase is reported at once (its rail entry is disabled
- * until reached), and a forward jump over a phase holding an error clamps there —
- * `wizardGoTo` gates exactly as Next does — so the wait reports where it stopped.
+ * until reached). A jump to a visited phase is never clamped by an error (#9a), so
+ * the wait only covers the click landing.
  *
  * @param {string} phase creation-phase id
  */
@@ -437,15 +437,13 @@ export async function standOnWizardStep(phase) {
   if (!(await entry.isEnabled())) {
     throw new Error(`the wizard rail has not reached '${phase}' yet, so it cannot be jumped to`);
   }
-  // Re-click inside the wait, rather than clicking once and then waiting. A forward
-  // rail jump is CLAMPED at the first blocking phase (`firstBlockedPhaseIndex`), and
-  // validation settles on a round trip to Rust — so a jump issued in the frame after
-  // an edit can be clamped short by a finding that is about to clear, and that single
-  // click is then spent. Waiting alone would spin to the timeout while the rail sat
-  // one step short. Clicking again each poll lets the jump land as soon as the
-  // transient block lifts, and rail navigation is idempotent so a repeat is free.
-  // (Observed twice on `life-stage-childhood`'s funding-switch test, both times
-  // passing on the spec retry — a flake that was really a missing settle.)
+  // Re-click inside the wait, rather than clicking once and then waiting. This was
+  // added while a forward rail jump was still CLAMPED at the first blocking phase: a
+  // jump issued in the frame after an edit could be clamped short by a finding about
+  // to clear. #9a removed that clamp, but the re-click is kept as cheap insurance
+  // against a click lost while the step re-renders, and rail navigation is
+  // idempotent so a repeat is free. (The flake was seen twice on
+  // `life-stage-childhood`'s funding-switch test.)
   await browser.waitUntil(
     async () => {
       if ((await currentWizardPhase()) === phase) return true;
