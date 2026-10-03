@@ -210,9 +210,10 @@ describe('Puissant Ability targets one ability instance', () => {
     // These used to be two back-to-back clicks, and the second row was now and
     // then "still not existing" after 10s and even 20s. Same race as 9632426's
     // Great Characteristic adds (magus-editor.e2e.js): an add's debounced
-    // validation grows the issues footer under the pointer and the next click
-    // lands on an issue `<li>`, silently — see `waitForBalancePoints` in
-    // helpers.js. Puissant Ability is a Minor Virtue (one point) and this
+    // validation grew the issues footer under the pointer and the next click
+    // landed on an issue `<li>`, silently — see `waitForBalancePoints` in
+    // helpers.js. The footer is a fixed height now (U3); the wait stays so each
+    // add is settled first. Puissant Ability is a Minor Virtue (one point) and this
     // companion holds no Virtue yet, so the Virtue points count the instances.
     const ROW_RENDER_TIMEOUT = SETTLE_TIMEOUT;
     await waitForBalancePoints('virtues', 0);
@@ -788,8 +789,8 @@ describe('character editor', () => {
     // Virtues & Flaws tab: a minor virtue funded by a minor flaw is balanced.
     await $('[data-testid="tab-virtues_flaws"]').click();
     await $('[data-testid="add-virtue.keen_vision"]').waitForExist({ timeout: 10000 });
-    // Each add settles (row + balance) before the next click, so the issues
-    // footer cannot grow under the pointer mid-click (`waitForBalancePoints`).
+    // Each add settles (row + balance) before the next click
+    // (`waitForBalancePoints`); the issues footer itself is a fixed height (U3).
     await waitForBalancePoints('virtues', 0);
     await $('[data-testid="add-virtue.keen_vision"]').click();
     // Match by testid prefix: the suffix is the entity-array index, which shifts

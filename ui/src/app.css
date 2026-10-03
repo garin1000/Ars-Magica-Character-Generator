@@ -1001,13 +1001,24 @@ button:disabled {
   font-size: var(--font-small);
 }
 
-/* Shared issues panel, pinned below the tabs at the bottom of the viewport. It
-   shows every error/warning for the whole character, not just the active tab. */
+/* Shared issues panel, pinned below the tabs at the bottom of the viewport (the
+   editor's, and the wizard's per-step one). A FIXED band (after-deadline answer 8):
+   it used to be `max-height: 30vh`, so a finding landing after an add grew it by a
+   row and squeezed the tab area from below — a quick second click near the bottom
+   of the tab then hit the footer that had just moved under the pointer. Now it is
+   one height whatever it holds, the "No issues" state included, so the tab area
+   never moves. 11.25rem is the heading plus four whole `.issue` rows (padding +
+   ~1.2 line box at `--font-small` + margin = ~27.8px each) plus this padding and
+   border; more rows scroll inside `.validation-body`, under a heading that stays.
+   `flex-shrink: 0` because on a flex item a height is only the basis.
+   `app.css.test.ts` recomputes the four-row model from the rules themselves. */
 .validation-bar {
   border-top: 1px solid var(--region-border);
   padding: 0.4rem 1.5rem;
-  max-height: 30vh;
-  overflow-y: auto;
+  height: 11.25rem;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .region {
@@ -1573,9 +1584,35 @@ ul {
 
 /* The (Area)/Craft/etc. parameter field gets its own full-width line beneath
    the rest of the row (name, score spinner, specialty, ×). flex-basis: 100%
-   forces a wrap onto a new line; it is last in DOM order so it lands below. */
+   forces a wrap onto a new line; it is last in DOM order so it lands below.
+   This is the bare field of a parameter with no catalogue; a catalogued one is
+   the combo below. */
 .ability-selection .ability-param {
   flex: 1 0 100%;
+  min-width: 0;
+}
+
+/* A catalogued parameter (try-out finding 5): the dropdown and the "Other…" field
+   it opens (or its "follows" indicator) are one control, so they take that
+   parameter line TOGETHER — dropdown left at its content width, field right taking
+   the rest. Without the wrapper the field kept the 100% basis above and broke onto
+   a line of its own under the dropdown. No wrap: the pair is one line by intent,
+   and the field's `min-width: 0` lets it give way instead. The field rule is three
+   classes deep so it outranks the two-class rule above whatever the source order. */
+.ability-selection .ability-param-combo {
+  flex: 1 0 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.ability-selection .ability-param-combo .ability-param-select {
+  flex: 0 0 auto;
+}
+
+.ability-selection .ability-param-combo .ability-param {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -2546,7 +2583,9 @@ ul {
 }
 
 /* The one box both panel states render into (ValidationPanel.svelte), floored so
-   the footer keeps its height when the last issue clears instead of jumping.
+   the panel keeps its height when the last issue clears instead of jumping. (The
+   docked footer no longer needs it — `.validation-bar` is a fixed height — but the
+   boxed panel on the wizard's Review step still does.)
    The floor is one `.issue` row: 0.35rem padding-top + a ~14.4px line box
    (`line-height: normal` at `--font-small`) + 0.35rem padding-bottom +
    0.35rem margin-bottom ≈ 27.8px, inside this 2.25rem = 28.7px. The empty
@@ -2557,17 +2596,26 @@ ul {
   min-height: 2.25rem;
 }
 
-/* Validation summary below the selected frame (outside the gold border),
-   same width as the frame: fixed height sized for ~2-3 issues, scrolls when
-   it overflows. */
+/* The docked summary inside `.validation-bar`: it takes the bar's fixed height and
+   hands what is left under the heading to its body, which is the ONE scrollport.
+   The list used to carry a 7.5rem cap of its own — a second scrollport nested in
+   the first, and a second height to keep in step with the bar's. */
+.validation-docked {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .validation-docked h2 {
   margin: 0 0 0.35rem;
   font-size: var(--font-small);
   color: var(--muted);
 }
 
-.validation-docked .issue-list {
-  max-height: 7.5rem;
+.validation-docked .validation-body {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
 }
 

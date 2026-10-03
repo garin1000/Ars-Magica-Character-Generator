@@ -1330,4 +1330,124 @@ describe('app.css', () => {
     expect(body).toMatch(/text-align:\s*right;/);
     expect(body).toMatch(/font-variant-numeric:\s*tabular-nums;/);
   });
+
+  // ── The Ability parameter combo is one line (L4, try-out finding 5) ─────────
+  //
+  // A catalogued parameter (Dead Language, Area Lore, …) renders a dropdown —
+  // catalogue values, linked Virtues, "Other…" — and, while "Other…" is chosen
+  // (the default), a free-text field. The field carried `.ability-param`'s
+  // `flex: 1 0 100%`, written for the bare text field of an UNcatalogued
+  // parameter, so it broke onto a line of its own under the dropdown and the
+  // pair read as two unrelated controls. Wrapped together (the markup half is
+  // pinned in `lib/components/AbilityTab.test.ts`), the pair takes that full
+  // line instead and splits it: dropdown at its content width, field the rest.
+  it('lays the parameter dropdown and its "Other…" field out on one line of their own', () => {
+    const combo = selectorBody('.ability-selection .ability-param-combo');
+    // The pair, not the field, now claims the row's parameter line.
+    expect(combo).toMatch(/flex:\s*1\s+0\s+100%;/);
+    expect(combo).toMatch(/display:\s*flex;/);
+    expect(combo).toMatch(/align-items:\s*center;/);
+    expect(combo).toMatch(/gap:/);
+    expect(combo).toMatch(/min-width:\s*0;/);
+    // ONE line: a wrapping combo would put the field back under the dropdown.
+    expect(combo).not.toMatch(/flex-wrap:\s*wrap/);
+
+    // Dropdown left, sized to its content: neither grows nor shrinks.
+    const select = selectorBody('.ability-selection .ability-param-combo .ability-param-select');
+    expect(select).toMatch(/flex:\s*0\s+0\s+auto;/);
+    // Field right, taking whatever is left — and allowed to go narrower than its
+    // intrinsic width, or a long placeholder would push the line wider than the row.
+    // Three classes deep so it outranks the two-class full-width rule below
+    // regardless of source order.
+    const field = selectorBody('.ability-selection .ability-param-combo .ability-param');
+    expect(field).toMatch(/flex:\s*1\s+1\s+auto;/);
+    expect(field).toMatch(/min-width:\s*0;/);
+  });
+
+  // The other user of `.ability-param`: a parameter with no catalogue renders the
+  // bare text field, no dropdown, and that one keeps its own full-width line.
+  it('keeps the bare parameter field of an uncatalogued Ability on a full line', () => {
+    expect(selectorBody('.ability-selection .ability-param')).toMatch(/flex:\s*1\s+0\s+100%;/);
+  });
+
+  // ── The issues footer is a FIXED band (U3, after-deadline answer 8) ─────────
+  //
+  // `.validation-bar` was `max-height: 30vh`, i.e. as tall as its issue list up to
+  // a cap — so an add whose validation brought a finding grew it by a row and
+  // squeezed the tab area from below, and a quick second click near the bottom of
+  // the tab landed on the footer that had just moved under the pointer
+  // (`waitForBalancePoints` in `e2e/helpers.js` exists only to dodge that). The
+  // band is now one height whatever it holds — the empty state included, since
+  // the footer is always rendered (App.svelte, WizardShell.svelte) — so the tab
+  // area above it never moves. The height is a model of the rows it holds, at the
+  // ~1.2 line box this file uses for every other line-height estimate.
+  const LINE_BOX = 1.2;
+
+  /** The height a rule declares (not `min-`/`max-height`), in CSS px. */
+  function ownHeightPx(body: string): number {
+    const declared = /(?:^|[^-])height:\s*([^;]+);/.exec(body);
+    expect(declared, 'the rule should declare its own height').not.toBeNull();
+    return lengthPx(declared![1]);
+  }
+
+  /** One `.issue` row: padding, its single line box, and the gap below it. */
+  function issueRowPx(): number {
+    const row = ruleBody('issue');
+    const [vertical] = paddingPx(row);
+    const margin = /margin-bottom:\s*([^;]+);/.exec(row);
+    expect(margin, '.issue should space its rows with margin-bottom').not.toBeNull();
+    return 2 * vertical + fontSizePx(row) * LINE_BOX + lengthPx(margin![1]);
+  }
+
+  it('gives the issues footer a fixed height rather than one that follows its rows', () => {
+    const bar = ruleBody('validation-bar');
+    // A height in rem, so it tracks the type the rows are set in.
+    expect(bar).toMatch(/(?:^|[^-])height:\s*[\d.]+rem;/);
+    // Neither bound: a min or max height is exactly a height that moves.
+    expect(bar).not.toMatch(/(max|min)-height:/);
+    // …and not a share of the window, which is a height that moves on resize.
+    expect(bar).not.toMatch(/vh/);
+    // On a flex item a height is only the basis: without this the column could
+    // still shrink the band when the window runs short.
+    expect(bar).toMatch(/flex-shrink:\s*0;|flex:\s*(none|0\s+0\s+auto);/);
+  });
+
+  it('sizes the issues footer for about four issue rows under its heading', () => {
+    const bar = ruleBody('validation-bar');
+    const [vertical] = paddingPx(bar);
+    const border = lengthPx(/border-top:\s*([\d.]+px)/.exec(bar)![1]);
+    const heading = selectorBody('.validation-docked h2');
+    const headingGap = /margin:\s*0\s+0\s+([^;\s]+);/.exec(heading);
+    expect(headingGap, 'the heading should space itself from the list').not.toBeNull();
+    const headingPx = fontSizePx(heading) * LINE_BOX + lengthPx(headingGap![1]);
+
+    // `* { box-sizing: border-box }`, so the declared height includes padding and
+    // border, and what is left under the heading is the scrolling issue area.
+    const issueArea = ownHeightPx(bar) - 2 * vertical - border - headingPx;
+    expect(issueArea, 'four whole rows fit').toBeGreaterThanOrEqual(4 * issueRowPx());
+    expect(issueArea, 'not a fifth').toBeLessThan(5 * issueRowPx());
+  });
+
+  it('scrolls the issues inside the fixed footer, under a heading that stays put', () => {
+    // A flex column, so the panel inside can be handed exactly the band's height…
+    const bar = ruleBody('validation-bar');
+    expect(bar).toMatch(/display:\s*flex;/);
+    expect(bar).toMatch(/flex-direction:\s*column;/);
+    // …the docked panel fills it and passes it on to its body…
+    const panel = ruleBody('validation-docked');
+    expect(panel).toMatch(/display:\s*flex;/);
+    expect(panel).toMatch(/flex-direction:\s*column;/);
+    expect(panel).toMatch(/flex:\s*1/);
+    expect(panel).toMatch(/min-height:\s*0;/);
+    // …and the body, not the band and not the heading, is the one scrollport.
+    const body = selectorBody('.validation-docked .validation-body');
+    expect(body).toMatch(/flex:\s*1/);
+    expect(body).toMatch(/min-height:\s*0;/);
+    expect(body).toMatch(/overflow-y:\s*auto;/);
+    // The list's own 7.5rem cap was a SECOND scrollport nested in the first, and a
+    // height of its own that the band would have to be kept in step with.
+    expect(cssWithoutComments).not.toMatch(
+      /\.validation-docked \.issue-list\s*\{[^}]*(max-height|overflow)/,
+    );
+  });
 });

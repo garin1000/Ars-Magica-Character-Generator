@@ -649,10 +649,11 @@ describe('selected frame', () => {
     // how many weapons/shields/armor the rules ship.
     const [addId] = await enabledAddIds('add-', 1);
     const add = await $(`[data-testid="${addId}"]`);
-    // One click, then its row, before the next: back-to-back clicks can lose one
-    // to the issues footer growing under the pointer (see `waitForBalancePoints`
-    // in helpers.js). Equipment spends no Virtue points, so the row count is the
-    // settle signal here.
+    // One click, then its row, before the next: back-to-back clicks used to lose
+    // one to the issues footer growing under the pointer (see `waitForBalancePoints`
+    // in helpers.js); the footer is a fixed height now (U3), and the wait keeps
+    // each add settled before the next. Equipment spends no Virtue points, so the
+    // row count is the settle signal here.
     const carried = async () => (await $$('[data-testid^="equipment-name-"]')).length;
     const before = await carried();
     for (let i = 0; i < EQUIPMENT_ROWS; i++) {
@@ -827,17 +828,18 @@ describe('repeated parameterized virtues', () => {
     // not existing" after 20s. Caught with an in-page event probe: the lost
     // click's mousedown landed on `li.issue.error` at the very point the Add
     // button's centre had been. The issues panel is the app-wide footer
-    // (`App.svelte`, `.validation-bar`), and it grows as an add's debounced
-    // validation lands with new findings, squeezing the tab area from below —
+    // (`App.svelte`, `.validation-bar`), and it USED to grow as an add's debounced
+    // validation landed with new findings, squeezing the tab area from below —
     // and this row sits at the bottom edge of the Available list. WebDriver
     // checks for an obscuring element BEFORE it dispatches, so a validation that
-    // lands in between moves the footer under the pointer and the click goes to
-    // it with no error at all.
+    // landed in between moved the footer under the pointer and the click went to
+    // it with no error at all. The footer is a fixed height now (U3), which
+    // removes that cause.
     //
-    // So each click waits for the add before it to be fully validated. The
+    // Each click still waits for the add before it to be fully validated. The
     // balance bar reads `effective.virtue_points`, which `revalidate` publishes in
     // the same guarded write as the issue list, so it showing `n` Virtue points
-    // means the footer already has its height for `n` instances. A Minor Virtue
+    // means the validation for `n` instances has landed. A Minor Virtue
     // is one point and a fresh companion holds none, so `n` is the instance
     // count. A zero budget means the first engine pass has not landed yet.
     const targets = ['int', 'per', 'str', 'sta', 'pre', 'com'];

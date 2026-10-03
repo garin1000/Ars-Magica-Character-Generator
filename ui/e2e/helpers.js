@@ -694,12 +694,14 @@ export const SETTLE_TIMEOUT = 20000;
  *
  * WHY A SPEC WAITS FOR THIS BETWEEN TWO ADD CLICKS (9632426). Each add's debounced
  * validation can bring new findings, and the app-wide issues footer (`App.svelte`,
- * `.validation-bar`) then grows and squeezes the tab area from below. WebDriver
- * checks for an obscuring element BEFORE it dispatches a click, so a validation
- * landing in between moves the footer under the pointer and the click goes to an
- * issue `<li>` with no error at all. `revalidate` publishes the balance in the same
+ * `.validation-bar`) used to grow with them and squeeze the tab area from below.
+ * WebDriver checks for an obscuring element BEFORE it dispatches a click, so a
+ * validation landing in between moved the footer under the pointer and the click
+ * went to an issue `<li>` with no error at all. The footer is a fixed height now
+ * (U3), so that cause is gone; the wait stays as the cheap guarantee that each add
+ * is fully validated before the next. `revalidate` publishes the balance in the same
  * guarded write as the issue list, so the bar showing the expected total means the
- * footer already has its final height and the next click is safe.
+ * add's validation has fully landed.
  *
  * @param {'virtues'|'flaws'} side which half of the bar to read
  * @param {number} points the expected spent total
