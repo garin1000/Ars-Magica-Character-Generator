@@ -2504,9 +2504,19 @@ export function wizardPhases(profile: EntityTypeProfile | undefined): CreationPh
   return [...profile.creation_phases.map(phaseOf), 'review'];
 }
 
+/**
+ * Whether a finding belongs to a creation phase: its owning `phase`, or one of the
+ * `also_phases` the engine lists for it — the shared-XP-pool overspend belongs to
+ * every step that spends the pool (tryout-findings-2026-10-03 #9b, #11). The one
+ * membership rule every phase predicate below uses.
+ */
+function belongsToPhase(issue: ValidationIssue, phase: CreationPhase): boolean {
+  return issue.phase === phase || (issue.also_phases ?? []).includes(phase);
+}
+
 /** The findings attributed to one creation phase — what a wizard step shows. */
 export function issuesForPhase(issues: ValidationIssue[], phase: CreationPhase): ValidationIssue[] {
-  return issues.filter((issue) => issue.phase === phase);
+  return issues.filter((issue) => belongsToPhase(issue, phase));
 }
 
 /**
@@ -2574,7 +2584,7 @@ export function issuesForStep(
   if (!phase) return issues.map((issue) => ({ issue }));
   const entries: StepIssue[] = [];
   for (const issue of issues) {
-    if (issue.phase === phase) {
+    if (belongsToPhase(issue, phase)) {
       entries.push({ issue });
       continue;
     }
@@ -2597,7 +2607,7 @@ export function issuesForStep(
  * moment the player leaves that step.
  */
 export function phaseHasPendingWarning(issues: ValidationIssue[], phase: CreationPhase): boolean {
-  return issues.some((issue) => issue.phase === phase && issue.severity === 'warning');
+  return issues.some((issue) => belongsToPhase(issue, phase) && issue.severity === 'warning');
 }
 
 /**
@@ -2610,7 +2620,7 @@ export function phaseHasPendingWarning(issues: ValidationIssue[], phase: Creatio
  * gates nothing.
  */
 export function phaseHasBlockingIssue(issues: ValidationIssue[], phase: CreationPhase): boolean {
-  return issues.some((issue) => issue.phase === phase && issue.severity === 'error');
+  return issues.some((issue) => belongsToPhase(issue, phase) && issue.severity === 'error');
 }
 
 /**
@@ -2638,28 +2648,6 @@ export function phaseIsIncomplete(
   phase: CreationPhase,
 ): boolean {
   return incompletePhases(result).includes(phase);
-}
-
-/**
- * The index of the first phase in `phases[from..=to]` that blocks, or `null` if
- * the whole range is clear.
- *
- * The range is **inclusive of `from`**: a forward rail jump starts at a phase the
- * user may have just broken, and skipping it would make the rail a way around the
- * very gate that blocks Next. A backwards range is never blocked — Back is always
- * allowed, so the user can always reach the step that needs fixing.
- */
-export function firstBlockedPhaseIndex(
-  phases: CreationPhase[],
-  issues: ValidationIssue[],
-  from: number,
-  to: number,
-): number | null {
-  for (let i = from; i <= to; i++) {
-    const phase = phases[i];
-    if (phase && phaseHasBlockingIssue(issues, phase)) return i;
-  }
-  return null;
 }
 
 export interface AbilityGroup {

@@ -17,6 +17,7 @@
 //! (audit finding Klaus F4) — see the constant's own docs.
 
 use super::*;
+use crate::types::CreationPhase;
 
 /// The experience charged against a pool for a bought score whose advancement
 /// table cost is `table_xp`, under an optional Affinity multiplier.
@@ -327,6 +328,44 @@ enum SpendKind {
     Art,
     /// A per-spell Spell Mastery Ability, eligible for SpellMasteryXp pools only.
     Mastery,
+}
+
+impl SpendKind {
+    /// One spend of each kind, so the pool's spending steps can be read off the
+    /// taxonomy rather than restated. A new variant fails [`Self::phase`]'s match
+    /// until it is given a step, and belongs in this list as well.
+    fn one_of_each() -> [SpendKind; 3] {
+        [
+            SpendKind::Ability {
+                ability: Id::new(""),
+                category: AbilityCategory::General,
+                parameter: None,
+            },
+            SpendKind::Art,
+            SpendKind::Mastery,
+        ]
+    }
+
+    /// The creation step whose input surface buys this kind of spend.
+    fn phase(&self) -> CreationPhase {
+        match self {
+            SpendKind::Ability { .. } => CreationPhase::Abilities,
+            SpendKind::Art => CreationPhase::Arts,
+            SpendKind::Mastery => CreationPhase::Spells,
+        }
+    }
+}
+
+/// Every creation step that spends the shared experience pool, in phase order:
+/// Abilities, Arts and Spells (Spell Mastery). The shared-pool findings
+/// (`not_enough_xp`, `xp_solve_bound_exceeded`) belong to each of them, since an
+/// overspend can be made on any (tryout-findings-2026-10-03 #9b, #11).
+pub(crate) fn shared_pool_phases() -> Vec<CreationPhase> {
+    let phases: BTreeSet<CreationPhase> = SpendKind::one_of_each()
+        .iter()
+        .map(SpendKind::phase)
+        .collect();
+    phases.into_iter().collect()
 }
 
 /// A restricted pool's funding scope for the flow solve.

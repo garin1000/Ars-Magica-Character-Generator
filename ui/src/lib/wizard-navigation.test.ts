@@ -236,3 +236,36 @@ describe('WizardNavigation / a visited step stays reachable while an error stand
     expect(nav.canFinish).toBe(false);
   });
 });
+
+// W2 (tryout-findings-2026-10-03 #9b, #11): the engine now lists every step that
+// spends the shared pool in the overspend's `also_phases`, so an overspend made on
+// Arts holds Arts itself. With #9a's rule that must gate only the move past
+// `furthest` — never trap the player on visited ground.
+describe('WizardNavigation / the shared-pool overspend also blocks Arts (#9b)', () => {
+  const sharedOverspend: ValidationIssue[] = [
+    { ...issue('not_enough_xp', 'abilities', ''), also_phases: ['arts', 'spells'] },
+  ];
+
+  function onArtsAsFurthest(): WizardNavigation {
+    const nav = new WizardNavigation(makeHost(sharedOverspend));
+    nav.furthest = nav.phases.indexOf('arts');
+    nav.step = nav.phases.indexOf('arts');
+    return nav;
+  }
+
+  it('holds Next shut on Arts when Arts is the furthest step reached', () => {
+    const nav = onArtsAsFurthest();
+    expect(nav.canAdvance).toBe(false);
+    nav.next();
+    expect(nav.phase).toBe('arts');
+  });
+
+  it('does not trap the player: Back to Abilities, then Next onto Arts again', () => {
+    const nav = onArtsAsFurthest();
+    nav.back();
+    expect(nav.phase).toBe('abilities');
+    expect(nav.canAdvance).toBe(true);
+    nav.next();
+    expect(nav.phase).toBe('arts');
+  });
+});

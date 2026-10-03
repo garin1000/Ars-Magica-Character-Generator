@@ -3422,7 +3422,7 @@ exemption is read off the effect's presence (age cap itself is M4/4e).
 - Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
   arithmetic, verified against the worked example below) + `ability_affinity`,
   folded into `effective/xp.rs::xp_allocation` and so into
-  `validation/magus.rs::validate_xp_pool` (:971). **Not** the simpler
+  `validation/magus.rs::validate_xp_pool` (:982). **Not** the simpler
   `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
   example below, but overcharges by one XP whenever `T·den mod num` falls
   strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
@@ -3500,10 +3500,14 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:971) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:982) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
-  be named).
+  be named). `not_enough_xp` and `xp_solve_bound_exceeded` are owned by Abilities and
+  list the other steps that spend the pool in `also_phases` (Arts, Spells — from
+  `effective/xp.rs::shared_pool_phases`, read off `SpendKind`), so the overspend
+  shows on every XP step (tryout-findings-2026-10-03 #9b, #11). Presentation only;
+  the computation is unchanged.
 - **Restricted pool spent before the general pool (two-phase fill).** The
   restricted XP is free-but-earmarked, so an eligible spend must drain it before
   the general pool: otherwise the general pool is over-consumed and unused

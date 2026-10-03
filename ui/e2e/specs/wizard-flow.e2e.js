@@ -276,6 +276,9 @@ describe('guided creation wizard', () => {
   // old gate then held the player there: Next was dead and a rail click to the
   // already-visited Arts step clamped back to Abilities. Visited ground is now open
   // both ways; the gate only guards steps never reached.
+  //
+  // #9(b): the same finding also lists Arts and Spells (`also_phases`), so the Arts
+  // step where the overspend is made shows it and is marked too.
   it('lets the player move between visited Abilities and Arts after an overspend', async () => {
     await startWizard('magus');
     await $(WIZARD_RAIL).waitForExist({ timeout: BOOT_TIMEOUT });
@@ -296,7 +299,15 @@ describe('guided creation wizard', () => {
       { timeout: STEP_TIMEOUT, timeoutMsg: 'Creo did not reach 6' },
     );
 
-    // Back on Abilities, the overspend is that step's error.
+    // #9(b): the Arts step itself shows the overspend and carries the rail marker.
+    const artsStep = await $('[data-testid="wizard-step-arts"]');
+    await browser.waitUntil(async () => (await artsStep.getAttribute('data-blocked')) === 'true', {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'the Arts overspend did not mark the Arts step itself',
+    });
+    await expect($('[data-code="not_enough_xp"]')).toExist();
+
+    // Back on Abilities, the overspend is that step's error too.
     await $(BACK).click();
     await browser.waitUntil(async () => (await currentWizardPhase()) === 'abilities', {
       timeout: STEP_TIMEOUT,
@@ -336,6 +347,7 @@ describe('guided creation wizard', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'lowering Creo did not clear the overspend on Abilities',
     });
+    expect(await artsStep.getAttribute('data-blocked')).toBeFalsy();
   });
 });
 

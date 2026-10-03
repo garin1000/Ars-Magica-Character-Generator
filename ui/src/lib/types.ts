@@ -2508,6 +2508,9 @@ export interface ValidationIssue {
   // The creation phase whose input surface owns the offending value — what the
   // wizard filters each step's findings on. Always present.
   phase: CreationPhase;
+  // Further phases the finding also belongs to (the shared-XP-pool overspend lists
+  // Arts and Spells beside its Abilities `phase`). Absent when empty.
+  also_phases?: CreationPhase[];
   // Interpolation values for the localized message, keyed by argument name.
   args: Record<string, string>;
   context?: string | null;

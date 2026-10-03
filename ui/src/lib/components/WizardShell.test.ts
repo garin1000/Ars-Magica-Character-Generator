@@ -229,6 +229,48 @@ describe('WizardShell', () => {
     });
   });
 
+  // W2 (tryout-findings-2026-10-03 #9b, #11): the shared XP pool's overspend is
+  // owned by Abilities but lists Arts and Spells in `also_phases`, since both spend
+  // the same pool. Before, only the Abilities step carried the "!" and the Arts or
+  // Spells step where the overspend was made said nothing at all.
+  describe('a shared-pool overspend listing other spending steps (#9b)', () => {
+    function overspentOnArts(): void {
+      installFlow(['abilities', 'arts', 'spells']);
+      store.wizardStep = 1;
+      store.wizardFurthest = 1;
+      store.result = {
+        issues: [
+          {
+            severity: 'error',
+            code: 'not_enough_xp',
+            phase: 'abilities',
+            args: { spent: '25', pool: '10', shortfall: '15' },
+            also_phases: ['arts', 'spells'],
+          },
+        ],
+      };
+    }
+
+    it('marks every spending step on the rail, in words as well', () => {
+      overspentOnArts();
+      const body = html();
+      for (const phase of ['abilities', 'arts', 'spells']) {
+        expect(tag(body, `wizard-step-${phase}`)).toContain('data-blocked="true"');
+        expect(text(body, `wizard-blocked-hint-${phase}`)).not.toBe('');
+      }
+    });
+
+    it('lists the overspend in the Arts footer, exactly once', () => {
+      overspentOnArts();
+      expect(html().match(/data-code="not_enough_xp"/g) ?? []).toHaveLength(1);
+    });
+
+    it('holds Next shut on Arts while Arts is the furthest step reached', () => {
+      overspentOnArts();
+      expect(tag(html(), 'wizard-next')).toContain('disabled');
+    });
+  });
+
   it('allows Next over a warning — an advisory is not an illegal state', () => {
     store.result = {
       issues: [{ severity: 'warning', code: 'x', phase: 'concept', args: {} }],

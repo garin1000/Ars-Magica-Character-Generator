@@ -100,6 +100,12 @@ impl fmt::Display for IssueSeverity {
 /// A code listed under several phases is emitted from several places over
 /// different subject kinds; its phase is the caller's, not the code's.
 ///
+/// The phase column names the owning `phase` only. Two rows also carry
+/// [`ValidationIssue::also_phases`]: `not_enough_xp` and `xp_solve_bound_exceeded`
+/// are owned by `abilities` and list the other steps that spend the shared XP pool
+/// (`arts`, `spells`), read off the spend taxonomy by
+/// `effective/xp.rs::shared_pool_phases`. Every other code leaves it empty.
+///
 /// Three rows describe a **rejected command input** rather than an entity state:
 /// `childhood_slot_unfilled`, `childhood_slot_is_native_language`, and
 /// `childhood_slot_duplicate_value` come only from [`childhood_rejection_issues`],
@@ -317,6 +323,17 @@ pub struct ValidationIssue {
     ///
     /// Always emitted, for the same reason as `args`.
     pub phase: CreationPhase,
+    /// Further creation phases this finding belongs to besides [`Self::phase`],
+    /// in phase order. The wizard shows and gates the finding on each of them,
+    /// and a whole-character list still shows it once.
+    ///
+    /// Set only by the shared-XP-pool findings (`not_enough_xp`,
+    /// `xp_solve_bound_exceeded`, tryout-findings-2026-10-03 #9b/#11): the pool
+    /// is typed on Abilities but spent on Abilities, Arts and Spells (Mastery),
+    /// so an overspend made on Arts must show on Arts. Empty everywhere else, and
+    /// then omitted from the JSON. IPC only: an issue is never saved.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub also_phases: Vec<CreationPhase>,
     /// Interpolation values for the localized message, keyed by argument name.
     /// Always emitted, even when empty (no `skip_serializing_if`): a
     /// `ValidationResult` is a transient frontend payload, never a git-tracked
@@ -1064,6 +1081,7 @@ impl ValidationIssue {
             severity,
             code: code.to_string(),
             phase,
+            also_phases: Vec::new(),
             args,
             context,
         }
@@ -4791,6 +4809,38 @@ mod tests {
         assert_eq!(parsed.phase, CreationPhase::VirtuesFlaws);
     }
 
+    /// W2 (tryout-findings-2026-10-03 #9b): `also_phases` is additive IPC. Empty —
+    /// every finding but the shared-pool ones — it is omitted from the JSON, and a
+    /// payload without it reads back as empty; set, it serializes as phase slugs.
+    #[test]
+    fn issue_also_phases_is_omitted_when_empty_and_roundtrips_when_set() {
+        let mut issue = ValidationIssue::error(
+            ValidationIssue::CODE_NOT_ENOUGH_XP,
+            CreationPhase::Abilities,
+            BTreeMap::new(),
+            None,
+        );
+        let json = serde_json::to_string(&issue).unwrap();
+        assert!(
+            !json.contains("also_phases"),
+            "an empty also_phases must be omitted from JSON: {json}"
+        );
+        let parsed: ValidationIssue = serde_json::from_str(
+            r#"{"severity":"error","code":"not_enough_xp","phase":"abilities"}"#,
+        )
+        .unwrap();
+        assert!(parsed.also_phases.is_empty());
+
+        issue.also_phases = vec![CreationPhase::Arts, CreationPhase::Spells];
+        let json = serde_json::to_string(&issue).unwrap();
+        assert!(
+            json.contains(r#""also_phases":["arts","spells"]"#),
+            "the extra phases serialize as slugs: {json}"
+        );
+        let roundtripped: ValidationIssue = serde_json::from_str(&json).unwrap();
+        assert_eq!(issue, roundtripped);
+    }
+
     #[test]
     fn public_constructors_build_issues_and_results() {
         let issue = ValidationIssue::new(
@@ -6216,6 +6266,73 @@ mod tests {
         e.xp_pool = 10;
         e.art_scores = vec![ArtScore::new(Id::new("art.creo"), 5)];
         assert!(codes(&validate(&e, &rs)).contains(&"not_enough_xp".to_string()));
+    }
+
+    /// The one `not_enough_xp` finding in `result`.
+    fn the_xp_overspend(result: &ValidationResult) -> &ValidationIssue {
+        let found: Vec<&ValidationIssue> = result
+            .issues
+            .iter()
+            .filter(|i| i.code == ValidationIssue::CODE_NOT_ENOUGH_XP)
+            .collect();
+        assert_eq!(found.len(), 1, "{:?}", all_codes(result));
+        found[0]
+    }
+
+    /// tryout-findings-2026-10-03 #9(b), #11. Abilities, Arts and Spell Mastery
+    /// buy from one shared pool, so its overspend belongs to every step that
+    /// spends from it. Filed only under Abilities, an overspend made on the Arts or
+    /// Spells step said nothing there. The finding keeps ONE owning `phase`
+    /// (Abilities, where the pool's size is typed) and lists the other spending
+    /// steps in `also_phases`, so it is still one finding, not three.
+    #[test]
+    fn an_art_overspend_is_also_filed_on_the_arts_and_spells_steps() {
+        let rs = arts_ruleset();
+        let mut e = make_entity("companion", vec![]);
+        // Creo 5 costs 15 xp; the shared pool of 10 is not enough.
+        e.xp_pool = 10;
+        e.art_scores = vec![ArtScore::new(Id::new("art.creo"), 5)];
+        let result = validate(&e, &rs);
+        let issue = the_xp_overspend(&result);
+        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(
+            issue.also_phases,
+            vec![CreationPhase::Arts, CreationPhase::Spells]
+        );
+    }
+
+    /// The same attribution whichever step caused the overspend: the finding is
+    /// about the shared pool, not about the spend that happened to tip it.
+    #[test]
+    fn an_ability_overspend_lists_the_same_spending_steps() {
+        let rs = arts_ruleset();
+        let mut e = make_entity("companion", vec![]);
+        // Awareness 3 costs 30 xp; the shared pool of 10 is not enough.
+        e.xp_pool = 10;
+        e.ability_scores = vec![AbilityScore::new(Id::new("ability.awareness"), 3)];
+        let result = validate(&e, &rs);
+        let issue = the_xp_overspend(&result);
+        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert_eq!(
+            issue.also_phases,
+            vec![CreationPhase::Arts, CreationPhase::Spells]
+        );
+    }
+
+    /// The pool's unspent-points warning is NOT widened: W2 widens the overspend
+    /// error only, and `also_phases` stays empty everywhere else.
+    #[test]
+    fn the_general_xp_unspent_warning_names_no_other_step() {
+        let rs = arts_ruleset();
+        let mut e = make_entity("companion", vec![]);
+        e.xp_pool = 100;
+        let result = validate(&e, &rs);
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_GENERAL_XP_UNSPENT)
+            .unwrap_or_else(|| panic!("{:?}", all_codes(&result)));
+        assert!(issue.also_phases.is_empty(), "{issue:?}");
     }
 
     #[test]

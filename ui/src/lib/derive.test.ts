@@ -7,7 +7,6 @@ import {
   abilityDisplayName,
   abilityLabel,
   agingMigrationNotice,
-  firstBlockedPhaseIndex,
   incompletePhases,
   issuesForPhase,
   issuesForStep,
@@ -4564,6 +4563,20 @@ describe('issuesForPhase', () => {
     // Neither leaks onto the other's step, nor onto the step that funds them.
     expect(issuesForPhase(findings, 'experience')).toEqual([]);
   });
+
+  // W2 (tryout-findings-2026-10-03 #9b, #11): Abilities, Arts and Spell Mastery
+  // spend one shared pool, so the engine lists the other spending steps in
+  // `also_phases`. The finding then belongs to each of them, not just its owner.
+  it('files a shared-pool finding on every step its also_phases lists', () => {
+    const overspend: ValidationIssue = {
+      ...issue('not_enough_xp', 'abilities'),
+      also_phases: ['arts', 'spells'],
+    };
+    for (const phase of ['abilities', 'arts', 'spells'] as CreationPhase[]) {
+      expect(issuesForPhase([overspend], phase).map((i) => i.code)).toEqual(['not_enough_xp']);
+    }
+    expect(issuesForPhase([overspend], 'experience')).toEqual([]);
+  });
 });
 
 describe('phaseSelectedItemIds', () => {
@@ -4659,6 +4672,33 @@ describe('issuesForStep', () => {
     ]);
     expect(entries.every((e) => e.elsewhere === undefined)).toBe(true);
   });
+
+  // W2 (#9b, #11): the shared-pool overspend is this step's own finding on every
+  // step that spends the pool — listed once, and not marked as owned elsewhere,
+  // since the step the player stands on can fix it.
+  describe('a finding with also_phases', () => {
+    const overspend: ValidationIssue = {
+      ...issue('error', 'not_enough_xp', 'abilities'),
+      also_phases: ['arts', 'spells'],
+    };
+
+    it('shows on a step its also_phases lists, once and unmarked', () => {
+      for (const phase of ['arts', 'spells'] as CreationPhase[]) {
+        const entries = issuesForStep([overspend], phase, new Set());
+        expect(entries.map((e) => e.issue.code)).toEqual(['not_enough_xp']);
+        expect(entries[0].elsewhere).toBeUndefined();
+      }
+    });
+
+    it('still shows exactly once on its owning step and in the whole-character list', () => {
+      expect(issuesForStep([overspend], 'abilities', new Set())).toHaveLength(1);
+      expect(issuesForStep([overspend], undefined, new Set())).toHaveLength(1);
+    });
+
+    it('stays off a step it does not list', () => {
+      expect(issuesForStep([overspend], 'experience', new Set())).toEqual([]);
+    });
+  });
 });
 
 describe('phaseHasPendingWarning', () => {
@@ -4690,6 +4730,18 @@ describe('phaseHasPendingWarning', () => {
     expect(
       phaseHasPendingWarning([issue('warning', 'house_unset', 'house_specialisation')], 'arts'),
     ).toBe(false);
+  });
+
+  // W2: one membership rule for every phase predicate — a finding belongs to its
+  // `phase` and to each phase in `also_phases`. No shipped warning lists any yet;
+  // this keeps the pending marker from disagreeing with the blocked one if it does.
+  it('reports a warning on a phase its also_phases lists', () => {
+    const shared: ValidationIssue = {
+      ...issue('warning', 'x', 'abilities'),
+      also_phases: ['arts'],
+    };
+    expect(phaseHasPendingWarning([shared], 'arts')).toBe(true);
+    expect(phaseHasPendingWarning([shared], 'spells')).toBe(false);
   });
 });
 
@@ -4724,6 +4776,19 @@ describe('phaseHasBlockingIssue', () => {
     expect(
       phaseHasBlockingIssue([issue('error', 'over_spell_levels', 'spells')], 'abilities'),
     ).toBe(false);
+  });
+
+  // W2 (#9b, #11): the shared-pool overspend blocks every step that spends the
+  // pool, so it shows (the rail's "!") where the overspend was made.
+  it('blocks every step an error lists in also_phases, and no other', () => {
+    const overspend: ValidationIssue = {
+      ...issue('error', 'not_enough_xp', 'abilities'),
+      also_phases: ['arts', 'spells'],
+    };
+    expect(phaseHasBlockingIssue([overspend], 'abilities')).toBe(true);
+    expect(phaseHasBlockingIssue([overspend], 'arts')).toBe(true);
+    expect(phaseHasBlockingIssue([overspend], 'spells')).toBe(true);
+    expect(phaseHasBlockingIssue([overspend], 'experience')).toBe(false);
   });
 });
 
@@ -4780,45 +4845,6 @@ describe('incompletePhases', () => {
   // need not, and must read as "nothing to report" rather than crashing the rail.
   it('is empty when the payload carries no report', () => {
     expect(incompletePhases({ issues: [] })).toEqual([]);
-  });
-});
-
-describe('firstBlockedPhaseIndex', () => {
-  const phases: CreationPhase[] = [
-    'concept',
-    'characteristics',
-    'virtues_flaws',
-    'abilities',
-    'review',
-  ];
-  const err = (phase: CreationPhase): ValidationIssue => ({
-    severity: 'error',
-    code: 'x',
-    phase,
-    args: {},
-  });
-
-  it('is null when nothing in the range blocks', () => {
-    expect(firstBlockedPhaseIndex(phases, [err('review')], 0, 3)).toBeNull();
-  });
-
-  it('finds a phase blocked in the middle of the range', () => {
-    expect(firstBlockedPhaseIndex(phases, [err('virtues_flaws')], 0, 3)).toBe(2);
-  });
-
-  it('includes the departure phase, so a rail jump cannot smuggle past the Next gate', () => {
-    // Advance to 3, walk back to 1 and break it: jumping forward to 3 must clamp
-    // to 1, not sail over it. If the scan skipped `from`, the rail would be a way
-    // around the very gate that blocks Next.
-    expect(firstBlockedPhaseIndex(phases, [err('characteristics')], 1, 3)).toBe(1);
-  });
-
-  it('includes the destination phase', () => {
-    expect(firstBlockedPhaseIndex(phases, [err('abilities')], 1, 3)).toBe(3);
-  });
-
-  it('is null for a backwards range — Back is never gated', () => {
-    expect(firstBlockedPhaseIndex(phases, [err('characteristics')], 3, 1)).toBeNull();
   });
 });
 

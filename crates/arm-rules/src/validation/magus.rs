@@ -961,6 +961,17 @@ fn validate_spell_mastery_abilities(
     }
 }
 
+/// A shared-pool finding, also filed on every other step that spends the pool
+/// (tryout-findings-2026-10-03 #9b, #11): its `phase` stays the owner, and
+/// `also_phases` lists the rest of `effective/xp.rs::shared_pool_phases`.
+fn shared_pool_issue(mut issue: ValidationIssue) -> ValidationIssue {
+    issue.also_phases = crate::effective::shared_pool_phases()
+        .into_iter()
+        .filter(|phase| *phase != issue.phase)
+        .collect();
+    issue
+}
+
 /// Validates the experience pools: Abilities and Arts are bought from the shared
 /// general bank (`Entity::xp_pool`) plus any restricted grants (Educated/Warrior/
 /// Privileged), each Affinity-reduced. Feasibility is a max-flow solve over the
@@ -991,10 +1002,10 @@ pub(crate) fn validate_xp_pool(
     let allocation = match crate::effective::checked_xp_allocation(entity, ruleset) {
         Ok(allocation) => allocation,
         Err(bound) => {
-            issues.push(ValidationIssue::error(
+            issues.push(shared_pool_issue(ValidationIssue::error(
                 ValidationIssue::CODE_XP_SOLVE_BOUND_EXCEEDED,
-                // The pool spans Abilities and Arts, but the Abilities step is
-                // where the XP bar lives, matching `not_enough_xp` below.
+                // Owned by the Abilities step, where the pool is typed, matching
+                // `not_enough_xp` below; `shared_pool_issue` adds the others.
                 CreationPhase::Abilities,
                 args([
                     ("nodes", bound.nodes.to_string()),
@@ -1003,15 +1014,16 @@ pub(crate) fn validate_xp_pool(
                     ("pools", bound.flow_pools.to_string()),
                 ]),
                 None,
-            ));
+            )));
             return;
         }
     };
     if allocation.total_demand > allocation.max_flow {
-        issues.push(ValidationIssue::error(
+        issues.push(shared_pool_issue(ValidationIssue::error(
             ValidationIssue::CODE_NOT_ENOUGH_XP,
-            // The pool spans Abilities and Arts, but the Abilities step is where
-            // the XP bar lives and where most of the spending happens.
+            // Owned by the Abilities step, where the pool is typed and most of
+            // the spending happens; `shared_pool_issue` adds the other steps that
+            // spend it, so an overspend made on Arts or Spells shows there too.
             CreationPhase::Abilities,
             args([
                 ("spent", allocation.total_demand.to_string()),
@@ -1026,7 +1038,7 @@ pub(crate) fn validate_xp_pool(
                 ),
             ]),
             None,
-        ));
+        )));
     } else if allocation.general_used < allocation.general_pool {
         // guided-creation-review-2026-08 #30: the underspend counterpart of the
         // error above. Its sibling on the restricted pools has existed all along,
@@ -1336,6 +1348,12 @@ mod tests {
         let issue = &errors[0];
         assert_eq!(issue.severity, IssueSeverity::Error);
         assert_eq!(issue.phase, CreationPhase::Abilities);
+        // W2 (#9b): the refused solve is about the same shared pool as
+        // `not_enough_xp`, so it is shown on every step that spends from it.
+        assert_eq!(
+            issue.also_phases,
+            vec![CreationPhase::Arts, CreationPhase::Spells]
+        );
         assert_eq!(issue.args.get("nodes").cloned(), Some("3003".to_string()));
         assert_eq!(
             issue.args.get("limit").cloned(),
