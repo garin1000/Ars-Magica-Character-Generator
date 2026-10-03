@@ -18,7 +18,7 @@ fn the_default_saga_year_is_the_year_the_published_setting_stands_in() {
 
 #[test]
 fn an_age_is_the_years_between_the_birth_year_and_the_saga_year() {
-    let derived = arm_rules::age_in_saga_year(1220, 1190);
+    let derived = arm_rules::age_in_saga_year(1220, 1190, None);
     assert_eq!(derived.age, 30);
     assert!(
         derived.issues.is_empty(),
@@ -32,7 +32,7 @@ fn a_birth_year_is_the_saga_year_less_the_age() {
     assert_eq!(arm_rules::birth_year_in_saga_year(1220, 30), 1190);
     // The link is exact in both directions, so a round trip is the identity.
     assert_eq!(
-        arm_rules::age_in_saga_year(1220, arm_rules::birth_year_in_saga_year(1220, 30)).age,
+        arm_rules::age_in_saga_year(1220, arm_rules::birth_year_in_saga_year(1220, 30), None).age,
         30
     );
 }
@@ -41,7 +41,7 @@ fn a_birth_year_is_the_saga_year_less_the_age() {
 fn a_saga_year_before_the_birth_year_clamps_the_age_to_zero_and_warns() {
     // `birth_year` is i32 and `age` is u32, so this subtraction is exactly where an
     // underflow would live. It clamps and says why instead.
-    let derived = arm_rules::age_in_saga_year(1220, 1250);
+    let derived = arm_rules::age_in_saga_year(1220, 1250, None);
     assert_eq!(derived.age, 0);
 
     assert_eq!(derived.issues.len(), 1, "{:?}", derived.issues);
@@ -70,9 +70,9 @@ fn neither_direction_overflows_at_the_edges_of_the_year_range() {
     // A hand-edited save can carry any i32 birth year and any u32 age; neither may
     // panic in a release build's wrapping arithmetic or a debug build's overflow
     // check.
-    assert_eq!(arm_rules::age_in_saga_year(i32::MIN, i32::MAX).age, 0);
+    assert_eq!(arm_rules::age_in_saga_year(i32::MIN, i32::MAX, None).age, 0);
     assert_eq!(
-        arm_rules::age_in_saga_year(i32::MAX, i32::MIN).age,
+        arm_rules::age_in_saga_year(i32::MAX, i32::MIN, None).age,
         u32::MAX,
         "the widest possible span saturates rather than wrapping"
     );

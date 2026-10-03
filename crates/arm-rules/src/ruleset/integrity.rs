@@ -1249,6 +1249,19 @@ impl Ruleset {
             );
         }
 
+        // The app maximum age (an app limit, not a rule) caps every character's age;
+        // one below the first aging-roll age would cap them all before aging could
+        // ever apply.
+        if let Some(max_age) = aging.max_age
+            && max_age < aging.first_roll_age()
+        {
+            errors.push(format!(
+                "aging max_age is {max_age}, below the first aging-roll age {}: every \
+                 character would be capped before aging could apply",
+                aging.first_roll_age()
+            ));
+        }
+
         let Some(first) = aging.outcomes.first() else {
             errors.push(
                 "aging rules ship no outcome rows, so no aging total would ever have a result"

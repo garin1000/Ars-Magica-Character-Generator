@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { I32_MAX, I32_MIN } from '../derive';
+  import { I32_MAX } from '../derive';
   import { REALMS, type Realm } from '../types';
 
   function onBirthYear(event: Event) {
@@ -43,7 +43,7 @@
     <span>{store.t('identity-birth-year')}</span>
     <input
       type="number"
-      min={I32_MIN}
+      min={store.earliestBirthYear}
       max={I32_MAX}
       value={store.entity.birth_year ?? ''}
       oninput={onBirthYear}

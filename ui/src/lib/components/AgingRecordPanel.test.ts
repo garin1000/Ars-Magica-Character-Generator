@@ -126,6 +126,28 @@ beforeEach(() => {
 // steals hit area from the row's own × button, which is why `.aging-log-scroll`
 // scrolls on one axis only. The e2e measures the rendered placeholder against the
 // rendered input; this is the fast guard that the declaration exists at all.
+// Slice A1 (after-deadline answer 7): the apparent age is clamped to the app maximum
+// age on load, so its input is capped there too — otherwise a typed value above it
+// would silently change on the next open. The maximum is rules data on the ruleset's
+// aging block; a value other than the shipped 500 proves the source.
+describe('AgingRecordPanel apparent-age maximum (slice A1)', () => {
+  it('takes the apparent-age input maximum from the ruleset aging block', () => {
+    installRuleset();
+    (store.ruleset!.ruleset as unknown as Record<string, unknown>).aging = {
+      start_age: 35,
+      age_divisor: 10,
+      apparent_age_increase_min: 3,
+      living_conditions: [],
+      outcomes: [],
+      max_age: 321,
+    };
+    const opening = /<input[^>]*data-testid="apparent-age-input"[^>]*>/i.exec(html());
+    expect(opening).not.toBeNull();
+    expect(opening![0]).toMatch(/max="321"/);
+    store.ruleset = null;
+  });
+});
+
 describe('AgingRecordPanel log row width floor', () => {
   it('gives the effect input a real minimum width, not a zero one', () => {
     const rule = /\.aging-log-block \.twilight-desc\s*\{([^}]*)\}/.exec(source);

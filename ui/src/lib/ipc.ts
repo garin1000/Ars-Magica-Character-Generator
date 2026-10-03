@@ -89,10 +89,15 @@ export function writeSettings(patch: SettingsPatch): Promise<void> {
  * underflowing the entity's unsigned `age`.
  *
  * Asked of the engine rather than computed here: the clamp policy and the finding it
- * emits have one home, and the frontend computes no mechanics of its own.
+ * emits have one home, and the frontend computes no mechanics of its own. `maxAge` is
+ * the ruleset's app maximum age (`null` when it states none); the age clamps at it.
  */
-export function deriveAge(sagaYear: number, birthYear: number): Promise<AgeInSagaYear> {
-  return invoke('derive_age', { sagaYear, birthYear });
+export function deriveAge(
+  sagaYear: number,
+  birthYear: number,
+  maxAge: number | null,
+): Promise<AgeInSagaYear> {
+  return invoke('derive_age', { sagaYear, birthYear, maxAge });
 }
 
 /** Which year a character aged `age` in `sagaYear` was born in. */

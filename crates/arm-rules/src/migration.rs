@@ -16,6 +16,7 @@ use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityFunding, AbilityParameterValue, Entity, Id,
     Selection, SelectionParamValue, Talisman, TalismanAttunement,
 };
+use crate::validation::birth_year_in_saga_year;
 
 /// Current save-format schema version.
 ///
@@ -781,6 +782,28 @@ fn fold_dangling_and_ambiguous_links(
     (dangling, ambiguous)
 }
 
+/// Clamps a loaded entity's ages to the ruleset's app maximum age
+/// (`AgingRules::max_age` — an app limit, not a rule; Norbert 2026-10-03).
+///
+/// `age` and `apparent_age` clamp to the maximum, and a `birth_year` earlier than
+/// `saga_year - max_age` clamps to that year, **in step with the age**: the birth
+/// year is the age's other view, so both halves of the pair are held to the same
+/// bound and the next save writes both clamped values. Without the clamp a crafted
+/// age reaches `aging.rs::aging_schedule`, which builds one row per year.
+///
+/// Like the aura clamp it is value-driven, idempotent and version-free: it stamps
+/// no [`SCHEMA_VERSION`], and an in-range save round-trips byte-identically. A
+/// ruleset whose aging block states no maximum leaves every age alone.
+fn clamp_ages_to_max_age(entity: &mut Entity, ruleset: &Ruleset) {
+    let Some(max_age) = ruleset.aging().and_then(|rules| rules.max_age) else {
+        return;
+    };
+    entity.age = entity.age.map(|age| age.min(max_age));
+    entity.apparent_age = entity.apparent_age.map(|age| age.min(max_age));
+    let earliest_birth_year = birth_year_in_saga_year(entity.saga_year, max_age);
+    entity.birth_year = entity.birth_year.map(|year| year.max(earliest_birth_year));
+}
+
 /// Deserializes an entity from JSON, applying backward-compatible save
 /// migrations, and reports what was migrated.
 ///
@@ -845,6 +868,9 @@ fn fold_dangling_and_ambiguous_links(
 /// value-driven, idempotent and version-free, so it stamps no [`SCHEMA_VERSION`]:
 /// the document's *shape* is current, only one of its values was out of range, and
 /// a legal aura round-trips byte-identically.
+///
+/// It clamps the ages to the ruleset's app maximum age as well (see
+/// [`clamp_ages_to_max_age`]), for the same reasons and in the same version-free way.
 ///
 /// Dispatch is on legacy-key *presence*, never on the recorded version: a
 /// hand-edited save may carry any `schema_version` alongside either shape. Plain
@@ -954,6 +980,10 @@ pub fn load_entity_migrating(
         entity.saga_year = default_saga_year;
         entity.schema_version = SCHEMA_VERSION;
     }
+
+    // After the saga-year fold, because the birth-year bound is measured from it.
+    // Value-driven and version-free, like the aura clamp — see the max-age paragraph.
+    clamp_ages_to_max_age(&mut entity, ruleset);
 
     // X9b (F-16): dispatch is on finding the OLD id itself, not a legacy key's
     // presence — there is no single top-level marker the way `talisman_attunements`

@@ -562,9 +562,17 @@ pub fn write_settings(patch: settings::SettingsPatch, app: AppHandle) -> Result<
 ///
 /// The engine's [`arm_rules::age_in_saga_year`] does the work: the clamp policy and
 /// the finding have one home, and the frontend computes no mechanics of its own.
+///
+/// `maxAge` is the ruleset's app maximum age (`AgingRules::max_age`), handed in by
+/// the frontend from the ruleset it already holds; `None` when the ruleset states
+/// none. The derived age clamps at it.
 #[tauri::command]
-pub fn derive_age(saga_year: i32, birth_year: i32) -> arm_rules::AgeInSagaYear {
-    arm_rules::age_in_saga_year(saga_year, birth_year)
+pub fn derive_age(
+    saga_year: i32,
+    birth_year: i32,
+    max_age: Option<u32>,
+) -> arm_rules::AgeInSagaYear {
+    arm_rules::age_in_saga_year(saga_year, birth_year, max_age)
 }
 
 /// Which year a character aged `age` in `sagaYear` was born in — the other view of

@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Entity } from '../types';
+import type { Entity, LocalizedRuleset } from '../types';
 
 // The fields read the shared store singleton (the entity's age) and the Fluent
 // bundle. The store schedules a debounced revalidate over the
@@ -92,6 +92,48 @@ describe('AgeFields (slice 6b6b)', () => {
   it('leaves the field empty for a character with no age', () => {
     const body = html();
     expect(element(body, 'age-input').open).toMatch(/value=""/);
+  });
+});
+
+// Slice A1 (after-deadline answer 7, robustness F2): the age input is capped at the
+// app maximum age, which is rules data on the ruleset's aging block — never a
+// constant in the component. A value other than the shipped 500 proves the source.
+describe('AgeFields maximum age (slice A1)', () => {
+  afterEach(() => {
+    store.ruleset = null;
+  });
+
+  function installAging(aging: Record<string, unknown> | undefined): void {
+    store.ruleset = {
+      ruleset: {
+        id: 'test',
+        version: '1',
+        point_items: {},
+        type_profiles: {},
+        magnitude_points: { free: 0, minor: 1, major: 3 },
+        ability_category_order: ['general'],
+        art_type_order: ['technique', 'form'],
+        ...(aging ? { aging } : {}),
+      },
+      i18n: {},
+    } as unknown as LocalizedRuleset;
+  }
+
+  it('takes the input maximum from the ruleset aging block', () => {
+    installAging({
+      start_age: 35,
+      age_divisor: 10,
+      apparent_age_increase_min: 3,
+      living_conditions: [],
+      outcomes: [],
+      max_age: 321,
+    });
+    expect(element(html(), 'age-input').open).toMatch(/max="321"/);
+  });
+
+  it('falls back to the stored width when the ruleset states no maximum age', () => {
+    installAging(undefined);
+    expect(element(html(), 'age-input').open).toMatch(/max="4294967295"/);
   });
 });
 
