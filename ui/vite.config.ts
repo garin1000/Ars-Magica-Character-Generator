@@ -13,4 +13,11 @@ export default defineConfig({
     // directory (one level above `ui/`).
     fs: { allow: ['..'] },
   },
+  build: {
+    // Vite's 500 kB default is a web download budget; this bundle is read from
+    // the local disk inside the installed app, so it does not apply. The bundle
+    // is ~580 kB, a third of it the two raw `.ftl` locales (`lib/i18n.ts`). The
+    // limit stays finite so an unexpected doubling still warns.
+    chunkSizeWarningLimit: 1024,
+  },
 });
