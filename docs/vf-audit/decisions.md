@@ -828,6 +828,22 @@ presumption of correctness.
 
 ---
 
+## D83 — the post-deadline rulings and the try-out findings
+
+**Norbert, 2026-10-03** (`tmp/questions-after-deadline.md`, `tmp/tryout-findings-2026-10-03.md`).
+
+2. **Repeated free text compares folded** (amends D81.9; try-out finding 25).
+   Every across-copies check (`max_per_target` duplicates, `max_per_value`)
+   compares a free-text value, and a parameterized Ability's instance text,
+   case- and whitespace-insensitively through `catalogue.rs::fold_free_text`.
+   Ids and `multi_ref` sets compare exactly; values are stored as typed. Focus
+   Power's `focus` declares `max_per_value: 255` (ArMDE:3903). Of the other ten
+   repeatable text items, none may repeat a value. Norbert ruled the three unclear
+   ones: Deteriorating Power, Potent Magic and Special Circumstances each take a
+   different value per copy.
+
+---
+
 ## D82 — the coverage target and a dead Ruleset field
 
 **Norbert, 2026-10-02.**

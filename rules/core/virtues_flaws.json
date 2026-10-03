@@ -4890,7 +4890,7 @@
     "classification": "creation_effect",
     "entity_kinds": ["character"],
     "max_per_target": 255,
-    "parameters": [{ "key": "focus", "type": "ref", "domain": "text" }],
+    "parameters": [{ "key": "focus", "type": "ref", "domain": "text", "max_per_value": 255 }],
     "max_total": 255,
     "effects": [{ "type": "focus_points", "amount": 25 }],
     "source": { "anchor": "focus-power", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3895, 3905] }

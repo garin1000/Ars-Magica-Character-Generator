@@ -151,9 +151,28 @@ fn focus_power_requires_a_focus() {
     assert_required_text_param("virtue.focus_power", "focus", "finding lost things");
 }
 
+/// Every issue code that judges an item's copies against each other: the
+/// whole-tuple repeat (`max_per_target`), the total (`max_total`), and the
+/// one-key repeat (`max_per_value`). Try-out finding 25 slipped past a guard
+/// that checked only the first of them.
+const REPEAT_CODES: [&str; 3] = [
+    "duplicate_selection",
+    "too_many_selections",
+    "too_many_for_param_value",
+];
+
+fn repeat_findings(codes: &[String]) -> Vec<&String> {
+    codes
+        .iter()
+        .filter(|c| REPEAT_CODES.contains(&c.as_str()))
+        .collect()
+}
+
 /// ArMDE:3903: "This Virtue may be taken more than once, and the points
-/// gained may be combined", so a second copy for the SAME focus is legal.
-/// X6c's new `focus` parameter must not turn that into a duplicate selection.
+/// gained may be combined", so a second copy for the SAME focus is legal
+/// (D81.9: copies may share a scope). No repeat check of ANY code may object —
+/// finding 25 was `too_many_for_param_value`, which the old form of this guard
+/// (checking `duplicate_selection` alone) never looked for.
 #[test]
 fn focus_power_may_be_taken_twice_for_the_same_focus() {
     let rs = load_ruleset();
@@ -166,8 +185,28 @@ fn focus_power_may_be_taken_twice_for_the_same_focus() {
     );
     let codes = issue_codes(&twice, &rs);
     assert!(
-        !codes.iter().any(|c| c == "duplicate_selection"),
-        "two Focus Power copies on one focus combine their points, got {codes:?}"
+        repeat_findings(&codes).is_empty(),
+        "two Focus Power copies on one focus combine their points (ArMDE:3903), got {codes:?}"
+    );
+}
+
+/// The same two copies spelled with different case and padding are still one
+/// focus (free text compares case- and whitespace-insensitively), and still
+/// legal to hold twice.
+#[test]
+fn focus_power_twice_for_one_focus_spelled_differently_is_still_legal() {
+    let rs = load_ruleset();
+    let twice = entity(
+        "companion",
+        vec![
+            sel_with("virtue.focus_power", param("focus", "Fire")),
+            sel_with("virtue.focus_power", param("focus", " fire  ")),
+        ],
+    );
+    let codes = issue_codes(&twice, &rs);
+    assert!(
+        repeat_findings(&codes).is_empty(),
+        "\"Fire\" and \" fire  \" are one focus, which may be taken twice, got {codes:?}"
     );
 }
 

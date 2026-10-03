@@ -1178,7 +1178,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2868-2877` (The Gift),
   `ArMDE:2858` (magi must take The Gift + Hermetic Magus status), `ArMDE:2293` and
   `ArMDE:4067-4069` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1858).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:1937).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1725,7 +1725,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2814`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :790) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :846) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4816`) and "Great twice per Characteristic" (`ArMDE:3989`). Effect
@@ -2075,6 +2075,35 @@ section and the tests it is pinned by).
   carry the same explicit `"max_per_value": 255` for the identical reason — see
   *Enumerated parameter domain* below, and `ArMDE:3919`'s "you can align it to
   the same Realm as before or pick a different one".
+  `virtue.focus_power`'s `focus` parameter carries `"max_per_value": 255`
+  (D83.2, try-out finding 25): "This Virtue may be taken more than once, and the
+  points gained may be combined." (`ArMDE:3903`), and D81.9 lets copies share a
+  scope, so two copies on ONE focus draw no repeat finding of any code.
+- Sweep (D83.2) of the other repeatable (`max_total` 255) text-parameter items,
+  which keep the default cap of 1 because their descriptors demand a different
+  value per copy: `flaw.restricted_power` ("once for each power the character
+  possesses", `ArMDE:6689`), `flaw.slow_power` ("not more than once for a single
+  power", `ArMDE:6761`), `flaw.vulnerable_magic` ("so long as a different
+  condition is specified for each", `ArMDE:7009`), `virtue.greater_immunity`
+  ("with a different immunity each time", `ArMDE:4015`), `virtue.social_contacts`
+  ("each time specifying a different social group", `ArMDE:4990`),
+  `virtue.variable_power` ("it only applies once to a single power",
+  `ArMDE:5205`), `virtue.ways_of_the_land` ("for different types of terrain",
+  `ArMDE:5233`). Pending Norbert, also left at 1: `flaw.deteriorating_power`
+  (`ArMDE:5948`), `virtue.potent_magic_major`/`_minor` (`ArMDE:4742`),
+  `virtue.special_circumstances` (`ArMDE:5000`).
+- **Free text compares folded (D83.2).** A `text`-domain value and a
+  parameterized Ability's instance text are compared by
+  `catalogue.rs::fold_free_text` (case-folded, trimmed, inner whitespace
+  collapsed) in both `validate_duplicate_selections` and `validate_per_value_cap`,
+  via `validation/selections.rs::comparable_params`, so "Fire", "fire" and
+  " Fire  " are one value and no cap is dodged by retyping. Ids (`enumerated`,
+  `ability`, `art`, …) and `multi_ref` sets compare exactly. Stored values stay
+  as typed; the finding names the first copy's own spelling. Tests:
+  `tests/r2_text_param_compare.rs`,
+  `focus_power_may_be_taken_twice_for_the_same_focus` and
+  `focus_power_twice_for_one_focus_spelled_differently_is_still_legal`
+  (`tests/x6c_label_parameters.rs`).
 - Tests: `two_copies_may_not_share_a_capped_parameter_value`,
   `copies_naming_different_values_of_a_capped_parameter_are_clean`,
   `two_instances_of_one_parameterized_ability_are_two_targets`,
@@ -11023,11 +11052,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1087),
-  `validate_forbidden_traits` (:1108))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1166),
+  `validate_forbidden_traits` (:1187))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
   (`validation/selections.rs` — `validate_entity_kind_applicability` (:619),
-  `validate_parameters` (:1308), `validate_duplicate_selections` (:790))
+  `validate_parameters` (:1387), `validate_duplicate_selections` (:846))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,
