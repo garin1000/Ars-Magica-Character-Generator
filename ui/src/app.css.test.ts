@@ -754,6 +754,19 @@ describe('app.css', () => {
     expect(block![1]).toMatch(/z-index:\s*[1-9]/);
   });
 
+  // W3 (finding 11): the Spells tab and step carry TWO bars, XpBar above
+  // SpellBudgetBar. Two sibling stickies both at `top: 0` land on the same strip and
+  // the later one paints over the earlier, so the pair rides in one `.bar-stack`
+  // that is itself the pinned box — sticky, opaque and raised exactly like a bar.
+  it('pins the two-bar stack as one box, under the same rule as every bar', () => {
+    const block = /^((?:\.[\w-]+,\s*\n)*\.[\w-]+)\s*\{([^}]*)\}/m;
+    const sticky = [...appCss.matchAll(new RegExp(block, 'gm'))].find(
+      (match) => /position:\s*sticky;/.test(match[2]) && /\.xp-summary\b/.test(match[1]),
+    );
+    expect(sticky).toBeDefined();
+    expect(sticky![1].split(/,\s*/).map((s) => s.trim())).toContain('.bar-stack');
+  });
+
   // The other half of #16, and the half that actually decides whether sticky does
   // anything: a sticky box is confined to its CONTAINING BLOCK, which for every bar
   // is `.vf-tab`. While the overflow belonged to the ancestor `.tab-content` this box

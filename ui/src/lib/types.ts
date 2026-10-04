@@ -1037,6 +1037,10 @@ export interface EffectiveScores {
   // Available: xp_general_used is a flow capped by the pool, so pool -
   // xp_general_used can never go negative however far the spend overshoots.
   xp_max_flow: number;
+  // Every experience point the character has: the general pool plus every
+  // restricted pool, the Spell-Mastery pool included (which `restricted_xp_pools`
+  // never lists, so it cannot be summed here). M in the bar's "spent N of M".
+  xp_total_supply: number;
   // The general pool itself: the typed `xp_pool` for a directly-entered character,
   // and for one built through its life stages the block that may fund anything —
   // apprenticeship plus the years past the Gauntlet for a magus, later life for

@@ -607,8 +607,15 @@
             <ArtGrid />
           </div>
         {:else if tab === 'spells'}
+          <!-- Spell Mastery spends the shared experience pool, so the XP bar rides
+               above the spell-levels bar (try-out finding 11). The pair is ONE pinned
+               box: two sibling stickies at `top: 0` would paint over each other. Same
+               arrangement as the wizard's Spells step (`WizardStep`'s `STEPS`). -->
           <div class="vf-tab">
-            <SpellBudgetBar />
+            <div class="bar-stack">
+              <XpBar prefix="spell-" />
+              <SpellBudgetBar />
+            </div>
             <SpellTab />
           </div>
         {:else if tab === 'possessions'}

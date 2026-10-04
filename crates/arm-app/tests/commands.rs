@@ -2369,6 +2369,38 @@ fn effective_scores_surface_max_flow_so_the_ui_can_show_an_overspent_pool() {
     assert_eq!(legal.xp_total_demand, legal.xp_max_flow);
 }
 
+/// W3 (try-out finding 10): the XP bar's overall "spent N of M" chip needs the
+/// character's TOTAL experience, which no field carried — `xp_max_flow` equals the
+/// demand for every legal character, so it would always read "N of N". The engine's
+/// `XpAllocation::total_supply` (general + restricted + Spell-Mastery pools) has to
+/// reach the frontend as `xp_total_supply`.
+#[test]
+fn effective_scores_surface_the_total_xp_supply_for_the_overall_chip() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut magus = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("magus"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+    magus.xp_pool = 240;
+    // Educated: a 50-point restricted pool (ArMDE:3711-3713). Mastered Spells: a
+    // 50-point Spell-Mastery pool (ArMDE:4471-4474), which `restricted_xp_pools`
+    // never lists — so the total cannot be summed from the other fields.
+    magus.selections = vec![
+        arm_rules::Selection::new(Id::new("virtue.educated")),
+        arm_rules::Selection::new(Id::new("virtue.mastered_spells")),
+    ];
+    magus.ability_scores = vec![arm_rules::AbilityScore::new(
+        Id::new("ability.awareness"),
+        2,
+    )];
+
+    let effective = effective_scores_loaded(&magus, &ruleset);
+    assert_eq!(effective.xp_total_demand, 15);
+    assert_eq!(effective.xp_max_flow, 15);
+    assert_eq!(effective.xp_total_supply, 340);
+}
+
 /// The Characteristic point cost is surfaced by the engine rather than recomputed
 /// in the frontend. `ui/src/lib/derive.ts` carried its own copy of the point-buy
 /// table (audit findings VA1/GF1/GD4, raised by three separate reviewers), which

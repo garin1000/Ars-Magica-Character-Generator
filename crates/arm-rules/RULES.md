@@ -3518,6 +3518,17 @@ approximation of "Latin").
   that edge and continues Edmonds-Karp on the same residuals. The sum is the true
   max flow with restricted usage maximized = minimum general used; feasibility and
   `total_demand` are unchanged.
+- **Overall total (W3, tryout-findings-2026-10-03 #10/#11).** `XpAllocation::total_supply`
+  is every experience point the character has: `general_pool` plus each flow pool's
+  `amount` — the restricted ability-XP pools, the life-stage blocks and the
+  Spell-Mastery pool (which `restricted` never surfaces) — summed saturating, like
+  `total_demand`. It is a read-out, not a rule: no validation reads it. The XP bar's
+  overall chip reads "spent `total_demand` of `total_supply`" (`EffectiveScores::xp_total_supply`,
+  `XpBar.svelte`, Fluent `xp-total`), shown on the Experience, Abilities, Arts and
+  Spells tabs/steps. `max_flow` is deliberately not M: it equals `total_demand`
+  whenever the spend is legal. `not_enough_xp` keeps `pool = max_flow`, the fundable
+  amount, which is the honest number for an overspend (it can be below
+  `total_supply` when a restricted pool is left unused).
 - **Unspent GENERAL experience warns too (Slice 11 / #30), and says nothing more.**
   Overspending the general pool has always been `not_enough_xp`; leaving it unspent
   produced **silence**, while a single unspent Characteristic point produced

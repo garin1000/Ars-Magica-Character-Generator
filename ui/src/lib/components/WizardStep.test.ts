@@ -97,6 +97,24 @@ function body(phase: CreationPhase): string {
   return render(WizardStep, { props: { phase } }).body;
 }
 
+/**
+ * The inner markup of the `.bar-stack` element, found by balancing `<div>` tags
+ * (SSR gives a string, not a DOM), or null when the step renders no stack.
+ */
+function barStack(markup: string): string | null {
+  const open = /<div[^>]*class="bar-stack[^"]*"[^>]*>/.exec(markup);
+  if (!open) return null;
+  const start = open.index + open[0].length;
+  const tags = /<div\b[^>]*>|<\/div>/g;
+  tags.lastIndex = start;
+  let depth = 1;
+  for (let tag = tags.exec(markup); tag; tag = tags.exec(markup)) {
+    depth += tag[0].startsWith('</') ? -1 : 1;
+    if (depth === 0) return markup.slice(start, tag.index);
+  }
+  return null;
+}
+
 describe('WizardStep', () => {
   // Each phase mounts the same direct-entry surface the editor's tab uses — the
   // wizard adds orchestration, not a second set of inputs.
@@ -147,7 +165,7 @@ describe('WizardStep', () => {
 
   // guided-creation-review-2026-08 #19: the spell-levels base is a fixed rules grant
   // (ArMDE:2215), so the wizard shows it and does not offer it for editing.
-  // The divergence is carried by an explicit prop through the existing `barProps`
+  // The divergence is carried by an explicit prop through the existing per-bar `props`
   // seam — the same seam that already carries `XpBar`'s testid prefix — and never by
   // the bar sniffing which flow mounted it.
   it('passes readonlyBase to the spells bar', () => {
@@ -155,6 +173,34 @@ describe('WizardStep', () => {
     expect(open).not.toBeNull();
     expect(open![0]).not.toMatch(/<input/i);
     expect(open![0]).toMatch(/<span/i);
+  });
+
+  // W3 (try-out finding 11): Spell Mastery spends the shared experience pool, so the
+  // Spells step shows the XP bar too — above the spell-levels bar, and the two inside
+  // ONE sticky stack: two sibling bars each pinned at `top: 0` would paint over each
+  // other once the step scrolls.
+  describe('the spells step budget bars (W3)', () => {
+    it('mounts the XP bar, with its own testid prefix, inside the bar stack', () => {
+      const stack = barStack(body('spells'));
+      expect(stack).not.toBeNull();
+      expect(stack!).toContain('data-testid="spell-xp-total"');
+      expect(stack!).toContain('data-testid="spell-levels-used"');
+    });
+
+    it('puts the XP bar above the spell-levels bar', () => {
+      const stack = barStack(body('spells'));
+      expect(stack).not.toBeNull();
+      const xp = stack!.indexOf('data-testid="spell-xp-total"');
+      expect(xp).toBeGreaterThanOrEqual(0);
+      expect(xp).toBeLessThan(stack!.indexOf('data-testid="spell-levels-used"'));
+    });
+
+    it('keeps the spell picker itself out of the stack', () => {
+      // The stack is the bars alone: the body scrolling under them is the point.
+      const stack = barStack(body('spells'));
+      expect(stack).not.toBeNull();
+      expect(stack!).not.toContain('class="region-row"');
+    });
   });
 
   // #1: the read-only `type` step is gone. The step table is exhaustive over

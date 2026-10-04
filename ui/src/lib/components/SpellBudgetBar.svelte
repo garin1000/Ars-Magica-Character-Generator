@@ -16,7 +16,7 @@
   // running: reading the flow here would make the component's behaviour depend on
   // global state its own caller cannot see, and every mount would have to be traced
   // to know what it renders. The mount already declares its own differences through
-  // `WizardStep`'s `barProps` seam (which carries `XpBar`'s testid prefix the same
+  // `WizardStep`'s per-bar `props` seam (which carries `XpBar`'s testid prefix the same
   // way), so the divergence is visible at the mount site.
   //
   // Why the wizard may withhold it: the 120 is a fixed rules grant — "Take 120

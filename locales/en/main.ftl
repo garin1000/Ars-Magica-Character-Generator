@@ -236,6 +236,10 @@ tab-details = Details
 # restricted sub-budgets. `xp-pool` labels the whole general-pool group.
 xp-pool = XP pool
 xp-available = Available: { $available }
+# The overall figure across every pool (general, restricted, Spell Mastery):
+# `$spent` is the whole demand of Abilities, Arts and Spell Mastery, `$total` every
+# experience point the character has.
+xp-total = XP: spent { $spent } of { $total }
 # The Virtue/Flaw contribution to the general pool: Skilled Parens grants "an
 # additional 60 experience points … during apprenticeship" (Core Rules.md:4966),
 # Weak Parens takes 60 away. A POSITIVE one is a pool of its own, spent before the

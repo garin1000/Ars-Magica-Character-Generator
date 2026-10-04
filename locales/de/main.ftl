@@ -248,6 +248,10 @@ tab-details = Details
 # `xp-pool` benennt die gesamte Gruppe des allgemeinen Vorrats.
 xp-pool = EP-Vorrat
 xp-available = Verfügbar: { $available }
+# Der Gesamtwert über alle Vorräte (allgemein, eingeschränkt, Zaubermeisterschaft):
+# `$spent` ist der ganze Bedarf von Fertigkeiten, Künsten und Zaubermeisterschaft,
+# `$total` alle Erfahrungspunkte des Charakters.
+xp-total = EP: { $spent } von { $total } ausgegeben
 # Der Beitrag von Tugenden & Fehlern zum allgemeinen Vorrat: Erfahrener Parens
 # gewährt 60 zusätzliche Erfahrungspunkte während der Lehrzeit
 # (Basisregeln.md:4966), Schwacher Parens nimmt 60 weg. Ein POSITIVER Beitrag

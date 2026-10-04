@@ -925,3 +925,61 @@ describe('XpBar and the Virtue/Flaw pool bonus (slice 6b8c)', () => {
     expect(element(body, 'xp-available').text).toContain('240');
   });
 });
+
+// W3 (try-out finding 10): the bar splits the budget into pools and nowhere said how
+// much experience the character has IN TOTAL. One overall chip, beside the per-pool
+// ones: N is the engine's whole demand (`xp_total_demand`, Abilities + Arts + Spell
+// Mastery) and M its whole supply (`xp_total_supply`, every pool the flow solve is
+// given — including the Spell-Mastery pool no other field lists). Both are read off
+// the engine, never summed here.
+describe('XpBar overall total (W3, finding 10)', () => {
+  /** A 240 general pool and a 50 restricted pool, plus a 50 Mastery pool only the total knows. */
+  function withPools(demand: number): void {
+    resetEntity(240);
+    setEffective(demand, [
+      {
+        amount: 50,
+        used: Math.min(demand, 50),
+        categories: ['martial'],
+        origin: { kind: 'item', item: 'virtue.warrior' },
+      },
+    ]);
+    store.effective!.xp_total_supply = 340;
+  }
+
+  it('shows the overall spent and total experience', () => {
+    withPools(200);
+    expect(clean(element(html(), 'xp-total').text)).toBe('XP: spent 200 of 340');
+  });
+
+  it('reads the total off the engine rather than summing the pools on screen', () => {
+    // The pools on screen add up to 290; the Mastery pool is the other 50.
+    withPools(200);
+    expect(clean(element(html(), 'xp-total').text)).toContain('340');
+    expect(clean(element(html(), 'xp-total').text)).not.toContain('290');
+  });
+
+  it('localizes the chip to German', () => {
+    store.lang = 'de';
+    withPools(200);
+    expect(clean(element(html(), 'xp-total').text)).toBe('EP: 200 von 340 ausgegeben');
+  });
+
+  it('marks the chip overspent once the demand exceeds the total', () => {
+    withPools(400);
+    const chip = element(html(), 'xp-total');
+    expect(clean(chip.text)).toBe('XP: spent 400 of 340');
+    expect(chip.open).toMatch(/\bover\b/);
+    expect(chip.open).toMatch(/data-overspent="true"/);
+  });
+
+  it('is not marked overspent while the demand fits', () => {
+    withPools(340);
+    expect(element(html(), 'xp-total').open).toMatch(/data-overspent="false"/);
+  });
+
+  it('carries the mount prefix like every other testid of the bar', () => {
+    withPools(200);
+    expect(has(html('spell-'), 'spell-xp-total')).toBe(true);
+  });
+});

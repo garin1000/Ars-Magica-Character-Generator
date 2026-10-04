@@ -4,9 +4,10 @@
   import { formatSigned, generalXpAllocation, restrictedPoolLabel, U32_MAX } from '../derive';
   import BudgetBonusChip from './BudgetBonusChip.svelte';
 
-  // One XP summary shared by the Abilities and Arts tabs: both spend from the
-  // SAME `entity.xp_pool`, so this single component drives both, differing only
-  // in the data-testid prefix ('' for Abilities, 'art-' for Arts) the e2e suite
+  // One XP summary shared by the Experience, Abilities, Arts and Spells tabs: all
+  // spend from the SAME `entity.xp_pool` (Spell Mastery included), so this single
+  // component drives every one, differing only in the data-testid prefix ('' for
+  // Experience/Abilities, 'art-' for Arts, 'spell-' for Spells) the e2e suite
   // keys off. Pool source, used source and restricted sub-budgets are identical
   // across the two instances.
   let { prefix = '' }: { prefix?: string } = $props();
@@ -73,6 +74,12 @@
   // class covers both the label and the number).
   const available = $derived(alloc.available);
   const restricted = $derived(store.effective?.restricted_xp_pools ?? []);
+  // The overall figure (try-out finding 10): everything spent against everything the
+  // character has, across every pool — the Spell-Mastery pool included, which no
+  // per-pool chip shows. Both numbers are the engine's; summing the chips here would
+  // miss that pool and fork the evaluation path.
+  const totalSpent = $derived(store.effective?.xp_total_demand ?? 0);
+  const totalSupply = $derived(store.effective?.xp_total_supply ?? 0);
 
   // One restricted pool per life-stage block, looked up BY BLOCK rather than by
   // index: the engine pushes them in a fixed order, but a V/F-granted pool can sit
@@ -121,6 +128,14 @@
 </script>
 
 <div class="xp-summary">
+  <span
+    class="xp-total"
+    class:over={totalSpent > totalSupply}
+    data-overspent={totalSpent > totalSupply}
+    data-testid="{prefix}xp-total"
+  >
+    {store.t('xp-total', { spent: String(totalSpent), total: String(totalSupply) })}
+  </span>
   <span class="xp-pool">
     <span class="xp-pool-label">{store.t('xp-pool')}</span>
     <!-- The experience charged to the BASE (a positive V/F bonus is spent first and

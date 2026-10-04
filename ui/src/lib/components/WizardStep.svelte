@@ -19,16 +19,26 @@
 
   let { phase }: { phase: CreationPhase } = $props();
 
-  interface StepDef {
-    /** The input surface for this phase — the very component the editor's tab mounts. */
+  interface BarDef {
     component: Component;
-    /** A budget bar above it, where App.svelte mounts one for the matching tab. */
-    bar?: Component;
     /**
      * Props for the bar: the per-mount differences this step declares out loud.
      * `XpBar`'s testid/label prefix, and `SpellBudgetBar`'s `readonlyBase` (#19).
+     * `undefined` is admitted because a mixed list's literal type gives each entry
+     * the other entries' keys as optional `undefined` (`readonlyBase?: undefined`).
      */
-    barProps?: Record<string, string | boolean>;
+    props?: Record<string, string | boolean | undefined>;
+  }
+
+  interface StepDef {
+    /** The input surface for this phase — the very component the editor's tab mounts. */
+    component: Component;
+    /**
+     * The budget bars above it, top to bottom, where App.svelte mounts them for the
+     * matching tab. More than one rides in a single `.bar-stack`, the pinned box:
+     * two sibling stickies at `top: 0` would paint over each other on scroll.
+     */
+    bars?: BarDef[];
     /** Long, self-contained panels need the scrolling wrapper or they clip. */
     scroll?: boolean;
   }
@@ -43,7 +53,7 @@
   // editor, the tab) owns it and the picker stays a picker.
   //
   // Where a step must behave differently from the matching tab, the difference is a
-  // PROP passed through `barProps`, declared right here in the table — never a
+  // PROP passed through a bar's `props`, declared right here in the table — never a
   // `store` lookup inside the component asking which flow is running. That is the
   // difference between one component with a stated parameter and two behaviours
   // hidden inside one file. `spells` is the first such divergence: the spell-levels
@@ -63,16 +73,24 @@
   const STEPS = {
     concept: { component: ConceptStep, scroll: true },
     characteristics: { component: CharacteristicPicker },
-    virtues_flaws: { component: VirtueFlawTab, bar: BalanceBar },
+    virtues_flaws: { component: VirtueFlawTab, bars: [{ component: BalanceBar }] },
     // The bar is the step's own input, not just a read-out: under flat funding the
     // pool total lives in `XpBar`, so without it the step asks where a character's
     // experience comes from while offering no way to answer for one of the two
     // modes. It stays on `abilities` as well — there you spend against the total,
     // here you set it — and #14's life-stage chips belong on this step too.
-    experience: { component: ExperienceStep, scroll: true, bar: XpBar },
-    abilities: { component: AbilityTab, bar: XpBar },
-    arts: { component: ArtGrid, bar: XpBar, barProps: { prefix: 'art-' } },
-    spells: { component: SpellTab, bar: SpellBudgetBar, barProps: { readonlyBase: true } },
+    experience: { component: ExperienceStep, scroll: true, bars: [{ component: XpBar }] },
+    abilities: { component: AbilityTab, bars: [{ component: XpBar }] },
+    arts: { component: ArtGrid, bars: [{ component: XpBar, props: { prefix: 'art-' } }] },
+    // Spell Mastery spends the shared experience pool, so the XP bar rides above the
+    // spell-levels bar (try-out finding 11).
+    spells: {
+      component: SpellTab,
+      bars: [
+        { component: XpBar, props: { prefix: 'spell-' } },
+        { component: SpellBudgetBar, props: { readonlyBase: true } },
+      ],
+    },
     house_specialisation: { component: HouseSelector, scroll: true },
     mythic_type: { component: MythicCompanionTypeSelector },
     personality_reputations: { component: PersonalityReputationsStep, scroll: true },
@@ -82,8 +100,14 @@
 
   const step = $derived<StepDef>(STEPS[phase]);
   const Body = $derived(step.component);
-  const Bar = $derived(step.bar);
+  const bars = $derived(step.bars ?? []);
 </script>
+
+{#snippet barList()}
+  {#each bars as bar, i (i)}
+    <bar.component {...bar.props ?? {}} />
+  {/each}
+{/snippet}
 
 <!-- Reproduces the editor's height chain verbatim — `.tab-content > .vf-tab
      [> .tab-scroll]` (app.css) — because `.region-row`'s Available/Selected
@@ -95,8 +119,12 @@
        the rulebook open, and the sentences cost every step a paragraph of height
        above its input surface. Only the bar — the step's own budget, which is
        content and not teaching — sits above the body now. -->
-  {#if Bar}
-    <Bar {...step.barProps ?? {}} />
+  {#if bars.length > 1}
+    <div class="bar-stack">
+      {@render barList()}
+    </div>
+  {:else}
+    {@render barList()}
   {/if}
   {#if step.scroll}
     <div class="tab-scroll">

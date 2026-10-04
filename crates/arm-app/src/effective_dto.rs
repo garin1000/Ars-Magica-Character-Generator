@@ -82,6 +82,12 @@ pub struct EffectiveScores {
     /// value capped by the pool itself, so `pool - general_used` can never go
     /// negative no matter how far the spend exceeds the pool.
     pub xp_max_flow: u32,
+    /// Every experience point the character has: the general pool plus every
+    /// restricted pool, the Spell-Mastery pool included (which
+    /// `restricted_xp_pools` never lists, so the UI cannot sum it). The XP bar's
+    /// overall "spent `xp_total_demand` of this" chip; engine-authoritative
+    /// (`XpAllocation::total_supply`).
+    pub xp_total_supply: u32,
     /// The restricted experience pools (Educated/Warrior/Privileged, and the
     /// life-stage blocks) with how much of each the allocation consumes, for the
     /// per-pool XP bar. Each carries its `origin`, so the bar labels it rather than
@@ -550,6 +556,7 @@ struct XpFields {
     general_pool: u32,
     general_bonus: i64,
     max_flow: u32,
+    total_supply: u32,
     restricted: Vec<RestrictedXpPool>,
     life_stage: Option<LifeStageBudget>,
 }
@@ -577,6 +584,7 @@ fn xp_fields(entity: &Entity, ruleset: &Ruleset) -> XpFields {
             general_pool: allocation.general_pool,
             general_bonus: allocation.general_bonus,
             max_flow: allocation.max_flow,
+            total_supply: allocation.total_supply,
             restricted: allocation.restricted,
             life_stage,
         },
@@ -586,6 +594,7 @@ fn xp_fields(entity: &Entity, ruleset: &Ruleset) -> XpFields {
             general_pool: 0,
             general_bonus: 0,
             max_flow: 0,
+            total_supply: 0,
             restricted: Vec::new(),
             life_stage,
         },
@@ -873,6 +882,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         xp_general_pool: xp.general_pool,
         xp_general_bonus: xp.general_bonus,
         xp_max_flow: xp.max_flow,
+        xp_total_supply: xp.total_supply,
         restricted_xp_pools: xp.restricted,
         life_stage: xp.life_stage,
 
@@ -1101,6 +1111,7 @@ mod tests {
         assert_eq!(scores.xp_general_pool, 0);
         assert_eq!(scores.xp_general_bonus, 0);
         assert_eq!(scores.xp_max_flow, 0);
+        assert_eq!(scores.xp_total_supply, 0);
         assert!(scores.restricted_xp_pools.is_empty());
     }
 

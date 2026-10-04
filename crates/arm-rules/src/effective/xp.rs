@@ -282,6 +282,12 @@ pub struct XpAllocation {
     pub total_demand: u32,
     /// Maximum demand that can be funded. Equals `total_demand` iff legal.
     pub max_flow: u32,
+    /// Every experience point the character has, whatever it may buy: the general
+    /// pool plus each restricted pool the solve is given — ability-XP grants,
+    /// life-stage blocks, and the Spell-Mastery pool [`Self::restricted`] never
+    /// lists. The XP bar's overall "spent N of M" reads it as M; `max_flow` cannot
+    /// serve, since it equals `total_demand` whenever the spend is legal.
+    pub total_supply: u32,
     /// The general pool size: the block's base (`Entity::xp_pool`, or the life-stage
     /// block that may fund anything) **plus** [`XpAllocation::general_bonus`].
     pub general_pool: u32,
@@ -1618,6 +1624,11 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
         .fold(0u32, |sum, s| sum.saturating_add(s.cost));
 
     let (general_pool, general_bonus) = general_pool_and_bonus(entity, ruleset);
+    // Saturating for the same reason as `total_demand`: a crafted pool near
+    // `u32::MAX` plus any restricted pool would overflow a plain sum.
+    let total_supply = flow_pools
+        .iter()
+        .fold(general_pool, |sum, pool| sum.saturating_add(pool.amount));
 
     let (layout, mut cap) = build_capacity_matrix(&flow_pools, &spends);
     let (max_flow, general_used) = two_phase_max_flow(&layout, general_pool, &mut cap);
@@ -1626,6 +1637,7 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
     XpAllocation {
         total_demand,
         max_flow,
+        total_supply,
         general_pool,
         general_bonus,
         general_used,

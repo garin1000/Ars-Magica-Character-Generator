@@ -511,6 +511,30 @@ describe('the editor tabs Slice 3 splits out', () => {
     expect(document.querySelector('[data-testid="longevity-add"]')).not.toBeNull();
   });
 
+  // W3 (try-out finding 11): Spell Mastery spends the shared experience pool, yet the
+  // Spells tab showed no XP at all. It mounts the XP bar above the spell-levels bar,
+  // the two in ONE sticky stack so they cannot paint over each other on scroll —
+  // the same arrangement as the wizard's Spells step.
+  it('mounts the XP bar above the spell-levels bar on the Spells tab', async () => {
+    await mountApp();
+    store.view = 'editor';
+    // The Spells tab is gated on the engine resolving the hermetic phases.
+    store.effective = { phases_in_force: ['arts', 'spells'] } as unknown as EffectiveScores;
+    flushSync();
+
+    clickTab('spells');
+
+    // The premise, asserted: the Spells panel really rendered its spell-levels bar.
+    expect(document.querySelector('[data-testid="spell-levels-used"]')).not.toBeNull();
+    const stack = document.querySelector('.bar-stack');
+    expect(stack).not.toBeNull();
+    const xp = stack!.querySelector('[data-testid="spell-xp-total"]');
+    const levels = stack!.querySelector('[data-testid="spell-levels-used"]');
+    expect(xp).not.toBeNull();
+    expect(levels).not.toBeNull();
+    expect(xp!.compareDocumentPosition(levels!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   // The acceptance criterion #28 asks to be asserted rather than eyeballed: every
   // tab's `aria-controls` must name a panel that actually exists once that tab is
   // active, and the panel must point back at it. Only the active panel is

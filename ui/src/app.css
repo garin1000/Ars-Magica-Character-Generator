@@ -439,7 +439,14 @@ button:disabled {
    `top: 0` pins to `.vf-tab`'s padding-box top edge, so rows scrolling up pass behind
    the bar with no sliver showing above it. The background is what makes that readable,
    and `z-index` is what makes it happen at all: a positioned element with `auto`
-   z-index still paints beneath later siblings, which is precisely the rows. */
+   z-index still paints beneath later siblings, which is precisely the rows.
+
+   `.bar-stack` holds a step's TWO bars (Spells: XpBar above SpellBudgetBar, W3). Two
+   sibling stickies at `top: 0` would land on the same strip and the later would paint
+   over the earlier, so the stack is the pinned box instead. The bars inside keep
+   their own sticky rule, which is inert there: their containing block is the stack,
+   exactly their own height, so they have no travel. */
+.bar-stack,
 .xp-summary,
 .balance {
   position: sticky;
