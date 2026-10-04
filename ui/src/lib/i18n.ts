@@ -20,9 +20,16 @@ function sourceForLang(lang: Lang): string {
   return entry[1];
 }
 
-/** Builds a Fluent bundle for the given language. */
+/**
+ * Builds a Fluent bundle for the given language.
+ *
+ * Bidi isolation is off: every shipped locale is left-to-right, so the
+ * U+2068/U+2069 marks Fluent would wrap around each placeable buy nothing, and
+ * they leak into text the user copies out of the window (try-out finding N8).
+ * A future right-to-left locale would have to revisit this.
+ */
 export function buildBundle(lang: Lang): FluentBundle {
-  const bundle = new FluentBundle(lang);
+  const bundle = new FluentBundle(lang, { useIsolating: false });
   bundle.addResource(new FluentResource(sourceForLang(lang)));
   return bundle;
 }
