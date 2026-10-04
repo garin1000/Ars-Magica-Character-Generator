@@ -126,8 +126,9 @@ fn main() {
 /// still has no unit seam: this is window/webview-level Tauri glue with no
 /// library-crate hook (`main.rs` is a binary, and `guard_blocks_quit` below has
 /// the same gap), and exercising it for real needs a live window, which needs
-/// Tauri's mock runtime (the `test` feature, not enabled in this crate — adding
-/// it is a larger step than this fix). That half is closed by e2e specs
+/// a real runtime: this crate's tests do run on Tauri's `MockRuntime` (the `test`
+/// feature, `tests/a3_mock_app_commands.rs`), but this glue is typed to `Wry`,
+/// which the mock cannot stand in for. That half is closed by e2e specs
 /// instead: the `window.close() bridge — unsaved changes` describe in
 /// `ui/e2e/specs/companion-editor.e2e.js` and `window.close() bridge — no
 /// unsaved changes` in `ui/e2e/specs/app-shell.e2e.js` drive the real release

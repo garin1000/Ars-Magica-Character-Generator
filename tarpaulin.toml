@@ -1,0 +1,29 @@
+# Coverage configuration for `cargo tarpaulin` (picked up automatically from the
+# workspace root; run it as plain `cargo tarpaulin | tail -3`).
+#
+# D82.1 as amended by D83.16: the 95% target is measured on PRODUCTION code only
+# — every workspace crate's `src/`, not the integration-test crates under
+# `crates/*/tests/`. Tarpaulin attributes the continuation lines of a multi-line
+# `assert!`/`format!` inside a test file as uncovered even though the statement
+# ran, so counting test files measured the measurement, not the product.
+# `#[cfg(test)]` modules inside `src/` are already left out by tarpaulin's
+# default `--ignore-tests`.
+#
+# An include list, not `exclude-files = ["crates/*/tests/*"]`: tarpaulin walks
+# the whole project directory, so stray `.rs` files under the gitignored `tmp/`
+# (scratch copies, old worktrees) were counted too — 2,459 coverable lines of
+# them on the first run. Production code is exactly `crates/<crate>/src`.
+
+[coverage]
+workspace = true
+include-files = ["crates/*/src/*"]
+# `rulebook_citations` alone needs 70-80 s per test response even
+# uninstrumented; tarpaulin's default limit is 60 s.
+timeout = "600s"
+# A separate target dir: tarpaulin builds with its own RUSTFLAGS, which would
+# otherwise invalidate `target/debug` for every ordinary `cargo test` after it.
+target-dir = "target/tarpaulin"
+# ...and since that dir holds nothing else, a re-run can build incrementally.
+skip-clean = true
+out = ["Json"]
+output-dir = "tmp"

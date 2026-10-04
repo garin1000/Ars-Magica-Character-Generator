@@ -281,7 +281,12 @@ Prompt context (paste PROJECT_CONTEXT below + this):
 > and test quality.
 >
 > Run: cargo test, cargo clippy (warnings as errors), cargo fmt --check,
-> cargo tarpaulin -p arm-rules --out json --output-dir tmp/
+> `cargo tarpaulin | tail -3` — no flags: the checked-in `tarpaulin.toml` sets the
+> scope (whole workspace, production code only — `crates/*/tests` excluded, D82.1
+> as amended by D83.16), the 600 s timeout, its own `target/tarpaulin` dir and the
+> JSON report in `tmp/`. Pass no scope flags of your own (`-p`, `--out`, …): the
+> figure is only comparable run to run in the configured scope. A cold run takes
+> ~40 min.
 >
 > If ui/ exists, also run its type-check, tests, lint, and format — each as a
 > `cd <repo>/ui && npm run <script>` compound (see Command hygiene), e.g.
@@ -299,7 +304,8 @@ Prompt context (paste PROJECT_CONTEXT below + this):
 > critical finding, even if every other gate is green.
 >
 > Check for ALL of the following:
-> 1. Test coverage must reach 95%. Report exact percentage. List uncovered functions.
+> 1. Test coverage of production code must reach 95% (the `tarpaulin.toml` scope).
+>    Report exact percentage. List uncovered functions.
 > 2. Test quality — meaningful assertions, not just compilation
 > 3. Missing edge case tests
 > 4. Missing negative tests
@@ -347,7 +353,8 @@ Run a verification agent (or bash commands directly) to confirm:
 1. `cargo test --workspace` — all pass
 2. `cargo clippy --workspace -- -D warnings` — clean
 3. `cargo fmt --check` — clean
-4. `cargo tarpaulin -p arm-rules --out json --output-dir tmp/` — coverage percentage
+4. `cargo tarpaulin | tail -3` — production-code coverage percentage (scope and
+   options come from `tarpaulin.toml`; see the QA reviewer above)
 5. If ui/ exists: `cd <repo>/ui && npm run check`, then `npm run test:unit`,
    `npm run lint`, `npm run format:check` — each a `cd <repo>/ui && npm run <script>`
    compound (see Command hygiene) — all clean

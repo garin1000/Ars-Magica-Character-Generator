@@ -4105,8 +4105,8 @@ fn a_fresh_dirty_state_report_clears_the_confirmed_discard_latch() {
 
 /// Erika F4 (MAJOR): the close/quit guard is the mandatory product behaviour
 /// `CLAUDE.md` singles out, and until this test its decision logic had no
-/// coverage at any level. `guard_blocks_quit` (`main.rs`) lives in a binary, the
-/// crate does not enable Tauri's `test` feature, and WebDriver cannot answer a
+/// coverage at any level. `guard_blocks_quit` (`main.rs`) lives in a binary typed
+/// to `Wry`, which Tauri's `MockRuntime` cannot stand in for, and WebDriver cannot answer a
 /// native GTK dialog — so of its branches the e2e suite reached exactly two
 /// (clean-allow and dirty-show-dialog) and nothing at all reached the
 /// `confirmed` pass-through, the `showing` no-second-dialog branch, or either

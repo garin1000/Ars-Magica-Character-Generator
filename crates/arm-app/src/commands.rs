@@ -146,8 +146,9 @@ impl Decision {
 /// dialog.
 ///
 /// **It lives here rather than there because there is nowhere to test it there**
-/// (Erika F4). `main.rs` is a binary, this crate does not enable Tauri's `test`
-/// feature, and a native GTK dialog is not something WebDriver can answer — so
+/// (Erika F4). `main.rs` is a binary typed to the real `Wry` runtime, which the
+/// `MockRuntime` this crate's tests use (`tests/a3_mock_app_commands.rs`) cannot
+/// stand in for, and a native GTK dialog is not something WebDriver can answer — so
 /// the e2e suite reached two of these rows and the other four were unreachable
 /// at every level. They are the rows that matter most: the `confirmed`
 /// pass-through and the `showing` no-second-dialog branch are the difference

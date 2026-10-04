@@ -54,6 +54,12 @@ tauri-plugin-dialog = "2"
 # Take exactly what tauri takes: nothing but what it already enables.
 muda = { version = "0.19", default-features = false }
 pretty_assertions = "1"
+# Tauri's `MockRuntime` (`tauri::test`), for `tests/a3_mock_app_commands.rs`:
+# a `State<'_, AppState>` exists only inside a running app's managed state, so
+# the `#[tauri::command]` shims and the generic menu glue are reachable from a
+# test only through a mock app. The feature adds no dependency, and as a
+# dev-dependency it is never compiled into the shipped binary.
+tauri = { version = "2", features = ["test"] }
 tempfile = "3"
 
 # Off by default, so a plain `cargo build --release` — the exact command that

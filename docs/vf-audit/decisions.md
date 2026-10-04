@@ -927,6 +927,11 @@ presumption of correctness.
     ids, no notice on open), generated from the test fixtures and guarded byte
     for byte. A NOTICE gives the CC BY-SA attribution. The incomplete
     `magus_criamon` variant stays a test fixture only.
+16. **The coverage target counts production code only** (amends D82.1;
+    after-deadline answer 2). `tarpaulin.toml` measures `crates/*/src`. The
+    target is 95%: 94.66% before this round, 95.73% after nine mock-runtime
+    app tests. The rest is mostly Tauri-runtime and native-dialog code, which
+    only e2e reaches.
 11. **Spell codes show their requisites** (try-out finding 22; after-deadline
     answer 4). The engine builds a spell's code once in
     `LocalizedRuleset::spell_code`. Technique requisites go in parentheses after
