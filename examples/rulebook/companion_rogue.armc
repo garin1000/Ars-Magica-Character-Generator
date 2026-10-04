@@ -1,0 +1,156 @@
+{
+  "schema_version": 22,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "companion",
+  "selections": [
+    {
+      "ref": "flaw.avaricious_major"
+    },
+    {
+      "ref": "flaw.compulsion_minor"
+    },
+    {
+      "ref": "flaw.dark_secret"
+    },
+    {
+      "ref": "flaw.night_terrors"
+    },
+    {
+      "ref": "virtue.great_characteristic",
+      "params": {
+        "characteristic": "characteristic.dex"
+      }
+    },
+    {
+      "ref": "virtue.great_characteristic",
+      "params": {
+        "characteristic": "characteristic.qik"
+      }
+    },
+    {
+      "ref": "virtue.improved_characteristics"
+    },
+    {
+      "ref": "virtue.improved_characteristics"
+    },
+    {
+      "ref": "virtue.light_touch"
+    },
+    {
+      "ref": "virtue.perfect_balance"
+    },
+    {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.legerdemain"
+      }
+    },
+    {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.stealth"
+      }
+    },
+    {
+      "ref": "virtue.wanderer"
+    }
+  ],
+  "characteristics": {
+    "int": 0,
+    "per": 1,
+    "str": -1,
+    "sta": 0,
+    "pre": 0,
+    "com": 1,
+    "dex": 3,
+    "qik": 3
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 1,
+      "specialty": "rich people's homes",
+      "parameter": {
+        "text": "Local area"
+      }
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 3,
+      "specialty": "climbing"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 3,
+      "specialty": "noticing whether he is observed"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 3,
+      "specialty": "getting away"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 2,
+      "specialty": "people who think he's exciting"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 1,
+      "specialty": "people in authority"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 1,
+      "specialty": "when caught red-handed"
+    },
+    {
+      "ability": "ability.legerdemain",
+      "score": 5,
+      "specialty": "picking pockets"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "being polite",
+      "parameter": {
+        "text": "Native language"
+      }
+    },
+    {
+      "ability": "ability.stealth",
+      "score": 5,
+      "specialty": "being quiet"
+    }
+  ],
+  "xp_pool": 345,
+  "ability_funding": "pool",
+  "age": 20,
+  "apparent_age": 20,
+  "personality_traits": [
+    {
+      "name": "Avaricious",
+      "value": 6
+    },
+    {
+      "name": "Daring",
+      "value": 2
+    },
+    {
+      "name": "Sociable",
+      "value": 2
+    }
+  ],
+  "name": "The Rogue",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.fist",
+      "loadout": "wielded"
+    }
+  ]
+}

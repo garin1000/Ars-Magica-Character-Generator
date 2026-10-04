@@ -1,0 +1,4 @@
+# Shipped example saves are compared byte-for-byte against what the app writes
+# (crates/arm-app/tests/a2_shipped_examples.rs), and the app writes LF. Keep
+# them LF on every checkout, Windows with core.autocrlf included.
+*.armc text eol=lf

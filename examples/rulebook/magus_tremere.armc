@@ -1,0 +1,236 @@
+{
+  "schema_version": 22,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.ambitious_major"
+    },
+    {
+      "ref": "flaw.susceptibility_to_divine_power"
+    },
+    {
+      "ref": "flaw.weak_magic_resistance"
+    },
+    {
+      "ref": "virtue.book_learner"
+    },
+    {
+      "ref": "virtue.cautious_sorcerer"
+    },
+    {
+      "ref": "virtue.elemental_magic"
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.latent_magic_ability"
+    },
+    {
+      "ref": "virtue.skilled_parens"
+    },
+    {
+      "ref": "virtue.the_gift"
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": -2,
+    "str": 0,
+    "sta": 2,
+    "pre": 0,
+    "com": 0,
+    "dex": 0,
+    "qik": 1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "arithmetic"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 2,
+      "specialty": "magi"
+    },
+    {
+      "ability": "ability.code_of_hermes",
+      "score": 1,
+      "specialty": "certamen law"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "Hermetic terms",
+      "parameter": {
+        "id": "language.latin"
+      }
+    },
+    {
+      "ability": "ability.etiquette",
+      "score": 2,
+      "specialty": "Hermetic"
+    },
+    {
+      "ability": "ability.finesse",
+      "score": 2,
+      "specialty": "Terram"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 3,
+      "specialty": "magi"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 2,
+      "specialty": "lying to underlings"
+    },
+    {
+      "ability": "ability.intrigue",
+      "score": 2,
+      "specialty": "Hermetic politics"
+    },
+    {
+      "ability": "ability.leadership",
+      "score": 3,
+      "specialty": "running institutions"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "giving orders",
+      "parameter": {
+        "text": "Native language"
+      }
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 3,
+      "specialty": "Creo"
+    },
+    {
+      "ability": "ability.organization_lore",
+      "score": 2,
+      "specialty": "Tremere",
+      "parameter": {
+        "id": "organization.order_of_hermes"
+      }
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1,
+      "specialty": "Mentem"
+    },
+    {
+      "ability": "ability.penetration",
+      "score": 3,
+      "specialty": "Ignem"
+    }
+  ],
+  "xp_pool": 435,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.aquam",
+      "score": 3
+    },
+    {
+      "art": "art.auram",
+      "score": 6
+    },
+    {
+      "art": "art.creo",
+      "score": 5
+    },
+    {
+      "art": "art.ignem",
+      "score": 6
+    },
+    {
+      "art": "art.intellego",
+      "score": 5
+    },
+    {
+      "art": "art.mentem",
+      "score": 1
+    },
+    {
+      "art": "art.muto",
+      "score": 5
+    },
+    {
+      "art": "art.perdo",
+      "score": 5
+    },
+    {
+      "art": "art.rego",
+      "score": 5
+    },
+    {
+      "art": "art.terram",
+      "score": 6
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.circling_winds_of_protection"
+    },
+    {
+      "spell": "spell.earth_that_breaks_no_more"
+    },
+    {
+      "spell": "spell.pilum_of_fire"
+    },
+    {
+      "spell": "spell.pit_of_the_gaping_earth"
+    },
+    {
+      "spell": "spell.rain_of_stones"
+    },
+    {
+      "spell": "spell.seal_the_earth"
+    },
+    {
+      "spell": "spell.soothe_the_raging_flames"
+    },
+    {
+      "spell": "spell.the_miners_keen_eye"
+    }
+  ],
+  "house": "house.tremere",
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Ambitious",
+      "value": 6
+    },
+    {
+      "name": "Authoritarian",
+      "value": 3
+    },
+    {
+      "name": "Brave",
+      "value": 2
+    },
+    {
+      "name": "Respectful",
+      "value": 3
+    }
+  ],
+  "name": "The Tremere",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "loadout": "wielded"
+    }
+  ]
+}

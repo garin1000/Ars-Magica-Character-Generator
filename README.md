@@ -82,6 +82,12 @@ Prefer something you can drop on a USB stick? `./build-linux.sh` and
 and write no registry entries. These are not published by CI — you build them
 yourself.
 
+**Example characters ship with the app.** Every installer and portable archive
+has an `examples` folder beside `rules`, holding the character templates printed
+in the core rulebook (the grogs, the companions, a magus of each House, and
+Darius at his Gauntlet) as ready-made `.armc` saves. Open one with
+File > Open to try the app out.
+
 ## Highlights
 
 - **Two languages out of the box** — English and German, for both the UI and the
@@ -164,7 +170,14 @@ arm-char-gen/
 │   └── i18n/<lang>/      # translatable rules text, keyed by stable IDs
 ├── locales/<lang>/       # Fluent UI strings
 └── examples/             # sample saves for tests and demos
+    └── rulebook/         # the book's templates as .armc saves, shipped as examples/
 ```
+
+`examples/rulebook/` is generated, never hand-edited: each file is a book
+template from `crates/arm-rules/tests/fixtures/book_templates/` opened and saved
+by the app itself, and `crates/arm-app/tests/a2_shipped_examples.rs` fails when
+they drift. Regenerate with
+`cargo test -p arm-app --test a2_shipped_examples -- --ignored`.
 
 The engine (`arm-rules`) has **no dependency on Tauri, the filesystem, or the
 UI**. It operates on in-memory data and is fully exercised with `cargo test`.
@@ -455,9 +468,9 @@ split follows *what the content is*, not which folder it sits in:
 
 - **The generator and the data format — MIT.** The Rust crates, the
   Svelte/TypeScript frontend, the Fluent UI strings (`locales/`), the sample
-  saves (`examples/`), the tooling (`scripts/`), the build config, **and the
-  rules JSON's form**: its schema, key names, the stable slug-ID scheme, the file
-  layout, and all of `rules/core/` — numbers, enums, prerequisite structures and
+  saves (`examples/*_sample.json`), the tooling (`scripts/`), the build config,
+  **and the rules JSON's form**: its schema, key names, the stable slug-ID scheme,
+  the file layout, and all of `rules/core/` — numbers, enums, prerequisite structures and
   source citations, with no rulebook text in it. See [`LICENSE`](LICENSE) and
   [`rules/core/LICENSE`](rules/core/LICENSE).
 - **The Ars Magica rules text — CC BY-SA 4.0.** The authoritative Markdown in
@@ -468,7 +481,9 @@ split follows *what the content is*, not which folder it sits in:
   redistributed under the **Ars Magica Open License** (Creative Commons
   Attribution-ShareAlike 4.0). Translations of that text are derivatives and are
   CC BY-SA 4.0 too. See [`rules/source/LICENSE`](rules/source/LICENSE) and
-  [`rules/i18n/LICENSE`](rules/i18n/LICENSE).
+  [`rules/i18n/LICENSE`](rules/i18n/LICENSE). The shipped example characters in
+  `examples/rulebook/` are transcriptions of the rulebook's templates and are
+  CC BY-SA 4.0 likewise; see [`examples/rulebook/NOTICE.md`](examples/rulebook/NOTICE.md).
 
   In plain terms: **reusing the format needs only MIT — writing your own data
   against this schema, translating into a new language, or building tooling on

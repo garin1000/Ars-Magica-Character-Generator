@@ -55,6 +55,9 @@ rm -rf "dist-linux"
 # directory (Tauri falls back to /usr/lib/<name> there), so load_ruleset also
 # looks in ./rules next to the exe — which is where this stages it.
 stage_rules "$STAGE/rules"
+# The rulebook's example characters, beside rules/ exactly as the installers
+# place them (bundle.resources). Their NOTICE.md rides along inside the folder.
+stage_examples "$STAGE/examples"
 cp "target/release/arm-app" "$STAGE/$APP"
 chmod +x "$STAGE/$APP"
 # Attribution has to travel with the data it describes. Bundled installers get
@@ -78,6 +81,10 @@ HOW TO RUN
   Keep the ${APP} binary and the "rules" folder together in the same
   directory — the app loads its rules data from ./rules at startup. Moving the
   binary out on its own will stop it from launching correctly.
+
+  The "examples" folder holds the character templates from the core rulebook
+  (grogs, companions, one magus per House) as ready-made saves. Open one with
+  File > Open to try the app out; the app runs without them.
 
 REQUIREMENTS
   - A 64-bit (x86_64) glibc-based Linux distribution.
@@ -104,7 +111,9 @@ LICENSING
   rules data — its JSON schema, identifiers and the mechanics in rules/core.
   The Ars Magica rules TEXT in rules/i18n is (c) 1993-2024 Trident, Inc. d/b/a
   Atlas Games, used under CC BY-SA 4.0. See rules/NOTICE.md for the full
-  attribution and terms.
+  attribution and terms. The example characters in examples/ are
+  transcriptions of the rulebook's templates under the same license; see
+  examples/NOTICE.md.
 EOF
 
 echo ">> Creating tarball..."

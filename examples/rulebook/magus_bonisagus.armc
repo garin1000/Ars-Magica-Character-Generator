@@ -1,0 +1,221 @@
+{
+  "schema_version": 22,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.driven_minor"
+    },
+    {
+      "ref": "flaw.favors"
+    },
+    {
+      "ref": "flaw.painful_magic"
+    },
+    {
+      "ref": "flaw.weak_enchanter"
+    },
+    {
+      "ref": "virtue.affinity_art",
+      "params": {
+        "art": "art.auram"
+      }
+    },
+    {
+      "ref": "virtue.affinity_art",
+      "params": {
+        "art": "art.creo"
+      }
+    },
+    {
+      "ref": "virtue.book_learner"
+    },
+    {
+      "ref": "virtue.free_study"
+    },
+    {
+      "ref": "virtue.great_characteristic",
+      "params": {
+        "characteristic": "characteristic.int"
+      }
+    },
+    {
+      "ref": "virtue.great_characteristic",
+      "params": {
+        "characteristic": "characteristic.int"
+      }
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.inventive_genius"
+    },
+    {
+      "ref": "virtue.secondary_insight"
+    },
+    {
+      "ref": "virtue.the_gift"
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": 0,
+    "str": 0,
+    "sta": 0,
+    "pre": 0,
+    "com": 1,
+    "dex": 0,
+    "qik": 0
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "logic"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 2,
+      "specialty": "when working"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 2,
+      "specialty": "equals"
+    },
+    {
+      "ability": "ability.concentration",
+      "score": 3,
+      "specialty": "spell casting"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "Hermetic technical terms",
+      "parameter": {
+        "id": "language.latin"
+      }
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 2,
+      "specialty": "magi"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "educated talk",
+      "parameter": {
+        "text": "Native language"
+      }
+    },
+    {
+      "ability": "ability.magic_lore",
+      "score": 1,
+      "specialty": "non-Hermetic magic"
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 4,
+      "specialty": "Creo"
+    },
+    {
+      "ability": "ability.organization_lore",
+      "score": 2,
+      "specialty": "great discoveries",
+      "parameter": {
+        "id": "organization.order_of_hermes"
+      }
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1,
+      "specialty": "Mentem"
+    },
+    {
+      "ability": "ability.penetration",
+      "score": 1,
+      "specialty": "Auram"
+    },
+    {
+      "ability": "ability.teaching",
+      "score": 3,
+      "specialty": "Hermetic Arts"
+    }
+  ],
+  "xp_pool": 435,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.auram",
+      "score": 12
+    },
+    {
+      "art": "art.corpus",
+      "score": 4
+    },
+    {
+      "art": "art.creo",
+      "score": 12
+    },
+    {
+      "art": "art.rego",
+      "score": 3
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.charge_of_the_angry_winds"
+    },
+    {
+      "spell": "spell.clouds_of_rain_and_thunder"
+    },
+    {
+      "spell": "spell.clouds_of_summer_snow"
+    },
+    {
+      "spell": "spell.purification_of_the_festering_wounds"
+    },
+    {
+      "spell": "spell.the_incantation_of_lightning"
+    }
+  ],
+  "house": "house.bonisagus",
+  "house_choices": {
+    "bonisagus_puissant": {
+      "ref": "virtue.puissant_ability",
+      "params": {
+        "ability": "ability.magic_theory"
+      }
+    }
+  },
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Brave",
+      "value": -1
+    },
+    {
+      "name": "Driven",
+      "value": 3
+    },
+    {
+      "name": "Studious",
+      "value": 2
+    }
+  ],
+  "name": "The Bonisagus",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "loadout": "wielded"
+    }
+  ]
+}

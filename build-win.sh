@@ -75,6 +75,9 @@ rm -rf "dist-win"
 # A non-bundled binary resolves BaseDirectory::Resource to its own directory, so
 # the rules data the app loads at startup must sit next to the executable.
 stage_rules "$STAGE/rules"
+# The rulebook's example characters, beside rules\ exactly as the installers
+# place them (bundle.resources). Their NOTICE.md rides along inside the folder.
+stage_examples "$STAGE/examples"
 cp "target/$TARGET/release/arm-app.exe" "$STAGE/${APP}.exe"
 # Attribution has to travel with the data it describes. Bundled installers get
 # these from tauri.conf.json (bundle.resources + licenseFile), which this
@@ -96,6 +99,10 @@ HOW TO RUN
   directory — the app loads its rules data from .\\rules at startup.
   Moving the .exe out on its own will stop it from launching correctly.
 
+  The "examples" folder holds the character templates from the core rulebook
+  (grogs, companions, one magus per House) as ready-made saves. Open one with
+  File > Open to try the app out; the app runs without them.
+
 REQUIREMENTS
   - Windows 10 (64-bit) or newer.
   - Microsoft WebView2 Runtime. This is preinstalled on Windows 11 and
@@ -115,7 +122,9 @@ LICENSING
   rules data — its JSON schema, identifiers and the mechanics in rules\\core.
   The Ars Magica rules TEXT in rules\\i18n is (c) 1993-2024 Trident, Inc. d/b/a
   Atlas Games, used under CC BY-SA 4.0. See rules\\NOTICE.md for the full
-  attribution and terms.
+  attribution and terms. The example characters in examples\\ are
+  transcriptions of the rulebook's templates under the same license; see
+  examples\\NOTICE.md.
 EOF
 
 echo ">> Zipping..."

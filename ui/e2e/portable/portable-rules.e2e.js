@@ -46,6 +46,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { workerConfigHome } from '../driver.js';
+import { portableDir } from '../stage-portable.js';
 
 const BOOT_TIMEOUT = 30000;
 const STEP_TIMEOUT = 10000;
@@ -94,6 +95,26 @@ function resolveSettingsPath() {
 }
 
 describe('portable layout', () => {
+  it('carries the rulebook examples in an examples folder beside rules (A2)', () => {
+    // A2 (try-out finding 12): the portable archives ship the book templates as
+    // `examples/<template>.armc` beside `rules/`, just as the installers do via
+    // `bundle.resources`. This layout is staged by `stage-portable.js`, which
+    // mirrors `build-linux.sh`, so the staged folder must hold exactly the
+    // repository's generated `examples/rulebook/` — same names, same bytes.
+    // No UI is involved: what is at risk is the staging, not the app.
+    const shipped = path.join(repoRoot, 'examples/rulebook');
+    const staged = path.join(portableDir, 'examples');
+    const expected = fs.readdirSync(shipped).sort();
+    expect(expected.length).toBeGreaterThan(0);
+    expect(fs.existsSync(staged)).toBe(true);
+    expect(fs.readdirSync(staged).sort()).toEqual(expected);
+    for (const name of expected) {
+      const stagedBytes = fs.readFileSync(path.join(staged, name));
+      const shippedBytes = fs.readFileSync(path.join(shipped, name));
+      expect(stagedBytes.equals(shippedBytes)).toBe(true);
+    }
+  });
+
   it('boots outside target/ and loads its ruleset from beside the executable', async () => {
     // The startup screen renders one entry per character-type PROFILE, so a create
     // button existing at all means `rules/core/character_types.json` was found,

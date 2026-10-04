@@ -1,0 +1,235 @@
+{
+  "schema_version": 22,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.enemies"
+    },
+    {
+      "ref": "flaw.necessary_condition",
+      "params": {
+        "action": "spinning around three times"
+      }
+    },
+    {
+      "ref": "flaw.wrathful_major"
+    },
+    {
+      "ref": "virtue.affinity_art",
+      "params": {
+        "art": "art.creo"
+      }
+    },
+    {
+      "ref": "virtue.affinity_art",
+      "params": {
+        "art": "art.ignem"
+      }
+    },
+    {
+      "ref": "virtue.greater_immunity",
+      "params": {
+        "hazard": "Fire"
+      }
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.life_boost"
+    },
+    {
+      "ref": "virtue.major_magical_focus",
+      "params": {
+        "focus": "flames"
+      }
+    },
+    {
+      "ref": "virtue.the_gift"
+    }
+  ],
+  "characteristics": {
+    "int": 2,
+    "per": 1,
+    "str": 0,
+    "sta": 2,
+    "pre": 0,
+    "com": -1,
+    "dex": 0,
+    "qik": 1
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 2,
+      "specialty": "hiding places",
+      "parameter": {
+        "text": "Local area"
+      }
+    },
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "logic"
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 2,
+      "specialty": "running"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 3,
+      "specialty": "in combat"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 2,
+      "specialty": "dodging"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "insults",
+      "parameter": {
+        "id": "language.latin"
+      }
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 1,
+      "specialty": "people in authority over him"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 3,
+      "specialty": "claiming not to have done something"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "insults",
+      "parameter": {
+        "text": "Native language"
+      }
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 3,
+      "specialty": "Ignem"
+    },
+    {
+      "ability": "ability.organization_lore",
+      "score": 1,
+      "specialty": "House Flambeau",
+      "parameter": {
+        "id": "organization.order_of_hermes"
+      }
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1,
+      "specialty": "Mentem"
+    },
+    {
+      "ability": "ability.penetration",
+      "score": 2,
+      "specialty": "Ignem"
+    },
+    {
+      "ability": "ability.stealth",
+      "score": 1,
+      "specialty": "entering buildings or rooms"
+    },
+    {
+      "ability": "ability.survival",
+      "score": 1,
+      "specialty": "woods"
+    }
+  ],
+  "xp_pool": 435,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.creo",
+      "score": 12
+    },
+    {
+      "art": "art.ignem",
+      "score": 12
+    },
+    {
+      "art": "art.perdo",
+      "score": 4
+    },
+    {
+      "art": "art.rego",
+      "score": 5
+    },
+    {
+      "art": "art.terram",
+      "score": 1
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.arc_of_fiery_ribbons",
+      "within_focus": true
+    },
+    {
+      "spell": "spell.ball_of_abysmal_flame",
+      "within_focus": true
+    },
+    {
+      "spell": "spell.circle_of_encompassing_flames",
+      "within_focus": true
+    },
+    {
+      "spell": "spell.palm_of_flame",
+      "within_focus": true
+    },
+    {
+      "spell": "spell.pilum_of_fire",
+      "within_focus": true
+    }
+  ],
+  "house": "house.flambeau",
+  "house_choices": {
+    "flambeau_puissant": {
+      "ref": "virtue.puissant_art",
+      "params": {
+        "art": "art.ignem"
+      }
+    }
+  },
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Brave",
+      "value": 3
+    },
+    {
+      "name": "Thoughtful",
+      "value": -2
+    },
+    {
+      "name": "Wrathful",
+      "value": 6
+    }
+  ],
+  "name": "The Flambeau",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "loadout": "wielded",
+      "specialization_applies": true
+    }
+  ]
+}

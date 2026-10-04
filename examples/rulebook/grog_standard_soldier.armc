@@ -1,0 +1,143 @@
+{
+  "schema_version": 22,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "grog",
+  "selections": [
+    {
+      "ref": "flaw.weakness_minor"
+    },
+    {
+      "ref": "virtue.covenfolk"
+    },
+    {
+      "ref": "virtue.warrior"
+    }
+  ],
+  "characteristics": {
+    "int": -1,
+    "per": 0,
+    "str": 1,
+    "sta": 1,
+    "pre": 0,
+    "com": 0,
+    "dex": 2,
+    "qik": 2
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 3,
+      "specialty": "taverns",
+      "parameter": {
+        "text": "Local area"
+      }
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 3,
+      "specialty": "running"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 3,
+      "specialty": "in combat"
+    },
+    {
+      "ability": "ability.bows",
+      "score": 4,
+      "specialty": "short bow"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 4,
+      "specialty": "punching"
+    },
+    {
+      "ability": "ability.carouse",
+      "score": 3,
+      "specialty": "drinking"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 2,
+      "specialty": "opposite sex"
+    },
+    {
+      "ability": "ability.etiquette",
+      "score": 2,
+      "specialty": "magi"
+    },
+    {
+      "ability": "ability.great_weapon",
+      "score": 4,
+      "specialty": "pole axe"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 2,
+      "specialty": "avoiding duties"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "rude words",
+      "parameter": {
+        "text": "Native language"
+      }
+    },
+    {
+      "ability": "ability.single_weapon",
+      "score": 5,
+      "specialty": "heater shield"
+    },
+    {
+      "ability": "ability.survival",
+      "score": 1,
+      "specialty": "for a short period"
+    }
+  ],
+  "xp_pool": 420,
+  "ability_funding": "pool",
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Brave",
+      "value": 3
+    },
+    {
+      "name": "Garrulous",
+      "value": 1
+    },
+    {
+      "name": "Loyal",
+      "value": 2
+    }
+  ],
+  "name": "The Standard Soldier",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "armor.metal_scale_full",
+      "loadout": "wielded"
+    },
+    {
+      "item": "shield.heater",
+      "loadout": "wielded"
+    },
+    {
+      "item": "weapon.axe",
+      "loadout": "wielded",
+      "specialization_applies": true
+    },
+    {
+      "item": "weapon.fist",
+      "loadout": "wielded",
+      "specialization_applies": true
+    }
+  ]
+}
