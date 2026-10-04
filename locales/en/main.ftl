@@ -310,8 +310,13 @@ xp-pool-block-early-childhood-spread-only = Early childhood — Other Abilities 
 # magus, whose general pool is apprenticeship; for anyone else later life IS the
 # general pool already shown as the bar's own total, so repeating it would be a
 # second spent/total for one pool.
-xp-pool-block-later-life = Later life (ages { $from }-{ $to }): { $years } × { $rate } = { $xp } XP
-xp-pool-block-later-life-restricted = Later life (ages { $from }-{ $to }): { $years } × { $rate } = { $xp } XP — { $used } / { $amount }
+#
+# The chip states the result only (N7, try-out 2026-10-04); the `years × rate`
+# calculation is the chip's tooltip, `xp-pool-block-later-life-tooltip`, shared by
+# both variants.
+xp-pool-block-later-life = Later life (ages { $from }-{ $to }): { $xp } XP
+xp-pool-block-later-life-restricted = Later life (ages { $from }-{ $to }): { $used } / { $amount }
+xp-pool-block-later-life-tooltip = { $years } × { $rate } = { $xp } XP
 # Apprenticeship, for a magus alone: fifteen fixed years whose experience "can be
 # spent on Arts or Abilities" (Core Rules.md:2435), which makes it the general pool —
 # so this chip names the block the pool total comes from and needs no spent/total of
@@ -320,14 +325,24 @@ xp-pool-block-later-life-restricted = Later life (ages { $from }-{ $to }): { $ye
 xp-pool-block-apprenticeship = Apprenticeship: { $years } years = { $xp } XP
 # The years after apprenticeship: "For every year, the magus gets 30 points"
 # (Core Rules.md:2471), less 10 for every charged season of lab work (`:2482`). Each
-# point is an experience point or one level of a spell, so the points and the
-# experience left after the spell levels are both named.
+# point is an experience point or one level of a spell, so the chip names the points
+# and their split into experience and spell levels (N9, try-out 2026-10-04). The
+# calculation behind the points — years × rate, less the lab work — is the chip's
+# tooltip, `xp-pool-block-after-gauntlet-tooltip`. `$years` and `$levels` arrive as
+# numbers, so the `[one]` variants fire.
 #
 # "After the Gauntlet", not "As a magus" (#14.4): the block is driven by the
 # `Gauntlet age` field, and naming it for the Gauntlet ties label to field. It also
 # stops the chip reading as a *state* the character is in — which, sitting where it
 # used to sit, made "Later life" below it look like life past the Gauntlet.
-xp-pool-block-after-gauntlet = After the Gauntlet: { $years } × { $rate } - { $lab } for lab work = { $points } points, { $xp } XP
+xp-pool-block-after-gauntlet = After the Gauntlet ({ $years ->
+        [one] { $years } year
+       *[other] { $years } years
+    }): { $points } points = { $xp } XP + { $levels ->
+        [one] { $levels } spell level
+       *[other] { $levels } spell levels
+    }
+xp-pool-block-after-gauntlet-tooltip = { $years } × { $rate } - { $lab } for lab work = { $points } points
 # Age is repeated inside the panel because later life is measured in years, so it
 # is edited here as well as on the Details tab.
 life-stage-age-label = Age

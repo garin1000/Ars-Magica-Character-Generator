@@ -241,6 +241,63 @@ describe('German UI bundle', () => {
     );
   });
 
+  // N7/N9 (try-out 2026-10-04): the later-life and post-Gauntlet chips state the
+  // RESULT only — "Later life (ages 5-10): 75 / 75", "After the Gauntlet (5 years):
+  // 120 points = 90 XP + 30 spell levels" — and the calculation behind each moves into
+  // a tooltip key of its own. Numbers, not strings, so the plural selectors fire.
+  describe('later-life and post-Gauntlet chips state the result, the tooltip the sum', () => {
+    const en = buildBundle('en');
+    const de = buildBundle('de');
+    const general = { from: 5, to: 25, years: 20, rate: 15, xp: 300 };
+    const restricted = { from: 5, to: 10, years: 5, rate: 15, xp: 75, used: 75, amount: 75 };
+    const fiveYears = { years: 5, rate: 30, lab: 30, points: 120, xp: 90, levels: 30 };
+    const oneYear = { years: 1, rate: 30, lab: 0, points: 30, xp: 29, levels: 1 };
+
+    it('reads later life as its span and its experience, in English', () => {
+      expect(translate(en, 'xp-pool-block-later-life', general)).toBe(
+        'Later life (ages 5-25): 300 XP',
+      );
+      expect(translate(en, 'xp-pool-block-later-life-restricted', restricted)).toBe(
+        'Later life (ages 5-10): 75 / 75',
+      );
+      expect(translate(en, 'xp-pool-block-later-life-tooltip', restricted)).toBe('5 × 15 = 75 XP');
+    });
+
+    it('reads later life as its span and its experience, in German', () => {
+      expect(translate(de, 'xp-pool-block-later-life', general)).toBe(
+        'Späteres Leben (Alter 5-25): 300 EP',
+      );
+      expect(translate(de, 'xp-pool-block-later-life-restricted', restricted)).toBe(
+        'Späteres Leben (Alter 5-10): 75 / 75',
+      );
+      expect(translate(de, 'xp-pool-block-later-life-tooltip', general)).toBe('20 × 15 = 300 EP');
+    });
+
+    it('reads the years after the Gauntlet as points split into XP and spell levels', () => {
+      expect(translate(en, 'xp-pool-block-after-gauntlet', fiveYears)).toBe(
+        'After the Gauntlet (5 years): 120 points = 90 XP + 30 spell levels',
+      );
+      expect(translate(en, 'xp-pool-block-after-gauntlet', oneYear)).toBe(
+        'After the Gauntlet (1 year): 30 points = 29 XP + 1 spell level',
+      );
+      expect(translate(en, 'xp-pool-block-after-gauntlet-tooltip', fiveYears)).toBe(
+        '5 × 30 - 30 for lab work = 120 points',
+      );
+    });
+
+    it('reads the years after the Gauntlet in German, singular and plural', () => {
+      expect(translate(de, 'xp-pool-block-after-gauntlet', fiveYears)).toBe(
+        'Nach der Lehrlingsprüfung (5 Jahre): 120 Punkte = 90 EP + 30 Zauberstufen',
+      );
+      expect(translate(de, 'xp-pool-block-after-gauntlet', oneYear)).toBe(
+        'Nach der Lehrlingsprüfung (1 Jahr): 30 Punkte = 29 EP + 1 Zauberstufe',
+      );
+      expect(translate(de, 'xp-pool-block-after-gauntlet-tooltip', fiveYears)).toBe(
+        '5 × 30 - 30 für Laborarbeit = 120 Punkte',
+      );
+    });
+  });
+
   // guided-creation-review-2026-08 #30: two new warning codes. A code with no
   // `issue-<code>` message renders as its own slug, which is the very thing
   // CLAUDE.md forbids — and locale parity alone would not catch it, because a code

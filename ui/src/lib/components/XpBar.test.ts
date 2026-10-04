@@ -430,16 +430,27 @@ describe('XpBar under a life-stage plan (slice 6b3b)', () => {
     expect(text).toBe('150');
   });
 
-  it('renders the later-life row as years, rate and total experience', () => {
+  it('renders the later-life row as its age span and total experience, without the sum', () => {
+    // N7 (try-out 2026-10-04): the chip states the result; the `years × rate`
+    // calculation moved into the chip's tooltip (`XpBar.client.test.ts`).
     resetEntity(0);
     installPlan();
+    installPostApprenticeshipRules();
     setEffective(0, [], budget(10, 15));
     const { text } = element(html(), 'life-stage-later-life');
-    expect(text).toContain('10');
-    expect(text).toContain('15');
-    expect(text).toContain('150');
-    // ASCII hyphen-minus only; nothing here is negative but no U+2212 may leak in.
-    expect(text).not.toContain('−');
+    // ASCII hyphen-minus as the range separator; no U+2212 may leak in.
+    expect(clean(text)).toBe('Later life (ages 5-15): 150 XP');
+    expect(text).not.toContain('×');
+  });
+
+  it('makes the later-life chip keyboard-reachable for its tooltip', () => {
+    resetEntity(0);
+    installPlan();
+    installPostApprenticeshipRules();
+    setEffective(0, [], budget(10, 15));
+    // `use:tooltip` runs only on a mounted node, but the focusable host is markup:
+    // without it the calculation would be announced to nobody (tooltip-host-parity).
+    expect(element(html(), 'life-stage-later-life').open).toMatch(/tabindex="0"/);
   });
 
   it('keeps the spent and available arithmetic against the derived later-life pool', () => {
@@ -581,6 +592,29 @@ describe('XpBar under a guided magus plan (slice 6b4)', () => {
     expect(text).not.toContain('later_life');
   });
 
+  it('reads the restricted later-life chip as its span and its spend, without the sum', () => {
+    // N7 (try-out 2026-10-04): "Later life (ages 5-10): 75 / 75" — the `5 × 15 = 75 XP`
+    // derivation lives in the chip's tooltip now.
+    resetEntity(0);
+    installPlan();
+    installPostApprenticeshipRules();
+    setEffective(20, laterLifePool(75, 20), magusBudget());
+    const { open, text } = element(html(), 'life-stage-later-life');
+    expect(clean(text)).toBe('Later life (ages 5-10): 20 / 75');
+    expect(open).toMatch(/tabindex="0"/);
+  });
+
+  it('localizes the restricted later-life chip to German', () => {
+    store.lang = 'de';
+    resetEntity(0);
+    installPlan();
+    installPostApprenticeshipRules();
+    setEffective(20, laterLifePool(75, 20), magusBudget());
+    expect(clean(element(html(), 'life-stage-later-life').text)).toBe(
+      'Späteres Leben (Alter 5-10): 20 / 75',
+    );
+  });
+
   it('gives the Arts instance the identical guided shape', () => {
     resetEntity(0);
     installPlan();
@@ -610,27 +644,36 @@ describe('XpBar for a magus past its Gauntlet (slice 6b5)', () => {
     store.effective!.xp_general_pool = 240 + 730;
   }
 
-  it('names the years past the Gauntlet with the rate, the lab deduction and the experience', () => {
+  it('names the years past the Gauntlet as points split into experience and spell levels', () => {
     installPastGauntlet();
-    const { text } = element(html(), 'life-stage-post-gauntlet');
-    // 30 years × 30 = 900. The 6 stored lab seasons pack as one full lab year (3
-    // charged) plus 2 (F1, `life_stage.rs::charged_lab_seasons`), so 5 charged × 10
-    // = 50, leaving 850 points; 120 of them taken as levels of spells leave 730 XP.
-    expect(text).toContain('30');
-    expect(text).toContain('50');
-    expect(text).not.toContain('60');
-    expect(text).toContain('850');
-    expect(text).toContain('730');
-    expect(text).not.toContain('post_gauntlet');
-    // ASCII hyphen-minus only; nothing here is negative but no U+2212 may leak in.
-    expect(text).not.toContain('−');
+    const { open, text } = element(html(), 'life-stage-post-gauntlet');
+    // N9 (try-out 2026-10-04): 30 years × 30 = 900, less 5 charged lab seasons × 10
+    // (F1, `life_stage.rs::charged_lab_seasons`) = 850 points; 120 of them taken as
+    // levels of spells leave 730 XP. The chip states the split; the deduction is the
+    // tooltip's (the rate read off the ruleset is pinned in `XpBar.client.test.ts`).
+    expect(clean(text)).toBe(
+      'After the Gauntlet (30 years): 850 points = 730 XP + 120 spell levels',
+    );
+    expect(text).not.toContain('lab work');
+    expect(open).toMatch(/tabindex="0"/);
   });
 
-  it('reads the per-year rate off the ruleset rather than a literal 30', () => {
+  it('names a single year and a single spell level in the singular', () => {
+    resetEntity(0);
+    installPlan({ gauntlet_age: 25, post_gauntlet_spell_levels: 1 });
+    installPostApprenticeshipRules();
+    setEffective(0, laterLifePool(75), pastGauntletBudget(1, 0, 1));
+    expect(clean(element(html(), 'life-stage-post-gauntlet').text)).toBe(
+      'After the Gauntlet (1 year): 30 points = 29 XP + 1 spell level',
+    );
+  });
+
+  it('localizes the post-Gauntlet chip to German', () => {
+    store.lang = 'de';
     installPastGauntlet();
-    installPostApprenticeshipRules(20);
-    const { text } = element(html(), 'life-stage-post-gauntlet');
-    expect(text).toContain('20');
+    expect(clean(element(html(), 'life-stage-post-gauntlet').text)).toBe(
+      'Nach der Lehrlingsprüfung (30 Jahre): 850 Punkte = 730 EP + 120 Zauberstufen',
+    );
   });
 
   it('omits the line for a magus standing at its Gauntlet', () => {

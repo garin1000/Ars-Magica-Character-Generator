@@ -281,11 +281,13 @@ describe('a magus past its Gauntlet', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'the post-Gauntlet experience should join apprenticeship in the general pool',
     });
-    // And the bar carries the lab-season deduction itself, derived from the engine's
-    // points rather than recomputed from the season count: 1050 - 100 = 950.
+    // And the bar names the points left after the lab seasons (1050 - 100 = 950) and
+    // their split: 650 XP + 300 spell levels. The deduction itself is the chip's
+    // tooltip since N9, pinned in `XpBar.client.test.ts`.
     const bar = await textOf(POST_GAUNTLET);
-    expect(bar).toContain('100');
     expect(bar).toContain('950');
+    expect(bar).toContain('650');
+    expect(bar).toContain('300');
 
     // THE 6b4 REGRESSION LOCK, read off the bar's own blocks. Later life stops where
     // apprenticeship begins (`ArMDE:2214`), and apprenticeship is the fifteen years ending

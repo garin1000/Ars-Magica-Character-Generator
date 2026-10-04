@@ -329,8 +329,13 @@ xp-pool-block-early-childhood-spread-only = Frühe Kindheit — Übrige Fertigke
 # ist; bei allen anderen IST das spätere Leben der allgemeine Vorrat, der schon als
 # Gesamtwert der Leiste steht — ihn zu wiederholen wäre ein zweites Ausgegeben/Gesamt
 # für einen Vorrat.
-xp-pool-block-later-life = Späteres Leben (Alter { $from }-{ $to }): { $years } × { $rate } = { $xp } EP
-xp-pool-block-later-life-restricted = Späteres Leben (Alter { $from }-{ $to }): { $years } × { $rate } = { $xp } EP — { $used } / { $amount }
+#
+# Der Chip nennt nur das Ergebnis (N7, Probelauf 2026-10-04); die Rechnung
+# `Jahre × Rate` ist der Tooltip des Chips, `xp-pool-block-later-life-tooltip`, für
+# beide Varianten.
+xp-pool-block-later-life = Späteres Leben (Alter { $from }-{ $to }): { $xp } EP
+xp-pool-block-later-life-restricted = Späteres Leben (Alter { $from }-{ $to }): { $used } / { $amount }
+xp-pool-block-later-life-tooltip = { $years } × { $rate } = { $xp } EP
 # Die Lehrlingszeit, allein für einen Magus: fünfzehn feste Jahre, deren Erfahrung
 # auf Künste oder Fertigkeiten verwendet werden kann (Basisregeln.md:2435), was sie
 # zum allgemeinen Vorrat macht — dieser Chip benennt also den Block, aus dem der
@@ -339,15 +344,25 @@ xp-pool-block-later-life-restricted = Späteres Leben (Alter { $from }-{ $to }):
 xp-pool-block-apprenticeship = Lehrlingszeit: { $years } Jahre = { $xp } EP
 # Die Jahre nach der Lehrlingszeit: „Für jedes Jahr erhält der Magus 30 Punkte“
 # (Basisregeln.md:2471), abzüglich 10 für jedes angerechnete Quartal Laborarbeit
-# (`:2482`). Jeder Punkt ist ein Erfahrungspunkt oder eine Zauberstufe, daher werden
-# sowohl die Punkte als auch die nach den Zauberstufen verbleibende Erfahrung genannt.
+# (`:2482`). Jeder Punkt ist ein Erfahrungspunkt oder eine Zauberstufe, daher nennt
+# der Chip die Punkte und ihre Aufteilung in Erfahrung und Zauberstufen (N9,
+# Probelauf 2026-10-04). Die Rechnung hinter den Punkten — Jahre × Rate, abzüglich
+# der Laborarbeit — ist der Tooltip des Chips, `xp-pool-block-after-gauntlet-tooltip`.
+# `$years` und `$levels` kommen als Zahlen an, damit die `[one]`-Varianten greifen.
 #
 # „Nach der Lehrlingsprüfung“, nicht „Als Magus“ (#14.4): Der Block hängt am Feld
 # „Alter bei der Lehrlingsprüfung“, und den Chip nach der Prüfung zu benennen bindet
 # Label an Feld. Zudem liest sich der Chip so nicht mehr als ZUSTAND des Charakters —
 # was an seiner früheren Stelle das darunter stehende „Späteres Leben“ wie das Leben
 # nach der Lehrlingsprüfung wirken ließ.
-xp-pool-block-after-gauntlet = Nach der Lehrlingsprüfung: { $years } × { $rate } - { $lab } für Laborarbeit = { $points } Punkte, { $xp } EP
+xp-pool-block-after-gauntlet = Nach der Lehrlingsprüfung ({ $years ->
+        [one] { $years } Jahr
+       *[other] { $years } Jahre
+    }): { $points } Punkte = { $xp } EP + { $levels ->
+        [one] { $levels } Zauberstufe
+       *[other] { $levels } Zauberstufen
+    }
+xp-pool-block-after-gauntlet-tooltip = { $years } × { $rate } - { $lab } für Laborarbeit = { $points } Punkte
 # Das Alter wird im Bereich wiederholt, weil das spätere Leben in Jahren gemessen
 # wird — es wird hier ebenso bearbeitet wie im Details-Reiter.
 life-stage-age-label = Alter

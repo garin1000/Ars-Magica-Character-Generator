@@ -263,8 +263,7 @@ describe('life-stage funding and Sample Childhoods', () => {
     });
     expect(await $(XP_POOL_INPUT).isExisting()).toBe(false);
     const laterLife = await textOf(LATER_LIFE);
-    expect(laterLife).toContain('20');
-    expect(laterLife).toContain('15');
+    // The 20 × 15 calculation is the chip's tooltip since N7; the chip shows the result.
     expect(laterLife).toContain('300');
     // The ages the block spans, so the player can see WHICH years earned it: a
     // companion of 25 whose childhood ends at 5 lived later life over ages 5-25 (#14).

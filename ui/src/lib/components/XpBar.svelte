@@ -2,6 +2,7 @@
   import type { RestrictedXpPool } from '../types';
   import { store } from '../state.svelte';
   import { formatSigned, generalXpAllocation, restrictedPoolLabel, U32_MAX } from '../derive';
+  import { tooltip } from '../actions';
   import BudgetBonusChip from './BudgetBonusChip.svelte';
 
   // One XP summary shared by the Experience, Abilities, Arts and Spells tabs: all
@@ -229,23 +230,33 @@
            when it IS a restricted pool — a magus, whose general pool is
            apprenticeship instead. For everyone else later life is the general pool
            already shown as this bar's own total, so a second spent/total for the one
-           pool would be the duplication #14 exists to remove. -->
-      <span class="xp-life-stage" data-testid="{prefix}life-stage-later-life">
+           pool would be the duplication #14 exists to remove.
+
+           The chip states the result; its `years × rate` calculation is the tooltip
+           (N7), on a focusable host so the keyboard reaches it too. -->
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+      <span
+        class="xp-life-stage"
+        data-testid="{prefix}life-stage-later-life"
+        tabindex="0"
+        use:tooltip={{
+          text: store.t('xp-pool-block-later-life-tooltip', {
+            years: lifeStage.later_life_years,
+            rate: lifeStage.later_life_rate,
+            xp: lifeStage.later_life_xp,
+          }),
+        }}
+      >
         {laterLife
           ? store.t('xp-pool-block-later-life-restricted', {
               from: String(childhoodYears),
               to: String(laterLifeTo),
-              years: String(lifeStage.later_life_years),
-              rate: String(lifeStage.later_life_rate),
-              xp: String(lifeStage.later_life_xp),
               used: String(laterLife.used),
               amount: String(laterLife.amount),
             })
           : store.t('xp-pool-block-later-life', {
               from: String(childhoodYears),
               to: String(laterLifeTo),
-              years: String(lifeStage.later_life_years),
-              rate: String(lifeStage.later_life_rate),
               xp: String(lifeStage.later_life_xp),
             })}
       </span>
@@ -260,15 +271,29 @@
         </span>
       {/if}
       {#if lifeStage.post_gauntlet_years > 0}
-        <!-- The years after apprenticeship: 30 points a year, less the charged lab
-             seasons, split into experience and levels of spells. -->
-        <span class="xp-life-stage" data-testid="{prefix}life-stage-post-gauntlet">
+        <!-- The years after apprenticeship: their points, split into experience and
+             levels of spells. How the points arise — 30 a year, less the charged lab
+             seasons — is the tooltip (N9). Numbers, not strings, so the year and
+             spell-level plurals select. -->
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+        <span
+          class="xp-life-stage"
+          data-testid="{prefix}life-stage-post-gauntlet"
+          tabindex="0"
+          use:tooltip={{
+            text: store.t('xp-pool-block-after-gauntlet-tooltip', {
+              years: lifeStage.post_gauntlet_years,
+              rate: pointsPerYear,
+              lab: labDeduction,
+              points: lifeStage.post_gauntlet_points,
+            }),
+          }}
+        >
           {store.t('xp-pool-block-after-gauntlet', {
-            years: String(lifeStage.post_gauntlet_years),
-            rate: String(pointsPerYear),
-            lab: String(labDeduction),
-            points: String(lifeStage.post_gauntlet_points),
-            xp: String(lifeStage.post_gauntlet_xp),
+            years: lifeStage.post_gauntlet_years,
+            points: lifeStage.post_gauntlet_points,
+            xp: lifeStage.post_gauntlet_xp,
+            levels: lifeStage.post_gauntlet_spell_levels,
           })}
         </span>
       {/if}
