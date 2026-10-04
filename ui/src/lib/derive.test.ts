@@ -4213,14 +4213,33 @@ describe('grantItemLabel: fixed parameters the name template does not consume (I
   const read = (path: string) =>
     JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf-8'));
 
-  /** The SHIPPED point items, Abilities and rules i18n for one language. */
+  /**
+   * One locale's parameter-catalogue value names (id → name), as shipped in
+   * `rules/i18n/<lang>/parameter_catalogue.json`.
+   */
+  function catalogueNames(lang: Lang): Record<string, string> {
+    const file = read(`../../../rules/i18n/${lang}/parameter_catalogue.json`) as {
+      names: { id: string; name: string }[];
+    };
+    return Object.fromEntries(file.names.map((n) => [n.id, n.name]));
+  }
+
+  /**
+   * The SHIPPED point items, Abilities and rules i18n for one language, with the
+   * catalogue value names merged into the id → name map exactly as the app does
+   * on load (`ruleset_io.rs::merge_catalogue_display_names`).
+   */
   function shippedRuleset(lang: Lang): LocalizedRuleset {
     const items = read('../../../rules/core/virtues_flaws.json') as PointItem[];
     const core = read('../../../rules/core/abilities.json') as { abilities: Ability[] };
+    const catalogue = Object.fromEntries(
+      Object.entries(catalogueNames(lang)).map(([id, name]) => [id, { name }]),
+    ) as LocalizedRuleset['i18n'];
     const i18n: LocalizedRuleset['i18n'] = {
       ...(read(`../../../rules/i18n/${lang}/virtues_flaws.json`) as LocalizedRuleset['i18n']),
       ...(read(`../../../rules/i18n/${lang}/abilities.json`) as LocalizedRuleset['i18n']),
       ...(read(`../../../rules/i18n/${lang}/arts.json`) as LocalizedRuleset['i18n']),
+      ...catalogue,
     };
     const localized = makeRuleset(items, { i18n });
     localized.ruleset.abilities = Object.fromEntries(core.abilities.map((a) => [a.id, a]));
@@ -4278,22 +4297,29 @@ describe('grantItemLabel: fixed parameters the name template does not consume (I
   /**
    * The label a player should read for one parameter value, worked out from the
    * parameter's DECLARED domain — an independent oracle, deliberately not the
-   * resolver under test. Free text (and a number) is shown as typed; the engine
+   * resolver under test. A number is shown as typed. A `text` value fixed by
+   * rules DATA is a parameter-catalogue value id (I5b: words in a mechanics file
+   * would be untranslatable), shown as that locale's catalogue name. The engine
    * taxonomies go through their Fluent families; every id-valued domain through
-   * its own rules-i18n name. A domain with no label fails loudly instead of
-   * letting a raw id through.
+   * its own rules-i18n name. A value with no label fails loudly instead of
+   * letting a raw id or untranslatable text through.
    */
   function expectedValueLabel(
     localized: LocalizedRuleset,
     t: Translate,
+    lang: Lang,
     domain: string,
     value: string,
   ): string {
     const slug = value.slice(value.indexOf('.') + 1);
     switch (domain) {
-      case 'text':
       case 'number':
         return value;
+      case 'text': {
+        const name = catalogueNames(lang)[value];
+        expect(name, `fixed text ${value} is not a parameter-catalogue value`).toBeTruthy();
+        return name!;
+      }
       case 'characteristic':
         return t(`characteristic-${slug}`);
       case 'realm':
@@ -4327,7 +4353,7 @@ describe('grantItemLabel: fixed parameters the name template does not consume (I
           const where = `${lang} ${pick.source} ${pick.ref} ${key}=${value} -> "${label}"`;
           const domain = item!.parameters?.find((p) => p.key === key)?.domain;
           expect(domain, `${where}: no parameter "${key}" declared`).toBeDefined();
-          const expected = expectedValueLabel(localized, t, domain!, value);
+          const expected = expectedValueLabel(localized, t, lang, domain!, value);
 
           // Shown once: a consumed value fills its token and is NOT repeated in a
           // suffix; an unconsumed one appears in the suffix.
@@ -4349,24 +4375,34 @@ describe('grantItemLabel: fixed parameters the name template does not consume (I
     });
   }
 
-  // The try-out case itself, pinned in both locales. The value is free text and
-  // shown as typed — exactly as the shipped data stores it, which matches the
-  // English book's "Minor Magical Focus (certamen)." (ArMDE:2281).
+  // The try-out case itself, pinned in both locales, as each book prints it: "Minor
+  // Magical Focus (certamen)." (ArMDE:2281) and "Kleiner Magischer Fokus
+  // (Certamen)." (the German book, same line). I5b: the shipped data names the
+  // parameter-catalogue value `magical_focus.certamen`, whose words live per locale
+  // in `rules/i18n/<lang>/parameter_catalogue.json`.
   it("names House Tremere's certamen focus on its granted Minor Magical Focus", () => {
     const tremere = (
       read('../../../rules/core/houses.json').houses as { id: string; grants?: Grant[] }[]
     ).find((h) => h.id === 'house.tremere');
+    const focus = { focus: 'magical_focus.certamen' };
     expect(tremere?.grants).toContainEqual({
       kind: 'fixed',
       item: 'virtue.minor_magical_focus',
-      params: { focus: 'certamen' },
+      params: focus,
     });
 
     expect(
-      grantItemLabel(shippedRuleset('en'), 'virtue.minor_magical_focus', translator('en'), {
-        focus: 'certamen',
-      }),
+      grantItemLabel(shippedRuleset('en'), 'virtue.minor_magical_focus', translator('en'), focus),
     ).toBe('Minor Magical Focus (certamen)');
+    expect(
+      grantItemLabel(shippedRuleset('de'), 'virtue.minor_magical_focus', translator('de'), focus),
+    ).toBe('Kleiner Magischer Fokus (Certamen)');
+  });
+
+  // A value the player TYPED is still free text, shown as typed in every locale:
+  // a save holding "certamen" (a bought copy, or any text) needs no migration and
+  // is never re-cased. Guard: passes before and after I5b.
+  it('shows typed free text as typed, in every locale', () => {
     expect(
       grantItemLabel(shippedRuleset('de'), 'virtue.minor_magical_focus', translator('de'), {
         focus: 'certamen',

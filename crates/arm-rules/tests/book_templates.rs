@@ -1035,7 +1035,9 @@ fn the_tremere_matches_the_book() {
     // `rules/core/houses.json` — "Minor Magical Focus(certamen)\*" (ArMDE:2064
     // `#### Tremere`), the asterisk marking it the free House Virtue, and the
     // House table's "Minor Magical Focus (certamen)." (ArMDE:2281 `####
-    // Hermetic Houses Summary`). RED until that param ships.
+    // Hermetic Houses Summary`). I5b (D83.14): the value is the parameter-catalogue
+    // id `magical_focus.certamen`, not the English word, so each locale names it
+    // through `rules/i18n/<lang>/parameter_catalogue.json` ("Certamen" in German).
     let tremere_grants = arm_rules::house::granted_selections(&tremere, &ruleset);
     let focus_grant = tremere_grants
         .iter()
@@ -1046,7 +1048,7 @@ fn the_tremere_matches_the_book() {
             .params
             .get("focus")
             .and_then(SelectionParamValue::as_single),
-        Some(&Id::new("certamen"))
+        Some(&Id::new("magical_focus.certamen"))
     );
 
     // Arts: Cr 5, In 5, Mu 5, Pe 5, Re 5, Aq 8 (3), Au 9 (1), Ig 9 (1), Me 1,

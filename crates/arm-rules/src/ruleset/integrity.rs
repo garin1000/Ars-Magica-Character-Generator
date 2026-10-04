@@ -2000,7 +2000,8 @@ impl Ruleset {
     /// Shared by House and Mythic-Companion-type integrity checks; `kind` and
     /// `owner` label the offending record in the error message. Grant `params`
     /// values are deliberately NOT registry-checked, mirroring the
-    /// forward-declared Ability/Art-domain policy on parameter values elsewhere.
+    /// forward-declared Ability/Art-domain policy on parameter values elsewhere —
+    /// except a `text`-domain value, see `validate_grant_text_params` (D83.14).
     fn validate_grant_refs(
         &self,
         kind: &str,
@@ -2010,12 +2011,14 @@ impl Ruleset {
     ) {
         for grant in grants {
             match grant {
-                Grant::Fixed { item, .. } => {
+                Grant::Fixed { item, params, .. } => {
                     if !self.point_items.contains_key(item) {
                         errors.push(format!(
                             "{kind} '{owner}': fixed grant references unknown item '{item}'"
                         ));
                     }
+                    let values = params.iter().map(|(key, value)| (key.as_str(), value));
+                    self.validate_grant_text_params(kind, owner, item, values, errors);
                 }
                 Grant::Choice { options, .. } => {
                     for option in options {
@@ -2025,12 +2028,62 @@ impl Ruleset {
                                 option.item_ref
                             ));
                         }
+                        let values = option
+                            .params
+                            .iter()
+                            .filter_map(|(key, value)| Some((key.as_str(), value.as_single()?)));
+                        self.validate_grant_text_params(
+                            kind,
+                            owner,
+                            &option.item_ref,
+                            values,
+                            errors,
+                        );
                     }
                 }
                 // Open grants resolve to a player pick at runtime — nothing here.
                 Grant::Open { .. } => {}
             }
         }
+    }
+
+    /// D83.14: a value a grant fixes for a `text`-domain parameter is shown to
+    /// the player, so it may not be literal words in a language-neutral file —
+    /// it must name a parameter-catalogue value, whose text each locale supplies
+    /// in `rules/i18n/<lang>/parameter_catalogue.json` (House Tremere's
+    /// `magical_focus.certamen`, ArMDE:2281). Text the PLAYER types stays free;
+    /// this judges rules data only. An unknown item or key is reported elsewhere.
+    fn validate_grant_text_params<'v>(
+        &self,
+        kind: &str,
+        owner: &Id,
+        item: &Id,
+        values: impl Iterator<Item = (&'v str, &'v Id)>,
+        errors: &mut Vec<String>,
+    ) {
+        let Some(declared) = self.point_items.get(item) else {
+            return;
+        };
+        for (key, value) in values {
+            let is_text = declared
+                .parameters
+                .iter()
+                .any(|p| p.key == key && p.domain == ParameterDomain::Text);
+            if is_text && !self.is_catalogue_value(value) {
+                errors.push(format!(
+                    "{kind} '{owner}': grant of '{item}' fixes text parameter '{key}' to the \
+                     literal '{value}' — name a parameter catalogue value instead, so each \
+                     locale can supply its text"
+                ));
+            }
+        }
+    }
+
+    /// Whether `value` is a value of any loaded parameter catalogue.
+    fn is_catalogue_value(&self, value: &Id) -> bool {
+        self.parameter_catalogues
+            .values()
+            .any(|catalogue| catalogue.value(value).is_some())
     }
 
     /// Validates a Mythic Companion type: every grant item, every required Virtue,

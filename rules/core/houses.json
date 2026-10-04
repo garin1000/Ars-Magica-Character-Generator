@@ -111,7 +111,7 @@
         {
           "kind": "fixed",
           "item": "virtue.minor_magical_focus",
-          "params": { "focus": "certamen" }
+          "params": { "focus": "magical_focus.certamen" }
         }
       ],
       "source": { "anchor": "house-tremere", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [743, 753] }

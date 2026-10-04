@@ -1282,8 +1282,8 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2359, shared by
-  `validate_prereq_refs` :2236 and `validate_effect_refs` :2774) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2412, shared by
+  `validate_prereq_refs` :2289 and `validate_effect_refs` :2827) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
@@ -5077,8 +5077,21 @@ trip the ≤1-Major-Hermetic-Virtue cap even when granted. Tremere's own Magical
 Focus field is book-given, not freeform: "Minor Magical Focus(certamen)\*"
 (`ArMDE:2064`, the sample Tremere magus's Virtues-and-Flaws line) and the House table's "Minor
 Magical Focus (certamen)." (`ArMDE:2281`) both name it, so House Tremere's grant
-carries `"params": { "focus": "certamen" }` on its
-`fixed virtue.minor_magical_focus` (X10(a), D65 row N5). Ex Miscellanea's Minor
+carries `"params": { "focus": "magical_focus.certamen" }` on its
+`fixed virtue.minor_magical_focus` (X10(a), D65 row N5).
+
+**D83.14 (I5b) — a grant's fixed text value is a catalogue key.** The focus is a
+`text`-domain parameter, so English words in `rules/core/` could not be localized;
+the German book reads "Kleiner Magischer Fokus (Certamen)" on the same line. The
+value is the parameter-catalogue id `magical_focus.certamen` (`catalogue.magical_focus`
+in `rules/core/parameter_catalogues.json`, source `ArMDE:2266-2281` `#### Hermetic
+Houses Summary`); `rules/i18n/en/parameter_catalogue.json` names it "certamen" and
+`rules/i18n/de/parameter_catalogue.json` "Certamen" (Latin kept, German noun
+capitalised). The app merges those names into the localized id → name map, so the
+UI grant label and the export print the localized text with no special case.
+`validate_grant_text_params` (`ruleset/integrity.rs`) fails the load when a fixed
+grant or choice option gives a `text` parameter anything but a catalogue value;
+text a player types stays free. Tests: `tests/i5b_fixed_grant_text.rs`. Ex Miscellanea's Minor
 Hermetic Virtue is player-chosen (`open`), not a fixed item, so there is no
 invented `virtue.ex_misc_minor_hermetic`.
 

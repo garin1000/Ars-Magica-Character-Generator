@@ -18,6 +18,12 @@
       ]
     },
     {
+      "id": "catalogue.magical_focus",
+      "values": [
+        { "id": "magical_focus.certamen", "source": { "anchor": "hermetic-houses-summary", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2266, 2281] } }
+      ]
+    },
+    {
       "id": "catalogue.organization",
       "values": [
         { "id": "organization.church", "source": { "anchor": "church-upbringing", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5789, 5791] } },
