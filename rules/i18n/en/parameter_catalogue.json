@@ -6,6 +6,7 @@
   { "id": "language.hebrew", "name": "Hebrew" },
   { "id": "language.latin", "name": "Latin" },
   { "id": "language.persian", "name": "Persian" },
+  { "id": "magical_focus.certamen", "name": "certamen" },
   { "id": "organization.church", "name": "Church" },
   { "id": "organization.house_bjornaer", "name": "House Bjornaer" },
   { "id": "organization.order_of_hermes", "name": "Order of Hermes" },

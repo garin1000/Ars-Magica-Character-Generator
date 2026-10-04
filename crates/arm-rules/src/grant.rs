@@ -57,7 +57,9 @@ pub enum Grant {
     Fixed {
         /// The granted point-item id.
         item: Id,
-        /// Parameter values the grant fixes (e.g. `focus` = `certamen`).
+        /// Parameter values the grant fixes (e.g. `focus` =
+        /// `magical_focus.certamen`). A `text`-domain value must be a
+        /// parameter-catalogue value, so each locale names it (D83.14).
         #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
         params: BTreeMap<String, Id>,
         /// D74.4/row 55 (`docs/open-todos.md`, `docs/vf-audit/decisions.md`): a
