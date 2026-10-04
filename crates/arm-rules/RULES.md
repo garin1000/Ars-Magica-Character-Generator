@@ -2511,10 +2511,10 @@ inventing one would encode a ruling the book leaves open. Recorded here rather
 than implemented.
 
 **The name says which Virtue.** Both i18n names gained a `{virtue}`
-placeholder — "False Power (Major): {virtue}" / "Falsche Macht (Groß):
-{virtue}" — because the defect this row records is precisely that the copies
+placeholder — "False Power [Major]: {virtue}" / "Falsche Macht [Groß]:
+{virtue}" (brackets per D84.3) — because the defect this row records is precisely that the copies
 "do not name which Supernatural Virtue they taint". Without it the in-app row
-would read "False Power (Minor)" three times over: `selectionDisplayName`
+would read "False Power [Minor]" three times over: `selectionDisplayName`
 (`ui/src/lib/derive.ts`) fills placeholders and has no extras-append path. The
 Markdown sheet would have shown the Virtue either way — `Doc::fill_template`
 appends a value the template never mentions — so the placeholder is what keeps

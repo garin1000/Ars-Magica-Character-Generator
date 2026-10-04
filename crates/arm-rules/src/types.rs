@@ -1004,7 +1004,7 @@ pub struct ParameterDef {
     pub require_ability_categories: BTreeSet<AbilityCategory>,
     /// Subtracts these ids from an [`ParameterDomain::Ability`] parameter's
     /// domain — the subtractive mirror of [`Self::allow_ids`] (X6a/e3: Magian
-    /// Lineage (Major) excludes True Names even though it is
+    /// Lineage [Major] excludes True Names even though it is
     /// Supernatural-category, ArMDE:4345). Empty (the default) excludes
     /// nothing.
     ///
