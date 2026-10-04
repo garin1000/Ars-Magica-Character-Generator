@@ -221,6 +221,49 @@ describe('ValidationPanel', () => {
     expect(deText).toMatch(/<span class="issue-severity">Warnung:<\/span> /);
   });
 
+  // I1 (try-out finding 4): the panel hands the issue's CODE to
+  // `resolveIssueArgs`, which is what lets the prerequisite finding say which
+  // prerequisite is unmet, read from the ruleset's own tree for `item`.
+  it('names the unmet prerequisite in the prerequisite finding, in both locales', () => {
+    store.ruleset!.ruleset.point_items['flaw.offensive_to_beings'] = {
+      id: 'flaw.offensive_to_beings',
+      kind: 'flaw',
+      magnitude: 'minor',
+      categories: ['general'],
+      classification: 'uncomputed_rule',
+      prerequisites: {
+        kind: 'any',
+        value: [
+          { kind: 'none', value: [{ kind: 'has', value: 'virtue.the_gift' }] },
+          { kind: 'has', value: 'virtue.gentle_gift' },
+        ],
+      },
+    };
+    store.ruleset!.i18n['flaw.offensive_to_beings'] = { name: 'Offensive to {being}' };
+    store.ruleset!.i18n['virtue.the_gift'] = { name: 'The Gift' };
+    store.ruleset!.i18n['virtue.gentle_gift'] = { name: 'Gentle Gift' };
+    store.result = {
+      issues: [
+        issue('prereq_not_met', 'virtues_flaws', 'error', { item: 'flaw.offensive_to_beings' }),
+      ],
+    };
+
+    const enText = issueMarkup(render(ValidationPanel).body, 'prereq_not_met').replace(
+      /[⁦-⁩]/g,
+      '',
+    );
+    expect(enText).toContain(
+      'Prerequisite not met for Offensive to (Beings). Requires: (without The Gift) or Gentle Gift.',
+    );
+
+    store.lang = 'de';
+    const deText = issueMarkup(render(ValidationPanel).body, 'prereq_not_met').replace(
+      /[⁦-⁩]/g,
+      '',
+    );
+    expect(deText).toContain('Erfordert: (ohne The Gift) oder Gentle Gift.');
+  });
+
   // S2 (tmp/review/review-round-2-sabine.md): round 1's fix made the severity
   // prefix `sr-only`, which is invisible to SIGHTED users — so a colourblind
   // sighted user still had only the border/background hue swap to go on,

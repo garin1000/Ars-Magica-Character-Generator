@@ -1083,6 +1083,44 @@ requirement-exemplar = { " " }({ $ability })
 # die letzte mit -or; eine einzelne Sprache steht allein.
 requirement-language-list-separator = ,
 requirement-language-list-or = { $head } oder { $last }
+# Ein Voraussetzungsbaum als Wendung (I1, `derive.ts::describePrereq`), gezeigt in den
+# Voraussetzungsmeldungen und im Tugend/Fehler-Tooltip. „all“ liest „A, B und C“,
+# „any“ „A oder B“, „none“ „ohne X“ (eins) oder „keines von: A, B“ (mehrere); ein
+# verschachtelter Ausdruck steht in Klammern. Ein Schlüssel je Prereq-Art.
+prereq-list-separator = ,
+prereq-and = { $head } und { $last }
+prereq-or = { $head } oder { $last }
+prereq-none = keines von: { $list }
+prereq-without = ohne { $item }
+prereq-group = ({ $inner })
+# Steht anstelle eines Baums, der tiefer verschachtelt ist, als die Engine erlaubt.
+prereq-truncated = …
+prereq-house = Haus { $house }
+prereq-ability-min = { $ability } { $score }
+prereq-art-min = { $art } { $score }
+prereq-hermetically-trained = hermetische Ausbildung
+prereq-order-member = Mitgliedschaft im Orden des Hermes
+prereq-is-companion = Gefährte zu sein
+prereq-is-grog = Grog zu sein
+prereq-has-category = eine Tugend oder ein Fehler ({ $category })
+prereq-age-min = ein Alter von mindestens { $age }
+# $kind ist eine der prereq-kind-*-Wendungen, mit Artikel.
+prereq-has-category-at-magnitude = { $kind } ({ $category }, mindestens { $magnitude })
+prereq-kind-virtue = eine Tugend
+prereq-kind-flaw = ein Fehler
+prereq-kind-boon = ein Vorzug
+prereq-kind-hook = ein Haken
+prereq-character-type = { $type } zu sein
+# Ein Charaktertyp, den kein Profil dieses Regelwerks anbietet (etwa der eines Tiers).
+prereq-character-type-unavailable = ein hier nicht verfügbarer Charaktertyp
+prereq-characteristic-min = { $characteristic } mindestens { $score }
+prereq-ability-category-score-min = eine Fertigkeit ({ $category }) mit einem Wert von mindestens { $score }
+prereq-any-art-min = eine beliebige Kunst mit einem Wert von mindestens { $score }
+# Wird an die Voraussetzungsmeldungen angehängt; bringt sein eigenes Leerzeichen mit.
+prereq-requires-clause = { " " }Erfordert: { $requirement }.
+# Bezeichnungen der Tooltip-Zeile: eine feste und eine eingeschränkte („in der Regel“) Voraussetzung.
+prereq-requires-label = Erfordert
+prereq-advisory-requires-label = Erfordert normalerweise
 # Lokalisierte Parameter-Bezeichnungen, je Parameter-Schlüssel der Engine. Dienen auch
 # als typbezogener Platzhalter/Hinweis für ein leeres Parameter-Eingabefeld.
 param-label-ability = Fertigkeit
@@ -1353,9 +1391,11 @@ issue-too_many_story_flaws = Mehr Geschichte-Fehler als empfohlen ({ $count } vo
 issue-too_many_tainted_virtues = Mehr als die Hälfte deiner Tugendpunkte sind befleckt ({ $tainted } von { $total }).
 issue-too_many_tainted_flaws = Mehr als die Hälfte deiner Fehlerpunkte sind befleckt ({ $tainted } von { $total }).
 issue-too_large_share = { $item } macht einen größeren Anteil deiner Punkte aus, als die Regeln erlauben ({ $points } von { $total }).
-issue-prereq_not_met = Voraussetzung für { $item } nicht erfüllt.
-issue-prereq_unevaluated = Voraussetzung für { $item } konnte noch nicht geprüft werden.
-issue-advisory_prereq_not_met = Voraussetzung für { $item } ist normalerweise nicht erfüllt.
+# $requirement ist der ganze Satz „ Erfordert: ….“ (prereq-requires-clause), von
+# der Oberfläche aus dem Voraussetzungsbaum des Eintrags gebaut; leer, wenn er keinen hat.
+issue-prereq_not_met = Voraussetzung für { $item } nicht erfüllt.{ $requirement }
+issue-prereq_unevaluated = Voraussetzung für { $item } konnte noch nicht geprüft werden.{ $requirement }
+issue-advisory_prereq_not_met = Voraussetzung für { $item } ist normalerweise nicht erfüllt.{ $requirement }
 issue-incompatible = { $item } ist mit { $other } unvereinbar.
 issue-forbidden_category = { $item } gehört zu einer verbotenen Kategorie ({ $category }).
 issue-category_not_permitted = { $item } ist in keiner erlaubten Kategorie ({ $category }).

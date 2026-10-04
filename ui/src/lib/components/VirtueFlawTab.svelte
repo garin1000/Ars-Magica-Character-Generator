@@ -2,6 +2,7 @@
   import { store } from '../state.svelte';
   import {
     atMaxTotalRefs,
+    describePrereq,
     displayName,
     filterItems,
     grantItemLabel,
@@ -147,10 +148,34 @@
   );
 
   // Tooltip from the item's localized rules text (full description if present,
-  // else the short summary). A no-op when neither exists.
+  // else the short summary), plus what the item requires when it carries a
+  // prerequisite (I1) — its hedged tree labelled "Normally requires". A no-op
+  // when there is none of these.
   function tip(itemId: string): TooltipContent {
     const entry = store.ruleset?.i18n[itemId];
-    return { text: entry?.description ?? entry?.summary ?? undefined };
+    return {
+      text: entry?.description ?? entry?.summary ?? undefined,
+      ...requirementLine(itemId),
+    };
+  }
+
+  function requirementLine(itemId: string): Pick<TooltipContent, 'listLabel' | 'list'> {
+    const rs = store.ruleset;
+    const item = rs?.ruleset.point_items[itemId];
+    if (!rs || !item) return {};
+    if (item.prerequisites) {
+      return {
+        listLabel: store.t('prereq-requires-label'),
+        list: [describePrereq(item.prerequisites, rs, store.t)],
+      };
+    }
+    if (item.advisory_prerequisites) {
+      return {
+        listLabel: store.t('prereq-advisory-requires-label'),
+        list: [describePrereq(item.advisory_prerequisites, rs, store.t)],
+      };
+    }
+    return {};
   }
 
   // A blocked source row explains WHY above its normal description: a Mythic

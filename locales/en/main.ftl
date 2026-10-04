@@ -1037,6 +1037,44 @@ requirement-exemplar = { " " }({ $ability })
 # printed alone.
 requirement-language-list-separator = ,
 requirement-language-list-or = { $head } or { $last }
+# A prerequisite tree as a phrase (I1, `derive.ts::describePrereq`), shown in the
+# prerequisite findings and the Virtue/Flaw tooltip. "all" reads "A, B and C", "any"
+# reads "A or B", "none" reads "without X" (one) or "none of: A, B" (several); a
+# nested compound is bracketed. One key per Prereq kind.
+prereq-list-separator = ,
+prereq-and = { $head } and { $last }
+prereq-or = { $head } or { $last }
+prereq-none = none of: { $list }
+prereq-without = without { $item }
+prereq-group = ({ $inner })
+# Shown in place of a tree nested deeper than the engine allows.
+prereq-truncated = …
+prereq-house = House { $house }
+prereq-ability-min = { $ability } { $score }
+prereq-art-min = { $art } { $score }
+prereq-hermetically-trained = Hermetic training
+prereq-order-member = membership in the Order of Hermes
+prereq-is-companion = being a companion
+prereq-is-grog = being a grog
+prereq-has-category = a Virtue or Flaw ({ $category })
+prereq-age-min = an age of at least { $age }
+# $kind is one of the prereq-kind-* phrases, article included.
+prereq-has-category-at-magnitude = { $kind } ({ $category }, at least { $magnitude })
+prereq-kind-virtue = a Virtue
+prereq-kind-flaw = a Flaw
+prereq-kind-boon = a Boon
+prereq-kind-hook = a Hook
+prereq-character-type = being a { $type }
+# A character type no profile in this ruleset offers (e.g. an animal's).
+prereq-character-type-unavailable = a character type not available here
+prereq-characteristic-min = { $characteristic } of at least { $score }
+prereq-ability-category-score-min = an Ability ({ $category }) with a score of at least { $score }
+prereq-any-art-min = any Art with a score of at least { $score }
+# Appended to the prerequisite findings; leads with its own space.
+prereq-requires-clause = { " " }Requires: { $requirement }.
+# Tooltip line labels: a hard prerequisite, and a hedged ("generally") one.
+prereq-requires-label = Requires
+prereq-advisory-requires-label = Normally requires
 # Localized parameter labels, keyed by the engine's parameter key. Also used as the
 # type-aware placeholder/prompt for an empty parameter input.
 param-label-ability = Ability
@@ -1275,9 +1313,11 @@ issue-too_many_story_flaws = More Story Flaws than recommended ({ $count } of { 
 issue-too_many_tainted_virtues = More than half your Virtue points are Tainted ({ $tainted } of { $total }).
 issue-too_many_tainted_flaws = More than half your Flaw points are Tainted ({ $tainted } of { $total }).
 issue-too_large_share = { $item } accounts for more of your points than the rules allow it to ({ $points } of { $total }).
-issue-prereq_not_met = Prerequisite not met for { $item }.
-issue-prereq_unevaluated = Prerequisite for { $item } could not be checked yet.
-issue-advisory_prereq_not_met = Prerequisite for { $item } is not normally met.
+# $requirement is the whole " Requires: …." sentence (prereq-requires-clause),
+# built by the UI from the item's own prerequisite tree; empty when it has none.
+issue-prereq_not_met = Prerequisite not met for { $item }.{ $requirement }
+issue-prereq_unevaluated = Prerequisite for { $item } could not be checked yet.{ $requirement }
+issue-advisory_prereq_not_met = Prerequisite for { $item } is not normally met.{ $requirement }
 issue-incompatible = { $item } is incompatible with { $other }.
 issue-forbidden_category = { $item } belongs to a forbidden category ({ $category }).
 issue-category_not_permitted = { $item } is not in a permitted category ({ $category }).

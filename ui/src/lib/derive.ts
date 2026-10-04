@@ -743,6 +743,141 @@ function houseOnlyValue(prereq: Prereq, house: string | null, depth: number): bo
 }
 
 /**
+ * A prerequisite tree as a localized phrase a player reads — "(without The Gift)
+ * or Gentle Gift" — for the prerequisite findings and the V/F picker tooltip
+ * (I1, try-out finding 4). Leaves show names, never ids; `all`/`any` read as
+ * "A, B and C" / "A or B"; `none` as "without X" or "none of: A, B"; a compound
+ * nested in a compound is bracketed so the phrase can be read only one way.
+ */
+export function describePrereq(prereq: Prereq, localized: LocalizedRuleset, t: Translate): string {
+  return describePrereqAt(prereq, localized, t, 0);
+}
+
+/**
+ * Whether a prerequisite renders as a compound phrase, and so needs brackets
+ * inside another one. A one-child `none` reads "without X", which counts: inside
+ * an "or", "without X or Y" could be read as "without (X or Y)". A one-child
+ * `all`/`any` renders as its child alone, so it is judged by that child.
+ */
+function rendersAsCompound(prereq: Prereq, depth: number): boolean {
+  if (depth > PREREQ_MAX_DEPTH) return false;
+  if (prereq.kind === 'none') return true;
+  if (prereq.kind !== 'all' && prereq.kind !== 'any') return false;
+  if (prereq.value.length !== 1) return true;
+  return rendersAsCompound(prereq.value[0], depth + 1);
+}
+
+/** The children of a compound, each rendered and bracketed where it is itself a compound. */
+function describePrereqChildren(
+  children: Prereq[],
+  localized: LocalizedRuleset,
+  t: Translate,
+  depth: number,
+): string[] {
+  return children.map((child) => {
+    const text = describePrereqAt(child, localized, t, depth + 1);
+    const bracket = children.length > 1 && rendersAsCompound(child, depth + 1);
+    return bracket ? t('prereq-group', { inner: text }) : text;
+  });
+}
+
+/** "A, B and C" (or "or"): the separator between all but the last two, then `key`. */
+function joinPrereqTexts(texts: string[], key: string, t: Translate): string {
+  const last = texts.at(-1) ?? '';
+  if (texts.length < 2) return last;
+  const head = texts.slice(0, -1).join(`${t('prereq-list-separator')} `);
+  return t(key, { head, last });
+}
+
+/** The label of a character type the profile catalogue offers, or a neutral phrase. */
+function characterTypeText(localized: LocalizedRuleset, typeId: string, t: Translate): string {
+  if (!localized.ruleset.type_profiles[typeId]) return t('prereq-character-type-unavailable');
+  return t('prereq-character-type', { type: t(`type-${typeId}`) });
+}
+
+function describePrereqAt(
+  prereq: Prereq,
+  localized: LocalizedRuleset,
+  t: Translate,
+  depth: number,
+): string {
+  if (depth > PREREQ_MAX_DEPTH) return t('prereq-truncated');
+  const name = (id: string) => displayName(localized, id, undefined, paramHint(t));
+
+  switch (prereq.kind) {
+    case 'all':
+      return joinPrereqTexts(
+        describePrereqChildren(prereq.value, localized, t, depth),
+        'prereq-and',
+        t,
+      );
+    case 'any':
+      return joinPrereqTexts(
+        describePrereqChildren(prereq.value, localized, t, depth),
+        'prereq-or',
+        t,
+      );
+    case 'none': {
+      const texts = describePrereqChildren(prereq.value, localized, t, depth);
+      if (texts.length === 1) return t('prereq-without', { item: texts[0] });
+      return t('prereq-none', { list: texts.join(`${t('prereq-list-separator')} `) });
+    }
+    case 'has':
+      return name(prereq.value);
+    case 'house':
+      return t('prereq-house', { house: name(prereq.value) });
+    case 'ability_min':
+      return t('prereq-ability-min', {
+        ability: name(prereq.value.ability),
+        score: String(prereq.value.score),
+      });
+    case 'art_min':
+      return t('prereq-art-min', {
+        art: name(prereq.value.art),
+        score: String(prereq.value.score),
+      });
+    case 'hermetically_trained':
+      return t('prereq-hermetically-trained');
+    case 'order_member':
+      return t('prereq-order-member');
+    case 'is_companion':
+      return t('prereq-is-companion');
+    case 'is_grog':
+      return t('prereq-is-grog');
+    case 'has_category':
+      return t('prereq-has-category', { category: t(`category-${prereq.value}`) });
+    case 'age_min':
+      return t('prereq-age-min', { age: String(prereq.value) });
+    case 'has_category_at_magnitude':
+      return t('prereq-has-category-at-magnitude', {
+        kind: t(`prereq-kind-${prereq.value.item_kind}`),
+        category: t(`category-${prereq.value.category}`),
+        magnitude: t(`magnitude-${prereq.value.magnitude}`),
+      });
+    case 'character_type':
+      return characterTypeText(localized, prereq.value, t);
+    case 'characteristic_min':
+      return t('prereq-characteristic-min', {
+        characteristic: t(
+          `characteristic-${prereq.value.characteristic.replace(CHARACTERISTIC_ID_PREFIX, '')}`,
+        ),
+        score: String(prereq.value.score),
+      });
+    case 'ability_category_score_min':
+      return t('prereq-ability-category-score-min', {
+        category: t(`ability-category-${prereq.value.category}`),
+        score: String(prereq.value.score),
+      });
+    case 'any_art_min':
+      return t('prereq-any-art-min', { score: String(prereq.value.score) });
+  }
+  // Exhaustiveness guard, as in `houseOnlyValue`: a new union member makes this
+  // line the type error until it is given its own phrase above.
+  const unhandled: never = prereq;
+  return unhandled;
+}
+
+/**
  * Every category list an open pick of `item` could still have in force, in no
  * significant order: the whole descriptor (what the engine's
  * `types.rs::PointItem::categories_for` resolves to while no reading is
@@ -2230,6 +2365,37 @@ function instanceArgLabel(
 }
 
 /**
+ * Which of an item's prerequisite trees each prerequisite finding is about: the
+ * hedged `advisory_prerequisites` for the advisory warning, the hard
+ * `prerequisites` for the other two (`validation/prereq.rs::validate_prerequisites`).
+ */
+const PREREQ_TREE_OF_CODE: Record<string, 'prerequisites' | 'advisory_prerequisites'> = {
+  prereq_not_met: 'prerequisites',
+  prereq_unevaluated: 'prerequisites',
+  advisory_prereq_not_met: 'advisory_prerequisites',
+};
+
+/**
+ * The " Requires: …." sentence a prerequisite finding ends with (I1), built from
+ * the ruleset's own tree for `item`. `undefined` for any other finding; the empty
+ * string when the item carries no tree (a stale id), since the message
+ * interpolates `$requirement` unconditionally and a missing variable would print
+ * as a literal `{$requirement}`.
+ */
+function prereqRequirementClause(
+  localized: LocalizedRuleset,
+  code: string | undefined,
+  item: string | undefined,
+  t: Translate,
+): string | undefined {
+  const tree = code === undefined ? undefined : PREREQ_TREE_OF_CODE[code];
+  if (tree === undefined) return undefined;
+  const prereq = item === undefined ? undefined : localized.ruleset.point_items[item]?.[tree];
+  if (prereq === undefined) return '';
+  return t('prereq-requires-clause', { requirement: describePrereq(prereq, localized, t) });
+}
+
+/**
  * Every value in a validation-issue arg map, localized via `resolveIssueArgValue`.
  *
  * One arg is not independent of the others: an `exemplar` **qualifies** the `ability`
@@ -2246,13 +2412,20 @@ function instanceArgLabel(
  *  - the message and the magus-minimums checklist go through the one
  *    `requirementAbilityLabel` / `requirementExemplarNote` pair, which is what makes
  *    them read identically.
+ *
+ * `code` is the finding's own code. It is needed only by the three prerequisite
+ * findings, which gain a `requirement` arg naming what the item requires (see
+ * `prereqRequirementClause`); a caller that never shows those may omit it.
  */
 export function resolveIssueArgs(
   localized: LocalizedRuleset,
   args: Record<string, string>,
   t: Translate,
+  code?: string,
 ): Record<string, string> {
   const resolved: Record<string, string> = {};
+  const requirement = prereqRequirementClause(localized, code, args.item, t);
+  if (requirement !== undefined) resolved.requirement = requirement;
   for (const [key, value] of Object.entries(args)) {
     if (QUALIFIER_ARG_KEYS.has(key)) continue;
     resolved[key] = resolveIssueArgValue(localized, key, value, t);

@@ -303,6 +303,90 @@ describe('VirtueFlawTab gives the status-Virtue block a reason', () => {
   });
 });
 
+// I1 (try-out finding 4): an Available row whose item carries a prerequisite
+// says what it requires in its tooltip, before the player takes it — the same
+// `describePrereq` text the `prereq_not_met` finding shows after the fact. The
+// hedged (advisory) tree is labelled as what it is: a "normally".
+describe('VirtueFlawTab tooltips name an item’s prerequisite', () => {
+  const OFFENSIVE: PointItem = {
+    id: 'flaw.offensive_to_beings',
+    kind: 'flaw',
+    magnitude: 'minor',
+    categories: ['general'],
+    classification: 'uncomputed_rule',
+    entity_kinds: ['character'],
+    parameters: [{ key: 'being', type: 'ref', domain: 'enumerated', values: ['being.animals'] }],
+    prerequisites: {
+      kind: 'any',
+      value: [
+        { kind: 'none', value: [{ kind: 'has', value: 'virtue.the_gift' }] },
+        { kind: 'has', value: 'virtue.gentle_gift' },
+      ],
+    },
+  } as PointItem;
+  const VENDETTA: PointItem = {
+    id: 'flaw.vendetta',
+    kind: 'flaw',
+    magnitude: 'major',
+    categories: ['story'],
+    classification: 'narrative',
+    entity_kinds: ['character'],
+    advisory_prerequisites: { kind: 'house', value: 'house.verditius' },
+  } as PointItem;
+
+  function installPrereqRuleset(): void {
+    const rs = store.ruleset!;
+    rs.ruleset.point_items[OFFENSIVE.id] = OFFENSIVE;
+    rs.ruleset.point_items[VENDETTA.id] = VENDETTA;
+    rs.i18n[OFFENSIVE.id] = { name: 'Offensive to {being}', description: 'Rules text.' };
+    rs.i18n[VENDETTA.id] = { name: 'Vendetta', description: 'Rules text.' };
+    rs.i18n['virtue.the_gift'] = { name: 'The Gift' };
+    rs.i18n['virtue.gentle_gift'] = { name: 'Gentle Gift' };
+    rs.i18n['house.verditius'] = { name: 'Verditius' };
+  }
+
+  /** Focus the Available row's button, run the open delay, and read the popup. */
+  function openTooltip(itemId: string): Element | null {
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(VirtueFlawTab, { target });
+    flushSync();
+    const row = target.querySelector(`[data-testid="add-${itemId}"]`);
+    expect(row).not.toBeNull();
+    vi.useFakeTimers();
+    row!.dispatchEvent(new Event('focusin', { bubbles: true }));
+    vi.advanceTimersByTime(500);
+    flushSync();
+    return document.querySelector('.tooltip-pop');
+  }
+
+  it('shows "Requires: …" for Offensive to (Beings), beside its rules text', () => {
+    installPrereqRuleset();
+    const pop = openTooltip('flaw.offensive_to_beings');
+    expect(pop?.querySelector('[data-testid="tooltip-text"]')?.textContent).toBe('Rules text.');
+    expect(pop?.querySelector('.tooltip-list')?.textContent?.replace(/[⁦-⁩]/g, '')).toBe(
+      'Requires: (without The Gift) or Gentle Gift',
+    );
+  });
+
+  it('labels a hedged prerequisite "Normally requires"', () => {
+    installPrereqRuleset();
+    const pop = openTooltip('flaw.vendetta');
+    expect(pop?.querySelector('[data-testid="tooltip-text"]')?.textContent).toBe('Rules text.');
+    expect(pop?.querySelector('.tooltip-list')?.textContent?.replace(/[⁦-⁩]/g, '')).toBe(
+      'Normally requires: House Verditius',
+    );
+  });
+
+  it('adds no requirement line to an item without a prerequisite', () => {
+    installPrereqRuleset();
+    store.ruleset!.i18n['virtue.heartbeast'] = { name: 'Heartbeast', description: 'Rules text.' };
+    const pop = openTooltip('virtue.heartbeast');
+    expect(pop).not.toBeNull();
+    expect(pop?.querySelector('.tooltip-list')).toBeNull();
+  });
+});
+
 // D42/D70/D74: picking a realm in the override `<select>` must write it as the
 // `association` parameter on the selection at that row's INDEX (via the same
 // `setParamAt` path `ParameterPicker`'s own realm dropdown uses) — a real DOM

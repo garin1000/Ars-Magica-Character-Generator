@@ -87,7 +87,9 @@
               <span class="issue-severity">{store.t(`issue-severity-${issue.severity}`)}: </span>
               {store.t(
                 `issue-${issue.code}`,
-                store.ruleset ? resolveIssueArgs(store.ruleset, rawArgs, store.t) : rawArgs,
+                store.ruleset
+                  ? resolveIssueArgs(store.ruleset, rawArgs, store.t, issue.code)
+                  : rawArgs,
               )}
               <!-- A finding this step did not cause the gate for: it is filed on
                    another phase, so `canAdvance` ignores it and Next stays enabled.

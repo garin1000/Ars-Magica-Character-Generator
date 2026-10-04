@@ -110,6 +110,17 @@ describe('Prereq TS/Rust parity', () => {
     expect(blockAfter(deriveSource, 'function houseOnlyValue(')).not.toMatch(/^\s*default:/m);
   });
 
+  // I1: the requirement text a prerequisite finding and the V/F picker show is a
+  // second exhaustive walk over the same union. A kind it does not name would
+  // fall through to no text at all — a requirement silently missing from the
+  // very sentence that exists to state it.
+  it('names every Prereq kind explicitly in describePrereqAt, with no catch-all', () => {
+    const body = blockAfter(deriveSource, 'function describePrereqAt(');
+    const cases = new Set(Array.from(body.matchAll(/case '([^']+)':/g), (m) => m[1]));
+    expect([...cases].sort()).toEqual([...tsPrereqKinds()].sort());
+    expect(body).not.toMatch(/^\s*default:/m);
+  });
+
   it('caps recursion at the same depth the engine does', () => {
     // The second literal this mirror duplicates. The engine rejects a deeper
     // tree at load; the UI copy is defence in depth, and is only defence at all
