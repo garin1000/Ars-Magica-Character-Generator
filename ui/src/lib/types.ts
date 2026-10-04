@@ -735,11 +735,19 @@ export interface AbilityBonusSources {
 // (D1), further halved for a Short-Ranged-Magic holder when
 // `range_beyond_touch` is set (D28)). Mirrors the engine's `SpellLevelCap` —
 // two rows per Technique/Form pair, one per range class.
+//
+// N1: the marked figures, as on `SpellCap` below — the cap with the Magical
+// Focus marker, with the Potent Magic marker, and with both. Each is present
+// only while its Virtue(s) are held; neither Virtue is scoped per Te/Fo, so
+// they appear on every row then. Shown in the Spells tab's group tooltip.
 export interface SpellLevelCap {
   technique: string;
   form: string;
   range_beyond_touch: boolean;
   cap: number;
+  within_focus_cap?: number;
+  within_potent_field_cap?: number;
+  within_focus_and_potent_field_cap?: number;
 }
 
 // A per-CATALOGUE-SPELL level cap (D81.5/X11b): unlike `SpellLevelCap`'s

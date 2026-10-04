@@ -499,6 +499,13 @@ spell-add-within-focus-and-potent-field-tooltip = Im Rahmen deines Magischen Fok
 # Zaubers), als Hover-Hinweis auf der Gruppenüberschrift — ein schneller
 # Richtwert; die Grenze pro Zauber oben entscheidet tatsächlich über die Zeile.
 spell-group-cap-tooltip = Zaubergrenze: { $cap }
+# N1: dieselbe Basisgrenze mit den Markierungen für Magischen Fokus bzw.
+# Potente Magie, an spell-group-cap-tooltip angehängt, nur solange der
+# Charakter die Tugend(en) besitzt, getrennt durch spell-group-cap-separator.
+spell-group-cap-within-focus = im Magischen Fokus: { $cap }
+spell-group-cap-within-potent-field = im Bereich der Potenten Magie: { $cap }
+spell-group-cap-within-focus-and-potent-field = im Magischen Fokus und im Bereich der Potenten Magie: { $cap }
+spell-group-cap-separator = {" · "}
 spell-general-level-label = Stufe (General)
 spell-add = Zauber hinzufügen
 spell-none = — Zauber wählen —

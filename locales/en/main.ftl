@@ -476,6 +476,13 @@ spell-add-within-focus-and-potent-field-tooltip = Fits within your Magical Focus
 # folded in), shown as a hover hint on a source group's header — a quick
 # at-a-glance figure; the per-spell cap above is what actually gates a row.
 spell-group-cap-tooltip = Spell-level cap: { $cap }
+# N1: the same baseline with the Magical Focus / Potent Magic markers, appended
+# to spell-group-cap-tooltip only while the character holds the Virtue(s),
+# joined by spell-group-cap-separator.
+spell-group-cap-within-focus = within Magical Focus: { $cap }
+spell-group-cap-within-potent-field = within Potent Magic field: { $cap }
+spell-group-cap-within-focus-and-potent-field = within Magical Focus and Potent Magic field: { $cap }
+spell-group-cap-separator = {" · "}
 # Accessible label for the inline level field on a chosen General spell (its
 # level is not fixed by the catalogue, so it is edited per row).
 spell-general-level-label = General level

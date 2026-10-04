@@ -134,3 +134,54 @@ fn effective_scores_surface_the_within_potent_field_caps() {
     assert_eq!(row.within_potent_field_cap, Some(22));
     assert_eq!(row.within_focus_and_potent_field_cap, Some(25));
 }
+
+/// N1 (try-out 2026-10-04): the Te/Fo grid (`spell_level_caps`) carries the
+/// same marked figures for the Spells tab's group-header tooltip. Pe 10 /
+/// Te 10, no requisites folded at grid level: plain 23; a Major Magical
+/// Focus doubles the lower Art (+10) -> 33; Major Potent Magic +6 -> 29;
+/// both -> 39. Absent while the Virtue is not held.
+#[test]
+fn effective_scores_surface_the_marked_caps_on_the_te_fo_grid() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let mut m = magus();
+    m.art_scores = vec![
+        ArtScore::new(Id::new("art.perdo"), 10),
+        ArtScore::new(Id::new("art.terram"), 10),
+    ];
+    let grid_row = |m: &Entity| {
+        effective_scores_loaded(m, &ruleset)
+            .spell_level_caps
+            .into_iter()
+            .find(|c| {
+                c.technique == Id::new("art.perdo")
+                    && c.form == Id::new("art.terram")
+                    && !c.range_beyond_touch
+            })
+            .expect("the grid has a Perdo/Terram Touch row")
+    };
+
+    let row = grid_row(&m);
+    assert_eq!(row.cap, 23);
+    assert_eq!(row.within_focus_cap, None, "no Magical Focus held");
+    assert_eq!(row.within_potent_field_cap, None, "no Potent Magic held");
+    assert_eq!(row.within_focus_and_potent_field_cap, None);
+
+    m.selections = vec![
+        Selection::with_params(
+            Id::new("virtue.major_magical_focus"),
+            BTreeMap::from([("focus".to_string(), Id::new("stone"))]),
+        ),
+        Selection::with_params(
+            Id::new("virtue.potent_magic_major"),
+            BTreeMap::from([("field".to_string(), Id::new("metal"))]),
+        ),
+    ];
+    let row = grid_row(&m);
+    assert_eq!(
+        row.cap, 23,
+        "holding the Virtues must not change the plain cap"
+    );
+    assert_eq!(row.within_focus_cap, Some(33));
+    assert_eq!(row.within_potent_field_cap, Some(29));
+    assert_eq!(row.within_focus_and_potent_field_cap, Some(39));
+}

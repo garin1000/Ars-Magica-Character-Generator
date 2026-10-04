@@ -5596,9 +5596,19 @@ the focus doubling and the Potent bonus all sum into `base` before any halving.
 held), serialized only when present. The combined figure is an engine figure because
 the halvings floor the sum. The plain `cap` never includes Potent Magic.
 
+N1 (try-out 2026-10-04): the Te/Fo grid `spell_level_caps` carries the same three
+figures (`within_focus_cap`, `within_potent_field_cap`,
+`within_focus_and_potent_field_cap` on `SpellLevelCap`), each `spell_level_cap` with the
+matching `SpellMarks` and no requisites, present only while the Virtue(s) are held —
+neither Virtue is scoped per Te/Fo in the data. The Spells tab's group-header tooltip
+(`derive.ts::spellGroupCapTooltip`) appends them to the plain cap.
+
 Tests: `tests/r3_potent_magic_spell_cap.rs`, `tests/r3_potent_magic_spell_cap_fields.rs`,
 `composite_spell_five_dimensions.rs::level_cap_without_the_potent_field_mark_drops_the_potent_bonus`,
-and `arm-app/tests/spell_caps_dto.rs::effective_scores_surface_the_within_potent_field_caps`.
+`tests/n1_spell_level_caps_marked_figures.rs`,
+`arm-app/tests/spell_caps_dto.rs::effective_scores_surface_the_within_potent_field_caps`
+and `arm-app/tests/spell_caps_dto.rs::effective_scores_surface_the_marked_caps_on_the_te_fo_grid`,
+and `ui/src/lib/spell-group-cap-tooltip.test.ts`.
 
 **A Deficient Art halves the cap, because the cap *is* a Lab Total.** The closing
 sentence of `ArMDE:2465` above is what makes the per-spell cap subject to every Virtue

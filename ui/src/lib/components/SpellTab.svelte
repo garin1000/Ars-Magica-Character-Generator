@@ -18,13 +18,21 @@
     usedSpellForms,
     spellCodeWithLevel,
     spellDisplayName,
+    spellGroupCapTooltip,
     withinFocusAddable,
     withinFocusAndPotentFieldAddable,
     withinPotentFieldAddable,
   } from '../derive';
   import type { SelectedSpellGroup } from '../derive';
   import { tooltip, withReason, type TooltipContent } from '../actions';
-  import type { Art, Spell, SpellCap, SpellMasteryAbility, SpellSelection } from '../types';
+  import type {
+    Art,
+    Spell,
+    SpellCap,
+    SpellLevelCap,
+    SpellMasteryAbility,
+    SpellSelection,
+  } from '../types';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
   import Spinner from './Spinner.svelte';
@@ -138,10 +146,12 @@
   // cannot); kept for `groupCapTooltip`'s quick at-a-glance figure on a
   // source group's header — a requisite-free BASELINE for the whole
   // Technique/Form pair, independent of any one candidate spell.
-  const capByTeFo = $derived.by((): Map<string, number> => {
-    const m = new Map<string, number>();
+  // N1: the whole row is kept, so the tooltip can add the Magical Focus /
+  // Potent Magic figures the engine surfaced beside the plain cap.
+  const capByTeFo = $derived.by((): Map<string, SpellLevelCap> => {
+    const m = new Map<string, SpellLevelCap>();
     for (const c of store.effective?.spell_level_caps ?? [])
-      m.set(`${c.technique} ${c.form} ${c.range_beyond_touch}`, c.cap);
+      m.set(`${c.technique} ${c.form} ${c.range_beyond_touch}`, c);
     return m;
   });
   // The Ritual level floor — see `minLearnableLevel` in `derive.ts` (VA2): reads
@@ -174,10 +184,10 @@
   // requisite-free BASELINE cap (the near, not-beyond-Touch row), a quick
   // at-a-glance figure independent of any one candidate spell's requisites.
   // `undefined` (no `title` attribute) before the grid has any data for this
-  // pair (e.g. a non-magus, where `spell_level_caps` is empty).
+  // pair (e.g. a non-magus, where `spell_level_caps` is empty). N1: the
+  // Magical Focus / Potent Magic figures follow while those Virtues are held.
   function groupCapTooltip(technique: string, form: string): string | undefined {
-    const cap = capByTeFo.get(`${technique} ${form} false`);
-    return cap == null ? undefined : store.t('spell-group-cap-tooltip', { cap: String(cap) });
+    return spellGroupCapTooltip(capByTeFo.get(`${technique} ${form} false`), store.t);
   }
 
   // A spell's level tag: its fixed level, or the localized "General" marker (the

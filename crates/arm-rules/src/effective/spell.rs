@@ -607,7 +607,9 @@ pub fn spell_level_cap(
 /// A per-Technique/Form/range-class spell-level cap, surfaced to the frontend
 /// so the spell picker can grey a spell whose level exceeds the magus's cap
 /// without recomputing the derivation in JS. Serializes as
-/// `{ "technique": "<id>", "form": "<id>", "range_beyond_touch": bool, "cap": N }`.
+/// `{ "technique": "<id>", "form": "<id>", "range_beyond_touch": bool, "cap": N }`,
+/// plus the marked figures of [`SpellCap`] while their Virtues are held (N1:
+/// the Spells tab's group-header tooltip shows them).
 ///
 /// D28 (`docs/vf-audit/decisions.md`): the cap no longer depends on Te/Fo
 /// alone once Short-Ranged Magic is in play, so the key gains
@@ -624,6 +626,18 @@ pub struct SpellLevelCap {
     /// The maximum learnable level for this Te/Fo/range-class combination (may
     /// be negative for a beginning magus).
     pub cap: i64,
+    /// The cap with the Magical Focus marker (ArMDE:4403), present only when
+    /// the entity holds a Magical Focus — same shape as
+    /// [`SpellCap::within_focus_cap`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub within_focus_cap: Option<i64>,
+    /// The cap with the Potent Magic marker (D83.3), present only when the
+    /// entity holds Potent Magic.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub within_potent_field_cap: Option<i64>,
+    /// The cap with both markers, present only when both Virtues are held.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub within_focus_and_potent_field_cap: Option<i64>,
 }
 
 /// The [`spell_level_cap`] for every Technique × Form combination in the Art
@@ -637,28 +651,41 @@ pub fn spell_level_caps(entity: &Entity, ruleset: &Ruleset) -> Vec<SpellLevelCap
     // `art_ids_of` guarantees the sort the canonical (technique, form) order needs.
     let techniques = ruleset.art_ids_of(crate::art::ArtType::Technique);
     let forms = ruleset.art_ids_of(crate::art::ArtType::Form);
+    let has_focus = has_magical_focus(entity, ruleset);
+    let has_potent = has_potent_magic(entity, ruleset);
     let mut caps = Vec::with_capacity(techniques.len() * forms.len() * 2);
     for technique in &techniques {
         for form in &forms {
             for range_beyond_touch in [false, true] {
-                caps.push(SpellLevelCap {
-                    technique: technique.clone(),
-                    form: form.clone(),
-                    range_beyond_touch,
-                    // No specific spell at this grid cell (it may host several,
-                    // each with different or no requisites, and none of them
-                    // specifically marked within-focus) — a no-op fold, same
-                    // reasoning as `derived/casting.rs::casting_totals`'s own
-                    // `requisites: &[]`.
-                    cap: spell_level_cap(
+                // No specific spell at this grid cell (it may host several,
+                // each with different or no requisites) — a no-op fold, same
+                // reasoning as `derived/casting.rs::casting_totals`'s own
+                // `requisites: &[]`. The marked figures (N1) are the same
+                // computation `spell_caps` makes per spell, offered whenever
+                // the Virtue is held: neither Virtue is scoped per Te/Fo.
+                let marked_cap = |within_focus: bool, within_potent_field: bool| {
+                    spell_level_cap(
                         entity,
                         ruleset,
                         technique,
                         form,
                         &[],
                         range_beyond_touch,
-                        SpellMarks::default(),
-                    ),
+                        SpellMarks {
+                            within_focus,
+                            within_potent_field,
+                        },
+                    )
+                };
+                caps.push(SpellLevelCap {
+                    technique: technique.clone(),
+                    form: form.clone(),
+                    range_beyond_touch,
+                    cap: marked_cap(false, false),
+                    within_focus_cap: has_focus.then(|| marked_cap(true, false)),
+                    within_potent_field_cap: has_potent.then(|| marked_cap(false, true)),
+                    within_focus_and_potent_field_cap: (has_focus && has_potent)
+                        .then(|| marked_cap(true, true)),
                 });
             }
         }

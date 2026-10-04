@@ -36,6 +36,7 @@ import type {
   Selection,
   Spell,
   SpellCap,
+  SpellLevelCap,
   SpellSelection,
   ValidationIssue,
   ValidationMode,
@@ -79,6 +80,29 @@ export const U32_MAX = 4294967295;
 
 /** A `store.t`-shaped translator, threaded in so search can index rendered labels. */
 export type Translate = (key: string, args?: Record<string, string>) => string;
+
+/**
+ * The Spells tab's Te/Fo group-header hover hint (N1): the grid row's plain
+ * cap, then each marked figure the engine surfaced (present only while the
+ * Magical Focus / Potent Magic Virtue is held), joined by the localized
+ * separator. `undefined` without a row (e.g. a non-magus's empty grid).
+ */
+export function spellGroupCapTooltip(
+  row: SpellLevelCap | undefined,
+  t: Translate,
+): string | undefined {
+  if (row == null) return undefined;
+  const figures: [string, number | undefined][] = [
+    ['spell-group-cap-tooltip', row.cap],
+    ['spell-group-cap-within-focus', row.within_focus_cap],
+    ['spell-group-cap-within-potent-field', row.within_potent_field_cap],
+    ['spell-group-cap-within-focus-and-potent-field', row.within_focus_and_potent_field_cap],
+  ];
+  return figures
+    .filter((figure): figure is [string, number] => figure[1] != null)
+    .map(([key, cap]) => t(key, { cap: String(cap) }))
+    .join(t('spell-group-cap-separator'));
+}
 
 /** The standard "(Label)" placeholder hint for an unfilled `{param}` token. */
 export function paramHint(t: Translate): (key: string) => string {
