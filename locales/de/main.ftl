@@ -633,6 +633,14 @@ unresolved-catalogued-parameter-list-separator = ,
 migrated-catalogued-parameter-notice = { $items } wurden anhand des eingegebenen Textes erkannt und mit ihrem Katalogeintrag verknüpft.
 migrated-catalogued-parameter-item = { $ability }: „{ $text }“ → { $resolved }
 migrated-catalogued-parameter-list-separator = ,
+# L1b (Befund 6): einmalig nach dem Öffnen eines Spielstands, der vor der Aufteilung
+# einer Werteliste (Tote / Lebende Sprache) gespeichert wurde. $from / $to sind die
+# vollen Namen („Arabisch (Tote Sprache)“); bei einer Kollision ist $score der Wert
+# des verschobenen Eintrags, $existing der schon vorhandene, $kept der behaltene.
+moved-ability-parameter-notice = Dieser Charakter wurde gespeichert, bevor eine Werteliste aufgeteilt wurde. Diese Einträge wurden deshalb zu der Fertigkeit verschoben, deren Liste sie führt: { $items }. Beim Speichern bleibt die Änderung erhalten.
+moved-ability-parameter-item = { $from } → { $to }
+moved-ability-parameter-collision-item = { $from } ({ $score }) → { $to }, wo der Eintrag schon mit { $existing } vorhanden war; der höhere Wert, { $kept }, wurde behalten
+moved-ability-parameter-list-separator = ;
 warping-points-label = Verzerrungspunkte
 twilight-scars-label = Zwielichtnarben
 twilight-scar-placeholder = Beschreibe die Narbe
@@ -1063,14 +1071,18 @@ param-group-label = Kombination { $n }
 # <option> nur beim Überfahren mit der Maus erscheint. { $label } ist der Name der
 # Option, { $reason } der Text von vf-blocked-incompatible.
 param-option-blocked = { $label } ({ $reason })
-# Eine Forderung, die die Engine weiter prüft, als die Regeln sie formulieren. Das
-# Beispiel der Regeln steht vorn, damit der Wert unmittelbar folgt („Latein 1“, wie
-# das Regelwerk es schreibt), und DIESER Zusatz folgt dem Wert und nennt, was die
-# Engine wirklich prüft: „unter Latein 1 (Tote Sprache genügt)“. Er bringt ein
-# eigenes Leerzeichen mit, weil die tragenden Meldungen ihn ohne Trenner einsetzen —
-# bei einer Forderung ohne Beispiel ist er leer. Ohne Artikel und ohne Adjektiv
-# formuliert, damit das eingesetzte Fertigkeitswort in jedem Genus passt.
-requirement-exemplar = { " " }({ $ability } genügt)
+# Eine Forderung, die die Regeln über ihr Beispiel formulieren. Das Beispiel steht
+# vorn, damit der Wert unmittelbar folgt („Latein 1“, wie das Regelwerk es schreibt),
+# und DIESER Zusatz folgt dem Wert und nennt die Fertigkeit, als die es erworben wird:
+# „unter Latein 1 (Tote Sprache)“. Er bringt ein eigenes Leerzeichen mit, weil die
+# tragenden Meldungen ihn ohne Trenner einsetzen — bei einer Forderung ohne Beispiel
+# ist er leer.
+requirement-exemplar = { " " }({ $ability })
+# Eine Liste alternativer Sprachen, z. B. „Latein, Hebräisch, Griechisch oder
+# Arabisch“. Die Oberfläche verbindet alle bis auf die letzte mit dem Trenner, dann
+# die letzte mit -or; eine einzelne Sprache steht allein.
+requirement-language-list-separator = ,
+requirement-language-list-or = { $head } oder { $last }
 # Lokalisierte Parameter-Bezeichnungen, je Parameter-Schlüssel der Engine. Dienen auch
 # als typbezogener Platzhalter/Hinweis für ein leeres Parameter-Eingabefeld.
 param-label-ability = Fertigkeit
@@ -1417,7 +1429,7 @@ issue-restricted_xp_unspent = { $origin }: { $unspent } von { $amount } eingesch
 issue-general_xp_unspent = { $unspent } von { $pool } Erfahrungspunkten sind noch nicht ausgegeben.
 issue-spell_levels_unspent = { $unspent } von { $budget } Stufen Zauber sind noch nicht ausgegeben.
 issue-ability_category_requires_virtue = { $ability } ist { $ability_category } und benötigt eine Tugend, die den Zugang bei der Charaktererschaffung gewährt.
-issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit erfordert normalerweise { $ability }{ $qualifier } auf { $min } oder höher.
+issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit erfordert normalerweise { $languages } auf { $min } oder höher.
 issue-life_stage_age_unset = Trage das Alter des Charakters ein: das spätere Leben erbringt Erfahrungspunkte pro Jahr, ohne Alter zählen daher nur die Blöcke der Kindheit.
 issue-life_stage_age_before_childhood = Alter { $age } liegt innerhalb der Kindheit, die { $min } Jahre dauert — es gibt keine späteren Lebensjahre, in denen Erfahrung erworben wird.
 issue-life_stage_age_before_gauntlet = Kein Magus legt die Lehrlingsprüfung mit { $age } Jahren ab: Sie kommt frühestens mit { $min } — Kindheit plus fünfzehn Jahre Lehrlingszeit.
@@ -1435,6 +1447,7 @@ issue-childhood_slot_unfilled = Trage { $key } für { $ability } ein, bevor das 
 issue-childhood_slot_is_native_language = { $key } für { $ability } muss sich von der Muttersprache { $language } unterscheiden.
 issue-childhood_slot_duplicate_value = { $key } { $value } für { $ability } ist bereits von einem anderen Eintrag des Fertigkeitspakets belegt; wähle einen anderen Wert.
 issue-ability_parameter_required = { $ability } braucht einen Wert (z. B. das konkrete Gebiet oder die Sprache).
+issue-ability_parameter_outside_catalogue = { $ability }: Dieser Eintrag steht nicht in der Liste dieser Fertigkeit. Wähle ihn erneut aus der Liste.
 issue-ability_score_out_of_range = Fertigkeit { $ability } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
 # `$ability` ist der VOLLSTÄNDIGE Fertigkeitsname samt Instanz („Handwerk:
 # Zimmerei“, „Brandenburg-Kunde“): das Argument `parameter` der Engine wird von

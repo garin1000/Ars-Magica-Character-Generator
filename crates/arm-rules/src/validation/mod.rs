@@ -197,7 +197,7 @@ impl fmt::Display for IssueSeverity {
 /// | `general_xp_unspent` | warning | abilities | `pool`, `used`, `unspent` |
 /// | `restricted_xp_unspent` | warning | experience | `amount`, `used`, `unspent`, `origin_kind`, `origin` |
 /// | `ability_category_requires_virtue` | error | abilities | `ability`, `ability_category` |
-/// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min`, `exemplar`&nbsp;(opt) |
+/// | `academic_ability_without_scholarly_language` | warning | abilities | `languages`, `min` |
 /// | `life_stage_age_unset` | error | experience | (none) |
 /// | `life_stage_age_before_childhood` | error | experience | `age`, `min` |
 /// | `life_stage_age_before_gauntlet` | error | experience | `age`, `min` |
@@ -215,6 +215,7 @@ impl fmt::Display for IssueSeverity {
 /// | `childhood_slot_is_native_language` | error | experience | `ability`, `key`, `slot`, `language` |
 /// | `childhood_slot_duplicate_value` | error | experience | `ability`, `key`, `slot`, `other_slot`, `value` |
 /// | `ability_parameter_required` | error | abilities | `ability` |
+/// | `ability_parameter_outside_catalogue` | error | abilities | `ability`, `parameter` |
 /// | `ability_score_out_of_range` | error | abilities | `ability`, `score`, `max` |
 /// | `ability_bonus_dangling_target` | error | abilities | `item`, `ability`, `parameter` |
 /// | `specialty_forbidden` | error | abilities | `ability`, `specialty` |
@@ -543,6 +544,11 @@ impl ValidationIssue {
     pub const CODE_XP_SOLVE_BOUND_EXCEEDED: &'static str = "xp_solve_bound_exceeded";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_ABILITY_PARAMETER_REQUIRED: &'static str = "ability_parameter_required";
+    /// A catalogued Ability instance holds a `Catalogued` id its own catalogue
+    /// does not list (L1b) — e.g. Arabic under Dead Language in a hand-edited
+    /// save the 21 → 22 load migration deliberately does not move.
+    pub const CODE_ABILITY_PARAMETER_OUTSIDE_CATALOGUE: &'static str =
+        "ability_parameter_outside_catalogue";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_ABILITY_SCORE_OUT_OF_RANGE: &'static str = "ability_score_out_of_range";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].

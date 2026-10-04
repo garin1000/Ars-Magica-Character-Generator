@@ -281,6 +281,18 @@ describe('MagusMinimumAbilities checklist (slice 6b4)', () => {
     expect(clean(latin.text)).not.toContain('language.latin');
   });
 
+  // L2: a requirement may name its instance as a catalogue value id. With no exemplar
+  // to head the row, the instance is named — by its localized name, never the id.
+  it('names a requirement instance given as a catalogue id by its localized name', () => {
+    store.ruleset!.i18n['language.latin'] = { name: 'Latin' };
+    setChecklist([
+      { ...row('ability.dead_language', 1, 0, 'required'), parameter: 'language.latin' },
+    ]);
+    const text = clean(element(html(), 'magus-minimum-ability.dead_language').text);
+    expect(text).toContain('Latin (Dead Language) 1');
+    expect(text).not.toContain('language.latin');
+  });
+
   it('names the Ability without a doubled placeholder when nothing is bought yet', () => {
     // #13: with no instance held, the generic "(Language)" hint used to be stacked on
     // the template's own "(Dead Language)" literal, reading
@@ -403,15 +415,16 @@ describe('MagusMinimumAbilities and its validation message (slice 7, #13 + #32)'
   // and its score — "below Dead Language (e.g. Latin) 1" — so the sentence read as
   // though "e.g. Latin" were the thing being scored, and the demand the rules
   // actually make ("Latin 1", `ArMDE:2437`) was buried. The example now heads the
-  // requirement with the score right after it, and the widening the engine really
-  // enforces trails as one short note.
-  it('states the demand as "Latin 1", with the widening trailing it', () => {
+  // requirement with the score right after it, and the Ability it is bought as
+  // trails as one short note. L2 (try-out finding 8): the engine now checks Latin
+  // itself, so the note names the Ability and no longer claims "any Dead Language".
+  it('states the demand as "Latin 1", with its Ability trailing it', () => {
     setChecklist(shippedChecklist());
     const rowText = clean(element(html(), 'magus-minimum-ability.dead_language').text);
-    expect(rowText).toBe('Latin 1 (any Dead Language) is not met: this character has 0.');
+    expect(rowText).toBe('Latin 1 (Dead Language) is not met: this character has 0.');
     // `toContain`, not `toBe`: the panel prefixes each finding with its severity.
     expect(issueText()).toContain(
-      'No magus is admitted to the Order below Latin 1 (any Dead Language); this character has 0.',
+      'No magus is admitted to the Order below Latin 1 (Dead Language); this character has 0.',
     );
     // The example never separates the requirement from its score again.
     for (const text of [rowText, issueText()]) {
@@ -426,11 +439,13 @@ describe('MagusMinimumAbilities and its validation message (slice 7, #13 + #32)'
   it('states the recommended demand the same way', () => {
     setChecklist(shippedChecklist());
     const rowText = clean(element(html(), 'magus-recommended-ability.dead_language').text);
-    expect(rowText).toBe('Latin 4 (any Dead Language) is not met: this character has 0.');
+    expect(rowText).toBe('Latin 4 (Dead Language) is not met: this character has 0.');
   });
 
-  // The warning twin and the Academic-Ability warning fold the same `exemplar` arg
-  // through the same path, so they carried the same defect and are fixed with it.
+  // The warning twin folds the same `exemplar` arg through the same path. The
+  // Academic-Ability warning (L2, ruling F5) names every language that satisfies
+  // ArMDE:7151 instead — Latin or Hebrew as a Dead Language, Greek or Arabic as a
+  // Living Language — from the engine's `languages` arg.
   it('states the sibling findings the same way', () => {
     expect(
       findingText('magus_recommended_ability', {
@@ -440,22 +455,27 @@ describe('MagusMinimumAbilities and its validation message (slice 7, #13 + #32)'
         score: '0',
       }),
     ).toContain(
-      'Latin 4 (any Dead Language) is recommended for a magus just out of apprenticeship; this character has 0.',
+      'Latin 4 (Dead Language) is recommended for a magus just out of apprenticeship; this character has 0.',
     );
+    store.ruleset!.i18n['language.latin'] = { name: 'Latin' };
+    store.ruleset!.i18n['language.hebrew'] = { name: 'Hebrew' };
+    store.ruleset!.i18n['language.greek'] = { name: 'Greek' };
+    store.ruleset!.i18n['language.arabic'] = { name: 'Arabic' };
     expect(
       findingText('academic_ability_without_scholarly_language', {
-        ability: 'ability.dead_language',
-        exemplar: 'latin',
+        languages: 'language.latin, language.hebrew, language.greek, language.arabic',
         min: '3',
       }),
-    ).toContain('An Academic Ability normally requires Latin (any Dead Language) at 3 or better.');
+    ).toContain(
+      'An Academic Ability normally requires Latin, Hebrew, Greek or Arabic at 3 or better.',
+    );
   });
 
   it('reads the requirement identically in the row and the message', () => {
     setChecklist(shippedChecklist());
     const rowText = clean(element(html(), 'magus-minimum-ability.dead_language').text);
     // One shared label path, so the phrase naming the requirement is byte-identical.
-    const phrase = 'Latin 1 (any Dead Language)';
+    const phrase = 'Latin 1 (Dead Language)';
     expect(rowText.startsWith(phrase)).toBe(true);
     expect(issueText()).toContain(phrase);
   });
@@ -464,11 +484,9 @@ describe('MagusMinimumAbilities and its validation message (slice 7, #13 + #32)'
     speakGerman();
     setChecklist(shippedChecklist());
     const rowText = clean(element(html(), 'magus-minimum-ability.dead_language').text);
-    expect(rowText).toBe(
-      'Latein 1 (Tote Sprache genügt) ist nicht erfüllt: dieser Charakter hat 0.',
-    );
+    expect(rowText).toBe('Latein 1 (Tote Sprache) ist nicht erfüllt: dieser Charakter hat 0.');
     expect(issueText()).toContain(
-      'Kein Magus wird unter Latein 1 (Tote Sprache genügt) in den Orden aufgenommen; dieser Charakter hat 0.',
+      'Kein Magus wird unter Latein 1 (Tote Sprache) in den Orden aufgenommen; dieser Charakter hat 0.',
     );
     for (const text of [rowText, issueText()]) {
       expect(text).toContain('Latein 1');

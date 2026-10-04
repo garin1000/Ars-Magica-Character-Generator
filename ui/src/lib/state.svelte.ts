@@ -32,6 +32,7 @@ import {
   agingMigrationNotice,
   mandatoryTraitRefs,
   migratedCatalogueParameterNotice,
+  movedAbilityParameterNotice,
   resolvedLinksFrom,
   unresolvedCatalogueParameterNotice,
 } from './derive';
@@ -47,6 +48,7 @@ import type {
   AgingNote,
   CloseGuardLabels,
   MigratedCatalogueParameter,
+  MovedAbilityParameter,
   UnresolvedCatalogueParameter,
 } from './ipc';
 import type { DocumentAction, MenuFlags } from './menu';
@@ -93,7 +95,7 @@ const VALIDATE_DEBOUNCE_MS = 150;
  * Mirrors `arm_rules::SCHEMA_VERSION` by hand; the Rust constant is the source
  * and `the_frontend_mirrors_the_engine_schema_version` pins the two together.
  */
-export const SCHEMA_VERSION = 21;
+export const SCHEMA_VERSION = 22;
 
 /**
  * The saga year a document starts at when nothing else says otherwise — the
@@ -573,6 +575,7 @@ class AppStore {
       this.migratedAgingCharacteristics = [];
       this.unresolvedCatalogueParameters = [];
       this.migratedCatalogueParameters = [];
+      this.movedAbilityParameters = [];
     },
     setError: (error) => {
       this.error = error;
@@ -678,6 +681,20 @@ class AppStore {
    */
   get migratedCatalogueNotice(): string | null {
     return migratedCatalogueParameterNotice(this.ruleset, this.migratedCatalogueParameters, this.t);
+  }
+
+  /**
+   * Ability instances the load moved to the sibling Ability whose catalogue
+   * holds their value (L1b, try-out finding 6), for the document currently
+   * open. Empty when nothing moved. Kept as ids so
+   * {@link movedAbilityParameterNotice} re-composes on a language switch;
+   * cleared on the same lifecycle as {@link migratedCatalogueParameters}.
+   */
+  movedAbilityParameters = $state<MovedAbilityParameter[]>([]);
+
+  /** The localized one-time "these entries were moved" notice, or `null`. */
+  get movedAbilityParameterNotice(): string | null {
+    return movedAbilityParameterNotice(this.ruleset, this.movedAbilityParameters, this.t);
   }
 
   /**
@@ -2697,6 +2714,7 @@ class AppStore {
         this.migratedAgingCharacteristics = loaded.migrated_aging_characteristics ?? [];
         this.unresolvedCatalogueParameters = loaded.unresolved_catalogued_parameters ?? [];
         this.migratedCatalogueParameters = loaded.migrated_catalogued_parameters ?? [];
+        this.movedAbilityParameters = loaded.moved_ability_parameters ?? [];
         // A different document from here on, so the components that keep
         // per-document UI state locally retire theirs (@see documentEpoch).
         // Bumped only on a SUCCESSFUL load: a cancelled dialog replaced nothing.
@@ -2762,6 +2780,7 @@ class AppStore {
     this.migratedAgingCharacteristics = [];
     this.unresolvedCatalogueParameters = [];
     this.migratedCatalogueParameters = [];
+    this.movedAbilityParameters = [];
     // Likewise every component's own per-document state (@see documentEpoch).
     this.#documentEpoch += 1;
     this.filters = defaultPickerFilters();
@@ -2837,6 +2856,7 @@ class AppStore {
     this.migratedAgingCharacteristics = [];
     this.unresolvedCatalogueParameters = [];
     this.migratedCatalogueParameters = [];
+    this.movedAbilityParameters = [];
     // As does every component's own per-document state (@see documentEpoch).
     this.#documentEpoch += 1;
     this.filters = defaultPickerFilters();

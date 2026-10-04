@@ -48,6 +48,7 @@ impl Ruleset {
 
         self.validate_point_items(&mut errors);
         self.validate_catalogued_abilities(&mut errors);
+        self.validate_scholarly_language_values(&mut errors);
         self.validate_incompatibility_symmetry(&mut errors);
         self.validate_magnitude_variant_exclusivity(&mut errors);
 
@@ -217,28 +218,89 @@ impl Ruleset {
     }
 
     /// A `catalogued: true` Ability (design note § 2.2, CV2) must declare a
-    /// `parameter` key (there is nothing to catalogue otherwise) and that key
-    /// must name a catalogue that actually exists (`catalogue.<key>`) — a
-    /// referential check, so it runs here rather than in `parse.rs`'s
-    /// pre-integrity pass, exactly like every other cross-catalogue reference.
+    /// `parameter` key (there is nothing to catalogue otherwise) and its
+    /// catalogue — the one its `catalogue` field names, else `catalogue.<key>`
+    /// (L1a, [`Ability::catalogue_id`]) — must actually exist. A referential
+    /// check, so it runs here rather than in `parse.rs`'s pre-integrity pass,
+    /// exactly like every other cross-catalogue reference.
     fn validate_catalogued_abilities(&self, errors: &mut Vec<String>) {
         for ability in self.abilities.values() {
             if !ability.catalogued {
                 continue;
             }
-            let Some(parameter) = &ability.parameter else {
+            if ability.parameter.is_none() {
                 errors.push(format!(
                     "ability '{}' is catalogued but takes no parameter",
                     ability.id
                 ));
                 continue;
+            }
+            let Some(catalogue_id) = ability.catalogue_id() else {
+                continue;
             };
-            let catalogue_id = Id::new(format!("catalogue.{parameter}"));
             if !self.parameter_catalogues.contains_key(&catalogue_id) {
                 errors.push(format!(
                     "ability '{}' is catalogued against '{catalogue_id}', which does not exist",
                     ability.id
                 ));
+            }
+        }
+    }
+
+    /// A rules-named instance of a **catalogued** Ability must be a value of that
+    /// Ability's own catalogue (L2): "Dead Language: Arabic" names a value Dead
+    /// Language cannot hold (ArMDE:7432), so a requirement naming it could never be
+    /// met. An uncatalogued Ability's instance is free text and is not checked.
+    fn check_value_in_own_catalogue(
+        &self,
+        subject: &str,
+        ability: &Id,
+        value: &str,
+        errors: &mut Vec<String>,
+    ) {
+        let Some(catalogue_id) = self.abilities.get(ability).and_then(Ability::catalogue_id) else {
+            return;
+        };
+        let held = self
+            .parameter_catalogues
+            .get(&catalogue_id)
+            .is_some_and(|catalogue| catalogue.value(&Id::new(value)).is_some());
+        if !held {
+            errors.push(format!(
+                "{subject} for '{ability}' names '{value}', which is not a value of '{catalogue_id}'"
+            ));
+        }
+    }
+
+    /// The scholarly languages of ArMDE:7151 name catalogue values, so each
+    /// listed Ability must be catalogued and each value must sit in its own
+    /// catalogue (L2): "Latin, Greek, Hebrew, or Arabic", of which "only Hebrew is
+    /// a dead language" (ArMDE:7432) — so Greek and Arabic are Living Language
+    /// values, and naming one under Dead Language is a broken rules file.
+    fn validate_scholarly_language_values(&self, errors: &mut Vec<String>) {
+        let Some(requirement) = &self.scholarly_language else {
+            return;
+        };
+        for language in &requirement.languages {
+            let catalogued = self
+                .abilities
+                .get(&language.ability)
+                .and_then(Ability::catalogue_id)
+                .is_some();
+            if !catalogued {
+                errors.push(format!(
+                    "scholarly-language ability '{}' is not catalogued, so it cannot name values",
+                    language.ability
+                ));
+                continue;
+            }
+            for value in &language.values {
+                self.check_value_in_own_catalogue(
+                    "scholarly-language requirement",
+                    &language.ability,
+                    value.as_str(),
+                    errors,
+                );
             }
         }
     }
@@ -1006,15 +1068,11 @@ impl Ruleset {
             }
             return;
         };
-        // Each requirement's `ability` IS a ref and is resolved below. Its
-        // `exemplar` deliberately is NOT: it is a **label key**, one example the
-        // rules name in prose ("Latin 1", `ArMDE:2437`), pointing at
-        // `exemplar.<slug>` in `rules/i18n/<lang>/` and at no catalogue entry.
-        // There is no language catalogue to resolve against and there never will
-        // be — the rules publish no language list and dead-vs-living is a troupe's
-        // decision, so authoring one would mean inventing rules data (RULES.md
-        // records this). Resolving the exemplar as a ref would therefore reject
-        // every valid ruleset.
+        // Each requirement's `ability` IS a ref and is resolved below, and so is
+        // its `parameter` when the Ability is catalogued (L2: "Latin 1" names
+        // `language.latin`, ArMDE:2437). Its `exemplar` deliberately is NOT: it is
+        // a **label key** pointing at `exemplar.<slug>` in `rules/i18n/<lang>/`,
+        // the rules' own wording of the demand, not a catalogue entry.
         let requirements = apprenticeship
             .minimum_abilities
             .iter()
@@ -1031,7 +1089,16 @@ impl Ruleset {
                          but the ability takes no parameter"
                     ));
                 }
-                Some(_) => {}
+                Some(_) => {
+                    if let Some(value) = &requirement.parameter {
+                        self.check_value_in_own_catalogue(
+                            "apprenticeship requirement",
+                            id,
+                            value,
+                            errors,
+                        );
+                    }
+                }
             }
         }
 
@@ -2537,8 +2604,9 @@ impl Ruleset {
     }
 
     /// A [`ParamValue::Literal`] restricting a `catalogued: true` Ability must
-    /// name a real value in the catalogue that Ability's own `parameter` key
-    /// selects — fail loudly with the offending literal id and the ability id
+    /// name a real value in that Ability's own catalogue
+    /// ([`Ability::catalogue_id`](crate::ability::Ability::catalogue_id), L1a)
+    /// — fail loudly with the offending literal id and the ability id
     /// (design note § 7, CV3), mirroring how the `Bound` branch above fails
     /// loudly on a dangling parameter key. An ability that does not resolve,
     /// is not catalogued, or is catalogued against a shape
@@ -2556,13 +2624,12 @@ impl Ruleset {
         let Some(ability) = self.abilities.get(ability_id) else {
             return;
         };
-        if !ability.catalogued {
+        if ability.parameter.is_none() {
             return;
         }
-        let Some(parameter) = &ability.parameter else {
+        let Some(catalogue_id) = ability.catalogue_id() else {
             return;
         };
-        let catalogue_id = Id::new(format!("catalogue.{parameter}"));
         let Some(catalogue) = self.parameter_catalogues.get(&catalogue_id) else {
             return;
         };

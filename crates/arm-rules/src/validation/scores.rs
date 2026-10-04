@@ -336,6 +336,7 @@ pub(crate) fn validate_abilities(
         validate_ability_age_cap(entity, ruleset, entry, issues);
         validate_ability_specialty_permitted(ruleset, effective_selections, entry, issues);
         validate_ability_parameter_link(entity, ruleset, entry, issues);
+        validate_ability_parameter_in_catalogue(ruleset, entry, issues);
         validate_ability_banked_xp(ruleset, entry, issues);
 
         let key = (
@@ -455,6 +456,44 @@ fn validate_ability_parameter_link(
                 ("item", item.to_string()),
                 ("ability", entry.ability.to_string()),
                 ("param", param.clone()),
+            ]),
+            Some(entry.ability.clone()),
+        ));
+    }
+}
+
+/// L1b: a `Catalogued` value must be one of its own Ability's catalogue values
+/// (`ability_parameter_outside_catalogue`). The 21 → 22 load migration moves a
+/// pre-split save's misplaced language, but never a save written at 22 or later,
+/// so a hand-edited one is reported here instead of loading silently with a
+/// value no picker offers. Free text and `Linked` values are not catalogue ids
+/// and are not checked; neither is an Ability with no catalogue.
+fn validate_ability_parameter_in_catalogue(
+    ruleset: &Ruleset,
+    entry: &AbilityScore,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    let Some(AbilityParameterValue::Catalogued { id }) = &entry.parameter else {
+        return;
+    };
+    let Some(catalogue_id) = ruleset
+        .abilities
+        .get(&entry.ability)
+        .and_then(|ability| ability.catalogue_id())
+    else {
+        return;
+    };
+    let listed = ruleset
+        .parameter_catalogues()
+        .get(&catalogue_id)
+        .is_some_and(|catalogue| catalogue.value(id).is_some());
+    if !listed {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_ABILITY_PARAMETER_OUTSIDE_CATALOGUE,
+            CreationPhase::Abilities,
+            args([
+                ("ability", entry.ability.to_string()),
+                ("parameter", id.to_string()),
             ]),
             Some(entry.ability.clone()),
         ));

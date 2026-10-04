@@ -122,14 +122,17 @@ pub(crate) fn validate_ability_authorization(
 /// > Hebrew, or Arabic score of at least 3, depending on the region of Europe you
 /// > are from. For most characters, Latin 3 is required.
 ///
-/// Source: ArMDE:7151.
+/// > Arabic, Greek and Hebrew fill similar functions, although of these only Hebrew
+/// > is a dead language.
+///
+/// Source: ArMDE:7151, :7432.
 ///
 /// A **warning**, not an error, for two reasons the passage itself gives: "normally"
-/// and "depending on the region", so a saga may legitimately differ; and which
-/// languages qualify is regional, so the data names the ability
-/// (`scholarly_language_ability`) and minimum score rather than enumerating Latin,
-/// Greek, Hebrew and Arabic — any instance of that ability at the minimum satisfies
-/// it, which is as close as the engine can get without deciding a saga's region.
+/// and "depending on the region", so a saga may legitimately differ. Any one of the
+/// languages the data lists (Latin or Hebrew as a Dead Language, Greek or Arabic as a
+/// Living Language) at the bought minimum satisfies it, read through the shared
+/// `catalogue.rs::instance_is` (L2, ruling F5). The finding names every listed
+/// language, so the player sees the real alternatives.
 pub(crate) fn validate_academic_language(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -138,36 +141,48 @@ pub(crate) fn validate_academic_language(
     let Some(requirement) = ruleset.scholarly_language_requirement() else {
         return;
     };
+    let is_language_ability =
+        |ability: &Id| requirement.languages.iter().any(|l| &l.ability == ability);
     let has_academic = entity.ability_scores.iter().any(|entry| {
         ruleset
             .ability(&entry.ability)
             .is_some_and(|ability| ability.category == AbilityCategory::Academic)
-            && entry.ability != requirement.ability
+            && !is_language_ability(&entry.ability)
     });
     if !has_academic {
         return;
     }
-    let satisfied = entity
-        .ability_scores
-        .iter()
-        .any(|entry| entry.ability == requirement.ability && entry.score >= requirement.min_score);
-    if !satisfied {
-        let mut args = args([
-            ("ability", requirement.ability.to_string()),
-            ("min", requirement.min_score.to_string()),
-        ]);
-        // "For most characters, Latin 3 is required" (`ArMDE:7151`): the check stays any
-        // instance of the dead language, but the finding names the rules' exemplar.
-        if let Some(exemplar) = &requirement.exemplar {
-            args.insert("exemplar".to_string(), exemplar.clone());
-        }
-        issues.push(ValidationIssue::warning(
-            ValidationIssue::CODE_ACADEMIC_ABILITY_WITHOUT_SCHOLARLY_LANGUAGE,
-            CreationPhase::Abilities,
-            args,
-            None,
-        ));
+    let satisfied = entity.ability_scores.iter().any(|entry| {
+        entry.score >= requirement.min_score
+            && requirement.languages.iter().any(|language| {
+                language.ability == entry.ability
+                    && language.values.iter().any(|value| {
+                        crate::catalogue::instance_is(
+                            ruleset,
+                            &entry.ability,
+                            entry.parameter.as_ref(),
+                            value.as_str(),
+                        )
+                    })
+            })
+    });
+    if satisfied {
+        return;
     }
+    let languages: Vec<&str> = requirement
+        .languages
+        .iter()
+        .flat_map(|language| language.values.iter().map(Id::as_str))
+        .collect();
+    issues.push(ValidationIssue::warning(
+        ValidationIssue::CODE_ACADEMIC_ABILITY_WITHOUT_SCHOLARLY_LANGUAGE,
+        CreationPhase::Abilities,
+        args([
+            ("languages", languages.join(", ")),
+            ("min", requirement.min_score.to_string()),
+        ]),
+        None,
+    ));
 }
 
 #[cfg(test)]

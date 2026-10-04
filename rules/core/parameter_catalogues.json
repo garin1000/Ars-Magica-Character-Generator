@@ -1,14 +1,19 @@
 {
   "catalogues": [
     {
-      "id": "catalogue.language",
+      "id": "catalogue.language_dead",
+      "values": [
+        { "id": "language.gothic", "source": { "anchor": "clan-ilfetu", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } },
+        { "id": "language.hebrew", "source": { "anchor": "educated-hebrew", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3723, 3725] } },
+        { "id": "language.latin", "source": { "anchor": "educated", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] } }
+      ]
+    },
+    {
+      "id": "catalogue.language_living",
       "values": [
         { "id": "language.arabic", "source": { "anchor": "educated-islamic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3719, 3721] } },
         { "id": "language.aramaic", "source": { "anchor": "educated-hebrew", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3723, 3725] } },
-        { "id": "language.gothic", "source": { "anchor": "clan-ilfetu", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } },
         { "id": "language.greek", "source": { "anchor": "educated-islamic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3719, 3721] } },
-        { "id": "language.hebrew", "source": { "anchor": "educated-hebrew", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3723, 3725] } },
-        { "id": "language.latin", "source": { "anchor": "educated", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] } },
         { "id": "language.persian", "source": { "anchor": "educated-islamic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3719, 3721] } }
       ]
     },

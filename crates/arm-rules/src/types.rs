@@ -7793,7 +7793,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 21"#));
+        assert!(json.contains(r#""schema_version": 22"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -8314,7 +8314,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 21"#));
+        assert!(json.contains(r#""schema_version": 22"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -8677,7 +8677,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 21"#));
+        assert!(json.contains(r#""schema_version": 22"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
@@ -8990,13 +8990,14 @@ mod tests {
     /// Source: ArMDE:16621, :16624-16632.
     #[test]
     fn a_resolved_crisis_round_trips_and_needs_no_schema_bump() {
-        // 21 is X9b's own bump (`virtue.rard` -> `virtue.bard`); the Crisis
-        // widening contributed nothing to it, nor to 20's bump
+        // 22 is L1b's own bump (the Dead/Living Language move), 21 X9b's
+        // (`virtue.rard` -> `virtue.bard`); the Crisis widening contributed
+        // nothing to either, nor to 20's bump
         // (`EquipmentSlot::loadout`, F1), 19's multi-valued parameter type
         // (C5a), 16's funding discriminator, 17's saga year, or 18's
         // ability-parameter type widening (CV4).
         assert_eq!(
-            SCHEMA_VERSION, 21,
+            SCHEMA_VERSION, 22,
             "a purely additive widening earns no bump"
         );
 
@@ -9168,7 +9169,7 @@ mod tests {
         entity.normalize();
         let json = serde_json::to_string_pretty(&entity).unwrap();
         assert!(json.contains(r#""warping_choices""#), "{json}");
-        assert!(json.contains(r#""schema_version": 21"#), "{json}");
+        assert!(json.contains(r#""schema_version": 22"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);

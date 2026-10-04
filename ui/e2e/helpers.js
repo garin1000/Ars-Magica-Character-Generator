@@ -537,7 +537,8 @@ async function addAbilityAtScoreOne(ability, index, parameter) {
  * pools are derived and no input is offered, and apprenticeship funds these three
  * many times over anyway.
  *
- * @param {string} language the dead language to name (any dead language satisfies `ArMDE:2437`)
+ * @param {string} language the dead language to type into the "Other…" field. Only Latin
+ *   satisfies `ArMDE:2437` (L2); typed text naming it in any shipped locale counts.
  */
 export async function satisfyMagusMinimums(language = 'Latin') {
   const pool = await $('[data-testid="xp-pool"]');

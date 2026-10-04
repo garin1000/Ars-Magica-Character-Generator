@@ -120,13 +120,31 @@ above now.** Decide before CV1.
 
 | Catalogue | id | Values (id — EN name) |
 |---|---|---|
-| `language` | `catalogue.language` | `language.latin` — Latin; `language.gothic` — Gothic; `language.hebrew` — Hebrew; `language.arabic` — Arabic; `language.persian` — Persian; `language.greek` — Greek; `language.aramaic` — Aramaic |
+| dead languages | `catalogue.language_dead` | `language.latin` — Latin; `language.gothic` — Gothic; `language.hebrew` — Hebrew |
+| living languages | `catalogue.language_living` | `language.arabic` — Arabic; `language.persian` — Persian; `language.greek` — Greek; `language.aramaic` — Aramaic |
 | `profession` | `catalogue.profession` | `profession.falconer` — Falconer; `profession.marshal` — Marshal; `profession.storyteller` — Storyteller; `profession.poet` — Poet; `profession.master_of_kennels` — Master of Kennels; `profession.merchant` — Merchant |
 | `organization` | `catalogue.organization` | `organization.house_bjornaer` — House Bjornaer; `organization.order_of_hermes` — Order of Hermes |
 
-`ability.dead_language` and `ability.living_language` **share** the `language`
-catalogue; `ability.profession` uses `profession`; `ability.organization_lore`
-uses `organization`. `ability.craft`, `ability.area_lore`,
+**L1a (2026-10-03, try-out finding 6, amends D59): the language catalogue is
+split.** Revision 4 had `ability.dead_language` and `ability.living_language`
+**share** one `catalogue.language`, which offered Arabic and Greek as Dead
+Languages against ArMDE:7432 ("Arabic, Greek and Hebrew fill similar
+functions, although of these only Hebrew is a dead language"). Norbert's
+decision: Dead = Latin, Hebrew, Gothic (ArMDE:3565, "Gothic, the dead language
+that the House uses"); Living = Arabic, Greek, Persian, Aramaic. Each value
+sits in exactly one list; value ids and their i18n names are unchanged.
+Both Abilities keep the parameter key `language` (it picks the
+`param-label-language` Fluent label) and name their catalogue through the new
+`catalogue` field (§ 2.2). The pool instances that cite a now-living value
+(Educated (Islamic)'s Arabic/Greek/Persian, ArMDE:3721; Educated (Hebrew)'s
+Aramaic, ArMDE:3725) move from `ability.dead_language` to
+`ability.living_language`, and Turb Trained's `language` choice (Q-X6-2, "the
+catalogue's dead languages", ArMDE:5181) narrows to the dead list. Saves
+holding a living value under Dead Language
+are moved on load by the separate migration slice L1b.
+
+`ability.profession` uses `profession`; `ability.organization_lore` uses
+`organization`. `ability.craft`, `ability.area_lore`,
 `ability.mystery_cult_lore` stay uncatalogued.
 
 ---
@@ -192,7 +210,13 @@ pub struct Ability {
 `catalogued: true` means: "this ability's parameter values are looked up in the
 `rules/core/parameter_catalogues.json` catalogue whose id is `catalogue.<parameter
 key>`" — reusing the existing key string rather than a second id field, since
-the two are always in lockstep. `false` (default) means the parameter stays
+the two are always in lockstep. **L1a amends this:** they stopped being in
+lockstep once Dead and Living Language, which share the label key `language`,
+needed different lists (§ 1.3). An Ability now names its catalogue with an
+optional `catalogue: Option<Id>` field (`"catalogue.language_dead"`); when
+absent, the id still falls back to `catalogue.<parameter key>`. Every reader
+(picker options, load integrity, the § 5.3 fold) resolves it the same way.
+`false` (default) means the parameter stays
 free text with no catalogue — unchanged for `craft`/`area`/`mystery_cult`, and
 also the answer for the two Ability-*requirement* mechanisms in § 8, which stay
 wide by design.
@@ -201,7 +225,8 @@ Load-time integrity (`ruleset::integrity`), fails loudly with ids:
 
 - `catalogued: true` requires `parameter: Some(_)` (cannot catalogue a
   non-parameterized ability).
-- A `catalogue.<key>` matching the ability's `parameter` must exist.
+- A `catalogue.<key>` matching the ability's `parameter` must exist (L1a: the
+  catalogue the ability's `catalogue` field names, when it declares one).
 - Every catalogue's `values` non-empty, sorted by `id`, unique **by id**
   within its own catalogue.
 - **[decided, MEDIUM, new]** Within one catalogue, **no two values may collide
@@ -937,7 +962,8 @@ backstop, not a substitute for the table above.
 ## 7. Integrity at load
 
 - Every `AbilityRef.instance`'s literal (now an `Id`) must resolve inside the
-  catalogue named by the target ability's `parameter` key — fail loudly with
+  target ability's catalogue (its `catalogue` field, else the one its
+  `parameter` key names; L1a) — fail loudly with
   the offending literal id and the ability id (mirrors the existing
   `validate_gated_ability_refs` pattern for `ParamValue::Bound`).
 - Catalogue ids unique within their own catalogue; catalogues and values
@@ -946,7 +972,8 @@ backstop, not a substitute for the table above.
   trimmed, case-folded comparison across the union of their EN and DE names**
   (§ 2.2 states the rule; this bullet is its Integrity-section restatement).
 - Every catalogue id has an `en` and `de` i18n name.
-- `catalogued: true` requires a matching `catalogue.<parameter>` to exist, and
+- `catalogued: true` requires its catalogue (the `catalogue` field, else
+  `catalogue.<parameter>`; L1a) to exist, and
   vice versa a catalogue naming no ability's parameter key is dead data.
 - **[decided, BLOCKER-mitigating, new] A `Bound`-instance-declaring item must
   be `max_total <= 1`.** `Selection` carries no stable per-copy id, so

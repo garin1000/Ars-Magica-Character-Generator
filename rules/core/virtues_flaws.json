@@ -4478,8 +4478,8 @@
         "amount": 50,
         "abilities": ["ability.judaic_lore", "ability.theology_judaism"],
         "instances": [
-          { "ability": "ability.dead_language", "instance": { "literal": "language.aramaic" } },
-          { "ability": "ability.dead_language", "instance": { "literal": "language.hebrew" } }
+          { "ability": "ability.dead_language", "instance": { "literal": "language.hebrew" } },
+          { "ability": "ability.living_language", "instance": { "literal": "language.aramaic" } }
         ]
       },
       { "type": "ability_authorization", "categories": ["academic"] }
@@ -4499,10 +4499,10 @@
         "amount": 50,
         "abilities": ["ability.artes_liberales", "ability.islamic_law", "ability.theology_islam"],
         "instances": [
-          { "ability": "ability.dead_language", "instance": { "literal": "language.arabic" } },
-          { "ability": "ability.dead_language", "instance": { "literal": "language.greek" } },
           { "ability": "ability.dead_language", "instance": { "literal": "language.latin" } },
-          { "ability": "ability.dead_language", "instance": { "literal": "language.persian" } }
+          { "ability": "ability.living_language", "instance": { "literal": "language.arabic" } },
+          { "ability": "ability.living_language", "instance": { "literal": "language.greek" } },
+          { "ability": "ability.living_language", "instance": { "literal": "language.persian" } }
         ]
       },
       { "type": "ability_authorization", "categories": ["academic"] }
@@ -7348,7 +7348,7 @@
     "incompatible_with": ["flaw.poor", "virtue.wealthy"],
     "parameters": [
       { "key": "language", "type": "ref", "domain": "enumerated",
-        "values": ["language.arabic", "language.aramaic", "language.gothic", "language.greek", "language.hebrew", "language.latin", "language.persian"] }
+        "values": ["language.gothic", "language.hebrew", "language.latin"] }
     ],
     "effects": [
       { "type": "ability_authorization", "categories": ["martial"],

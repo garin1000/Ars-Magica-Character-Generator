@@ -576,6 +576,10 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         parameter_catalogues: (!parameter_catalogues_json.is_empty())
             .then_some(parameter_catalogues_json.as_str()),
     })?;
+    // L2: every shipped locale's catalogue names, so text typed into "Other…" that
+    // names a catalogue value ("Latin", "Latein") counts as that value in the
+    // session, exactly as the load fold reads it on reopening.
+    let ruleset = ruleset.with_catalogue_names(catalogue_names_in_every_locale(rules_dir));
     // Load the requested language's rules text. For any non-English language,
     // English is loaded as a per-field fallback so a not-yet-translated string
     // (e.g. a missing German spell description) surfaces the English text rather
@@ -632,6 +636,40 @@ fn merge_catalogue_display_names(localized: &mut LocalizedRuleset, rules_dir: &P
             },
         );
     }
+}
+
+/// Every catalogue value's display names across **every** locale directory under
+/// `rules_dir/i18n/` that ships a `parameter_catalogue.json` — value id → names,
+/// locales in directory-name order. Matching keys for
+/// [`arm_rules::Ruleset::with_catalogue_names`] (L2), never shown.
+///
+/// Best-effort like [`merge_catalogue_display_names`]: an unreadable directory, a
+/// locale without the file, or a malformed file contributes nothing rather than
+/// failing the load over auxiliary naming text. Which locales exist is data: a
+/// rules directory adding one needs no code change.
+fn catalogue_names_in_every_locale(rules_dir: &Path) -> BTreeMap<Id, Vec<String>> {
+    let mut names: BTreeMap<Id, Vec<String>> = BTreeMap::new();
+    let Ok(entries) = fs::read_dir(rules_dir.join("i18n")) else {
+        return names;
+    };
+    let mut locale_dirs: Vec<_> = entries
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.is_dir())
+        .collect();
+    locale_dirs.sort();
+    for dir in locale_dirs {
+        let Ok(json) = fs::read_to_string(dir.join("parameter_catalogue.json")) else {
+            continue;
+        };
+        let Ok(locale_names) = arm_rules::parse_catalogue_names(&json) else {
+            continue;
+        };
+        for (id, name) in locale_names {
+            names.entry(id).or_default().push(name);
+        }
+    }
+    names
 }
 
 /// Design § 5.5: converts every bought Ability score linked to

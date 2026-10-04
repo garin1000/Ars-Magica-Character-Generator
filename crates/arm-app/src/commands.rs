@@ -847,6 +847,13 @@ pub struct OpenedDocument {
     /// still resolves correctly.
     ///
     pub migrated_catalogued_parameters: Vec<MigratedCatalogueParameter>,
+    /// Ability instances a pre-22 save stored under the sibling Ability whose
+    /// catalogue no longer holds their value, moved by the load (L1b, try-out
+    /// finding 6). Empty for a save that needed no move. Ids and scores only —
+    /// both Abilities, the catalogue value, the moved score and, on a collision,
+    /// the score already in place — so the frontend composes its own one-time
+    /// localized notice, as it does for the CV4b reports above.
+    pub moved_ability_parameters: Vec<arm_rules::migration::MovedAbilityParameter>,
 }
 
 /// One parameterized Ability instance whose stored value did not match any
@@ -896,6 +903,7 @@ pub fn opened_document(path: String, loaded: arm_rules::LoadedEntity) -> OpenedD
                 resolved,
             })
             .collect(),
+        moved_ability_parameters: loaded.moved_ability_parameters,
     }
 }
 

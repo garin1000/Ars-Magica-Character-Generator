@@ -35,7 +35,8 @@
    * show the "(Language)" hint while the character plainly has Latin.
    */
   function instanceOf(row: MagusMinimumAbility): string | null {
-    if (row.parameter) return row.parameter;
+    // A catalogue value id (`language.latin`) reads as its localized name.
+    if (row.parameter) return localized?.i18n[row.parameter]?.name ?? row.parameter;
     let best: { score: number; parameter: string | null } | null = null;
     for (const bought of store.entity.ability_scores ?? []) {
       if (bought.ability !== row.ability) continue;
@@ -55,9 +56,9 @@
    * The Ability label goes through `requirementAbilityLabel`, the same path the
    * `issue-magus_minimum_ability` message takes, so the checklist and the finding
    * word the demand identically. That is also where the rules' own exemplar is
-   * named — `ArMDE:2437` says "Latin 1" while the enforced check is "any Dead
-   * Language 1", so the row states the demand as the rulebook does and trails the
-   * widening as `requirementExemplarNote`, clear of the score.
+   * named — `ArMDE:2437` says "Latin 1", so the row states the demand as the rulebook
+   * does and trails the Ability it is bought as (`requirementExemplarNote`), clear of
+   * the score.
    */
   function statusOf(row: MagusMinimumAbility): string {
     if (!localized) return '';

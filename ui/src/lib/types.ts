@@ -754,13 +754,11 @@ export type AbilityRequirementKind = 'required' | 'recommended';
 // character bought, and whether that satisfies it. Mirrors the engine's
 // `MagusMinimumAbility`. `score` is the BOUGHT score — a Virtue's +2 to use is not
 // training the Order can examine — and `parameter` narrows the demand to one
-// instance, unset throughout the shipped data.
+// instance: a catalogue value id for a catalogued Ability (`language.latin`, L2).
 export interface MagusMinimumAbility {
   ability: string;
-  // One example instance the rules themselves name ("latin"), as a language-neutral
-  // slug labelled through `exemplar.<slug>` in the rules i18n. Present because the
-  // enforced check is deliberately wider than the rules' letter — the rules say
-  // "Latin 1", the engine can only demand any Dead Language. See
+  // How the rules word the demand ("latin" → "Latin 1"), as a language-neutral slug
+  // labelled through `exemplar.<slug>` in the rules i18n. See
   // `requirementAbilityLabel` in derive.ts.
   exemplar?: string;
   parameter?: string;
@@ -2154,8 +2152,8 @@ export interface ApprenticeshipRules {
 }
 
 // An Ability score a rule demands. Mirrors the engine's `AbilityRequirement`;
-// `parameter` narrows the demand to one instance of a parameterized Ability and is
-// unset throughout the shipped data (the match is by Ability id).
+// `parameter` narrows the demand to one instance of a parameterized Ability: a
+// catalogue value id for a catalogued Ability (the shipped Latin rows, L2).
 export interface AbilityRequirement {
   ability: string;
   // A label key, not a ref: one example the rules name in prose, resolved through

@@ -141,18 +141,45 @@ pub struct Ability {
     /// Upbringing).
     #[serde(default, skip_serializing_if = "is_false")]
     pub locality_dependent: bool,
-    /// Whether this ability's parameter values are looked up in the
-    /// `rules/core/parameter_catalogues.json` catalogue whose id is
-    /// `catalogue.<parameter key>` (CV1/CV2,
+    /// Whether this ability's parameter values are looked up in a
+    /// `rules/core/parameter_catalogues.json` catalogue — the one
+    /// [`Ability::catalogue_id`] names (CV1/CV2, L1a;
     /// `docs/vf-audit/design-cv-catalogued-values.md`). `false` (default) means
     /// the parameter stays free text with no catalogue — unchanged for
     /// `craft`/`area`/`mystery_cult`. `true` requires `parameter: Some(_)` and a
     /// matching catalogue to exist (`Ruleset::validate_integrity`).
     #[serde(default, skip_serializing_if = "is_false")]
     pub catalogued: bool,
+    /// The catalogue a `catalogued` ability draws on, when it is not the
+    /// `catalogue.<parameter key>` default (L1a). Dead and Living Language
+    /// share the label key `language` but not the list, so each names its
+    /// own (`catalogue.language_dead` / `catalogue.language_living`). Read it
+    /// through [`Ability::catalogue_id`], never directly.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub catalogue: Option<Id>,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<SourceRef>,
+}
+
+impl Ability {
+    /// The id of the catalogue this ability's parameter values come from:
+    /// the explicit [`Ability::catalogue`] field, else
+    /// `catalogue.<parameter key>`. `None` when the ability is not
+    /// `catalogued`, or is catalogued but takes no parameter and names no
+    /// catalogue (an authoring error integrity reports). Every reader — the
+    /// picker options, load integrity and the load-time name fold — goes
+    /// through this one function, so they cannot disagree.
+    pub fn catalogue_id(&self) -> Option<Id> {
+        if !self.catalogued {
+            return None;
+        }
+        if let Some(named) = &self.catalogue {
+            return Some(named.clone());
+        }
+        let key = self.parameter.as_deref()?;
+        Some(Id::new(format!("catalogue.{key}")))
+    }
 }
 
 /// One row of the Ability advancement table: `total_xp` is the experience needed

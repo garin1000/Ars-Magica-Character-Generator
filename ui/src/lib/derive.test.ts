@@ -50,6 +50,7 @@ import {
   invalidSelectionIds,
   isDisabled,
   minLearnableLevel,
+  movedAbilityParameterNotice,
   nonTakeableReason,
   orderSelectedSpells,
   usedSpellForms,
@@ -3284,6 +3285,155 @@ describe('agingMigrationNotice (slice-2 handoff)', () => {
   });
 });
 
+// --- L1b: the one-time notice for the 21 -> 22 language move ------------------
+
+/**
+ * L1b (try-out finding 6, decisions C5): loading a pre-22 save moves a language
+ * instance from the Ability whose catalogue no longer holds its value (Dead vs
+ * Living Language) to the one that does, and tells the player once. The engine
+ * reports ids and scores only; this composes the sentence. Every Ability and
+ * value is named by its localized name, never the raw id, and a collision names
+ * both scores.
+ */
+describe('movedAbilityParameterNotice (L1b)', () => {
+  const bundles = { en: buildBundle('en'), de: buildBundle('de') } as const;
+  const translator =
+    (lang: Lang): Translate =>
+    (key, a) =>
+      formatMessage(bundles[lang], key, a);
+
+  /** Just enough ruleset for the two language Abilities and their values, per locale. */
+  function languageRuleset(lang: Lang): LocalizedRuleset {
+    const names =
+      lang === 'en'
+        ? { dead: 'Dead Language', living: 'Living Language', arabic: 'Arabic', latin: 'Latin' }
+        : { dead: 'Tote Sprache', living: 'Lebende Sprache', arabic: 'Arabisch', latin: 'Latein' };
+    const localized = makeRuleset([], {
+      i18n: {
+        'ability.dead_language': { name: `{language} (${names.dead})`, name_unfilled: names.dead },
+        'ability.living_language': {
+          name: `{language} (${names.living})`,
+          name_unfilled: names.living,
+        },
+        'language.arabic': { name: names.arabic },
+        'language.latin': { name: names.latin },
+      },
+    });
+    localized.ruleset.abilities = {
+      'ability.dead_language': {
+        id: 'ability.dead_language',
+        category: 'academic',
+        parameter: 'language',
+      },
+      'ability.living_language': {
+        id: 'ability.living_language',
+        category: 'general',
+        parameter: 'language',
+      },
+    } as unknown as LocalizedRuleset['ruleset']['abilities'];
+    return localized;
+  }
+
+  /** Strips Fluent's bidi isolation marks so a substring check reads plainly. */
+  const plain = (s: string | null) => s?.replace(/[⁨⁩]/g, '') ?? null;
+
+  it('says nothing when nothing moved, or before a ruleset is loaded', () => {
+    expect(movedAbilityParameterNotice(languageRuleset('en'), [], translator('en'))).toBeNull();
+    expect(
+      movedAbilityParameterNotice(
+        null,
+        [
+          {
+            from: 'ability.dead_language',
+            to: 'ability.living_language',
+            value: 'language.arabic',
+            score: 3,
+          },
+        ],
+        translator('en'),
+      ),
+    ).toBeNull();
+  });
+
+  it.each([
+    ['en', 'Arabic', 'Dead Language', 'Living Language'],
+    ['de', 'Arabisch', 'Tote Sprache', 'Lebende Sprache'],
+  ] as const)(
+    'names the value and both Abilities, never an id (%s)',
+    (lang, value, dead, living) => {
+      const notice = plain(
+        movedAbilityParameterNotice(
+          languageRuleset(lang),
+          [
+            {
+              from: 'ability.dead_language',
+              to: 'ability.living_language',
+              value: 'language.arabic',
+              score: 3,
+            },
+          ],
+          translator(lang),
+        ),
+      );
+      expect(notice).not.toBeNull();
+      expect(notice).toContain(value);
+      expect(notice).toContain(dead);
+      expect(notice).toContain(living);
+      expect(notice).not.toContain('language.arabic');
+      expect(notice).not.toContain('ability.');
+      expect(notice).not.toContain('{');
+    },
+  );
+
+  it.each(['en', 'de'] as const)('names both scores on a collision (%s)', (lang) => {
+    const notice = plain(
+      movedAbilityParameterNotice(
+        languageRuleset(lang),
+        [
+          {
+            from: 'ability.living_language',
+            to: 'ability.dead_language',
+            value: 'language.latin',
+            score: 7,
+            existing_score: 3,
+          },
+        ],
+        translator(lang),
+      ),
+    );
+    expect(notice).not.toBeNull();
+    expect(notice).toContain('7');
+    expect(notice).toContain('3');
+    expect(notice).toContain(lang === 'en' ? 'Latin' : 'Latein');
+    expect(notice).not.toContain('{');
+  });
+
+  it('lists every moved entry in one notice', () => {
+    const notice = plain(
+      movedAbilityParameterNotice(
+        languageRuleset('en'),
+        [
+          {
+            from: 'ability.dead_language',
+            to: 'ability.living_language',
+            value: 'language.arabic',
+            score: 3,
+          },
+          {
+            from: 'ability.living_language',
+            to: 'ability.dead_language',
+            value: 'language.latin',
+            score: 1,
+          },
+        ],
+        translator('en'),
+      ),
+    );
+    expect(notice).toContain('Arabic');
+    expect(notice).toContain('Latin');
+  });
+});
+
 // --- C4: grouping + sorting selected V/F and abilities ----------------------
 
 describe('groupSelectionsByCategory', () => {
@@ -5486,5 +5636,183 @@ describe('sameParam', () => {
     const catalogued: AbilityParamValue = { id: 'language.latin' };
     const text: AbilityParamValue = { text: 'language.latin' };
     expect(sameParam(catalogued, text, resolvedLinks)).toBe(false);
+  });
+});
+
+// L2 (try-out finding 8, ruling F5): the language requirements name the real
+// languages. The Academic warning lists every qualifying language from data
+// (ArMDE:7151: "a Latin, Greek, Hebrew, or Arabic score of at least 3"); the magus
+// minimum is Latin itself, so its note no longer says "any Dead Language".
+describe('language requirement messages (L2)', () => {
+  const bundles = { en: buildBundle('en'), de: buildBundle('de') } as const;
+  const translator =
+    (lang: Lang): Translate =>
+    (key, a) =>
+      formatMessage(bundles[lang], key, a);
+
+  /** The two language Abilities, the four scholarly languages and the exemplar. */
+  function languageRuleset(lang: Lang): LocalizedRuleset {
+    const n =
+      lang === 'en'
+        ? {
+            dead: 'Dead Language',
+            living: 'Living Language',
+            latin: 'Latin',
+            hebrew: 'Hebrew',
+            greek: 'Greek',
+            arabic: 'Arabic',
+          }
+        : {
+            dead: 'Tote Sprache',
+            living: 'Lebende Sprache',
+            latin: 'Latein',
+            hebrew: 'Hebräisch',
+            greek: 'Griechisch',
+            arabic: 'Arabisch',
+          };
+    const localized = makeRuleset([], {
+      i18n: {
+        'ability.dead_language': { name: `{language} (${n.dead})`, name_unfilled: n.dead },
+        'ability.living_language': { name: `{language} (${n.living})`, name_unfilled: n.living },
+        'language.latin': { name: n.latin },
+        'language.hebrew': { name: n.hebrew },
+        'language.greek': { name: n.greek },
+        'language.arabic': { name: n.arabic },
+        'exemplar.latin': { name: n.latin },
+      },
+    });
+    localized.ruleset.abilities = {
+      'ability.dead_language': {
+        id: 'ability.dead_language',
+        category: 'academic',
+        parameter: 'language',
+      },
+      'ability.living_language': {
+        id: 'ability.living_language',
+        category: 'general',
+        parameter: 'language',
+      },
+    } as unknown as LocalizedRuleset['ruleset']['abilities'];
+    return localized;
+  }
+
+  /** Strips Fluent's bidi isolation marks so a string compares plainly. */
+  const plain = (s: string) => s.replace(/[⁦-⁩]/g, '');
+
+  function message(lang: Lang, code: string, args: Record<string, string>): string {
+    const t = translator(lang);
+    return plain(t(`issue-${code}`, resolveIssueArgs(languageRuleset(lang), args, t)));
+  }
+
+  const FOUR = 'language.latin, language.hebrew, language.greek, language.arabic';
+
+  it.each([
+    [
+      'en',
+      'An Academic Ability normally requires Latin, Hebrew, Greek or Arabic at 3 or better.',
+    ],
+    [
+      'de',
+      'Eine akademische Fertigkeit erfordert normalerweise Latein, Hebräisch, Griechisch oder Arabisch auf 3 oder höher.',
+    ],
+  ] as const)('the Academic warning names all four languages (%s)', (lang, expected) => {
+    expect(
+      message(lang, 'academic_ability_without_scholarly_language', { languages: FOUR, min: '3' }),
+    ).toBe(expected);
+  });
+
+  it('builds the list from the data, whatever its length', () => {
+    // Count-neutral: one language is printed alone, two are joined by "or" alone.
+    expect(
+      message('en', 'academic_ability_without_scholarly_language', {
+        languages: 'language.latin',
+        min: '3',
+      }),
+    ).toBe('An Academic Ability normally requires Latin at 3 or better.');
+    expect(
+      message('de', 'academic_ability_without_scholarly_language', {
+        languages: 'language.latin, language.greek',
+        min: '3',
+      }),
+    ).toBe(
+      'Eine akademische Fertigkeit erfordert normalerweise Latein oder Griechisch auf 3 oder höher.',
+    );
+  });
+
+  it('never prints a catalogue id or the old "any Dead Language" claim', () => {
+    for (const lang of ['en', 'de'] as const) {
+      const text = message(lang, 'academic_ability_without_scholarly_language', {
+        languages: FOUR,
+        min: '3',
+      });
+      expect(text).not.toContain('language.');
+      expect(text).not.toContain('any');
+      expect(text).not.toContain('genügt');
+    }
+  });
+
+  it.each([
+    [
+      'en',
+      'magus_minimum_ability',
+      '1',
+      'No magus is admitted to the Order below Latin 1 (Dead Language); this character has 0.',
+    ],
+    [
+      'de',
+      'magus_minimum_ability',
+      '1',
+      'Kein Magus wird unter Latein 1 (Tote Sprache) in den Orden aufgenommen; dieser Charakter hat 0.',
+    ],
+    [
+      'en',
+      'magus_recommended_ability',
+      '4',
+      'Latin 4 (Dead Language) is recommended for a magus just out of apprenticeship; this character has 0.',
+    ],
+    [
+      'de',
+      'magus_recommended_ability',
+      '4',
+      'Latein 4 (Tote Sprache) wird für einen Magus empfohlen, der gerade aus der Lehrlingszeit kommt; dieser Charakter hat 0.',
+    ],
+  ] as const)('%s %s names Latin, not any Dead Language', (lang, code, min, expected) => {
+    expect(
+      message(lang, code, {
+        ability: 'ability.dead_language',
+        exemplar: 'latin',
+        min,
+        score: '0',
+      }),
+    ).toBe(expected);
+  });
+
+  // L1b defect: `ability_parameter_outside_catalogue` carries the CATALOGUE ID as its
+  // `parameter`, and the instance was composed into the Ability name unresolved.
+  it.each([
+    [
+      'en',
+      "Arabic (Dead Language): this value is not on this Ability's list. Choose it again from the list.",
+    ],
+    [
+      'de',
+      'Arabisch (Tote Sprache): Dieser Eintrag steht nicht in der Liste dieser Fertigkeit. Wähle ihn erneut aus der Liste.',
+    ],
+  ] as const)('a catalogued instance arg reads as its localized name (%s)', (lang, expected) => {
+    const text = message(lang, 'ability_parameter_outside_catalogue', {
+      ability: 'ability.dead_language',
+      parameter: 'language.arabic',
+    });
+    expect(text).toBe(expected);
+    expect(text).not.toContain('language.arabic');
+  });
+
+  it('a typed instance arg still reads as typed', () => {
+    expect(
+      message('en', 'ability_parameter_outside_catalogue', {
+        ability: 'ability.dead_language',
+        parameter: 'Old Norse',
+      }),
+    ).toContain('Old Norse (Dead Language):');
   });
 });

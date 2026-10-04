@@ -17,9 +17,7 @@ use std::fmt;
 
 use crate::effective::selections_for_effects;
 use crate::ruleset::Ruleset;
-use crate::types::{
-    AbilityFunding, AbilityParameterValue, Effect, Entity, Id, SelectionParamValue, is_zero,
-};
+use crate::types::{AbilityFunding, Effect, Entity, Id, SelectionParamValue, is_zero};
 
 /// The life-stage experience rules, loaded from `rules/core/life_stages.json`.
 // No `Default`: every field is authored data with no meaningful zero (a childhood
@@ -138,28 +136,21 @@ pub struct PostApprenticeshipRules {
 /// An Ability score some rule demands, as data: which Ability, at what score, and
 /// optionally at which instance.
 ///
-/// Shaped like [`crate::ruleset::ScholarlyLanguageRequirement`] plus `parameter`,
-/// and deliberately NOT unified with it: they live in different files and gate
-/// different rules, so sharing a type would couple two unrelated edits.
+/// Deliberately NOT unified with [`crate::ruleset::ScholarlyLanguageRequirement`]:
+/// they live in different files and gate different rules, so sharing a type would
+/// couple two unrelated edits.
 ///
-/// `parameter` is `None` throughout the shipped data — "Latin 1" is matched by
-/// Ability id, since an instance value is free-text player input with no
-/// localization path (a German player types "Latein"). The match therefore stays
-/// **deliberately wider than the rules' letter**, permanently: languages are
-/// troupe-defined free text and the rulebook publishes no language list, so
-/// this requirement stays instance-blind by design even after CV
-/// (`docs/vf-audit/design-cv-catalogued-values.md`) adds a `language` catalogue
-/// for literal instances elsewhere — narrowing to one instance here would
-/// misstate ArMDE:7151/:2437's *any-qualifying-language* rule, not merely widen
-/// an implementation gap. See `RULES.md`.
-/// [`Self::exemplar`] is the honesty fix for that widening.
+/// L2 (try-out finding 8) reverses the old instance-blind reading: "Latin 1" names
+/// the catalogue value (`parameter: language.latin`), and the check reads the
+/// bought instance through `catalogue.rs::instance_is`, so another Dead Language no
+/// longer satisfies it, while typed text naming Latin in any shipped locale
+/// ("Latein") does. See `RULES.md`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AbilityRequirement {
     /// The Ability the requirement is about.
     pub ability: Id,
-    /// One example instance the **rules themselves name**, as a language-neutral
-    /// slug (`"latin"`), so a UI can show what the passage actually demands beside
-    /// the wider check the engine enforces.
+    /// How the **rules themselves word** the demand, as a language-neutral slug
+    /// (`"latin"`), so a UI can state it as the passage does ("Latin 1").
     ///
     /// A **label key, not a `ref`**: it names no catalogue entry, so the loader's
     /// referential-integrity pass deliberately does not resolve it (see
@@ -173,7 +164,9 @@ pub struct AbilityRequirement {
     pub exemplar: Option<String>,
     /// The score it must reach.
     pub min_score: u8,
-    /// The instance it must be, for a parameterized Ability. `None` accepts any.
+    /// The instance it must be, for a parameterized Ability: a value of its own
+    /// catalogue when the Ability is catalogued (checked at load), else free text.
+    /// `None` accepts any.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameter: Option<String>,
 }
@@ -309,11 +302,12 @@ pub fn magus_minimum_abilities(entity: &Entity, ruleset: &Ruleset) -> Vec<MagusM
                 .filter(|bought| {
                     bought.ability == requirement.ability
                         && requirement.parameter.as_ref().is_none_or(|wanted| {
-                            bought
-                                .parameter
-                                .as_ref()
-                                .and_then(AbilityParameterValue::match_key)
-                                == Some(wanted.as_str())
+                            crate::catalogue::instance_is(
+                                ruleset,
+                                &bought.ability,
+                                bought.parameter.as_ref(),
+                                wanted,
+                            )
                         })
                 })
                 .map(|bought| bought.score)
@@ -2001,31 +1995,111 @@ mod tests {
         assert!(magus_minimum_abilities(&magus(vec![]), &rate_ruleset()).is_empty());
     }
 
-    /// **Documented approximation.** "Latin 1" is matched by Ability id alone, so a
-    /// magus whose only dead language is Greek satisfies it. The rules model Latin as
-    /// one *value* of the parameterized dead-language Ability, and an instance value
-    /// is free-text player input with no localization path — a German player types
-    /// "Latein" — so an instance match would fail for every non-English user, which is
-    /// worse than under-enforcing. `AbilityRequirement::parameter` is the tightening a
-    /// future language registry would fill in.
+    /// A ruleset whose Latin minimum names the catalogue value, as the shipped
+    /// `life_stages.json` does since L2: Dead Language with its own catalogue
+    /// (Gothic, Hebrew, Latin) and "Latin 1" as `parameter: language.latin`.
+    fn latin_minimum_ruleset() -> Ruleset {
+        let types = r#"[
+          { "id": "magus", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general"],
+            "hermetically_trained": true, "order_member": true, "creation_phases": [] }
+        ]"#;
+        let abilities = r#"{
+          "advancement": [ { "score": 1, "total_xp": 5 } ],
+          "abilities": [
+            { "id": "ability.artes_liberales", "category": "academic" },
+            { "id": "ability.dead_language", "category": "academic", "parameter": "language",
+              "catalogued": true, "catalogue": "catalogue.language_dead" },
+            { "id": "ability.living_language", "category": "general", "parameter": "language" },
+            { "id": "ability.magic_theory", "category": "arcane" },
+            { "id": "ability.parma_magica", "category": "arcane" },
+            { "id": "ability.penetration", "category": "arcane" },
+            { "id": "ability.philosophiae", "category": "academic" }
+          ]
+        }"#;
+        let catalogues = r#"{ "catalogues": [
+          { "id": "catalogue.language_dead", "values": [
+            { "id": "language.gothic", "source": { "anchor": "clan-ilfetu",
+              "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } },
+            { "id": "language.hebrew", "source": { "anchor": "educated-hebrew",
+              "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3723, 3725] } },
+            { "id": "language.latin", "source": { "anchor": "educated",
+              "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] } }
+          ] }
+        ] }"#;
+        let life_stages = r#"{
+          "apprenticeship": {
+            "years": 15, "xp": 240,
+            "minimum_abilities": [
+              { "ability": "ability.dead_language", "min_score": 1, "parameter": "language.latin" }
+            ],
+            "recommended_abilities": [], "recommended_xp": 0,
+            "truncated_xp_per_year": 16, "truncated_spell_levels_per_year": 8
+          },
+          "childhood": { "years": 5, "native_language_ability": "ability.living_language",
+                         "native_language_xp": 75, "spread_xp": 45, "spread_abilities": [] },
+          "later_life": { "xp_per_year": 15 },
+          "post_apprenticeship": { "lab_season_cost": 10,
+                                   "max_charged_lab_seasons_per_year": 3, "points_per_year": 30 }
+        }"#;
+        Ruleset::from_sources(crate::ruleset::RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: "[]",
+            type_profiles: types,
+            abilities: Some(abilities),
+            life_stages: Some(life_stages),
+            parameter_catalogues: Some(catalogues),
+            ..crate::ruleset::RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    /// L2 (try-out finding 8) reverses the old approximation, under which "Latin 1"
+    /// was matched by Ability id alone and Dead Language: Greek satisfied it. Latin
+    /// is now a catalogue value, so the requirement names it and the check reads the
+    /// instance: only a bought `language.latin` counts. Neither another Dead
+    /// Language nor typed text that merely spells the id ("language.latin" in the
+    /// "Other…" field) is Latin. Typed text spelling a catalogue NAME is matched
+    /// against the names the app attaches to the ruleset (none here; see
+    /// `tests/l2_typed_language_in_session.rs`).
     ///
-    /// Asserted so this can never become accidental. See `RULES.md`.
+    /// Source: ArMDE:2437 ("Latin 1").
     #[test]
-    fn latin_is_matched_by_ability_id_not_by_instance() {
-        let rs = minimum_ruleset();
-        let greek = magus(vec![("ability.dead_language", Some("Greek"), 1)]);
-        let row = magus_minimum_abilities(&greek, &rs)
-            .into_iter()
-            .find(|row| {
-                row.ability == Id::new("ability.dead_language")
-                    && row.requirement == AbilityRequirementKind::Required
-            })
-            .expect("the Latin minimum is on the checklist");
-        assert!(row.met, "any dead language satisfies it: {row:?}");
-        assert!(
-            row.parameter.is_none(),
-            "the shipped requirement names no instance: {row:?}"
+    fn latin_is_matched_by_catalogue_value_not_by_ability_id() {
+        let rs = latin_minimum_ruleset();
+        let latin_minimum = |parameter: crate::types::AbilityParameterValue| {
+            let mut entity = magus(vec![]);
+            let mut row = crate::types::AbilityScore::new(Id::new("ability.dead_language"), 1);
+            row.parameter = Some(parameter);
+            entity.ability_scores = vec![row];
+            magus_minimum_abilities(&entity, &rs)
+                .into_iter()
+                .find(|row| {
+                    row.ability == Id::new("ability.dead_language")
+                        && row.requirement == AbilityRequirementKind::Required
+                })
+                .expect("the Latin minimum is on the checklist")
+        };
+        let catalogued =
+            |id: &str| crate::types::AbilityParameterValue::Catalogued { id: Id::new(id) };
+        let typed = crate::types::AbilityParameterValue::text;
+
+        let latin = latin_minimum(catalogued("language.latin"));
+        assert!(latin.met, "Dead Language: Latin 1 is Latin 1: {latin:?}");
+        assert_eq!(
+            latin.parameter.map(|p| p.to_string()),
+            Some("language.latin".to_string()),
+            "the requirement names its instance"
         );
+        for (case, parameter) in [
+            ("Dead Language: Hebrew", catalogued("language.hebrew")),
+            ("typed Greek", typed("Greek")),
+            ("typed text spelling the id", typed("language.latin")),
+        ] {
+            let row = latin_minimum(parameter);
+            assert!(!row.met, "{case} 1 is not Latin 1: {row:?}");
+        }
     }
 
     /// The score tested is the **bought** one. "Magi must have the following minimum
@@ -2096,7 +2170,7 @@ mod tests {
             json.contains(r#""childhood_package": "childhood.athletic""#),
             "{json}"
         );
-        assert!(json.contains(r#""schema_version": 21"#), "{json}");
+        assert!(json.contains(r#""schema_version": 22"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
@@ -2157,10 +2231,11 @@ mod tests {
         // the widened aging log, 16 from the funding discriminator, 17 from the
         // per-document saga year, 18 from CV4's ability-parameter widening, 19
         // from C5a's multi-valued parameter type, 20 from F1's
-        // `EquipmentSlot::loadout` move, and 21 from X9b's `virtue.rard` ->
-        // `virtue.bard` id rename, not from this plan).
-        assert_eq!(SCHEMA_VERSION, 21);
-        assert!(json.contains(r#""schema_version": 21"#), "{json}");
+        // `EquipmentSlot::loadout` move, 21 from X9b's `virtue.rard` ->
+        // `virtue.bard` id rename, and 22 from L1b's Dead/Living Language move,
+        // not from this plan).
+        assert_eq!(SCHEMA_VERSION, 22);
+        assert!(json.contains(r#""schema_version": 22"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(back.life_stages, Some(out_of_apprenticeship));

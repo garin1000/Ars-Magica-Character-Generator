@@ -609,6 +609,15 @@ unresolved-catalogued-parameter-list-separator = ,
 migrated-catalogued-parameter-notice = { $items } were recognized from what you typed and are now linked to their catalogue entry.
 migrated-catalogued-parameter-item = { $ability }: "{ $text }" → { $resolved }
 migrated-catalogued-parameter-list-separator = ,
+# L1b (try-out finding 6): shown once after opening a save written before an
+# Ability's value list was split (Dead / Living Language). Each entry moved to the
+# Ability whose list holds its value. $from / $to are the instance's full names
+# ("Arabic (Dead Language)"); on a collision $score is the moved entry's score,
+# $existing the one already there, and $kept the score that was kept.
+moved-ability-parameter-notice = This character was saved before a list of values was split, so these entries were moved to the Ability whose list holds them: { $items }. Saving keeps the change.
+moved-ability-parameter-item = { $from } → { $to }
+moved-ability-parameter-collision-item = { $from } ({ $score }) → { $to }, which already had it at { $existing }; the higher score, { $kept }, was kept
+moved-ability-parameter-list-separator = ;
 warping-points-label = Warping points
 twilight-scars-label = Twilight Scars
 twilight-scar-placeholder = Describe the scar
@@ -1016,13 +1025,18 @@ param-group-label = Combination { $n }
 # mouse-hover only. { $label } is the option's name, { $reason } the
 # vf-blocked-incompatible text.
 param-option-blocked = { $label } ({ $reason })
-# A requirement the engine enforces more widely than the rules word it. The rules'
-# own example heads the requirement so its score follows it directly ("Latin 1", as
-# the rulebook states it) and THIS note trails the score, saying what the engine
-# really checks: "below Latin 1 (any Dead Language)". It leads with a space of its
-# own because the messages carrying it interpolate it with no separator — it is
-# empty for a requirement that names no example.
-requirement-exemplar = { " " }(any { $ability })
+# A requirement the rules word by its example. The example heads the requirement so
+# its score follows it directly ("Latin 1", as the rulebook states it) and THIS note
+# trails the score, naming the Ability it is bought as: "below Latin 1 (Dead
+# Language)". It leads with a space of its own because the messages carrying it
+# interpolate it with no separator — it is empty for a requirement that names no
+# example.
+requirement-exemplar = { " " }({ $ability })
+# A list of alternative languages, e.g. "Latin, Hebrew, Greek or Arabic". The UI joins
+# all but the last with the separator, then the last with -or; a single language is
+# printed alone.
+requirement-language-list-separator = ,
+requirement-language-list-or = { $head } or { $last }
 # Localized parameter labels, keyed by the engine's parameter key. Also used as the
 # type-aware placeholder/prompt for an empty parameter input.
 param-label-ability = Ability
@@ -1334,7 +1348,7 @@ issue-restricted_xp_unspent = { $origin }: { $unspent } of { $amount } restricte
 issue-general_xp_unspent = { $unspent } of { $pool } experience points are still unspent.
 issue-spell_levels_unspent = { $unspent } of { $budget } levels of spells are still unspent.
 issue-ability_category_requires_virtue = { $ability } is { $ability_category }, which needs a Virtue granting access at character creation.
-issue-academic_ability_without_scholarly_language = An Academic Ability normally requires { $ability }{ $qualifier } at { $min } or better.
+issue-academic_ability_without_scholarly_language = An Academic Ability normally requires { $languages } at { $min } or better.
 issue-life_stage_age_unset = Enter the character's age: later life earns experience per year, so with no age only childhood's blocks can be counted.
 issue-life_stage_age_before_childhood = Age { $age } falls inside childhood, which lasts { $min } years — there are no later-life years to earn experience in.
 issue-life_stage_age_before_gauntlet = No magus is gauntleted at { $age }: the Gauntlet comes no earlier than { $min } — childhood plus fifteen years of apprenticeship.
@@ -1352,6 +1366,7 @@ issue-childhood_slot_unfilled = Fill in the { $key } for { $ability } before app
 issue-childhood_slot_is_native_language = The { $key } for { $ability } must differ from the native language { $language }.
 issue-childhood_slot_duplicate_value = The { $key } { $value } for { $ability } is already used by another entry of the childhood package; choose a different one.
 issue-ability_parameter_required = { $ability } needs a value (e.g. the specific Area or Language).
+issue-ability_parameter_outside_catalogue = { $ability }: this value is not on this Ability's list. Choose it again from the list.
 issue-ability_score_out_of_range = Ability { $ability } score { $score } is outside the allowed range (0 to { $max }).
 # `$ability` is the WHOLE Ability name, instance included ("Craft: Carpentry",
 # "Brandenburg-Kunde"): the engine's `parameter` arg is folded into it by
