@@ -238,6 +238,13 @@ pub struct AbilityInstanceRef {
     /// instance" meaning.
     #[serde(default, skip_serializing_if = "crate::types::is_false")]
     pub ambiguous: bool,
+    /// Present when `parameter` is text the player typed (childhood's native
+    /// language): what it resolved to against the Ability's catalogue, once, with
+    /// the ruleset (`catalogue.rs::resolve_typed_instance`, N4a). Governs
+    /// [`Self::satisfied_by`] in place of the plain-string comparison, so the
+    /// plan's "Arabic" is a picked or reloaded `Catalogued(language.arabic)` row.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) typed: Option<crate::catalogue::ResolvedInstance>,
 }
 
 impl AbilityInstanceRef {
@@ -248,14 +255,18 @@ impl AbilityInstanceRef {
 
     /// Whether the bought `parameter` satisfies this instance restriction
     /// (design § 4). An ambiguous Bound source ([`Self::ambiguous`]) satisfies
-    /// nothing, checked first so it overrides every other case. Otherwise: a
+    /// nothing, checked first so it overrides every other case. A typed instance
+    /// ([`Self::typed`]) matches by its resolution. Otherwise: a
     /// Bound-origin restriction ([`Self::bound_source`]) matches by design §
     /// 4's rule 1/2; anything else falls back to the plain-string comparison
-    /// (`Literal` or free text). No restriction at all (`parameter: None` and
+    /// (`Literal`). No restriction at all (`parameter: None` and
     /// no `bound_source`) is vacuously satisfied.
     pub(crate) fn satisfied_by(&self, parameter: Option<&AbilityParameterValue>) -> bool {
         if self.ambiguous {
             return false;
+        }
+        if let Some(typed) = &self.typed {
+            return typed.is_satisfied_by(parameter);
         }
         match (&self.bound_source, self.parameter.as_deref()) {
             (Some((item, param)), target) => {
@@ -413,6 +424,11 @@ struct FlowPool {
 /// (`life_stage_native_language_unset`), and no pool is created for a language
 /// nobody picked.
 ///
+/// The plan's language is typed text, so it is resolved once against the
+/// Ability's catalogue names in every locale (N4a, D84.1): "Arabic" is then the
+/// `Catalogued(language.arabic)` row a player picked or a reload folded, and any
+/// spelling of its names; text naming no value ("Gaelic") matches case-folded.
+///
 /// The `life_stages` check here genuinely asks "is there a plan to read a language
 /// off", **not** "is this character life-stage funded". The funding mode is decided
 /// once, upstream: this is only called inside the `if let Some((rules, budget))`
@@ -421,15 +437,19 @@ struct FlowPool {
 fn native_language_instance(
     entity: &Entity,
     rules: &crate::life_stage::LifeStageRules,
+    ruleset: &Ruleset,
 ) -> Option<AbilityInstanceRef> {
     let language = entity.life_stages.as_ref()?.native_language.clone()?;
+    let ability = rules.childhood.native_language_ability.clone();
+    let typed = crate::catalogue::resolve_typed_instance(ruleset, &ability, &language);
     Some(AbilityInstanceRef {
-        ability: rules.childhood.native_language_ability.clone(),
+        ability,
         parameter: Some(language),
         // Free text the plan itself chose, not a rules-authored Literal.
         requires_catalogued: false,
         bound_source: None,
         ambiguous: false,
+        typed: Some(typed),
     })
 }
 
@@ -487,8 +507,9 @@ impl AuthorizedAbility {
 /// named `target` (design § 4 rule 1): when the restriction came from a
 /// rules-authored `ParamValue::Literal` (`requires_catalogued`), it is
 /// satisfied ONLY by a bought `Catalogued` with the same id, never by `Text`
-/// holding the identical letters. Every other origin (plain free text, e.g.
-/// childhood's native-language instance) keeps the plain-string comparison.
+/// holding the identical letters. Every other origin keeps the plain-string
+/// comparison (childhood's native language resolves through its own
+/// [`AbilityInstanceRef::typed`] instead).
 /// Never called for a `Bound`-origin restriction — see
 /// [`bound_instance_satisfied`] for that. Shared by
 /// [`AbilityInstanceRef::satisfied_by`] and [`AuthorizedAbility::covers`] so
@@ -614,6 +635,7 @@ pub(crate) fn resolve_instance(
             requires_catalogued: matches!(instance, Some(crate::types::ParamValue::Literal { .. })),
             bound_source: None,
             ambiguous: false,
+            typed: None,
         };
     };
     // Design § 4.1: resolved against effective selections, not just read off
@@ -627,6 +649,7 @@ pub(crate) fn resolve_instance(
             requires_catalogued: false,
             bound_source: Some((selection.item_ref.clone(), param.clone())),
             ambiguous: false,
+            typed: None,
         },
         LinkResolution::Ambiguous(_) => AbilityInstanceRef {
             ability,
@@ -634,6 +657,7 @@ pub(crate) fn resolve_instance(
             requires_catalogued: false,
             bound_source: None,
             ambiguous: true,
+            typed: None,
         },
         // `selection` is itself an occurrence of its own declaring item, so
         // zero occurrences cannot happen here in practice; treated
@@ -644,6 +668,7 @@ pub(crate) fn resolve_instance(
             requires_catalogued: false,
             bound_source: Some((selection.item_ref.clone(), param.clone())),
             ambiguous: false,
+            typed: None,
         },
     }
 }
@@ -1313,10 +1338,11 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
 /// language nobody picked). Source: ArMDE:2378.
 fn childhood_native_language_pool(
     entity: &Entity,
+    ruleset: &Ruleset,
     rules: &crate::life_stage::LifeStageRules,
     budget: &crate::life_stage::LifeStageBudget,
 ) -> Option<FlowPool> {
-    let native = native_language_instance(entity, rules)?;
+    let native = native_language_instance(entity, rules, ruleset)?;
     Some(FlowPool {
         amount: budget.childhood_native_xp,
         eligibility: PoolEligibility::Ability {
@@ -1336,10 +1362,11 @@ fn childhood_native_language_pool(
 /// pool, which needs a language actually set). Source: ArMDE:2378.
 fn childhood_spread_pool(
     entity: &Entity,
+    ruleset: &Ruleset,
     rules: &crate::life_stage::LifeStageRules,
     budget: &crate::life_stage::LifeStageBudget,
 ) -> FlowPool {
-    let native = native_language_instance(entity, rules);
+    let native = native_language_instance(entity, rules, ruleset);
     FlowPool {
         amount: budget.childhood_spread_xp,
         eligibility: PoolEligibility::Ability {
@@ -1500,8 +1527,10 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
                 },
             });
         } else {
-            flow_pools.extend(childhood_native_language_pool(entity, rules, budget));
-            flow_pools.push(childhood_spread_pool(entity, rules, budget));
+            flow_pools.extend(childhood_native_language_pool(
+                entity, ruleset, rules, budget,
+            ));
+            flow_pools.push(childhood_spread_pool(entity, ruleset, rules, budget));
         }
         let trained = crate::effective::is_hermetically_trained(
             entity,
@@ -2106,6 +2135,7 @@ mod tests {
             requires_catalogued: false,
             bound_source: None,
             ambiguous: false,
+            typed: None,
         };
         assert!(unrestricted.satisfied_by(None));
         assert!(unrestricted.satisfied_by(Some(&AbilityParameterValue::text("anything"))));

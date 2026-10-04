@@ -832,6 +832,18 @@ presumption of correctness.
 
 **Norbert, 2026-10-04** (`tmp/tryout-2026-10-04.md`).
 
+1. **The native language matches by catalogue value, not by spelling** (N4a; a
+   wrong-rules bug found while planning N4). The plan's `native_language` stays free
+   text (N4b makes it a list value), but it is resolved once against the native
+   Ability's catalogue names in every locale (`catalogue.rs::resolve_typed_instance`,
+   trimmed and case-folded, the `instance_is` rule); text naming no value keeps a folded
+   text match. The 75-XP pool, the missing-score warning, `SlotIsNativeLanguage` and the
+   duplicate-slot key all compare through it, and `apply_package` writes `Catalogued`
+   where the text names a value. Before, a list-picked Arabic row was unfunded by a plan
+   saying "Arabic", and so was every typed one after the load fold. The UI mirror folds
+   case and whitespace only (one locale's names); a cross-locale spelling is caught by the
+   engine on Apply.
+
 3. **A split "Minor or Major" entry shows its magnitude in square brackets** (N11).
    Where the book prints ONE entry taken at either magnitude and the catalogue splits
    it into two items, the name carries the magnitude in brackets: "Ambitious [Major]",

@@ -8143,7 +8143,8 @@ Abilities are bought with experience earned in blocks, not from one bank:
   package was taken or the 45 points were divided by hand.
 - **Applying a package is a monotone raise.** `childhood::apply_package`
   (`childhood.rs`) returns a **new** entity whose Ability rows are each brought to
-  `max(existing, entry.score)`, keyed by `(ability, parameter)` — so a score bought
+  `max(existing, entry.score)`, keyed by `(ability, instance)` — the existing row
+  holding that instance in any spelling, picked or typed (N4a, D84.1) — so a score bought
   from later life is never lowered by taking a package, a row the package does not
   name is never removed, and an existing row keeps its specialty. Two properties
   follow, both pinned by tests: the application is **idempotent** (the same package
@@ -8164,7 +8165,23 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `Living Language 5` — exactly the shape hand-buying two instances of one
   parameterized Ability produces. A slot that is missing, or blank once trimmed, is
   **unanswered** rather than answered with an empty string, since `Area Lore ()` is
-  a row no one asked for.
+  a row no one asked for. Where the answer (or the plan's native language) spells a
+  catalogue value's name in any locale, the row stores that value
+  (`Catalogued(language.arabic)` for "arabic"), as the load fold would; text naming
+  no value ("Gaelic") stays text (N4a, D84.1,
+  `catalogue.rs::resolve_typed_instance`).
+- **Typed languages compare as the language they name, not as spelled (N4a,
+  D84.1).** The plan's native language is free text, while a Living Language row is
+  `Catalogued` once picked from the list or reloaded (the load fold runs on every
+  load). `catalogue.rs::resolve_typed_instance` resolves the text once against the
+  Ability's catalogue names in every locale (trimmed, case-folded, the `instance_is`
+  rule), else keeps the folded text. The 75-point native pool
+  (`effective/xp.rs::native_language_instance`, carried ruleset-free in
+  `AbilityInstanceRef::typed`), the `life_stage_native_language_missing_score`
+  warning (`validate_life_stage_native_language`), and the two slot checks below all
+  compare through it, so "Arabic", "arabic", "Arabisch" and the picked row are one
+  language. The UI mirror (`derive.ts::childhoodSlotFault`) compares trimmed,
+  lower-cased text: it holds one locale's names, under which that is the same test.
 - **The spread's second language may not be the native one.** `ArMDE:2378` lists what the
   45 points buy as "Living Language (other than the character's **native
   language**)", so a language slot answered with the plan's own native language is

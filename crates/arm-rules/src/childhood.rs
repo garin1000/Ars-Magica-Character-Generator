@@ -20,8 +20,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use crate::ability::AdvancementTable;
+use crate::catalogue::{ResolvedInstance, resolve_typed_instance};
 use crate::ruleset::Ruleset;
-use crate::types::{AbilityParameterValue, AbilityScore, Entity, Id, SourceRef, is_false};
+use crate::types::{AbilityScore, Entity, Id, SourceRef, is_false};
 
 /// One Ability score a Sample Childhood package grants.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -288,15 +289,23 @@ pub fn apply_package(
     let native_language_ability = ruleset
         .life_stages()
         .map(|rules| &rules.childhood.native_language_ability);
-    // The slot each `(ability, value)` pair was first answered under, so a repeat
-    // can name the slot it collides with.
-    let mut answered: BTreeMap<(&Id, &str), &str> = BTreeMap::new();
+    // Typed values are compared as the language each names, not as spelled
+    // (N4a): "arabic", "Arabic" and "Arabisch" are one Living Language.
+    let native_instance = native_language
+        .zip(native_language_ability)
+        .map(|(language, ability)| resolve_typed_instance(ruleset, ability, language));
+    // The slot each `(ability, instance)` pair was first answered under, so a
+    // repeat can name the slot it collides with.
+    let mut answered: BTreeMap<(&Id, ResolvedInstance), &str> = BTreeMap::new();
 
     let mut scores = entity.ability_scores.clone();
     for entry in &package.entries {
         let parameter = if entry.native {
             match native_language {
-                Some(language) => Some(language.to_string()),
+                Some(language) => Some((
+                    resolve_typed_instance(ruleset, &entry.ability, language),
+                    language,
+                )),
                 // Already reported above; there is nothing to write it under.
                 None => continue,
             }
@@ -308,7 +317,10 @@ pub fn apply_package(
                 });
                 continue;
             };
-            if native_language_ability == Some(&entry.ability) && Some(value) == native_language {
+            let instance = resolve_typed_instance(ruleset, &entry.ability, value);
+            if native_language_ability == Some(&entry.ability)
+                && native_instance.as_ref() == Some(&instance)
+            {
                 rejections.push(ChildhoodRejection::SlotIsNativeLanguage {
                     slot: slot.to_string(),
                     ability: entry.ability.clone(),
@@ -318,7 +330,7 @@ pub fn apply_package(
             }
             // Two entries of one Ability answered alike would merge into a single
             // row, so the second entry's experience would vanish.
-            if let Some(other_slot) = answered.insert((&entry.ability, value), slot) {
+            if let Some(other_slot) = answered.insert((&entry.ability, instance.clone()), slot) {
                 rejections.push(ChildhoodRejection::DuplicateSlotValue {
                     slot: slot.to_string(),
                     other_slot: other_slot.to_string(),
@@ -327,14 +339,16 @@ pub fn apply_package(
                 });
                 continue;
             }
-            Some(value.to_string())
+            Some((instance, value))
         } else {
             None
         };
         raise_score(
             &mut scores,
             &entry.ability,
-            parameter.map(AbilityParameterValue::text),
+            parameter
+                .as_ref()
+                .map(|(instance, typed)| (instance, *typed)),
             entry.score,
         );
     }
@@ -362,24 +376,32 @@ fn filled_slot_value<'a>(slot_values: &'a BTreeMap<String, String>, slot: &str) 
     (!value.is_empty()).then_some(value)
 }
 
-/// Raises the `(ability, parameter)` row to `score`, adding it when the
-/// character has none. The raise is monotone — a higher bought score stands —
-/// and an existing row keeps everything else it carries, its specialty included.
+/// Raises the row of `ability` at `instance` (what the player typed, resolved,
+/// and the typed text itself) to `score`, adding it when the character has none.
+/// An existing row is the one holding that instance in any spelling, picked or
+/// typed (N4a); a new row stores the catalogue value where the text names one
+/// ([`ResolvedInstance::to_parameter`]). The raise is monotone — a higher bought
+/// score stands — and an existing row keeps everything else it carries, its
+/// specialty and its own stored value included.
 fn raise_score(
     scores: &mut Vec<AbilityScore>,
     ability: &Id,
-    parameter: Option<AbilityParameterValue>,
+    instance: Option<(&ResolvedInstance, &str)>,
     score: u8,
 ) {
-    if let Some(existing) = scores
-        .iter_mut()
-        .find(|row| row.ability == *ability && row.parameter == parameter)
-    {
+    let holds_instance = |row: &&mut AbilityScore| {
+        row.ability == *ability
+            && match instance {
+                Some((resolved, _)) => resolved.is_satisfied_by(row.parameter.as_ref()),
+                None => row.parameter.is_none(),
+            }
+    };
+    if let Some(existing) = scores.iter_mut().find(holds_instance) {
         existing.score = existing.score.max(score);
         return;
     }
     let mut row = AbilityScore::new(ability.clone(), score);
-    row.parameter = parameter;
+    row.parameter = instance.map(|(resolved, typed)| resolved.to_parameter(typed));
     scores.push(row);
 }
 
@@ -392,7 +414,7 @@ mod tests {
 
     use crate::life_stage::LifeStagePlan;
     use crate::ruleset::{Ruleset, RulesetSources};
-    use crate::types::{AbilityScore, Entity, EntityKind, RulesetRef};
+    use crate::types::{AbilityParameterValue, AbilityScore, Entity, EntityKind, RulesetRef};
 
     /// "Athletic Childhood: Athletics 2, Brawl 2, Native Language 5, Swim 2"
     /// (ArMDE:2384) as the shipped file will carry it — entries in

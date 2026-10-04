@@ -2203,6 +2203,13 @@ export type ChildhoodSlotFault = 'empty' | 'duplicate' | 'native';
  * Reported symmetrically for a duplicate: both answers need looking at, and either
  * one is a legitimate thing to change.
  *
+ * Answers compare as the engine resolves them (N4a,
+ * `catalogue.rs::resolve_typed_instance`): trimmed and case-folded, so "arabic" is
+ * the native "Arabic". The engine also resolves a name against its catalogue value
+ * in every locale; the UI holds only the active locale's names, under which that
+ * resolution is exactly this folded comparison. A cross-locale spelling ("Arabisch"
+ * against "Arabic") is therefore not caught here — the engine rejects it on Apply.
+ *
  * Source: ArMDE:2378, :2384-2388.
  */
 export function childhoodSlotFault(
@@ -2215,10 +2222,10 @@ export function childhoodSlotFault(
   const entry = pkg.entries.find((candidate) => candidate.slot === slot);
   if (!entry) return null;
 
-  const value = (slots[slot] ?? '').trim();
+  const value = foldAnswer(slots[slot]);
   if (!value) return 'empty';
 
-  const nativeLanguage = plan?.native_language?.trim() ?? '';
+  const nativeLanguage = foldAnswer(plan?.native_language);
   const languageAbility = localized.ruleset.life_stages?.childhood.native_language_ability;
   if (nativeLanguage && entry.ability === languageAbility && value === nativeLanguage) {
     return 'native';
@@ -2226,9 +2233,14 @@ export function childhoodSlotFault(
 
   for (const other of pkg.entries) {
     if (!other.slot || other.slot === slot || other.ability !== entry.ability) continue;
-    if ((slots[other.slot] ?? '').trim() === value) return 'duplicate';
+    if (foldAnswer(slots[other.slot]) === value) return 'duplicate';
   }
   return null;
+}
+
+/** A typed answer as the engine compares it: trimmed and lower-cased (`catalogue.rs::fold_name`). */
+function foldAnswer(text: string | null | undefined): string {
+  return (text ?? '').trim().toLowerCase();
 }
 
 /**

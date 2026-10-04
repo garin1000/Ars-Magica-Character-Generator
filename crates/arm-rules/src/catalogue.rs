@@ -248,6 +248,102 @@ pub(crate) fn instance_is(
     }
 }
 
+/// What a typed parameter value names on one Ability (N4a, D84.1): the catalogue
+/// value it spells, or — naming none — its own folded text. Resolved once, with the
+/// ruleset, by [`resolve_typed_instance`]; matched afterwards without it
+/// ([`Self::is_satisfied_by`]), which is what lets a pool's
+/// `effective/xp.rs::AbilityInstanceRef` carry it.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ResolvedInstance {
+    /// The text spells a display name of this catalogue value. `names` holds every
+    /// name the ruleset knows for it, in any locale, folded with [`fold_name`].
+    Catalogued {
+        /// The catalogue value (`language.arabic`).
+        id: Id,
+        /// Its names, folded.
+        names: Vec<String>,
+    },
+    /// The text names no value of the Ability's catalogue (or the Ability has none).
+    Text {
+        /// The text, folded with [`fold_name`].
+        folded: String,
+    },
+}
+
+impl ResolvedInstance {
+    /// Whether a bought `parameter` is this instance — the [`instance_is`] rule:
+    /// `Catalogued` by id; `Text` when it spells one of the value's names, or, for
+    /// text naming no value, the same text, all under [`fold_name`]. Free text never
+    /// matches a `Catalogued` row, and `Linked` or an absent value never matches.
+    pub(crate) fn is_satisfied_by(
+        &self,
+        parameter: Option<&crate::types::AbilityParameterValue>,
+    ) -> bool {
+        use crate::types::AbilityParameterValue;
+        match (self, parameter) {
+            (
+                Self::Catalogued { id, .. },
+                Some(AbilityParameterValue::Catalogued { id: bought }),
+            ) => id == bought,
+            (Self::Catalogued { names, .. }, Some(AbilityParameterValue::Text { text })) => {
+                names.contains(&fold_name(text))
+            }
+            (Self::Text { folded }, Some(AbilityParameterValue::Text { text })) => {
+                fold_name(text) == *folded
+            }
+            _ => false,
+        }
+    }
+
+    /// The value to store for this instance: the catalogue value, or the player's
+    /// own `typed` spelling when it names none.
+    pub(crate) fn to_parameter(&self, typed: &str) -> crate::types::AbilityParameterValue {
+        use crate::types::AbilityParameterValue;
+        match self {
+            Self::Catalogued { id, .. } => AbilityParameterValue::Catalogued { id: id.clone() },
+            Self::Text { .. } => AbilityParameterValue::text(typed),
+        }
+    }
+}
+
+/// Resolves typed `text` against `ability`'s own catalogue (N4a, D84.1): the value
+/// whose display name, in any locale the app attached
+/// ([`crate::Ruleset::with_catalogue_names`]), it spells under [`fold_name`] — the
+/// rule [`instance_is`] and the load fold (`migration.rs::fold_catalogue_matching`)
+/// use — else the folded text itself. Every check that compares a typed language
+/// with a bought one goes through this: childhood's native-language pool, the
+/// "native language not bought" warning, and a Sample Childhood's slot checks. A
+/// ruleset without names attached resolves nothing, so it matches text with text.
+pub(crate) fn resolve_typed_instance(
+    ruleset: &crate::Ruleset,
+    ability: &Id,
+    text: &str,
+) -> ResolvedInstance {
+    let folded = fold_name(text);
+    let catalogue = ruleset
+        .ability(ability)
+        .and_then(crate::Ability::catalogue_id)
+        .and_then(|id| ruleset.catalogue(&id));
+    let named = |value: &&CatalogueValue| {
+        ruleset
+            .catalogue_value_names(&value.id)
+            .iter()
+            .any(|name| fold_name(name) == folded)
+    };
+    match catalogue.and_then(|catalogue| catalogue.values.iter().find(named)) {
+        Some(value) => ResolvedInstance::Catalogued {
+            id: value.id.clone(),
+            names: ruleset
+                .catalogue_value_names(&value.id)
+                .iter()
+                .map(|name| fold_name(name))
+                .collect(),
+        },
+        None => ResolvedInstance::Text { folded },
+    }
+}
+
 /// Loads and validates both locales' catalogue value names against an
 /// already-loaded set of catalogues (design note § 2.2/§ 7):
 ///

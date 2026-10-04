@@ -8,7 +8,6 @@ use super::*;
 
 use crate::childhood::ChildhoodRejection;
 use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
-use crate::types::AbilityParameterValue;
 
 /// Validates a character built through its life stages.
 ///
@@ -112,7 +111,7 @@ pub(crate) fn validate_life_stage_plan(
         validate_post_gauntlet_choices(plan, rules, age, &budget, issues);
     }
 
-    validate_life_stage_native_language(entity, rules, plan, issues);
+    validate_life_stage_native_language(entity, ruleset, rules, plan, issues);
     validate_childhood_package_known(ruleset, plan, issues);
 }
 
@@ -217,10 +216,13 @@ fn validate_life_stage_age_meets_minimum(
 /// `childhood.native_language_ability` — at one instance, so "bought" is a row
 /// for exactly that id whose parameter is this language, scoring above 0.
 /// Testing the parameter alone would let an `Area Lore (German)` pass while the
-/// 75-point pool, which keys on the id (`native_language_instance` in
-/// `effective.rs`), funds none of it.
+/// 75-point pool, which keys on the id (`effective/xp.rs::native_language_instance`),
+/// funds none of it. The language is compared as that pool compares it — resolved
+/// against the Ability's catalogue (`catalogue.rs::resolve_typed_instance`, N4a) —
+/// so a picked or reloaded `Catalogued(language.arabic)` is the plan's "Arabic".
 fn validate_life_stage_native_language(
     entity: &Entity,
+    ruleset: &Ruleset,
     rules: &LifeStageRules,
     plan: &LifeStagePlan,
     issues: &mut Vec<ValidationIssue>,
@@ -235,13 +237,11 @@ fn validate_life_stage_native_language(
         // Suppressed while the language is set but unspent — that is the warning
         // below, not this error.
         Some(language) => {
+            let native = &rules.childhood.native_language_ability;
+            let wanted = crate::catalogue::resolve_typed_instance(ruleset, native, language);
             let bought = entity.ability_scores.iter().any(|score| {
-                score.ability == rules.childhood.native_language_ability
-                    && score
-                        .parameter
-                        .as_ref()
-                        .and_then(AbilityParameterValue::match_key)
-                        == Some(language.as_str())
+                score.ability == *native
+                    && wanted.is_satisfied_by(score.parameter.as_ref())
                     && score.score > 0
             });
             if !bought {
