@@ -107,6 +107,21 @@ impl Ruleset {
         &self.parameter_catalogues
     }
 
+    /// Attaches every known display name of each catalogue value (value id →
+    /// names, in any number of locales), so typed text naming a value counts as
+    /// that value in the session (L2; see [`crate::catalogue::instance_is`]). A
+    /// ruleset without them matches catalogued instances by id only.
+    pub fn with_catalogue_names(mut self, names: BTreeMap<Id, Vec<String>>) -> Self {
+        self.catalogue_names = names;
+        self
+    }
+
+    /// Every attached display name of catalogue value `value`, in every locale;
+    /// empty when none are attached.
+    pub(crate) fn catalogue_value_names(&self, value: &Id) -> &[String] {
+        self.catalogue_names.get(value).map_or(&[], Vec::as_slice)
+    }
+
     /// The age → maximum-Ability-score band table (ArMDE:2366-2374). Empty when the
     /// ruleset ships no age caps.
     pub fn age_ability_caps(&self) -> &AgeAbilityCaps {

@@ -191,7 +191,7 @@ impl fmt::Display for IssueSeverity {
 /// | `general_xp_unspent` | warning | abilities | `pool`, `used`, `unspent` |
 /// | `restricted_xp_unspent` | warning | experience | `amount`, `used`, `unspent`, `origin_kind`, `origin` |
 /// | `ability_category_requires_virtue` | error | abilities | `ability`, `ability_category` |
-/// | `academic_ability_without_scholarly_language` | warning | abilities | `ability`, `min`, `exemplar`&nbsp;(opt) |
+/// | `academic_ability_without_scholarly_language` | warning | abilities | `languages`, `min` |
 /// | `life_stage_age_unset` | error | experience | (none) |
 /// | `life_stage_age_before_childhood` | error | experience | `age`, `min` |
 /// | `life_stage_age_before_gauntlet` | error | experience | `age`, `min` |

@@ -349,29 +349,39 @@ fn check_duplicate_ids(parsed: &ParsedSources) -> Vec<String> {
     errors
 }
 
-/// The scholarly-language expectation names an ability, which must resolve and
-/// be parameterized (a scholarly language is one instance of a dead language).
-///
-/// Its `exemplar` is **not** checked, and must not be: it is a label key pointing at
-/// `exemplar.<slug>` in the i18n layer, not a `ref` into any catalogue. See
-/// [`crate::AbilityRequirement::exemplar`] and `RULES.md`.
+/// Each scholarly-language entry names an ability, which must resolve and be
+/// parameterized (a scholarly language is one instance of a language Ability), and
+/// at least one value. That every value sits in the Ability's own catalogue is a
+/// cross-file check, made in `integrity.rs::validate_scholarly_language_values`.
 fn check_scholarly_language(abilities_file: &AbilitiesFile) -> Vec<String> {
     let mut errors = Vec::new();
-    if let Some(requirement) = &abilities_file.scholarly_language {
+    let Some(requirement) = &abilities_file.scholarly_language else {
+        return errors;
+    };
+    if requirement.languages.is_empty() {
+        errors.push("scholarly-language requirement names no languages".to_string());
+    }
+    for language in &requirement.languages {
         match abilities_file
             .abilities
             .iter()
-            .find(|a| a.id == requirement.ability)
+            .find(|a| a.id == language.ability)
         {
             None => errors.push(format!(
                 "scholarly-language requirement names unknown ability '{}'",
-                requirement.ability
+                language.ability
             )),
             Some(ability) if ability.parameter.is_none() => errors.push(format!(
                 "scholarly-language ability '{}' takes no parameter, so it cannot name one language",
-                requirement.ability
+                language.ability
             )),
             Some(_) => {}
+        }
+        if language.values.is_empty() {
+            errors.push(format!(
+                "scholarly-language ability '{}' names no values",
+                language.ability
+            ));
         }
     }
     errors
@@ -469,6 +479,7 @@ fn assemble_ruleset(id: &str, version: &str, parsed: ParsedSources) -> Ruleset {
         shields: index_by_id(equipment_file.shields, |s| s.id.clone()),
         armor: index_by_id(equipment_file.armor, |a| a.id.clone()),
         parameter_catalogues: index_by_id(parameter_catalogues, |c| c.id.clone()),
+        catalogue_names: BTreeMap::new(),
     };
     ruleset.apply_derived_fields();
     ruleset

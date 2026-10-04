@@ -1054,14 +1054,18 @@ param-group-label = Kombination { $n }
 # <option> nur beim Überfahren mit der Maus erscheint. { $label } ist der Name der
 # Option, { $reason } der Text von vf-blocked-incompatible.
 param-option-blocked = { $label } ({ $reason })
-# Eine Forderung, die die Engine weiter prüft, als die Regeln sie formulieren. Das
-# Beispiel der Regeln steht vorn, damit der Wert unmittelbar folgt („Latein 1“, wie
-# das Regelwerk es schreibt), und DIESER Zusatz folgt dem Wert und nennt, was die
-# Engine wirklich prüft: „unter Latein 1 (Tote Sprache genügt)“. Er bringt ein
-# eigenes Leerzeichen mit, weil die tragenden Meldungen ihn ohne Trenner einsetzen —
-# bei einer Forderung ohne Beispiel ist er leer. Ohne Artikel und ohne Adjektiv
-# formuliert, damit das eingesetzte Fertigkeitswort in jedem Genus passt.
-requirement-exemplar = { " " }({ $ability } genügt)
+# Eine Forderung, die die Regeln über ihr Beispiel formulieren. Das Beispiel steht
+# vorn, damit der Wert unmittelbar folgt („Latein 1“, wie das Regelwerk es schreibt),
+# und DIESER Zusatz folgt dem Wert und nennt die Fertigkeit, als die es erworben wird:
+# „unter Latein 1 (Tote Sprache)“. Er bringt ein eigenes Leerzeichen mit, weil die
+# tragenden Meldungen ihn ohne Trenner einsetzen — bei einer Forderung ohne Beispiel
+# ist er leer.
+requirement-exemplar = { " " }({ $ability })
+# Eine Liste alternativer Sprachen, z. B. „Latein, Hebräisch, Griechisch oder
+# Arabisch“. Die Oberfläche verbindet alle bis auf die letzte mit dem Trenner, dann
+# die letzte mit -or; eine einzelne Sprache steht allein.
+requirement-language-list-separator = ,
+requirement-language-list-or = { $head } oder { $last }
 # Lokalisierte Parameter-Bezeichnungen, je Parameter-Schlüssel der Engine. Dienen auch
 # als typbezogener Platzhalter/Hinweis für ein leeres Parameter-Eingabefeld.
 param-label-ability = Fertigkeit
@@ -1408,7 +1412,7 @@ issue-restricted_xp_unspent = { $origin }: { $unspent } von { $amount } eingesch
 issue-general_xp_unspent = { $unspent } von { $pool } Erfahrungspunkten sind noch nicht ausgegeben.
 issue-spell_levels_unspent = { $unspent } von { $budget } Stufen Zauber sind noch nicht ausgegeben.
 issue-ability_category_requires_virtue = { $ability } ist { $ability_category } und benötigt eine Tugend, die den Zugang bei der Charaktererschaffung gewährt.
-issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit erfordert normalerweise { $ability }{ $qualifier } auf { $min } oder höher.
+issue-academic_ability_without_scholarly_language = Eine akademische Fertigkeit erfordert normalerweise { $languages } auf { $min } oder höher.
 issue-life_stage_age_unset = Trage das Alter des Charakters ein: das spätere Leben erbringt Erfahrungspunkte pro Jahr, ohne Alter zählen daher nur die Blöcke der Kindheit.
 issue-life_stage_age_before_childhood = Alter { $age } liegt innerhalb der Kindheit, die { $min } Jahre dauert — es gibt keine späteren Lebensjahre, in denen Erfahrung erworben wird.
 issue-life_stage_age_before_gauntlet = Kein Magus legt die Lehrlingsprüfung mit { $age } Jahren ab: Sie kommt frühestens mit { $min } — Kindheit plus fünfzehn Jahre Lehrlingszeit.

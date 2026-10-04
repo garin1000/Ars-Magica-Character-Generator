@@ -29,7 +29,13 @@
     { "max_score": 9 }
   ],
   "categories_requiring_virtue": ["academic", "arcane", "martial"],
-  "scholarly_language": { "ability": "ability.dead_language", "exemplar": "latin", "min_score": 3 },
+  "scholarly_language": {
+    "languages": [
+      { "ability": "ability.dead_language", "values": ["language.latin", "language.hebrew"] },
+      { "ability": "ability.living_language", "values": ["language.greek", "language.arabic"] }
+    ],
+    "min_score": 3
+  },
   "abilities": [
     { "id": "ability.animal_handling", "category": "general", "source": { "anchor": "animal-handling", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7273, 7275] } },
     { "id": "ability.animal_ken", "category": "supernatural", "requires_training": true, "source": { "anchor": "animal-ken-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [7277, 7279] } },

@@ -213,6 +213,41 @@ pub(crate) fn fold_free_text(text: &str) -> String {
     fold_name(&text.split_whitespace().collect::<Vec<_>>().join(" "))
 }
 
+/// Whether a bought instance of `ability` (its `parameter`) is the instance
+/// `wanted` — the one matching rule every "is this language X" check shares
+/// (L2, try-out finding 8):
+///
+/// - a `Catalogued` value is `wanted` when its id is `wanted`;
+/// - for a **catalogued** Ability, `Text` is `wanted` when it spells one of the
+///   value's display names in any locale the app attached
+///   ([`crate::Ruleset::with_catalogue_names`]), trimmed and case-folded with the
+///   load fold's own [`fold_name`]. Text spelling the id itself never is: an id is
+///   not a name;
+/// - for an uncatalogued Ability, `wanted` is free text, so `Text` matches it
+///   under the same fold;
+/// - `Linked` and an absent value never match.
+pub(crate) fn instance_is(
+    ruleset: &crate::Ruleset,
+    ability: &Id,
+    parameter: Option<&crate::types::AbilityParameterValue>,
+    wanted: &str,
+) -> bool {
+    use crate::types::AbilityParameterValue;
+    let catalogued = ruleset
+        .ability(ability)
+        .and_then(crate::Ability::catalogue_id)
+        .is_some();
+    match parameter {
+        Some(AbilityParameterValue::Catalogued { id }) => id.as_str() == wanted,
+        Some(AbilityParameterValue::Text { text }) if catalogued => ruleset
+            .catalogue_value_names(&Id::new(wanted))
+            .iter()
+            .any(|name| fold_name(name) == fold_name(text)),
+        Some(AbilityParameterValue::Text { text }) => fold_name(text) == fold_name(wanted),
+        Some(AbilityParameterValue::Linked { .. }) | None => false,
+    }
+}
+
 /// Loads and validates both locales' catalogue value names against an
 /// already-loaded set of catalogues (design note § 2.2/§ 7):
 ///

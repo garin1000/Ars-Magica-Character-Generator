@@ -385,7 +385,11 @@ fn magus_full_build_validates() {
         {
             let mut a = AbilityScore::new(Id::new("ability.dead_language"), 4);
             a.specialty = Some("Latin".into());
-            a.parameter = Some(AbilityParameterValue::text("Latin"));
+            // Latin picked from the list (L2: the minimum reads the instance, and a
+            // bare engine ruleset carries no names to read typed text by).
+            a.parameter = Some(AbilityParameterValue::Catalogued {
+                id: Id::new("language.latin"),
+            });
             a
         },
         ability("ability.artes_liberales", 1),

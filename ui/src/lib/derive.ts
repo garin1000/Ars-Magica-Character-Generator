@@ -1771,20 +1771,18 @@ export function exemplarLabel(
  * An Ability requirement's label — the example the rules themselves name, where they
  * name one.
  *
- * The Core Rules demand "Latin 1" of every magus (ArMDE:2437), but
- * `ability.dead_language` takes a **free-text** instance — a troupe decides which
- * languages exist and which are dead — so the engine can only enforce "any Dead
- * Language ≥ N". That widening is permanent (see `crates/arm-rules/RULES.md`), so the
- * honest presentation is to enforce the wide check and *say* what the rules mean.
+ * The Core Rules demand "Latin 1" of every magus (ArMDE:2437). Since L2 the engine
+ * checks Latin itself (`parameter: language.latin`), and the exemplar is how the
+ * demand is worded.
  *
  * The label is the **exemplar alone** so the score can follow it directly and the
  * sentence reads "Latin 1", as the rulebook states it. It used to read "Dead Language
  * (e.g. Latin)", which put the example between the Ability and its score — "below Dead
  * Language (e.g. Latin) 1" reads as though "e.g. Latin" were being scored, and buries
- * the demand. The widening itself is not dropped: it trails the score as
+ * the demand. The Ability it is bought as trails the score as
  * [`requirementExemplarNote`]. The bought instance is deliberately ignored when the
- * rules name an exemplar — the requirement is "Latin 1" whichever dead language the
- * character happens to hold, and the score in the same sentence says what they hold.
+ * rules name an exemplar — the requirement is "Latin 1" whatever the character holds,
+ * and the score in the same sentence says what they hold.
  *
  * The single label path for both surfaces that show such a requirement — the magus
  * minimums checklist and the `issue-magus_minimum_ability` /
@@ -1805,14 +1803,13 @@ export function requirementAbilityLabel(
 }
 
 /**
- * The note that trails a widened requirement's score — " (any Dead Language)" — or
+ * The note that trails an exemplar requirement's score — " (Dead Language)" — or
  * the empty string when the requirement names no exemplar.
  *
  * The companion of [`requirementAbilityLabel`]: that one names the rules' example so
- * "Latin 1" reads as one phrase, this one says what the engine actually enforces, in
- * the one place where it cannot be mistaken for part of the score. It names the
- * **general** Ability with no instance filled in, so it stays true of every dead
- * language a troupe invents.
+ * "Latin 1" reads as one phrase, this one names the Ability the example is bought as,
+ * in the one place where it cannot be mistaken for part of the score. It names the
+ * **general** Ability with no instance filled in.
  *
  * Empty rather than absent, because every message interpolating it does so
  * unconditionally, and a variable the args map does not carry renders as a
@@ -2104,6 +2101,7 @@ export function resolveIssueArgValue(
   t: Translate,
 ): string {
   if (argKey === 'allowed') return resolveAllowedList(localized, value, t);
+  if (argKey === 'languages') return resolveLanguageList(localized, value, t);
   if (localized.i18n[value]) return displayName(localized, value, undefined, paramHint(t));
   const prefix = ENUM_ARG_FLUENT_PREFIX[argKey];
   if (prefix && !/^-?\d+$/.test(value)) return t(`${prefix}${value}`);
@@ -2138,12 +2136,46 @@ function resolveAllowedList(localized: LocalizedRuleset, value: string, t: Trans
 }
 
 /**
+ * `academic_ability_without_scholarly_language`'s `languages` arg
+ * (`validation/authorization.rs::validate_academic_language`, L2): the qualifying
+ * languages as catalogue value ids, pre-joined by the engine with ", " in the order
+ * the rules data lists them. Each id becomes its localized name; all but the last
+ * are joined with `requirement-language-list-separator`, and the last is joined to
+ * them with `requirement-language-list-or` ("Latin, Hebrew, Greek or Arabic"). One
+ * language is printed alone, so the wording holds for any count the data names.
+ */
+function resolveLanguageList(localized: LocalizedRuleset, value: string, t: Translate): string {
+  const names = value
+    .split(', ')
+    .filter((token) => token !== '')
+    .map((id) => abilityParamDisplay({ id }, localized));
+  const last = names.pop();
+  if (last === undefined) return '';
+  if (names.length === 0) return last;
+  const head = names.join(`${t('requirement-language-list-separator')} `);
+  return t('requirement-language-list-or', { head, last });
+}
+
+/**
+ * An Ability-instance arg as a player reads it: a catalogue value id
+ * (`language.arabic`, as `ability_parameter_outside_catalogue` sends it) becomes its
+ * localized name; free text stays as typed.
+ */
+function instanceArgLabel(
+  localized: LocalizedRuleset,
+  value: string | undefined,
+): string | undefined {
+  if (value === undefined || !localized.i18n[value]) return value;
+  return abilityParamDisplay({ id: value }, localized);
+}
+
+/**
  * Every value in a validation-issue arg map, localized via `resolveIssueArgValue`.
  *
  * One arg is not independent of the others: an `exemplar` **qualifies** the `ability`
  * it accompanies rather than standing alone, so it never reaches a message under its
  * own name. It becomes two args instead — the `ability` label ("Latin") and a
- * `qualifier` note (" (any Dead Language)") the message places AFTER the score, so the
+ * `qualifier` note (" (Dead Language)") the message places AFTER the score, so the
  * requirement reads "Latin 1" as the rulebook states it. Two consequences worth
  * keeping in mind:
  *  - a message must NOT interpolate `$exemplar` — the arg is optional in the engine's
@@ -2172,7 +2204,12 @@ export function resolveIssueArgs(
   for (const [nameKey, instanceKey] of Object.entries(ABILITY_INSTANCE_ARG)) {
     const abilityId = args[nameKey];
     if (abilityId === undefined || !localized.ruleset.abilities?.[abilityId]) continue;
-    resolved[nameKey] = abilityDisplayName(localized, abilityId, args[instanceKey], paramHint(t));
+    resolved[nameKey] = abilityDisplayName(
+      localized,
+      abilityId,
+      instanceArgLabel(localized, args[instanceKey]),
+      paramHint(t),
+    );
   }
   if (args.ability) {
     // Emitted for every `ability` arg, empty where the rules name no exemplar: a

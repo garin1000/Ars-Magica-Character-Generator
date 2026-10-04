@@ -924,9 +924,8 @@ fn shipped_apprenticeship_carries_the_2435_and_2437_numbers() {
         "\"240 experience points\" (ArMDE:2435)"
     );
 
-    // "Parma Magica 1, Magic Theory 1, Latin 1" (ArMDE:2437). Latin is one instance of
-    // the parameterized dead-language Ability, matched by id (see RULES.md), so no
-    // requirement names a parameter.
+    // "Parma Magica 1, Magic Theory 1, Latin 1" (ArMDE:2437). Latin is the catalogue
+    // value `language.latin` of the dead-language Ability (L2, see RULES.md).
     let stated: Vec<(&str, u8, Option<&str>)> = apprenticeship
         .minimum_abilities
         .iter()
@@ -935,7 +934,7 @@ fn shipped_apprenticeship_carries_the_2435_and_2437_numbers() {
     assert_eq!(
         stated,
         vec![
-            ("ability.dead_language", 1, None),
+            ("ability.dead_language", 1, Some("language.latin")),
             ("ability.magic_theory", 1, None),
             ("ability.parma_magica", 1, None),
         ]
@@ -951,7 +950,7 @@ fn shipped_apprenticeship_carries_the_2435_and_2437_numbers() {
         recommended,
         vec![
             ("ability.artes_liberales", 1, None),
-            ("ability.dead_language", 4, None),
+            ("ability.dead_language", 4, Some("language.latin")),
             ("ability.magic_theory", 3, None),
             ("ability.parma_magica", 1, None),
         ]
@@ -5247,13 +5246,13 @@ fn exemplar_id(slug: &str) -> Id {
     Id::new(format!("exemplar.{slug}"))
 }
 
-/// #32: `ArMDE:2437` names **Latin** three times, but `ability.dead_language` takes a
-/// free-text instance, so the engine can only enforce "any Dead Language ≥ N". The
-/// widening is permanent (see RULES.md); the honesty fix is to carry the rules' own
-/// exemplar as a language-neutral slug and label it per locale.
+/// #32: `ArMDE:2437` names **Latin**, and the rules' own exemplar labels the demand
+/// per locale ("Latin 1"). Since L2 the check itself reads the instance
+/// (`parameter: language.latin`, pinned in `l2_language_requirements.rs`); the
+/// exemplar stays the label. The Academic requirement lists its languages instead
+/// (ArMDE:7151), so it carries no exemplar.
 ///
-/// Source: ArMDE:2437 (Latin 1), `ArMDE:2455`
-/// (the recommended Latin 4), `ArMDE:7151` ("For most characters, Latin 3 is required").
+/// Source: ArMDE:2437 (Latin 1), `ArMDE:2455` (the recommended Latin 4).
 #[test]
 fn the_magus_minimum_dead_language_requirement_names_its_exemplar() {
     let rs = load_full_ruleset();
@@ -5278,15 +5277,6 @@ fn the_magus_minimum_dead_language_requirement_names_its_exemplar() {
         recommended.exemplar.as_deref(),
         Some("latin"),
         ":2455 Latin 4"
-    );
-
-    let scholarly = rs
-        .scholarly_language_requirement()
-        .expect("the shipped abilities declare a scholarly language");
-    assert_eq!(
-        scholarly.exemplar.as_deref(),
-        Some("latin"),
-        ":7151 Latin 3 for most characters"
     );
 }
 

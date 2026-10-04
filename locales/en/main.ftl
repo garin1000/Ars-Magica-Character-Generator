@@ -1008,13 +1008,18 @@ param-group-label = Combination { $n }
 # mouse-hover only. { $label } is the option's name, { $reason } the
 # vf-blocked-incompatible text.
 param-option-blocked = { $label } ({ $reason })
-# A requirement the engine enforces more widely than the rules word it. The rules'
-# own example heads the requirement so its score follows it directly ("Latin 1", as
-# the rulebook states it) and THIS note trails the score, saying what the engine
-# really checks: "below Latin 1 (any Dead Language)". It leads with a space of its
-# own because the messages carrying it interpolate it with no separator — it is
-# empty for a requirement that names no example.
-requirement-exemplar = { " " }(any { $ability })
+# A requirement the rules word by its example. The example heads the requirement so
+# its score follows it directly ("Latin 1", as the rulebook states it) and THIS note
+# trails the score, naming the Ability it is bought as: "below Latin 1 (Dead
+# Language)". It leads with a space of its own because the messages carrying it
+# interpolate it with no separator — it is empty for a requirement that names no
+# example.
+requirement-exemplar = { " " }({ $ability })
+# A list of alternative languages, e.g. "Latin, Hebrew, Greek or Arabic". The UI joins
+# all but the last with the separator, then the last with -or; a single language is
+# printed alone.
+requirement-language-list-separator = ,
+requirement-language-list-or = { $head } or { $last }
 # Localized parameter labels, keyed by the engine's parameter key. Also used as the
 # type-aware placeholder/prompt for an empty parameter input.
 param-label-ability = Ability
@@ -1326,7 +1331,7 @@ issue-restricted_xp_unspent = { $origin }: { $unspent } of { $amount } restricte
 issue-general_xp_unspent = { $unspent } of { $pool } experience points are still unspent.
 issue-spell_levels_unspent = { $unspent } of { $budget } levels of spells are still unspent.
 issue-ability_category_requires_virtue = { $ability } is { $ability_category }, which needs a Virtue granting access at character creation.
-issue-academic_ability_without_scholarly_language = An Academic Ability normally requires { $ability }{ $qualifier } at { $min } or better.
+issue-academic_ability_without_scholarly_language = An Academic Ability normally requires { $languages } at { $min } or better.
 issue-life_stage_age_unset = Enter the character's age: later life earns experience per year, so with no age only childhood's blocks can be counted.
 issue-life_stage_age_before_childhood = Age { $age } falls inside childhood, which lasts { $min } years — there are no later-life years to earn experience in.
 issue-life_stage_age_before_gauntlet = No magus is gauntleted at { $age }: the Gauntlet comes no earlier than { $min } — childhood plus fifteen years of apprenticeship.

@@ -1269,15 +1269,15 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2282, shared by
-  `validate_prereq_refs` :2159 and `validate_effect_refs` :2697) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2346, shared by
+  `validate_prereq_refs` :2223 and `validate_effect_refs` :2761) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
   prerequisites/effects and claim the catalogue as it stands). Every
   `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
   rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
-  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :777).
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :836).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -8592,78 +8592,59 @@ Abilities are bought with experience earned in blocks, not from one bank:
   flat `xp_pool` is held to it exactly as a guided one is. That is why the validator
   lives in `validation/magus.rs` and not in `validation/life_stage.rs`, which returns
   early without a life-stage plan.
-- **Documented approximation: "Latin 1" is matched by Ability id.** Latin is one
-  *value* of the parameterized `ability.dead_language` (`ArMDE:7431-7434`, where Latin is
-  only "the most important example"), and an instance value is free-text player input
-  with no localization path — a German player types "Latein". Matching the instance
-  would therefore fail for every non-English user, which is worse than
-  under-enforcing. **The consequence, stated plainly: a magus whose only dead language
-  is Greek 1 passes `ArMDE:2437`.** The same id-level proxy `ability.scholarly_language`
-  (`rules/core/abilities.json`) uses. `AbilityRequirement::parameter` exists unused so
-  a future language registry tightens this by filling one JSON field, with no code
-  change; the test `latin_is_matched_by_ability_id_not_by_instance` pins the current
-  behaviour so it can never become accidental.
-  **This is now a deliberate divergence from `flaw.covenant_upbringing`'s own
-  Latin check, not a shared choice — stale wording here used to say the two
-  agreed.** Phase 2 C1 scoped `covenant_upbringing`'s `ability_authorization` to
-  the literal instance `latin` (`AbilityRef.instance`), and Phase 2 C4 does the
-  same for ten more restricted-XP pools (Educated, Marshal, Master Bard, …,
-  below). The two mechanisms answer the free-text risk oppositely, on purpose,
-  because they fail in opposite directions: this minimum-abilities gate is a
-  hard bar a legitimately-qualified magus must never wrongly fail, so it stays
-  id-only and permanently over-wide; an authorization/pool-funding grant is a
-  spending permission that must never wrongly over-permit (F-349/F-16x, D48),
-  so it accepts the locale risk and matches the literal instead. A saga whose
-  players type a non-English or misspelled instance value gets the wide
-  reading here and the narrow (occasionally wrong) one there — two different,
-  independently justified trade-offs, not one drifted out of sync.
-- **The widening is PERMANENT, and a `language.*` catalogue is rejected — not
-  deferred (guided-creation review #32, Slice 7).** The obvious way to make "Latin 1"
-  enforceable is a language catalogue so the requirement can name Latin by id. **It
-  cannot be built.** The rules publish no comprehensive list of languages, and whether
-  a given language exists — and whether it is dead or living — is a **troupe's
-  decision**. Authoring one would mean inventing rules data, which `CLAUDE.md`'s
-  provenance rule prohibits outright. So free text is the **correct** model for the
-  `language` parameter, not a shortcoming, and the paragraph above about
-  `AbilityRequirement::parameter` awaiting "a future language registry" describes a
-  registry that will never exist. It also follows that the check can never be narrowed
-  to Latin mechanically: string-matching a user-typed value against a localized name
-  would be locale-dependent and would break on `latin`, `Lateinisch`, or a troupe's own
-  spelling. **Do not propose a language catalogue as an improvement.**
-- **The honesty fix instead: the requirement carries the rules' own exemplar as a
-  label.** `AbilityRequirement::exemplar` (and `ScholarlyLanguageRequirement::exemplar`)
-  hold a **language-neutral slug** — `"exemplar": "latin"` — on the three sites where
-  the rules name Latin: `rules/core/life_stages.json` `minimum_abilities`
-  (`dead_language ≥ 1`, `ArMDE:2437`) and `recommended_abilities` (`≥ 4`, `ArMDE:2455`), plus
-  `rules/core/abilities.json` `scholarly_language` (`≥ 3`, `ArMDE:7151` — "For most
-  characters, Latin 3 is required"). Its **translated text lives in
+- **L2 (try-out finding 8, D83.12): "Latin 1" is Latin.** The old reading matched by
+  Ability id, so a magus whose only dead language was Greek passed `ArMDE:2437`; it was
+  kept because languages were free text with no catalogue. CV and L1a since gave Dead
+  Language its own catalogue (Latin, Hebrew, Gothic; `ArMDE:7432`), so both Latin rows
+  now carry `"parameter": "language.latin"` and the check reads the bought instance
+  through `catalogue.rs::instance_is`, the one "is this instance language X" helper:
+  - a `Catalogued` value counts when its id is `language.latin`;
+  - typed text counts when it equals (trimmed, case-folded) Latin's name in any locale
+    the rules ship ("latin", "Latein"). The load fold already converts such text on
+    reopening; for the session the app attaches every shipped locale's catalogue names
+    to its ruleset (`Ruleset::with_catalogue_names`, filled by
+    `arm-app/ruleset_io.rs::catalogue_names_in_every_locale`). A ruleset with no names
+    attached matches ids only. Text spelling the id ("language.latin") never counts.
+  - Integrity: a requirement's `parameter` on a catalogued Ability must be a value of
+    its own catalogue, or the load fails naming it
+    (`integrity.rs::check_value_in_own_catalogue`).
+  - Pinned by `latin_is_matched_by_catalogue_value_not_by_ability_id` (it replaces
+    `latin_is_matched_by_ability_id_not_by_instance`) and
+    `tests/l2_language_requirements.rs`, `tests/l2_typed_language_in_session.rs`, and
+    `arm-app/tests/l2_language_requirements.rs`.
+  The earlier "the widening is permanent, a language catalogue is rejected" ruling
+  (guided-creation review #32) was superseded by CV/D59 and is withdrawn here.
+- **The requirement carries the rules' own wording as a label.**
+  `AbilityRequirement::exemplar` holds a **language-neutral slug** — `"exemplar":
+  "latin"` — on the two sites where the rules demand Latin by name:
+  `rules/core/life_stages.json` `minimum_abilities`
+  (`dead_language ≥ 1`, `ArMDE:2437`) and `recommended_abilities` (`≥ 4`, `ArMDE:2455`).
+  (The scholarly-language expectation lists its languages instead since L2; see its own
+  section.) Its **translated text lives in
   `rules/i18n/<lang>/abilities.json`** under `exemplar.latin` (`Latin` / `Latein`, the
   latter as the German rulebook uses it at the mirrored `ArMDE:2437`), so no translatable
   string enters the mechanics file. `MagusMinimumAbility` carries it through to the
-  frontend and both validators emit it as an **optional** `exemplar` arg, so the
+  frontend and the validator emits it as an **optional** `exemplar` arg, so the
   minimums row and the `issue-magus_minimum_ability` /
-  `issue-magus_recommended_ability` /
-  `issue-academic_ability_without_scholarly_language` messages read identically:
-  *"Latin 1 (any Dead Language) is not met"*. The exemplar **heads** the requirement so
-  the score follows it directly, exactly as `ArMDE:2437` states it, and the widening trails
-  the score as a note; it used to read *"Dead Language (e.g. Latin) 1"*, which put the
+  `issue-magus_recommended_ability` messages read identically:
+  *"Latin 1 (Dead Language) is not met"*. The exemplar **heads** the requirement so
+  the score follows it directly, exactly as `ArMDE:2437` states it, and the Ability it is
+  bought as trails the score as a note (L2: it said "(any Dead Language)" while the
+  check was id-only); it used to read *"Dead Language (e.g. Latin) 1"*, which put the
   example between the Ability and its score and buried the demand
   (guided-creation-review-2026-08 #12). The one shared label path is
   `requirementAbilityLabel` + `requirementExemplarNote` in `ui/src/lib/derive.ts`,
   joined by the `requirement-exemplar` Fluent string and a `qualifier` message
-  variable. **The enforced check is
-  unchanged** — still any Dead Language ≥ N. The exemplar is one *named example*, never
-  an enumeration of languages.
+  variable.
 - **The exemplar slug is a LABEL KEY, not a referential-integrity `ref`.** It resolves
-  against no catalogue — there is none to resolve against — so the loader deliberately
-  does not check it (documented at both check sites,
-  `ruleset/integrity.rs::validate_apprenticeship_refs` and
-  `ruleset/parse.rs::check_scholarly_language`) while the requirement's `ability` **is**
-  a ref and still fails loudly. Pinned by
+  against no catalogue, so the loader deliberately does not check it (documented at
+  `ruleset/integrity.rs::validate_apprenticeship_refs`) while the requirement's
+  `ability` **is** a ref and still fails loudly, and so is its `parameter` on a
+  catalogued Ability (L2). Pinned by
   `an_exemplar_slug_is_not_treated_as_a_referential_integrity_ref`, which also proves
   the test is not vacuous by showing a bogus `ability` still rejected. Its i18n
   coverage in both locales is pinned by `the_exemplar_slug_resolves_in_both_locales`,
-  and its presence on the three sites by
+  and its presence on the two sites by
   `the_magus_minimum_dead_language_requirement_names_its_exemplar`.
 - **The score tested is the BOUGHT one**, not the effective one:
   `effective_ability_score` returns 2 for a magus with a Puissant Parma Magica and no
@@ -8707,7 +8688,8 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `AbilityRequirementKind::Recommended`, reported by
   `validate_magus_minimum_abilities` as `magus_recommended_ability` (**warning**,
   `abilities`, args `ability`/`min`/`score` plus an optional `exemplar` — the Latin 4
-  row states one, `ArMDE:2455`).
+  row states one, `ArMDE:2455`). Since L2 the Latin 4 row also names
+  `"parameter": "language.latin"` and is matched exactly like the minimum above.
 - **A warning, not an error**, because `ArMDE:2451` calls the list *recommended* and the
   consequences `ArMDE:2437` spells out describe a weak magus, not an illegal one — unlike
   `ArMDE:2437`'s own three, which decide admission.
@@ -9495,22 +9477,30 @@ Tests: `magical_mount_requires_companion_or_order_member`,
 > depending on the region of Europe you are from. For most characters, Latin 3 is
 > required.
 
-- Source: `ArMDE:7151`.
-- Data: `rules/core/abilities.json` → `scholarly_language`
-  (`{ ability: ability.dead_language, exemplar: "latin", min_score: 3 }`).
-- Implementation: `validation/authorization.rs` — `validate_academic_language`,
-  emitting `academic_ability_without_scholarly_language` (args `ability`/`min` plus an
-  optional `exemplar`).
+> In other areas of the world, Arabic, Greek and Hebrew fill similar functions,
+> although of these only Hebrew is a dead language.
+
+- Source: `ArMDE:7151`, `ArMDE:7432` (L2, ruling F5, D83.12).
+- Data: `rules/core/abilities.json` → `scholarly_language`:
+  `{ min_score: 3, languages: [ { ability: ability.dead_language, values: [language.latin,
+  language.hebrew] }, { ability: ability.living_language, values: [language.greek,
+  language.arabic] } ] }`. Greek and Arabic are Living Language values because
+  `ArMDE:7432` says only Hebrew of the three is dead. Values are in book order within
+  each Ability, which is the order the warning lists them.
+- Implementation: `validation/authorization.rs` — `validate_academic_language`: any
+  bought instance of a listed Ability naming a listed value (through
+  `catalogue.rs::instance_is`, so typed names count) at bought score ≥ `min_score`
+  satisfies it. The listed Abilities do not themselves trigger it. Emits
+  `academic_ability_without_scholarly_language` (args `languages`, the value ids
+  ", "-joined in data order, and `min`); the UI names them "Latin, Hebrew, Greek or
+  Arabic" (`derive.ts`, `requirement-language-list-*`).
+- Load checks: `ruleset/parse.rs::check_scholarly_language` (each Ability resolves and
+  is parameterized; no empty list) and
+  `ruleset/integrity.rs::validate_scholarly_language_values` (each Ability is
+  catalogued, each value is in its own catalogue, else the load fails naming it).
 - A **warning**, not an error, because the passage hedges twice ("normally",
-  "depending on the region of Europe"). Engine reading: the data names the
-  parameterized dead-language ability and the minimum score rather than enumerating
-  Latin/Greek/Hebrew/Arabic, and any instance at that score satisfies it — the engine
-  cannot know a saga's region, and the four names are examples of one Ability.
-- The `exemplar` slug surfaces the passage's own "For most characters, Latin 3 is
-  required" as a label (`Latin` / `Latein` from `rules/i18n/<lang>/abilities.json`
-  under `exemplar.latin`) without narrowing the check. See the widening note under
-  **Hermetic minimum Abilities** for why it can never be narrowed, and why the slug is
-  a label key rather than a `ref`.
+  "depending on the region of Europe"); the engine cannot know a saga's region, so any
+  of the four satisfies it.
 
 #### Foreign Upbringing halves locality-dependent caps (M6/6b2c)
 

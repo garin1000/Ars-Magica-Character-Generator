@@ -100,7 +100,7 @@ describe('German UI bundle', () => {
       'Fähigkeiten',
     );
     // Whole sentences per status, so neither row leans on colour alone. `qualifier`
-    // is the trailing "any Dead Language" note, empty for a requirement that names
+    // is the trailing "(Dead Language)" note, empty for a requirement that names
     // no exemplar — and never absent, because an unresolved variable renders as a
     // literal `{$qualifier}` in the sentence. (It used to THROW; `translate` now
     // collects the error and returns the partial instead — see i18n.ts.)

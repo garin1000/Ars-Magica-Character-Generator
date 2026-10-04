@@ -259,6 +259,15 @@ pub struct Ruleset {
     /// public contract.
     #[serde(default)]
     pub(crate) parameter_catalogues: BTreeMap<Id, crate::catalogue::Catalogue>,
+    /// Every known display name of each catalogue value, in every locale the rules
+    /// ship (L2, try-out finding 8), so typed text naming a value ("Latin",
+    /// "Latein") is read as that value in the session, not only after a reload.
+    /// Matching keys, never shown: the names live in `rules/i18n/`, so a ruleset
+    /// built from `rules/core/` alone has none (and then matches ids only) until
+    /// the caller attaches them with [`Ruleset::with_catalogue_names`]. Never
+    /// serialized: the frontend has its own localized names.
+    #[serde(skip)]
+    pub(crate) catalogue_names: BTreeMap<Id, Vec<String>>,
 }
 
 /// The magnitude→points table, derived from the canonical [`Magnitude::points`].
@@ -613,27 +622,34 @@ struct AbilitiesFile {
     scholarly_language: Option<ScholarlyLanguageRequirement>,
 }
 
-/// The scholarly language an Academic Ability normally expects, and at what score.
+/// The scholarly languages an Academic Ability normally expects, and at what score.
 ///
 /// > learning an Academic Knowledge normally requires a Latin, Greek, Hebrew, or
 /// > Arabic score of at least 3, depending on the region of Europe you are from.
 ///
-/// Data rather than four hardcoded ids: which language qualifies is regional, so the
-/// ruleset names the *ability* (the parameterized dead language) and the minimum
-/// score, and any instance of it satisfies the expectation. Source: ArMDE:7151.
+/// > In other areas of the world, Arabic, Greek and Hebrew fill similar functions,
+/// > although of these only Hebrew is a dead language.
+///
+/// Data, not four ids in Rust (L2, ruling F5): each entry names the Ability its
+/// languages are bought as and the catalogue values that qualify — Latin and Hebrew
+/// as Dead Language, Greek and Arabic as Living Language — in the order a message
+/// lists them. One score for all, as the passage states one.
+/// Source: ArMDE:7151, :7432.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ScholarlyLanguageRequirement {
-    /// The ability a scholarly language is an instance of.
-    pub ability: Id,
-    /// One example the rules themselves name — "For most characters, Latin 3 is
-    /// required" (`ArMDE:7151`) — as a language-neutral slug, so a UI can say which
-    /// language the passage means beside the wider check the engine enforces.
-    ///
-    /// A **label key, not a `ref`**: see [`crate::AbilityRequirement::exemplar`].
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub exemplar: Option<String>,
-    /// The score it is normally expected to reach.
+    /// The score any one qualifying language must reach ("at least 3").
     pub min_score: u8,
+    /// The qualifying languages, grouped by the Ability they are bought as.
+    pub languages: Vec<ScholarlyLanguage>,
+}
+
+/// The qualifying scholarly languages bought as one Ability.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ScholarlyLanguage {
+    /// The catalogued Ability these languages are instances of.
+    pub ability: Id,
+    /// The catalogue values that qualify, in the order a message names them.
+    pub values: Vec<Id>,
 }
 
 /// On-disk shape of `rules/core/childhoods.json`: the Sample Childhood package
