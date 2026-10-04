@@ -1,4 +1,4 @@
-import { flushSync, mount, unmount } from 'svelte';
+import { flushSync, mount, tick, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -303,6 +303,134 @@ describe('SpellTab within-potent-field toggle writes through the store (D79)', (
     flushSync();
     expect(store.entity.spells![0].within_focus).toBe(true);
     expect(store.entity.spells![0].within_potent_field).toBe(true);
+  });
+});
+
+// W4 (try-out finding 17): once the Magical Focus (or Potent Magic) Virtue is
+// removed, the spell keeps its saved mark (D81.17) and the engine flags it
+// stale — but the cell no longer carries the figure that gated the checkbox,
+// so the mark could not be unticked. A marked spell must keep its checkbox,
+// whatever the figure, so the player can clear the stale mark. A `client`
+// test: it exercises the real `onchange` wiring.
+describe('SpellTab a stale within-focus / within-Potent-field mark can be cleared (W4)', () => {
+  function mountTab(): void {
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(SpellTab, { target });
+    flushSync();
+  }
+
+  function toggle(testid: string): HTMLInputElement {
+    const el = target.querySelector<HTMLInputElement>(`[data-testid="${testid}"]`);
+    if (!el) throw new Error(`stale-mark toggle not rendered: no [data-testid="${testid}"]`);
+    return el;
+  }
+
+  function untick(input: HTMLInputElement): void {
+    input.checked = false;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+  }
+
+  beforeEach(() => {
+    // The Virtue is gone: the spell's own cell carries neither figure.
+    store.derived = {
+      casting_totals: [
+        {
+          technique: 'art.creo',
+          form: 'art.animal',
+          within_focus: null,
+          within_potent_field: null,
+        },
+      ],
+    } as unknown as DerivedTotals;
+  });
+
+  it('shows the within-focus checkbox, ticked, for a marked spell without a Magical Focus', () => {
+    store.entity.spells = [{ spell: RITUAL, level: 20, within_focus: true }];
+    mountTab();
+    expect(toggle(`spell-within-focus-${RITUAL}-0`).checked).toBe(true);
+  });
+
+  it('unticking the stale within-focus mark clears it', () => {
+    store.entity.spells = [{ spell: RITUAL, level: 20, within_focus: true }];
+    mountTab();
+    untick(toggle(`spell-within-focus-${RITUAL}-0`));
+    expect(store.entity.spells![0].within_focus ?? false).toBe(false);
+  });
+
+  it('shows the within-Potent-field checkbox, ticked, for a marked spell without Potent Magic', () => {
+    store.entity.spells = [{ spell: RITUAL, level: 20, within_potent_field: true }];
+    mountTab();
+    expect(toggle(`spell-within-potent-field-${RITUAL}-0`).checked).toBe(true);
+  });
+
+  it('unticking the stale within-Potent-field mark clears it', () => {
+    store.entity.spells = [{ spell: RITUAL, level: 20, within_potent_field: true }];
+    mountTab();
+    untick(toggle(`spell-within-potent-field-${RITUAL}-0`));
+    expect(store.entity.spells![0].within_potent_field ?? false).toBe(false);
+  });
+
+  // Unticking a stale mark removes its checkbox (no figure, no mark left), so
+  // keyboard focus must not fall to <body>. It lands on the same row's
+  // focusable spell name: non-destructive, unlike the remove button, where a
+  // second Space press would delete the spell.
+  async function untickFocused(testid: string): Promise<void> {
+    const input = toggle(testid);
+    input.focus();
+    expect(document.activeElement).toBe(input);
+    untick(input);
+    await tick();
+  }
+
+  it('moves focus to the row, not <body>, when unticking removes the within-focus checkbox', async () => {
+    store.entity.spells = [{ spell: RITUAL, level: 20, within_focus: true }];
+    mountTab();
+    await untickFocused(`spell-within-focus-${RITUAL}-0`);
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement?.getAttribute('data-testid')).toBe(`spell-name-${RITUAL}-0`);
+  });
+
+  it('moves focus to the row, not <body>, when unticking removes the within-Potent-field checkbox', async () => {
+    store.entity.spells = [{ spell: RITUAL, level: 20, within_potent_field: true }];
+    mountTab();
+    await untickFocused(`spell-within-potent-field-${RITUAL}-0`);
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement?.getAttribute('data-testid')).toBe(`spell-name-${RITUAL}-0`);
+  });
+
+  it('leaves focus on the checkbox when it survives the untick (figure still present)', async () => {
+    store.derived = {
+      casting_totals: [
+        {
+          technique: 'art.creo',
+          form: 'art.animal',
+          within_focus: {
+            focus_art: 0,
+            formulaic: 41,
+            ritual: 41,
+            spontaneous_fatiguing: 20,
+            spontaneous_non_fatiguing: 20,
+          },
+          within_potent_field: null,
+        },
+      ],
+    } as unknown as DerivedTotals;
+    store.entity.spells = [{ spell: RITUAL, level: 20, within_focus: true }];
+    mountTab();
+    const testid = `spell-within-focus-${RITUAL}-0`;
+    await untickFocused(testid);
+    expect(document.activeElement?.getAttribute('data-testid')).toBe(testid);
+  });
+
+  it('still hides both checkboxes for an unmarked spell without either Virtue', () => {
+    store.entity.spells = [{ spell: RITUAL, level: 20 }];
+    mountTab();
+    expect(target.querySelector(`[data-testid="spell-within-focus-${RITUAL}-0"]`)).toBeNull();
+    expect(
+      target.querySelector(`[data-testid="spell-within-potent-field-${RITUAL}-0"]`),
+    ).toBeNull();
   });
 });
 

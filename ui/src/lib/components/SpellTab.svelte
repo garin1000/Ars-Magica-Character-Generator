@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { store } from '../state.svelte';
   import {
     artLabel,
@@ -349,6 +350,23 @@
     );
   }
 
+  // W4 (finding 17): a within-focus / within-Potent-field checkbox also shows
+  // while the spell is marked without the figure (a stale mark, D81.17), so
+  // unticking it removes the checkbox. Keyboard focus must not fall to
+  // <body>: it moves to the same row's spell name — non-destructive, unlike
+  // the remove button, where a second Space press would delete the spell.
+  async function setMarkKeepingFocus(
+    input: HTMLInputElement,
+    setMark: (checked: boolean) => void,
+  ): Promise<void> {
+    const hadFocus = document.activeElement === input;
+    const row = input.closest('li');
+    setMark(input.checked);
+    await tick();
+    if (!hadFocus || input.isConnected || !row) return;
+    row.querySelector<HTMLElement>('.item-name')?.focus();
+  }
+
   // The in-app Casting Total for a known spell at row `index` (X10c, D73.2;
   // D79) — a plain lookup into the engine's own per-row computation
   // (`DerivedTotals.spell_casting_totals`, index-aligned with `entity.spells`).
@@ -549,22 +567,21 @@
                     {/if}
                   </span>
                 {/if}
-                {#if cat && hasFocusFigure(cat)}
+                {#if cat && (hasFocusFigure(cat) || chosen.within_focus)}
                   <label class="checkbox inline within-focus-toggle">
                     <input
                       type="checkbox"
                       aria-label={store.t('spell-within-focus-label')}
                       checked={chosen.within_focus ?? false}
                       onchange={(e) =>
-                        store.setSpellWithinFocusAt(
-                          i,
-                          (e.currentTarget as HTMLInputElement).checked,
+                        setMarkKeepingFocus(e.currentTarget as HTMLInputElement, (checked) =>
+                          store.setSpellWithinFocusAt(i, checked),
                         )}
                       data-testid="spell-within-focus-{chosen.spell}-{i}"
                     /><span>{store.t('spell-within-focus-label')}</span>
                   </label>
                 {/if}
-                {#if cat && hasPotentFieldFigure(cat)}
+                {#if cat && (hasPotentFieldFigure(cat) || chosen.within_potent_field)}
                   <!-- D79: independent of the within-focus toggle above — a
                        character may hold a Magical Focus, Potent Magic, both,
                        or neither, and the two free-text themes need not
@@ -575,9 +592,8 @@
                       aria-label={store.t('spell-within-potent-field-label')}
                       checked={chosen.within_potent_field ?? false}
                       onchange={(e) =>
-                        store.setSpellWithinPotentFieldAt(
-                          i,
-                          (e.currentTarget as HTMLInputElement).checked,
+                        setMarkKeepingFocus(e.currentTarget as HTMLInputElement, (checked) =>
+                          store.setSpellWithinPotentFieldAt(i, checked),
                         )}
                       data-testid="spell-within-potent-field-{chosen.spell}-{i}"
                     /><span>{store.t('spell-within-potent-field-label')}</span>

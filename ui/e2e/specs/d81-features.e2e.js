@@ -9,7 +9,7 @@
 //      (ArMDE:12309-12313);
 //   2. "add within focus" adds a spell already marked, and removing the
 //      Magical Focus produces the over-cap error + the stale-mark warning
-//      (D81.5/D81.17);
+//      (D81.5/D81.17), and unticking the stale mark clears the warning (W4);
 //   3. Incompatible Arts' four selects in pairs, a barred grid cell reading
 //      "Unusable", and a spell using a barred combination raising an error
 //      (D81.8/D81.15);
@@ -179,6 +179,25 @@ describe('add within focus, and the stale-mark warning on removal (D81.5/D81.17)
           'spell_within_focus_without_magical_focus for the stale-marked spell',
       },
     );
+
+    // W4 (try-out finding 17): the stale mark stays clearable — the checkbox
+    // survives the Virtue's removal while the spell is marked. Unticking it
+    // clears the stale-mark warning; the over-cap error stays, because level 10
+    // still exceeds the plain cap of 9 without a focus.
+    await $(SPELLS_TAB).click();
+    const staleMarker = await $('[data-testid^="spell-within-focus-spell.lamp_without_flame-"]');
+    await staleMarker.waitForExist({ timeout: STEP_TIMEOUT });
+    expect(await staleMarker.isSelected()).toBe(true);
+    await staleMarker.click();
+
+    await browser.waitUntil(
+      async () => !(await issueCodes()).includes('spell_within_focus_without_magical_focus'),
+      {
+        timeout: STEP_TIMEOUT,
+        timeoutMsg: 'unticking the stale within-focus mark should clear its warning',
+      },
+    );
+    expect((await issueCodes()).includes('spell_level_exceeds_cap')).toBe(true);
   });
 });
 
