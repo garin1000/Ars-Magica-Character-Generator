@@ -1193,7 +1193,7 @@ param-label-medium = Medium
 param-label-rank = Rank
 # Savantism's favored Ability (ArMDE:6703-6708).
 param-label-favored = Favored Ability
-# Restricted Learning's five named Abilities, and Magian Lineage (Major)'s
+# Restricted Learning's five named Abilities, and Magian Lineage [Major]'s
 # three connected ones (ArMDE:6685, :4345).
 param-label-abilities = Abilities
 # Faerie Blood / Strong Faerie Blood's type of fay heritage (ArMDE:3805-3819).

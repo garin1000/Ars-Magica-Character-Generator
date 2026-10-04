@@ -1259,7 +1259,7 @@ param-label-rank = Rang
 # Die bevorzugte Fertigkeit bei Savantismus (ArMDE:6703-6708).
 param-label-favored = Bevorzugte Fertigkeit
 # Die fünf benannten Fertigkeiten von Eingeschränktem Lernen, und die drei
-# verbundenen von Magischer Abstammung (Groß) (ArMDE:6685, :4345).
+# verbundenen von Magischer Abstammung [Groß] (ArMDE:6685, :4345).
 param-label-abilities = Fertigkeiten
 # Die Art des Feenbluts bei Feenblut / Starkem Feenblut (ArMDE:3805-3819).
 param-label-heritage = Abstammung
