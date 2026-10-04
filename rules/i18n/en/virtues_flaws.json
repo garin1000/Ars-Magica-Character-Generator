@@ -377,11 +377,13 @@
     "description": "You cannot hear at all. You may be able to speak, but you cannot understand spoken language, which makes communication difficult. Magi with this Flaw must roll an extra two botch dice when casting spells with a spoken component, as they cannot hear what they are saying."
   },
   "flaw.deficient_form": {
-    "name": "Deficient Form",
+    "name": "Deficient {form}",
+    "name_unfilled": "Deficient Form",
     "summary": "Almost all totals (including Casting Totals and Lab Totals, but excluding Magic Resistance) to which a particular Form is added are halved."
   },
   "flaw.deficient_technique": {
     "name": "Deficient {technique}",
+    "name_unfilled": "Deficient Technique",
     "summary": "You are unable to use one Technique effectively.",
     "description": "All totals, including Lab and Casting totals, including a particular Technique are halved. Advancement Totals are not halved. Experience points required are based on the actual value of the Technique, before halving."
   },
@@ -1798,6 +1800,7 @@
   },
   "virtue.affinity_art": {
     "name": "Affinity with {art}",
+    "name_unfilled": "Affinity with Art",
     "summary": "Experience put into one Art counts for half again. May be taken twice, for two Arts.",
     "description": "Your Advancement Totals for one Hermetic Art are increased by one half, rounded up. At character creation, any experience points you put into that Art are also increased by one half (rounded up), and you may exceed the normal recommended limits. You may take this Virtue twice, for two different Arts."
   },
@@ -2864,6 +2867,7 @@
   },
   "virtue.puissant_art": {
     "name": "Puissant {art}",
+    "name_unfilled": "Puissant Art",
     "summary": "+3 to all totals using one Art; it does not apply when learning, teaching, or writing about the Art. May be taken twice, for two Arts.",
     "description": "You add 3 to the value of one Art whenever you use it. This means all totals in which the score of the Art is part of the total. It does not apply when learning, teaching, or writing about the Art. You may take this Virtue twice, for two different Arts. If a spell has requisites, include the bonus from Puissant Art with that Art when calculating which Art is higher. If the Puissant Art is higher, the bonus does not apply to the requisite."
   },

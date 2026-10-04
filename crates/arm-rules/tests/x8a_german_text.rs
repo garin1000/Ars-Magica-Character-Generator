@@ -326,8 +326,14 @@ fn d57_unaffected_templates_guard() {
         ("flaw.bound_to_role_role", "Gebunden an {role}"),
         // Prefix compound: German compounding needs no case/gender agreement.
         ("virtue.land_regio_network", "{land}Regio-Netz"),
-        // Closed 5-item catalogue, uniformly feminine via "(die) Technik".
-        ("flaw.deficient_technique", "Defizitäre {technique}"),
+        // T2 / C3: the heading, then the Technique after a colon, so the
+        // adjective agrees with "Technik" and never with a Latin Art name
+        // (same shape as `flaw.deficient_form`'s "Defizitäre Form: {form}").
+        (
+            "flaw.deficient_technique",
+            "Defizitäre Technik: {technique}",
+        ),
+        ("flaw.deficient_form", "Defizitäre Form: {form}"),
         // Closed 8-item catalogue, uniformly feminine (all 8 Characteristics
         // are grammatically feminine nouns in German).
         (

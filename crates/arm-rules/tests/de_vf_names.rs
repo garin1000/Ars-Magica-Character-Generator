@@ -823,7 +823,17 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[
          word with no brackets on BOTH the EN ('Deficient Technique') and DE \
          ('Defizitäre Technik') columns, unlike every other parameterized row \
          confirmed in this guard, so there is no safe bracket- or word-based \
-         signal to bridge the English parameter key to its German spelling.",
+         signal to bridge the English parameter key to its German spelling. \
+         Shipped 'Defizitäre Technik: {technique}' (T2, C3) is the table name \
+         plus the chosen Technique after a colon; the unfilled name is the \
+         table's 'Defizitäre Technik' exactly.",
+    ),
+    (
+        "flaw.deficient_form",
+        "Parser cannot compare — same bare-placeholder limitation as \
+         flaw.deficient_technique: shipped 'Defizitäre Form: {form}' (T2, C3) \
+         is the table's 'Defizitäre Form' plus the chosen Form after a colon; \
+         the unfilled name is the table's 'Defizitäre Form' exactly.",
     ),
     (
         "virtue.great_characteristic",

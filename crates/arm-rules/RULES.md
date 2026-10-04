@@ -322,6 +322,19 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   `export/resolve.rs::unfilled_name` (consulted by `parameterized_name` /
   `parameterized_value`) in the Markdown exporter, so a sheet and the screen word the
   Ability identically instead of the sheet alone printing the doubled form.
+- **Art-parameterized V/F names (T2, try-out finding 23, decision C3).** Unfilled, an
+  Art-parameterized Virtue/Flaw reads as its book heading (EN) or its
+  `tugenden-fehler.md` row (DE, D31) through `name_unfilled`: `Deficient Form` /
+  `Deficient Technique` (`ArMDE:5909`, `ArMDE:5913`), `Puissant Art` (`ArMDE:4818`),
+  `Affinity with Art` (`ArMDE:3376`); DE `Defizitäre Form` / `Defizitäre Technik`,
+  `Durchdrungen vom Geist der (Form)`, `Vis-Gewinner der (Form)`,
+  `Meister der (Form-)Kreaturen`, `Hunger nach (Form-)Magie`. Filled, the chosen Art
+  takes the slot: `Deficient {form}` (formerly no slot, so the sheet appended
+  "(Ignem)"), DE `Defizitäre Form: {form}` / `Defizitäre Technik: {technique}` (a
+  colon, so the adjective never agrees with a Latin Art name). Imbued and Extractor
+  keep D57's comma apposition when filled. Data only; pinned by
+  `crates/arm-rules/tests/t2_art_parameterized_names.rs` (sheet) and
+  `ui/src/lib/art-parameterized-names.test.ts` (row and picker).
 
 #### Full core Virtue/Flaw catalogue — `rules/core/virtues_flaws.json`
 > Virtues: `## Virtues` detailed entries `ArMDE:3360-5282`; Flaws: `## Flaws`

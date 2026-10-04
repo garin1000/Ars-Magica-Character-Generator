@@ -378,11 +378,13 @@
     "description": "Du kannst überhaupt nichts hören. Du bist möglicherweise in der Lage zu sprechen, kannst aber gesprochene Sprache nicht verstehen, was die Kommunikation erheblich erschwert. Magi mit diesem Fehler müssen beim Wirken von Zaubern mit einer gesprochenen Komponente zwei zusätzliche Patzerwürfel werfen, da sie nicht hören können, was sie sagen."
   },
   "flaw.deficient_form": {
-    "name": "Defizitäre Form",
+    "name": "Defizitäre Form: {form}",
+    "name_unfilled": "Defizitäre Form",
     "summary": "Fast alle Gesamtwerte (einschließlich Zaubersummen und Laborsummen, jedoch ausgenommen Magieresistenz), zu denen eine bestimmte Form addiert wird, werden halbiert."
   },
   "flaw.deficient_technique": {
-    "name": "Defizitäre {technique}",
+    "name": "Defizitäre Technik: {technique}",
+    "name_unfilled": "Defizitäre Technik",
     "summary": "Du bist unfähig, eine Technik effektiv einzusetzen.",
     "description": "Alle Gesamtwerte, einschließlich Labor- und Zaubersummen, die eine bestimmte Technik enthalten, werden halbiert. Fortschreits-Gesamtwerte werden nicht halbiert. Die benötigten Erfahrungspunkte richten sich nach dem tatsächlichen Wert der Technik vor der Halbierung."
   },
@@ -756,6 +758,7 @@
   },
   "flaw.hunger_for_form_magic": {
     "name": "Hunger nach {form}-Magie",
+    "name_unfilled": "Hunger nach (Form-)Magie",
     "summary": "Der Charakter wurde wiederholt Magie ausgesetzt und ist dadurch auf Magie zum Überleben angewiesen.",
     "description": "Der Charakter wurde wiederholt Magie ausgesetzt und ist dadurch auf Magie zum Überleben angewiesen. Der Charakter muss jede Jahreszeit 1 Bauer Vis verbrauchen, der der Form entspricht, der er hauptsächlich ausgesetzt wurde. Ist der Charakter nicht in der Lage, in einer Jahreszeit einen Bauern Vis zu verbrauchen, verliert er eine Langzeit-Erschöpfungsstufe, die erst wieder erlangt werden kann, wenn ein Bauer des entsprechenden Vis verbraucht wurde. Ein Charakter, der Hunger nach Ignem-Magie hat und ein ganzes Jahr lang keinen Bauern Ignem-Vis verbraucht hat, hat zum Beispiel 4 Langzeit-Erschöpfungsstufen verloren und ist daher Betäubt mit einem -5-Malus auf Aktivitäten. Verbraucht der Charakter dann 1 Bauern Ignem-Vis, erlangt er nach einer Stunde eine Erschöpfungsstufe zurück und ist Müde."
   },
@@ -2129,6 +2132,7 @@
   },
   "virtue.extractor_of_form_vis": {
     "name": "Vis-Gewinner der Form, {form}",
+    "name_unfilled": "Vis-Gewinner der (Form)",
     "summary": "Der Magus kann (Form)-Vis aus einer Magiesphären-Aura gewinnen, jedoch nur, wenn die Merkmale der Aura die Form verkörpern.",
     "description": "Der Magus kann (Form)-Vis aus einer Magiesphären-Aura gewinnen, jedoch nur, wenn die Merkmale der Aura die Form verkörpern. Eine Aura am Ufer eines Sees verkörpert beispielsweise Aquam, eine Aura an einer Begräbnisstätte verkörpert Corpus usw. Die Vis-Gewinnung auf diese Weise ist eine Laboratoriumstätigkeit; der Magus gewinnt eine Anzahl Bauern Vis, die einem Zehntel seiner Creo-Vim-(Form)-Laborsumme entspricht (aufgerundet). Offensichtlich benötigt er dafür auch ein Laboratorium in der Aura, und natürlich kann der Magus auch wählen, stattdessen Vim-Vis zu gewinnen (siehe Seite 250). Diese Tugend kann mehrfach gewählt werden (einmal für jede Form)."
   },
@@ -2370,6 +2374,7 @@
   },
   "virtue.imbued_with_the_spirit_of_form": {
     "name": "Durchdrungen vom Geist der Form, {form}",
+    "name_unfilled": "Durchdrungen vom Geist der (Form)",
     "summary": "Der Magus hat einen Teil der Kräfte eines Elementarwesens oder eines anderen magischen Objekts absorbiert (vielleicht durch Verzehr).",
     "description": "Der Magus hat einen Teil der Kräfte eines Elementarwesens oder eines anderen magischen Objekts absorbiert (vielleicht durch Verzehr). Dieser Vorgang trübt den Magus, sodass jedes Wesen mit einer Magischen Macht, die mit der Form dieser Tugend verknüpft ist, seine Natur in der Nähe wahrnehmen kann. Schwache Kreaturen werden in der Regel Angst vor dem Magus haben, während mächtige versuchen werden, ihn zu töten.\n\nWann immer der Magus einen Zauber wirkt oder eine Laborarbeit ausführt, die Vis der gewählten Form erfordert, kann er langfristige Erschöpfungsstufen als Ersatz für die Vis einsetzen. Jede verlorene langfristige Erschöpfungsstufe verringert den Vis-Bedarf des Zaubers oder Effekts um 1. Beim Wirken eines Zaubers gehen die Erschöpfungsstufen nach dem Zaubern verloren. Bei Laborarbeiten hält der Erschöpfungsverlust für die Dauer des Laborprozesses an (also mindestens ein Quartal), und als Vis-Ersatz eingesetzte Erschöpfungsstufen zählen nicht zur Vis-Ausgabenbeschränkung des Magus pro Quartal. Der Magus erleidet den Erschöpfungsabzug auf seine Laborsumme.\n\nBeachte, dass das Studieren von Vis keine Laborarbeit ist, weshalb der Magus beim Vis-Studium keine Erschöpfungsstufen als Vis-Ersatz einsetzen kann.\n\nAls Beispiel: Ein Magus, der den Zauber Verzauberung des Spionagepools als Ritual wirkt (InAq 30, Seite 322), benötigt 6 Bauern irgendeiner Kombination aus Intellego- und Aquam-Vis. Ist der Magus Durchdrungen vom Geist des Aquam, kann er sich ermüden (und dabei drei langfristige Erschöpfungsstufen verlieren) und damit den Vis-Bedarf um 3 verringern."
   },
@@ -2666,6 +2671,7 @@
   },
   "virtue.master_of_form_creatures": {
     "name": "Meister der {form}-Kreaturen",
+    "name_unfilled": "Meister der (Form-)Kreaturen",
     "summary": "Der Charakter kann Tiere und andere unintelligente Wesen zähmen, deren Machtwert einer bestimmten Form zugeordnet ist."
   },
   "virtue.master_of_kennels": {
