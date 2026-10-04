@@ -898,6 +898,20 @@ presumption of correctness.
    together; the next save writes the clamped values, as with the aura clamp,
    and the schema is not bumped. Moving the saga year forward recomputes nothing
    (D3.3), so the birth year can fall out of step until the file is reopened.
+10. **Dead and Living Language have separate catalogues** (amends D59; try-out
+    finding 6). Dead = Latin, Hebrew, Gothic (ArMDE:3565); Living = Arabic,
+    Greek, Persian, Aramaic. An Ability names its catalogue in an optional
+    `catalogue` field. Educated (Islamic/Hebrew) now fund Living Language, and
+    Turb Trained offers only the dead languages (ArMDE:5181). The migration to
+    schema 22 moves a misplaced language in an older save to the Ability whose
+    catalogue lists it. A collision keeps the higher score, and a one-time
+    notice names each move. A newer save holding a value outside its catalogue
+    gets `ability_parameter_outside_catalogue`.
+12. **The language checks name the actual language** (try-out finding 8;
+    ruling F5). The magus minimum and the recommended Latin 4 require Latin
+    itself. The Academic requirement is Latin or Hebrew (Dead) or Greek or
+    Arabic (Living) at 3 (ArMDE:7151, :7432). A typed name in any shipped locale
+    counts as that catalogue language.
 11. **Spell codes show their requisites** (try-out finding 22; after-deadline
     answer 4). The engine builds a spell's code once in
     `LocalizedRuleset::spell_code`. Technique requisites go in parentheses after
