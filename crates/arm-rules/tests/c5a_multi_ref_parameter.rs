@@ -272,18 +272,18 @@ fn a_multi_ref_selection_reloads_idempotently() {
 /// `crates/arm-app/tests/commands.rs::the_frontend_mirrors_the_engine_schema_version`'s
 /// TS-side mirror (`ui/src/lib/state.svelte.ts::SCHEMA_VERSION`) to 19 alongside
 /// this constant, per `SCHEMA_VERSION`'s own doc comment on why the bump is a
-/// pure version marker with no fold. The constant has since moved three times
+/// pure version marker with no fold. The constant has since moved four times
 /// more: to 20 for F1's unrelated `EquipmentSlot::loadout` move (K5), to 21 for
-/// X9b's unrelated `virtue.rard` -> `virtue.bard` id rename, and to 22 for L1b's
-/// unrelated Dead/Living Language move — this assertion tracks the current
-/// value, not C5a's own contribution to it (still 19 → one bump, same as it
-/// always was).
+/// X9b's unrelated `virtue.rard` -> `virtue.bard` id rename, to 22 for L1b's
+/// unrelated Dead/Living Language move, and to 23 for N4b's unrelated
+/// native-language value — this assertion tracks the current value, not C5a's
+/// own contribution to it (still 19 → one bump, same as it always was).
 #[test]
 fn c5a_bumps_schema_version_to_19() {
     assert_eq!(
         arm_rules::migration::SCHEMA_VERSION,
-        22,
-        "C5a's own bump (§ 10) still stands at 18 -> 19; later bumps (F1/K5, X9b, L1b) move \
+        23,
+        "C5a's own bump (§ 10) still stands at 18 -> 19; later bumps (F1/K5, X9b, L1b, N4b) move \
          the constant further, which this assertion tracks"
     );
 }

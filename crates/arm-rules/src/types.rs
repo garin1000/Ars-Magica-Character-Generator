@@ -7793,7 +7793,7 @@ mod tests {
         let roundtripped: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, roundtripped);
 
-        assert!(json.contains(r#""schema_version": 22"#));
+        assert!(json.contains(r#""schema_version": 23"#));
         assert!(json.contains(r#""ref": "flaw.deficient_technique""#));
         assert!(json.contains(r#""xp_pool": 30"#));
         assert!(json.contains(r#""art": "art.creo""#));
@@ -8314,7 +8314,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 22"#));
+        assert!(json.contains(r#""schema_version": 23"#));
         assert!(json.contains(r#""aura": -3"#));
         assert!(json.contains(r#""source": "external""#));
     }
@@ -8677,7 +8677,7 @@ mod tests {
         let json = serde_json::to_string_pretty(&entity).unwrap();
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
-        assert!(json.contains(r#""schema_version": 22"#));
+        assert!(json.contains(r#""schema_version": 23"#));
         assert!(json.contains(r#""warping_points": 15"#));
         assert!(json.contains(r#""name": "Marcus""#));
         assert!(json.contains(r#""description": "Knight of the Teutonic Order, Crusader""#));
@@ -8995,9 +8995,10 @@ mod tests {
         // nothing to either, nor to 20's bump
         // (`EquipmentSlot::loadout`, F1), 19's multi-valued parameter type
         // (C5a), 16's funding discriminator, 17's saga year, or 18's
-        // ability-parameter type widening (CV4).
+        // ability-parameter type widening (CV4), or 23's native-language value
+        // (N4b).
         assert_eq!(
-            SCHEMA_VERSION, 22,
+            SCHEMA_VERSION, 23,
             "a purely additive widening earns no bump"
         );
 
@@ -9169,7 +9170,7 @@ mod tests {
         entity.normalize();
         let json = serde_json::to_string_pretty(&entity).unwrap();
         assert!(json.contains(r#""warping_choices""#), "{json}");
-        assert!(json.contains(r#""schema_version": 22"#), "{json}");
+        assert!(json.contains(r#""schema_version": 23"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);

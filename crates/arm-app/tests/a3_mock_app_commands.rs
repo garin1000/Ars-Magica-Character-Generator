@@ -209,7 +209,7 @@ fn the_entity_rewriting_commands_answer_from_the_cached_ruleset() {
     child.age = Some(25);
     child.ability_funding = arm_rules::AbilityFunding::LifeStages;
     child.life_stages = Some(arm_rules::LifeStagePlan {
-        native_language: Some("German".to_string()),
+        native_language: Some("German".into()),
         ..arm_rules::LifeStagePlan::default()
     });
     let ChildhoodApplication::Applied { entity: applied } = commands::apply_childhood_package(

@@ -843,6 +843,13 @@ presumption of correctness.
    saying "Arabic", and so was every typed one after the load fold. The UI mirror folds
    case and whitespace only (one locale's names); a cross-locale spelling is caught by the
    engine on Apply.
+   **Addendum (N4b, schema 23):** `LifeStagePlan::native_language` is a `NativeLanguage`,
+   `{"id"}` (a value of the native-language Ability's catalogue) or `{"text"}`; `Linked`
+   fails the load. A bare string is wrapped as text at any claimed version (shape
+   dispatch), and text naming a catalogue value in any locale folds to it on every load,
+   silently. The field and a catalogued childhood slot use the Ability row's combo
+   (`AbilityParameterCombo.svelte`); a slot pick travels to the engine by its shown name.
+   Typed text is not converted while the player types.
 
 3. **A split "Minor or Major" entry shows its magnitude in square brackets** (N11).
    Where the book prints ONE entry taken at either magnitude and the catalogue splits

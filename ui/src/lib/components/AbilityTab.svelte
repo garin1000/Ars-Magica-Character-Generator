@@ -31,6 +31,7 @@
     AbilityScore,
     ValidationIssue,
   } from '../types';
+  import AbilityParameterCombo from './AbilityParameterCombo.svelte';
   import MagusMinimumAbilities from './MagusMinimumAbilities.svelte';
   import SourcePicker from './SourcePicker.svelte';
   import SelectionList from './SelectionList.svelte';
@@ -340,50 +341,16 @@
     };
   }
 
-  // === Parameter combo box (CV7, design § 6.1/§ 6.3) ===
+  // === Parameter combo box (CV7, design § 6.1/§ 6.3; `AbilityParameterCombo`) ===
 
-  // Separator joining a link target's item id and param key into one option
-  // value — mirrors `ParameterPicker.svelte`'s own `SEP` (a NUL never appears
-  // in an id or a player-typed guild/craft name).
+  // Separator joining a link target's item id and param key — the key
+  // `resolvedLinksFrom` writes (a NUL never appears in an id or a typed name).
   const SEP = String.fromCharCode(0);
-
-  /** The combo box's own selected `<option>` value for the row's current stored
-   *  shape — never a raw id/pair, only ever one of the three tagged forms this
-   *  same picker writes. */
-  function comboValue(parameter: AbilityParamValue | null | undefined): string {
-    if (parameter == null) return 'other';
-    if ('id' in parameter) return `cat:${parameter.id}`;
-    if ('item' in parameter) return `link:${parameter.item}${SEP}${parameter.param}`;
-    return 'other';
-  }
-
-  /** Choosing any combo entry REPLACES whatever was stored before — there is
-   *  no "keep both" state (design § 6.3). Choosing "Other…" clears to empty
-   *  free text, which reveals the escape input below. */
-  function onParamSelect(index: number, event: Event): void {
-    const raw = (event.currentTarget as HTMLSelectElement).value;
-    if (raw.startsWith('cat:')) {
-      store.setAbilityParameterValueAt(index, { id: raw.slice('cat:'.length) });
-      return;
-    }
-    if (raw.startsWith('link:')) {
-      const [item, param] = raw.slice('link:'.length).split(SEP);
-      store.setAbilityParameterValueAt(index, { item, param });
-      return;
-    }
-    store.setAbilityParameterValueAt(index, undefined);
-  }
 
   function isLinked(
     parameter: AbilityParamValue | null | undefined,
   ): parameter is { item: string; param: string } {
     return parameter != null && 'item' in parameter;
-  }
-
-  /** The combo box's "Other…" entry is selected: no value, or a plain typed
-   *  one — reveals the free-text escape input. */
-  function isOther(parameter: AbilityParamValue | null | undefined): boolean {
-    return parameter == null || 'text' in parameter;
   }
 
   /** A linked value's source is offered as a resolvable target right now —
@@ -590,54 +557,27 @@
               {/if}
               {#if key && !unbought}
                 {#if options}
-                  <!-- The engine-built combo box (design § 6.1/§ 6.3): catalogue
-                       values first, then the character's own link targets, then
-                       the free-text "Other…" escape — one stable order, and the
-                       UI derives none of it itself. The box and what it opens
-                       (the "Other…" field, or the "follows" indicator) share one
-                       wrapper, which app.css lays out as a single line: the
-                       dropdown at its content width, the field taking the rest
-                       (try-out finding 5). The hint stays outside, on a line of
-                       its own. -->
-                  <div class="ability-param-combo">
-                    <select
-                      class="ability-param-select"
-                      aria-label={store.t(`param-label-${key}`)}
-                      aria-invalid={invalid ? 'true' : undefined}
-                      value={comboValue(entry.parameter)}
-                      onchange={(e) => onParamSelect(i, e)}
-                      data-testid="ability-param-select-{entry.ability}-{id}"
-                    >
-                      {#each options.catalogued as catId (catId)}
-                        <option value="cat:{catId}">
-                          {store.ruleset ? displayName(store.ruleset, catId) : catId}
-                        </option>
-                      {/each}
-                      {#each options.linked as link (link.item + SEP + link.param)}
-                        <option value="link:{link.item}{SEP}{link.param}">
-                          {store.t('ability-param-follows', {
-                            item: linkSourceName(link),
-                            value: link.resolved ?? '',
-                          })}
-                        </option>
-                      {/each}
-                      <option value="other">{store.t('ability-param-other')}</option>
-                    </select>
-                    {#if isOther(entry.parameter)}
-                      <input
-                        type="text"
-                        class="ability-param"
-                        placeholder={store.t(`param-label-${key}`)}
-                        aria-invalid={invalid ? 'true' : undefined}
-                        value={abilityParamDisplay(entry.parameter, store.ruleset, resolvedLinks)}
-                        oninput={(e) =>
-                          store.setAbilityParameterAt(
-                            i,
-                            (e.currentTarget as HTMLInputElement).value,
-                          )}
-                        data-testid="ability-param-{entry.ability}-{i}"
-                      />
-                    {/if}
+                  <!-- The engine-built combo box (design § 6.1/§ 6.3), shared with
+                       the native language and the childhood slots since N4b. The
+                       "follows" indicator renders inside its wrapper; the hint stays
+                       outside, on a line of its own. -->
+                  <AbilityParameterCombo
+                    catalogued={options.catalogued}
+                    linked={options.linked}
+                    linkLabel={(link) =>
+                      store.t('ability-param-follows', {
+                        item: linkSourceName(link),
+                        value: link.resolved ?? '',
+                      })}
+                    value={entry.parameter}
+                    label={store.t(`param-label-${key}`)}
+                    placeholder={store.t(`param-label-${key}`)}
+                    {invalid}
+                    selectTestId="ability-param-select-{entry.ability}-{id}"
+                    inputTestId="ability-param-{entry.ability}-{i}"
+                    onchoose={(value) => store.setAbilityParameterValueAt(i, value)}
+                    ontext={(text) => store.setAbilityParameterAt(i, text)}
+                  >
                     {#if isLinked(entry.parameter)}
                       {#if linkResolves(entry.parameter)}
                         <span
@@ -664,7 +604,7 @@
                         </span>
                       {/if}
                     {/if}
-                  </div>
+                  </AbilityParameterCombo>
                   {#if options.hint}
                     <span
                       class="ability-param-hint"

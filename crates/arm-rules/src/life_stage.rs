@@ -327,6 +327,59 @@ pub fn magus_minimum_abilities(entity: &Entity, ruleset: &Ruleset) -> Vec<MagusM
     rows
 }
 
+/// The plan's native language (N4b, schema 23): a value of the native-language
+/// Ability's catalogue, or the player's own text for a language the catalogue
+/// lacks ("Other…").
+///
+/// The JSON is exactly two of [`crate::types::AbilityParameterValue`]'s three
+/// shapes, `{"id": …}` and `{"text": …}`, so one picker writes both fields alike.
+/// The third, `Linked`, follows another selection's parameter, which a plan's
+/// language never does: it is no variant here, so such a value fails the load.
+/// `deny_unknown_fields` makes a value naming both variants' keys fail too rather
+/// than be read as the first match.
+///
+/// A save written before schema 23 holds a bare string here;
+/// `migration.rs::wrap_legacy_native_language` wraps it before the typed parse.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(deny_unknown_fields, untagged)]
+pub enum NativeLanguage {
+    /// Picked from the catalogue, or typed text the load fold recognized.
+    Catalogued {
+        /// The catalogue value's id (`language.arabic`).
+        id: Id,
+    },
+    /// The player's own text, naming no catalogue value.
+    Text {
+        /// The typed language.
+        text: String,
+    },
+}
+
+impl NativeLanguage {
+    /// The stored value as one string: the catalogue id, or the text trimmed. An
+    /// issue argument carries it as is — the UI localizes an id like any other.
+    pub(crate) fn as_str(&self) -> &str {
+        match self {
+            Self::Catalogued { id } => id.as_str(),
+            Self::Text { text } => text.trim(),
+        }
+    }
+
+    /// Typed text that is blank once trimmed names no language at all.
+    pub(crate) fn is_blank(&self) -> bool {
+        self.as_str().is_empty()
+    }
+}
+
+impl From<&str> for NativeLanguage {
+    /// Typed text — the shape every pre-23 plan held.
+    fn from(text: &str) -> Self {
+        Self::Text {
+            text: text.to_string(),
+        }
+    }
+}
+
 /// A character's life-stage *choices* — never its resolved numbers.
 ///
 /// Saves store choices, not derived values, so this records only what the player
@@ -351,10 +404,11 @@ pub struct LifeStagePlan {
     /// The language the character grew up speaking — the one the childhood's
     /// native-language experience may be spent on, and the one a second Living
     /// Language may not be ("Living Language (other than the character's native
-    /// language)", ArMDE:2378). A `living_language` instance value, so it is
-    /// the player's own text, not an id.
+    /// language)", ArMDE:2378). An instance value of the childhood's
+    /// `native_language_ability`: a value of its catalogue, or the player's own
+    /// text (N4b, schema 23).
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub native_language: Option<String>,
+    pub native_language: Option<NativeLanguage>,
     /// The Sample Childhood package the player took, if any — a **record of the
     /// decision**, nothing more. The Abilities it grants live in
     /// [`Entity::ability_scores`] as ordinary bought rows, exactly as a
@@ -2170,7 +2224,7 @@ mod tests {
             json.contains(r#""childhood_package": "childhood.athletic""#),
             "{json}"
         );
-        assert!(json.contains(r#""schema_version": 22"#), "{json}");
+        assert!(json.contains(r#""schema_version": 23"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
@@ -2203,7 +2257,7 @@ mod tests {
         };
         assert_eq!(
             serde_json::to_string(&nothing_chosen).unwrap(),
-            r#"{"native_language":"German","childhood_package":"childhood.athletic"}"#
+            r#"{"native_language":{"text":"German"},"childhood_package":"childhood.athletic"}"#
         );
 
         let out_of_apprenticeship = LifeStagePlan {
@@ -2232,10 +2286,10 @@ mod tests {
         // per-document saga year, 18 from CV4's ability-parameter widening, 19
         // from C5a's multi-valued parameter type, 20 from F1's
         // `EquipmentSlot::loadout` move, 21 from X9b's `virtue.rard` ->
-        // `virtue.bard` id rename, and 22 from L1b's Dead/Living Language move,
-        // not from this plan).
-        assert_eq!(SCHEMA_VERSION, 22);
-        assert!(json.contains(r#""schema_version": 22"#), "{json}");
+        // `virtue.bard` id rename, 22 from L1b's Dead/Living Language move, and
+        // 23 from N4b's native-language value — the plan's, but not these fields').
+        assert_eq!(SCHEMA_VERSION, 23);
+        assert!(json.contains(r#""schema_version": 23"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(back.life_stages, Some(out_of_apprenticeship));

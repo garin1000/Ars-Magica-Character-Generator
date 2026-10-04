@@ -408,7 +408,8 @@ describe('a magus past its Gauntlet', () => {
     // Plus the stored funding mode, which since schema 16 is a choice of its own.
     expect(saved.ability_funding).toBe('life_stages');
     expect(saved.life_stages).toEqual({
-      native_language: 'German',
+      // N4b (schema 23): no catalogue value, so typed text.
+      native_language: { text: 'German' },
       gauntlet_age: 25,
       post_gauntlet_lab_seasons: 13,
       post_gauntlet_spell_levels: 300,

@@ -445,7 +445,8 @@ describe('magus apprenticeship through the life stages', () => {
     // presence no longer carries it. Nothing was typed into the pool here.
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
     expect(saved.ability_funding).toBe('life_stages');
-    expect(saved.life_stages).toEqual({ native_language: 'German' });
+    // N4b (schema 23): "German" is no catalogue value, so it is stored as typed text.
+    expect(saved.life_stages).toEqual({ native_language: { text: 'German' } });
     expect(saved.xp_pool ?? 0).toBe(0);
     expect(saved.age).toBe(25);
 

@@ -424,8 +424,9 @@ struct FlowPool {
 /// (`life_stage_native_language_unset`), and no pool is created for a language
 /// nobody picked.
 ///
-/// The plan's language is typed text, so it is resolved once against the
-/// Ability's catalogue names in every locale (N4a, D84.1): "Arabic" is then the
+/// The plan's language is resolved once (N4a/N4b, D84.1): a catalogue value is
+/// itself, and typed text is resolved against the Ability's catalogue names in
+/// every locale. Either way `language.arabic` then matches the
 /// `Catalogued(language.arabic)` row a player picked or a reload folded, and any
 /// spelling of its names; text naming no value ("Gaelic") matches case-folded.
 ///
@@ -439,12 +440,12 @@ fn native_language_instance(
     rules: &crate::life_stage::LifeStageRules,
     ruleset: &Ruleset,
 ) -> Option<AbilityInstanceRef> {
-    let language = entity.life_stages.as_ref()?.native_language.clone()?;
+    let language = entity.life_stages.as_ref()?.native_language.as_ref()?;
     let ability = rules.childhood.native_language_ability.clone();
-    let typed = crate::catalogue::resolve_typed_instance(ruleset, &ability, &language);
+    let typed = crate::catalogue::resolve_native_language(ruleset, &ability, language);
     Some(AbilityInstanceRef {
         ability,
-        parameter: Some(language),
+        parameter: Some(language.as_str().to_string()),
         // Free text the plan itself chose, not a rules-authored Literal.
         requires_catalogued: false,
         bound_source: None,

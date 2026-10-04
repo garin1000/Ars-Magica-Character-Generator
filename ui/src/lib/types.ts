@@ -921,11 +921,18 @@ export interface LifeStageBudget {
   truncated_training_post_span_xp: number;
 }
 
+// `LifeStagePlan.native_language`: the `{id}` and `{text}` shapes of
+// `AbilityParamValue`, so the same combo writes both.
+export type NativeLanguage = { id: string } | { text: string };
+
 // A character's life-stage choices — never its resolved numbers (see
 // `LifeStageBudget`). Its presence switches Ability funding from the typed
 // `xp_pool` to the derived life-stage blocks.
 export interface LifeStagePlan {
-  native_language?: string;
+  // The language the character grew up speaking (N4b, schema 23): a value of the
+  // native-language Ability's catalogue, or the player's own text ("Other…").
+  // Mirrors the engine's `NativeLanguage` — an Ability parameter without `Linked`.
+  native_language?: NativeLanguage;
   // The Sample Childhood package the player took — a record of the decision, not
   // something derived from: the Abilities it grants live in `ability_scores` as
   // ordinary bought rows. Omitted for a childhood divided by hand.

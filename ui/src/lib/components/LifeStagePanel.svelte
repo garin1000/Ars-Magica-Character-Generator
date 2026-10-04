@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store, type AbilityFunding } from '../state.svelte';
-  import { U32_MAX } from '../derive';
+  import { abilityParamDisplay, U32_MAX } from '../derive';
+  import AbilityParameterCombo from './AbilityParameterCombo.svelte';
   import AgeFields from './AgeFields.svelte';
   import ChildhoodPackagePicker from './ChildhoodPackagePicker.svelte';
 
@@ -29,7 +30,17 @@
   // `AgeFields` (Slice 12, #24). The age→Ability-score cap moved to the Abilities
   // surface, beside the lists it constrains.
   const age = $derived(store.entity.age ?? null);
-  const nativeLanguage = $derived(store.entity.life_stages?.native_language ?? '');
+  const nativeLanguage = $derived(store.entity.life_stages?.native_language);
+  // N4b: the native language is a value of the native-language Ability's catalogue
+  // or the player's own text — the Ability row's combo over the engine's options
+  // for that Ability. With no list offered (an uncatalogued Ability, or before the
+  // engine's first answer) the plain text field stays.
+  const languageOptions = $derived.by(() => {
+    const ability = rules?.childhood.native_language_ability;
+    return store.effective?.ability_parameter_options?.find((o) => o.ability === ability);
+  });
+  // The plain field's text: a catalogue value by its display name, never its id.
+  const nativeLanguageText = $derived(abilityParamDisplay(nativeLanguage, store.ruleset));
 
   // The years after the Gauntlet are worth what the DATA says (30 points a year, 10
   // a charged lab season), so a ruleset shipping no such block grants nothing and the
@@ -172,13 +183,27 @@
         {/if}
         <label class="field inline">
           <span>{store.t('native-language-label')}</span>
-          <input
-            type="text"
-            placeholder={store.t('native-language-placeholder')}
-            value={nativeLanguage}
-            oninput={onNativeLanguage}
-            data-testid="native-language-input"
-          />
+          {#if languageOptions}
+            <AbilityParameterCombo
+              catalogued={languageOptions.catalogued}
+              value={nativeLanguage}
+              label={store.t('native-language-label')}
+              placeholder={store.t('native-language-placeholder')}
+              selectTestId="native-language-select"
+              inputTestId="native-language-input"
+              onchoose={(value) =>
+                store.setNativeLanguageValue(value && 'id' in value ? value : undefined)}
+              ontext={(text) => store.setNativeLanguage(text)}
+            />
+          {:else}
+            <input
+              type="text"
+              placeholder={store.t('native-language-placeholder')}
+              value={nativeLanguageText}
+              oninput={onNativeLanguage}
+              data-testid="native-language-input"
+            />
+          {/if}
         </label>
       </div>
       {#if showPostGauntlet}

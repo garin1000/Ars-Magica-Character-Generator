@@ -217,9 +217,10 @@ fn validate_life_stage_age_meets_minimum(
 /// for exactly that id whose parameter is this language, scoring above 0.
 /// Testing the parameter alone would let an `Area Lore (German)` pass while the
 /// 75-point pool, which keys on the id (`effective/xp.rs::native_language_instance`),
-/// funds none of it. The language is compared as that pool compares it — resolved
-/// against the Ability's catalogue (`catalogue.rs::resolve_typed_instance`, N4a) —
-/// so a picked or reloaded `Catalogued(language.arabic)` is the plan's "Arabic".
+/// funds none of it. The language is compared as that pool compares it
+/// (`catalogue.rs::resolve_native_language`, N4a/N4b): a picked value is itself,
+/// and typed text is resolved against the Ability's catalogue, so a picked or
+/// reloaded `Catalogued(language.arabic)` row is the plan's "Arabic" either way.
 fn validate_life_stage_native_language(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -238,7 +239,7 @@ fn validate_life_stage_native_language(
         // below, not this error.
         Some(language) => {
             let native = &rules.childhood.native_language_ability;
-            let wanted = crate::catalogue::resolve_typed_instance(ruleset, native, language);
+            let wanted = crate::catalogue::resolve_native_language(ruleset, native, language);
             let bought = entity.ability_scores.iter().any(|score| {
                 score.ability == *native
                     && wanted.is_satisfied_by(score.parameter.as_ref())
@@ -248,7 +249,8 @@ fn validate_life_stage_native_language(
                 issues.push(ValidationIssue::warning(
                     ValidationIssue::CODE_LIFE_STAGE_NATIVE_LANGUAGE_MISSING_SCORE,
                     CreationPhase::Experience,
-                    args([("language", language.clone())]),
+                    // A catalogue id or the typed text; the UI localizes an id.
+                    args([("language", language.as_str().to_string())]),
                     None,
                 ));
             }

@@ -92,7 +92,7 @@ fn companion(native: &str, scores: Vec<AbilityScore>) -> Entity {
     entity.ability_funding = arm_rules::AbilityFunding::LifeStages;
     entity.age = Some(25);
     entity.life_stages = Some(arm_rules::life_stage::LifeStagePlan {
-        native_language: Some(native.to_string()),
+        native_language: Some(native.into()),
         ..Default::default()
     });
     entity.ability_scores = scores;

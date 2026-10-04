@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
 import type {
   ChildhoodPackage,
+  EffectiveScores,
   Entity,
   LifeStagePlan,
   LifeStageRules,
@@ -108,7 +109,7 @@ function installRuleset(packages: ChildhoodPackage[] | null = [TRAVELING, ATHLET
   } as unknown as LocalizedRuleset;
 }
 
-function resetEntity(plan: LifeStagePlan | null = { native_language: 'German' }): void {
+function resetEntity(plan: LifeStagePlan | null = { native_language: { text: 'German' } }): void {
   store.entity = {
     schema_version: SCHEMA_VERSION,
     ruleset: { id: 'test', version: '1' },
@@ -401,7 +402,7 @@ describe('ChildhoodPackagePicker apply (slice 6b3b)', () => {
 
 describe('ChildhoodPackagePicker record vs draft (slice 6b3b)', () => {
   it('names the package the character has taken, read-only', () => {
-    resetEntity({ native_language: 'German', childhood_package: 'childhood.traveling' });
+    resetEntity({ native_language: { text: 'German' }, childhood_package: 'childhood.traveling' });
     const body = html();
     expect(text(body, 'childhood-taken')).toBe('Childhood taken: Traveling Childhood');
     // A record, not a control: it is text, not an input the player can retype.
@@ -409,7 +410,7 @@ describe('ChildhoodPackagePicker record vs draft (slice 6b3b)', () => {
   });
 
   it('leaves the draft select unselected even with a package recorded', () => {
-    resetEntity({ native_language: 'German', childhood_package: 'childhood.traveling' });
+    resetEntity({ native_language: { text: 'German' }, childhood_package: 'childhood.traveling' });
     const body = html();
     // A recorded package is history, not a draft: pre-filling it would show
     // spurious empty-slot faults after a reload, since slot drafts are not saved.
@@ -454,5 +455,96 @@ describe('ChildhoodPackagePicker engine rejections (slice 6b3b)', () => {
   it('renders no rejection list when the engine has said nothing', () => {
     store.setChildhoodDraftPackage('childhood.traveling');
     expect(has(html(), 'childhood-rejections')).toBe(false);
+  });
+});
+
+// N4b: a slot whose Ability is catalogued (Traveling's second Living Language) is
+// answered through the same select + "Other…" combo as the native language; a slot
+// of an uncatalogued Ability (Area Lore) stays a text field.
+describe('ChildhoodPackagePicker catalogued slots (N4b)', () => {
+  /** The engine's options for the Living Language catalogue, and the names to show. */
+  function offerLanguages(): void {
+    store.ruleset!.i18n['language.arabic'] = { name: 'Arabic' };
+    store.ruleset!.i18n['language.greek'] = { name: 'Greek' };
+    store.effective = {
+      ability_parameter_options: [
+        {
+          ability: 'ability.living_language',
+          catalogued: ['language.arabic', 'language.greek'],
+          linked: [],
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+  }
+
+  /** The `<select>` block carrying a data-testid. */
+  function selectOf(body: string, testid: string): string {
+    const match = new RegExp(`<select[^>]*data-testid="${testid}"[\\s\\S]*?</select>`, 'i').exec(
+      body,
+    );
+    if (!match) throw new Error(`no <select> with data-testid="${testid}"`);
+    return match[0];
+  }
+
+  /** The value of the option marked selected. */
+  function selectedOption(select: string): string | null {
+    const tag = [...select.matchAll(/<option([^>]*)>/g)]
+      .map((m) => m[1])
+      .find((attrs) => /\bselected\b/.test(attrs));
+    return tag ? (/value="([^"]*)"/.exec(tag)?.[1] ?? null) : null;
+  }
+
+  beforeEach(() => {
+    offerLanguages();
+    store.setChildhoodDraftPackage('childhood.traveling');
+  });
+
+  afterEach(() => {
+    store.effective = null;
+  });
+
+  it('asks a catalogued slot through the list and an uncatalogued one as text', () => {
+    const body = html();
+    const select = selectOf(body, 'childhood-slot-select-language');
+    expect(select.replace(/<[^>]*>/g, ' ')).toContain('Greek');
+    expect(has(body, 'childhood-slot-select-area_a')).toBe(false);
+    expect(open(body, 'childhood-slot-area_a')).toMatch(/type="text"/);
+  });
+
+  it('shows a picked language as that list entry, and names it in the preview', () => {
+    store.setChildhoodDraftSlotValue('language', { id: 'language.greek' });
+    const body = html();
+    expect(selectedOption(selectOf(body, 'childhood-slot-select-language'))).toBe(
+      'cat:language.greek',
+    );
+    expect(has(body, 'childhood-slot-language')).toBe(false);
+    expect(rows(body, 'childhood-package-preview')).toContain('Greek 1');
+    expect(visibleText(body)).not.toContain('language.greek');
+  });
+
+  it('names a native language picked from the list in the preview', () => {
+    resetEntity({ native_language: { id: 'language.arabic' } });
+    const body = html();
+    expect(rows(body, 'childhood-package-preview')).toContain('Arabic 5');
+    expect(visibleText(body)).not.toContain('language.arabic');
+  });
+
+  it('shows a typed language as "Other…" with its text', () => {
+    store.setChildhoodDraftSlot('language', 'Gaelic');
+    const body = html();
+    expect(selectedOption(selectOf(body, 'childhood-slot-select-language'))).toBe('other');
+    expect(open(body, 'childhood-slot-language')).toMatch(/value="Gaelic"/);
+  });
+
+  it('faults a picked slot language that is the picked native language', () => {
+    resetEntity({ native_language: { id: 'language.arabic' } });
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+    store.setChildhoodDraftSlot('area_b', 'Provence');
+    store.setChildhoodDraftSlotValue('language', { id: 'language.arabic' });
+    const body = html();
+    expect(open(body, 'childhood-slot-select-language')).toMatch(/aria-invalid="true"/);
+    expect(has(body, 'childhood-slot-language-reason')).toBe(true);
+    expect(open(body, 'childhood-apply')).toMatch(/disabled/);
   });
 });

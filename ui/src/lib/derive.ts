@@ -2163,7 +2163,8 @@ export function childhoodSlots(
  * Every Ability is named as the sheet will show it: the package's native-language
  * entry reads the plan's chosen language ("German 5", never the `{language}` token
  * and never the Ability id), a slot already answered reads its answer ("Rhine Lore
- * 1"), and an unanswered one falls back to the localized parameter hint.
+ * 1"), and an unanswered one falls back to the localized parameter hint. A
+ * language picked from the list reads its display name, never its id (N4b).
  *
  * Source: ArMDE:2384-2388.
  */
@@ -2171,12 +2172,16 @@ export function childhoodEntryPreview(
   localized: LocalizedRuleset,
   pkg: ChildhoodPackage,
   plan: LifeStagePlan | null | undefined,
-  slots: Record<string, string>,
+  slots: Record<string, string | { id: string }>,
   t: Translate,
 ): string[] {
-  const nativeLanguage = plan?.native_language?.trim() ?? '';
+  const nativeLanguage = answerText(localized, plan?.native_language).trim();
   return pkg.entries.map((entry) => {
-    const value = entry.native ? nativeLanguage : entry.slot ? slots[entry.slot] : undefined;
+    const value = entry.native
+      ? nativeLanguage
+      : entry.slot
+        ? answerText(localized, slots[entry.slot])
+        : undefined;
     const name = abilityDisplayName(localized, entry.ability, value, paramHint(t));
     return t('childhood-entry', { name, score: String(entry.score) });
   });
@@ -2209,6 +2214,8 @@ export type ChildhoodSlotFault = 'empty' | 'duplicate' | 'native';
  * in every locale; the UI holds only the active locale's names, under which that
  * resolution is exactly this folded comparison. A cross-locale spelling ("Arabisch"
  * against "Arabic") is therefore not caught here — the engine rejects it on Apply.
+ * A value picked from the list (N4b) compares as its display name, which within
+ * one locale names exactly that value.
  *
  * Source: ArMDE:2378, :2384-2388.
  */
@@ -2216,16 +2223,16 @@ export function childhoodSlotFault(
   localized: LocalizedRuleset,
   pkg: ChildhoodPackage,
   slot: string,
-  slots: Record<string, string>,
+  slots: Record<string, string | { id: string }>,
   plan: LifeStagePlan | null | undefined,
 ): ChildhoodSlotFault | null {
   const entry = pkg.entries.find((candidate) => candidate.slot === slot);
   if (!entry) return null;
 
-  const value = foldAnswer(slots[slot]);
+  const value = foldAnswer(answerText(localized, slots[slot]));
   if (!value) return 'empty';
 
-  const nativeLanguage = foldAnswer(plan?.native_language);
+  const nativeLanguage = foldAnswer(answerText(localized, plan?.native_language));
   const languageAbility = localized.ruleset.life_stages?.childhood.native_language_ability;
   if (nativeLanguage && entry.ability === languageAbility && value === nativeLanguage) {
     return 'native';
@@ -2233,9 +2240,20 @@ export function childhoodSlotFault(
 
   for (const other of pkg.entries) {
     if (!other.slot || other.slot === slot || other.ability !== entry.ability) continue;
-    if (foldAnswer(slots[other.slot]) === value) return 'duplicate';
+    if (foldAnswer(answerText(localized, slots[other.slot])) === value) return 'duplicate';
   }
   return null;
+}
+
+/**
+ * A native language or slot answer as text: typed text as typed, a catalogue value
+ * by its display name in the active locale (`abilityParamDisplay`).
+ */
+function answerText(
+  localized: LocalizedRuleset,
+  answer: string | { id: string } | { text: string } | null | undefined,
+): string {
+  return abilityParamDisplay(answer, localized);
 }
 
 /** A typed answer as the engine compares it: trimmed and lower-cased (`catalogue.rs::fold_name`). */

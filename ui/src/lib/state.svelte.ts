@@ -63,6 +63,7 @@ import type {
   LoadoutState,
   LocalizedRuleset,
   LongevitySource,
+  NativeLanguage,
   Realm,
   ReputationType,
   Selection,
@@ -95,7 +96,7 @@ const VALIDATE_DEBOUNCE_MS = 150;
  * Mirrors `arm_rules::SCHEMA_VERSION` by hand; the Rust constant is the source
  * and `the_frontend_mirrors_the_engine_schema_version` pins the two together.
  */
-export const SCHEMA_VERSION = 22;
+export const SCHEMA_VERSION = 23;
 
 /**
  * The saga year a document starts at when nothing else says otherwise — the
@@ -1339,11 +1340,22 @@ class AppStore {
    * plan is how its contents survive a mode switch rather than a bug.
    */
   setNativeLanguage(value: string): void {
+    const language = value.trim();
+    this.setNativeLanguageValue(language ? { text: language } : undefined);
+  }
+
+  /**
+   * Store the native language chosen from the list — a catalogue value — or clear
+   * it with `undefined` ("Other…" with nothing typed yet). N4b: the same write an
+   * Ability row's combo makes. Typed text is not matched against the list here:
+   * the engine treats it as the value it names (N4a), and the load fold stores it
+   * so. A no-op without a plan, like {@link setNativeLanguage}.
+   */
+  setNativeLanguageValue(value: NativeLanguage | undefined): void {
     const plan = this.entity.life_stages;
     if (!plan) return;
-    const language = value.trim();
-    if (language) {
-      plan.native_language = language;
+    if (value) {
+      plan.native_language = value;
     } else {
       delete plan.native_language;
     }
@@ -1423,6 +1435,11 @@ class AppStore {
   /** @see ChildhoodWorkflow.setDraftSlot */
   setChildhoodDraftSlot(slot: string, value: string): void {
     this.#childhoodWorkflow.setDraftSlot(slot, value);
+  }
+
+  /** @see ChildhoodWorkflow.setDraftSlotValue */
+  setChildhoodDraftSlotValue(slot: string, value: { id: string } | undefined): void {
+    this.#childhoodWorkflow.setDraftSlotValue(slot, value);
   }
 
   /**

@@ -162,8 +162,9 @@ fn a_v21_dead_language_arabic_moves_to_living_language() {
         "the specialty travels with the instance"
     );
     assert_eq!(
-        entity.schema_version, SPLIT_VERSION,
-        "a load that moved something stamps the new version, like every other \
+        entity.schema_version,
+        arm_rules::SCHEMA_VERSION,
+        "a load that moved something stamps the current version, like every other \
          meaning-changing fold"
     );
 }

@@ -73,7 +73,7 @@ fn fully_populated_entity() -> Entity {
     e.spell_levels_override = Some(150);
     e.ability_funding = AbilityFunding::LifeStages;
     e.life_stages = Some(LifeStagePlan {
-        native_language: Some("Latin".to_string()),
+        native_language: Some("Latin".into()),
         childhood_package: Some(Id::new("childhood.package")),
         gauntlet_age: Some(25),
         post_gauntlet_lab_seasons: 3,

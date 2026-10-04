@@ -3223,7 +3223,7 @@ describe('ability funding mode', () => {
       // Since schema 16 the mode is STORED, not inferred from the plan: a save the
       // engine's migration folded carries both.
       ability_funding: 'life_stages',
-      life_stages: { native_language: 'German' },
+      life_stages: { native_language: { text: 'German' } },
     };
   }
 
@@ -3241,7 +3241,7 @@ describe('ability funding mode', () => {
     // mode was inferred from the plan, DELETING the plan was how "pool" got
     // recorded — so nothing could stop the destruction until the field was stored.
     store.entity.ability_funding = 'pool';
-    store.entity.life_stages = { native_language: 'German', gauntlet_age: 25 };
+    store.entity.life_stages = { native_language: { text: 'German' }, gauntlet_age: 25 };
     expect(store.abilityFunding).toBe('pool');
 
     // And the other direction: the field alone flips the mode, plan or no plan.
@@ -3291,7 +3291,7 @@ describe('ability funding mode', () => {
 
   it('preserves the life-stage plan when switching to pool', async () => {
     const plan = {
-      native_language: 'German',
+      native_language: { text: 'German' },
       childhood_package: 'childhood.traveling',
       gauntlet_age: 25,
       post_gauntlet_lab_seasons: 6,
@@ -3318,13 +3318,19 @@ describe('ability funding mode', () => {
     await store.setAbilityFunding('pool');
 
     expect(store.entity.xp_pool).toBe(240);
-    expect(store.entity.life_stages).toEqual({ native_language: 'German', gauntlet_age: 25 });
+    expect(store.entity.life_stages).toEqual({
+      native_language: { text: 'German' },
+      gauntlet_age: 25,
+    });
     expect(store.abilityFunding).toBe('pool');
 
     // And back again: the plan is picked up where it was left, not restarted empty.
     await store.setAbilityFunding('life_stages');
     expect(store.entity.xp_pool).toBe(240);
-    expect(store.entity.life_stages).toEqual({ native_language: 'German', gauntlet_age: 25 });
+    expect(store.entity.life_stages).toEqual({
+      native_language: { text: 'German' },
+      gauntlet_age: 25,
+    });
   });
 
   it('still clears the childhood draft when leaving life stages', async () => {
@@ -3412,7 +3418,7 @@ describe('ability funding mode', () => {
 
     expect(store.entity.ability_funding).toBe('life_stages');
     expect(store.abilityFunding).toBe('life_stages');
-    expect(store.entity.life_stages).toEqual({ native_language: 'German' });
+    expect(store.entity.life_stages).toEqual({ native_language: { text: 'German' } });
     vi.mocked(ipc.saveEntity).mockReset();
     vi.mocked(ipc.loadEntity).mockReset();
   });
@@ -3427,7 +3433,7 @@ describe('setNativeLanguage', () => {
 
   it('stores the trimmed language on the plan', () => {
     store.setNativeLanguage('  German  ');
-    expect(store.entity.life_stages).toEqual({ native_language: 'German' });
+    expect(store.entity.life_stages).toEqual({ native_language: { text: 'German' } });
   });
 
   it('validates through the debounce, like the other typed fields', () => {
@@ -3450,7 +3456,7 @@ describe('setNativeLanguage', () => {
     store.setNativeLanguage('German');
     expect(store.entity.life_stages).toEqual({
       childhood_package: 'childhood.traveling',
-      native_language: 'German',
+      native_language: { text: 'German' },
     });
   });
 
@@ -3469,6 +3475,44 @@ describe('setNativeLanguage', () => {
     expect('life_stages' in store.entity).toBe(false);
     vi.advanceTimersByTime(200);
     expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+  });
+});
+
+// N4b: the native language picked from the list is stored as the catalogue value,
+// exactly as an Ability row's combo stores it; "Other…" is the typed escape above.
+describe('setNativeLanguageValue (N4b)', () => {
+  beforeEach(async () => {
+    await store.setAbilityFunding('life_stages');
+    store.entity.life_stages = {};
+    vi.mocked(ipc.validateEntity).mockClear();
+  });
+
+  it('stores a language chosen from the list as its catalogue value', () => {
+    store.setNativeLanguageValue({ id: 'language.arabic' });
+    expect(store.entity.life_stages).toEqual({ native_language: { id: 'language.arabic' } });
+  });
+
+  it('replaces typed text, and "Other…" clears the choice', () => {
+    store.setNativeLanguage('Gaelic');
+    store.setNativeLanguageValue({ id: 'language.arabic' });
+    expect(store.entity.life_stages).toEqual({ native_language: { id: 'language.arabic' } });
+
+    store.setNativeLanguageValue(undefined);
+    expect(store.entity.life_stages).toEqual({});
+    expect(store.entity.life_stages).not.toHaveProperty('native_language');
+  });
+
+  it('validates through the debounce, like the typed field', () => {
+    store.setNativeLanguageValue({ id: 'language.arabic' });
+    expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(200);
+    expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
+  });
+
+  it('is a no-op when no plan exists', () => {
+    delete store.entity.life_stages;
+    store.setNativeLanguageValue({ id: 'language.arabic' });
+    expect('life_stages' in store.entity).toBe(false);
   });
 });
 
@@ -3492,11 +3536,11 @@ describe('the post-Gauntlet plan fields', () => {
       store.setGauntletAge(25);
       store.setGauntletAge(null);
       // Absent means "standing at the Gauntlet" — exactly the pre-6b5 shape.
-      expect(store.entity.life_stages).toEqual({ native_language: 'German' });
+      expect(store.entity.life_stages).toEqual({ native_language: { text: 'German' } });
 
       store.setGauntletAge(25);
       store.setGauntletAge(0);
-      expect(store.entity.life_stages).toEqual({ native_language: 'German' });
+      expect(store.entity.life_stages).toEqual({ native_language: { text: 'German' } });
     });
 
     it('clamps to the u32 range the engine field is', () => {
@@ -3701,6 +3745,17 @@ describe('the childhood package draft', () => {
     expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
   });
 
+  it('stores a language picked from the list as its catalogue value (N4b)', () => {
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('language', 'Gaelic');
+    store.setChildhoodDraftSlotValue('language', { id: 'language.greek' });
+    expect(store.childhoodDraft.slots).toEqual({ language: { id: 'language.greek' } });
+
+    // "Other…" clears the pick, leaving the slot unanswered.
+    store.setChildhoodDraftSlotValue('language', undefined);
+    expect(store.childhoodDraft.slots).toEqual({});
+  });
+
   it('deletes a slot key for a blank or whitespace-only value', () => {
     store.setChildhoodDraftPackage('childhood.traveling');
     store.setChildhoodDraftSlot('area_a', 'Rhine');
@@ -3817,7 +3872,10 @@ describe('applyChildhoodPackage', () => {
   function appliedEntity(): Entity {
     return {
       ...plain(store.entity),
-      life_stages: { native_language: 'German', childhood_package: 'childhood.traveling' },
+      life_stages: {
+        native_language: { text: 'German' },
+        childhood_package: 'childhood.traveling',
+      },
       ability_scores: [
         { ability: 'ability.living_language', score: 5, parameter: { text: 'German' } },
         { ability: 'ability.area_lore', score: 1, parameter: { text: 'Rhine' } },
@@ -3861,6 +3919,27 @@ describe('applyChildhoodPackage', () => {
 
     expect(vi.mocked(ipc.applyChildhoodPackage)).toHaveBeenCalledWith(sent, 'childhood.traveling', {
       language: 'German',
+      area_a: 'Rhine',
+    });
+  });
+
+  it('sends a language picked from the list by its shown name, which the engine resolves (N4b)', async () => {
+    // The engine takes slot answers as text and resolves a name of any locale to its
+    // catalogue value (`catalogue.rs::resolve_typed_instance`), so a pick travels as
+    // the name the player saw — never as an id the engine would read as free text.
+    store.ruleset!.i18n['language.greek'] = { name: 'Greek' } as never;
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
+      status: 'applied',
+      entity: appliedEntity(),
+    });
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlotValue('language', { id: 'language.greek' });
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+
+    await store.applyChildhoodPackage();
+
+    expect(vi.mocked(ipc.applyChildhoodPackage).mock.calls[0][2]).toEqual({
+      language: 'Greek',
       area_a: 'Rhine',
     });
   });

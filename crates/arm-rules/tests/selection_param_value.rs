@@ -24,12 +24,13 @@ use std::path::{Path, PathBuf};
 /// on it). The constant has since moved five times more — to 18 for CV4's
 /// unrelated ability-parameter widening, to 19 for C5a itself, to 20 for F1's
 /// unrelated `EquipmentSlot::loadout` move (K5), to 21 for X9b's unrelated
-/// `virtue.rard` -> `virtue.bard` id rename, and to 22 for L1b's unrelated
-/// Dead/Living Language move — this assertion tracks the current value, not
-/// C0b's own contribution to it (still zero).
+/// `virtue.rard` -> `virtue.bard` id rename, to 22 for L1b's unrelated
+/// Dead/Living Language move, and to 23 for N4b's unrelated native-language
+/// value — this assertion tracks the current value, not C0b's own contribution
+/// to it (still zero).
 #[test]
 fn c0b_does_not_bump_schema_version() {
-    assert_eq!(arm_rules::migration::SCHEMA_VERSION, 22);
+    assert_eq!(arm_rules::migration::SCHEMA_VERSION, 23);
 }
 
 /// The real shipped ruleset + catalogue names — CV4's `load_entity_migrating`

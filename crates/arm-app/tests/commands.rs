@@ -340,7 +340,7 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
     // The shipped sample now carries characteristics, ability scores, and a bank,
     // and is kept at the current schema version so a save/load round trip on it is
     // an identity (see `save_then_load_round_trips_with_byte_stable_canonical_json`).
-    assert_eq!(entity.schema_version, 22);
+    assert_eq!(entity.schema_version, 23);
     assert!(!entity.characteristics.is_empty());
     assert!(!entity.ability_scores.is_empty());
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
@@ -1002,7 +1002,7 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     .unwrap()
     .entity;
     assert_eq!(
-        migrated.schema_version, 22,
+        migrated.schema_version, 23,
         "the field move bumps the schema"
     );
     let talisman = migrated
@@ -1020,7 +1020,7 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     let written = fs::read_to_string(&path).unwrap();
     assert!(!written.contains("talisman_attunements"), "got: {written}");
     assert!(written.contains("\"talisman\""), "got: {written}");
-    assert!(written.contains("\"schema_version\": 22"), "got: {written}");
+    assert!(written.contains("\"schema_version\": 23"), "got: {written}");
 }
 
 /// C8: the app's load door is what carries the user's configured default into the
@@ -1100,7 +1100,7 @@ fn a_schema_20_save_keeps_a_within_focus_mark_through_migration() {
         vec![Selection::new(Id::new("virtue.bard"))],
         "fixture premise: the 20 -> 21 fold ran"
     );
-    assert_eq!(migrated.schema_version, 22);
+    assert_eq!(migrated.schema_version, 23);
     assert_eq!(migrated.spells.len(), 1);
     assert!(
         migrated.spells[0].within_focus,
@@ -1185,7 +1185,7 @@ fn save_stamps_current_schema_version() {
     save_entity_to_path(&entity, &path).unwrap();
     let written = fs::read_to_string(&path).unwrap();
     assert!(
-        written.contains("\"schema_version\": 22"),
+        written.contains("\"schema_version\": 23"),
         "save must stamp the current schema version, got: {written}"
     );
 }
@@ -1745,7 +1745,7 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
     )
     .unwrap()
     .entity;
-    assert_eq!(reloaded.schema_version, 22);
+    assert_eq!(reloaded.schema_version, 23);
     assert_eq!(reloaded.art_scores, entity.art_scores);
 }
 
@@ -2607,7 +2607,7 @@ fn life_stage_companion(native_language: &str) -> Entity {
     // The funding mode is stored since schema 16, so a plan needs it to be live.
     entity.ability_funding = arm_rules::AbilityFunding::LifeStages;
     entity.life_stages = Some(arm_rules::LifeStagePlan {
-        native_language: Some(native_language.to_string()),
+        native_language: Some(native_language.into()),
         ..arm_rules::LifeStagePlan::default()
     });
     entity
@@ -3695,7 +3695,7 @@ fn mirrored_keys(value: &serde_json::Value, into: &mut std::collections::BTreeSe
 #[test]
 fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
     let plan = arm_rules::LifeStagePlan {
-        native_language: Some("German".to_string()),
+        native_language: Some("German".into()),
         childhood_package: Some(Id::new("childhood.athletic")),
         // The three post-Gauntlet choices, populated for the same reason every other
         // optional field here is: `skip_serializing_if` would otherwise drop them
@@ -4803,7 +4803,7 @@ fn the_examples_keep_a_genuine_pre_migration_fixture() {
     // And the current fixture is genuinely current, so the round-trip test above is
     // comparing like with like.
     let current = fs::read_to_string(repo_root().join("examples/companion_sample.json")).unwrap();
-    assert!(current.contains("\"schema_version\": 22"), "got {current}");
+    assert!(current.contains("\"schema_version\": 23"), "got {current}");
     assert!(current.contains("\"saga_year\": 1220"), "got {current}");
 }
 

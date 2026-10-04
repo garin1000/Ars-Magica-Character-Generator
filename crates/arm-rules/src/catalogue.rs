@@ -332,15 +332,35 @@ pub(crate) fn resolve_typed_instance(
             .any(|name| fold_name(name) == folded)
     };
     match catalogue.and_then(|catalogue| catalogue.values.iter().find(named)) {
-        Some(value) => ResolvedInstance::Catalogued {
-            id: value.id.clone(),
-            names: ruleset
-                .catalogue_value_names(&value.id)
-                .iter()
-                .map(|name| fold_name(name))
-                .collect(),
-        },
+        Some(value) => catalogued_instance(ruleset, &value.id),
         None => ResolvedInstance::Text { folded },
+    }
+}
+
+/// The plan's native language as the instance it names (N4b): a catalogue value
+/// is that value, with every name the ruleset knows for it; typed text resolves as
+/// [`resolve_typed_instance`] resolves it.
+pub(crate) fn resolve_native_language(
+    ruleset: &crate::Ruleset,
+    ability: &Id,
+    language: &crate::life_stage::NativeLanguage,
+) -> ResolvedInstance {
+    use crate::life_stage::NativeLanguage;
+    match language {
+        NativeLanguage::Catalogued { id } => catalogued_instance(ruleset, id),
+        NativeLanguage::Text { text } => resolve_typed_instance(ruleset, ability, text),
+    }
+}
+
+/// The catalogue value `id` with its names in every locale, folded.
+fn catalogued_instance(ruleset: &crate::Ruleset, id: &Id) -> ResolvedInstance {
+    ResolvedInstance::Catalogued {
+        id: id.clone(),
+        names: ruleset
+            .catalogue_value_names(id)
+            .iter()
+            .map(|name| fold_name(name))
+            .collect(),
     }
 }
 

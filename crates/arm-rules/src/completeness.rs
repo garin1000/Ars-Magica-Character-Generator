@@ -293,7 +293,7 @@ mod tests {
         let mut entity = character("grog");
         assert!(incomplete(&entity).contains(&CreationPhase::Experience));
         entity.life_stages = Some(LifeStagePlan {
-            native_language: Some("German".to_string()),
+            native_language: Some("German".into()),
             ..LifeStagePlan::default()
         });
         assert!(!incomplete(&entity).contains(&CreationPhase::Experience));

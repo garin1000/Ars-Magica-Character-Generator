@@ -6033,7 +6033,7 @@ fn abandoned_apprentice_completed_years_fund_16_xp_and_8_spell_levels_per_year()
     e.ability_funding = AbilityFunding::LifeStages;
     e.age = Some(20);
     e.life_stages = Some(LifeStagePlan {
-        native_language: Some("German".to_string()),
+        native_language: Some("German".into()),
         ..LifeStagePlan::default()
     });
     let mut a = AbilityScore::new(Id::new("ability.living_language"), 5);
@@ -6589,7 +6589,7 @@ fn redcap_and_lone_redcap_total_budget_is_495_not_720() {
         e.ability_funding = AbilityFunding::LifeStages;
         e.age = Some(25);
         e.life_stages = Some(LifeStagePlan {
-            native_language: Some("German".to_string()),
+            native_language: Some("German".into()),
             ..LifeStagePlan::default()
         });
 

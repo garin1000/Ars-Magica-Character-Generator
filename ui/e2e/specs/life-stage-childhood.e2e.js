@@ -484,7 +484,8 @@ describe('life-stage funding and Sample Childhoods', () => {
     expect(saved.ability_funding).toBe('life_stages');
     expect(saved.life_stages).toEqual({
       childhood_package: TRAVELING,
-      native_language: 'German',
+      // N4b (schema 23): no catalogue value, so typed text.
+      native_language: { text: 'German' },
     });
     expect(saved.xp_pool ?? 0).toBe(0);
 

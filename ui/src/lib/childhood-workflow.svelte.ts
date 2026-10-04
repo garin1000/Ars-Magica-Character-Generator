@@ -5,6 +5,7 @@
 // and the record of the package taken arrive together), routed through the
 // `host` so `AppStore` stays the sole owner of `entity`.
 
+import { abilityParamDisplay } from './derive';
 import * as ipc from './ipc';
 import type { AppError, Entity, LocalizedRuleset, ValidationIssue } from './types';
 
@@ -23,8 +24,16 @@ export interface ChildhoodDraft {
   /** The package the picker has selected; `null` while none is chosen. */
   packageId: string | null;
   /** Slot key (`area_a`, `language`, …) -> the player's value. Blanks are absent. */
-  slots: Record<string, string>;
+  slots: Record<string, ChildhoodSlotAnswer>;
 }
+
+/**
+ * One slot's answer: typed text, or (N4b) a value picked from the catalogue of the
+ * slot's Ability. The engine takes slot answers as text, so {@link
+ * ChildhoodWorkflow.apply} sends a pick by its shown name, which the engine resolves
+ * back to the value in any locale (`catalogue.rs::resolve_typed_instance`).
+ */
+export type ChildhoodSlotAnswer = string | { id: string };
 
 /** A fresh, empty childhood draft (the initial/reset state). */
 export function defaultChildhoodDraft(): ChildhoodDraft {
@@ -99,8 +108,21 @@ export class ChildhoodWorkflow {
    * {@link setDraftPackage}.
    */
   setDraftSlot(slot: string, value: string): void {
-    this.rejections = [];
     const answer = value.trim();
+    this.#writeSlot(slot, answer || undefined);
+  }
+
+  /**
+   * Answer a slot with a value picked from its Ability's catalogue (N4b), or clear
+   * it with `undefined` ("Other…" with nothing typed yet). Draft state only, like
+   * {@link setDraftSlot}.
+   */
+  setDraftSlotValue(slot: string, value: { id: string } | undefined): void {
+    this.#writeSlot(slot, value);
+  }
+
+  #writeSlot(slot: string, answer: ChildhoodSlotAnswer | undefined): void {
+    this.rejections = [];
     const slots = { ...this.draft.slots };
     if (answer) {
       slots[slot] = answer;
@@ -108,6 +130,16 @@ export class ChildhoodWorkflow {
       delete slots[slot];
     }
     this.draft.slots = slots;
+  }
+
+  /** The slot answers as the engine takes them: text, a pick by its shown name. */
+  #slotTexts(): Record<string, string> {
+    const texts: Record<string, string> = {};
+    const localized = this.#host.ruleset();
+    for (const [slot, answer] of Object.entries(this.draft.slots)) {
+      texts[slot] = typeof answer === 'string' ? answer : abilityParamDisplay(answer, localized);
+    }
+    return texts;
   }
 
   /** The parameter slot keys the given package's entries declare. */
@@ -120,9 +152,9 @@ export class ChildhoodWorkflow {
   }
 
   /** Drafted slot answers kept only where the target package still asks for them. */
-  #prunedSlots(packageId: string): Record<string, string> {
+  #prunedSlots(packageId: string): Record<string, ChildhoodSlotAnswer> {
     const asked = this.#slotKeys(packageId);
-    const kept: Record<string, string> = {};
+    const kept: Record<string, ChildhoodSlotAnswer> = {};
     for (const [slot, answer] of Object.entries(this.draft.slots)) {
       if (asked.has(slot)) kept[slot] = answer;
     }
@@ -149,7 +181,7 @@ export class ChildhoodWorkflow {
       const outcome = await ipc.applyChildhoodPackage(
         $state.snapshot(this.#host.entity()),
         packageId,
-        $state.snapshot(this.draft.slots),
+        this.#slotTexts(),
       );
       if (outcome.status === 'rejected') {
         this.rejections = outcome.issues;

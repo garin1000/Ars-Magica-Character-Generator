@@ -5265,6 +5265,8 @@ describe('childhoodSlots / childhoodEntryPreview / childhoodSlotFault', () => {
         'ability.living_language': { name: '{language}' },
         'ability.stealth': { name: 'Stealth' },
         'ability.survival': { name: 'Survival' },
+        'language.arabic': { name: 'Arabic' },
+        'language.greek': { name: 'Greek' },
       },
     } as unknown as LocalizedRuleset;
   }
@@ -5350,7 +5352,7 @@ describe('childhoodSlots / childhoodEntryPreview / childhoodSlotFault', () => {
       const rows = childhoodEntryPreview(
         rs,
         traveling,
-        { native_language: 'German' },
+        { native_language: { text: 'German' } },
         { area_a: 'Rhine' },
         t,
       );
@@ -5365,10 +5367,29 @@ describe('childhoodSlots / childhoodEntryPreview / childhoodSlotFault', () => {
     });
 
     it('names the plan native language on the native entry, never its token or id', () => {
-      const rows = childhoodEntryPreview(rs, traveling, { native_language: 'German' }, {}, t);
+      const rows = childhoodEntryPreview(
+        rs,
+        traveling,
+        { native_language: { text: 'German' } },
+        {},
+        t,
+      );
       expect(rows).toContain('German 5');
       expect(rows.join(' | ')).not.toContain('{language}');
       expect(rows.join(' | ')).not.toContain('ability.living_language');
+    });
+
+    it('names languages picked from the list by their display names, never their ids (N4b)', () => {
+      const rows = childhoodEntryPreview(
+        rs,
+        traveling,
+        { native_language: { id: 'language.arabic' } },
+        { language: { id: 'language.greek' } },
+        t,
+      );
+      expect(rows).toContain('Arabic 5');
+      expect(rows).toContain('Greek 1');
+      expect(rows.join(' | ')).not.toContain('language.');
     });
 
     it('falls back to the localized parameter hint while no native language is chosen', () => {
@@ -5377,7 +5398,13 @@ describe('childhoodSlots / childhoodEntryPreview / childhoodSlotFault', () => {
     });
 
     it('never leaves a brace placeholder or an ability slug in a row', () => {
-      const rows = childhoodEntryPreview(rs, exploring, { native_language: 'German' }, {}, t);
+      const rows = childhoodEntryPreview(
+        rs,
+        exploring,
+        { native_language: { text: 'German' } },
+        {},
+        t,
+      );
       for (const row of rows) {
         expect(row).not.toContain('{');
         expect(row).not.toContain('ability.');
@@ -5386,7 +5413,7 @@ describe('childhoodSlots / childhoodEntryPreview / childhoodSlotFault', () => {
   });
 
   describe('childhoodSlotFault', () => {
-    const plan = { native_language: 'German' };
+    const plan = { native_language: { text: 'German' } };
 
     it('reports an unanswered slot as empty', () => {
       expect(childhoodSlotFault(rs, traveling, 'area_a', {}, plan)).toBe('empty');

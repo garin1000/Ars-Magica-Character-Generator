@@ -351,7 +351,7 @@ describe('LifeStagePanel guided fields (slice 6b3b)', () => {
   });
 
   it('renders the native-language field with its localized label and placeholder', () => {
-    installPlan({ native_language: 'German' });
+    installPlan({ native_language: { text: 'German' } });
     const body = html();
     const input = element(body, 'native-language-input');
     expect(input.open).toMatch(/value="German"/);
@@ -606,7 +606,7 @@ describe('LifeStagePanel childhood picker (slice 6b3b)', () => {
 
   it('mounts the childhood picker under the guided fields', () => {
     installCatalogue();
-    installPlan({ native_language: 'German' });
+    installPlan({ native_language: { text: 'German' } });
     const body = html();
     expect(has(body, 'childhood-package-select')).toBe(true);
     // Childhood is part of the guided flow, so it belongs below the native
@@ -621,5 +621,83 @@ describe('LifeStagePanel childhood picker (slice 6b3b)', () => {
     // No plan: the character's Abilities are funded by the typed pool, and
     // childhood is not one of its blocks.
     expect(has(html(), 'childhood-package-select')).toBe(false);
+  });
+});
+
+// N4b (finding N4): "in Life stage mode, you have to select a native language.
+// This is free text and never matched with the selection list." The field is now
+// the Ability row's own select + "Other…" combo over the native-language Ability's
+// catalogue, which the engine hands over in `ability_parameter_options`.
+describe('LifeStagePanel native language as a list value (N4b)', () => {
+  /** The engine's options for the native-language Ability, and the names to show. */
+  function offerLanguages(): void {
+    store.ruleset!.i18n['language.arabic'] = { name: 'Arabic' };
+    store.ruleset!.i18n['language.greek'] = { name: 'Greek' };
+    store.effective = {
+      ...(store.effective ?? {}),
+      ability_parameter_options: [
+        {
+          ability: 'ability.living_language',
+          catalogued: ['language.arabic', 'language.greek'],
+          linked: [],
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+  }
+
+  /** The `<select>` block carrying a data-testid. */
+  function selectBlock(body: string, testid: string): string {
+    const match = new RegExp(`<select[^>]*data-testid="${testid}"[\\s\\S]*?</select>`, 'i').exec(
+      body,
+    );
+    if (!match) throw new Error(`no <select> with data-testid="${testid}"`);
+    return match[0];
+  }
+
+  /** The value of the option marked selected. */
+  function selectedOption(select: string): string | null {
+    const tag = [...select.matchAll(/<option([^>]*)>/g)]
+      .map((m) => m[1])
+      .find((attrs) => /\bselected\b/.test(attrs));
+    return tag ? (/value="([^"]*)"/.exec(tag)?.[1] ?? null) : null;
+  }
+
+  it('shows a native language picked from the list as that list entry', () => {
+    installPlan({ native_language: { id: 'language.arabic' } });
+    offerLanguages();
+    const body = html();
+    const select = selectBlock(body, 'native-language-select');
+    expect(select).toMatch(/aria-label="Native language"/);
+    expect(selectedOption(select)).toBe('cat:language.arabic');
+    expect(select.replace(/<[^>]*>/g, ' ')).toContain('Greek');
+    // Picked from the list, so no "Other…" field is open.
+    expect(has(body, 'native-language-input')).toBe(false);
+    expect(body.replace(/<[^>]*>/g, ' ')).not.toContain('language.arabic');
+  });
+
+  it('shows a language the list lacks as "Other…" with the typed text', () => {
+    installPlan({ native_language: { text: 'Gaelic' } });
+    offerLanguages();
+    const body = html();
+    expect(selectedOption(selectBlock(body, 'native-language-select'))).toBe('other');
+    const input = element(body, 'native-language-input');
+    expect(input.open).toMatch(/value="Gaelic"/);
+    expect(input.open).toMatch(/placeholder="[^"]*German/);
+  });
+
+  it('opens an empty "Other…" field while no language is chosen', () => {
+    installPlan();
+    offerLanguages();
+    const body = html();
+    expect(selectedOption(selectBlock(body, 'native-language-select'))).toBe('other');
+    expect(element(body, 'native-language-input').open).not.toMatch(/value="[^"]+"/);
+  });
+
+  it('keeps the plain text field while the engine offers no list', () => {
+    installPlan({ native_language: { text: 'German' } });
+    const body = html();
+    expect(has(body, 'native-language-select')).toBe(false);
+    expect(element(body, 'native-language-input').open).toMatch(/value="German"/);
   });
 });

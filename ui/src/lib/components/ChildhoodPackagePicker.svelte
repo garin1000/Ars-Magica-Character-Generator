@@ -1,6 +1,10 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import type { ChildhoodSlotAnswer } from '../childhood-workflow.svelte';
+  import type { AbilityParameterOptions, AbilityParamValue } from '../types';
+  import AbilityParameterCombo from './AbilityParameterCombo.svelte';
   import {
+    abilityParamDisplay,
     childhoodEntryPreview,
     childhoodSlotFault,
     childhoodSlots,
@@ -108,6 +112,22 @@
   function onSlot(slot: string, event: Event) {
     store.setChildhoodDraftSlot(slot, (event.currentTarget as HTMLInputElement).value);
   }
+
+  /** The engine's list for a slot's Ability, or `undefined` for an uncatalogued one. */
+  function optionsFor(ability: string): AbilityParameterOptions | undefined {
+    return store.effective?.ability_parameter_options?.find((o) => o.ability === ability);
+  }
+
+  /** A drafted answer as the combo's value: a pick as itself, typed text as text. */
+  function comboValue(answer: ChildhoodSlotAnswer | undefined): AbilityParamValue | undefined {
+    if (answer === undefined) return undefined;
+    return typeof answer === 'string' ? { text: answer } : answer;
+  }
+
+  /** A drafted answer as a plain field's text: a pick by its display name. */
+  function slotText(answer: ChildhoodSlotAnswer | undefined): string {
+    return abilityParamDisplay(answer, store.ruleset);
+  }
 </script>
 
 {#if packages.length > 0}
@@ -146,20 +166,42 @@
         <div class="childhood-slots">
           {#each slots as slot (slot.slot)}
             {@const fault = faults.get(slot.slot) ?? null}
+            {@const options = optionsFor(slot.ability)}
             <div class="childhood-slot">
               <label class="field inline">
                 <!-- The label is the Ability, ordinal-disambiguated where one
                      Ability holds two slots; the slot key is a machine key and is
                      never shown. -->
                 <span>{slot.label}</span>
-                <input
-                  type="text"
-                  value={store.childhoodDraft.slots[slot.slot] ?? ''}
-                  aria-invalid={fault ? 'true' : undefined}
-                  aria-describedby={fault ? reasonId(slot.slot) : undefined}
-                  oninput={(event) => onSlot(slot.slot, event)}
-                  data-testid="childhood-slot-{slot.slot}"
-                />
+                {#if options}
+                  <!-- N4b: a catalogued Ability's slot is answered from its list,
+                       with "Other…" for a value the list lacks. -->
+                  <AbilityParameterCombo
+                    catalogued={options.catalogued}
+                    value={comboValue(store.childhoodDraft.slots[slot.slot])}
+                    label={slot.label}
+                    placeholder={slot.label}
+                    invalid={!!fault}
+                    describedby={fault ? reasonId(slot.slot) : undefined}
+                    selectTestId="childhood-slot-select-{slot.slot}"
+                    inputTestId="childhood-slot-{slot.slot}"
+                    onchoose={(value) =>
+                      store.setChildhoodDraftSlotValue(
+                        slot.slot,
+                        value && 'id' in value ? value : undefined,
+                      )}
+                    ontext={(text) => store.setChildhoodDraftSlot(slot.slot, text)}
+                  />
+                {:else}
+                  <input
+                    type="text"
+                    value={slotText(store.childhoodDraft.slots[slot.slot])}
+                    aria-invalid={fault ? 'true' : undefined}
+                    aria-describedby={fault ? reasonId(slot.slot) : undefined}
+                    oninput={(event) => onSlot(slot.slot, event)}
+                    data-testid="childhood-slot-{slot.slot}"
+                  />
+                {/if}
               </label>
               {#if fault}
                 <span

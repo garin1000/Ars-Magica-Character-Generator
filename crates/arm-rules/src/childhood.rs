@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use crate::ability::AdvancementTable;
-use crate::catalogue::{ResolvedInstance, resolve_typed_instance};
+use crate::catalogue::{ResolvedInstance, resolve_native_language, resolve_typed_instance};
 use crate::ruleset::Ruleset;
 use crate::types::{AbilityScore, Entity, Id, SourceRef, is_false};
 
@@ -275,9 +275,8 @@ pub fn apply_package(
     let native_language = entity
         .life_stages
         .as_ref()
-        .and_then(|plan| plan.native_language.as_deref())
-        .map(str::trim)
-        .filter(|language| !language.is_empty());
+        .and_then(|plan| plan.native_language.as_ref())
+        .filter(|language| !language.is_blank());
     if native_language.is_none() {
         rejections.push(ChildhoodRejection::NativeLanguageUnset);
     }
@@ -290,10 +289,11 @@ pub fn apply_package(
         .life_stages()
         .map(|rules| &rules.childhood.native_language_ability);
     // Typed values are compared as the language each names, not as spelled
-    // (N4a): "arabic", "Arabic" and "Arabisch" are one Living Language.
+    // (N4a): "arabic", "Arabic" and "Arabisch" are one Living Language — and a
+    // native language picked from the list is that language (N4b).
     let native_instance = native_language
         .zip(native_language_ability)
-        .map(|(language, ability)| resolve_typed_instance(ruleset, ability, language));
+        .map(|(language, ability)| resolve_native_language(ruleset, ability, language));
     // The slot each `(ability, instance)` pair was first answered under, so a
     // repeat can name the slot it collides with.
     let mut answered: BTreeMap<(&Id, ResolvedInstance), &str> = BTreeMap::new();
@@ -303,8 +303,8 @@ pub fn apply_package(
         let parameter = if entry.native {
             match native_language {
                 Some(language) => Some((
-                    resolve_typed_instance(ruleset, &entry.ability, language),
-                    language,
+                    resolve_native_language(ruleset, &entry.ability, language),
+                    language.as_str(),
                 )),
                 // Already reported above; there is nothing to write it under.
                 None => continue,
@@ -762,7 +762,7 @@ mod tests {
         );
         entity.age = Some(25);
         entity.life_stages = Some(LifeStagePlan {
-            native_language: native_language.map(str::to_string),
+            native_language: native_language.map(Into::into),
             ..LifeStagePlan::default()
         });
         entity

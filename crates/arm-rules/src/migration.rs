@@ -11,6 +11,7 @@ use std::collections::BTreeMap;
 
 use crate::characteristics::Characteristic;
 use crate::effective::{effective_characteristic_score, minimal_aging_points_for_drops};
+use crate::life_stage::NativeLanguage;
 use crate::ruleset::Ruleset;
 use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityFunding, AbilityParameterValue, Entity, Id,
@@ -210,7 +211,18 @@ use crate::validation::birth_year_in_saga_year;
 /// hand edit and validation reports it
 /// (`ability_parameter_outside_catalogue`); moving it would rewrite a
 /// deliberate choice. The version is stamped only when something moved.
-pub const SCHEMA_VERSION: u32 = 22;
+///
+/// Bumped 22 → 23 for N4b (try-out 2026-10-04, finding N4, D84.1):
+/// [`crate::life_stage::LifeStagePlan::native_language`] widens from a bare string to
+/// [`crate::life_stage::NativeLanguage`] (`{"id": …}` or `{"text": …}`), so the
+/// native language can be a catalogue value like an Ability row's. A genuine
+/// shape move, like 17 → 18's: [`wrap_legacy_native_language`] rewraps a bare
+/// string into `{"text": …}` before the typed parse whatever the claimed version
+/// says, and stamps the version when it did. [`fold_native_language_catalogue`]
+/// then turns text naming a value of the native-language Ability's catalogue into
+/// that value on every load, silently and without a stamp — the
+/// [`fold_catalogue_matching`] rule.
+pub const SCHEMA_VERSION: u32 = 23;
 
 /// `(ability, original text, resolved catalogue id)` — see
 /// [`LoadedEntity::migrated_catalogued_parameters`]. A named alias rather than
@@ -665,6 +677,64 @@ fn wrap_legacy_ability_parameters(value: &mut serde_json::Value) {
     }
 }
 
+/// Rewrites a legacy bare-string `life_stages.native_language` into `{"text":
+/// <string>}` before the typed parse (N4b, 22 → 23) — the
+/// [`wrap_legacy_ability_parameters`] rule for the plan's one parameter value.
+///
+/// Dispatch is on the SHAPE, never on the claimed `schema_version`: a save is the
+/// trust boundary, and a hand-edited one may claim 23 while holding a string.
+/// Any other shape is left for the typed parse, which accepts only `{"id"}` and
+/// `{"text"}` and fails the load on anything else. Returns whether a string was
+/// wrapped, so the caller stamps [`SCHEMA_VERSION`] for the shape move.
+fn wrap_legacy_native_language(value: &mut serde_json::Value) -> bool {
+    let Some(plan) = value
+        .get_mut("life_stages")
+        .and_then(serde_json::Value::as_object_mut)
+    else {
+        return false;
+    };
+    let Some(serde_json::Value::String(text)) = plan.get("native_language").cloned() else {
+        return false;
+    };
+    plan.insert(
+        "native_language".into(),
+        serde_json::json!({ "text": text }),
+    );
+    true
+}
+
+/// Turns a typed native language naming a value of the native-language Ability's
+/// own catalogue — trimmed, case-folded, in any locale — into that value (N4b).
+/// The [`fold_catalogue_matching`] rule for the plan: value-driven and idempotent,
+/// so it runs on every load, stamps nothing and reports nothing. Text naming no
+/// value, and every value without life-stage rules to name the Ability, stays as
+/// written.
+fn fold_native_language_catalogue(
+    entity: &mut Entity,
+    ruleset: &Ruleset,
+    catalogue_names: &BTreeMap<Id, Vec<String>>,
+) {
+    let Some(rules) = ruleset.life_stages() else {
+        return;
+    };
+    let Some(plan) = entity.life_stages.as_mut() else {
+        return;
+    };
+    let Some(language) = plan.native_language.as_ref() else {
+        return;
+    };
+    let Some(catalogue) = catalogue_of(ruleset, &rules.childhood.native_language_ability) else {
+        return;
+    };
+    let typed = match language {
+        NativeLanguage::Text { text } => AbilityParameterValue::text(text.clone()),
+        NativeLanguage::Catalogued { .. } => return,
+    };
+    if let Some(id) = value_in_catalogue(catalogue, Some(&typed), catalogue_names) {
+        plan.native_language = Some(NativeLanguage::Catalogued { id });
+    }
+}
+
 /// Rewrites every legacy `equipment[].equipped: bool` into `loadout:
 /// LoadoutState`, before the typed parse (K5, F1 —
 /// `docs/vf-audit/design-f0-book-template-engine.md` § 6). Unlike the four
@@ -1094,6 +1164,7 @@ pub fn load_entity_migrating(
         .as_object_mut()
         .and_then(|obj| obj.remove("talisman_attunements"));
     wrap_legacy_ability_parameters(&mut value);
+    let native_language_wrapped = wrap_legacy_native_language(&mut value);
     let equipment_loadout_absent = fold_legacy_equipment_loadout(&mut value);
     // Dispatch on the key's absence, never on the recorded `schema_version`: a
     // hand-edited save may carry any version alongside either shape. Read before the
@@ -1153,6 +1224,11 @@ pub fn load_entity_migrating(
         } else {
             AbilityFunding::Pool
         };
+        entity.schema_version = SCHEMA_VERSION;
+    }
+
+    if native_language_wrapped {
+        // N4b: a bare-string native language is the pre-23 shape, wrapped above.
         entity.schema_version = SCHEMA_VERSION;
     }
 
@@ -1235,6 +1311,8 @@ pub fn load_entity_migrating(
         migrated_catalogued_parameters.clear();
         unresolved_catalogued_parameters.clear();
     }
+    // The plan's native language, by the same rule and as silently (N4b).
+    fold_native_language_catalogue(&mut entity, ruleset, catalogue_names);
     let (dangling_links, ambiguous_links) = fold_dangling_and_ambiguous_links(&mut entity, ruleset);
     Ok(LoadedEntity {
         entity,
@@ -2078,7 +2156,7 @@ mod tests {
     /// talisman folds do. The aging log itself is still untouched.
     #[test]
     fn a_schema_fourteen_save_loads_without_migration() {
-        assert_eq!(SCHEMA_VERSION, 22);
+        assert_eq!(SCHEMA_VERSION, 23);
         let schema_14 = r#"{
           "schema_version": 14,
           "ruleset": { "id": "arm5-core", "version": "2024.1" },
@@ -2110,13 +2188,12 @@ mod tests {
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 
-    /// The current-version pin, advanced at every bump (most recently 21 → 22 for
-    /// L1b's language move after L1a split the Dead/Living Language catalogues —
-    /// see [`SCHEMA_VERSION`]'s own doc comment for why that bump owns a fold,
-    /// unlike C5a's 18 → 19 pure marker).
+    /// The current-version pin, advanced at every bump (most recently 22 → 23 for
+    /// N4b's native-language value — see [`SCHEMA_VERSION`]'s own doc comment for
+    /// why that bump owns a fold, unlike C5a's 18 → 19 pure marker).
     #[test]
-    fn schema_version_is_22() {
-        assert_eq!(SCHEMA_VERSION, 22);
+    fn schema_version_is_23() {
+        assert_eq!(SCHEMA_VERSION, 23);
     }
 
     /// C5a's bump is a **pure version marker**: no shape moved, so no fold

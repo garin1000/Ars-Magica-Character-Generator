@@ -8171,7 +8171,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   no value ("Gaelic") stays text (N4a, D84.1,
   `catalogue.rs::resolve_typed_instance`).
 - **Typed languages compare as the language they name, not as spelled (N4a,
-  D84.1).** The plan's native language is free text, while a Living Language row is
+  D84.1).** The plan's native language may be typed text (N4b below), while a Living Language row is
   `Catalogued` once picked from the list or reloaded (the load fold runs on every
   load). `catalogue.rs::resolve_typed_instance` resolves the text once against the
   Ability's catalogue names in every locale (trimmed, case-folded, the `instance_is`
@@ -8182,6 +8182,24 @@ Abilities are bought with experience earned in blocks, not from one bank:
   compare through it, so "Arabic", "arabic", "Arabisch" and the picked row are one
   language. The UI mirror (`derive.ts::childhoodSlotFault`) compares trimmed,
   lower-cased text: it holds one locale's names, under which that is the same test.
+- **The native language is a list value (N4b, D84.1, schema 23).**
+  `LifeStagePlan::native_language` is a `life_stage.rs::NativeLanguage`: `{"id": …}`
+  for a value of the `native_language_ability`'s catalogue, `{"text": …}` for a
+  language the list lacks — the Ability row's own shapes, without `Linked`, which a
+  plan never follows (such a value fails the load). The UI offers the Ability row's
+  select + "Other…" combo (`AbilityParameterCombo.svelte`) over the engine's
+  `ability_parameter_options`, and the same combo answers a Sample Childhood slot of
+  a catalogued Ability (Traveling's second Living Language; Area Lore stays text).
+  A picked slot travels to `apply_package` by its shown name, which
+  `resolve_typed_instance` resolves back to the value. A picked native language is
+  itself (`catalogue.rs::resolve_native_language`) in the native pool, the
+  missing-score warning (whose `language` argument is then the id, localized by the
+  UI) and the slot checks. Load (`migration.rs`): a bare string — every pre-23 save,
+  or a hand edit at any claimed version — is wrapped as text by
+  `wrap_legacy_native_language` (shape-dispatched, stamps 23), and
+  `fold_native_language_catalogue` turns text naming a value of that catalogue, in
+  any locale, into the value on every load, silently, like the Ability-row fold.
+  Typed text is not converted while the player types.
 - **The spread's second language may not be the native one.** `ArMDE:2378` lists what the
   45 points buy as "Living Language (other than the character's **native
   language**)", so a language slot answered with the plan's own native language is
