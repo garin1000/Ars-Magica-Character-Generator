@@ -445,6 +445,10 @@ spell-cap-reason = Above the highest level you can learn ({ $cap })
 # from spell-cap-reason so the tooltip points at the separate "add within
 # focus" action instead of calling the spell simply out of reach.
 spell-cap-within-focus-reason = Above the highest level you can learn ({ $cap }); fits within your Magical Focus
+# R3 (D83.3): the same for the cap with Potent Magic's bonus (which the plain
+# cap never includes), and for the cap with both the Focus and Potent Magic.
+spell-cap-within-potent-field-reason = Above the highest level you can learn ({ $cap }); fits within your Potent Magic field
+spell-cap-within-focus-and-potent-field-reason = Above the highest level you can learn ({ $cap }); fits within your Magical Focus and Potent Magic field together
 spell-budget-reason = Not enough spell levels remaining
 spell-already-taken-reason = Already selected
 # D81.5: a spell whose level exceeds the plain per-spell cap but fits the
@@ -454,6 +458,15 @@ spell-already-taken-reason = Already selected
 spell-add-within-focus = Add within focus
 spell-add-within-focus-label = Add { $name } within focus
 spell-add-within-focus-tooltip = Fits within your Magical Focus (cap { $cap })
+# R3 (D83.3): the Potent Magic twins of the action above — added already
+# marked within the Potent Magic field (`SpellSelection.within_potent_field`),
+# or with both markers when only the combined cap admits the spell.
+spell-add-within-potent-field = Add within Potent Magic field
+spell-add-within-potent-field-label = Add { $name } within Potent Magic field
+spell-add-within-potent-field-tooltip = Fits within your Potent Magic field (cap { $cap })
+spell-add-within-focus-and-potent-field = Add within focus and Potent Magic field
+spell-add-within-focus-and-potent-field-label = Add { $name } within focus and Potent Magic field
+spell-add-within-focus-and-potent-field-tooltip = Fits within your Magical Focus and Potent Magic field together (cap { $cap })
 # The Technique/Form baseline spell-level cap (no spell-specific requisites
 # folded in), shown as a hover hint on a source group's header — a quick
 # at-a-glance figure; the per-spell cap above is what actually gates a row.

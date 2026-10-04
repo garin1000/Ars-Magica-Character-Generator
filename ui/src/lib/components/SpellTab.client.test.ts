@@ -342,3 +342,59 @@ describe('SpellTab "add within focus" action adds the spell already marked (D81.
     expect(store.entity.spells).toEqual([{ spell: CANDIDATE, within_focus: true }]);
   });
 });
+
+// R3b (D83.3): the Potent Magic twins of the action above write their
+// marker(s) in the same click — a real click, hence the `client` project.
+describe('SpellTab "add within Potent field" actions add the spell already marked (R3b)', () => {
+  const CANDIDATE = 'spell.test_potent_candidate';
+
+  function installCandidate(): void {
+    store.ruleset!.ruleset.spells = {
+      ...store.ruleset!.ruleset.spells,
+      [CANDIDATE]: { id: CANDIDATE, technique: 'art.creo', form: 'art.animal', level: 15 },
+    };
+    store.ruleset!.i18n[CANDIDATE] = { name: 'Test Potent Candidate' };
+  }
+
+  function mountTab(): void {
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(SpellTab, { target });
+    flushSync();
+  }
+
+  function clickTestid(testid: string): void {
+    const button = target.querySelector<HTMLButtonElement>(`[data-testid="${testid}"]`);
+    if (!button) throw new Error(`action not rendered: no [data-testid="${testid}"]`);
+    button.click();
+    flushSync();
+  }
+
+  it('"add within Potent field" adds the spell with within_potent_field: true from the click', () => {
+    installCandidate();
+    // Exceeds the plain cap (10) but fits the within-Potent-field one (16).
+    store.effective!.spell_caps = [{ spell: CANDIDATE, cap: 10, within_potent_field_cap: 16 }];
+    mountTab();
+    clickTestid(`add-within-potent-field-${CANDIDATE}`);
+    expect(store.entity.spells).toEqual([{ spell: CANDIDATE, within_potent_field: true }]);
+  });
+
+  it('"add within focus and Potent field" adds the spell with both markers from the click', () => {
+    installCandidate();
+    // Neither single-marker cap (12) admits level 15; the combined one (18) does.
+    store.effective!.spell_caps = [
+      {
+        spell: CANDIDATE,
+        cap: 6,
+        within_focus_cap: 12,
+        within_potent_field_cap: 12,
+        within_focus_and_potent_field_cap: 18,
+      },
+    ];
+    mountTab();
+    clickTestid(`add-within-focus-and-potent-field-${CANDIDATE}`);
+    expect(store.entity.spells).toEqual([
+      { spell: CANDIDATE, within_focus: true, within_potent_field: true },
+    ]);
+  });
+});

@@ -75,6 +75,41 @@ export class SpellWorkflow {
    * never transiently in an illegal (over-cap, unmarked) state.
    */
   addWithinFocus(spellId: string, level?: number | null, parameter?: string | null): void {
+    this.#addMarked(spellId, level, parameter, { within_focus: true });
+  }
+
+  /**
+   * Add a spell already marked within the character's Potent Magic field (R3,
+   * D83.3) — the Potent Magic twin of {@link addWithinFocus}, for a spell
+   * that fits only the cap including Potent Magic's bonus.
+   */
+  addWithinPotentField(spellId: string, level?: number | null, parameter?: string | null): void {
+    this.#addMarked(spellId, level, parameter, { within_potent_field: true });
+  }
+
+  /**
+   * Add a spell already marked within both the Magical Focus and the Potent
+   * Magic field (R3, D83.3), for a spell only the combined cap admits. Both
+   * markers are set in the same write.
+   */
+  addWithinFocusAndPotentField(
+    spellId: string,
+    level?: number | null,
+    parameter?: string | null,
+  ): void {
+    this.#addMarked(spellId, level, parameter, {
+      within_focus: true,
+      within_potent_field: true,
+    });
+  }
+
+  /** The shared add path for the marked variants: {@link add}'s identity/dedupe rules, markers set from the start. */
+  #addMarked(
+    spellId: string,
+    level: number | null | undefined,
+    parameter: string | null | undefined,
+    markers: { within_focus?: true; within_potent_field?: true },
+  ): void {
     const entity = this.#host.entity();
     const lvl = typeof level === 'number' ? level : undefined;
     const param = parameter ?? undefined;
@@ -95,7 +130,7 @@ export class SpellWorkflow {
         spell: spellId,
         ...(lvl === undefined ? {} : { level: lvl }),
         ...(param === undefined ? {} : { parameter: param }),
-        within_focus: true,
+        ...markers,
       },
     ];
     this.#host.scheduleValidate();

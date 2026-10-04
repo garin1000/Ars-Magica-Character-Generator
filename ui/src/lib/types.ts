@@ -730,10 +730,20 @@ export interface SpellLevelCap {
 // itself only when a candidate level fits `within_focus_cap` but not `cap` —
 // the engine cannot match a spell to a player's free-text focus itself, so
 // the player decides via that action.
+//
+// R3 (D83.3): the plain `cap` never includes Potent Magic's bonus — it counts
+// only for a spell marked within the Potent field. `within_potent_field_cap`
+// is the cap with that bonus (present only when a Potent Magic Virtue is
+// held); `within_focus_and_potent_field_cap` carries both the Focus doubling
+// and the bonus (present only when both are held). The picker offers its
+// "add within Potent field" / "add within focus and Potent field" actions
+// from these, exactly like "add within focus" above.
 export interface SpellCap {
   spell: string;
   cap: number;
   within_focus_cap?: number;
+  within_potent_field_cap?: number;
+  within_focus_and_potent_field_cap?: number;
 }
 
 // Whether a demanded Ability score is one the Order enforces or one the rulebook

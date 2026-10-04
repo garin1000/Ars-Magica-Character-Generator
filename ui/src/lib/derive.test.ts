@@ -80,6 +80,8 @@ import {
   spellLevelAllocation,
   totalCopies,
   withinFocusAddable,
+  withinFocusAndPotentFieldAddable,
+  withinPotentFieldAddable,
   type Translate,
 } from './derive';
 // Aliased: this file already declares a `translate` stub of its own further down.
@@ -2046,6 +2048,134 @@ describe('withinFocusAddable', () => {
     expect(withinFocusAddable(FIXED, new Set([FIXED.id]), capMap(FIXED.id, 9, 20), 100)).toBe(
       false,
     );
+  });
+});
+
+/** A one-row `capBySpell` map carrying any of the three marked caps (R3). */
+function markedCapMap(
+  spellId: string,
+  caps: { cap: number; focus?: number; potent?: number; both?: number },
+): Map<string, SpellCap> {
+  const row: SpellCap = { spell: spellId, cap: caps.cap };
+  if (caps.focus != null) row.within_focus_cap = caps.focus;
+  if (caps.potent != null) row.within_potent_field_cap = caps.potent;
+  if (caps.both != null) row.within_focus_and_potent_field_cap = caps.both;
+  return new Map([[spellId, row]]);
+}
+
+// R3 (after-deadline answer 3, amends D1): Potent Magic's bonus counts toward
+// a spell's cap only for a spell marked within the Potent field, so the
+// engine's plain `cap` no longer includes it. The picker mirrors D81.5's "add
+// within focus" action: "add within Potent field" appears when the level
+// exceeds the plain cap but fits `within_potent_field_cap`; absent entirely
+// without Potent Magic (`within_potent_field_cap` unset).
+describe('withinPotentFieldAddable', () => {
+  const FIXED: Spell = { id: 'spell.fixed', technique: 'art.creo', form: 'art.animal', level: 10 };
+
+  it('is false when the level is within the plain cap (plain Add suffices)', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 20, potent: 26 });
+    expect(withinPotentFieldAddable(FIXED, new Set(), caps, 100)).toBe(false);
+  });
+
+  it('is true when the level exceeds the plain cap but fits the within-Potent-field cap', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 9, potent: 15 });
+    expect(withinPotentFieldAddable(FIXED, new Set(), caps, 100)).toBe(true);
+  });
+
+  it('is false when the level exceeds the within-Potent-field cap too', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 3, potent: 9 });
+    expect(withinPotentFieldAddable(FIXED, new Set(), caps, 100)).toBe(false);
+  });
+
+  it('is false when the character holds no Potent Magic (no within_potent_field_cap)', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 9, focus: 20 });
+    expect(withinPotentFieldAddable(FIXED, new Set(), caps, 100)).toBe(false);
+  });
+
+  it('is false once the remaining spell-levels budget cannot afford the level', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 9, potent: 15 });
+    expect(withinPotentFieldAddable(FIXED, new Set(), caps, 9)).toBe(false);
+  });
+
+  it('is false for an already-selected fixed-level spell', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 9, potent: 15 });
+    expect(withinPotentFieldAddable(FIXED, new Set([FIXED.id]), caps, 100)).toBe(false);
+  });
+});
+
+// R3: "add within focus and Potent field" — offered only when NEITHER single
+// marker admits the level but both together do (the engine's
+// `within_focus_and_potent_field_cap`, present only with both Virtues held).
+describe('withinFocusAndPotentFieldAddable', () => {
+  const FIXED: Spell = { id: 'spell.fixed', technique: 'art.creo', form: 'art.animal', level: 10 };
+
+  it('is true when only the combined cap admits the level', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 3, focus: 8, potent: 9, both: 14 });
+    expect(withinFocusAndPotentFieldAddable(FIXED, new Set(), caps, 100)).toBe(true);
+  });
+
+  it('is false when the within-focus cap alone already admits it', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 3, focus: 10, potent: 9, both: 16 });
+    expect(withinFocusAndPotentFieldAddable(FIXED, new Set(), caps, 100)).toBe(false);
+  });
+
+  it('is false when the within-Potent-field cap alone already admits it', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 3, focus: 8, potent: 10, both: 15 });
+    expect(withinFocusAndPotentFieldAddable(FIXED, new Set(), caps, 100)).toBe(false);
+  });
+
+  it('is false when the level exceeds the combined cap too', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 1, focus: 4, potent: 5, both: 9 });
+    expect(withinFocusAndPotentFieldAddable(FIXED, new Set(), caps, 100)).toBe(false);
+  });
+
+  it('is false without both Virtues (no combined cap)', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 3, potent: 9 });
+    expect(withinFocusAndPotentFieldAddable(FIXED, new Set(), caps, 100)).toBe(false);
+  });
+
+  it('is false once the remaining budget cannot afford the level', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 3, focus: 8, potent: 9, both: 14 });
+    expect(withinFocusAndPotentFieldAddable(FIXED, new Set(), caps, 9)).toBe(false);
+  });
+});
+
+// R3: the plain Add control's reason names the marker that would admit the
+// spell, so the tooltip points at the matching action. Within-focus keeps
+// precedence when both single markers would admit it (the existing D81.5 key).
+describe('nonTakeableReason with the Potent Magic caps (R3)', () => {
+  const FIXED: Spell = { id: 'spell.fixed', technique: 'art.creo', form: 'art.animal', level: 10 };
+
+  it('reports a Potent-field-aware reason when the level fits only the within-Potent-field cap', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 9, potent: 15 });
+    expect(nonTakeableReason(FIXED, new Set(), caps, 100)).toEqual({
+      key: 'spell-cap-within-potent-field-reason',
+      cap: 9,
+    });
+  });
+
+  it('reports a both-markers reason when only the combined cap admits the level', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 3, focus: 8, potent: 9, both: 14 });
+    expect(nonTakeableReason(FIXED, new Set(), caps, 100)).toEqual({
+      key: 'spell-cap-within-focus-and-potent-field-reason',
+      cap: 3,
+    });
+  });
+
+  it('keeps the within-focus reason when the focus cap alone admits the level', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 9, focus: 12, potent: 15, both: 18 });
+    expect(nonTakeableReason(FIXED, new Set(), caps, 100)).toEqual({
+      key: 'spell-cap-within-focus-reason',
+      cap: 9,
+    });
+  });
+
+  it('reports the plain cap-reason when no marked cap admits the level', () => {
+    const caps = markedCapMap(FIXED.id, { cap: 1, focus: 4, potent: 5, both: 9 });
+    expect(nonTakeableReason(FIXED, new Set(), caps, 100)).toEqual({
+      key: 'spell-cap-reason',
+      cap: 1,
+    });
   });
 });
 

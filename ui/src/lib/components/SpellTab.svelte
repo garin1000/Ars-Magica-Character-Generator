@@ -18,6 +18,8 @@
     spellCodeWithLevel,
     spellDisplayName,
     withinFocusAddable,
+    withinFocusAndPotentFieldAddable,
+    withinPotentFieldAddable,
   } from '../derive';
   import type { SelectedSpellGroup } from '../derive';
   import { tooltip, withReason, type TooltipContent } from '../actions';
@@ -257,10 +259,25 @@
   // (over-cap, unmarked) state — the engine cannot match a spell to a
   // player's free-text focus on its own, so the player's click IS the claim.
   function addWithinFocus(spell: Spell) {
-    store.addSpellWithinFocus(
-      spell.id,
-      spell.level == null ? minLearnableLevel(spell, ritualMinLevel) : undefined,
-    );
+    store.addSpellWithinFocus(spell.id, generalAddLevel(spell));
+  }
+
+  // R3 (D83.3): the Potent Magic twins of `addWithinFocus` — the plain cap
+  // never includes Potent Magic's bonus, so a spell that fits only with it is
+  // added already marked within the Potent field (or with both markers, when
+  // only the combined cap admits it), in the same write.
+  function addWithinPotentField(spell: Spell) {
+    store.addSpellWithinPotentField(spell.id, generalAddLevel(spell));
+  }
+
+  function addWithinFocusAndPotentField(spell: Spell) {
+    store.addSpellWithinFocusAndPotentField(spell.id, generalAddLevel(spell));
+  }
+
+  // The level a marked add passes: a General spell's minimum learnable level,
+  // nothing for a fixed-level spell (as in `add`).
+  function generalAddLevel(spell: Spell): number | undefined {
+    return spell.level == null ? minLearnableLevel(spell, ritualMinLevel) : undefined;
   }
 
   // A chosen row is General (level editable inline) when its catalogue entry has
@@ -292,6 +309,19 @@
   function withinFocusTip(spell: Spell): TooltipContent {
     const cap = capBySpell.get(spell.id)?.within_focus_cap;
     return { text: store.t('spell-add-within-focus-tooltip', { cap: String(cap ?? 0) }) };
+  }
+
+  // R3 (D83.3): the Potent Magic actions' tooltips, each naming its own cap.
+  function withinPotentFieldTip(spell: Spell): TooltipContent {
+    const cap = capBySpell.get(spell.id)?.within_potent_field_cap;
+    return { text: store.t('spell-add-within-potent-field-tooltip', { cap: String(cap ?? 0) }) };
+  }
+
+  function withinFocusAndPotentFieldTip(spell: Spell): TooltipContent {
+    const cap = capBySpell.get(spell.id)?.within_focus_and_potent_field_cap;
+    return {
+      text: store.t('spell-add-within-focus-and-potent-field-tooltip', { cap: String(cap ?? 0) }),
+    };
   }
 
   // A chosen (selected-list) row's tooltip: the description only.
@@ -384,6 +414,34 @@
               data-testid="add-within-focus-{spell.id}"
             >
               {store.t('spell-add-within-focus')}
+            </button>
+          {/if}
+          {#if withinPotentFieldAddable(spell, selectedSpellIds, capBySpell, remaining, ritualMinLevel)}
+            <button
+              type="button"
+              class="within-focus-add"
+              onclick={() => addWithinPotentField(spell)}
+              use:tooltip={withinPotentFieldTip(spell)}
+              aria-label={store.t('spell-add-within-potent-field-label', {
+                name: optionLabel(spell),
+              })}
+              data-testid="add-within-potent-field-{spell.id}"
+            >
+              {store.t('spell-add-within-potent-field')}
+            </button>
+          {/if}
+          {#if withinFocusAndPotentFieldAddable(spell, selectedSpellIds, capBySpell, remaining, ritualMinLevel)}
+            <button
+              type="button"
+              class="within-focus-add"
+              onclick={() => addWithinFocusAndPotentField(spell)}
+              use:tooltip={withinFocusAndPotentFieldTip(spell)}
+              aria-label={store.t('spell-add-within-focus-and-potent-field-label', {
+                name: optionLabel(spell),
+              })}
+              data-testid="add-within-focus-and-potent-field-{spell.id}"
+            >
+              {store.t('spell-add-within-focus-and-potent-field')}
             </button>
           {/if}
         {/snippet}

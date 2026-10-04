@@ -1507,7 +1507,9 @@ export function minLearnableLevel(
  * `SpellCap.within_focus_cap` is NOT reported as takeable here — the plain
  * Add control stays blocked, with a reason that points at the separate
  * "add within focus" action ({@link withinFocusAddable}) instead of merely
- * saying the spell is out of reach.
+ * saying the spell is out of reach. Likewise (R3, D83.3) for
+ * `within_potent_field_cap` and `within_focus_and_potent_field_cap`, tried
+ * in that order after the focus cap.
  *
  * `selectedSpellIds` greys an ordinary fixed-level spell once selected; a
  * General spell (multiple learnable levels) or a parameterized spell (once per
@@ -1528,8 +1530,14 @@ export function nonTakeableReason(
   const row = capBySpell.get(spell.id);
   const need = spell.level ?? minLearnableLevel(spell, ritualMinLevel);
   if (row != null && need > row.cap) {
-    if (row.within_focus_cap != null && need <= row.within_focus_cap) {
+    if (admits(row.within_focus_cap, need)) {
       return { key: 'spell-cap-within-focus-reason', cap: row.cap };
+    }
+    if (admits(row.within_potent_field_cap, need)) {
+      return { key: 'spell-cap-within-potent-field-reason', cap: row.cap };
+    }
+    if (admits(row.within_focus_and_potent_field_cap, need)) {
+      return { key: 'spell-cap-within-focus-and-potent-field-reason', cap: row.cap };
     }
     return { key: 'spell-cap-reason', cap: row.cap };
   }
@@ -1573,6 +1581,58 @@ export function withinFocusAddable(
   if (row?.within_focus_cap == null) return false;
   const need = spell.level ?? minLearnableLevel(spell, ritualMinLevel);
   return need > row.cap && need <= row.within_focus_cap && need <= remaining;
+}
+
+/** Whether an optional marked cap is present and admits `need`. */
+function admits(markedCap: number | undefined, need: number): boolean {
+  return markedCap != null && need <= markedCap;
+}
+
+/**
+ * Whether the picker's "add within Potent field" action should appear (R3,
+ * D83.3) — the Potent Magic twin of {@link withinFocusAddable}: the level
+ * exceeds the plain cap (which never includes Potent Magic's bonus) but fits
+ * `within_potent_field_cap`, absent without a Potent Magic Virtue. Same
+ * already-selected and budget gates. Selecting it adds the spell with
+ * `within_potent_field = true` already set.
+ */
+export function withinPotentFieldAddable(
+  spell: Spell,
+  selectedSpellIds: Set<string>,
+  capBySpell: Map<string, SpellCap>,
+  remaining: number,
+  ritualMinLevel: number = RITUAL_MINIMUM_LEVEL_FALLBACK,
+): boolean {
+  const isParametrized = (spell.parameters?.length ?? 0) > 0;
+  if (spell.level != null && !isParametrized && selectedSpellIds.has(spell.id)) return false;
+  const row = capBySpell.get(spell.id);
+  if (row?.within_potent_field_cap == null) return false;
+  const need = spell.level ?? minLearnableLevel(spell, ritualMinLevel);
+  return need > row.cap && need <= row.within_potent_field_cap && need <= remaining;
+}
+
+/**
+ * Whether the picker's "add within focus and Potent field" action should
+ * appear (R3, D83.3): only when NEITHER single-marker cap admits the level
+ * but `within_focus_and_potent_field_cap` (present only with both a Magical
+ * Focus and Potent Magic) does. Same already-selected and budget gates.
+ * Selecting it adds the spell with both markers already set.
+ */
+export function withinFocusAndPotentFieldAddable(
+  spell: Spell,
+  selectedSpellIds: Set<string>,
+  capBySpell: Map<string, SpellCap>,
+  remaining: number,
+  ritualMinLevel: number = RITUAL_MINIMUM_LEVEL_FALLBACK,
+): boolean {
+  const isParametrized = (spell.parameters?.length ?? 0) > 0;
+  if (spell.level != null && !isParametrized && selectedSpellIds.has(spell.id)) return false;
+  const row = capBySpell.get(spell.id);
+  if (row?.within_focus_and_potent_field_cap == null) return false;
+  const need = spell.level ?? minLearnableLevel(spell, ritualMinLevel);
+  if (need <= row.cap) return false;
+  if (admits(row.within_focus_cap, need) || admits(row.within_potent_field_cap, need)) return false;
+  return need <= row.within_focus_and_potent_field_cap && need <= remaining;
 }
 
 /** Highest whole score the advancement table can price (the spinner ceiling). */

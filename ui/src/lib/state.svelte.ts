@@ -1532,6 +1532,35 @@ class AppStore {
   }
 
   /**
+   * Add a spell already marked within the character's Potent Magic field —
+   * the picker's "add within Potent field" action (R3, D83.3).
+   *
+   * @see SpellWorkflow.addWithinPotentField
+   */
+  addSpellWithinPotentField(
+    spellId: string,
+    level?: number | null,
+    parameter?: string | null,
+  ): void {
+    this.#spellWorkflow.addWithinPotentField(spellId, level, parameter);
+  }
+
+  /**
+   * Add a spell already marked within both the Magical Focus and the Potent
+   * Magic field — the picker's "add within focus and Potent field" action
+   * (R3, D83.3).
+   *
+   * @see SpellWorkflow.addWithinFocusAndPotentField
+   */
+  addSpellWithinFocusAndPotentField(
+    spellId: string,
+    level?: number | null,
+    parameter?: string | null,
+  ): void {
+    this.#spellWorkflow.addWithinFocusAndPotentField(spellId, level, parameter);
+  }
+
+  /**
    * Set (or clear) the target Form of a parametrized spell at `index` — part of
    * the spell's identity, so distinct Forms are distinct instances.
    *

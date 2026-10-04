@@ -1632,6 +1632,64 @@ describe('addSpellWithinFocus', () => {
   });
 });
 
+// R3b (D83.3): the picker's "add within Potent field" action — same
+// identity/dedupe rules as addSpell, the new row starting with
+// `within_potent_field: true` already set (one write, never a later toggle).
+describe('addSpellWithinPotentField', () => {
+  it('adds a fixed spell already marked within_potent_field', () => {
+    store.addSpellWithinPotentField('spell.pilum_of_fire');
+    expect(store.entity.spells).toEqual([
+      { spell: 'spell.pilum_of_fire', within_potent_field: true },
+    ]);
+  });
+
+  it('stores the chosen level for a General spell, already marked within_potent_field', () => {
+    store.addSpellWithinPotentField('spell.aegis_of_the_hearth', 20);
+    expect(store.entity.spells).toEqual([
+      { spell: 'spell.aegis_of_the_hearth', level: 20, within_potent_field: true },
+    ]);
+  });
+
+  it('dedups the same (spell, level) pair exactly like addSpell', () => {
+    store.addSpellWithinPotentField('spell.pilum_of_fire');
+    store.addSpellWithinPotentField('spell.pilum_of_fire');
+    expect(store.entity.spells).toEqual([
+      { spell: 'spell.pilum_of_fire', within_potent_field: true },
+    ]);
+  });
+});
+
+// R3b (D83.3): "add within focus and Potent field" — both markers set in the
+// SAME write, for a spell only the combined cap admits.
+describe('addSpellWithinFocusAndPotentField', () => {
+  it('adds a fixed spell already marked with both markers', () => {
+    store.addSpellWithinFocusAndPotentField('spell.pilum_of_fire');
+    expect(store.entity.spells).toEqual([
+      { spell: 'spell.pilum_of_fire', within_focus: true, within_potent_field: true },
+    ]);
+  });
+
+  it('stores the chosen level for a General spell, already marked with both markers', () => {
+    store.addSpellWithinFocusAndPotentField('spell.aegis_of_the_hearth', 20);
+    expect(store.entity.spells).toEqual([
+      {
+        spell: 'spell.aegis_of_the_hearth',
+        level: 20,
+        within_focus: true,
+        within_potent_field: true,
+      },
+    ]);
+  });
+
+  it('dedups the same (spell, level) pair exactly like addSpell', () => {
+    store.addSpellWithinFocusAndPotentField('spell.pilum_of_fire');
+    store.addSpellWithinFocusAndPotentField('spell.pilum_of_fire');
+    expect(store.entity.spells).toEqual([
+      { spell: 'spell.pilum_of_fire', within_focus: true, within_potent_field: true },
+    ]);
+  });
+});
+
 describe('removeSpellAt', () => {
   it('removes only the row at the given index, keeping order', () => {
     store.addSpell('spell.a');
@@ -4650,6 +4708,22 @@ describe('unsaved-changes tracking', () => {
     expect(store.dirty).toBe(false);
 
     store.addSpellWithinFocus('spell.pilum_of_fire');
+    expect(store.dirty).toBe(true);
+  });
+
+  it('addSpellWithinPotentField dirties the document', async () => {
+    await loadClean(undefined, { ...cleanEntity(), type_id: 'magus' });
+    expect(store.dirty).toBe(false);
+
+    store.addSpellWithinPotentField('spell.pilum_of_fire');
+    expect(store.dirty).toBe(true);
+  });
+
+  it('addSpellWithinFocusAndPotentField dirties the document', async () => {
+    await loadClean(undefined, { ...cleanEntity(), type_id: 'magus' });
+    expect(store.dirty).toBe(false);
+
+    store.addSpellWithinFocusAndPotentField('spell.pilum_of_fire');
     expect(store.dirty).toBe(true);
   });
 

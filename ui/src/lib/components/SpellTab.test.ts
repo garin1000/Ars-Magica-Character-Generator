@@ -399,6 +399,109 @@ describe('SpellTab "add within focus" action appears only within the focus-doubl
   });
 });
 
+// R3b (D83.3): the Potent Magic twins of the D81.5 action. Since R3 the plain
+// `cap` no longer folds Potent Magic's bonus in, so a spell that fits only
+// with it is offered through "add within Potent field"; one that fits only
+// with BOTH markers through "add within focus and Potent field". Markup only;
+// the clicks are in `SpellTab.client.test.ts`.
+describe('SpellTab "add within Potent field" actions appear only within their caps (R3b)', () => {
+  const CANDIDATE = 'spell.test_potent_candidate';
+  const POTENT = `add-within-potent-field-${CANDIDATE}`;
+  const BOTH = `add-within-focus-and-potent-field-${CANDIDATE}`;
+  const FOCUS = `add-within-focus-${CANDIDATE}`;
+
+  function installCandidate(): void {
+    store.ruleset!.ruleset.spells = {
+      ...store.ruleset!.ruleset.spells,
+      [CANDIDATE]: { id: CANDIDATE, technique: 'art.creo', form: 'art.animal', level: 15 },
+    };
+    store.ruleset!.i18n[CANDIDATE] = { name: 'Test Potent Candidate' };
+  }
+
+  it('offers "add within Potent field" when the level fits only the within-Potent-field cap', () => {
+    installCandidate();
+    store.effective!.spell_caps = [{ spell: CANDIDATE, cap: 10, within_potent_field_cap: 16 }];
+    const body = html();
+    expect(body).toContain(`data-testid="${POTENT}"`);
+    expect(body).not.toContain(`data-testid="${BOTH}"`);
+    expect(body).not.toContain(`data-testid="${FOCUS}"`);
+  });
+
+  it('offers neither Potent action when the level is within the plain cap', () => {
+    installCandidate();
+    store.effective!.spell_caps = [
+      {
+        spell: CANDIDATE,
+        cap: 20,
+        within_focus_cap: 30,
+        within_potent_field_cap: 26,
+        within_focus_and_potent_field_cap: 36,
+      },
+    ];
+    const body = html();
+    expect(body).not.toContain(`data-testid="${POTENT}"`);
+    expect(body).not.toContain(`data-testid="${BOTH}"`);
+  });
+
+  it('offers neither Potent action without Potent Magic (no within_potent_field_cap)', () => {
+    installCandidate();
+    store.effective!.spell_caps = [{ spell: CANDIDATE, cap: 10 }];
+    const body = html();
+    expect(body).not.toContain(`data-testid="${POTENT}"`);
+    expect(body).not.toContain(`data-testid="${BOTH}"`);
+  });
+
+  it('offers only "add within focus and Potent field" when only the combined cap admits the level', () => {
+    installCandidate();
+    store.effective!.spell_caps = [
+      {
+        spell: CANDIDATE,
+        cap: 6,
+        within_focus_cap: 12,
+        within_potent_field_cap: 12,
+        within_focus_and_potent_field_cap: 18,
+      },
+    ];
+    const body = html();
+    expect(body).toContain(`data-testid="${BOTH}"`);
+    expect(body).not.toContain(`data-testid="${POTENT}"`);
+    expect(body).not.toContain(`data-testid="${FOCUS}"`);
+  });
+
+  it('offers no marked action when the level exceeds the combined cap too', () => {
+    installCandidate();
+    store.effective!.spell_caps = [
+      {
+        spell: CANDIDATE,
+        cap: 2,
+        within_focus_cap: 4,
+        within_potent_field_cap: 8,
+        within_focus_and_potent_field_cap: 10,
+      },
+    ];
+    const body = html();
+    expect(body).not.toContain(`data-testid="${POTENT}"`);
+    expect(body).not.toContain(`data-testid="${BOTH}"`);
+    expect(body).not.toContain(`data-testid="${FOCUS}"`);
+  });
+
+  it('gives both actions an accessible name naming the spell', () => {
+    installCandidate();
+    store.effective!.spell_caps = [{ spell: CANDIDATE, cap: 10, within_potent_field_cap: 16 }];
+    expect(outer(html(), POTENT)).toMatch(/aria-label="Add .*Test Potent Candidate \(.*15\).*"/);
+    store.effective!.spell_caps = [
+      {
+        spell: CANDIDATE,
+        cap: 6,
+        within_focus_cap: 12,
+        within_potent_field_cap: 12,
+        within_focus_and_potent_field_cap: 18,
+      },
+    ];
+    expect(outer(html(), BOTH)).toMatch(/aria-label="Add .*Test Potent Candidate \(.*15\).*"/);
+  });
+});
+
 // guided-creation-review-2026-08 #8: `SelectionList.svelte` opens a NEW `<ul>` per
 // group, and the row separator was a `border-bottom` suppressed on `:last-child` —
 // a selector scoped per PARENT, so the suppression fired once per group. A group

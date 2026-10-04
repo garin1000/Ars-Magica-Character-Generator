@@ -1373,3 +1373,119 @@ describe('UI bundles, post-deadline wording fixes', () => {
     expect(translate(buildBundle('de'), 'equipment-loadout-wielded')).toBe('Geführt / Angelegt');
   });
 });
+
+// R3b (D83.3): the Potent Magic twins of D81.5's "add within focus" strings —
+// the Spells picker's reasons, actions, accessible names and tooltips for a
+// spell that fits only within the Potent Magic field, or only within the
+// Magical Focus and the Potent Magic field together. Worded after the
+// within-focus strings; DE term „Bereich der Potenten Magie“ as in
+// `spell-within-potent-field-label`.
+describe('UI bundles, Potent Magic picker actions (R3b)', () => {
+  const bundles = { en: buildBundle('en'), de: buildBundle('de') };
+  const say = (lang: 'en' | 'de', key: string, args?: Record<string, string>) =>
+    translate(bundles[lang], key, args).replace(/[⁦-⁩]/g, '');
+
+  const cases: {
+    lang: 'en' | 'de';
+    key: string;
+    args?: Record<string, string>;
+    want: string;
+  }[] = [
+    {
+      lang: 'en',
+      key: 'spell-cap-within-potent-field-reason',
+      args: { cap: '15' },
+      want: 'Above the highest level you can learn (15); fits within your Potent Magic field',
+    },
+    {
+      lang: 'de',
+      key: 'spell-cap-within-potent-field-reason',
+      args: { cap: '15' },
+      want: 'Über deiner Zaubergrenze (15); im Bereich deiner Potenten Magie erlaubt',
+    },
+    {
+      lang: 'en',
+      key: 'spell-cap-within-focus-and-potent-field-reason',
+      args: { cap: '15' },
+      want: 'Above the highest level you can learn (15); fits within your Magical Focus and Potent Magic field together',
+    },
+    {
+      lang: 'de',
+      key: 'spell-cap-within-focus-and-potent-field-reason',
+      args: { cap: '15' },
+      want: 'Über deiner Zaubergrenze (15); im Rahmen deines Magischen Fokus und im Bereich deiner Potenten Magie zusammen erlaubt',
+    },
+    {
+      lang: 'en',
+      key: 'spell-add-within-potent-field',
+      want: 'Add within Potent Magic field',
+    },
+    {
+      lang: 'de',
+      key: 'spell-add-within-potent-field',
+      want: 'Im Bereich der Potenten Magie hinzufügen',
+    },
+    {
+      lang: 'en',
+      key: 'spell-add-within-potent-field-label',
+      args: { name: 'Pilum of Fire (CrIg 20)' },
+      want: 'Add Pilum of Fire (CrIg 20) within Potent Magic field',
+    },
+    {
+      lang: 'de',
+      key: 'spell-add-within-potent-field-label',
+      args: { name: 'Pilum des Feuers (CrIg 20)' },
+      want: 'Pilum des Feuers (CrIg 20) im Bereich der Potenten Magie hinzufügen',
+    },
+    {
+      lang: 'en',
+      key: 'spell-add-within-potent-field-tooltip',
+      args: { cap: '15' },
+      want: 'Fits within your Potent Magic field (cap 15)',
+    },
+    {
+      lang: 'de',
+      key: 'spell-add-within-potent-field-tooltip',
+      args: { cap: '15' },
+      want: 'Im Bereich deiner Potenten Magie erlaubt (Grenze 15)',
+    },
+    {
+      lang: 'en',
+      key: 'spell-add-within-focus-and-potent-field',
+      want: 'Add within focus and Potent Magic field',
+    },
+    {
+      lang: 'de',
+      key: 'spell-add-within-focus-and-potent-field',
+      want: 'Im Fokus und im Bereich der Potenten Magie hinzufügen',
+    },
+    {
+      lang: 'en',
+      key: 'spell-add-within-focus-and-potent-field-label',
+      args: { name: 'Pilum of Fire (CrIg 20)' },
+      want: 'Add Pilum of Fire (CrIg 20) within focus and Potent Magic field',
+    },
+    {
+      lang: 'de',
+      key: 'spell-add-within-focus-and-potent-field-label',
+      args: { name: 'Pilum des Feuers (CrIg 20)' },
+      want: 'Pilum des Feuers (CrIg 20) im Fokus und im Bereich der Potenten Magie hinzufügen',
+    },
+    {
+      lang: 'en',
+      key: 'spell-add-within-focus-and-potent-field-tooltip',
+      args: { cap: '15' },
+      want: 'Fits within your Magical Focus and Potent Magic field together (cap 15)',
+    },
+    {
+      lang: 'de',
+      key: 'spell-add-within-focus-and-potent-field-tooltip',
+      args: { cap: '15' },
+      want: 'Im Rahmen deines Magischen Fokus und im Bereich deiner Potenten Magie zusammen erlaubt (Grenze 15)',
+    },
+  ];
+
+  it.each(cases)('$lang/$key', (c) => {
+    expect(say(c.lang, c.key, c.args)).toBe(c.want);
+  });
+});

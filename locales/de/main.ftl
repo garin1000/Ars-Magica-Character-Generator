@@ -468,6 +468,10 @@ spell-cap-reason = Über deiner Zaubergrenze ({ $cap })
 # spell-cap-reason, damit der Tooltip auf die eigene „Im Fokus hinzufügen“-
 # Aktion verweist, statt den Zauber als schlicht unerreichbar darzustellen.
 spell-cap-within-focus-reason = Über deiner Zaubergrenze ({ $cap }); im Rahmen deines Magischen Fokus erlaubt
+# R3 (D83.3): dasselbe für die Grenze mit dem Bonus der Potenten Magie (den die
+# normale Grenze nie enthält) und für die Grenze mit Fokus und Potenter Magie.
+spell-cap-within-potent-field-reason = Über deiner Zaubergrenze ({ $cap }); im Bereich deiner Potenten Magie erlaubt
+spell-cap-within-focus-and-potent-field-reason = Über deiner Zaubergrenze ({ $cap }); im Rahmen deines Magischen Fokus und im Bereich deiner Potenten Magie zusammen erlaubt
 spell-budget-reason = Nicht genug Zauberstufen übrig
 spell-already-taken-reason = Bereits ausgewählt
 # D81.5: ein Zauber, dessen Stufe die normale Zaubergrenze pro Zauber
@@ -478,6 +482,15 @@ spell-already-taken-reason = Bereits ausgewählt
 spell-add-within-focus = Im Fokus hinzufügen
 spell-add-within-focus-label = { $name } im Fokus hinzufügen
 spell-add-within-focus-tooltip = Im Rahmen deines Magischen Fokus erlaubt (Grenze { $cap })
+# R3 (D83.3): die Gegenstücke für die Potente Magie — gleich als „im Bereich
+# der Potenten Magie“ markiert (`SpellSelection.within_potent_field`), oder mit
+# beiden Markierungen, wenn nur die gemeinsame Grenze den Zauber zulässt.
+spell-add-within-potent-field = Im Bereich der Potenten Magie hinzufügen
+spell-add-within-potent-field-label = { $name } im Bereich der Potenten Magie hinzufügen
+spell-add-within-potent-field-tooltip = Im Bereich deiner Potenten Magie erlaubt (Grenze { $cap })
+spell-add-within-focus-and-potent-field = Im Fokus und im Bereich der Potenten Magie hinzufügen
+spell-add-within-focus-and-potent-field-label = { $name } im Fokus und im Bereich der Potenten Magie hinzufügen
+spell-add-within-focus-and-potent-field-tooltip = Im Rahmen deines Magischen Fokus und im Bereich deiner Potenten Magie zusammen erlaubt (Grenze { $cap })
 # Die Te/Fo-Basisgrenze (ohne gefaltete Voraussetzungen des einzelnen
 # Zaubers), als Hover-Hinweis auf der Gruppenüberschrift — ein schneller
 # Richtwert; die Grenze pro Zauber oben entscheidet tatsächlich über die Zeile.
