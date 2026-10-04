@@ -6,6 +6,7 @@
     abilityLabel,
     abilityParamDisplay,
     displayName,
+    effectiveBreakdownTooltip,
     filterAbilities,
     groupAbilitiesByCategory,
     groupAbilitySelectionsByCategory,
@@ -16,6 +17,7 @@
     rowWarnings,
     rowWarningText,
     sameParam,
+    scoreSourceLines,
     unboughtModifiedAbilities,
     UNBOUGHT_ROW_INDEX,
     type IndexedAbilityScore,
@@ -287,6 +289,27 @@
     return Math.max(score, floorOf(abilityId, parameter)) + bonusOf(abilityId, parameter);
   }
 
+  // I3: why the effective badge differs from the bought score — each source item
+  // the engine names (Puissant Ability, a granting Virtue's floor), by localized
+  // name. Matched to the row by `sameParam`, exactly like `bonusOf`.
+  function effectiveTip(
+    settledScore: number,
+    abilityId: string,
+    parameter: AbilityParamValue | null | undefined,
+  ): TooltipContent {
+    const sources = store.effective?.ability_bonus_sources?.find(
+      (s) => s.ability === abilityId && sameParam(s.parameter ?? null, parameter, resolvedLinks),
+    )?.sources;
+    return effectiveBreakdownTooltip(
+      {
+        bought: String(settledScore),
+        effective: String(effectiveOf(settledScore, abilityId, parameter)),
+      },
+      store.ruleset ? scoreSourceLines(sources ?? [], store.ruleset, store.t) : [],
+      store.t,
+    );
+  }
+
   // The bought score `bonusOf`/`floorOf` were computed against — NOT the live one
   // the spinner shows (#16). The spinner is direct feedback and moves on the
   // keystroke; the badge is a bought+modifier pair, and mixing a fresh half with a
@@ -516,7 +539,15 @@
               {/if}
               {#if effectiveOf(settledScore, entry.ability, entry.parameter) !== settledScore}
                 <span class="eff-slot">
-                  <span class="eff-badge" data-testid="ability-eff-{entry.ability}-{id}">
+                  <!-- Deliberately focusable: which Virtue moved the score lives only
+                       in this tooltip, and `use:tooltip` opens it on `focusin` (I3). -->
+                  <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+                  <span
+                    class="eff-badge"
+                    data-testid="ability-eff-{entry.ability}-{id}"
+                    tabindex="0"
+                    use:tooltip={effectiveTip(settledScore, entry.ability, entry.parameter)}
+                  >
                     {store.t('effective-score', {
                       score: String(effectiveOf(settledScore, entry.ability, entry.parameter)),
                     })}

@@ -261,6 +261,75 @@ describe('ArtGrid effective-score badge staleness (#16)', () => {
   });
 });
 
+// I3 (try-out finding 15): the effective badge says WHY it differs from the bought
+// score, in the Characteristics badge's own shape — "Bought X, effective Y." and
+// one line per source Virtue, by its localized name, with a signed amount — from
+// the engine's per-source breakdown (`art_bonus_sources`). A `client` test: the
+// tooltip is an action, which the SSR renderer never runs, and the badge must be
+// reachable by keyboard (the `tooltip-host-parity.test.ts` rule), which only a
+// mounted node can show.
+describe('ArtGrid effective badge explains its sources (I3)', () => {
+  afterEach(() => {
+    document.querySelectorAll('.tooltip-pop').forEach((pop) => pop.remove());
+  });
+
+  /** Settle a pass in which unbought Ignem carries Puissant Art +3 and Elemental
+   *  Magic +3 (the engine's summed bonus is 6). */
+  async function settleIgnemBreakdown(): Promise<void> {
+    store.ruleset!.i18n = {
+      ...store.ruleset!.i18n,
+      'virtue.puissant_art': { name: 'Puissant {art}', name_unfilled: 'Puissant Art' },
+      'virtue.elemental_magic': { name: 'Elemental Magic' },
+    } as LocalizedRuleset['i18n'];
+    const pass = store.revalidate();
+    inFlight[1].resolve({
+      art_bonuses: [{ art: IGNEM, bonus: 6 }],
+      art_bonus_sources: [
+        {
+          art: IGNEM,
+          sources: [
+            { source: 'virtue.puissant_art', amount: 3 },
+            { source: 'virtue.elemental_magic', amount: 3 },
+          ],
+        },
+      ],
+    } as unknown as EffectiveScores);
+    await vi.advanceTimersByTimeAsync(0);
+    await pass;
+    flushSync();
+  }
+
+  function ignemBadge(): HTMLElement {
+    const el = target.querySelector<HTMLElement>(`[data-testid="art-eff-${IGNEM}"]`);
+    expect(el).toBeTruthy();
+    return el!;
+  }
+
+  /** The text of the tooltip the badge opens on keyboard focus, isolates stripped. */
+  function tooltipOnFocus(el: HTMLElement): string {
+    el.focus();
+    vi.advanceTimersByTime(500);
+    flushSync();
+    const describedBy = el.getAttribute('aria-describedby');
+    expect(describedBy, 'the badge opened no tooltip').toBeTruthy();
+    return (document.getElementById(describedBy!)?.textContent ?? '').replace(/[⁦-⁩]/g, '');
+  }
+
+  it('puts the effective badge in the tab order', async () => {
+    await settleIgnemBreakdown();
+    expect(ignemBadge().tabIndex).toBeGreaterThanOrEqual(0);
+  });
+
+  it('lists bought, each source Virtue with its signed amount, and effective', async () => {
+    await settleIgnemBreakdown();
+    const text = tooltipOnFocus(ignemBadge());
+    expect(text).toContain('Bought 0, effective 6.');
+    expect(text).toContain('Puissant Art +3');
+    expect(text).toContain('Elemental Magic +3');
+    expect(text).not.toContain('virtue.');
+  });
+});
+
 // X10b: the banked-XP input writes through the store like every other picker
 // edit. A `client` test because it exercises the real `oninput` wiring, not
 // just the rendered markup. Red-checkpoint protocol, phase 1: `ArtGrid.svelte`

@@ -167,6 +167,60 @@ describe('AbilityTab effective-score badge staleness (#16)', () => {
   });
 });
 
+// I3 (try-out finding 15): the Ability effective badge explains itself like the
+// Characteristics one — bought, each source Virtue by localized name with a
+// signed amount, effective — from the engine's `ability_bonus_sources`. A
+// `client` test: actions never run under SSR, and keyboard reachability is a
+// live-node property.
+describe('AbilityTab effective badge explains its sources (I3)', () => {
+  afterEach(() => {
+    document.querySelectorAll('.tooltip-pop').forEach((pop) => pop.remove());
+  });
+
+  /** Settle a pass in which bought Athletics 3 carries Puissant Ability +2. */
+  async function settleAthleticsBreakdown(): Promise<void> {
+    store.ruleset!.i18n = {
+      ...store.ruleset!.i18n,
+      'virtue.puissant_ability': { name: 'Puissant {ability}', name_unfilled: 'Puissant Ability' },
+    } as LocalizedRuleset['i18n'];
+    const pass = store.revalidate();
+    inFlight[1].resolve({
+      ability_bonuses: [{ ability: ATHLETICS, bonus: 2 }],
+      ability_bonus_sources: [
+        { ability: ATHLETICS, sources: [{ source: 'virtue.puissant_ability', amount: 2 }] },
+      ],
+    } as unknown as EffectiveScores);
+    await vi.advanceTimersByTimeAsync(0);
+    await pass;
+    flushSync();
+  }
+
+  function athleticsBadge(): HTMLElement {
+    const el = target.querySelector<HTMLElement>(`[data-testid="ability-eff-${ATHLETICS}-0"]`);
+    expect(el).toBeTruthy();
+    return el!;
+  }
+
+  it('puts the effective badge in the tab order', async () => {
+    await settleAthleticsBreakdown();
+    expect(athleticsBadge().tabIndex).toBeGreaterThanOrEqual(0);
+  });
+
+  it('lists bought, each source Virtue with its signed amount, and effective', async () => {
+    await settleAthleticsBreakdown();
+    const el = athleticsBadge();
+    el.focus();
+    vi.advanceTimersByTime(500);
+    flushSync();
+    const describedBy = el.getAttribute('aria-describedby');
+    expect(describedBy, 'the badge opened no tooltip').toBeTruthy();
+    const text = (document.getElementById(describedBy!)?.textContent ?? '').replace(/[⁦-⁩]/g, '');
+    expect(text).toContain('Bought 3, effective 5.');
+    expect(text).toContain('Puissant Ability +2');
+    expect(text).not.toContain('virtue.');
+  });
+});
+
 // CV7 (design-cv-catalogued-values.md § 6.1/§ 6.3, § 5.5): the parameter
 // picker combo box, and the removal flow's live conversion. Red-checkpoint
 // protocol, phase 1: `AbilityTab.svelte`'s template is untouched, so every

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { formatSigned } from '../derive';
+  import { effectiveBreakdownTooltip, formatSigned } from '../derive';
   import { tooltip } from '../actions';
   import { CHARACTERISTICS, type Characteristic } from '../types';
   import Spinner from './Spinner.svelte';
@@ -87,6 +87,8 @@
 
   // Tooltip breakdown for the effective score: a bought → effective summary plus
   // the reasons that apply (aging drop and/or free virtue delta).
+  // Shares its shape and summary messages with the Arts' and Abilities' badges
+  // (`derive.ts::effectiveBreakdownTooltip`); only the reason lines are its own.
   function effectiveTooltip(characteristic: Characteristic) {
     const drops = agingDropOf(characteristic);
     const bonus = bonusOf(characteristic);
@@ -97,16 +99,16 @@
     if (bonus !== 0) {
       list.push(store.t('characteristic-effective-tooltip-virtue', { bonus: formatSigned(bonus) }));
     }
-    return {
-      text: store.t('characteristic-effective-tooltip-summary', {
+    return effectiveBreakdownTooltip(
+      {
         // The settled bought score, so the "bought -> effective" summary reads as
         // one coherent pair rather than two generations (#16).
         bought: formatSigned(settledScoreOf(characteristic)),
         effective: formatSigned(effectiveOf(characteristic)),
-      }),
-      listLabel: store.t('characteristic-effective-tooltip-breakdown-label'),
+      },
       list,
-    };
+      store.t,
+    );
   }
 
   // Derived Size (base 0), shown only when a virtue/flaw moves it off 0.

@@ -11,12 +11,13 @@
 use std::collections::BTreeMap;
 
 use arm_rules::{
-    AbilityBonus, AbilityFloor, AbilityParameterOptions, ArtBonus, Characteristic,
-    CharacteristicBonus, Confidence, CreationPhase, Entity, EntityTypeProfile, Grant, Id,
-    LifeStageBudget, MagusMinimumAbility, MightScore, PointCeilings, Realm, RealmAssociation,
-    ReputationType, RestrictedXpPool, Ruleset, Selection, SpellCap, SpellLevelCap,
-    SupernaturalFreeSlots, ability_bonuses, ability_parameter_options, ability_score_floors,
-    aging_schedule, aging_total, art_bonuses, characteristic_aging_drops, characteristic_bonuses,
+    AbilityBonus, AbilityBonusSources, AbilityFloor, AbilityParameterOptions, ArtBonus,
+    ArtBonusSources, Characteristic, CharacteristicBonus, Confidence, CreationPhase, Entity,
+    EntityTypeProfile, Grant, Id, LifeStageBudget, MagusMinimumAbility, MightScore, PointCeilings,
+    Realm, RealmAssociation, ReputationType, RestrictedXpPool, Ruleset, Selection, SpellCap,
+    SpellLevelCap, SupernaturalFreeSlots, ability_bonus_sources, ability_bonuses,
+    ability_parameter_options, ability_score_floors, aging_schedule, aging_total,
+    art_bonus_sources, art_bonuses, characteristic_aging_drops, characteristic_bonuses,
     characteristic_caps, characteristic_floors, characteristic_points_granted,
     checked_xp_allocation, compute_balance, confidence, decrepitude_score,
     effective_characteristics, effective_might, effective_point_ceilings, entity_grants,
@@ -42,6 +43,13 @@ pub struct EffectiveScores {
     pub ability_bonuses: Vec<AbilityBonus>,
     /// One entry per boosted Art (e.g. Puissant Art +3).
     pub art_bonuses: Vec<ArtBonus>,
+    /// Per-source breakdown of each `art_bonuses` entry (I3): which item adds how
+    /// much, for the effective badge's tooltip. Amounts sum to the bonus.
+    pub art_bonus_sources: Vec<ArtBonusSources>,
+    /// Per-source breakdown of each ability instance whose effective score differs
+    /// from its bought score (I3) — bonuses and the part of a granted floor above
+    /// the bought score. Amounts sum to effective minus bought.
+    pub ability_bonus_sources: Vec<AbilityBonusSources>,
     /// Characteristic → highest buyable score (Great Characteristic raises it).
     pub characteristic_caps: BTreeMap<Characteristic, i32>,
     /// Characteristic → lowest buyable score (Poor Characteristic lowers it).
@@ -693,6 +701,8 @@ fn reputation_grants_for_ui(entity: &Entity, ruleset: &Ruleset) -> Vec<Reputatio
 struct CharacteristicFields {
     ability_bonuses: Vec<AbilityBonus>,
     art_bonuses: Vec<ArtBonus>,
+    art_bonus_sources: Vec<ArtBonusSources>,
+    ability_bonus_sources: Vec<AbilityBonusSources>,
     caps: BTreeMap<Characteristic, i32>,
     floors: BTreeMap<Characteristic, i32>,
     points_granted: i32,
@@ -707,6 +717,8 @@ fn characteristic_fields(entity: &Entity, ruleset: &Ruleset) -> CharacteristicFi
     CharacteristicFields {
         ability_bonuses: ability_bonuses(entity, ruleset),
         art_bonuses: art_bonuses(entity, ruleset),
+        art_bonus_sources: art_bonus_sources(entity, ruleset),
+        ability_bonus_sources: ability_bonus_sources(entity, ruleset),
         caps: characteristic_caps(ruleset, entity),
         floors: characteristic_floors(ruleset),
         points_granted: characteristic_points_granted(entity, ruleset),
@@ -869,6 +881,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
     EffectiveScores {
         ability_bonuses: characteristics.ability_bonuses,
         art_bonuses: characteristics.art_bonuses,
+        art_bonus_sources: characteristics.art_bonus_sources,
+        ability_bonus_sources: characteristics.ability_bonus_sources,
         characteristic_caps: characteristics.caps,
         characteristic_floors: characteristics.floors,
         // A ruleset that declares no Characteristic table prices nothing, so zero

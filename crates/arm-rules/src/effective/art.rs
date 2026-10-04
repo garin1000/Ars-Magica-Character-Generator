@@ -16,6 +16,47 @@ pub struct ArtBonus {
     pub bonus: i32,
 }
 
+/// One item's contribution to an Art's or Ability's effective-over-bought delta:
+/// the source item's id (the Virtue/Flaw the selection names) and the signed
+/// amount it adds. Serializes as `{ "source": "<id>", "amount": N }`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ScoreSource {
+    /// The contributing item's slug id (e.g. `virtue.puissant_art`).
+    pub source: Id,
+    /// Its signed share of the delta; never 0.
+    pub amount: i32,
+}
+
+/// The per-source breakdown of one Art's [`ArtBonus`]. Serializes as
+/// `{ "art": "<id>", "sources": [ScoreSource] }`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ArtBonusSources {
+    /// The boosted Art.
+    pub art: Id,
+    /// Each contributing item; the amounts sum to the Art's [`ArtBonus::bonus`].
+    pub sources: Vec<ScoreSource>,
+}
+
+/// Adds `amount` from `source` to a breakdown, merging a repeated source into
+/// its first entry so each item is named once. A zero amount names nothing.
+pub(crate) fn add_score_source(sources: &mut Vec<ScoreSource>, source: &Id, amount: i32) {
+    if amount == 0 {
+        return;
+    }
+    match sources.iter_mut().find(|s| &s.source == source) {
+        Some(existing) => existing.amount += amount,
+        None => sources.push(ScoreSource {
+            source: source.clone(),
+            amount,
+        }),
+    }
+}
+
+/// The sum of a breakdown's amounts.
+pub(crate) fn sum_of(sources: &[ScoreSource]) -> i32 {
+    sources.iter().map(|s| s.amount).sum()
+}
+
 /// Sum of all art-bonus effects (e.g. Puissant Art) targeting one Art. Arts are
 /// not parameterized, so the target is matched by id alone. Two virtues boosting
 /// the same Art stack.
@@ -23,7 +64,13 @@ pub struct ArtBonus {
 /// Source: ArMDE:4818-4820 (Puissant
 /// Art, +3; may be taken twice, for two different Arts).
 pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
-    let mut bonus = 0;
+    sum_of(&flat_art_bonus_sources(entity, ruleset, art))
+}
+
+/// Each flat art-bonus effect targeting `art`, by the item that carries it — the
+/// one fold [`art_bonus`] sums, so the total and its breakdown cannot drift.
+fn flat_art_bonus_sources(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Vec<ScoreSource> {
+    let mut sources = Vec::new();
     for_each_effect!(entity, ruleset, |selection, effect| {
         // Exhaustive match so adding an Effect variant is a compile error
         // here, not a silently-ignored bonus.
@@ -35,13 +82,13 @@ pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
                     .and_then(SelectionParamValue::as_single)
                     == Some(art) =>
             {
-                bonus += i32::from(*amount);
+                add_score_source(&mut sources, &selection.item_ref, i32::from(*amount));
             }
             // Not an art bonus for this target; contributes nothing here.
             irrelevant_effect_variants!() => {}
         }
     });
-    bonus
+    sources
 }
 
 /// The highest whole bought score the entity holds for `art` (0 if unbought).
@@ -69,9 +116,15 @@ fn bought_art_score(entity: &Entity, art: &Id) -> u8 {
 /// selections twice — same precedent as `lab_total_mod` vs.
 /// `in_play_lab_total_mod`.
 pub(crate) fn elemental_magic_forms(entity: &Entity, ruleset: &Ruleset) -> Option<BTreeSet<Id>> {
-    for_each_effect!(entity, ruleset, |_selection, effect| {
+    elemental_magic_marker(entity, ruleset).map(|(_item, forms)| forms)
+}
+
+/// The item carrying the entity's Elemental Magic marker, with the Forms it
+/// pools over — the item is what the per-source breakdown names.
+fn elemental_magic_marker(entity: &Entity, ruleset: &Ruleset) -> Option<(Id, BTreeSet<Id>)> {
+    for_each_effect!(entity, ruleset, |selection, effect| {
         if let Effect::ElementalMagic { forms } = effect {
-            return Some(forms.clone());
+            return Some((selection.item_ref.clone(), forms.clone()));
         }
     });
     None
@@ -207,4 +260,36 @@ pub fn art_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<ArtBonus> {
         }
     }
     out
+}
+
+/// Each item that moves `art`'s effective score off its bought score: every flat
+/// art bonus (Puissant Art, ArMDE:4818-4820) and the Elemental Magic marker's
+/// XP-space boost (ArMDE:3731-3737). Sums to `effective - bought` by
+/// construction, since [`effective_art_score`] adds exactly these two terms.
+fn art_score_sources(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Vec<ScoreSource> {
+    let mut sources = flat_art_bonus_sources(entity, ruleset, art);
+    if let Some((marker, _forms)) = elemental_magic_marker(entity, ruleset) {
+        let boost = elemental_form_bonus(entity, ruleset, art);
+        add_score_source(&mut sources, &marker, boost);
+    }
+    sources.retain(|s| s.amount != 0);
+    sources
+}
+
+/// The per-source breakdown behind every Art [`art_bonuses`] reports, in the same
+/// order: one entry per Art whose effective score differs from its bought score,
+/// naming each contributing item with its signed share (I3, try-out finding 15).
+/// The UI's effective-badge tooltip reads it; the amounts sum to the Art's
+/// [`ArtBonus::bonus`].
+pub fn art_bonus_sources(entity: &Entity, ruleset: &Ruleset) -> Vec<ArtBonusSources> {
+    ruleset
+        .arts()
+        .filter_map(|art| {
+            let sources = art_score_sources(entity, ruleset, &art.id);
+            (sum_of(&sources) != 0).then(|| ArtBonusSources {
+                art: art.id.clone(),
+                sources,
+            })
+        })
+        .collect()
 }

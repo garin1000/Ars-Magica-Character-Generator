@@ -1594,6 +1594,18 @@ bleed onto the character's other areas.
   only once its instance is bought (an unnamed instance scores 0 by the rule
   above; a named-but-unbought one is in neither half) — reported instead by
   `ability_bonus_dangling_target`, below.
+- **Per-source breakdown (I3, try-out finding 15).** `effective/ability.rs::ability_bonus_sources`
+  lists every instance whose effective score differs from its bought score — the
+  Abilities tab's badge condition — with each item that moves it: every additive
+  bonus (`ability_bonus`, `ability_bonus_gated`) by the selection's item, and the
+  winning grant's item for `max(0, floor - bought)` (Second Sight "confers the
+  Ability Second Sight 1", `ArMDE:4890`), since `effective_ability_score` is
+  `max(bought, floor) + bonus`. So a floor at or below the bought score names
+  nothing, and a floor alone is listed although `ability_bonuses` omits it. It walks
+  `ability_bonuses`' instances plus every `ability_score_floors` instance.
+  `ability_bonus` sums the same per-item fold, so the amounts add up to the delta
+  by construction. Surfaced as `EffectiveScores.ability_bonus_sources`. Tests:
+  `tests/i3_bonus_sources.rs`.
 - Validation: `validate_parameters` makes the expected param-key set
   target-aware — a parameterized ability target also expects its instance key
   (else `missing_param`; a stray instance key on a plain target is
@@ -1644,6 +1656,14 @@ bleed onto the character's other areas.
   Art's row at score 0, so gating the list on `art_scores` would hide the badge
   until the first point is bought (Issue 13). Iterating the catalogue surfaces the
   bonus at bought-0 and naturally dedupes any duplicate bought rows.
+- **Per-source breakdown (I3, try-out finding 15).** `effective/art.rs::art_bonus_sources`
+  lists, for every Art `art_bonuses` reports and in the same order, each item that
+  moves its score with its signed share (`ScoreSource { source, amount }`): every
+  `art_bonus` effect by the selection's item, plus the Elemental Magic marker's item
+  with its XP-space boost (`ArMDE:3731-3737`). `art_bonus` sums the same per-item
+  fold, so the amounts add up to the delta by construction. Surfaced as
+  `EffectiveScores.art_bonus_sources`; the Arts tab's effective badge tooltip names
+  each source. Tests: `tests/i3_bonus_sources.rs`, `arm-app/tests/i3_bonus_sources_dto.rs`.
 
 #### Great (Characteristic) — a free +1, to a maximum of +5
 > "You may raise any Characteristic that already has a score of at least +3 by

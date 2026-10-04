@@ -217,13 +217,17 @@ ability-requires-training-marker = *
 # Eigenschaften-Punkteanzeige.
 characteristic-points = Punkte: { $used } / { $budget }
 characteristic-size = Größe: { $size }
-# Tooltip auf dem Eigenschaften-Reiter, der den effektiven Wert erklärt (den
-# Basiswert nach Alterungsminderungen und freien Tugend-Deltas). Nur sichtbar,
-# wenn der effektive Wert vom Basiswert abweicht. $bought/$effective sind
-# vorformatierte vorzeichenbehaftete Zahlen; $drops ist eine positive
-# Minderungszahl; $bonus ist ein vorzeichenbehaftetes Delta.
-characteristic-effective-tooltip-summary = Basiswert { $bought }, effektiv { $effective }.
-characteristic-effective-tooltip-breakdown-label = Enthält
+# Tooltip an einem Effektivwert-Abzeichen (Eigenschaften, Künste, Fertigkeiten),
+# der erklärt, warum der effektive Wert vom Basiswert abweicht. Nur sichtbar,
+# wenn beide abweichen. $bought/$effective sind vorformatierte Zahlen (auf dem
+# Eigenschaften-Reiter mit Vorzeichen). Auf den Reitern Künste und Fertigkeiten
+# ist jeder Listeneintrag eine Quelle: $name ist der Name der beitragenden
+# Tugend oder des Fehlers, $amount ihr vorzeichenbehafteter Anteil.
+effective-tooltip-summary = Basiswert { $bought }, effektiv { $effective }.
+effective-tooltip-breakdown-label = Enthält
+effective-tooltip-source = { $name } { $amount }
+# Nur Eigenschaften: $drops ist eine positive Minderungszahl; $bonus ist ein
+# vorzeichenbehaftetes Delta.
 characteristic-effective-tooltip-aging = Alterung -{ $drops }
 characteristic-effective-tooltip-virtue = Tugend { $bonus }
 # Reiter-Bezeichnungen für den Hauptbereich des Editors. Jeder Reiter, der einer

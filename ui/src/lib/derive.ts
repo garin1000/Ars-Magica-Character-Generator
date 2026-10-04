@@ -32,6 +32,7 @@ import type {
   ReputationGrant,
   RestrictedXpPool,
   SameChoiceExclusion,
+  ScoreSource,
   Selection,
   Spell,
   SpellCap,
@@ -41,6 +42,7 @@ import type {
   ValidationResult,
 } from './types';
 import { REALMS } from './types';
+import type { TooltipContent } from './actions';
 
 /**
  * Case- and diacritic-insensitive search normalization, so "Übernatürlich"
@@ -98,6 +100,42 @@ export function addendBreakdown(addends: Addend[], t: Translate): string {
   return addends
     .map((a) => `${addendLabel(a, t)} ${formatSigned(a.value)}`)
     .join(`${t('derived-addend-list-separator')} `);
+}
+
+/**
+ * The tooltip of an effective-score badge (Characteristics, Arts, Abilities): a
+ * "Bought X, effective Y." summary, then the reasons the two differ as a list.
+ * `bought`/`effective` arrive already formatted — Characteristics sign them
+ * (`formatSigned`), Arts and Abilities do not — so each badge keeps its own
+ * number style while sharing one shape and one set of messages.
+ */
+export function effectiveBreakdownTooltip(
+  scores: { bought: string; effective: string },
+  lines: string[],
+  t: Translate,
+): TooltipContent {
+  return {
+    text: t('effective-tooltip-summary', scores),
+    listLabel: t('effective-tooltip-breakdown-label'),
+    list: lines,
+  };
+}
+
+/**
+ * One tooltip line per engine-reported score source (I3): the contributing
+ * item's localized name — never its id — and its signed amount.
+ */
+export function scoreSourceLines(
+  sources: ScoreSource[],
+  localized: LocalizedRuleset,
+  t: Translate,
+): string[] {
+  return sources.map((s) =>
+    t('effective-tooltip-source', {
+      name: displayName(localized, s.source, undefined, paramHint(t)),
+      amount: formatSigned(s.amount),
+    }),
+  );
 }
 
 /**

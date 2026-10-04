@@ -40,13 +40,27 @@ pub fn ability_bonus(
     ability: &Id,
     parameter: Option<&str>,
 ) -> i32 {
+    sum_of(&ability_bonus_contributions(
+        entity, ruleset, ability, parameter,
+    ))
+}
+
+/// Each additive ability-bonus effect targeting the `(ability, parameter)`
+/// instance, by the item that carries it — the one fold [`ability_bonus`] sums,
+/// so the total and its breakdown cannot drift.
+fn ability_bonus_contributions(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    ability: &Id,
+    parameter: Option<&str>,
+) -> Vec<ScoreSource> {
     // The instance-discriminator key for a parameterized ability ((Area) Lore →
     // "area"); `None` for a plain ability (a single instance, matched by id).
     let instance_key = ruleset
         .abilities
         .get(ability)
         .and_then(|a| a.parameter.as_deref());
-    let mut bonus = 0;
+    let mut sources = Vec::new();
     for_each_effect!(entity, ruleset, |selection, effect| {
         // Exhaustive match so adding an Effect variant is a compile error
         // here, not a silently-ignored bonus.
@@ -73,7 +87,7 @@ pub fn ability_bonus(
                     },
                 };
                 if matches {
-                    bonus += i32::from(*amount);
+                    add_score_source(&mut sources, &selection.item_ref, i32::from(*amount));
                 }
             }
             // The gated-target sibling (Student of (Realm)'s +2 Lore): the
@@ -112,7 +126,7 @@ pub fn ability_bonus(
                         Some(_) => target.resolved_instance(selection).as_deref() == parameter,
                     };
                     if matches {
-                        bonus += i32::from(*amount);
+                        add_score_source(&mut sources, &selection.item_ref, i32::from(*amount));
                     }
                 }
             }
@@ -122,7 +136,7 @@ pub fn ability_bonus(
             irrelevant_effect_variants!() => {}
         }
     });
-    bonus
+    sources
 }
 
 /// The effective score of the `(ability, parameter)` instance: the highest bought
@@ -134,7 +148,15 @@ pub fn effective_ability_score(
     ability: &Id,
     parameter: Option<&str>,
 ) -> i32 {
-    let bought = entity
+    let bought = bought_ability_score(entity, ability, parameter);
+    let floor = granted_ability_floor(entity, ruleset, ability, parameter);
+    bought.max(floor) + ability_bonus(entity, ruleset, ability, parameter)
+}
+
+/// The highest bought score the entity holds for the exact `(ability, parameter)`
+/// instance (0 if unbought).
+fn bought_ability_score(entity: &Entity, ability: &Id, parameter: Option<&str>) -> i32 {
+    entity
         .ability_scores
         .iter()
         .filter(|a| {
@@ -146,9 +168,7 @@ pub fn effective_ability_score(
         })
         .map(|a| i32::from(a.score))
         .max()
-        .unwrap_or(0);
-    let floor = granted_ability_floor(entity, ruleset, ability, parameter);
-    bought.max(floor) + ability_bonus(entity, ruleset, ability, parameter)
+        .unwrap_or(0)
 }
 
 /// The highest free starting score granted to the `(ability, parameter)`
@@ -167,14 +187,32 @@ pub(crate) fn granted_ability_floor(
     ability: &Id,
     parameter: Option<&str>,
 ) -> i32 {
-    let mut floor = 0;
+    granted_ability_floor_source(entity, ruleset, ability, parameter)
+        .map_or(0, |(_item, floor)| floor.max(0))
+}
+
+/// The winning grant behind [`granted_ability_floor`]: the item carrying the
+/// highest grant for the instance, with that grant's amount. The first item to
+/// reach the highest amount wins a tie, so the breakdown names one item only.
+fn granted_ability_floor_source(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    ability: &Id,
+    parameter: Option<&str>,
+) -> Option<(Id, i32)> {
+    let mut best: Option<(Id, i32)> = None;
+    let mut consider = |item: &Id, amount: i32| {
+        if best.as_ref().is_none_or(|(_, floor)| amount > *floor) {
+            best = Some((item.clone(), amount));
+        }
+    };
     for_each_effect!(entity, ruleset, |selection, effect| {
         match effect {
             Effect::AbilityScoreGrant {
                 ability: granted,
                 amount,
             } if granted == ability && parameter.is_none() => {
-                floor = floor.max(i32::from(*amount));
+                consider(&selection.item_ref, i32::from(*amount));
             }
             Effect::AbilityScoreGrantParam {
                 ability: granted,
@@ -189,13 +227,13 @@ pub(crate) fn granted_ability_floor(
                     selection,
                 );
                 if resolved.parameter.as_deref() == parameter {
-                    floor = floor.max(i32::from(*amount));
+                    consider(&selection.item_ref, i32::from(*amount));
                 }
             }
             _ => {}
         }
     });
-    floor
+    best
 }
 
 /// Non-zero ability bonuses, one per ability *instance*, for the UI to add onto
@@ -226,6 +264,26 @@ pub(crate) fn granted_ability_floor(
 /// Order: catalogue (id) order, then any bought instance the catalogue does not
 /// already name, in `ability_scores` order.
 pub fn ability_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityBonus> {
+    candidate_ability_instances(entity, ruleset)
+        .into_iter()
+        .filter_map(|(ability, parameter)| {
+            let bonus = ability_bonus(entity, ruleset, ability, parameter);
+            (bonus != 0).then(|| AbilityBonus {
+                ability: ability.clone(),
+                parameter: parameter.map(str::to_owned),
+                bonus,
+            })
+        })
+        .collect()
+}
+
+/// The ability instances [`ability_bonuses`] walks: the catalogue (each with no
+/// parameter), then every bought instance the catalogue does not already name,
+/// deduped on `(id, parameter)` (the reasoning is on [`ability_bonuses`]).
+fn candidate_ability_instances<'a>(
+    entity: &'a Entity,
+    ruleset: &'a Ruleset,
+) -> Vec<(&'a Id, Option<&'a str>)> {
     let mut seen: BTreeSet<(&Id, Option<&str>)> = BTreeSet::new();
     let mut instances: Vec<(&Id, Option<&str>)> = Vec::new();
     for ability in ruleset.abilities() {
@@ -246,13 +304,73 @@ pub fn ability_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityBonus> 
         }
     }
     instances
+}
+
+/// The per-source breakdown of one ability instance's effective-over-bought
+/// delta. Serializes as `{ "ability": "<id>", "sources": [ScoreSource] }`, with
+/// `parameter` added only when present, like [`AbilityBonus`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AbilityBonusSources {
+    /// The ability's id.
+    pub ability: Id,
+    /// The instance discriminator, as in [`AbilityBonus::parameter`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parameter: Option<String>,
+    /// Each contributing item; the amounts sum to effective minus bought.
+    pub sources: Vec<ScoreSource>,
+}
+
+/// Each item that moves the `(ability, parameter)` instance's effective score off
+/// its bought score: the winning grant, for the part of its floor above the
+/// bought score (Second Sight 1, ArMDE:4888-4890), and every additive bonus
+/// (Puissant Ability, ArMDE:4814-4816). Sums to `effective - bought` by
+/// construction, since [`effective_ability_score`] is `max(bought, floor) + bonus`
+/// and `max(bought, floor) - bought` is `max(0, floor - bought)`.
+fn ability_score_sources(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    ability: &Id,
+    parameter: Option<&str>,
+) -> Vec<ScoreSource> {
+    let bought = bought_ability_score(entity, ability, parameter);
+    let mut sources = Vec::new();
+    if let Some((grant, floor)) = granted_ability_floor_source(entity, ruleset, ability, parameter)
+    {
+        add_score_source(&mut sources, &grant, (floor - bought).max(0));
+    }
+    for bonus in ability_bonus_contributions(entity, ruleset, ability, parameter) {
+        add_score_source(&mut sources, &bonus.source, bonus.amount);
+    }
+    sources.retain(|s| s.amount != 0);
+    sources
+}
+
+/// The per-source breakdown behind every ability instance whose effective score
+/// differs from its bought score — the condition the Abilities tab shows its
+/// effective badge on — naming each contributing item with its signed share (I3,
+/// try-out finding 15). Unlike [`ability_bonuses`] this includes an instance
+/// moved by a granted floor alone, since the badge shows that too.
+///
+/// Instances: those [`ability_bonuses`] walks, plus every instance a grant names
+/// ([`ability_score_floors`]), so a parameter-bound floor on an unbought
+/// instance is covered. Order: that walk's order, floors last.
+pub fn ability_bonus_sources(entity: &Entity, ruleset: &Ruleset) -> Vec<AbilityBonusSources> {
+    let floors = ability_score_floors(entity, ruleset);
+    let mut instances = candidate_ability_instances(entity, ruleset);
+    for floor in &floors {
+        let instance = (&floor.ability, floor.parameter.as_deref());
+        if !instances.contains(&instance) {
+            instances.push(instance);
+        }
+    }
+    instances
         .into_iter()
         .filter_map(|(ability, parameter)| {
-            let bonus = ability_bonus(entity, ruleset, ability, parameter);
-            (bonus != 0).then(|| AbilityBonus {
+            let sources = ability_score_sources(entity, ruleset, ability, parameter);
+            (sum_of(&sources) != 0).then(|| AbilityBonusSources {
                 ability: ability.clone(),
                 parameter: parameter.map(str::to_owned),
-                bonus,
+                sources,
             })
         })
         .collect()

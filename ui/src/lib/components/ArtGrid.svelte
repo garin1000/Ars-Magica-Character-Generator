@@ -3,11 +3,13 @@
   import {
     artAbbreviation,
     artLabel,
+    effectiveBreakdownTooltip,
     groupArtsByType,
     maxArtScore,
     rowWarningFor,
     rowWarnings,
     rowWarningText,
+    scoreSourceLines,
   } from '../derive';
   import { tooltip, type TooltipContent } from '../actions';
   import type { Art } from '../types';
@@ -63,6 +65,18 @@
 
   // Banked-XP warnings (I2): marked on the Art's own row, by id.
   const warnings = $derived(rowWarnings(store.result));
+
+  // I3: why the effective badge differs from the bought score — each source item
+  // the engine names (Puissant Art, Elemental Magic), by localized name.
+  function effectiveTip(artId: string): TooltipContent {
+    const sources = store.effective?.art_bonus_sources?.find((s) => s.art === artId)?.sources;
+    const bought = settledScoreOf(artId);
+    return effectiveBreakdownTooltip(
+      { bought: String(bought), effective: String(bought + bonusOf(artId)) },
+      store.ruleset ? scoreSourceLines(sources ?? [], store.ruleset, store.t) : [],
+      store.t,
+    );
+  }
 
   function tip(artId: string): TooltipContent {
     return { text: store.ruleset?.i18n[artId]?.description ?? undefined };
@@ -133,7 +147,15 @@
                 /><span class="banked-xp-unit" aria-hidden="true">{store.t('xp-unit-abbr')}</span>
                 {#if bonus !== 0}
                   <span class="eff-slot">
-                    <span class="eff-badge" data-testid="art-eff-{art.id}">
+                    <!-- Deliberately focusable: which Virtue moved the score lives only
+                         in this tooltip, and `use:tooltip` opens it on `focusin` (I3). -->
+                    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+                    <span
+                      class="eff-badge"
+                      data-testid="art-eff-{art.id}"
+                      tabindex="0"
+                      use:tooltip={effectiveTip(art.id)}
+                    >
                       {store.t('effective-score', {
                         score: String(settledScoreOf(art.id) + bonus),
                       })}

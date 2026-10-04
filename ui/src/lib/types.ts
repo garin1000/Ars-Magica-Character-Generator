@@ -708,6 +708,28 @@ export interface ArtBonus {
   bonus: number;
 }
 
+// One item's signed share of an Art's or Ability's effective-over-bought delta
+// (I3). `source` is the item id — rendered only through its localized name.
+// Mirrors the engine's `ScoreSource`.
+export interface ScoreSource {
+  source: string;
+  amount: number;
+}
+
+// The per-source breakdown of one Art's bonus. Mirrors `ArtBonusSources`.
+export interface ArtBonusSources {
+  art: string;
+  sources: ScoreSource[];
+}
+
+// The per-source breakdown of one ability instance's delta; `parameter` is
+// absent for a plain ability, as on `AbilityBonus`. Mirrors `AbilityBonusSources`.
+export interface AbilityBonusSources {
+  ability: string;
+  parameter?: string | null;
+  sources: ScoreSource[];
+}
+
 // The maximum learnable spell level for one Technique/Form/range-class
 // combination (Te + Fo + Int + Magic Theory + 3, plus any flat lab_total_mod
 // (D1), further halved for a Short-Ranged-Magic holder when
@@ -1031,6 +1053,12 @@ export interface AgingReadout {
 export interface EffectiveScores {
   ability_bonuses: AbilityBonus[];
   art_bonuses: ArtBonus[];
+  /** I3: which item adds how much to each `art_bonuses` entry. Optional so an
+   *  older or partial payload (test fixtures) still type-checks. */
+  art_bonus_sources?: ArtBonusSources[];
+  /** I3: the same breakdown per ability instance whose effective score differs
+   *  from its bought score (bonuses, and a granted floor above the bought score). */
+  ability_bonus_sources?: AbilityBonusSources[];
   characteristic_caps: Partial<Record<Characteristic, number>>;
   characteristic_floors: Partial<Record<Characteristic, number>>;
   /** Engine-authoritative point-buy cost of the Characteristics, gains netted
