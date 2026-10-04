@@ -1050,6 +1050,46 @@ describe('app.css', () => {
     expect(block![1]).toMatch(/max-width:\s*100%;/);
   });
 
+  // N6 (try-out 2026-10-04): the Arts tab's light panel spanned the whole tab while
+  // the grid sat left inside it — unlike the characteristics, whose panel hugs its
+  // table and is centred. Same mechanism, so the same three declarations, on the
+  // panel and not on the grid inside it.
+  it('centres the Arts panel itself, as it does the characteristics panel (N6)', () => {
+    const panel = ruleBody('art-panel');
+    expect(panel).toMatch(/margin-inline:\s*auto;/);
+    expect(panel).toMatch(/width:\s*fit-content;/);
+    expect(panel).toMatch(/max-width:\s*100%;/);
+  });
+
+  // The grid's own `align-self: center` was dead: its parent is the block-flow
+  // `<section>`, not the flex `.vf-tab` it was written for. And with the panel
+  // hugging the grid, a second `width: fit-content` on the grid would be a second,
+  // driftable owner of the same answer.
+  it('leaves the hugging to the Arts panel, not the grid inside it (N6)', () => {
+    const grid = ruleBody('art-grid');
+    expect(grid).not.toMatch(/align-self/);
+    expect(grid).not.toMatch(/width:\s*fit-content/);
+  });
+
+  // N5 (try-out 2026-10-04): the demanded and the recommended minimum Abilities
+  // side by side, one column each — and stacked once the window is too narrow for
+  // two. `auto-fit` collapses the empty track, so a lone demanded block (no
+  // recommendation rows) takes the full width by construction.
+  it('lays the minimum-Ability blocks out side by side, stacking when narrow (N5)', () => {
+    const columns = ruleBody('magus-minimums-columns');
+    expect(columns).toMatch(/display:\s*grid;/);
+    expect(columns).toMatch(
+      /grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(100%,\s*22rem\),\s*1fr\)\);/,
+    );
+  });
+
+  // Guard, not a red: the grid lives on a wrapper INSIDE the `<details>`, never on
+  // the `<details>` itself — a flex or grid `<details>` stops hiding its content
+  // when closed on WebKitGTK, which this app ships on.
+  it('keeps the minimum-Ability disclosure itself in block flow (N5)', () => {
+    expect(ruleBody('magus-minimums')).not.toMatch(/display:/);
+  });
+
   // ── The Abilities tab's selected-row grid ───────────────────────────────────
   //
   // manual-testing-findings-2026-09 #31. `.ability-selection li` is a flex line

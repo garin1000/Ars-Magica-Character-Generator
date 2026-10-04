@@ -114,6 +114,17 @@ describe('ArtGrid heading hierarchy (S17)', () => {
   });
 });
 
+// N6 (try-out 2026-10-04): the light panel hugs the grid and is centred, as the
+// characteristics panel is. The sizing itself is app.css's (`.art-panel`, pinned in
+// app.css.test.ts); this pins that the Arts tab's own panel carries the class.
+describe('ArtGrid panel sizing (N6)', () => {
+  it('marks its panel as the hugging, centred Arts panel', () => {
+    const panel = tagContaining(html(), 'class="panel');
+    expect(panel).toMatch(/^<section/);
+    expect(panel).toMatch(/class="[^"]*\bart-panel\b/);
+  });
+});
+
 describe('ArtGrid columns and layout', () => {
   it('splits the Forms into two columns, book order within each', () => {
     const body = html();

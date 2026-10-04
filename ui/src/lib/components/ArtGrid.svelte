@@ -87,8 +87,9 @@
      directly under the app's single <h1> with no <h2> between (a heading
      hierarchy gap) until this was added. Reuses `tab-arts`, the same label the
      App.svelte tab button already carries, so it names nothing the user does
-     not already read on the tab strip. -->
-<section class="panel">
+     not already read on the tab strip. `art-panel` hugs the grid and centres
+     itself, as `char-panel` does for the characteristics (N6). -->
+<section class="panel art-panel">
   <h2>{store.t('tab-arts')}</h2>
   {#if store.ruleset}
     <div class="art-grid">

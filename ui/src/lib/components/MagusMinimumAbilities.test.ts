@@ -374,6 +374,83 @@ describe('MagusMinimumAbilities collapsed to a summary (slice 11, #12)', () => {
   });
 });
 
+// N5 (try-out 2026-10-04): the demanded and the recommended blocks side by side —
+// "|Minimum Abilities|Recommended Minimum Abilities|". The grid is app.css's
+// (`.magus-minimums-columns`, pinned in app.css.test.ts); this pins the markup it
+// lays out: one wrapper inside the disclosure, one column per block.
+describe('MagusMinimumAbilities side-by-side columns (N5)', () => {
+  const WRAPPER = '<div class="magus-minimums-columns">';
+
+  /** Each column's markup, in document order: its heading and its list. */
+  function columns(body: string): string[] {
+    return [...body.matchAll(/<div class="magus-minimums-column">([\s\S]*?)<\/ul>/g)].map(
+      (m) => m[1],
+    );
+  }
+
+  /** The visible text of a column's one heading. */
+  function headingOf(column: string): string {
+    const match = /<h3[^>]*>([\s\S]*?)<\/h3>/.exec(column);
+    return match ? match[1].replace(/<[^>]*>/g, '').trim() : '';
+  }
+
+  /** The row testids a column holds, in order. */
+  function rowsOf(column: string): string[] {
+    return [...column.matchAll(/data-testid="(magus-(?:minimum|recommended)-[^"]+)"/g)].map(
+      (m) => m[1],
+    );
+  }
+
+  it('wraps both blocks in one wrapper right after the summary, which stays a direct child', () => {
+    setChecklist(shippedChecklist());
+    const body = html();
+    const details = /<details[^>]*data-testid="magus-minimums"[^>]*>([\s\S]*)<\/details>/.exec(
+      body,
+    );
+    expect(details).not.toBeNull();
+    const inside = details![1];
+    // The `<summary>` opens the disclosure — nothing but whitespace or a hydration
+    // marker before it — or it is no longer the disclosure's control.
+    expect(inside.replace(/<!--[\s\S]*?-->/g, '').trimStart()).toMatch(/^<summary/);
+    const summaryEnd = inside.indexOf('</summary>');
+    const wrapperAt = inside.indexOf(WRAPPER);
+    expect(wrapperAt, 'the columns wrapper is missing').toBeGreaterThan(summaryEnd);
+    // Directly after the summary: the wrapper is the disclosure's second child.
+    const between = inside.slice(summaryEnd + '</summary>'.length, wrapperAt);
+    expect(between.replace(/<!--[\s\S]*?-->/g, '').trim()).toBe('');
+    // Every heading and every row sits inside the wrapper, none beside it.
+    const outside = inside.slice(0, wrapperAt);
+    expect(outside).not.toMatch(/<h3|<ul|data-testid="magus-(?:minimum|recommended)-/);
+  });
+
+  it('gives each block its own column, demanded first, rows in their own order', () => {
+    setChecklist(shippedChecklist());
+    const [required, recommended, ...rest] = columns(html());
+    expect(rest).toHaveLength(0);
+    expect(headingOf(required ?? '')).toBe('Minimum Abilities');
+    expect(headingOf(recommended ?? '')).toBe('Recommended minimum Abilities');
+    expect(rowsOf(required ?? '')).toEqual([
+      'magus-minimum-ability.dead_language',
+      'magus-minimum-ability.magic_theory',
+      'magus-minimum-ability.parma_magica',
+    ]);
+    expect(rowsOf(recommended ?? '')).toEqual([
+      'magus-recommended-ability.dead_language',
+      'magus-recommended-ability.magic_theory',
+      'magus-recommended-ability.parma_magica',
+    ]);
+  });
+
+  it('renders a lone demanded block as the only column, with no empty recommended one', () => {
+    setChecklist(shippedChecklist().filter((r) => r.requirement === 'required'));
+    const body = html();
+    const all = columns(body);
+    expect(all).toHaveLength(1);
+    expect(headingOf(all[0])).toBe('Minimum Abilities');
+    expect(body).not.toContain('Recommended minimum Abilities');
+  });
+});
+
 describe('MagusMinimumAbilities and its validation message (slice 7, #13 + #32)', () => {
   /** The one `<li>` of a ValidationPanel showing a finding about a dead language. */
   function findingText(

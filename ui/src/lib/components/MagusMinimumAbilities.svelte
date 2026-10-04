@@ -94,21 +94,32 @@
         {store.t('magus-minimums-summary', { unmet: String(unmet), total: String(rows.length) })}
       </span>
     </summary>
-    <h3>{store.t('magus-minimums-label')}</h3>
-    <ul class="magus-minimum-list">
-      {#each required as row (row.ability)}
-        <!-- The status is in the sentence itself; `data-met` only mirrors it for
-             styling and for the e2e suite, and never carries it alone. -->
-        <li data-met={row.met} data-testid="magus-minimum-{row.ability}">{statusOf(row)}</li>
-      {/each}
-    </ul>
-    {#if recommended.length > 0}
-      <h3>{store.t('magus-recommended-label')}</h3>
-      <ul class="magus-minimum-list">
-        {#each recommended as row (row.ability)}
-          <li data-met={row.met} data-testid="magus-recommended-{row.ability}">{statusOf(row)}</li>
-        {/each}
-      </ul>
-    {/if}
+    <!-- The two blocks side by side, one column each (N5). A wrapper, so the
+         `<summary>` above stays the disclosure's direct child and the `<details>`
+         itself stays block flow (see app.css). -->
+    <div class="magus-minimums-columns">
+      <div class="magus-minimums-column">
+        <h3>{store.t('magus-minimums-label')}</h3>
+        <ul class="magus-minimum-list">
+          {#each required as row (row.ability)}
+            <!-- The status is in the sentence itself; `data-met` only mirrors it for
+                 styling and for the e2e suite, and never carries it alone. -->
+            <li data-met={row.met} data-testid="magus-minimum-{row.ability}">{statusOf(row)}</li>
+          {/each}
+        </ul>
+      </div>
+      {#if recommended.length > 0}
+        <div class="magus-minimums-column">
+          <h3>{store.t('magus-recommended-label')}</h3>
+          <ul class="magus-minimum-list">
+            {#each recommended as row (row.ability)}
+              <li data-met={row.met} data-testid="magus-recommended-{row.ability}">
+                {statusOf(row)}
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
+    </div>
   </details>
 {/if}
