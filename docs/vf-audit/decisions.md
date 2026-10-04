@@ -912,6 +912,21 @@ presumption of correctness.
     itself. The Academic requirement is Latin or Hebrew (Dead) or Greek or
     Arabic (Living) at 3 (ArMDE:7151, :7432). A typed name in any shipped locale
     counts as that catalogue language.
+13. **Catalogue load notices only on a real upgrade** (try-out findings 13,
+    14). Typed text naming a catalogue entry is normalised silently on every
+    load. The "recognized" and "not recognized" notices fire only for a file
+    saved before schema 18, judged by the version read before any fold runs.
+    Free text such as "Native language" never warns in a current save.
+14. **A fixed grant's text value is a catalogue value.** Tremere's focus
+    (ArMDE:2281) is `magical_focus.certamen`, named "certamen" (EN) and
+    "Certamen" (DE). A fixed grant may not carry literal text, and this is
+    checked at load.
+15. **The rulebook examples ship** (try-out finding 12). 24 book templates
+    ship as `examples/<template>.armc` beside `rules/`, in the installers and
+    the portable layout. They are in the current form (schema 22, catalogue
+    ids, no notice on open), generated from the test fixtures and guarded byte
+    for byte. A NOTICE gives the CC BY-SA attribution. The incomplete
+    `magus_criamon` variant stays a test fixture only.
 11. **Spell codes show their requisites** (try-out finding 22; after-deadline
     answer 4). The engine builds a spell's code once in
     `LocalizedRuleset::spell_code`. Technique requisites go in parentheses after
