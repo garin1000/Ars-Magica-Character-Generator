@@ -11572,17 +11572,21 @@ ignored, identically in both directions.
 **The one finding.** `birth_year` is `i32` and `age` is `u32`, so a saga year *before*
 the birth year would underflow. It clamps the derived age to 0 and emits
 `saga_year_before_birth_year` — a **warning**, phase `concept`, args `saga_year` and
-`birth_year`, localized as `issue-saga_year_before_birth_year` in both locales. Like
-the three `childhood_slot_*` rows it is listed in the `ValidationIssue` contract table
-but is **not** emitted by `validate`: only the derivation raises it, and that stayed
-true through C8 — the year now reaches the engine as entity data, but `validate` was
-not given a new rule to enforce with it, so the advisory still comes only from
-`age_in_saga_year`. It carries no rulebook citation — no passage forbids an impossible
-date; the clamp exists because the type does. Since N3 (D84.2) the UI holds a typed
-birth year to `saga_year - 1` (`latestBirthYear` in `ui/src/lib/state.svelte.ts`), so the
-UI no longer asks the derivation about such a pair. A save that already holds one keeps
-its stored values (focusing and leaving the field without typing rewrites nothing).
-The engine side is unchanged.
+`birth_year`, localized as `issue-saga_year_before_birth_year` in both locales. It
+carries no rulebook citation — no passage forbids an impossible date; the clamp exists
+because the type does. Since N3 (D84.2) the UI holds a typed birth year to
+`saga_year - 1` (`latestBirthYear` in `ui/src/lib/state.svelte.ts`), so the UI no longer
+asks the derivation about such a pair. A save that already holds one keeps its stored
+values (focusing and leaving the field without typing rewrites nothing).
+
+Since N3b (D84.2, Norbert's option b) `validate` emits the same finding too:
+`validate_saga_year` (`validation/saga.rs`, character block of `validate`) checks the
+stored pair on every pass, so such a save says so as soon as it is opened, governed by
+the validation mode like any other finding. Both emit sites share one helper,
+`not_born_yet` (saga year before birth year; the same year is age 0 and advises
+nothing). The UI shows validation's copy only — the store keeps nothing from the
+derivation but the age. The message states only the fact (both years, not born yet);
+it no longer claims the age reads 0, which a loaded or saga-shifted pair need not.
 
 ### Creation-phase completeness (M6/6b8a) — `completeness.rs`
 

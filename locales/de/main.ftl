@@ -1601,11 +1601,11 @@ issue-living_conditions_conflict = Die Lebensumstände „{ $condition }“ und 
 # `:5189` sagt allerdings nur, es "sollte" höchstens so hoch sein, und lässt
 # Ausnahmen für Charaktere zu, die nicht im Grunde menschlich sind.
 issue-apparent_age_above_age = Das scheinbare Alter ({ $apparent_age }) liegt über dem tatsächlichen Alter ({ $age }); die Alterung erhöht es um höchstens ein Jahr pro Jahr.
-# Weder ein Zustand des Charakters noch eine abgelehnte Eingabe: die Verknüpfung von
-# Alter und Geburtsjahr hat ein unmögliches Paar ergeben, das Alter wurde daher auf 0
-# begrenzt statt unter null zu laufen. Nur ein Hinweis — das Paar ist unmöglich, aber
-# nichts daran ist regelwidrig.
-issue-saga_year_before_birth_year = Das Jahr der Saga ({ $saga_year }) liegt vor dem Geburtsjahr ({ $birth_year }), der Charakter ist also noch nicht geboren; das Alter steht auf 0, bis einer der beiden Werte geändert wird.
+# Das gespeicherte Geburtsjahr liegt nach dem Jahr der Saga (N3b: die Validierung
+# meldet es bei jedem Durchlauf, also auch für eine geladene Datei). Nennt nur die
+# Tatsache: das gespeicherte Alter ist, was die Datei enthält. Nur ein Hinweis — das
+# Paar ist unmöglich, aber nichts daran ist regelwidrig.
+issue-saga_year_before_birth_year = Das Jahr der Saga ({ $saga_year }) liegt vor dem Geburtsjahr ({ $birth_year }), der Charakter ist also noch nicht geboren.
 # Die sechs Gründe, aus denen ein Alterungswurf abgelehnt wird. Anders als alle
 # Befunde darüber gehören diese zur Eingabe eines Befehls: die Engine schreibt bei
 # einer Ablehnung nichts, kein gespeicherter Charakter kann sie also tragen — jeder

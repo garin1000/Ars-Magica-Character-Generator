@@ -20,10 +20,12 @@
 //! produces, so the clamp policy has a single home and no caller — Rust or
 //! frontend — restates it. The derivation has no mechanical effect: `age` and
 //! `birth_year` are both already stored on the entity, and this only fills one in
-//! from the other while the user types.
+//! from the other while the user types. The advisory is also part of the ordinary
+//! validation pass (N3b, D84.2), from the same helper, so a stored impossible pair is
+//! reported on every pass rather than only when the birth year is edited.
 
 use super::{ValidationIssue, args};
-use crate::types::CreationPhase;
+use crate::types::{CreationPhase, Entity};
 
 /// The calendar year the published setting stands in, and therefore the saga year
 /// a fresh installation assumes — the fallback of last resort, behind both the
@@ -64,21 +66,13 @@ pub struct AgeInSagaYear {
 /// input is capped at `saga_year - max_age`, so only a crafted call reaches the
 /// clamp. `None` applies no cap.
 pub fn age_in_saga_year(saga_year: i32, birth_year: i32, max_age: Option<u32>) -> AgeInSagaYear {
-    let years = i64::from(saga_year) - i64::from(birth_year);
-    if years < 0 {
+    if let Some(issue) = not_born_yet(saga_year, birth_year) {
         return AgeInSagaYear {
             age: 0,
-            issues: vec![ValidationIssue::warning(
-                ValidationIssue::CODE_SAGA_YEAR_BEFORE_BIRTH_YEAR,
-                CreationPhase::Concept,
-                args([
-                    ("saga_year", saga_year.to_string()),
-                    ("birth_year", birth_year.to_string()),
-                ]),
-                None,
-            )],
+            issues: vec![issue],
         };
     }
+    let years = i64::from(saga_year) - i64::from(birth_year);
     // The widest legal span (i32::MAX - i32::MIN) exceeds u32::MAX by one, so
     // saturate rather than wrap on a hand-edited extreme.
     let age = u32::try_from(years).unwrap_or(u32::MAX);
@@ -86,6 +80,36 @@ pub fn age_in_saga_year(saga_year: i32, birth_year: i32, max_age: Option<u32>) -
         age: max_age.map_or(age, |max_age| age.min(max_age)),
         issues: Vec::new(),
     }
+}
+
+/// Emits `saga_year_before_birth_year` when the entity's stored birth year is after
+/// its saga year (N3b, D84.2). Part of [`super::validate`], so a save that already
+/// holds such a pair — hand-written, or with the saga year moved back under the
+/// birth year, which rewrites neither value — says so the moment it is opened, not
+/// only when the birth year is next edited. An unset birth year says nothing.
+pub(crate) fn validate_saga_year(entity: &Entity, issues: &mut Vec<ValidationIssue>) {
+    let Some(birth_year) = entity.birth_year else {
+        return;
+    };
+    issues.extend(not_born_yet(entity.saga_year, birth_year));
+}
+
+/// The one statement of the rule [`age_in_saga_year`] and [`validate_saga_year`]
+/// share: a saga year before the birth year is a character not yet born. The same
+/// year is age 0, unusual but possible, and advises nothing.
+fn not_born_yet(saga_year: i32, birth_year: i32) -> Option<ValidationIssue> {
+    if saga_year >= birth_year {
+        return None;
+    }
+    Some(ValidationIssue::warning(
+        ValidationIssue::CODE_SAGA_YEAR_BEFORE_BIRTH_YEAR,
+        CreationPhase::Concept,
+        args([
+            ("saga_year", saga_year.to_string()),
+            ("birth_year", birth_year.to_string()),
+        ]),
+        None,
+    ))
 }
 
 /// Which year a character aged `age` in `saga_year` was born in.

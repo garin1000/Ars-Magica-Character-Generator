@@ -39,7 +39,7 @@ import IdentityFields from './IdentityFields.svelte';
 
 const BIRTH_YEAR = '[data-testid="identity-birth-year"]';
 
-/** The engine's advisory for a birth year after the saga year (validation/mod.rs). */
+/** The engine's advisory for a birth year after the saga year (validation/saga.rs). */
 const NOT_BORN_YET: ValidationIssue = {
   severity: 'warning',
   code: 'saga_year_before_birth_year',
@@ -117,7 +117,7 @@ afterEach(() => {
   if (app) unmount(app);
   app = undefined;
   target?.remove();
-  store.sagaIssues = [];
+  vi.mocked(ipc.validateEntity).mockResolvedValue({ issues: [] });
 });
 
 function mountField(): HTMLInputElement {
@@ -178,10 +178,10 @@ describe('IdentityFields birth year is bounded above at saga year - 1 (N3)', () 
   // A save written before D84.2, or a saga year moved back under the birth year,
   // holds a year the setter would now clamp. Visiting the field without typing is
   // not an edit: nothing is rewritten, the document stays clean, and the engine's
-  // age-0 advisory stays up to say what is wrong.
+  // advisory (from validation since N3b) stays up to say what is wrong.
   it('leaves a loaded later birth year alone when the field is focused and left untouched', async () => {
+    vi.mocked(ipc.validateEntity).mockResolvedValue({ issues: [NOT_BORN_YET] });
     await openDocument(character(1250, 0));
-    store.sagaIssues = [NOT_BORN_YET];
     const input = mountField();
     expect(input.value).toBe('1250');
 
@@ -194,7 +194,7 @@ describe('IdentityFields birth year is bounded above at saga year - 1 (N3)', () 
     expect(store.entity.birth_year).toBe(1250);
     expect(store.entity.age).toBe(0);
     expect(input.value).toBe('1250');
-    expect(store.sagaIssues).toEqual([NOT_BORN_YET]);
+    expect(store.result?.issues).toEqual([NOT_BORN_YET]);
     expect(vi.mocked(ipc.deriveAge)).not.toHaveBeenCalled();
     expect(store.dirty).toBe(false);
   });

@@ -47,6 +47,7 @@ use magus::*;
 use might::*;
 use prereq::*;
 use realm::*;
+use saga::validate_saga_year;
 use scores::*;
 use selections::*;
 use warping::*;
@@ -114,12 +115,10 @@ impl fmt::Display for IssueSeverity {
 /// application writes nothing. They are listed here all the same: the UI localizes
 /// them through the same `issue-<code>` catalogue.
 ///
-/// One further row, `saga_year_before_birth_year`, describes neither: it comes only
-/// from [`age_in_saga_year`], which derives one half of the stored age/birth-year
-/// pair from the other. [`validate`] cannot emit it, because the saga year it
-/// compares against is app-level saga state that never reaches the engine as entity
-/// data (see [`saga`]). It is listed for the same reason as the three above — the UI
-/// localizes it through the same catalogue.
+/// One further row, `saga_year_before_birth_year`, comes from two places sharing one
+/// helper: [`validate`] emits it for a stored birth year after the entity's saga year
+/// (N3b, D84.2), and [`age_in_saga_year`] returns it with the age it derives from such
+/// a pair (see [`saga`]).
 ///
 /// An arg marked **(opt)** is present only when the rules data states it. The
 /// `issue-<code>` Fluent message must therefore not interpolate it directly (Fluent
@@ -361,10 +360,9 @@ impl ValidationIssue {
     /// the issue-code contract table above).
     pub const CODE_UNKNOWN_TYPE: &'static str = "unknown_type";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning: the saga year is before
-    /// the character's birth year, so it is not yet born and the derived age clamps
-    /// to 0 rather than underflowing (`age` is `u32`). Emitted by
-    /// [`age_in_saga_year`], never by [`validate`] — the saga year is app-level saga
-    /// state, not entity data.
+    /// the character's birth year, so it is not yet born. Emitted by [`validate`] for
+    /// the stored pair (N3b, D84.2) and by [`age_in_saga_year`], whose derived age
+    /// clamps to 0 rather than underflowing (`age` is `u32`).
     pub const CODE_SAGA_YEAR_BEFORE_BIRTH_YEAR: &'static str = "saga_year_before_birth_year";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`].
     pub const CODE_UNKNOWN_REF: &'static str = "unknown_ref";
@@ -1277,6 +1275,7 @@ pub fn validate(entity: &Entity, ruleset: &Ruleset) -> ValidationResult {
     // neither. Gate them on the entity kind so the engine respects EntityKind
     // rather than relying on a covenant happening to carry no such data.
     if entity.entity_kind == EntityKind::Character {
+        validate_saga_year(entity, &mut issues);
         validate_characteristics(entity, ruleset, &mut issues);
         validate_characteristic_delta_preconditions(
             entity,

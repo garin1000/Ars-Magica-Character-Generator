@@ -2542,16 +2542,6 @@ class AppStore {
    */
   defaultSagaYear = $state<number>(DEFAULT_SAGA_YEAR);
 
-  /**
-   * Advisories from the age ↔ birth-year derivation — today only "the saga year is
-   * before the birth year", which clamps the age to 0.
-   *
-   * Kept apart from {@link result} because it is not a reading of the entity: the
-   * engine cannot emit it from `validate`, since the saga year never reaches it as
-   * entity data. `ValidationPanel` shows both lists.
-   */
-  sagaIssues = $state<ValidationIssue[]>([]);
-
   // Monotonic guard for the derivation round trips. Typing a birth year fires one
   // per keystroke and the answers come back over IPC, so a slow early reply must
   // not land on top of a later one. Same shape as `#seq` for validation.
@@ -2617,8 +2607,12 @@ class AppStore {
 
   /**
    * Fill in the age from the birth year just typed. The engine owns the arithmetic
-   * and the clamp, so the impossible-pair advisory has exactly one wording and the
-   * frontend states no policy of its own.
+   * and the clamp, so the frontend states no policy of its own.
+   *
+   * Only the age is taken from the answer. The impossible-pair advisory the
+   * derivation also returns is validation's to report (N3b, D84.2): `validate`
+   * checks the stored pair on every pass, so keeping the derivation's copy too would
+   * show the one finding twice.
    */
   #deriveAgeFromBirthYear(): void {
     const sagaYear = this.entity.saga_year;
@@ -2626,7 +2620,6 @@ class AppStore {
     if (sagaYear == null || birthYear == null) {
       // An emptied field derives nothing — the same treatment `setBirthYear` gives
       // it, rather than dating the character to year 0.
-      this.sagaIssues = [];
       return;
     }
     const seq = ++this.#sagaSeq;
@@ -2638,7 +2631,6 @@ class AppStore {
         // non-positive number as "field cleared", while a clamped 0 here is the
         // derived answer and has to survive.
         this.entity.age = derived.age;
-        this.sagaIssues = derived.issues;
         this.#scheduleValidate();
       })
       .catch(() => {
@@ -2650,19 +2642,13 @@ class AppStore {
   #deriveBirthYearFromAge(): void {
     const sagaYear = this.entity.saga_year;
     const age = this.entity.age;
-    if (sagaYear == null || age == null) {
-      this.sagaIssues = [];
-      return;
-    }
+    if (sagaYear == null || age == null) return;
     const seq = ++this.#sagaSeq;
     void ipc
       .deriveBirthYear(sagaYear, age)
       .then((year) => {
         if (seq !== this.#sagaSeq) return;
         this.entity.birth_year = year;
-        // Setting the age makes the pair consistent by construction, so whatever the
-        // other direction advised no longer holds.
-        this.sagaIssues = [];
         this.#scheduleValidate();
       })
       .catch(() => {});
@@ -2763,10 +2749,9 @@ class AppStore {
         // character owed says nothing about this one, and the years it already
         // recorded arrive in its own log.
         this.clearAgingDraft();
-        // And the saga-year advisory, which was about the previous character's pair.
-        // Nothing is re-derived for this one: a character built in a 1220 saga and
-        // opened under a 1230 setting keeps both stored values (#25).
-        this.sagaIssues = [];
+        // Nothing is re-derived for the opened pair: a character built in a 1220
+        // saga keeps both stored values (#25). An impossible one is reported by the
+        // validation pass below (N3b, D84.2).
         // Opening is reachable from any screen, so a load always lands in the
         // editor; a cancelled dialog leaves the current screen alone. A save
         // records no wizard progress, so an opened character is a finished
@@ -2813,7 +2798,6 @@ class AppStore {
     this.childhoodDraft = defaultChildhoodDraft();
     this.clearAgingDraft();
     this.result = null;
-    this.sagaIssues = [];
     this.effective = null;
     this.derived = null;
     // The basis goes with the payloads it describes; leaving the outgoing
@@ -2889,7 +2873,6 @@ class AppStore {
     this.childhoodDraft = defaultChildhoodDraft();
     this.clearAgingDraft();
     this.result = null;
-    this.sagaIssues = [];
     this.effective = null;
     this.derived = null;
     // As in `newDocument`: the basis is cleared with the payloads it describes (#16).

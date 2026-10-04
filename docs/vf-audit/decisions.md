@@ -858,7 +858,11 @@ presumption of correctness.
    value is not re-committed. A source-scan guard requires the action or a
    `commitStored-exempt` reason on every `type="number"`. (b) The latest birth year is
    saga year - 1 (age ≥ 1, as `setAge`); a loaded later year is kept until the field is
-   edited.
+   edited. **Addendum (N3b, Norbert's option b):** `validate` checks the stored birth year
+   against the saga year on every pass and emits the existing `saga_year_before_birth_year`
+   warning when birth > saga, sharing one helper with `age_in_saga_year`. The UI shows
+   validation's copy only (`sagaIssues` removed). The message drops "the age reads 0 …",
+   which a loaded or saga-shifted pair need not satisfy.
 
 3. **A split "Minor or Major" entry shows its magnitude in square brackets** (N11).
    Where the book prints ONE entry taken at either magnitude and the catalogue splits

@@ -1519,10 +1519,11 @@ issue-living_conditions_conflict = Living conditions '{ $condition }' and '{ $ot
 # so it cannot outrun the actual age on its own — but `:5189` only says it "should
 # be" less than or equal, and lets a character who is not basically human differ.
 issue-apparent_age_above_age = The apparent age ({ $apparent_age }) is above the actual age ({ $age }); aging raises it by at most one year per year.
-# Neither an entity state nor a rejected command: the age ↔ birth-year link derived
-# an impossible pair, so the age clamped to 0 rather than underflowing (`age` is
-# unsigned). Advisory — the pair is impossible, but nothing about it is illegal.
-issue-saga_year_before_birth_year = The saga year ({ $saga_year }) is before the birth year ({ $birth_year }), so the character is not born yet; the age reads 0 until one of the two is changed.
+# The stored birth year is after the saga year (N3b: raised by validation on every
+# pass, so a loaded save shows it too). States only the fact: the stored age is
+# whatever the save holds, so no claim about it. Advisory — the pair is impossible,
+# but nothing about it is illegal.
+issue-saga_year_before_birth_year = The saga year ({ $saga_year }) is before the birth year ({ $birth_year }), so the character is not born yet.
 # The six refusals an aging roll can meet. Unlike every finding above, these are
 # command-input findings: the engine writes nothing when it refuses, so no saved
 # character can hold one — each describes the roll just submitted.

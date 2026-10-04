@@ -1920,7 +1920,6 @@ describe('the saga year and the age ↔ birth-year link', () => {
   });
 
   afterEach(() => {
-    store.sagaIssues = [];
     vi.mocked(ipc.deriveAge).mockReset().mockResolvedValue({ age: 0, issues: [] });
     vi.mocked(ipc.deriveBirthYear).mockReset().mockResolvedValue(0);
   });
@@ -1997,7 +1996,8 @@ describe('the saga year and the age ↔ birth-year link', () => {
   // stored and the engine derived age 0 plus `saga_year_before_birth_year`. The store
   // now clamps it to saga year - 1, so the engine is never asked to derive age 0 from
   // a typed year. The advisory still arises from a loaded save or a saga year moved
-  // back under the birth year, and still clears once the pair becomes possible.
+  // back under the birth year; since N3b validation reports it (and clears it), see
+  // `saga-warning-single-source.test.ts`.
   it('clamps a typed birth year after the saga year, so no age 0 is derived from it', async () => {
     vi.mocked(ipc.deriveAge).mockResolvedValue({ age: 1, issues: [] });
     store.setBirthYear(1250);
@@ -2006,21 +2006,6 @@ describe('the saga year and the age ↔ birth-year link', () => {
     expect(store.entity.birth_year).toBe(1219);
     expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1220, 1219, null);
     expect(store.entity.age).toBe(1);
-    expect(store.sagaIssues).toEqual([]);
-
-    // An advisory left by a loaded or saga-shifted pair clears on the next edit.
-    store.sagaIssues = [
-      {
-        severity: 'warning',
-        code: 'saga_year_before_birth_year',
-        phase: 'concept',
-        args: { saga_year: '1220', birth_year: '1250' },
-      },
-    ];
-    vi.mocked(ipc.deriveAge).mockResolvedValue({ age: 30, issues: [] });
-    store.setBirthYear(1190);
-    await vi.runAllTimersAsync();
-    expect(store.sagaIssues).toEqual([]);
   });
 
   it('dirties the document when either half of the stored pair is edited', async () => {

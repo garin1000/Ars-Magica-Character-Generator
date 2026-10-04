@@ -91,7 +91,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  store.sagaIssues = [];
   vi.useRealTimers();
 });
 
