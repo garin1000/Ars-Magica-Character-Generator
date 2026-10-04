@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import { displayName, I32_MAX, I32_MIN, paramHint } from '../derive';
   import { CHARACTERISTICS, type AgingLogEntry, type Characteristic } from '../types';
 
@@ -169,6 +170,7 @@
             aria-label={store.t('aging-log-year-label')}
             value={entry.year ?? ''}
             oninput={(e) => store.setAgingLogEntryYear(i, optionalNumValue(e))}
+            use:commitStored={{ read: () => entry.year }}
             data-testid="aging-log-year-{i}"
           />
           <!-- The player's own note, and still theirs: the engine never writes here.
@@ -248,6 +250,7 @@
           max={store.ageInputMax}
           value={apparentAge ?? ''}
           oninput={onApparentAge}
+          use:commitStored={{ read: () => apparentAge }}
           data-testid="apparent-age-input"
         />
       </label>
@@ -296,6 +299,7 @@
               max="255"
               value={agingPoints[characteristic] ?? 0}
               oninput={(e) => store.setAgingPoints(characteristic, numValue(e))}
+              use:commitStored={{ read: () => agingPoints[characteristic] ?? 0 }}
               aria-labelledby="aging-points-label-{characteristic}"
               data-testid="aging-points-{characteristic}"
             />

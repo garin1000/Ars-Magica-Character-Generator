@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import {
     atMaxTotalRefs,
     eligibleForConstraint,
@@ -143,6 +144,7 @@
           max={U32_MAX}
           value={storedWarpingPoints}
           oninput={(e) => store.setWarpingPoints(numValue(e))}
+          use:commitStored={{ read: () => storedWarpingPoints }}
           data-testid="warping-points-input"
         />
       </label>

@@ -412,6 +412,15 @@ class AppStore {
     return Math.max(I32_MIN, this.entity.saga_year - maxAge);
   }
 
+  /**
+   * The latest birth year the birth-year input accepts: the saga year less one, so
+   * the derived age is at least 1 — the floor {@link setAge} keeps (N3, D84.2). A
+   * later year would only ever derive age 0. Held inside the stored i32 width.
+   */
+  get latestBirthYear(): number {
+    return Math.max(I32_MIN, this.entity.saga_year - 1);
+  }
+
   // --- Entity-mutator workflows -------------------------------------------
   //
   // The per-domain document editors, continuing the extraction the four
@@ -2492,7 +2501,7 @@ class AppStore {
   setBirthYear(year: number | null): void {
     this.entity.birth_year =
       year != null && Number.isFinite(year)
-        ? clampInt(year, this.earliestBirthYear, I32_MAX)
+        ? clampInt(year, this.earliestBirthYear, this.latestBirthYear)
         : null;
     this.#deriveAgeFromBirthYear();
     this.#scheduleValidate();

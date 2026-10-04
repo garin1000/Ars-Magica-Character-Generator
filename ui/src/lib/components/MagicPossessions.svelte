@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import { I32_MAX, I32_MIN } from '../derive';
   import FamiliarPanel from './FamiliarPanel.svelte';
   import TalismanPanel from './TalismanPanel.svelte';
@@ -65,6 +66,7 @@
           value={aura}
           aria-describedby={clampedEntry ? 'aura-out-of-range' : undefined}
           oninput={onAura}
+          use:commitStored={{ read: () => aura }}
           data-testid="aura-input"
         />
       </label>

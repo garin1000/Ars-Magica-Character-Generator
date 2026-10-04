@@ -24,7 +24,7 @@
     withinPotentFieldAddable,
   } from '../derive';
   import type { SelectedSpellGroup } from '../derive';
-  import { tooltip, withReason, type TooltipContent } from '../actions';
+  import { commitStored, tooltip, withReason, type TooltipContent } from '../actions';
   import type {
     Art,
     Spell,
@@ -504,6 +504,7 @@
           </select>
           <label class="field">
             <span>{store.t('spell-level-min-label')}</span>
+            <!-- commitStored-exempt: local filter state on `bind:value`; no store setter clamps it. -->
             <input
               type="number"
               min="1"
@@ -515,6 +516,7 @@
           </label>
           <label class="field">
             <span>{store.t('spell-level-max-label')}</span>
+            <!-- commitStored-exempt: local filter state on `bind:value`; no store setter clamps it. -->
             <input
               type="number"
               min="1"
@@ -650,6 +652,9 @@
                     value={chosen.level ?? minLevelForChosen(chosen.spell)}
                     oninput={(e) =>
                       store.setSpellLevelAt(i, Number((e.currentTarget as HTMLInputElement).value))}
+                    use:commitStored={{
+                      read: () => chosen.level ?? minLevelForChosen(chosen.spell),
+                    }}
                     data-testid="spell-level-input-{chosen.spell}-{i}"
                   />
                 {/if}

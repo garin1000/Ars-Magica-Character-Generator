@@ -9915,7 +9915,9 @@ end of this section.
   clamps in step; value-driven and version-free like the aura clamp, so the next save
   writes the clamped values), the integrity check (a `max_age` below
   `first_roll_age()` fails the load), and the UI (age and apparent-age inputs capped
-  at it, birth-year input floored at `saga_year - max_age`). Guards:
+  at it, birth-year input floored at `saga_year - max_age` and, since N3 / D84.2,
+  capped at `saga_year - 1` so a typed year derives an age of at least 1 — likewise
+  an app limit, no rulebook passage). Guards:
   `tests/a1_max_age.rs`.
 - **A Longevity Ritual holder under 35 is not scheduled** — a decision, not an
   oversight. `ArMDE:16575`'s "should roll on the table no matter what his age" is
@@ -11576,7 +11578,11 @@ but is **not** emitted by `validate`: only the derivation raises it, and that st
 true through C8 — the year now reaches the engine as entity data, but `validate` was
 not given a new rule to enforce with it, so the advisory still comes only from
 `age_in_saga_year`. It carries no rulebook citation — no passage forbids an impossible
-date; the clamp exists because the type does.
+date; the clamp exists because the type does. Since N3 (D84.2) the UI holds a typed
+birth year to `saga_year - 1` (`latestBirthYear` in `ui/src/lib/state.svelte.ts`), so the
+UI no longer asks the derivation about such a pair. A save that already holds one keeps
+its stored values (focusing and leaving the field without typing rewrites nothing).
+The engine side is unchanged.
 
 ### Creation-phase completeness (M6/6b8a) — `completeness.rs`
 

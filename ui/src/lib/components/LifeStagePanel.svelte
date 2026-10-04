@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store, type AbilityFunding } from '../state.svelte';
+  import { commitStored } from '../actions';
   import { abilityParamDisplay, U32_MAX } from '../derive';
   import AbilityParameterCombo from './AbilityParameterCombo.svelte';
   import AgeFields from './AgeFields.svelte';
@@ -151,6 +152,7 @@
               placeholder={gauntletPlaceholder}
               value={fieldValue(plan?.gauntlet_age)}
               oninput={(event) => store.setGauntletAge(count(event))}
+              use:commitStored={{ read: () => fieldValue(plan?.gauntlet_age) }}
               data-testid="life-stage-gauntlet-age-input"
             />
           </label>
@@ -164,6 +166,7 @@
               value={fieldValue(plan?.post_gauntlet_lab_seasons)}
               aria-describedby={noPostGauntletYears ? noYearsNoteId : undefined}
               oninput={(event) => store.setPostGauntletLabSeasons(count(event))}
+              use:commitStored={{ read: () => fieldValue(plan?.post_gauntlet_lab_seasons) }}
               data-testid="life-stage-lab-seasons-input"
             />
           </label>
@@ -177,6 +180,7 @@
               value={fieldValue(plan?.post_gauntlet_spell_levels)}
               aria-describedby={noPostGauntletYears ? noYearsNoteId : undefined}
               oninput={(event) => store.setPostGauntletSpellLevels(count(event))}
+              use:commitStored={{ read: () => fieldValue(plan?.post_gauntlet_spell_levels) }}
               data-testid="life-stage-spell-levels-input"
             />
           </label>

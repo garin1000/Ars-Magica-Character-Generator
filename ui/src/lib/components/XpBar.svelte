@@ -2,7 +2,7 @@
   import type { RestrictedXpPool } from '../types';
   import { store } from '../state.svelte';
   import { formatSigned, generalXpAllocation, restrictedPoolLabel, U32_MAX } from '../derive';
-  import { tooltip } from '../actions';
+  import { commitStored, tooltip } from '../actions';
   import BudgetBonusChip from './BudgetBonusChip.svelte';
 
   // One XP summary shared by the Experience, Abilities, Arts and Spells tabs: all
@@ -162,6 +162,7 @@
           placeholder="0"
           value={typedPool || ''}
           oninput={onPool}
+          use:commitStored={{ read: () => typedPool || '' }}
           data-testid="{prefix}xp-pool"
         />
       {/if}

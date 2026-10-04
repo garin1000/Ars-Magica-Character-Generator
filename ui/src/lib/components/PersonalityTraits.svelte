@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import Spinner from './Spinner.svelte';
 
   const traits = $derived(store.entity.personality_traits ?? []);
@@ -49,6 +50,7 @@
                   i,
                   Number((e.currentTarget as HTMLInputElement).value) || 0,
                 )}
+              use:commitStored={{ read: () => trait.value }}
               data-testid="personality-value-{i}"
             />
           {/snippet}

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import {
     abilityCategoryLabel,
     abilityDisplayName,
@@ -98,13 +99,15 @@
   // leave `store.setParamAt`'s write as the only source of truth for what is
   // shown. An out-of-range or non-integer value is clamped into range (a
   // blank box clears the choice, the same "not yet made" reading `onTypeText`
-  // already gives an empty string).
-  function onTypeNumber(
+  // already gives an empty string). Run by `commitStored`, which then shows the
+  // stored value — a clamp that leaves it unchanged gives Svelte nothing to
+  // re-render (N2).
+  function commitTypeNumber(
     key: string,
     range: { min: number; max: number } | undefined,
-    event: Event,
+    typed: string,
   ) {
-    const raw = (event.currentTarget as HTMLInputElement).value.trim();
+    const raw = typed.trim();
     if (raw === '') {
       setParam(key, '');
       return;
@@ -815,7 +818,7 @@
            control. `min`/`max` come from the parameter's own `type` (the
            bound lives there, not on `domain` — see `numberRange`); the
            browser's own spinner/validity affordance guides the *keyboard*,
-           but the actual clamp is enforced in `onTypeNumber` on commit, since
+           but the actual clamp is enforced in `commitTypeNumber` on commit, since
            an out-of-range value would otherwise round-trip through
            `setParamAt` unclamped and only be caught by the engine's
            `unknown_param_value` after a revalidate. -->
@@ -826,7 +829,10 @@
               min={range?.min}
               max={range?.max}
               value={selection.params?.[param.key] ?? ''}
-              onchange={(e) => onTypeNumber(param.key, range, e)}
+              use:commitStored={{
+                read: () => String(selection.params?.[param.key] ?? ''),
+                commit: (raw) => commitTypeNumber(param.key, range, raw),
+              }}
               data-testid="param-{selection.ref}-{param.key}-{suffix}"
             />
           {:else}

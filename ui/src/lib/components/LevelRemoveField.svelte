@@ -10,6 +10,8 @@
   // component's own template). This field and the button use only classes
   // already global in `app.css` (`.field.inline`, `.icon-btn`), so factoring
   // exactly this subset carries no such risk.
+  import { commitStored } from '../actions';
+
   let {
     levelLabel,
     levelValue,
@@ -41,6 +43,7 @@
     max={levelMax}
     value={levelValue}
     oninput={(e) => onLevelInput(Number((e.currentTarget as HTMLInputElement).value))}
+    use:commitStored={{ read: () => levelValue }}
     data-testid={levelTestid}
   />
 </label>

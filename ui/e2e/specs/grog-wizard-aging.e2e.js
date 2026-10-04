@@ -1086,9 +1086,8 @@ describe('the aging crisis', () => {
 //
 //  1. Age and birth year are two views of one fact — edit either, the other follows,
 //     against this document's saga year.
-//  2. A saga year BEFORE the birth year clamps the derived age to 0 and says why,
-//     rather than underflowing the entity's unsigned `age`
-//     (`saga_year_before_birth_year`, a warning on the `concept` phase).
+//  2. A typed birth year is held to saga year - 1 (N3, D84.2), so no age 0 is
+//     derived from it and `saga_year_before_birth_year` is not raised.
 //  3. Editing the saga year rewrites NEITHER stored value. A silent recompute would
 //     fabricate ages that skipped their aging rolls (D3.3).
 //  4. But it DOES dirty the document and it IS written to the file — that is the
@@ -1175,30 +1174,21 @@ describe('the saga year', () => {
     await expectValue(BIRTH_YEAR_INPUT, 1175, 'age 45 in a 1220 saga is a birth year of 1175');
   });
 
-  it('clamps the age to zero and says why when the saga year precedes the birth year', async () => {
-    // `birth_year` is i32 and `age` is u32, so this is the one pair that could
-    // underflow. It is an advisory, not an error: impossible, but not illegal.
+  it('holds a typed birth year to saga year - 1, so no age 0 is derived (N3)', async () => {
+    // N3 (D84.2): the latest birth year is saga year - 1 — age at least 1, the floor
+    // the age field keeps. A year past it never reaches the store while typing, and
+    // committing the field (leaving it) clamps it and shows the stored year. So the
+    // engine is never asked for the age-0 pair, and `saga_year_before_birth_year`
+    // stays down.
+    expect(await $(BIRTH_YEAR_INPUT).getAttribute('max')).toBe('1219');
     await type(BIRTH_YEAR_INPUT, 1250);
-    await expectValue(AGE_INPUT, 0, 'a character not yet born reads as age 0');
+    await $(AGE_INPUT).click();
+    await expectValue(BIRTH_YEAR_INPUT, 1219, 'a committed 1250 shows the clamped 1219');
+    await expectValue(AGE_INPUT, 1, 'saga year - 1 is age 1');
+    expect(await issueCount(CLAMP_CODE)).toBe(0);
 
-    await browser.waitUntil(async () => (await issueCount(CLAMP_CODE)) === 1, {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'an impossible age/birth-year pair must be reported on the concept step',
-    });
-    const row = await $(`${DOCKED_ISSUES} [data-code="${CLAMP_CODE}"]`);
-    expect(await row.getAttribute('data-severity')).toBe('warning');
-    const text = clean(await row.getText());
-    // A sentence naming both years, never its own code.
-    expect(text).not.toContain(CLAMP_CODE);
-    expect(text).toContain('1220');
-    expect(text).toContain('1250');
-
-    // Fixing either half clears it.
+    // The next test reads this pair back.
     await type(BIRTH_YEAR_INPUT, 1190);
-    await browser.waitUntil(async () => (await issueCount(CLAMP_CODE)) === 0, {
-      timeout: STEP_TIMEOUT,
-      timeoutMsg: 'a possible pair must clear the advisory',
-    });
     await expectValue(AGE_INPUT, 30, 'the age follows the corrected birth year');
   });
 

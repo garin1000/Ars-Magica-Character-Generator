@@ -1,25 +1,26 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { I32_MAX } from '../derive';
+  import { commitStored } from '../actions';
   import { REALMS, type Realm } from '../types';
 
-  // The store clamps the birth year below at saga year - max_age (slice A1), and
-  // every prefix of an ordinary year ("1", "11", "119") lies under that bound. So a
-  // keystroke only reaches the store once the typed value is in bounds; a partial
-  // value below it stays in the field as typed, and is clamped when committed.
+  // The store clamps the birth year to [saga year - max_age, saga year - 1] (slice A1,
+  // N3), and every prefix of an ordinary year ("1", "11", "119") lies under the lower
+  // bound while digits typed in front of a year overshoot the upper one. So a
+  // keystroke only reaches the store once the typed value is in bounds; anything else
+  // stays in the field as typed, and is clamped when committed.
   function onBirthYearInput(event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
-    if (raw !== '' && Number(raw) < store.earliestBirthYear) return;
+    if (raw !== '') {
+      const year = Number(raw);
+      if (year < store.earliestBirthYear || year > store.latestBirthYear) return;
+    }
     store.setBirthYear(raw === '' ? null : Number(raw));
   }
 
-  // Commit (blur or Enter): whatever is typed goes to the store, which clamps it, and
-  // the field shows the stored value — written back by hand, because a clamp that
-  // leaves the stored year unchanged gives Svelte nothing to re-render.
-  function onBirthYearChange(event: Event) {
-    const input = event.currentTarget as HTMLInputElement;
-    store.setBirthYear(input.value === '' ? null : Number(input.value));
-    input.value = String(store.entity.birth_year ?? '');
+  // Commit (blur or Enter): `commitStored` hands the typed text to the store, which
+  // clamps it, then shows the stored year (N2).
+  function commitBirthYear(raw: string) {
+    store.setBirthYear(raw === '' ? null : Number(raw));
   }
 
   function onConceptRealm(event: Event) {
@@ -58,10 +59,10 @@
     <input
       type="number"
       min={store.earliestBirthYear}
-      max={I32_MAX}
+      max={store.latestBirthYear}
       value={store.entity.birth_year ?? ''}
       oninput={onBirthYearInput}
-      onchange={onBirthYearChange}
+      use:commitStored={{ read: () => store.entity.birth_year, commit: commitBirthYear }}
       data-testid="identity-birth-year"
     />
   </label>

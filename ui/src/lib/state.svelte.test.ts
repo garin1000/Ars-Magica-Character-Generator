@@ -1993,27 +1993,30 @@ describe('the saga year and the age ↔ birth-year link', () => {
     expect(vi.mocked(ipc.deriveBirthYear)).not.toHaveBeenCalled();
   });
 
-  it('clamps the age to zero and warns when the saga year precedes the birth year', async () => {
-    // The clamp and the advisory are the engine's, not the store's: `birth_year` is
-    // i32 and `age` is u32, so the subtraction has exactly one correct home.
-    vi.mocked(ipc.deriveAge).mockResolvedValue({
-      age: 0,
-      issues: [
-        {
-          severity: 'warning',
-          code: 'saga_year_before_birth_year',
-          phase: 'concept',
-          args: { saga_year: '1220', birth_year: '1250' },
-        },
-      ],
-    });
+  // N3 (D84.2) reversed this pin: a typed birth year after the saga year used to be
+  // stored and the engine derived age 0 plus `saga_year_before_birth_year`. The store
+  // now clamps it to saga year - 1, so the engine is never asked to derive age 0 from
+  // a typed year. The advisory still arises from a loaded save or a saga year moved
+  // back under the birth year, and still clears once the pair becomes possible.
+  it('clamps a typed birth year after the saga year, so no age 0 is derived from it', async () => {
+    vi.mocked(ipc.deriveAge).mockResolvedValue({ age: 1, issues: [] });
     store.setBirthYear(1250);
     await vi.runAllTimersAsync();
 
-    expect(store.entity.age).toBe(0);
-    expect(store.sagaIssues.map((issue) => issue.code)).toEqual(['saga_year_before_birth_year']);
+    expect(store.entity.birth_year).toBe(1219);
+    expect(vi.mocked(ipc.deriveAge)).toHaveBeenCalledWith(1220, 1219, null);
+    expect(store.entity.age).toBe(1);
+    expect(store.sagaIssues).toEqual([]);
 
-    // And it clears again once the pair becomes possible.
+    // An advisory left by a loaded or saga-shifted pair clears on the next edit.
+    store.sagaIssues = [
+      {
+        severity: 'warning',
+        code: 'saga_year_before_birth_year',
+        phase: 'concept',
+        args: { saga_year: '1220', birth_year: '1250' },
+      },
+    ];
     vi.mocked(ipc.deriveAge).mockResolvedValue({ age: 30, issues: [] });
     store.setBirthYear(1190);
     await vi.runAllTimersAsync();
@@ -2730,8 +2733,10 @@ describe('integer clamps at the Tauri boundary', () => {
   });
 
   it('clamps the i32-backed birth year and aging-log year at both ends', () => {
+    // The top is the rules bound, saga year - 1 (N3, D84.2), which always lies inside
+    // the i32 width; the bottom is still the width when no maximum age is stated.
     store.setBirthYear(3e9);
-    expect(store.entity.birth_year).toBe(2147483647);
+    expect(store.entity.birth_year).toBe(store.entity.saga_year - 1);
     store.setBirthYear(-3e9);
     expect(store.entity.birth_year).toBe(-2147483648);
     // An empty field still clears it rather than clamping to 0.

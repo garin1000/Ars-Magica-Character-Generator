@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import {
     formatSigned,
     maxAbilityScore,
@@ -140,6 +141,7 @@
           placeholder={String(profileBase)}
           value={store.entity.spell_levels_override ?? ''}
           oninput={onOverride}
+          use:commitStored={{ read: () => store.entity.spell_levels_override }}
           data-testid="spell-levels-base"
         />
       {/if}

@@ -212,6 +212,45 @@ export const tooltip: Action<HTMLElement, TooltipContent | undefined> = (node, c
   };
 };
 
+/** What {@link commitStored} needs: how to read the stored value, and optionally how
+ *  to store the typed text (parse, clamp and set — the one owner of the clamp). */
+export interface CommitStoredParams {
+  read: () => number | string | null | undefined;
+  commit?: (raw: string) => void;
+}
+
+/**
+ * Show the stored value in a number field once an edit is committed (blur or Enter:
+ * the `change` event), never while typing, so a typed prefix is never fought (N2).
+ *
+ * A field bound one-way (`value={…}`) to a clamping setter otherwise keeps whatever
+ * was typed whenever the clamp leaves the stored value unchanged ("5000" in an age
+ * field holding 500), because Svelte has nothing new to render. On commit this runs
+ * the optional `commit(raw)`, then writes `read()` back into the field. A field that
+ * still shows the stored value was not edited, so its commit is skipped: a loaded
+ * value the setter would now clamp survives a visit to the field. The write-back
+ * itself is DOM-only and never touches the document, so it cannot dirty it.
+ */
+export const commitStored: Action<HTMLInputElement, CommitStoredParams> = (node, params) => {
+  let current = params;
+  const shown = (): string => String(current.read() ?? '');
+
+  const onChange = () => {
+    if (node.value !== shown()) current.commit?.(node.value);
+    node.value = shown();
+  };
+
+  node.addEventListener('change', onChange);
+  return {
+    update(next: CommitStoredParams) {
+      current = next;
+    },
+    destroy() {
+      node.removeEventListener('change', onChange);
+    },
+  };
+};
+
 /**
  * Reserve a right-edge gutter on the `.item-name` equal to the width of the
  * `.badges` overlaid on top of it. The name then word-wraps within the narrower

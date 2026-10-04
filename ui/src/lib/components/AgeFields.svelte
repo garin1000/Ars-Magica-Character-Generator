@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
 
   /**
    * Show the age as a read-out instead of an input.
@@ -44,6 +45,7 @@
         max={store.ageInputMax}
         value={age ?? ''}
         oninput={onAge}
+        use:commitStored={{ read: () => store.entity.age }}
         data-testid="age-input"
       />
     </label>

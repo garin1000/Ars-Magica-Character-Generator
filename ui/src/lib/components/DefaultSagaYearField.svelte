@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import { I32_MAX, I32_MIN } from '../derive';
 
   const defaultSagaYear = $derived(store.defaultSagaYear);
@@ -29,6 +30,7 @@
     max={I32_MAX}
     value={defaultSagaYear}
     oninput={onDefaultSagaYear}
+    use:commitStored={{ read: () => defaultSagaYear }}
     data-testid="default-saga-year-input"
   />
 </label>

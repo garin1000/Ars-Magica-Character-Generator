@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import { I32_MAX, I32_MIN } from '../derive';
 
   // Split out of `DerivedTotalsPanel.svelte` (V26, full-audit round). Magus-only
@@ -71,6 +72,7 @@
       value={aura}
       aria-describedby={clampedEntry ? 'derived-aura-out-of-range' : undefined}
       oninput={onAura}
+      use:commitStored={{ read: () => aura }}
       data-testid="derived-aura-input"
     />
   </label>

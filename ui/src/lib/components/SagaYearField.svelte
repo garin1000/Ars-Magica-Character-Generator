@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import { I32_MAX, I32_MIN } from '../derive';
 
   const sagaYear = $derived(store.entity.saga_year);
@@ -36,6 +37,7 @@
       max={I32_MAX}
       value={sagaYear}
       oninput={onSagaYear}
+      use:commitStored={{ read: () => sagaYear }}
       data-testid="saga-year-input"
     />
   </label>

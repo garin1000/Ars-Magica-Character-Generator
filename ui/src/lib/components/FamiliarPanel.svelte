@@ -1,6 +1,7 @@
 <script lang="ts">
   import { formatSigned } from '../derive';
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import { CHARACTERISTICS, REALMS, type Characteristic, type Realm } from '../types';
   import ConfirmPrompt from './ConfirmPrompt.svelte';
   import Spinner from './Spinner.svelte';
@@ -70,6 +71,7 @@
         max="127"
         value={familiar.size ?? 0}
         oninput={(e) => store.setFamiliarSize(num(e))}
+        use:commitStored={{ read: () => familiar?.size ?? 0 }}
         data-testid="familiar-size"
       />
     </label>
@@ -100,6 +102,7 @@
           max="255"
           value={might.score}
           oninput={(e) => store.setFamiliarMightScore(num(e))}
+          use:commitStored={{ read: () => might?.score }}
           data-testid="familiar-might-score"
         />
       </label>
@@ -135,6 +138,9 @@
             max="127"
             value={characteristics[characteristic as Characteristic] ?? 0}
             oninput={(e) => store.setFamiliarCharacteristic(characteristic, num(e))}
+            use:commitStored={{
+              read: () => characteristics[characteristic as Characteristic] ?? 0,
+            }}
             data-testid="familiar-char-{characteristic}"
           />
         </label>
@@ -205,6 +211,10 @@
             max="5"
             value={familiar[`cord_${cord}` as 'cord_gold' | 'cord_silver' | 'cord_bronze'] ?? 0}
             oninput={(e) => store.setFamiliarCord(cord as 'gold' | 'silver' | 'bronze', num(e))}
+            use:commitStored={{
+              read: () =>
+                familiar?.[`cord_${cord}` as 'cord_gold' | 'cord_silver' | 'cord_bronze'] ?? 0,
+            }}
             data-testid="familiar-cord-{cord}"
           />
         </label>

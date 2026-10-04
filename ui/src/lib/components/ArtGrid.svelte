@@ -11,7 +11,7 @@
     rowWarningText,
     scoreSourceLines,
   } from '../derive';
-  import { tooltip, type TooltipContent } from '../actions';
+  import { commitStored, tooltip, type TooltipContent } from '../actions';
   import type { Art } from '../types';
   import Spinner from './Spinner.svelte';
 
@@ -144,6 +144,7 @@
                       art.id,
                       Number((e.currentTarget as HTMLInputElement).value),
                     )}
+                  use:commitStored={{ read: () => bankedXpOf(art.id) }}
                   data-testid="art-banked-xp-{art.id}"
                 /><span class="banked-xp-unit" aria-hidden="true">{store.t('xp-unit-abbr')}</span>
                 {#if bonus !== 0}

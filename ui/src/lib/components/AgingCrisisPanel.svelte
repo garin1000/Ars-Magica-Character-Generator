@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import { displayName, formatSigned, paramHint } from '../derive';
   import type { CrisisAllowance, CrisisModifier } from '../ipc';
   import type { Characteristic } from '../types';
@@ -75,6 +76,7 @@
       max={crisisDieBounds?.max}
       value={draft.crisisDie ?? ''}
       oninput={onCrisisDie}
+      use:commitStored={{ read: () => draft.crisisDie }}
       data-testid="crisis-die-input"
     />
   </label>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import { formatSigned, resolveIssueArgs } from '../derive';
   import { CHARACTERISTICS } from '../types';
   import type { AgingNote, AgingPointAward } from '../ipc';
@@ -156,6 +157,7 @@
         min="0"
         value={draft.die ?? ''}
         oninput={onDie}
+        use:commitStored={{ read: () => draft.die }}
         data-testid="aging-die-input"
       />
     </label>
@@ -210,6 +212,7 @@
                     min="0"
                     value={draft.distribution[characteristic] ?? ''}
                     oninput={(event) => onDistribute(characteristic, event)}
+                    use:commitStored={{ read: () => draft.distribution[characteristic] }}
                     data-testid="aging-distribute-{characteristic}"
                   />
                 </label>

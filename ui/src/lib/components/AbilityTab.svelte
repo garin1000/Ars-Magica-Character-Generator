@@ -22,7 +22,7 @@
     UNBOUGHT_ROW_INDEX,
     type IndexedAbilityScore,
   } from '../derive';
-  import { tooltip, withReason, type TooltipContent } from '../actions';
+  import { commitStored, tooltip, withReason, type TooltipContent } from '../actions';
   import type {
     Ability,
     AbilityCategory,
@@ -501,6 +501,7 @@
                       i,
                       Number((e.currentTarget as HTMLInputElement).value),
                     )}
+                  use:commitStored={{ read: () => bankedXpOf(entry) }}
                   data-testid="ability-banked-xp-{entry.ability}-{id}"
                 /><span class="banked-xp-unit" aria-hidden="true">{store.t('xp-unit-abbr')}</span>
               {/if}

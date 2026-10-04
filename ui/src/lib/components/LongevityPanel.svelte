@@ -1,5 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import { formatSigned } from '../derive';
   import type { LongevitySource } from '../types';
 
@@ -54,6 +55,7 @@
         max="127"
         value={longevity.bonus ?? ''}
         oninput={onBonus}
+        use:commitStored={{ read: () => longevity?.bonus }}
         data-testid="longevity-bonus"
       />
     </label>

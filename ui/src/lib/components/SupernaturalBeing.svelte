@@ -1,6 +1,7 @@
 <script lang="ts">
   import { formatSigned } from '../derive';
   import { store } from '../state.svelte';
+  import { commitStored } from '../actions';
   import { REALMS, type Realm } from '../types';
   import LevelRemoveField from './LevelRemoveField.svelte';
 
@@ -62,6 +63,7 @@
               max="255"
               value={might.score}
               oninput={(e) => store.setMightScore(num(e))}
+              use:commitStored={{ read: () => might?.score }}
               data-testid="might-score"
             />
           </label>
@@ -127,6 +129,7 @@
                       i,
                       Number((e.currentTarget as HTMLInputElement).value),
                     )}
+                  use:commitStored={{ read: () => power.penetration ?? 0 }}
                   data-testid="power-penetration-{i}"
                 />
               </label>
@@ -186,6 +189,7 @@
                 max="65535"
                 value={power.penetration ?? 0}
                 oninput={(e) => store.setFocusPowerPenetration(i, num(e))}
+                use:commitStored={{ read: () => power.penetration ?? 0 }}
                 data-testid="focus-power-penetration-{i}"
               />
             </label>

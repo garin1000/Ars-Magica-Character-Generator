@@ -851,6 +851,15 @@ presumption of correctness.
    (`AbilityParameterCombo.svelte`); a slot pick travels to the engine by its shown name.
    Typed text is not converted while the player types.
 
+2. **Number fields show what is stored; the birth year has an upper bound** (N2, N3).
+   (a) Every store-bound number field carries `actions.ts::commitStored`: on commit
+   (blur/Enter) the typed text goes to the setter, which clamps, and the field shows the
+   stored value; nothing is rewritten while typing, and a field still showing the stored
+   value is not re-committed. A source-scan guard requires the action or a
+   `commitStored-exempt` reason on every `type="number"`. (b) The latest birth year is
+   saga year - 1 (age ≥ 1, as `setAge`); a loaded later year is kept until the field is
+   edited.
+
 3. **A split "Minor or Major" entry shows its magnitude in square brackets** (N11).
    Where the book prints ONE entry taken at either magnitude and the catalogue splits
    it into two items, the name carries the magnitude in brackets: "Ambitious [Major]",
