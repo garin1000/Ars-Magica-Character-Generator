@@ -10229,7 +10229,7 @@ fn false_power_admits_the_named_ids_but_not_an_arbitrary_other_hermetic_virtue()
 
 /// The row's original complaint was that the copies "do not name which
 /// Supernatural Virtue they taint", so the *name* has to say it: without a
-/// `{virtue}` placeholder the app's row would read "False Power (Minor)" three
+/// `{virtue}` placeholder the app's row would read "False Power [Minor]" three
 /// times over, telling the player nothing. Both locales, since a placeholder in
 /// one and not the other is a sheet that changes meaning with the language.
 #[test]

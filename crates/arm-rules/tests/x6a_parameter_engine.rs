@@ -363,7 +363,7 @@ mod e3_ability_category_narrowing {
         );
     }
 
-    /// Representative red (§ 4, e3): Magian Lineage (Major)'s `abilities`
+    /// Representative red (§ 4, e3): Magian Lineage [Major]'s `abilities`
     /// parameter narrows to Arcane/Supernatural via `require_ability_categories`
     /// AND subtracts `ability.true_names` via `forbid_ids` — the D34-style
     /// whitelist mirror.

@@ -579,12 +579,31 @@ fn literal_substituted(name: &str) -> String {
     out
 }
 
+/// The bracketed magnitude a split "Minor or Major" entry carries in its
+/// display name (D84.3: "Ambitious [Major]", „Ehrgeizig [Klein]").
+const BRACKETED_MAGNITUDES: &[&str] = &["[Minor]", "[Major]", "[Klein]", "[Groß]"];
+
+/// Removes a bracketed magnitude (and the space before it), so a split
+/// entry is compared with the table's base-name row: "Ambitious [Major]" ->
+/// "Ambitious", "False Power [Minor]: {virtue}" -> "False Power: {virtue}".
+/// A separate step on purpose, NOT a [`PLACEHOLDER_WORDS`] entry: the
+/// magnitude is a display convention, not a parameter, and a parenthesised
+/// `(Klein)` keeps distinguishing what it distinguished before.
+fn strip_bracketed_magnitude(s: &str) -> String {
+    BRACKETED_MAGNITUDES
+        .iter()
+        .fold(s.to_string(), |acc, bracket| {
+            acc.replace(&format!(" {bracket}"), "").replace(bracket, "")
+        })
+}
+
 fn match_key(s: &str) -> String {
-    marker_form(s).to_lowercase()
+    marker_form(&strip_bracketed_magnitude(s)).to_lowercase()
 }
 
 fn literal_match_key(s: &str) -> String {
-    collapse_ws(&strip_whitelisted_parens(&literal_substituted(s))).to_lowercase()
+    let base = strip_bracketed_magnitude(s);
+    collapse_ws(&strip_whitelisted_parens(&literal_substituted(&base))).to_lowercase()
 }
 
 /// The DE equality check, used only AFTER [`find_match`] has already
@@ -595,7 +614,8 @@ fn literal_match_key(s: &str) -> String {
 /// does not carry the collision risk that made the EN lookup key
 /// marker-preserving (`Poor {characteristic}` vs the unrelated Flaw `Poor`).
 fn normalize_de(s: &str) -> String {
-    let step1 = delete_curly(s);
+    let base = strip_bracketed_magnitude(s);
+    let step1 = delete_curly(&base);
     let step2 = delete_whitelisted_parens(&step1);
     collapse_ws(&step2)
 }
@@ -1001,4 +1021,57 @@ fn self_test_rejects_a_wrong_synthetic_name() {
         normalize_de("Völlig falscher Synthetischer Name"),
         "self-test: the comparison must reject a wrong synthetic name"
     );
+}
+
+/// [`strip_bracketed_magnitude`] removes exactly a bracketed magnitude and
+/// the space before it — nothing else: a parenthesised `(Groß)` and an
+/// unrelated bracket stay.
+#[test]
+fn self_test_strips_only_a_bracketed_magnitude() {
+    assert_eq!(strip_bracketed_magnitude("Ambitious [Major]"), "Ambitious");
+    assert_eq!(strip_bracketed_magnitude("Ehrgeizig [Klein]"), "Ehrgeizig");
+    assert_eq!(
+        strip_bracketed_magnitude("Falsche Macht [Groß]: {virtue}"),
+        "Falsche Macht: {virtue}"
+    );
+    assert_eq!(
+        strip_bracketed_magnitude("Potent Magic [Minor]"),
+        "Potent Magic"
+    );
+    assert_eq!(
+        strip_bracketed_magnitude("Ehrgeizig (Groß)"),
+        "Ehrgeizig (Groß)"
+    );
+    assert_eq!(strip_bracketed_magnitude("Foo [Bar]"), "Foo [Bar]");
+    assert_eq!(
+        strip_bracketed_magnitude("Minor Magical Focus"),
+        "Minor Magical Focus"
+    );
+}
+
+/// The split "Minor or Major" entries ARE compared with the table's
+/// base-name rows (D84.3): both halves of a real pair resolve to the
+/// untagged `tugenden-fehler.md` row `Ambitious | Ehrgeizig`, and both
+/// shipped DE names agree with it once the bracket is stripped.
+#[test]
+fn bracketed_magnitude_pairs_are_compared_with_the_table_base_name() {
+    let en = names(EN_I18N);
+    let de = names(DE_I18N);
+    let rows = all_rows();
+    for id in ["flaw.ambitious_major", "flaw.ambitious_minor"] {
+        let en_name = en.get(id).expect("EN name exists");
+        let de_name = de.get(id).expect("DE name exists");
+        let table_de = match find_match(en_name, &rows) {
+            Match::Found(de) => de,
+            other => panic!(
+                "{id}: EN \"{en_name}\" must resolve to the table's base-name row, got {other:?}"
+            ),
+        };
+        assert_eq!(table_de, "Ehrgeizig", "{id}: wrong table row");
+        assert_eq!(
+            normalize_de(de_name),
+            normalize_de(table_de),
+            "{id}: shipped DE \"{de_name}\" must match the table's \"{table_de}\""
+        );
+    }
 }

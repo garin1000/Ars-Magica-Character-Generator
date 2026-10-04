@@ -636,7 +636,7 @@ fn magian_lineage_major_requires_exactly_three_arcane_or_supernatural_abilities(
         issue_codes(&martial, &rs)
             .iter()
             .any(|c| c == "unknown_param_value"),
-        "a Martial Ability must not resolve Magian Lineage (Major)'s Arcane/Supernatural-only \
+        "a Martial Ability must not resolve Magian Lineage [Major]'s Arcane/Supernatural-only \
          parameter"
     );
 }

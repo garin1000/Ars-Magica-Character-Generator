@@ -1679,7 +1679,7 @@ fn the_berserker_matches_the_book() {
     // matching the book.
     assert_eq!(error_codes(&berserker, &ruleset), codes(&[]));
     // DISAGREEMENT B3 (docs/book-template-conformance.md). Short Attention Span
-    // and Wrathful (Minor) are both Personality Flaws, and the grog rule is "You
+    // and Wrathful [Minor] are both Personality Flaws, and the grog rule is "You
     // should not take more than one Personality Flaw" (ArMDE:2827 `#### Grogs`). The engine is
     // right and the template breaks the book's own grog checklist; it is a
     // guideline ("should"), hence a warning rather than an error.

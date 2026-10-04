@@ -91,12 +91,12 @@ const EXPECTED: &[(&str, &str, Option<&str>)] = &[
     ("flaw.apostate", "Abtrünniger", None),
     (
         "flaw.gender_nonconforming_major",
-        "Geschlechtsnonkonform (Groß)",
+        "Geschlechtsnonkonform [Groß]",
         None,
     ),
     (
         "flaw.gender_nonconforming_minor",
-        "Geschlechtsnonkonform (Klein)",
+        "Geschlechtsnonkonform [Klein]",
         None,
     ),
     // -- Revert to the pre-correction table name (D31) --

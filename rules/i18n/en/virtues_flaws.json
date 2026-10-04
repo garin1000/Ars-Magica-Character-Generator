@@ -112,11 +112,11 @@
     "description": "Probably due to a curse or a magical disaster, you age twice as fast as normal people. Your effective age (which applies as if it were your actual age when creating a Longevity Ritual, and when making rolls on the aging table) increases two years for every year that passes, and you make two aging rolls each year. It is possible to halt or slow the decline by supernatural means, such as Longevity Rituals, but they must deal with your effective age, not your chronological age."
   },
   "flaw.ambitious_major": {
-    "name": "Ambitious (Major)",
+    "name": "Ambitious [Major]",
     "summary": "You want to be the most successful or powerful person in the world in some respect."
   },
   "flaw.ambitious_minor": {
-    "name": "Ambitious (Minor)",
+    "name": "Ambitious [Minor]",
     "summary": "You want to be the most successful or powerful person in the world in some respect."
   },
   "flaw.anchored_to_the_land": {
@@ -138,11 +138,11 @@
     "description": "Your joints are stiff and often painful, making almost any prolonged movement difficult. You are at -3 to rolls involving repetitive movement, sustained over time. Occasionally, the pain is so great that you are seriously disabled. On any movement or combat botch, one of your joints may \"lock up,\" making the limb effectively useless (-6 to all rolls involving it) until you have a chance to rest it for a day or two."
   },
   "flaw.avaricious_major": {
-    "name": "Avaricious (Major)",
+    "name": "Avaricious [Major]",
     "summary": "You want money, lots of money."
   },
   "flaw.avaricious_minor": {
-    "name": "Avaricious (Minor)",
+    "name": "Avaricious [Minor]",
     "summary": "You want money, lots of money."
   },
   "flaw.baneful_circumstances": {
@@ -151,11 +151,11 @@
     "description": "Something about the character's supernatural nature weakens him in relatively common circumstances, such as when touching the ground or when in the presence of women. At these times, the character cannot recover Fatigue, heal wounds, or recover Might, and if at the end of the year the character has spent more than half of his time subject to these conditions, he must make an additional Aging roll even if he is normally immune to aging because of a Longevity Ritual or Might Score."
   },
   "flaw.beloved_rival_major": {
-    "name": "Beloved Rival (Major)",
+    "name": "Beloved Rival [Major]",
     "summary": "For a Minor Story Flaw, the character has a rival who is both fiercely protective of him and obsessed with opposing him at every turn."
   },
   "flaw.beloved_rival_minor": {
-    "name": "Beloved Rival (Minor)",
+    "name": "Beloved Rival [Minor]",
     "summary": "For a Minor Story Flaw, the character has a rival who is both fiercely protective of him and obsessed with opposing him at every turn."
   },
   "flaw.bigamist": {
@@ -281,27 +281,27 @@
     "description": "The character is the Animal Companion of another character (either a player character or a storyguide character) and therefore has little control over his own life. He is largely dependent on his master for food and shelter, and has an additional Personality Trait of \"Loyal to Master\" which represents this bond. Among people who know his master, the character is treated better than he would be, perhaps as that person's pet or bodyguard. Others most likely treat him as a brute or a dumb beast."
   },
   "flaw.compassionate_major": {
-    "name": "Compassionate (Major)",
+    "name": "Compassionate [Major]",
     "summary": "You help anyone who is wounded or in trouble."
   },
   "flaw.compassionate_minor": {
-    "name": "Compassionate (Minor)",
+    "name": "Compassionate [Minor]",
     "summary": "You help anyone who is wounded or in trouble."
   },
   "flaw.compulsion_major": {
-    "name": "Compulsion (Major)",
+    "name": "Compulsion [Major]",
     "summary": "You have an unfortunate urge that you have trouble resisting."
   },
   "flaw.compulsion_minor": {
-    "name": "Compulsion (Minor)",
+    "name": "Compulsion [Minor]",
     "summary": "You have an unfortunate urge that you have trouble resisting."
   },
   "flaw.compulsive_lying_major": {
-    "name": "Compulsive Lying (Major)",
+    "name": "Compulsive Lying [Major]",
     "summary": "Telling the truth is really hard for this character."
   },
   "flaw.compulsive_lying_minor": {
-    "name": "Compulsive Lying (Minor)",
+    "name": "Compulsive Lying [Minor]",
     "summary": "Telling the truth is really hard for this character."
   },
   "flaw.consumed_casting_tools": {
@@ -405,11 +405,11 @@
     "summary": "You feel responsible for someone, and bound to help if they are in trouble."
   },
   "flaw.depraved_major": {
-    "name": "Depraved (Major)",
+    "name": "Depraved [Major]",
     "summary": "The character seeks to undermine religion whenever possible, and generally tries to avoid the Dominion."
   },
   "flaw.depraved_minor": {
-    "name": "Depraved (Minor)",
+    "name": "Depraved [Minor]",
     "summary": "The character seeks to undermine religion whenever possible, and generally tries to avoid the Dominion."
   },
   "flaw.depressed": {
@@ -466,11 +466,11 @@
     "description": "After casting a spell, you must spend a round doing nothing but recovering your mental faculties."
   },
   "flaw.driven_major": {
-    "name": "Driven (Major)",
+    "name": "Driven [Major]",
     "summary": "You have some goal which you are determined to bring about."
   },
   "flaw.driven_minor": {
-    "name": "Driven (Minor)",
+    "name": "Driven [Minor]",
     "summary": "You have some goal which you are determined to bring about."
   },
   "flaw.dutybound": {
@@ -500,11 +500,11 @@
     "description": "The character's beauty draws revulsion and jealousy. This envy does not strike everyone, but vain persons of the character's gender are particularly susceptible to it. Characters with this Flaw may avoid its penalties by refusing to reveal their beauty to the world, which creates its own complications. A character lacking a positive Presence score may not have this Flaw."
   },
   "flaw.envious_major": {
-    "name": "Envious (Major)",
+    "name": "Envious [Major]",
     "summary": "You believe that everyone has it better than you do, and that they don't deserve their good fortune, while you do."
   },
   "flaw.envious_minor": {
-    "name": "Envious (Minor)",
+    "name": "Envious [Minor]",
     "summary": "You believe that everyone has it better than you do, and that they don't deserve their good fortune, while you do."
   },
   "flaw.environmental_magic_condition": {
@@ -566,12 +566,12 @@
     "summary": "The character has studied for a specific university license and failed his final examination."
   },
   "flaw.false_power": {
-    "name": "False Power (Major): {virtue}",
+    "name": "False Power [Major]: {virtue}",
     "summary": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation.",
     "description": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation. This quality could be because of something inherent to the Power, or perhaps because of the interference of Infernal agents. This Flaw can apply to Supernatural Virtues that define the character's background, like Faerie Blood, Diedne Magic, or even The Gift. In these cases, falsehood permeates the whole of the character's being, causing everything she does to seem unholy to those with the ability to sense it The False Power is often subtly changed by its Infernal aspect, making it more sinister or negative. Here are some examples:\n\n(False) Premonitions: The taint of the character's Premonitions Power leaves it vulnerable to Infernal manipulation, even if the character has Magic Resistance. Many of the character's premonitions are accurate, and pursuit of the stories they evoke is usually worthwhile. These valuable insights often lead characters to trust lies that a demon offers through the Power in order to manipulate their response to pivotal events.\n\n(False) Second Sight: The character is particularly likely to see through an illusion or deception when what he sees would lead him to sin. Sometimes he may see through mundane obstacles, if the information gained would tempt him to sinful acts.\n\n(False) Shapeshifter: The character can change his shape, but only into animals typically associated with the Infernal, such as a cat, a wolf, a raven, or a rat. When in these shapes, he seems unholy to those can recognize that quality.\n\nIt is quite possible that the character does not know that his Power is false. Once he does, he may find himself in a moral dilemma. Most people consider it a sin to use Powers associated with the Infernal realm for any reason, and would label him an infernalist if they discovered the nature of his Power. Yet his Power is also associated with another realm, making it more difficult to recognize it as Infernal, and leaving it unclear whether the Power is inherently evil or simply tainted by association. Perhaps the character believes it is not wrong for him to use his Powers, so long as he does not pursue evil ends with them.\n\nOnce the character recognizes that the Power has an unholy aspect, he may choose to treat it as an Infernal Power at any time, using the Infernal Power column of the realm interaction chart and thus giving him a bonus in Infernal auras. This may also grant him other benefits: like other infernalists he can boost his casting total with sacrifices, and use an Infernal Ceremony to include others in the activation, as described in Realms of Power: The Infernal, page 91. However, doing this removes any illusions about the Power's realm — even magical and faerie Powers can recognize that it is Infernal.\n\nIf the character realizes his Power is corrupted, he may decide to seek help from the Divine. Sincere repentance and participation in a form of ceremonial absolution allow the character to lose this Flaw, though this also takes away the Virtue it modifies. This is a heavy penance, but it is the only way to exorcise the evil influence of the Infernal realm, and of course there are far greater rewards in Heaven.\n\nThis Flaw may be taken multiple times, once for each appropriate Supernatural Virtue that the character possesses, but in each subsequent instance as a Minor Flaw rather than a Major one. Also note that this Flaw cannot apply to Supernatural Virtues that are affiliated to the Infernal realm in the first place, and the troupe may not allow it to apply to Virtues derived from the Divine."
   },
   "flaw.false_power_minor": {
-    "name": "False Power (Minor): {virtue}",
+    "name": "False Power [Minor]: {virtue}",
     "summary": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation.",
     "description": "One of the character's Supernatural Virtues is associated with the Infernal realm, in addition to the realm with which it would normally be associated, which causes it to appear unholy when subjected to Divine or Infernal investigation. This quality could be because of something inherent to the Power, or perhaps because of the interference of Infernal agents. This Flaw can apply to Supernatural Virtues that define the character's background, like Faerie Blood, Diedne Magic, or even The Gift. In these cases, falsehood permeates the whole of the character's being, causing everything she does to seem unholy to those with the ability to sense it The False Power is often subtly changed by its Infernal aspect, making it more sinister or negative. Here are some examples:\n\n(False) Premonitions: The taint of the character's Premonitions Power leaves it vulnerable to Infernal manipulation, even if the character has Magic Resistance. Many of the character's premonitions are accurate, and pursuit of the stories they evoke is usually worthwhile. These valuable insights often lead characters to trust lies that a demon offers through the Power in order to manipulate their response to pivotal events.\n\n(False) Second Sight: The character is particularly likely to see through an illusion or deception when what he sees would lead him to sin. Sometimes he may see through mundane obstacles, if the information gained would tempt him to sinful acts.\n\n(False) Shapeshifter: The character can change his shape, but only into animals typically associated with the Infernal, such as a cat, a wolf, a raven, or a rat. When in these shapes, he seems unholy to those can recognize that quality.\n\nIt is quite possible that the character does not know that his Power is false. Once he does, he may find himself in a moral dilemma. Most people consider it a sin to use Powers associated with the Infernal realm for any reason, and would label him an infernalist if they discovered the nature of his Power. Yet his Power is also associated with another realm, making it more difficult to recognize it as Infernal, and leaving it unclear whether the Power is inherently evil or simply tainted by association. Perhaps the character believes it is not wrong for him to use his Powers, so long as he does not pursue evil ends with them.\n\nOnce the character recognizes that the Power has an unholy aspect, he may choose to treat it as an Infernal Power at any time, using the Infernal Power column of the realm interaction chart and thus giving him a bonus in Infernal auras. This may also grant him other benefits: like other infernalists he can boost his casting total with sacrifices, and use an Infernal Ceremony to include others in the activation, as described in Realms of Power: The Infernal, page 91. However, doing this removes any illusions about the Power's realm — even magical and faerie Powers can recognize that it is Infernal.\n\nIf the character realizes his Power is corrupted, he may decide to seek help from the Divine. Sincere repentance and participation in a form of ceremonial absolution allow the character to lose this Flaw, though this also takes away the Virtue it modifies. This is a heavy penance, but it is the only way to exorcise the evil influence of the Infernal realm, and of course there are far greater rewards in Heaven.\n\nThis Flaw may be taken multiple times, once for each appropriate Supernatural Virtue that the character possesses, but in each subsequent instance as a Minor Flaw rather than a Major one. Also note that this Flaw cannot apply to Supernatural Virtues that are affiliated to the Infernal realm in the first place, and the troupe may not allow it to apply to Virtues derived from the Divine."
   },
@@ -662,19 +662,19 @@
     "summary": "Appointed by the community council, the gabai is the local tax collector."
   },
   "flaw.gender_nonconforming_major": {
-    "name": "Gender Nonconforming (Major)",
+    "name": "Gender Nonconforming [Major]",
     "summary": "You do not conform to the expected behavior for a person of the gender that your society would assign to you in the absence of social cues such as clothes and behavior."
   },
   "flaw.gender_nonconforming_minor": {
-    "name": "Gender Nonconforming (Minor)",
+    "name": "Gender Nonconforming [Minor]",
     "summary": "You do not conform to the expected behavior for a person of the gender that your society would assign to you in the absence of social cues such as clothes and behavior."
   },
   "flaw.generous_major": {
-    "name": "Generous (Major)",
+    "name": "Generous [Major]",
     "summary": "You willingly give away your property to anyone who expresses a desire for it, even if they are not particularly deserving."
   },
   "flaw.generous_minor": {
-    "name": "Generous (Minor)",
+    "name": "Generous [Minor]",
     "summary": "You willingly give away your property to anyone who expresses a desire for it, even if they are not particularly deserving."
   },
   "flaw.greater_malediction": {
@@ -683,11 +683,11 @@
     "description": "You have been cursed by some supernatural power, in a way that greatly hinders you. The effects of the curse should be comparable to those of other Major Flaws. Indeed, almost any Flaw could be the result of a curse."
   },
   "flaw.greedy_major": {
-    "name": "Greedy (Major)",
+    "name": "Greedy [Major]",
     "summary": "You like to eat and drink, and do so to excess whenever given the chance."
   },
   "flaw.greedy_minor": {
-    "name": "Greedy (Minor)",
+    "name": "Greedy [Minor]",
     "summary": "You like to eat and drink, and do so to excess whenever given the chance."
   },
   "flaw.grudge": {
@@ -709,11 +709,11 @@
     "description": "The character's Perdo spells cannot permanently destroy anything; they temporarily disrupt the target, like Perdo Imaginem magic, but as soon as the duration has passed the target returns to its natural state as if nothing had happened, like a Muto effect. This means that a version of The Wound that Weeps (PeCo15), for example, briefly causes a painful, bleeding wound that immediately closes again. Likewise, Fist of Shattering (PeTe10) causes an object of stone or weaker material to briefly break apart, but then fuse itself together again. The character's Ritual Perdo spells function normally, however.\n\nThis weakness can be a boon to a crafty character. A maga might invent a spell to destroy a heavy rock at Concentration Duration, she could then cast it and lie in wait. When her enemy walks into the vacant space, she could release her concentration and crush her victim beneath it when it reforms. However, in most cases this limitation is a minor hindrance, as useful Perdo magic requires longer Durations."
   },
   "flaw.hatred_major": {
-    "name": "Hatred (Major)",
+    "name": "Hatred [Major]",
     "summary": "You hate someone or some group so much that hurting them dominates your life."
   },
   "flaw.hatred_minor": {
-    "name": "Hatred (Minor)",
+    "name": "Hatred [Minor]",
     "summary": "You hate someone or some group so much that hurting them dominates your life."
   },
   "flaw.hedge_wizard": {
@@ -729,11 +729,11 @@
     "summary": "You must be a Redcap or magus to take this Flaw."
   },
   "flaw.higher_purpose_major": {
-    "name": "Higher Purpose (Major)",
+    "name": "Higher Purpose [Major]",
     "summary": "Let others concern themselves with petty matters, you have a nobler goal."
   },
   "flaw.higher_purpose_minor": {
-    "name": "Higher Purpose (Minor)",
+    "name": "Higher Purpose [Minor]",
     "summary": "Let others concern themselves with petty matters, you have a nobler goal."
   },
   "flaw.hobbled": {
@@ -822,11 +822,11 @@
     "description": "One of your legs is weakened, whether since birth or through some accident. You move slowly and clumsily. Your base speed is a mere one mile per hour, and anyone can outrun you. You suffer a -6 penalty on rolls involving moving quickly or with agility, -3 on Dodge, and -1 on other combat scores."
   },
   "flaw.lecherous_major": {
-    "name": "Lecherous (Major)",
+    "name": "Lecherous [Major]",
     "summary": "You seek sexual contact with as many people as possible."
   },
   "flaw.lecherous_minor": {
-    "name": "Lecherous (Minor)",
+    "name": "Lecherous [Minor]",
     "summary": "You seek sexual contact with as many people as possible."
   },
   "flaw.leprosy": {
@@ -909,11 +909,11 @@
     "description": "Either by choice or circumstance, this character never seems to be able to stick at a task or job for longer than a season, usually following the work as it moves through the year. As a result, this character can't apply any experience points earned through an Advancement Total to an Ability or Art that they have already applied experience points to this year. Where they can't be applied to a different Ability or Art, the experience points are lost. Experience points gained through other means, such as Secondary Insight, are unaffected and may be applied normally."
   },
   "flaw.meddler_major": {
-    "name": "Meddler (Major)",
+    "name": "Meddler [Major]",
     "summary": "You want to fix other peoples' lives: arrange matches, teach children to sew \"properly,\" or tend the sick."
   },
   "flaw.meddler_minor": {
-    "name": "Meddler (Minor)",
+    "name": "Meddler [Minor]",
     "summary": "You want to fix other peoples' lives: arrange matches, teach children to sew \"properly,\" or tend the sick."
   },
   "flaw.mentor": {
@@ -1007,11 +1007,11 @@
     "description": "You are large because of fat, not muscle. You are at -1 to all rolls that involve moving quickly or gracefully and at -3 to all Fatigue rolls. You are not so large that your Size is increased, and you may take this Flaw along with the Virtues and Flaws that change your Size."
   },
   "flaw.obsessed_major": {
-    "name": "Obsessed (Major)",
+    "name": "Obsessed [Major]",
     "summary": "You are fixated on some prized object, action, or ideal."
   },
   "flaw.obsessed_minor": {
-    "name": "Obsessed (Minor)",
+    "name": "Obsessed [Minor]",
     "summary": "You are fixated on some prized object, action, or ideal."
   },
   "flaw.offensive_to_beings": {
@@ -1020,11 +1020,11 @@
     "description": "This Flaw is associated with one of six classes of beings: animals, mundane humans, divine beings, faeries, demons, or magical creatures. These last four include characters associated with the Divine, Faerie, Infernal, or Magic realm, respectively, through Supernatural Virtues or Flaws, as well as beings with Might.\n\nBeings of the chosen category react badly to the character, as if he had The Gift, which makes them very uncomfortable around him and gives him a -3 to all social interaction rolls with them.\n\nYou may not take this Flaw more than once, characters who are Offensive to more than one kind of being should take Magical Air instead. Characters with The Gift may take this Flaw only if they have the Gentle Gift, which makes this type of being react to them negatively while others are unaffected. Characters with Magical Air may not take it at all.\n\nIf you are offensive to animals, animals with a Might score react in different ways. In general, those that react negatively to The Gift react negatively to you, while those that react positively do not, unless you actually have The Gift."
   },
   "flaw.optimistic_major": {
-    "name": "Optimistic (Major)",
+    "name": "Optimistic [Major]",
     "summary": "You are convinced that everything will turn out for the best."
   },
   "flaw.optimistic_minor": {
-    "name": "Optimistic (Minor)",
+    "name": "Optimistic [Minor]",
     "summary": "You are convinced that everything will turn out for the best."
   },
   "flaw.outcast": {
@@ -1043,27 +1043,27 @@
     "description": "You command a small group (three to six persons) of outlaws. Your followers look up to you and do what you tell them within reason. However, you must occasionally stick up for the group or one of its members, as well as provide for them. You often have to deal with challenges to your leadership in one form or another. You are well known as an outlaw in the local area, with a Reputation level of 3. You are actively sought by the local lord, sheriff, or other such official. You may take Martial Abilities at character generation. Grogs may not take this Flaw."
   },
   "flaw.outsider_major": {
-    "name": "Outsider (Major)",
+    "name": "Outsider [Major]",
     "summary": "You belong to a group that is both readily identifiable and distrusted or disliked."
   },
   "flaw.outsider_minor": {
-    "name": "Outsider (Minor)",
+    "name": "Outsider [Minor]",
     "summary": "You belong to a group that is both readily identifiable and distrusted or disliked."
   },
   "flaw.overconfident_major": {
-    "name": "Overconfident (Major)",
+    "name": "Overconfident [Major]",
     "summary": "You have a completely unshakable faith in your own abilities."
   },
   "flaw.overconfident_minor": {
-    "name": "Overconfident (Minor)",
+    "name": "Overconfident [Minor]",
     "summary": "You have a completely unshakable faith in your own abilities."
   },
   "flaw.oversensitive_major": {
-    "name": "Oversensitive (Major)",
+    "name": "Oversensitive [Major]",
     "summary": "Something that others find merely unpleasant you consider intolerable."
   },
   "flaw.oversensitive_minor": {
-    "name": "Oversensitive (Minor)",
+    "name": "Oversensitive [Minor]",
     "summary": "Something that others find merely unpleasant you consider intolerable."
   },
   "flaw.pagan": {
@@ -1089,11 +1089,11 @@
     "summary": "You always expect the worst."
   },
   "flaw.pious_major": {
-    "name": "Pious (Major)",
+    "name": "Pious [Major]",
     "summary": "You are a fervent follower of your religion."
   },
   "flaw.pious_minor": {
-    "name": "Pious (Minor)",
+    "name": "Pious [Minor]",
     "summary": "You are a fervent follower of your religion."
   },
   "flaw.plagued_by_supernatural_entity": {
@@ -1153,11 +1153,11 @@
     "summary": "You have had a Conditional Curse (also known as a \"Geas\") cast upon you and must obey the restrictions of your prohibition or be penalized by the curse."
   },
   "flaw.proud_major": {
-    "name": "Proud (Major)",
+    "name": "Proud [Major]",
     "summary": "You believe that you are more important than just about everybody, and expect the appropriate respect."
   },
   "flaw.proud_minor": {
-    "name": "Proud (Minor)",
+    "name": "Proud [Minor]",
     "summary": "You believe that you are more important than just about everybody, and expect the appropriate respect."
   },
   "flaw.raised_from_the_dead": {
@@ -1176,19 +1176,19 @@
     "description": "The character occasionally manifests physical phenomena in the presence of supernatural powers. Pick one of the four Realms of Power; whenever he enters an aura of strength 4 or more aligned to that realm, or is affected by a power greater than fourth magnitude (20th level) from that realm, he suffers from the stigmata. Every individual suffers from stigmata differently, but the most common variants are dark marks appearing on the skin, blood issuing from orifices, spontaneous eruption of wounds, minor twisting of the limbs, or the acquisition of minor animal features. Whenever they manifest, the character loses a Long-Term Fatigue level that he cannot recover while he remains under the influence of that Realm. When he recovers the Fatigue level, the stigmata fade. If he ever takes a Warping point from exposure to his sensitive Realm, his stigmata erupt so violently that he takes a Light Wound as well as Fatigue, and the stigmata remain until he recovers from this wound."
   },
   "flaw.rebellious_major": {
-    "name": "Rebellious (Major)",
+    "name": "Rebellious [Major]",
     "summary": "You react adversely to any attempt to impose authority over you, and work against those who are in command."
   },
   "flaw.rebellious_minor": {
-    "name": "Rebellious (Minor)",
+    "name": "Rebellious [Minor]",
     "summary": "You react adversely to any attempt to impose authority over you, and work against those who are in command."
   },
   "flaw.reckless_major": {
-    "name": "Reckless (Major)",
+    "name": "Reckless [Major]",
     "summary": "You tend not to notice that situations are threatening, and certainly do not stop to consider whether they might be."
   },
   "flaw.reckless_minor": {
-    "name": "Reckless (Minor)",
+    "name": "Reckless [Minor]",
     "summary": "You tend not to notice that situations are threatening, and certainly do not stop to consider whether they might be."
   },
   "flaw.reclusive": {
@@ -1412,19 +1412,19 @@
     "description": "The character's life has been manipulated by demons to ensure that she will act in a certain way in response to important events, usually to her own detriment and in such a way as to further a particular demon's aims. This means that she is a tainted character.\n\nTainted characters are produced as tools, to influence pivotal events. This Flaw represents two factors: the events that the demons have designed the person to influence are likely to happen, and the person has been designed and conditioned to behave predictably when her moment of destiny arrives. Tainted people are likely, at their point of destiny, to choose to sin, and so cause terrible events. The repercussions of the tragedy they create often harm the tainted person. The predisposition toward sin at the character's pivotal moment should be represented with a sinful Personality Trait.\n\nTainted people have difficult lives, but are not doomed from the moment of their conception. They have five sources of hope.\n\n- Demons do not foresee the future, they simply predict it through extremely skilled judgments. Arbitrary occurrences can ruin their schemes. - The process of creating and training tainted people contains random factors. These include inherited Flaws, like Tainted with Evil or Disfigured, which are personally painful, but might distance the character from her designed destiny. - The character's relationships with other humans also provide unpredictable elements. Most significantly, virtuous humans may notice the tainted person's tendency toward a certain type of sin, and teach them to resist it. - Humans have free will. All deception aside, the tainted person still has the power to choose not to perform sins. The tainted person may not understand this, or may feel that the sin she performed is minor and justified given the situation in which she is presented with her choice, but the choice is still entirely and absolutely hers. - Finally, the agents of the Divine meddle in the plans of Infernal lords.\n\nTainted characters are designed for specific situations. Characters who struggle successfully against their destiny find that their creator cannot usually fashion an alternative situation to which the tainted person is perfectly suited. The tainted character loses the Tragic Life Flaw, but usually gains the Plagued by Supernatural Entity Flaw instead, as the demonic lord vents his spite on the character."
   },
   "flaw.true_friend_major": {
-    "name": "True Friend (Major)",
+    "name": "True Friend [Major]",
     "summary": "You have found the one person meant for you in all of creation, and the bond between the two of you cannot be sundered."
   },
   "flaw.true_friend_minor": {
-    "name": "True Friend (Minor)",
+    "name": "True Friend [Minor]",
     "summary": "You have found the one person meant for you in all of creation, and the bond between the two of you cannot be sundered."
   },
   "flaw.true_love_major": {
-    "name": "True Love (Major)",
+    "name": "True Love [Major]",
     "summary": "You have found the one person meant for you in all of creation, and the bond between the two of you cannot be sundered."
   },
   "flaw.true_love_minor": {
-    "name": "True Love (Minor)",
+    "name": "True Love [Minor]",
     "summary": "You have found the one person meant for you in all of creation, and the bond between the two of you cannot be sundered."
   },
   "flaw.twilight_prone": {
@@ -1527,12 +1527,12 @@
     "description": "You often see images related to emotionally or magically laden events. A vision might be of the past, a possible future, or a distant occurrence, and is often symbolic or confusing. Visions usually come to you at quiet times or in places connected with a powerful emotional or magical event, such as the site of a patricide or diabolic sacrifice. Your visions may warn you of dangers to come, or get you involved in matters you would otherwise have avoided. The visions come purely at the storyguide's discretion, and reveal only what he wants to reveal."
   },
   "flaw.vow_major": {
-    "name": "Vow (Major)",
+    "name": "Vow [Major]",
     "summary": "You have sworn to do something difficult, and breaking your vow is a serious matter.",
     "description": "You have sworn to do something difficult, and breaking your vow is a serious matter. Example vows include never raising a weapon, never speaking, or living in poverty. If you do fail to uphold your vow, you must perform some kind of atonement, whether it be religious penance or coming to terms with your failure in some other way. A Vow that is a Major Flaw must be a vow to do something, rather than refrain from something, so that it can drive you to act."
   },
   "flaw.vow_minor": {
-    "name": "Vow (Minor)",
+    "name": "Vow [Minor]",
     "summary": "You have sworn to do something difficult, and breaking your vow is a serious matter.",
     "description": "You have sworn to do something difficult, and breaking your vow is a serious matter. Example vows include never raising a weapon, never speaking, or living in poverty. If you do fail to uphold your vow, you must perform some kind of atonement, whether it be religious penance or coming to terms with your failure in some other way. A Vow that is a Major Flaw must be a vow to do something, rather than refrain from something, so that it can drive you to act."
   },
@@ -1619,11 +1619,11 @@
     "summary": "You look to others for guidance rather than to yourself."
   },
   "flaw.weakness_major": {
-    "name": "Weakness (Major)",
+    "name": "Weakness [Major]",
     "summary": "You have a soft spot for some sort of object or person."
   },
   "flaw.weakness_minor": {
-    "name": "Weakness (Minor)",
+    "name": "Weakness [Minor]",
     "summary": "You have a soft spot for some sort of object or person."
   },
   "flaw.weird_magic": {
@@ -1636,11 +1636,11 @@
     "summary": "The character has minor disfigurements that those skilled in folk lore recognize as belonging to diabolists."
   },
   "flaw.wrathful_major": {
-    "name": "Wrathful (Major)",
+    "name": "Wrathful [Major]",
     "summary": "You are prone to anger over the smallest issues, and your rage when you are thwarted in something major is terrible to behold."
   },
   "flaw.wrathful_minor": {
-    "name": "Wrathful (Minor)",
+    "name": "Wrathful [Minor]",
     "summary": "You are prone to anger over the smallest issues, and your rage when you are thwarted in something major is terrible to behold."
   },
   "folk_magic.abjuration": {
@@ -1828,12 +1828,12 @@
     "description": "The character is a member of a band of mercenaries and raiders, living a life of adventure according to a code of honor and discipline. He shares a bond of solidarity with his fellows, and they can depend on each other's loyalty. He has Standard Armaments, and may take Martial Abilities. He may choose to be the Adalil, the second-in-command, at no additional cost, getting an increase in both authority and responsibility. He is supported by his unit, and may not take the Poor Flaw or Wealthy Virtue.\n\nThese characters are from the Iberian Peninsula, and if they are particularly far from home the troupe may rule that this is not available as a social status."
   },
   "virtue.amorphous_major": {
-    "name": "Amorphous (Major)",
+    "name": "Amorphous [Major]",
     "summary": "The character is able to take on any human form, so long as it does not identifiably belong to a particular human being.",
     "description": "The character is able to take on any human form, so long as it does not identifiably belong to a particular human being. The character develops this ability because his body has adopted the almost-gaseous property of demonic flesh, so any apparent changes in size or fitness are cosmetic, and do not affect the character's statistics. Some amorphous people can select a single shape at midnight, which is the Major form of the Virtue. Its Minor form allows the character to change shape only after having performed a significant act linked to the Obsession of the sponsoring demon. The character may only change to his birth form by selecting it once the conditions of transformation have been met, or involuntarily changing shape when dying or entering holy ground."
   },
   "virtue.amorphous_minor": {
-    "name": "Amorphous (Minor)",
+    "name": "Amorphous [Minor]",
     "summary": "The character is able to take on any human form, so long as it does not identifiably belong to a particular human being.",
     "description": "The character is able to take on any human form, so long as it does not identifiably belong to a particular human being. The character develops this ability because his body has adopted the almost-gaseous property of demonic flesh, so any apparent changes in size or fitness are cosmetic, and do not affect the character's statistics. Some amorphous people can select a single shape at midnight, which is the Major form of the Virtue. Its Minor form allows the character to change shape only after having performed a significant act linked to the Obsession of the sponsoring demon. The character may only change to his birth form by selecting it once the conditions of transformation have been met, or involuntarily changing shape when dying or entering holy ground."
   },
@@ -2584,12 +2584,12 @@
     "summary": "The character is employed by a university to watch over the students and ensure that they speak only Latin in their colleges and hostels."
   },
   "virtue.magian_lineage_major": {
-    "name": "Magian Lineage (Major)",
+    "name": "Magian Lineage [Major]",
     "summary": "This Virtue makes the character a true blood descendent of the Median tribe of Magians, the original priestly caste of Persia.",
     "description": "This Virtue makes the character a true blood descendent of the Median tribe of Magians, the original priestly caste of Persia. Many mobeds, the priests of Zoroastrianism, possess this Virtue, either Minor or Major, but it is not a requisite. Details about Mythic Zoroastrianism can be found in The Cradle and the Crescent, Chapter 5.\n\nMinor: Your character's lineage is weak, although he or she is still ethnically Magian, and gains a strong constitution due to his purity. The character gains a -1 bonus to Aging rolls and a +3 bonus to resist the effects of disease.\n\nMajor: In addition to the benefits of the Minor Virtue. your character has an affinity with the ancient prophetic and other mystical arts of their ancestors. The player must choose three Arcane or Supernatural Abilities which the character need not start play with, and which cannot be True Names. These Abilities are considered connected, so that whenever your character gains experience from a source dedicated to one of these Abilities, he gains half the Source Quality (round up) in experience points in each of the other two Abilities. A character must have access to a Supernatural Ability in one of the normal ways, such as taking the Virtue at character creation or Initiating it later, in order to put any experience points into it. If you choose a Supernatural Ability that your character does not yet have access to, any experience points generated for it by this Virtue before the character gains access to the Ability are lost."
   },
   "virtue.magian_lineage_minor": {
-    "name": "Magian Lineage (Minor)",
+    "name": "Magian Lineage [Minor]",
     "summary": "This Virtue makes the character a true blood descendent of the Median tribe of Magians, the original priestly caste of Persia.",
     "description": "This Virtue makes the character a true blood descendent of the Median tribe of Magians, the original priestly caste of Persia. Many mobeds, the priests of Zoroastrianism, possess this Virtue, either Minor or Major, but it is not a requisite. Details about Mythic Zoroastrianism can be found in The Cradle and the Crescent, Chapter 5.\n\nMinor: Your character's lineage is weak, although he or she is still ethnically Magian, and gains a strong constitution due to his purity. The character gains a -1 bonus to Aging rolls and a +3 bonus to resist the effects of disease.\n\nMajor: In addition to the benefits of the Minor Virtue. your character has an affinity with the ancient prophetic and other mystical arts of their ancestors. The player must choose three Arcane or Supernatural Abilities which the character need not start play with, and which cannot be True Names. These Abilities are considered connected, so that whenever your character gains experience from a source dedicated to one of these Abilities, he gains half the Source Quality (round up) in experience points in each of the other two Abilities. A character must have access to a Supernatural Ability in one of the normal ways, such as taking the Virtue at character creation or Initiating it later, in order to put any experience points into it. If you choose a Supernatural Ability that your character does not yet have access to, any experience points generated for it by this Virtue before the character gains access to the Ability are lost."
   },
@@ -2827,11 +2827,11 @@
     "description": "By staring intently at people you make them feel uneasy, as if you are peering into their souls. Those with ulterior motives, uneasy consciences, or lying tongues must make rolls against an appropriate Personality Trait, Guile, or whatever the storyguide deems appropriate, to remain calm. Furthermore, you gain a +3 to rolls involving intimidation. Faeries and demons are unfazed by your power."
   },
   "virtue.potent_magic_major": {
-    "name": "Potent Magic (Major)",
+    "name": "Potent Magic [Major]",
     "summary": "The maga's magic is particularly attuned to a narrow field, much as in a Magical Focus."
   },
   "virtue.potent_magic_minor": {
-    "name": "Potent Magic (Minor)",
+    "name": "Potent Magic [Minor]",
     "summary": "The maga's magic is particularly attuned to a narrow field, much as in a Magical Focus."
   },
   "virtue.powerful_relic": {

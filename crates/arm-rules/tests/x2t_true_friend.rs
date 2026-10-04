@@ -112,24 +112,24 @@ fn flaw_true_friend_major_copies_true_love_majors_mechanics() {
     );
     assert_eq!(
         new.magnitude, twin.magnitude,
-        "D60: True Friend (Major) copies True Love (Major)'s magnitude"
+        "D60: True Friend [Major] copies True Love [Major]'s magnitude"
     );
     assert_eq!(
         new.categories, twin.categories,
-        "D60: True Friend (Major) copies True Love (Major)'s categories"
+        "D60: True Friend [Major] copies True Love [Major]'s categories"
     );
     assert_eq!(
         new.classification, twin.classification,
-        "D60: True Friend (Major) copies True Love (Major)'s classification (narrative)"
+        "D60: True Friend [Major] copies True Love [Major]'s classification (narrative)"
     );
     assert_eq!(
         new.entity_kinds, twin.entity_kinds,
-        "D60: True Friend (Major) copies True Love (Major)'s entity_kinds"
+        "D60: True Friend [Major] copies True Love [Major]'s entity_kinds"
     );
     assert_eq!(
         new.source, twin.source,
-        "D60: True Friend (Major) cites the SAME source (file, lines, anchor) as True Love \
-         (Major) — there is no separate '#### True Friend' heading, only a rename sentence \
+        "D60: True Friend [Major] cites the SAME source (file, lines, anchor) as True Love \
+         [Major] — there is no separate '#### True Friend' heading, only a rename sentence \
          inside True Love's own passage (ArMDE:6875)"
     );
 }
@@ -143,17 +143,17 @@ fn flaw_true_friend_minor_copies_true_love_minors_mechanics() {
     assert_eq!(new.kind, twin.kind);
     assert_eq!(
         new.magnitude, twin.magnitude,
-        "D60: True Friend (Minor) copies True Love (Minor)'s magnitude"
+        "D60: True Friend [Minor] copies True Love [Minor]'s magnitude"
     );
     assert_eq!(new.categories, twin.categories);
     assert_eq!(
         new.classification, twin.classification,
-        "D60: True Friend (Minor) copies True Love (Minor)'s classification (narrative)"
+        "D60: True Friend [Minor] copies True Love [Minor]'s classification (narrative)"
     );
     assert_eq!(new.entity_kinds, twin.entity_kinds);
     assert_eq!(
         new.source, twin.source,
-        "D60: True Friend (Minor) cites the SAME source as True Love (Minor)"
+        "D60: True Friend [Minor] cites the SAME source as True Love [Minor]"
     );
 }
 
@@ -221,7 +221,7 @@ fn flaw_true_friend_major_and_minor_exclude_each_other() {
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"incompatible"),
-        "holding both True Friend (Major) and (Minor) must be a hard block, like True Love's \
+        "holding both True Friend [Major] and [Minor] must be a hard block, like True Love's \
          own pair, got: {:?}",
         issue_codes(&result)
     );
@@ -274,7 +274,7 @@ fn flaw_true_friend_carries_no_incompatibility_with_true_love() {
     let result = validate(&e, &rs);
     assert!(
         !issue_codes(&result).contains(&"incompatible"),
-        "True Love (Major) + True Friend (Minor) together must not be blocked as incompatible, \
+        "True Love [Major] + True Friend [Minor] together must not be blocked as incompatible, \
          got: {:?}",
         issue_codes(&result)
     );
@@ -282,7 +282,7 @@ fn flaw_true_friend_carries_no_incompatibility_with_true_love() {
 
 /// D60: the name differs, everything else is a copy. EN "True Love" ->
 /// "True Friend"; DE "Wahre Liebe" -> "Wahrer Freund"
-/// (`tugenden-fehler.md:170`, D31). The (Major)/(Minor)/(PC) qualifier stays,
+/// (`tugenden-fehler.md:170`, D31). The [Major]/[Minor]/(PC) qualifier stays,
 /// matching the twin's own naming convention exactly.
 #[test]
 fn en_de_names_follow_the_true_love_to_true_friend_naming_convention() {

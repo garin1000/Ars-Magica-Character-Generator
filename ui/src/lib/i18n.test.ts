@@ -940,12 +940,12 @@ describe('German UI bundle, DE .ftl audit fixes', () => {
   });
 
   it('S1: names the Reputation source without hyphen-compounding a data name', () => {
-    const source = { source: 'Außenseiter (Groß)' };
+    const source = { source: 'Außenseiter [Groß]' };
     expect(say('reputation-level-increment', source)).toBe(
-      'Reputation von Außenseiter (Groß) erhöhen',
+      'Reputation von Außenseiter [Groß] erhöhen',
     );
     expect(say('reputation-level-decrement', source)).toBe(
-      'Reputation von Außenseiter (Groß) verringern',
+      'Reputation von Außenseiter [Groß] verringern',
     );
   });
 

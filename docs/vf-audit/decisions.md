@@ -828,6 +828,22 @@ presumption of correctness.
 
 ---
 
+## D84 — the second try-out's findings (N1–N11)
+
+**Norbert, 2026-10-04** (`tmp/tryout-2026-10-04.md`).
+
+3. **A split "Minor or Major" entry shows its magnitude in square brackets** (N11).
+   Where the book prints ONE entry taken at either magnitude and the catalogue splits
+   it into two items, the name carries the magnitude in brackets: "Ambitious [Major]",
+   "False Power [Minor]: {virtue}", DE „Ehrgeizig [Groß]"/„[Klein]". Brackets keep it
+   apart from a parameter in parentheses ("Potent Magic [Minor] (Fire)"). A name whose
+   book spelling contains the magnitude ("Minor Magical Focus") is unchanged. A display
+   convention, not terminology: D31 is untouched, and `de_vf_names.rs` strips the bracket,
+   so these names are now compared with the tables' base-name rows (no mismatch). Guard:
+   `vf_magnitude_brackets.rs`.
+
+---
+
 ## D83 — the post-deadline rulings and the try-out findings
 
 **Norbert, 2026-10-03** (`tmp/questions-after-deadline.md`, `tmp/tryout-findings-2026-10-03.md`).
