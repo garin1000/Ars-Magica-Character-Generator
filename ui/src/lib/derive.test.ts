@@ -5707,10 +5707,7 @@ describe('language requirement messages (L2)', () => {
   const FOUR = 'language.latin, language.hebrew, language.greek, language.arabic';
 
   it.each([
-    [
-      'en',
-      'An Academic Ability normally requires Latin, Hebrew, Greek or Arabic at 3 or better.',
-    ],
+    ['en', 'An Academic Ability normally requires Latin, Hebrew, Greek or Arabic at 3 or better.'],
     [
       'de',
       'Eine akademische Fertigkeit erfordert normalerweise Latein, Hebräisch, Griechisch oder Arabisch auf 3 oder höher.',
