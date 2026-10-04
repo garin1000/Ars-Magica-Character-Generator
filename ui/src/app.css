@@ -1545,6 +1545,15 @@ ul {
   font-weight: 700;
 }
 
+/* I2: the WARNING twin of `.invalid-glyph` — a selected Ability or Art row a
+   banked-XP warning points at (AbilityTab.svelte, ArtGrid.svelte). A different
+   glyph AND the warning colour, so the two severities never read alike; the
+   `.sr-only` text beside it names the finding in words (WCAG 1.4.1). */
+.row-warning-glyph {
+  color: var(--warning);
+  font-weight: 700;
+}
+
 /* D81.8: a Lab/Casting Total grid cell or spell whose (Technique, Form) pair is
    barred by a held Incompatible Arts Flaw — always backed by an actual rule
    violation (same `--error` the invalid-selection family above uses), styled

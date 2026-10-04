@@ -134,10 +134,12 @@ fn art_warns_banked_xp_at_or_above_next_level(score: u8, banked_xp: u32) -> bool
     let mut a = ArtScore::new(Id::new("art.creo"), score);
     a.banked_xp = banked_xp;
     e.art_scores = vec![a];
+    // I2: one code per subject — the Art finding has its own code, so its
+    // Fluent message can name `$art` (`i2_banked_xp_names.rs`).
     validate(&e, &ruleset)
         .issues
         .iter()
-        .any(|i| i.code == "banked_xp_at_or_above_next_level")
+        .any(|i| i.code == "art_banked_xp_at_or_above_next_level")
 }
 
 #[test]
@@ -191,11 +193,11 @@ fn art_banked_xp_at_u32_max_warns_without_panicking() {
 
 // --- The ceiling-score branch (review E-1): the advancement table's own last
 // row has no score+1 entry to bank toward, so `validate_ability_banked_xp` /
-// `validate_art_banked_xp` fall to their `None` arm (`needed = 0`) rather than
-// comparing against a next-level delta. Any `banked_xp > 0` there must still
-// warn — there is nowhere left for it to go. The behavior is already
-// implemented (commit 6918b0c); this locks it with the dedicated test that
-// commit's own review found missing.
+// `validate_art_banked_xp` cannot compare against a next-level delta. Any
+// `banked_xp > 0` there must still warn — there is nowhere left for it to go.
+// I2 (try-out finding 7): it warns under its OWN code, carrying the `score` it
+// is stuck at, because the shared message read "the next level needs only 0"
+// where there is no next level at all.
 
 #[test]
 fn ability_banked_xp_at_the_ceiling_score_warns() {
@@ -220,9 +222,14 @@ fn ability_banked_xp_at_the_ceiling_score_warns() {
     let issues = validate(&e, &ruleset).issues;
     let issue = issues
         .iter()
-        .find(|i| i.code == "banked_xp_at_or_above_next_level")
+        .find(|i| i.code == "banked_xp_at_top_score")
         .expect("banked_xp above 0 at the ceiling score must still warn");
-    assert_eq!(issue.args.get("needed").map(String::as_str), Some("0"));
+    let ceiling_text = ceiling.to_string();
+    assert_eq!(
+        issue.args.get("score").map(String::as_str),
+        Some(ceiling_text.as_str())
+    );
+    assert_eq!(issue.args.get("needed"), None);
 }
 
 #[test]
@@ -251,9 +258,14 @@ fn art_banked_xp_at_the_ceiling_score_warns() {
     let issues = validate(&e, &ruleset).issues;
     let issue = issues
         .iter()
-        .find(|i| i.code == "banked_xp_at_or_above_next_level")
+        .find(|i| i.code == "art_banked_xp_at_top_score")
         .expect("an Art's banked_xp above 0 at the ceiling score must still warn");
-    assert_eq!(issue.args.get("needed").map(String::as_str), Some("0"));
+    let ceiling_text = ceiling.to_string();
+    assert_eq!(
+        issue.args.get("score").map(String::as_str),
+        Some(ceiling_text.as_str())
+    );
+    assert_eq!(issue.args.get("needed"), None);
 }
 
 // --- Round trip (X10b + X10c): plain serde mechanics, expected GREEN today --

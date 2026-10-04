@@ -12,6 +12,9 @@
     invalidSelectionIds,
     maxAbilityScore,
     resolvedLinksFrom,
+    rowWarningFor,
+    rowWarnings,
+    rowWarningText,
     sameParam,
     unboughtModifiedAbilities,
     UNBOUGHT_ROW_INDEX,
@@ -24,6 +27,7 @@
     AbilityParameterOptions,
     AbilityParamValue,
     AbilityScore,
+    ValidationIssue,
   } from '../types';
   import MagusMinimumAbilities from './MagusMinimumAbilities.svelte';
   import SourcePicker from './SourcePicker.svelte';
@@ -168,6 +172,14 @@
   // Abilities an error-severity issue points at (e.g. a supernatural ability whose
   // granting Virtue was removed after it was bought) — their rows render red.
   const invalidIds = $derived(invalidSelectionIds(store.result));
+
+  // Banked-XP warnings (I2): marked on the one row they name, by Ability AND
+  // instance, with a warning glyph distinct from the error "!" above.
+  const warnings = $derived(rowWarnings(store.result));
+
+  function warningOf(entry: AbilityScore): ValidationIssue | undefined {
+    return rowWarningFor(warnings, entry.ability, entry.parameter, resolvedLinks);
+  }
 
   const selectedColumns = $derived([
     {
@@ -434,6 +446,7 @@
             {@const key = paramKey(entry.ability)}
             {@const options = optionsFor(entry.ability)}
             {@const invalid = invalidIds.has(entry.ability)}
+            {@const warning = warningOf(entry)}
             <!-- The bought score the badge below is paired with (#16) — held to the
                  generation the modifiers were computed for, while `entry.score`
                  stays live for the spinner. -->
@@ -445,6 +458,14 @@
                      ValidationPanel's own non-colour severity marker. -->
                 <span class="invalid-glyph" aria-hidden="true">!</span>
                 <span class="sr-only">{store.t('ability-invalid-selection')}</span>
+              {/if}
+              {#if warning}
+                <!-- I2: a banked-XP warning on this row — a warning glyph, never the
+                     error "!", plus the finding in words for a screen reader. The
+                     glyph is forced to text presentation (U+FE0E) so it takes the
+                     warning colour instead of rendering as a coloured emoji. -->
+                <span class="row-warning-glyph" aria-hidden="true">&#x26A0;&#xFE0E;</span>
+                <span class="sr-only">{rowWarningText(store.ruleset, warning, store.t)}</span>
               {/if}
               <!-- Deliberately focusable: `use:tooltip` opens on `focusin`, and this
                    span is the only host for the chosen Ability's rules text and its

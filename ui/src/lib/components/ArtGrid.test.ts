@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { render } from 'svelte/server';
 
 import type { EffectiveScores, Entity, LocalizedRuleset } from '../types';
@@ -238,5 +238,71 @@ describe('ArtGrid banked XP input (X10b)', () => {
     expect(tagContaining(html(), 'data-testid="art-banked-xp-art.creo"')).not.toContain(
       'banked-xp-zero',
     );
+  });
+});
+
+// I2 (try-out finding 7, Norbert C4): an Art's banked-XP finding marks the
+// Art's own row with a warning mark distinct from the error "!", and says what
+// it is about in words for a screen reader.
+describe('ArtGrid banked-XP warning mark (I2)', () => {
+  beforeEach(() => {
+    store.entity.art_scores = [{ art: CREO, score: 5, banked_xp: 7 }];
+    store.result = {
+      issues: [
+        {
+          severity: 'warning',
+          code: 'art_banked_xp_at_or_above_next_level',
+          phase: 'arts',
+          context: CREO,
+          args: { art: CREO, banked: '7', needed: '6' },
+        },
+      ],
+    };
+  });
+
+  afterEach(() => {
+    store.result = null;
+  });
+
+  /** The `<li>` holding the row whose score carries `testid`. */
+  function rowOf(body: string, testid: string): string {
+    const at = body.indexOf(`data-testid="${testid}"`);
+    if (at === -1) throw new Error(`no element ${testid}`);
+    const start = body.lastIndexOf('<li', at);
+    return body.slice(start, body.indexOf('</li>', at));
+  }
+
+  it('marks the Art row with a warning glyph that is not the error "!"', () => {
+    const row = rowOf(html(), 'art-score-art.creo');
+    const glyph = /<span class="row-warning-glyph" aria-hidden="true">([^<]+)<\/span>/.exec(row);
+    expect(glyph, 'the Creo row should carry the warning glyph').not.toBeNull();
+    expect(glyph![1].trim()).not.toBe('!');
+  });
+
+  it('names the finding in words for a screen reader', () => {
+    expect(clean(rowOf(html(), 'art-score-art.creo'))).toContain(
+      'Warning: Creo: banked experience points (7) are already enough to raise this score',
+    );
+  });
+
+  it('marks the top-score finding too', () => {
+    store.result = {
+      issues: [
+        {
+          severity: 'warning',
+          code: 'art_banked_xp_at_top_score',
+          phase: 'arts',
+          context: CREO,
+          args: { art: CREO, banked: '1', score: '5' },
+        },
+      ],
+    };
+    expect(clean(rowOf(html(), 'art-score-art.creo'))).toContain(
+      'Warning: Creo: banked experience points (1) cannot raise this score any further',
+    );
+  });
+
+  it('leaves every other Art row unmarked', () => {
+    expect(rowOf(html(), 'art-score-art.animal')).not.toContain('row-warning-glyph');
   });
 });

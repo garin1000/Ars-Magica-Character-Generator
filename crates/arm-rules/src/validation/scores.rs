@@ -4,6 +4,7 @@
 //! the `ValidationIssue` issue-code contract.
 
 use super::*;
+use crate::ability::AdvancementTable;
 use crate::characteristics::CharacteristicRules;
 use crate::effective::{
     for_each_effect, irrelevant_effect_variants_except, selections_for_effects,
@@ -337,7 +338,7 @@ pub(crate) fn validate_abilities(
         validate_ability_specialty_permitted(ruleset, effective_selections, entry, issues);
         validate_ability_parameter_link(entity, ruleset, entry, issues);
         validate_ability_parameter_in_catalogue(ruleset, entry, issues);
-        validate_ability_banked_xp(ruleset, entry, issues);
+        validate_ability_banked_xp(entity, ruleset, entry, issues);
 
         let key = (
             &entry.ability,
@@ -527,48 +528,98 @@ fn validate_ability_score_in_range(
     }
 }
 
+/// What a row's banked XP says about its score, read off one advancement table.
+enum BankedXpFinding {
+    /// The banked figure reaches the next score: that IS the next score,
+    /// mis-recorded. Carries the raw-table delta it reaches.
+    ReachesNextLevel { needed: u32 },
+    /// The score is the table's last row: there is no next score to bank
+    /// toward, yet the figure is still charged against the pool.
+    AtTopScore,
+}
+
+/// X10b + I2: the one reading both the Ability and the Art check share. `None`
+/// when nothing is banked, when the banked figure is still short of the next
+/// score, or when the score itself is off-table (the range check already flags
+/// that). Overflow-safe: `checked_add`/`saturating_sub` keep a hostile
+/// `banked_xp: u32::MAX` from panicking.
+fn banked_xp_finding(
+    table: &AdvancementTable,
+    score: u8,
+    banked_xp: u32,
+) -> Option<BankedXpFinding> {
+    if banked_xp == 0 {
+        return None;
+    }
+    let current = table.xp_for_score(score)?;
+    let Some(next_table) = score
+        .checked_add(1)
+        .and_then(|next| table.xp_for_score(next))
+    else {
+        return Some(BankedXpFinding::AtTopScore);
+    };
+    let needed = next_table.saturating_sub(current);
+    (banked_xp >= needed).then_some(BankedXpFinding::ReachesNextLevel { needed })
+}
+
+/// The instance an Ability finding names (I2): a catalogued value's id (the
+/// UI localizes it), typed text as typed, and a `Linked` value as the text it
+/// resolves to now — through [`crate::effective::resolve_link`], with the same
+/// ambiguity fallback the export shows (`export/resolve.rs`), never the
+/// `(item, param)` pair. Empty for a plain Ability, as the
+/// `too_many_for_param_value` finding emits it.
+fn ability_instance_arg(entity: &Entity, ruleset: &Ruleset, entry: &AbilityScore) -> String {
+    match &entry.parameter {
+        None => String::new(),
+        Some(AbilityParameterValue::Catalogued { id }) => id.to_string(),
+        Some(AbilityParameterValue::Text { text }) => text.clone(),
+        Some(AbilityParameterValue::Linked { item, param }) => {
+            match crate::effective::resolve_link(entity, ruleset, item, param) {
+                crate::effective::LinkResolution::Resolved(value) => value,
+                crate::effective::LinkResolution::Ambiguous(fallback) => fallback,
+                crate::effective::LinkResolution::Dangling => None,
+            }
+            .unwrap_or_default()
+        }
+    }
+}
+
 /// X10b: a `banked_xp` figure at or above the raw-table delta to the next
 /// score is a self-contradiction — that IS the next score, mis-recorded — so
 /// it warns (`banked_xp_at_or_above_next_level`) rather than erroring, mirroring
-/// [`ValidationIssue::CODE_GENERAL_XP_UNSPENT`]: `effective/xp.rs`'s
-/// `saturating_add` already keeps a hostile `banked_xp: u32::MAX` from ever
-/// panicking on the way here. Fires too when any `banked_xp > 0` sits at the
-/// ceiling score (no next table row to compare against, so the banked figure
-/// can never be spent on anything). Skipped entirely when the score itself is
-/// off-table — `validate_ability_score_in_range` already flags that.
-/// Source: ArMDE:1177-1179.
+/// [`ValidationIssue::CODE_GENERAL_XP_UNSPENT`]. Any `banked_xp > 0` at the
+/// table's top score warns too, under its own code (`banked_xp_at_top_score`,
+/// I2): the figure can never be spent, but "the next level needs only 0" would
+/// be false. Both name the Ability with its instance (`parameter`), so the
+/// message can say WHICH Craft. Source: ArMDE:1177-1179.
 fn validate_ability_banked_xp(
+    entity: &Entity,
     ruleset: &Ruleset,
     entry: &AbilityScore,
     issues: &mut Vec<ValidationIssue>,
 ) {
-    if entry.banked_xp == 0 {
-        return;
-    }
-    let Some(current) = ruleset.advancement.xp_for_score(entry.score) else {
+    let Some(finding) = banked_xp_finding(&ruleset.advancement, entry.score, entry.banked_xp)
+    else {
         return;
     };
-    let needed = match entry
-        .score
-        .checked_add(1)
-        .and_then(|next| ruleset.advancement.xp_for_score(next))
-    {
-        Some(next_table) => {
-            let needed = next_table.saturating_sub(current);
-            if entry.banked_xp < needed {
-                return;
-            }
-            needed
-        }
-        None => 0, // ceiling score: nothing left to bank toward
+    let (code, figure) = match finding {
+        BankedXpFinding::ReachesNextLevel { needed } => (
+            ValidationIssue::CODE_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL,
+            ("needed", needed.to_string()),
+        ),
+        BankedXpFinding::AtTopScore => (
+            ValidationIssue::CODE_BANKED_XP_AT_TOP_SCORE,
+            ("score", entry.score.to_string()),
+        ),
     };
     issues.push(ValidationIssue::warning(
-        ValidationIssue::CODE_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL,
+        code,
         CreationPhase::Abilities,
         args([
             ("ability", entry.ability.to_string()),
+            ("parameter", ability_instance_arg(entity, ruleset, entry)),
             ("banked", entry.banked_xp.to_string()),
-            ("needed", needed.to_string()),
+            figure,
         ]),
         Some(entry.ability.clone()),
     ));
@@ -701,35 +752,31 @@ pub(crate) fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
 }
 
 /// Art counterpart of [`validate_ability_banked_xp`] — same rule, the Art
-/// advancement table. Source: ArMDE:1177-1179.
+/// advancement table, and the Art's own codes (I2: one code per subject, so
+/// each message names `$ability` or `$art`, never a guess between the two).
+/// Source: ArMDE:1177-1179.
 fn validate_art_banked_xp(ruleset: &Ruleset, entry: &ArtScore, issues: &mut Vec<ValidationIssue>) {
-    if entry.banked_xp == 0 {
-        return;
-    }
-    let Some(current) = ruleset.art_advancement.xp_for_score(entry.score) else {
+    let Some(finding) = banked_xp_finding(&ruleset.art_advancement, entry.score, entry.banked_xp)
+    else {
         return;
     };
-    let needed = match entry
-        .score
-        .checked_add(1)
-        .and_then(|next| ruleset.art_advancement.xp_for_score(next))
-    {
-        Some(next_table) => {
-            let needed = next_table.saturating_sub(current);
-            if entry.banked_xp < needed {
-                return;
-            }
-            needed
-        }
-        None => 0,
+    let (code, figure) = match finding {
+        BankedXpFinding::ReachesNextLevel { needed } => (
+            ValidationIssue::CODE_ART_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL,
+            ("needed", needed.to_string()),
+        ),
+        BankedXpFinding::AtTopScore => (
+            ValidationIssue::CODE_ART_BANKED_XP_AT_TOP_SCORE,
+            ("score", entry.score.to_string()),
+        ),
     };
     issues.push(ValidationIssue::warning(
-        ValidationIssue::CODE_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL,
+        code,
         CreationPhase::Arts,
         args([
             ("art", entry.art.to_string()),
             ("banked", entry.banked_xp.to_string()),
-            ("needed", needed.to_string()),
+            figure,
         ]),
         Some(entry.art.clone()),
     ));

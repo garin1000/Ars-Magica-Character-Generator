@@ -749,3 +749,73 @@ describe('AbilityTab banked XP input (X10b)', () => {
     expect(bankedXpTag(html())).not.toContain('banked-xp-zero');
   });
 });
+
+// I2 (try-out finding 7, Norbert C4): banked XP that already reaches the next
+// level marks the Ability's OWN row — a warning mark distinct from the error
+// "!", with the finding in words for a screen reader (not colour alone). Only
+// the instance the finding names is marked: two Craft rows share the context
+// id `ability.craft`, so the engine's `parameter` arg picks the row.
+describe('AbilityTab banked-XP warning mark (I2)', () => {
+  beforeEach(() => {
+    store.ruleset!.ruleset.abilities = {
+      ...store.ruleset!.ruleset.abilities,
+      'ability.craft': { id: 'ability.craft', category: 'general', parameter: 'craft' },
+    };
+    store.ruleset!.i18n = { ...store.ruleset!.i18n, 'ability.craft': { name: 'Craft: {craft}' } };
+    store.entity.ability_scores = [
+      { ability: 'ability.craft', score: 1, parameter: { text: 'Carpentry' }, banked_xp: 12 },
+      { ability: 'ability.craft', score: 1, parameter: { text: 'Smithing' }, banked_xp: 2 },
+    ];
+    store.result = {
+      issues: [
+        {
+          severity: 'warning',
+          code: 'banked_xp_at_or_above_next_level',
+          phase: 'abilities',
+          context: 'ability.craft',
+          args: {
+            ability: 'ability.craft',
+            parameter: 'Carpentry',
+            banked: '12',
+            needed: '10',
+          },
+        },
+      ],
+    };
+  });
+
+  /** The `<li>` holding the row whose score carries `testid`. */
+  function rowOf(body: string, testid: string): string {
+    const at = body.indexOf(`data-testid="${testid}"`);
+    if (at === -1) throw new Error(`no element ${testid}`);
+    const start = body.lastIndexOf('<li', at);
+    return body.slice(start, body.indexOf('</li>', at));
+  }
+
+  const clean = (text: string) => text.replace(/[⁦-⁩]/g, '');
+
+  it('marks the named instance with a warning glyph that is not the error "!"', () => {
+    const row = rowOf(html(), 'ability-score-ability.craft-0');
+    const glyph = /<span class="row-warning-glyph" aria-hidden="true">([^<]+)<\/span>/.exec(row);
+    expect(glyph, 'the Carpentry row should carry the warning glyph').not.toBeNull();
+    expect(glyph![1].trim()).not.toBe('!');
+    expect(row).not.toContain('invalid-glyph');
+  });
+
+  it('names the finding in words for a screen reader, the instance included', () => {
+    const row = clean(rowOf(html(), 'ability-score-ability.craft-0'));
+    expect(row).toContain(
+      'Warning: Craft: Carpentry: banked experience points (12) are already enough to raise this score',
+    );
+  });
+
+  it('leaves the other instance of the same Ability unmarked', () => {
+    const row = rowOf(html(), 'ability-score-ability.craft-1');
+    expect(row).not.toContain('row-warning-glyph');
+  });
+
+  it('marks nothing when the engine reports no banked-XP finding', () => {
+    store.result = { issues: [] };
+    expect(html()).not.toContain('row-warning-glyph');
+  });
+});

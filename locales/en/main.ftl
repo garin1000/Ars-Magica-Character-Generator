@@ -906,6 +906,10 @@ ability-requires-virtue = Requires a granting Virtue
 # points at (S7, full-audit a11y) — pairs with a visible glyph so the row's
 # invalidity is never colour-only (WCAG 1.4.1).
 ability-invalid-selection = Invalid selection
+# Screen-reader-only text on a selected Ability or Art row a banked-XP warning
+# points at (I2) — pairs with a visible warning glyph, distinct from the error
+# "!". $message is the localized finding itself.
+selection-row-warning = Warning: { $message }
 # Marks a display-only Ability row (#17): a Virtue gives this Ability a bonus or a
 # free starting score, but no score has been bought, so the row shows the bonus and
 # offers no controls. Says why in words — the greyed stepper alone is not a reason
@@ -1416,10 +1420,13 @@ issue-ability_bonus_dangling_target = Add { $ability } to the character's Abilit
 issue-unknown_art = Unknown Art: { $art }.
 issue-duplicate_art = { $art } is listed { $count } times.
 issue-art_score_out_of_range = Art { $art } score { $score } is outside the allowed range (0 to { $max }).
-# X10b. Shared by an Ability and an Art score, whose args carry `ability` or
-# `art` respectively — never both — so the message interpolates neither
-# directly and names only the two figures both cases share.
-issue-banked_xp_at_or_above_next_level = Banked experience points ({ $banked }) are already enough to raise this score — the next level needs only { $needed }.
+# X10b + I2. One code per subject, so each message names its own Ability
+# (with its instance, e.g. "Craft: Carpentry") or Art. The top-score pair has
+# no next level, so it names the score it is stuck at instead.
+issue-banked_xp_at_or_above_next_level = { $ability }: banked experience points ({ $banked }) are already enough to raise this score — the next level needs only { $needed }.
+issue-art_banked_xp_at_or_above_next_level = { $art }: banked experience points ({ $banked }) are already enough to raise this score — the next level needs only { $needed }.
+issue-banked_xp_at_top_score = { $ability }: banked experience points ({ $banked }) cannot raise this score any further — { $score } is the highest score the advancement table lists.
+issue-art_banked_xp_at_top_score = { $art }: banked experience points ({ $banked }) cannot raise this score any further — { $score } is the highest score the advancement table lists.
 issue-house_choice_unresolved = House { $house } has an unresolved specialisation choice ({ $choice_key }).
 issue-house_grant_constraint = The House { $house } grant { $choice_key } picks { $item }, which does not meet its constraint.
 issue-warping_owed_minor_flaws = You still owe { $count } Minor Flaw(s) from Warping.

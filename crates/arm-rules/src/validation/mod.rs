@@ -225,7 +225,10 @@ impl fmt::Display for IssueSeverity {
 /// | `unknown_art` | error | arts | `art` |
 /// | `duplicate_art` | error | arts | `art`, `count` |
 /// | `art_score_out_of_range` | error | arts | `art`, `score`, `max` |
-/// | `banked_xp_at_or_above_next_level` | warning | abilities, arts | `ability`/`art`, `banked`, `needed` |
+/// | `banked_xp_at_or_above_next_level` | warning | abilities | `ability`, `parameter`, `banked`, `needed` |
+/// | `art_banked_xp_at_or_above_next_level` | warning | arts | `art`, `banked`, `needed` |
+/// | `banked_xp_at_top_score` | warning | abilities | `ability`, `parameter`, `banked`, `score` |
+/// | `art_banked_xp_at_top_score` | warning | arts | `art`, `banked`, `score` |
 /// | `house_choice_unresolved` | error | house_specialisation | `house`, `choice_key` |
 /// | `house_grant_constraint` | error | house_specialisation | `house`, `choice_key`, `item` |
 /// | `house_unset` | warning | house_specialisation | (none) |
@@ -1023,11 +1026,26 @@ impl ValidationIssue {
     /// See [`Self::CODE_UNKNOWN_TYPE`]. Warning: a `banked_xp` figure (X10b) at or
     /// above the raw-table delta to the next score is a self-contradiction — that
     /// IS the next score, mis-recorded — not an illegal state, matching
-    /// [`Self::CODE_GENERAL_XP_UNSPENT`]'s severity. Shared by the Abilities and Arts
-    /// phases: `args` carries `ability` when emitted for an Ability score, or `art`
-    /// when emitted for an Art score — never both at once.
+    /// [`Self::CODE_GENERAL_XP_UNSPENT`]'s severity. Abilities only (I2): `args`
+    /// carries `ability` plus its instance as `parameter` (empty for a plain
+    /// Ability), so the message can name "Craft: Carpentry"; the Art twin is
+    /// [`Self::CODE_ART_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL`], because one Fluent
+    /// message cannot name `$ability` in one case and `$art` in the other.
     pub const CODE_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL: &'static str =
         "banked_xp_at_or_above_next_level";
+    /// See [`Self::CODE_UNKNOWN_TYPE`]. Warning (I2): the Art twin of
+    /// [`Self::CODE_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL`]; `args` carries `art`.
+    pub const CODE_ART_BANKED_XP_AT_OR_ABOVE_NEXT_LEVEL: &'static str =
+        "art_banked_xp_at_or_above_next_level";
+    /// See [`Self::CODE_UNKNOWN_TYPE`]. Warning (I2): a `banked_xp > 0` on an
+    /// Ability at the advancement table's top score. There is no next level to
+    /// bank toward, yet the figure is still charged against the pool, so it is
+    /// flagged — under its own code, since "the next level needs only 0" would
+    /// be false. `args`: `ability`, `parameter`, `banked`, `score`.
+    pub const CODE_BANKED_XP_AT_TOP_SCORE: &'static str = "banked_xp_at_top_score";
+    /// See [`Self::CODE_UNKNOWN_TYPE`]. Warning (I2): the Art twin of
+    /// [`Self::CODE_BANKED_XP_AT_TOP_SCORE`]; `args`: `art`, `banked`, `score`.
+    pub const CODE_ART_BANKED_XP_AT_TOP_SCORE: &'static str = "art_banked_xp_at_top_score";
     /// See [`Self::CODE_UNKNOWN_TYPE`]. Warning (D42/D70/D74): a
     /// `RealmAssociation::Default` entry's `association` override differs
     /// from the entry's own stated default (Hex/Spiritual Pact/Warped by

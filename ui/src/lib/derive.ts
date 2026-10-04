@@ -2791,6 +2791,83 @@ export function invalidSelectionIds(result: ValidationResult | null | undefined)
 }
 
 /**
+ * The warning codes that mark the Ability or Art ROW they are about (I2, try-out
+ * finding 7): banked XP that already reaches the next level, or that sits at the
+ * advancement table's top score. An explicit list, not "every warning with an
+ * Ability context": `magus_recommended_ability` can name an Ability that was never
+ * bought, and Advisory mode turns every error into a warning, so a generic rule
+ * would change what the mark means with the mode.
+ */
+const ROW_WARNING_CODES = new Set([
+  'banked_xp_at_or_above_next_level',
+  'banked_xp_at_top_score',
+  'art_banked_xp_at_or_above_next_level',
+  'art_banked_xp_at_top_score',
+]);
+
+/** A finding that marks one selected row with a warning (I2). */
+export interface RowWarning {
+  /** The row's Ability or Art id — the issue's `context`. */
+  id: string;
+  /** An Ability finding's instance (`parameter` arg); `null` for a plain Ability or an Art. */
+  parameter: string | null;
+  issue: ValidationIssue;
+}
+
+/**
+ * The warning-severity findings that mark a selected row — the warning
+ * counterpart of {@link invalidSelectionIds}, which carries the error "!".
+ * An error is left out: the error mark already covers that row.
+ */
+export function rowWarnings(result: ValidationResult | null | undefined): RowWarning[] {
+  const warnings: RowWarning[] = [];
+  for (const issue of result?.issues ?? []) {
+    if (issue.severity !== 'warning' || !ROW_WARNING_CODES.has(issue.code)) continue;
+    if (!issue.context) continue;
+    warnings.push({ id: issue.context, parameter: issue.args.parameter || null, issue });
+  }
+  return warnings;
+}
+
+/**
+ * The warning finding for one row, if any. An Ability row is matched by id AND
+ * instance, because the engine's `context` is the Ability id alone and two Craft
+ * rows share it; the instance comparison is {@link sameParam}'s, so a catalogued,
+ * typed or linked value each match the way the rest of the tab matches them. An
+ * Art row passes `null` and matches by id.
+ */
+export function rowWarningFor(
+  warnings: readonly RowWarning[],
+  id: string,
+  parameter: AbilityParamValue | null | undefined,
+  resolvedLinks: Record<string, string>,
+): ValidationIssue | undefined {
+  return warnings.find(
+    (warning) =>
+      warning.id === id && sameParam(warning.parameter, parameter ?? null, resolvedLinks),
+  )?.issue;
+}
+
+/**
+ * A row warning's screen-reader text: "Warning: " plus the finding itself,
+ * localized through the same `issue-<code>` + {@link resolveIssueArgs} path the
+ * issues panel uses (`ValidationPanel.svelte`), so the row and the panel say one
+ * thing — the Ability's instance included.
+ */
+export function rowWarningText(
+  localized: LocalizedRuleset | null | undefined,
+  issue: ValidationIssue,
+  t: Translate,
+): string {
+  const raw = { ...issue.args, ...(issue.context ? { context: issue.context } : {}) };
+  const message = t(
+    `issue-${issue.code}`,
+    localized ? resolveIssueArgs(localized, raw, t, issue.code) : raw,
+  );
+  return t('selection-row-warning', { message });
+}
+
+/**
  * The steps the guided wizard walks for a character type: the profile's own
  * ordered `creation_phases`, then the wizard's terminal `review` step.
  *

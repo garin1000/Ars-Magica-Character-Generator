@@ -1392,7 +1392,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/characteristics.rs` —
   `CharacteristicRules` (`cost_for`, `total_cost`, `min_score`, `max_score`,
   `base_max_score`, `base_min_score`); enforced in
-  `validation/scores.rs` — `validate_characteristics` (:35) (off-table
+  `validation/scores.rs` — `validate_characteristics` (:36) (off-table
   out-of-range error, above-cap / below-floor errors against the buy range,
   overspent error, points-unspent warning). The out-of-range error is what a save
   written against the old invented rows now trips — see *Save compatibility*
@@ -1481,7 +1481,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
   `LocalizedRuleset::specialties` exposes it.
 - Implementation: `crates/arm-rules/src/ability.rs` — `Ability`,
   `AbilityCategory`; registry + integrity (`AbilityMin`, `ability`-domain params
-  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:315).
+  resolve against it) in `ruleset/integrity.rs`; `validate_abilities` in `validation/scores.rs` (:316).
 
 ### Arts
 
@@ -1529,7 +1529,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:655).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:706).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -3812,7 +3812,7 @@ naming a `LifeStageBlock` (`ChildhoodSpread` or `Apprenticeship`), consumed in
   the `max_per_target` — see *Selection multiplicity* above. Copies stack: two
   grant 6 points.
 - Implementation: `effective/characteristic.rs::characteristic_points_granted` sums the grants;
-  `validation/scores.rs::validate_characteristics` (:35) budget = `start_points + granted`. The
+  `validation/scores.rs::validate_characteristics` (:36) budget = `start_points + granted`. The
   per-characteristic +3 *cap* is unchanged (only Great Characteristic widens it).
 
 #### Weak Characteristics — −3 Characteristic-buy points (`characteristic_points`, signed)
@@ -12443,6 +12443,22 @@ slice.
   next row to bank toward). Severity warning, matching
   `ValidationIssue::CODE_GENERAL_XP_UNSPENT` (D73.1 — an error was
   considered and rejected).
+  **I2 (try-out finding 7):** the findings name their row. One code per
+  subject — `banked_xp_at_or_above_next_level` (Ability) and
+  `art_banked_xp_at_or_above_next_level` (Art) — because one Fluent message
+  cannot name `$ability` in one case and `$art` in the other. The Ability
+  finding carries its instance as `parameter` (catalogue id, typed text, or
+  a `Linked` value's current resolved text; empty for a plain Ability), so
+  the message reads "Craft: Carpentry". The top score has its own pair,
+  `banked_xp_at_top_score` / `art_banked_xp_at_top_score`, carrying the
+  `score` it is stuck at and no `needed`: the banked XP is still charged
+  against the pool and can buy nothing, but "the next level needs only 0"
+  was false. Both validators read the table through one
+  `validation/scores.rs::banked_xp_finding`. In the UI, these four codes
+  alone (warning severity) mark the Ability row (matched by instance) or
+  the Art row with a warning glyph distinct from the error "!", plus
+  `.sr-only` "Warning: <finding>" (`derive.ts::rowWarnings`,
+  `derive.ts::rowWarningFor`, `derive.ts::rowWarningText`).
 - **X10c**: `SpellSelection::within_focus: bool`, same shape
   (`skip_serializing_if` on false). The player's own claim that a known
   spell falls within the character's Magical Focus — free-text
@@ -12489,7 +12505,9 @@ slice.
   reaches.
 - Fluent: `issue-banked_xp_at_or_above_next_level`, `art-banked-xp-label`,
   `ability-banked-xp-label`, `spell-within-focus-label` (both locales; the UI
-  wiring itself is a separate port step).
+  wiring itself is a separate port step). I2 adds
+  `issue-art_banked_xp_at_or_above_next_level`, `issue-banked_xp_at_top_score`,
+  `issue-art_banked_xp_at_top_score` and `selection-row-warning`.
 - Source: `ArMDE:1177-1179` (the "X (Z)" notation), `ArMDE:4399-4422` (Major
   Magical Focus). `types.rs::AbilityScore`, `types.rs::ArtScore`,
   `types.rs::SpellSelection`, `effective/xp.rs::build_spends`,
@@ -12497,6 +12515,7 @@ slice.
   `validation/scores.rs::validate_art_banked_xp`,
   `derived/casting.rs::spell_casting_total`, `export/sections.rs::score_cell`.
   Tests: `crates/arm-rules/tests/x10bc_banked_xp_and_within_focus.rs`,
+  `crates/arm-rules/tests/i2_banked_xp_names.rs`,
   `crates/arm-rules/tests/book_templates.rs`. The live-Focus gate
   (`tmp/review-d81.json` #1, above): `crates/arm-rules/tests/focus_marker_needs_focus.rs`.
 

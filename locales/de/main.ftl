@@ -946,6 +946,11 @@ ability-requires-virtue = Erfordert eine verleihende Tugend
 # sichtbares Symbol, damit die Ungültigkeit nie allein über die Farbe vermittelt
 # wird (WCAG 1.4.1).
 ability-invalid-selection = Ungültige Auswahl
+# Nur für Screenreader: Text auf einer gewählten Fertigkeits- oder Kunstzeile,
+# auf die eine Warnung zu angesparten EP zeigt (I2) — ergänzt ein sichtbares
+# Warnsymbol, das sich vom Fehler-„!“ unterscheidet. $message ist der
+# lokalisierte Hinweis selbst.
+selection-row-warning = Warnung: { $message }
 # Kennzeichnet eine reine Anzeigezeile einer Fertigkeit (#17): eine Tugend gewährt
 # dieser Fertigkeit einen Bonus oder einen freien Startwert, es wurde aber kein Wert
 # gekauft — die Zeile zeigt daher nur den Bonus und bietet keine Bedienelemente. Der
@@ -1497,10 +1502,13 @@ issue-ability_bonus_dangling_target = Füge { $ability } zu den Fertigkeiten des
 issue-unknown_art = Unbekannte Kunst: { $art }.
 issue-duplicate_art = { $art } ist { $count }-mal aufgeführt.
 issue-art_score_out_of_range = Kunst { $art } mit Wert { $score } liegt außerhalb des erlaubten Bereichs (0 bis { $max }).
-# X10b. Wird sowohl für eine Fertigkeit als auch für eine Kunst ausgelöst; die
-# Argumente tragen `ability` bzw. `art` — nie beide zugleich —, daher
-# interpoliert die Nachricht keines davon direkt.
-issue-banked_xp_at_or_above_next_level = Die angesparten Erfahrungspunkte ({ $banked }) reichen bereits aus, um diesen Wert zu steigern — die nächste Stufe braucht nur { $needed }.
+# X10b + I2. Ein Code je Gegenstand, damit jede Nachricht ihre Fertigkeit (mit
+# Ausprägung, z. B. „Handwerk: Zimmerei“) oder Kunst nennt. Das Paar für den
+# Höchstwert hat keine nächste Stufe und nennt stattdessen den erreichten Wert.
+issue-banked_xp_at_or_above_next_level = { $ability }: Die angesparten Erfahrungspunkte ({ $banked }) reichen bereits aus, um diesen Wert zu steigern — die nächste Stufe braucht nur { $needed }.
+issue-art_banked_xp_at_or_above_next_level = { $art }: Die angesparten Erfahrungspunkte ({ $banked }) reichen bereits aus, um diesen Wert zu steigern — die nächste Stufe braucht nur { $needed }.
+issue-banked_xp_at_top_score = { $ability }: Die angesparten Erfahrungspunkte ({ $banked }) können diesen Wert nicht weiter steigern — { $score } ist der höchste Wert, den die Steigerungstabelle aufführt.
+issue-art_banked_xp_at_top_score = { $art }: Die angesparten Erfahrungspunkte ({ $banked }) können diesen Wert nicht weiter steigern — { $score } ist der höchste Wert, den die Steigerungstabelle aufführt.
 issue-house_choice_unresolved = Haus { $house } hat eine offene Spezialisierungswahl ({ $choice_key }).
 issue-house_grant_constraint = Haus { $house }: Die Wahl { $choice_key } fällt auf { $item }, was die Vorgabe nicht erfüllt.
 issue-warping_owed_minor_flaws = Noch offene Kleine Fehler aus der Verzerrung: { $count }.

@@ -1503,3 +1503,19 @@ describe('app.css', () => {
     expect(text).toMatch(/overscroll-behavior:\s*contain;/);
   });
 });
+
+// I2 (try-out finding 7, Norbert C4): the row warning mark beside an Ability or
+// Art with too much banked XP. Warning-coloured, never the error colour the
+// `.invalid-glyph` "!" uses — the two marks must read as different severities.
+describe('app.css row warning mark (I2)', () => {
+  const glyph = (): string => {
+    const block = /^\.row-warning-glyph\s*\{([^}]*)\}/m.exec(cssWithoutComments);
+    expect(block, 'app.css should declare a .row-warning-glyph rule').not.toBeNull();
+    return block![1];
+  };
+
+  it('colours the glyph with the warning token, not the error token', () => {
+    expect(glyph()).toMatch(/color:\s*var\(--warning\)/);
+    expect(glyph()).not.toMatch(/var\(--error\)/);
+  });
+});

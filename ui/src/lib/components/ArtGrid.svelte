@@ -1,6 +1,14 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { artAbbreviation, artLabel, groupArtsByType, maxArtScore } from '../derive';
+  import {
+    artAbbreviation,
+    artLabel,
+    groupArtsByType,
+    maxArtScore,
+    rowWarningFor,
+    rowWarnings,
+    rowWarningText,
+  } from '../derive';
   import { tooltip, type TooltipContent } from '../actions';
   import type { Art } from '../types';
   import Spinner from './Spinner.svelte';
@@ -53,6 +61,9 @@
     return store.readSettled((e) => e.art_scores?.find((a) => a.art === artId)?.score ?? 0);
   }
 
+  // Banked-XP warnings (I2): marked on the Art's own row, by id.
+  const warnings = $derived(rowWarnings(store.result));
+
   function tip(artId: string): TooltipContent {
     return { text: store.ruleset?.i18n[artId]?.description ?? undefined };
   }
@@ -74,7 +85,15 @@
             {#each column.arts as art (art.id)}
               {@const score = scoreOf(art.id)}
               {@const bonus = bonusOf(art.id)}
+              {@const warning = rowWarningFor(warnings, art.id, null, {})}
               <li>
+                {#if warning}
+                  <!-- I2: a banked-XP warning on this Art — a warning glyph (text
+                       presentation, U+FE0E) plus the finding in words for a screen
+                       reader, so it is never carried by colour alone. -->
+                  <span class="row-warning-glyph" aria-hidden="true">&#x26A0;&#xFE0E;</span>
+                  <span class="sr-only">{rowWarningText(store.ruleset, warning, store.t)}</span>
+                {/if}
                 <!-- Deliberately focusable: `use:tooltip` opens on `focusin`, so this
                      is the only thing standing between a keyboard user and the Art's
                      rules text — which this popup is the app's ONLY rendering of

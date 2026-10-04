@@ -431,6 +431,7 @@ describe('German UI bundle', () => {
 
       const bankedXp = clean(
         translate(bundle, 'issue-banked_xp_at_or_above_next_level', {
+          ability: 'Craft: Carpentry',
           banked: '10',
           needed: '5',
         }),
@@ -438,6 +439,72 @@ describe('German UI bundle', () => {
       expect(bankedXp).toContain('10');
       expect(bankedXp).toContain('5');
     }
+  });
+
+  // I2 (try-out finding 7): the banked-XP findings NAME the Ability (with its
+  // instance, already composed by `resolveIssueArgs`) or the Art, and the top
+  // score has its own message — one with no "needs only 0" in it.
+  it('names the Ability or Art in all four banked-XP findings, in both locales', () => {
+    const codes = [
+      'issue-banked_xp_at_or_above_next_level',
+      'issue-art_banked_xp_at_or_above_next_level',
+      'issue-banked_xp_at_top_score',
+      'issue-art_banked_xp_at_top_score',
+    ];
+    for (const lang of ['en', 'de'] as const) {
+      const keys = messageKeys(sourceForLang(lang));
+      for (const code of codes) {
+        expect(keys, `${lang} is missing ${code}`).toContain(code);
+      }
+      const bundle = buildBundle(lang);
+      const clean = (s: string) => s.replace(/[⁦-⁩]/g, '');
+      const say = (key: string, args: Record<string, string>) =>
+        clean(translate(bundle, key, args));
+
+      expect(
+        say('issue-banked_xp_at_or_above_next_level', {
+          ability: 'Craft: Carpentry',
+          banked: '12',
+          needed: '10',
+        }),
+      ).toContain('Craft: Carpentry');
+      expect(
+        say('issue-art_banked_xp_at_or_above_next_level', {
+          art: 'Creo',
+          banked: '7',
+          needed: '6',
+        }),
+      ).toContain('Creo');
+
+      const topAbility = say('issue-banked_xp_at_top_score', {
+        ability: 'Craft: Carpentry',
+        banked: '3',
+        score: '20',
+      });
+      expect(topAbility).toContain('Craft: Carpentry');
+      expect(topAbility).toContain('3');
+      expect(topAbility).toContain('20');
+      const topArt = say('issue-art_banked_xp_at_top_score', {
+        art: 'Creo',
+        banked: '1',
+        score: '30',
+      });
+      expect(topArt).toContain('Creo');
+      expect(topArt).toContain('30');
+    }
+  });
+
+  // The row mark's accessible text (C4): the word "Warning" plus the finding
+  // itself, so a screen reader hears what the mark is about, not just that
+  // there is one.
+  it('words the row warning mark in both locales', () => {
+    for (const lang of ['en', 'de'] as const) {
+      expect(messageKeys(sourceForLang(lang))).toContain('selection-row-warning');
+    }
+    const say = (lang: 'en' | 'de') =>
+      translate(buildBundle(lang), 'selection-row-warning', { message: 'M' }).replace(/[⁦-⁩]/g, '');
+    expect(say('en')).toBe('Warning: M');
+    expect(say('de')).toBe('Warnung: M');
   });
 
   // E2 (open-todos row 24): `unknown_param_value` is the finding a player meets
@@ -1038,9 +1105,29 @@ describe('English UI bundle, wording at a count of 1', () => {
   // An Art at 0 needs 1 XP for its next level, so banked 1 / needed 1 is reachable.
   it('states one banked experience point against one needed correctly', () => {
     expect(
-      say('issue-banked_xp_at_or_above_next_level', { art: 'Creo', banked: '1', needed: '1' }),
+      say('issue-art_banked_xp_at_or_above_next_level', { art: 'Creo', banked: '1', needed: '1' }),
     ).toBe(
-      'Banked experience points (1) are already enough to raise this score — the next level needs only 1.',
+      'Creo: banked experience points (1) are already enough to raise this score — the next level needs only 1.',
+    );
+    expect(
+      say('issue-banked_xp_at_or_above_next_level', {
+        ability: 'Craft: Carpentry',
+        banked: '1',
+        needed: '1',
+      }),
+    ).toBe(
+      'Craft: Carpentry: banked experience points (1) are already enough to raise this score — the next level needs only 1.',
+    );
+  });
+
+  it('states one banked experience point at the top score correctly', () => {
+    expect(
+      say('issue-banked_xp_at_top_score', { ability: 'Awareness', banked: '1', score: '20' }),
+    ).toBe(
+      'Awareness: banked experience points (1) cannot raise this score any further — 20 is the highest score the advancement table lists.',
+    );
+    expect(say('issue-art_banked_xp_at_top_score', { art: 'Creo', banked: '1', score: '30' })).toBe(
+      'Creo: banked experience points (1) cannot raise this score any further — 30 is the highest score the advancement table lists.',
     );
   });
 
@@ -1115,9 +1202,29 @@ describe('German UI bundle, wording at a count of 1', () => {
 
   it('states one banked experience point against one needed correctly', () => {
     expect(
-      say('issue-banked_xp_at_or_above_next_level', { art: 'Creo', banked: '1', needed: '1' }),
+      say('issue-art_banked_xp_at_or_above_next_level', { art: 'Creo', banked: '1', needed: '1' }),
     ).toBe(
-      'Die angesparten Erfahrungspunkte (1) reichen bereits aus, um diesen Wert zu steigern — die nächste Stufe braucht nur 1.',
+      'Creo: Die angesparten Erfahrungspunkte (1) reichen bereits aus, um diesen Wert zu steigern — die nächste Stufe braucht nur 1.',
+    );
+    expect(
+      say('issue-banked_xp_at_or_above_next_level', {
+        ability: 'Handwerk: Zimmerei',
+        banked: '1',
+        needed: '1',
+      }),
+    ).toBe(
+      'Handwerk: Zimmerei: Die angesparten Erfahrungspunkte (1) reichen bereits aus, um diesen Wert zu steigern — die nächste Stufe braucht nur 1.',
+    );
+  });
+
+  it('states one banked experience point at the top score correctly', () => {
+    expect(
+      say('issue-banked_xp_at_top_score', { ability: 'Wahrnehmung', banked: '1', score: '20' }),
+    ).toBe(
+      'Wahrnehmung: Die angesparten Erfahrungspunkte (1) können diesen Wert nicht weiter steigern — 20 ist der höchste Wert, den die Steigerungstabelle aufführt.',
+    );
+    expect(say('issue-art_banked_xp_at_top_score', { art: 'Creo', banked: '1', score: '30' })).toBe(
+      'Creo: Die angesparten Erfahrungspunkte (1) können diesen Wert nicht weiter steigern — 30 ist der höchste Wert, den die Steigerungstabelle aufführt.',
     );
   });
 
