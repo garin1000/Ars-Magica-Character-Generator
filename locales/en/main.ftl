@@ -601,12 +601,15 @@ aging-migration-list-separator = ,
 # only by a recognized catalogue value, so an unrecognized one can silently
 # stop authorizing or funding what it used to. Separator as
 # restricted-xp-list-separator, via Fluent rather than a hardcoded ", ".
-unresolved-catalogued-parameter-notice = This character was saved with a value the rules catalogue does not recognize: { $items }. It was kept exactly as typed, but check that anything relying on it still works.
+# Shown once, on the CV4 migration: only for a save written before schema 18
+# (L3). $items is one pre-joined string, so the wording is count-neutral.
+unresolved-catalogued-parameter-notice = This character was saved with free text the rules catalogue does not recognize: { $items }. Kept exactly as typed. Check that anything relying on the typed text still works.
 unresolved-catalogued-parameter-item = { $ability } ("{ $text }")
 unresolved-catalogued-parameter-list-separator = ,
 # The positive counterpart: a value WAS recognized and linked to its catalogue
 # entry, so a rename or a locale switch still resolves correctly from here on.
-migrated-catalogued-parameter-notice = { $items } were recognized from what you typed and are now linked to their catalogue entry.
+# Also shown once, on the CV4 migration only, and count-neutral (L3).
+migrated-catalogued-parameter-notice = { $items } — recognized from what you typed and now linked to the catalogue.
 migrated-catalogued-parameter-item = { $ability }: "{ $text }" → { $resolved }
 migrated-catalogued-parameter-list-separator = ,
 # L1b (try-out finding 6): shown once after opening a save written before an

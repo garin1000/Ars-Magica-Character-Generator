@@ -1452,6 +1452,8 @@ fn the_opened_document_dto_carries_the_migration_report_to_the_frontend() {
 /// in a real save reaches the wire DTO. The Ability travels as its own id, not
 /// a sentence — the frontend resolves the localized name, exactly as
 /// `migrated_aging_characteristics` documents for its own case.
+///
+/// Schema 17: since L3 the report belongs to the CV4 (17 -> 18) migration only.
 #[test]
 fn opened_document_carries_unresolved_catalogued_parameters() {
     use arm_app::commands::opened_document;
@@ -1462,7 +1464,7 @@ fn opened_document_carries_unresolved_catalogued_parameters() {
         &path,
         format!(
             r#"{{
-              "schema_version": 18,
+              "schema_version": 17,
               "ruleset": {{ "id": "{RULESET_ID}", "version": "{RULESET_VERSION}" }},
               "entity_kind": "character",
               "type_id": "companion",
@@ -1504,7 +1506,8 @@ fn opened_document_carries_unresolved_catalogued_parameters() {
 /// CV4b's positive counterpart (design § 5.5): a value the fold DID recognize
 /// as a catalogue entry's name is reported too — "what you typed is now
 /// linked to its catalogue entry" — not only the failure case. Same
-/// through-the-real-conversion shape as the test above.
+/// through-the-real-conversion shape as the test above, and at schema 17 for
+/// the same L3 reason.
 #[test]
 fn opened_document_carries_migrated_catalogued_parameters() {
     use arm_app::commands::opened_document;
@@ -1515,7 +1518,7 @@ fn opened_document_carries_migrated_catalogued_parameters() {
         &path,
         format!(
             r#"{{
-              "schema_version": 18,
+              "schema_version": 17,
               "ruleset": {{ "id": "{RULESET_ID}", "version": "{RULESET_VERSION}" }},
               "entity_kind": "character",
               "type_id": "companion",

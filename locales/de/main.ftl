@@ -624,13 +624,15 @@ aging-migration-list-separator = ,
 # erkannten Katalogwert erfüllt, daher kann ein nicht erkannter Wert
 # stillschweigend aufhören zu berechtigen oder zu finanzieren. Trennzeichen wie
 # restricted-xp-list-separator, über Fluent statt eines fest verdrahteten ", ".
-unresolved-catalogued-parameter-notice = Dieser Charakter wurde mit einem Wert gespeichert, den der Regelkatalog nicht kennt: { $items }. Der Wert wurde genau wie eingegeben beibehalten — prüfe, ob alles, was davon abhängt, noch funktioniert.
+# Nur bei der CV4-Migration, also für Spielstände vor Schema 18 (L3). $items ist
+# eine fertig verbundene Zeichenkette, daher anzahlneutral formuliert.
+unresolved-catalogued-parameter-notice = Dieser Charakter wurde mit Freitext gespeichert, den der Regelkatalog nicht kennt: { $items }. Genau wie eingegeben beibehalten. Prüfe, ob alles, was von diesem Text abhängt, noch funktioniert.
 unresolved-catalogued-parameter-item = { $ability } („{ $text }“)
 unresolved-catalogued-parameter-list-separator = ,
 # Das positive Gegenstück: Ein Wert WURDE erkannt und mit seinem Katalogeintrag
 # verknüpft, sodass eine Umbenennung oder ein Sprachwechsel weiterhin korrekt
-# aufgelöst wird.
-migrated-catalogued-parameter-notice = { $items } wurden anhand des eingegebenen Textes erkannt und mit ihrem Katalogeintrag verknüpft.
+# aufgelöst wird. Ebenfalls nur bei der CV4-Migration, anzahlneutral (L3).
+migrated-catalogued-parameter-notice = { $items } — anhand des eingegebenen Textes erkannt und mit dem Katalog verknüpft.
 migrated-catalogued-parameter-item = { $ability }: „{ $text }“ → { $resolved }
 migrated-catalogued-parameter-list-separator = ,
 # L1b (Befund 6): einmalig nach dem Öffnen eines Spielstands, der vor der Aufteilung

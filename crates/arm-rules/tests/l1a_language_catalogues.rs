@@ -310,8 +310,10 @@ fn a_literal_inside_the_named_catalogue_loads() {
 
 /// The load fold matches typed text against the Ability's OWN catalogue:
 /// "Arabic" typed on the dead-language Ability is not in
-/// `catalogue.language_dead`, so it stays text and is reported; typed on the
-/// living-language Ability it resolves to `language.arabic`.
+/// `catalogue.language_dead`, so it stays text; typed on the living-language
+/// Ability it resolves to `language.arabic`. The save is at the current schema,
+/// so since L3 the leftover text is free text and is NOT reported
+/// (`l3_catalogue_notice_gating.rs`).
 #[test]
 fn the_load_fold_matches_typed_text_against_the_named_catalogue() {
     let ruleset = ruleset();
@@ -353,10 +355,8 @@ fn the_load_fold_matches_typed_text_against_the_named_catalogue() {
         "\"Arabic\" is not in catalogue.language_dead, so on ability.test_dead it must stay text"
     );
     assert!(
-        loaded
-            .unresolved_catalogued_parameters
-            .contains(&(Id::new("ability.test_dead"), "Arabic".to_string())),
-        "the unmatched dead-language text must be reported, got: {:?}",
+        loaded.unresolved_catalogued_parameters.is_empty(),
+        "free text in a current-schema save must not be reported, got: {:?}",
         loaded.unresolved_catalogued_parameters
     );
     assert_eq!(

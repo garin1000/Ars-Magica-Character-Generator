@@ -1489,3 +1489,50 @@ describe('UI bundles, Potent Magic picker actions (R3b)', () => {
     expect(say(c.lang, c.key, c.args)).toBe(c.want);
   });
 });
+
+// L3 (try-out finding 13): the CV4 load notices read "Latin were recognized"
+// for a single item. `$items` is one pre-joined string (`derive.ts`), so no
+// selector can see the count: the wording must read correctly for one item and
+// for several. Pinned with ONE item, the case that broke, args as derive.ts
+// composes them from the `-item` messages.
+describe('UI bundles, catalogue load notices at a single item (L3)', () => {
+  const bundles = { en: buildBundle('en'), de: buildBundle('de') };
+  const say = (lang: 'en' | 'de', key: string, args?: Record<string, string>) =>
+    translate(bundles[lang], key, args).replace(/[⁦-⁩]/g, '');
+
+  const cases: {
+    lang: 'en' | 'de';
+    key: string;
+    args: Record<string, string>;
+    want: string;
+  }[] = [
+    {
+      lang: 'en',
+      key: 'migrated-catalogued-parameter-notice',
+      args: { items: 'Dead Language: "Latin" → Latin' },
+      want: 'Dead Language: "Latin" → Latin — recognized from what you typed and now linked to the catalogue.',
+    },
+    {
+      lang: 'de',
+      key: 'migrated-catalogued-parameter-notice',
+      args: { items: 'Tote Sprache: „Latein“ → Latein' },
+      want: 'Tote Sprache: „Latein“ → Latein — anhand des eingegebenen Textes erkannt und mit dem Katalog verknüpft.',
+    },
+    {
+      lang: 'en',
+      key: 'unresolved-catalogued-parameter-notice',
+      args: { items: 'Living Language ("Gaelic")' },
+      want: 'This character was saved with free text the rules catalogue does not recognize: Living Language ("Gaelic"). Kept exactly as typed. Check that anything relying on the typed text still works.',
+    },
+    {
+      lang: 'de',
+      key: 'unresolved-catalogued-parameter-notice',
+      args: { items: 'Lebende Sprache („Gaelic“)' },
+      want: 'Dieser Charakter wurde mit Freitext gespeichert, den der Regelkatalog nicht kennt: Lebende Sprache („Gaelic“). Genau wie eingegeben beibehalten. Prüfe, ob alles, was von diesem Text abhängt, noch funktioniert.',
+    },
+  ];
+
+  it.each(cases)('$lang/$key reads correctly for one item', (c) => {
+    expect(say(c.lang, c.key, c.args)).toBe(c.want);
+  });
+});

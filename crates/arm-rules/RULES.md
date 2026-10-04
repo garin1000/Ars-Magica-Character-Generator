@@ -9250,7 +9250,8 @@ Tests: `magical_mount_requires_companion_or_order_member`,
   `migration.rs::fold_catalogue_matching` then upgrades a `Text` value into
   `Catalogued { id }` where it case-insensitively, trimmed-ly spells out a
   catalogue entry's name in either locale (§ 5.3), reporting both the
-  resolved and the unresolved cases on `LoadedEntity`. `SCHEMA_VERSION` 17 →
+  resolved and the unresolved cases on `LoadedEntity` (since L3 only for a
+  file whose raw version is below 18). `SCHEMA_VERSION` 17 →
   18. **`companion_witch.json`'s Dead Language score is restored to the
   human-typed `"Latin"`**, exactly as the CV3 note above anticipated — the
   fold now resolves it to `language.latin` at load, so
@@ -11609,6 +11610,15 @@ Link resolution) lands in CV3 onward.
   choice is never rewritten ("whichever single dead language the magi speak",
   ArMDE:5181): a living one is reported as `unknown_param_value`. Tests:
   `tests/l1b_language_save_migration.rs`, `tests/l1b_language_move_notice.rs`.
+- **L3 — catalogue load notices only on the CV4 migration** (try-out findings
+  13, 14; no schema bump). App behaviour, not a rule, so it has no rulebook
+  citation. `migration.rs::fold_catalogue_matching` still normalises typed text
+  to its catalogue id on every load. `load_entity_migrating` keeps the fold's two
+  reports, `migrated_catalogued_parameters` and
+  `unresolved_catalogued_parameters`, only when the file's RAW `schema_version`
+  is below 18. Free text in an 18+ save ("Native language") never warns. Both
+  Fluent notices are count-neutral in EN and DE. Tests:
+  `tests/l3_catalogue_notice_gating.rs`.
 - Load-time integrity: catalogue ids and value ids unique, both sorted by id,
   each catalogue non-empty; every value has both an `en` and a `de` name; no
   two values within one catalogue collide under trimmed, case-folded
