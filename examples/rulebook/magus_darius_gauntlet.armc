@@ -1,0 +1,292 @@
+{
+  "schema_version": 22,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.blatant_gift"
+    },
+    {
+      "ref": "flaw.disfigured"
+    },
+    {
+      "ref": "flaw.driven_major"
+    },
+    {
+      "ref": "flaw.enemies"
+    },
+    {
+      "ref": "virtue.affinity_art",
+      "params": {
+        "art": "art.perdo"
+      }
+    },
+    {
+      "ref": "virtue.enduring_constitution"
+    },
+    {
+      "ref": "virtue.fast_caster"
+    },
+    {
+      "ref": "virtue.flawless_magic"
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.hermetic_prestige"
+    },
+    {
+      "ref": "virtue.premonitions"
+    },
+    {
+      "ref": "virtue.second_sight"
+    },
+    {
+      "ref": "virtue.strong_willed"
+    },
+    {
+      "ref": "virtue.the_gift"
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": 1,
+    "str": 2,
+    "pre": -3,
+    "com": -1,
+    "dex": 1,
+    "qik": 2
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 2,
+      "specialty": "geography",
+      "parameter": {
+        "text": "Bavaria"
+      }
+    },
+    {
+      "ability": "ability.artes_liberales",
+      "score": 3,
+      "specialty": "grammar"
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 1,
+      "specialty": "running"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 2,
+      "specialty": "alertness"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 2,
+      "specialty": "punching"
+    },
+    {
+      "ability": "ability.chirurgy",
+      "score": 1,
+      "specialty": "bind wounds"
+    },
+    {
+      "ability": "ability.concentration",
+      "score": 1,
+      "specialty": "spells"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "Hermetic",
+      "parameter": {
+        "id": "language.latin"
+      }
+    },
+    {
+      "ability": "ability.etiquette",
+      "score": 1,
+      "specialty": "merchants"
+    },
+    {
+      "ability": "ability.faerie_lore",
+      "score": 1,
+      "specialty": "faerie forests"
+    },
+    {
+      "ability": "ability.finesse",
+      "score": 1,
+      "specialty": "precision"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 2,
+      "specialty": "peasants"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 2,
+      "specialty": "fast talk"
+    },
+    {
+      "ability": "ability.infernal_lore",
+      "score": 1,
+      "specialty": "demons"
+    },
+    {
+      "ability": "ability.intrigue",
+      "score": 1,
+      "specialty": "plotting"
+    },
+    {
+      "ability": "ability.leadership",
+      "score": 1,
+      "specialty": "intimidation"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "merchant slang",
+      "parameter": {
+        "text": "German"
+      }
+    },
+    {
+      "ability": "ability.magic_lore",
+      "score": 1,
+      "specialty": "creatures"
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 4,
+      "specialty": "inventing spells"
+    },
+    {
+      "ability": "ability.organization_lore",
+      "score": 1,
+      "specialty": "criminals",
+      "parameter": {
+        "id": "organization.order_of_hermes"
+      }
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1,
+      "specialty": "Corpus"
+    },
+    {
+      "ability": "ability.penetration",
+      "score": 2,
+      "specialty": "Perdo"
+    },
+    {
+      "ability": "ability.philosophiae",
+      "score": 1,
+      "specialty": "moral philosophy"
+    },
+    {
+      "ability": "ability.profession",
+      "score": 1,
+      "specialty": "speed",
+      "parameter": {
+        "text": "Scribe"
+      }
+    },
+    {
+      "ability": "ability.stealth",
+      "score": 1,
+      "specialty": "shadowing"
+    },
+    {
+      "ability": "ability.survival",
+      "score": 1,
+      "specialty": "forests"
+    },
+    {
+      "ability": "ability.swim",
+      "score": 1,
+      "specialty": "rough water"
+    }
+  ],
+  "xp_pool": 435,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.corpus",
+      "score": 2
+    },
+    {
+      "art": "art.creo",
+      "score": 5
+    },
+    {
+      "art": "art.perdo",
+      "score": 10
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.calm_the_motion_of_the_heart"
+    },
+    {
+      "spell": "spell.dust_to_dust"
+    },
+    {
+      "spell": "spell.loss_of_but_a_moments_memory"
+    },
+    {
+      "spell": "spell.parching_wind"
+    },
+    {
+      "spell": "spell.soothe_the_raging_flames"
+    },
+    {
+      "spell": "spell.the_wound_that_weeps"
+    },
+    {
+      "spell": "spell.veil_of_invisibility"
+    }
+  ],
+  "house": "house.flambeau",
+  "house_choices": {
+    "flambeau_puissant": {
+      "ref": "virtue.puissant_art",
+      "params": {
+        "art": "art.perdo"
+      }
+    }
+  },
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Brave",
+      "value": 3
+    },
+    {
+      "name": "Dedicated to Cause",
+      "value": 3
+    },
+    {
+      "name": "Efficient",
+      "value": 3
+    }
+  ],
+  "reputations": [
+    {
+      "kind": "hermetic",
+      "score": 4,
+      "content": "Dedicated Hoplite"
+    }
+  ],
+  "name": "Darius of Flambeau",
+  "concept": "A scary-looking magus who specializes in Perdo magic and in hunting down the enemies of the Order",
+  "gender": "male",
+  "saga_year": 1220
+}

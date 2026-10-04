@@ -116,11 +116,13 @@ fn latin_name_variants_all_resolve_to_the_same_catalogue_id() {
 /// A value that spells out no catalogue entry's name in either locale is never
 /// guessed at: it stays `Text`, unchanged, and is reported so the player is told
 /// rather than left with a silently-unrecognized value (design § 5.3/§ 5.5).
+/// Schema 17: since L3 the report is part of the CV4 migration only, so a save
+/// at 18 or later keeps its free text silently (`l3_catalogue_notice_gating.rs`).
 #[test]
 fn an_unmatched_free_text_value_stays_text_and_is_reported() {
     let ruleset = full_ruleset();
     let names = catalogue_names(&ruleset);
-    let json = companion_with_dead_language_parameter(18, "\"Klingon\"");
+    let json = companion_with_dead_language_parameter(17, "\"Klingon\"");
     let loaded = load_entity_migrating(&json, DEFAULT_SAGA_YEAR, &ruleset, &names)
         .expect("an unmatched value still loads");
 

@@ -1,0 +1,233 @@
+{
+  "schema_version": 22,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "magus",
+  "selections": [
+    {
+      "ref": "flaw.deficient_form",
+      "params": {
+        "form": "art.auram"
+      }
+    },
+    {
+      "ref": "flaw.generous_major"
+    },
+    {
+      "ref": "flaw.plagued_by_supernatural_entity"
+    },
+    {
+      "ref": "virtue.enduring_magic"
+    },
+    {
+      "ref": "virtue.hermetic_magus"
+    },
+    {
+      "ref": "virtue.improved_characteristics"
+    },
+    {
+      "ref": "virtue.major_magical_focus",
+      "params": {
+        "focus": "stone"
+      }
+    },
+    {
+      "ref": "virtue.puissant_art",
+      "params": {
+        "art": "art.terram"
+      }
+    },
+    {
+      "ref": "virtue.the_gift"
+    },
+    {
+      "ref": "virtue.tough"
+    }
+  ],
+  "characteristics": {
+    "int": 3,
+    "per": -1,
+    "str": 3,
+    "sta": 3,
+    "pre": -1,
+    "com": 0,
+    "dex": -2,
+    "qik": -2
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 3,
+      "specialty": "mountain trails",
+      "parameter": {
+        "text": "Local area"
+      }
+    },
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "astronomy"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 3,
+      "specialty": "grappling"
+    },
+    {
+      "ability": "ability.concentration",
+      "score": 3,
+      "specialty": "spellcasting"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "Hermetic usage",
+      "parameter": {
+        "id": "language.latin"
+      }
+    },
+    {
+      "ability": "ability.finesse",
+      "score": 2,
+      "specialty": "Terram"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "being polite",
+      "parameter": {
+        "text": "Native language"
+      }
+    },
+    {
+      "ability": "ability.magic_theory",
+      "score": 3,
+      "specialty": "Terram"
+    },
+    {
+      "ability": "ability.parma_magica",
+      "score": 1,
+      "specialty": "Ignem"
+    },
+    {
+      "ability": "ability.penetration",
+      "score": 2,
+      "specialty": "Terram"
+    },
+    {
+      "ability": "ability.survival",
+      "score": 3,
+      "specialty": "mountains"
+    }
+  ],
+  "xp_pool": 435,
+  "ability_funding": "pool",
+  "art_scores": [
+    {
+      "art": "art.corpus",
+      "score": 1
+    },
+    {
+      "art": "art.creo",
+      "score": 8
+    },
+    {
+      "art": "art.muto",
+      "score": 4
+    },
+    {
+      "art": "art.perdo",
+      "score": 3
+    },
+    {
+      "art": "art.rego",
+      "score": 5
+    },
+    {
+      "art": "art.terram",
+      "score": 12
+    }
+  ],
+  "spells": [
+    {
+      "spell": "spell.earth_that_breaks_no_more",
+      "within_focus": true
+    },
+    {
+      "spell": "spell.hands_of_the_grasping_earth"
+    },
+    {
+      "spell": "spell.obliteration_of_the_metallic_barrier"
+    },
+    {
+      "spell": "spell.rock_of_viscid_clay",
+      "within_focus": true
+    },
+    {
+      "spell": "spell.the_crystal_dart",
+      "within_focus": true
+    },
+    {
+      "spell": "spell.the_earths_carbuncle",
+      "within_focus": true
+    },
+    {
+      "spell": "spell.wall_of_protecting_stone",
+      "within_focus": true
+    }
+  ],
+  "house": "house.ex_miscellanea",
+  "house_choices": {
+    "ex_misc_major_flaw": {
+      "ref": "flaw.necessary_condition",
+      "params": {
+        "action": "spinning around three times"
+      }
+    },
+    "ex_misc_major_virtue": {
+      "ref": "virtue.giant_blood"
+    },
+    "ex_misc_minor_virtue": {
+      "ref": "virtue.affinity_art",
+      "params": {
+        "art": "art.terram"
+      }
+    }
+  },
+  "age": 25,
+  "apparent_age": 25,
+  "personality_traits": [
+    {
+      "name": "Generous",
+      "value": 6
+    },
+    {
+      "name": "Patient",
+      "value": 3
+    },
+    {
+      "name": "Trusting",
+      "value": 2
+    },
+    {
+      "name": "Vengeful",
+      "value": 2
+    }
+  ],
+  "name": "The Ex Miscellanea",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "loadout": "wielded"
+    },
+    {
+      "item": "weapon.grapple",
+      "loadout": "wielded",
+      "specialization_applies": true
+    }
+  ]
+}

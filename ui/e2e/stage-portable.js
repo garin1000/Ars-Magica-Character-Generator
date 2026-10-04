@@ -14,8 +14,8 @@
 // this staging existed nothing tested it.
 //
 // The layout below deliberately mirrors `build-linux.sh`: the binary, `rules/core`
-// and `rules/i18n` beside it, and the attribution notice that has to travel with
-// the rules text.
+// and `rules/i18n` beside it, the attribution notice that has to travel with
+// the rules text, and the rulebook example characters in `examples/`.
 //
 // Staging happens in Node rather than in a shell script so `npm run
 // test:e2e:portable` is the whole command a human needs, on any platform.
@@ -78,6 +78,11 @@ export function stagePortableApp({ build = true } = {}) {
     path.resolve(repoRoot, 'rules/NOTICE.md'),
     path.resolve(portableDir, 'rules/NOTICE.md'),
   );
+  // The rulebook's example characters (A2), beside `rules/` as `examples/`,
+  // exactly as build-linux.sh's `stage_examples` arranges them.
+  fs.cpSync(path.resolve(repoRoot, 'examples/rulebook'), path.resolve(portableDir, 'examples'), {
+    recursive: true,
+  });
 
   return portableApp;
 }

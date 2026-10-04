@@ -1,0 +1,108 @@
+{
+  "schema_version": 22,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "grog",
+  "selections": [
+    {
+      "ref": "flaw.pessimistic"
+    },
+    {
+      "ref": "virtue.covenfolk"
+    },
+    {
+      "ref": "virtue.warrior"
+    }
+  ],
+  "characteristics": {
+    "int": 0,
+    "per": 3,
+    "str": 0,
+    "sta": 1,
+    "pre": -2,
+    "com": -2,
+    "dex": 2,
+    "qik": 2
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 4,
+      "specialty": "game trails",
+      "parameter": {
+        "text": "Local area"
+      }
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 1,
+      "specialty": "climbing"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 5,
+      "specialty": "woodlands"
+    },
+    {
+      "ability": "ability.bows",
+      "score": 4,
+      "specialty": "shooting from cover"
+    },
+    {
+      "ability": "ability.hunt",
+      "score": 5,
+      "specialty": "deer"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "talking about forests",
+      "parameter": {
+        "text": "Native language"
+      }
+    },
+    {
+      "ability": "ability.stealth",
+      "score": 2,
+      "specialty": "hunting"
+    },
+    {
+      "ability": "ability.survival",
+      "score": 4,
+      "specialty": "woodlands"
+    }
+  ],
+  "xp_pool": 345,
+  "ability_funding": "pool",
+  "age": 20,
+  "apparent_age": 20,
+  "personality_traits": [
+    {
+      "name": "Brave",
+      "value": 3
+    },
+    {
+      "name": "Loyal",
+      "value": 1
+    },
+    {
+      "name": "Pessimistic",
+      "value": 3
+    }
+  ],
+  "name": "The Hunter",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "armor.heavy_leather_partial",
+      "loadout": "wielded"
+    },
+    {
+      "item": "weapon.bow_short",
+      "loadout": "wielded"
+    }
+  ]
+}

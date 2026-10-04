@@ -21,3 +21,19 @@ stage_rules() {
   cp -R "rules/core" "$dest/core"
   cp -R "rules/i18n" "$dest/i18n"
 }
+
+# stage_examples — copy the shipped rulebook example characters
+# (examples/rulebook: the book templates as .armc saves plus their NOTICE.md)
+# into a destination "examples" directory, replacing anything already there.
+# The portable archives' counterpart of the installers' bundle.resources entry
+# "../../examples/rulebook" -> "examples" in crates/arm-app/tauri.conf.json.
+# examples/*_sample.json are test fixtures and are deliberately not staged.
+#
+# Usage:
+#   stage_examples "$STAGE/examples"
+stage_examples() {
+  local dest="$1"
+  rm -rf "$dest"
+  mkdir -p "$dest"
+  cp -R "examples/rulebook/." "$dest"
+}

@@ -1,0 +1,171 @@
+{
+  "schema_version": 22,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "grog",
+  "selections": [
+    {
+      "ref": "flaw.weakness_minor"
+    },
+    {
+      "ref": "virtue.covenfolk"
+    },
+    {
+      "ref": "virtue.warrior"
+    }
+  ],
+  "characteristics": {
+    "int": 0,
+    "per": 0,
+    "str": 0,
+    "sta": 1,
+    "pre": 0,
+    "com": 0,
+    "dex": 2,
+    "qik": 2
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 2,
+      "specialty": "monsters",
+      "parameter": {
+        "text": "Area B"
+      }
+    },
+    {
+      "ability": "ability.area_lore",
+      "score": 4,
+      "specialty": "monsters",
+      "parameter": {
+        "text": "Area A"
+      }
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 5,
+      "specialty": "in combat"
+    },
+    {
+      "ability": "ability.bows",
+      "score": 5,
+      "specialty": "longbow"
+    },
+    {
+      "ability": "ability.brawl",
+      "score": 3,
+      "specialty": "kicking"
+    },
+    {
+      "ability": "ability.carouse",
+      "score": 3,
+      "specialty": "with fighting friends"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 1,
+      "specialty": "magi"
+    },
+    {
+      "ability": "ability.great_weapon",
+      "score": 5,
+      "specialty": "pole axe"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 2,
+      "specialty": "getting extra rations"
+    },
+    {
+      "ability": "ability.leadership",
+      "score": 3,
+      "specialty": "in combat"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "military talk",
+      "parameter": {
+        "text": "Native language"
+      }
+    },
+    {
+      "ability": "ability.organization_lore",
+      "score": 3,
+      "specialty": "grogs",
+      "parameter": {
+        "id": "organization.order_of_hermes"
+      }
+    },
+    {
+      "ability": "ability.single_weapon",
+      "score": 8,
+      "specialty": "heater shield"
+    },
+    {
+      "ability": "ability.stealth",
+      "score": 3,
+      "specialty": "when armored"
+    },
+    {
+      "ability": "ability.survival",
+      "score": 1,
+      "specialty": "when in a group"
+    },
+    {
+      "ability": "ability.thrown_weapon",
+      "score": 4,
+      "specialty": "knife"
+    }
+  ],
+  "xp_pool": 720,
+  "ability_funding": "pool",
+  "age": 45,
+  "apparent_age": 45,
+  "personality_traits": [
+    {
+      "name": "Brave",
+      "value": 1
+    },
+    {
+      "name": "Cheeky",
+      "value": 2
+    },
+    {
+      "name": "Loyal",
+      "value": 3
+    }
+  ],
+  "aging_points": {
+    "sta": 1,
+    "pre": 1,
+    "com": 1,
+    "dex": 2,
+    "qik": 2
+  },
+  "name": "The Grizzled Veteran",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "armor.metal_scale_full",
+      "loadout": "wielded"
+    },
+    {
+      "item": "shield.heater",
+      "loadout": "wielded"
+    },
+    {
+      "item": "weapon.axe",
+      "loadout": "wielded",
+      "specialization_applies": true
+    },
+    {
+      "item": "weapon.kick",
+      "loadout": "wielded",
+      "specialization_applies": true
+    }
+  ]
+}

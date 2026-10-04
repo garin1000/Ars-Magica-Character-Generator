@@ -582,6 +582,17 @@ matches:
 5. An uncatalogued ability's value, or a value already `Catalogued`/`Linked`,
    is a no-op for this fold.
 
+**[L3, try-out findings 13/14, 2026-10-04] The fold normalises on every load;
+it reports only on the migration.** Steps 3 and 4 run on every load, so typed
+text naming a catalogue entry always becomes its id. The two reports (§ 5.5's
+`migrated_catalogued_parameters` and `unresolved_catalogued_parameters`) are
+kept only when the file's **raw** `schema_version` is below 18. "Raw" is the
+file's own claim, read before any other fold stamps the current version. A save
+at 18 or later was written with the catalogue picker available, so its
+leftover text ("Native language", "Gaelic") is a deliberate "Other…" choice. It
+never warns, and its normalisation is silent. Before L3, the notices fired on
+every open.
+
 **Both-locales-at-once is a new requirement on the loader, not just an
 implementation nicety.** `LocalizedRuleset` (the app's existing i18n carrier)
 holds **one active language's** display text at a time, merged with a
@@ -666,6 +677,14 @@ swallowed"). `unresolved_catalogued_parameters`/`dangling_links`/
 (e.g. a stray trailing space that used to `==`-match by accident, or a
 duplicate selection nobody noticed) could silently lose an authorization —
 these notices are what keep that from being silent.
+
+**[L3] The two catalogue notices are one-time migration notices.**
+`migrated_catalogued_parameters` and `unresolved_catalogued_parameters` are
+filled only for a file whose raw `schema_version` is below 18 (§ 5.3's L3 note).
+Once that file is saved, it is stamped with the current version and reopens
+without either notice. `dangling_links` and `ambiguous_links` stay ungated (§
+5.4). Both notices are worded count-neutrally in EN and DE, because `$items`
+arrives as one pre-joined string and no `[one]` selector can see the count.
 
 ### 5.6 [decided, MAJOR, addressed] Per-call-site impact — `load_entity_migrating`'s new dependency
 

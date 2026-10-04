@@ -138,7 +138,11 @@ use crate::validation::birth_year_in_saga_year;
 /// spells out a catalogue entry's name (either locale) into `Catalogued { id
 /// }` (§ 5.3) — value-driven and idempotent, so it runs on every load, not
 /// just a migrating one, and stamps no version of its own; the version bump
-/// belongs to the wire-shape change alone.
+/// belongs to the wire-shape change alone. Its *reports* are a different
+/// matter (L3, try-out findings 13/14): they are the CV4 migration's notices,
+/// so only a file whose RAW `schema_version` is below 18 gets them. From 18 on
+/// the normalisation is silent, and unmatched text is a deliberate "Other…"
+/// choice that never warns.
 ///
 /// Bumped 18 → 19 for C5a (`docs/vf-audit/design-c0-parameter-model.md` § 8):
 /// `ParamType::MultiRef` and `ParameterDomain::Spell` land, and selection-parameter
@@ -254,7 +258,9 @@ pub struct LoadedEntity {
     /// Parameterized Ability rows whose free-text value was recognized as a
     /// catalogue entry's name (either locale) and folded from `Text` into
     /// `Catalogued` — `(ability, original text, resolved catalogue id)`, in the
-    /// order encountered (design § 5.3/§ 5.5). Empty when nothing matched.
+    /// order encountered (design § 5.3/§ 5.5). Empty when nothing matched, and
+    /// always empty for a file whose raw `schema_version` is 18 or later (L3):
+    /// the fold still normalises there, but silently.
     pub migrated_catalogued_parameters: MigratedCatalogueParameters,
     /// Parameterized Ability rows whose free-text value did NOT match any
     /// catalogue entry's name in either locale, and so stayed `Text` unchanged —
@@ -264,7 +270,9 @@ pub struct LoadedEntity {
     /// caller surfaces this as a localized notice, exactly like
     /// [`Self::migrated_aging_characteristics`] — the player is told a value
     /// went unrecognized rather than left to discover a silently broken
-    /// authorization later.
+    /// authorization later. Always empty for a file whose raw `schema_version`
+    /// is 18 or later (L3): such a file was written with the catalogue picker
+    /// available, so its free text is a deliberate "Other…" choice.
     pub unresolved_catalogued_parameters: UnresolvedCatalogueParameters,
     /// Parameterized Ability rows whose `Linked` value named a declaring item
     /// held ZERO times among effective (bought ∪ granted) selections — the
@@ -715,6 +723,14 @@ fn fold_legacy_equipment_loadout(value: &mut serde_json::Value) -> bool {
 /// written after the split.
 const CATALOGUE_SPLIT_SCHEMA_VERSION: u32 = 22;
 
+/// The first schema with catalogued Ability values (CV4, 17 → 18). Only a file
+/// written BEFORE it held its language as plain typed text by necessity, so
+/// only such a file gets the catalogue notices (L3, try-out findings 13/14).
+/// From 18 on, free text was a deliberate "Other…" choice and is never
+/// reported. A literal, not [`SCHEMA_VERSION`]: a later bump must not widen the
+/// notices to saves written after CV4.
+const CATALOGUED_VALUES_SCHEMA_VERSION: u32 = 18;
+
 /// The catalogue an Ability draws its parameter values from, if it is
 /// catalogued and the catalogue exists.
 fn catalogue_of<'a>(ruleset: &'a Ruleset, ability: &Id) -> Option<&'a crate::catalogue::Catalogue> {
@@ -846,6 +862,9 @@ fn move_values_to_their_catalogue(
 /// case-insensitively, trimmed-ly spells out one of the ability's catalogue's
 /// values' names, in either locale — never guessed, so an unmatched or
 /// ambiguous value stays `Text` unchanged and is reported.
+///
+/// The caller keeps the reports only for a pre-18 file (L3; see
+/// [`LoadedEntity::unresolved_catalogued_parameters`]).
 ///
 /// A no-op for any `AbilityScore` whose value is not `Text` (`Catalogued` and
 /// `Linked` pass through untouched — idempotent, and safe to run on every
@@ -1207,8 +1226,15 @@ pub fn load_entity_migrating(
     if !moved_ability_parameters.is_empty() {
         entity.schema_version = SCHEMA_VERSION;
     }
-    let (migrated_catalogued_parameters, unresolved_catalogued_parameters) =
+    // The fold normalises typed text on every load, silently. Its reports are
+    // the CV4 migration's notices, so only a file written before CV4 gets them
+    // (L3): from 18 on, unmatched text is a deliberate "Other…" choice.
+    let (mut migrated_catalogued_parameters, mut unresolved_catalogued_parameters) =
         fold_catalogue_matching(&mut entity, ruleset, catalogue_names);
+    if raw_schema_version >= CATALOGUED_VALUES_SCHEMA_VERSION {
+        migrated_catalogued_parameters.clear();
+        unresolved_catalogued_parameters.clear();
+    }
     let (dangling_links, ambiguous_links) = fold_dangling_and_ambiguous_links(&mut entity, ruleset);
     Ok(LoadedEntity {
         entity,

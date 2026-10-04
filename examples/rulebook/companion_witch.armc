@@ -1,0 +1,189 @@
+{
+  "schema_version": 22,
+  "ruleset": {
+    "id": "arm5-core",
+    "version": "2024.1"
+  },
+  "entity_kind": "character",
+  "type_id": "companion",
+  "selections": [
+    {
+      "ref": "flaw.compassionate_major"
+    },
+    {
+      "ref": "flaw.enemies"
+    },
+    {
+      "ref": "flaw.nocturnal"
+    },
+    {
+      "ref": "virtue.educated"
+    },
+    {
+      "ref": "virtue.improved_characteristics"
+    },
+    {
+      "ref": "virtue.premonitions"
+    },
+    {
+      "ref": "virtue.second_sight"
+    },
+    {
+      "ref": "virtue.student_of_realm",
+      "params": {
+        "realm": "realm.magic"
+      }
+    },
+    {
+      "ref": "virtue.wilderness_sense"
+    },
+    {
+      "ref": "virtue.wise_one",
+      "params": {
+        "study": "ability_category.arcane"
+      }
+    }
+  ],
+  "characteristics": {
+    "int": 2,
+    "per": 2,
+    "str": -1,
+    "sta": 0,
+    "pre": 1,
+    "com": 1,
+    "dex": 2,
+    "qik": 0
+  },
+  "ability_scores": [
+    {
+      "ability": "ability.area_lore",
+      "score": 3,
+      "specialty": "medicinal herbs",
+      "parameter": {
+        "text": "Local area"
+      }
+    },
+    {
+      "ability": "ability.artes_liberales",
+      "score": 1,
+      "specialty": "astronomy"
+    },
+    {
+      "ability": "ability.athletics",
+      "score": 1,
+      "specialty": "climbing"
+    },
+    {
+      "ability": "ability.awareness",
+      "score": 1,
+      "specialty": "animals"
+    },
+    {
+      "ability": "ability.charm",
+      "score": 3,
+      "specialty": "peasants"
+    },
+    {
+      "ability": "ability.chirurgy",
+      "score": 4,
+      "specialty": "farm accidents"
+    },
+    {
+      "ability": "ability.dead_language",
+      "score": 4,
+      "specialty": "medical terms",
+      "parameter": {
+        "id": "language.latin"
+      }
+    },
+    {
+      "ability": "ability.dominion_lore",
+      "score": 1,
+      "specialty": "relics"
+    },
+    {
+      "ability": "ability.faerie_lore",
+      "score": 2,
+      "specialty": "curses"
+    },
+    {
+      "ability": "ability.folk_ken",
+      "score": 3,
+      "specialty": "peasants"
+    },
+    {
+      "ability": "ability.guile",
+      "score": 3,
+      "specialty": "clergy"
+    },
+    {
+      "ability": "ability.infernal_lore",
+      "score": 1,
+      "specialty": "diabolists"
+    },
+    {
+      "ability": "ability.living_language",
+      "score": 5,
+      "specialty": "choosing words carefully",
+      "parameter": {
+        "text": "Native language"
+      }
+    },
+    {
+      "ability": "ability.magic_lore",
+      "score": 3,
+      "specialty": "regiones"
+    },
+    {
+      "ability": "ability.medicine",
+      "score": 5,
+      "specialty": "accidental poisonings"
+    },
+    {
+      "ability": "ability.premonitions",
+      "score": 3,
+      "specialty": "threats to others"
+    },
+    {
+      "ability": "ability.second_sight",
+      "score": 3,
+      "specialty": "ghosts"
+    },
+    {
+      "ability": "ability.survival",
+      "score": 3,
+      "specialty": "near farmland"
+    },
+    {
+      "ability": "ability.wilderness_sense",
+      "score": 3,
+      "specialty": "weather"
+    }
+  ],
+  "xp_pool": 495,
+  "ability_funding": "pool",
+  "age": 30,
+  "apparent_age": 30,
+  "personality_traits": [
+    {
+      "name": "Compassionate",
+      "value": 3
+    },
+    {
+      "name": "Sociable",
+      "value": -1
+    },
+    {
+      "name": "Trusting",
+      "value": -2
+    }
+  ],
+  "name": "The Witch",
+  "saga_year": 1220,
+  "equipment": [
+    {
+      "item": "weapon.dodge",
+      "loadout": "wielded"
+    }
+  ]
+}
