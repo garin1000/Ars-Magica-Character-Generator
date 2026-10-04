@@ -724,6 +724,33 @@ and the milestone gate) are all complete. Detail: `M6B-IMPLEMENTATION.md`.
       boots and finds its rules there, which is the only way to exercise
       `load_ruleset`'s exe-dir fallback
 
+## Milestone 6.6 — Optional update check (GitHub releases)
+
+Scope: the app can check GitHub for a newer release and tell the user. The check
+is **opt-in**: nothing goes out over the network until the user has agreed.
+Requested by Norbert, 2026-10-04. Comes **before M7**.
+
+- [ ] **Ask on first start.** On the first launch, and on the first launch of a
+      newer app version, ask whether the app should check for updates. The
+      answer is stored in a per-user settings file, along with the app version
+      it was given for. A version newer than the stored one asks again.
+- [ ] **Preference can be changed later**, e.g. through a menu item or a
+      settings entry, following the menu-accelerator rule in `CLAUDE.md`.
+- [ ] **The check itself:** if enabled, query the GitHub latest-release
+      endpoint and compare semver against the running version. A newer
+      release shows a non-blocking notice with a link to the release page.
+      Failures (offline, rate limit, bad response) are silent. Nothing is
+      downloaded or installed.
+- [ ] **Hostile-input robustness:** the response is untrusted. Use a size cap
+      and a timeout, parse the version strictly, and never panic.
+- [ ] **All strings in Fluent**, EN and DE.
+- [ ] **`CLAUDE.md` invariant update:** it says the app "makes no outbound
+      calls in normal operation". Amend it to name this single opt-in call.
+      The same applies to the CSP's `connect-src`.
+- [ ] **Tests:** the version comparison and the "ask again?" logic are pure
+      and unit-tested. The HTTP call sits behind a seam so it can be mocked.
+      e2e covers the first-start prompt.
+
 ## Milestone 7 — Character sheet window
 
 Scope: an optional, read-only **second app window** that renders a formatted
@@ -825,7 +852,7 @@ Full detail, field inventory, and quirks: **`docs/scribus-character-sheet.md`**.
 
 ---
 
-## Current focus: full-codebase audit backlog — Milestone 6 and the guided-creation review are both complete
+## Current focus: Milestone 6.6 — Milestones 0–6, both audits and the stabilisation round are complete
 
 Milestones 0–5.6 complete: the direct-entry gate is closed — every core-rules
 character is fully enterable and its combat/Soak/casting/lab totals computed
@@ -941,7 +968,7 @@ either implemented as decided or recorded in the plan's §3 as explicitly out of
 or a confirmed non-issue. Along the way it also picked up and closed #33 (grogs
 recording Personality Traits in the wizard).
 
-**A second full-codebase audit is in progress.** Five reviewers swept the whole
+**A second full-codebase audit has been worked through.** Five reviewers swept the whole
 codebase after the guided-creation work landed and returned 163 findings across every
 severity — a larger, separate pass from the 57-finding audit above. All 23 CRITICAL/HIGH
 findings are closed (`07380f6`), including a real gap: the unsaved-changes guard's
@@ -950,13 +977,18 @@ Cmd+Q path had zero test coverage despite being a mandatory product behavior. A 
 off; deleting a familiar or talisman had no confirmation) and 15 accessibility findings
 (`e44fc18`) are closed too. The remaining backlog is being worked tier by tier; the
 findings ledger is a working artifact under the gitignored `tmp/review/`, not committed
-to the repo. The e2e suite stands at 43 specs as of this pass.
+to the repo. The e2e suite stood at 43 specs as of that pass.
 
-**Next, once the audit backlog closes: Milestone 7 — the character-sheet window.** A
-read-only second Tauri window that renders a formatted sheet and re-renders live as the
-character is edited in the main window, with which sections appear driven by the
-character-type profile rather than a per-type ladder. The derived values it shows are
-already computed in M5; M7 only lays them out. Detail: the M7 section above.
+**Stabilisation since then (September–October 2026), now complete.** The V/F audit
+checked all 655 Virtue/Flaw entries against the rulebook (`docs/vf-audit/`, decisions
+D1 onwards), and its Phase 2 corrections landed. Two manual try-out rounds followed,
+each with a fix round planned slice by slice (decisions D83 and D84). The second round's
+retest passed every step. The save schema is at version 23. The app is at **version
+0.4.0**.
+
+**Next: Milestone 6.6, the optional update check**, then **Milestone 7, the
+character-sheet window**. Detail: their sections above. Two small open to-dos can go
+alongside them (`docs/open-todos.md` rows 55 and 56).
 
 ---
 

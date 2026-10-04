@@ -20,6 +20,12 @@ made against the actual model:
   machine and the files. There is nothing to escalate *to*.
 - **No server, no network service, no listening socket, no remote API, no origin.** The
   app ships no backend and makes no outbound calls in normal operation.
+  **Planned exception (M6.6, not yet built):** an opt-in update check that asks the
+  GitHub releases API for the latest version. It is off until the user agrees, and it
+  downloads and installs nothing. Its response is untrusted input: cap its size, time
+  it out, parse it strictly, never panic. When M6.6 lands, reword this bullet to
+  describe the call as shipped, and widen the CSP's `connect-src` only if the call is
+  made from the webview.
 - **No untrusted remote content.** Nothing is fetched from the internet and rendered.
 - **The trust boundary is the file the user opens** — a `.armc`/`.armcov` save, or a
   `rules/` directory beside the binary. That is the realistic hostile-input surface, and

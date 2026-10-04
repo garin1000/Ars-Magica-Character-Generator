@@ -195,10 +195,10 @@ step by step in the guided flow: milestone **M6 is complete**, closed by an
 end-to-end walk for each of the four character types — start screen to finish, every
 phase of that type's flow filled in, on the shipped binary. A follow-up review of the
 guided wizard (31 numbered issues plus two more found along the way) has since been
-fixed in full, in 12 dependency-ordered slices. Work has now moved to a full-codebase
-audit: all CRITICAL and HIGH findings are closed, and the remaining backlog is being
-worked tier by tier. See [PLAN.md](PLAN.md) for the detailed history and current
-focus.
+fixed in full, in 12 dependency-ordered slices. Two full-codebase audits, a
+rulebook audit of all 655 Virtues and Flaws, and two manual try-out rounds with
+their fix rounds have since been completed. The current version is 0.4.0. See
+[PLAN.md](PLAN.md) for the detailed history and current focus.
 
 ### What works today
 
@@ -407,9 +407,10 @@ focus.
 
 ### Next
 
-The full-codebase audit backlog is being closed out tier by tier first (see
-[PLAN.md](PLAN.md) for current status). After that, the next roadmap milestone is a
-**character-sheet window**: an optional, read-only second window that renders a
+The next milestone is an **optional update check**. If the user agrees, the app
+asks GitHub whether a newer release exists and says so. Nothing is downloaded.
+The app asks for this preference on first start and again after each upgrade.
+After that comes a **character-sheet window**: an optional, read-only second window that renders a
 formatted sheet and recomputes live as the character is edited in the main one. Which
 sections it shows will be driven by the character-type profile rather than a per-type
 ladder, and every value on it is already computed by the engine — the window only lays
