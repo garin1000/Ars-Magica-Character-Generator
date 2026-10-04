@@ -39,6 +39,7 @@ import {
   dismissTooltip,
   hoverForTooltip,
   openSettings,
+  replaceValue,
   returnToStartScreen,
   runDocumentAction,
   setLanguage,
@@ -654,7 +655,7 @@ describe('the settings dialog', () => {
     expect(await $(SAGA_YEAR_INPUT).getValue()).toBe('1220');
 
     await openSettings();
-    await $(DEFAULT_INPUT).setValue('1197');
+    await replaceValue(await $(DEFAULT_INPUT), '1197');
     await browser.waitUntil(() => storedSettings().default_saga_year === 1197, {
       timeout: 5000,
       timeoutMsg: 'the chosen default saga year should reach the settings file',
@@ -674,7 +675,7 @@ describe('the settings dialog', () => {
 
     // Restore, since the worker's settings directory persists across runs.
     await openSettings();
-    await $(DEFAULT_INPUT).setValue('1220');
+    await replaceValue(await $(DEFAULT_INPUT), '1220');
     await browser.waitUntil(() => storedSettings().default_saga_year === 1220, {
       timeout: 5000,
       timeoutMsg: 'the default saga year should be restored for the next run',

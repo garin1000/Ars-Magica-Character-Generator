@@ -24,6 +24,7 @@ import {
   BOOT_TIMEOUT,
   clean,
   currentWizardPhase,
+  replaceValue,
   resizeWindowTo,
   returnToStartScreen,
   runDocumentAction,
@@ -949,7 +950,7 @@ describe('layout stability under first interaction', () => {
     const artPool = await $('[data-testid="art-xp-pool"]');
     await artPool.waitForExist({ timeout: STEP_TIMEOUT });
     await artPool.waitForClickable({ timeout: STEP_TIMEOUT });
-    await artPool.setValue('100');
+    await replaceValue(artPool, '100');
     await raiseArt('art.creo', 1);
     await raiseArt('art.ignem', 1);
 

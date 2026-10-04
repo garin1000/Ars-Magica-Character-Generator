@@ -20,6 +20,7 @@ import { $, $$, browser, expect } from '@wdio/globals';
 import {
   clean,
   isRowBlocked,
+  replaceValue,
   setLanguage,
   SETTLE_TIMEOUT,
   startCharacter,
@@ -53,7 +54,7 @@ describe('hermetic arts', () => {
     // directly (no pick step); triangular cost = 15 XP.
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
-    await pool.setValue('20');
+    await replaceValue(pool, '20');
 
     const inc = await $('[data-testid="art-inc-art.creo"]');
     await inc.waitForExist({ timeout: 5000 });
@@ -102,7 +103,7 @@ describe('hermetic arts', () => {
 
     // Restore a legal pool so later specs start from a funded state.
     const pool = await $('[data-testid="art-xp-pool"]');
-    await pool.setValue('40');
+    await replaceValue(pool, '40');
     await browser.waitUntil(async () => clean(await available.getText()).includes('12'), {
       timeout: 5000,
       timeoutMsg: 'a 40-point pool should cover Creo 7 (28 XP) with 12 left',
@@ -143,7 +144,7 @@ describe('hermetic arts', () => {
     // The general-pool total is the only editable field and retains its value.
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
-    await pool.setValue('30');
+    await replaceValue(pool, '30');
     await browser.waitUntil(async () => (await pool.getValue()) === '30', {
       timeout: 5000,
       timeoutMsg: 'the editable general-pool total should retain the entered value',
@@ -387,7 +388,7 @@ describe('hermetic houses', () => {
     await $(ARTS_TAB).click();
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
-    await pool.setValue('20');
+    await replaceValue(pool, '20');
     const inc = await $('[data-testid="art-inc-art.ignem"]');
     await inc.waitForExist({ timeout: 5000 });
     await inc.click();

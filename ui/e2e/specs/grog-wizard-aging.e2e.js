@@ -29,6 +29,7 @@ import {
   BOOT_TIMEOUT,
   clean,
   currentWizardPhase,
+  replaceValue,
   runDocumentAction,
   setWizardAge,
   SETTLE_TIMEOUT,
@@ -256,7 +257,7 @@ describe('the guided aging step', () => {
 
   /** Type a stress die and wait for the engine's answer to come back. */
   async function rollDie(die, expectedTotal) {
-    await $(DIE_INPUT).setValue(String(die));
+    await replaceValue(await $(DIE_INPUT), die);
     await browser.waitUntil(
       async () =>
         (await $(AGING_TOTAL).isExisting()) &&
@@ -571,7 +572,7 @@ describe('the guided aging step', () => {
     // (fixed in Slice 8; this call site was missed).
     await $(LONGEVITY_BONUS).scrollIntoView({ block: 'center' });
     await $(LONGEVITY_BONUS).waitForClickable({ timeout: STEP_TIMEOUT });
-    await $(LONGEVITY_BONUS).setValue('1');
+    await replaceValue(await $(LONGEVITY_BONUS), '1');
 
     // Subtracted like the conditions (`ArMDE:16571`ArMDE: "a high Longevity Ritual modifier
     // … indicate[s] longer life"), so +7 becomes +6.
@@ -906,10 +907,10 @@ describe('the aging crisis', () => {
     // `setValue` race that frame — the whole spec failed on its first attempt and
     // passed on the retry, which is the shape a real defect hides in.
     await $(LONGEVITY_BONUS).waitForClickable({ timeout: STEP_TIMEOUT });
-    await $(LONGEVITY_BONUS).setValue('0');
+    await replaceValue(await $(LONGEVITY_BONUS), '0');
 
     // 9 + 4 = 13, which is the first Crisis row (`ArMDE:16602`).
-    await $(DIE_INPUT).setValue('9');
+    await replaceValue(await $(DIE_INPUT), '9');
     await browser.waitUntil(async () => (await textOf(AGING_TOTAL)).includes('13'), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'a stress die of 9 at age 36 should total 13',
@@ -932,7 +933,7 @@ describe('the aging crisis', () => {
     // points ARE the increase, and they are a term of the crisis total. Read off the
     // character standing here, the same die answers 14; the app would then show 14
     // and write 15. So with the die typed and nothing placed, there is no reading.
-    await $(CRISIS_DIE).setValue('10');
+    await replaceValue(await $(CRISIS_DIE), '10');
     await browser.waitUntil(async () => await $(CRISIS_UNROLLED).isExisting(), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'an unplaced distribution should leave the Crisis unread',
@@ -940,7 +941,7 @@ describe('the aging crisis', () => {
     expect(await $(CRISIS_TOTAL).isExisting()).toBe(false);
 
     // Placing them is what makes the reading honest — and it is 15, not 14.
-    await $(DISTRIBUTE_STA).setValue('5');
+    await replaceValue(await $(DISTRIBUTE_STA), '5');
     await browser.waitUntil(
       async () =>
         (await $(CRISIS_TOTAL).isExisting()) && (await textOf(CRISIS_TOTAL)).includes('15'),
@@ -1124,7 +1125,7 @@ describe('the saga year', () => {
   async function type(selector, value) {
     const field = await $(selector);
     await field.waitForClickable({ timeout: STEP_TIMEOUT });
-    await field.setValue(String(value));
+    await replaceValue(field, value);
   }
 
   /** Wait for a field to read back `value`, so the store has taken it. */

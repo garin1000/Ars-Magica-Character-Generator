@@ -35,6 +35,7 @@ import { $, $$, browser, expect } from '@wdio/globals';
 
 import {
   currentWizardPhase,
+  replaceValue,
   runDocumentAction,
   satisfyMagusMinimums,
   startWizard,
@@ -162,7 +163,7 @@ const FILLERS = {
     await name.setValue(plan.name);
     const age = await $('[data-testid="age-input"]');
     await age.waitForExist({ timeout: STEP_TIMEOUT });
-    await age.setValue(plan.age);
+    await replaceValue(age, plan.age);
   },
 
   characteristics: async (plan) => {
@@ -207,7 +208,7 @@ const FILLERS = {
     }
     const pool = await $('[data-testid="xp-pool"]');
     await pool.waitForExist({ timeout: STEP_TIMEOUT });
-    await pool.setValue(plan.xpPool);
+    await replaceValue(pool, plan.xpPool);
     // Confirm the total reached the STORE, not merely the input. `value={typedPool}`
     // is not a `bind:`, so the DOM keeps whatever was typed even if the change never
     // committed — reading the field back proves nothing. `Available` is derived from

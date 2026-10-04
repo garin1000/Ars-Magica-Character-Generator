@@ -31,6 +31,7 @@ import {
   dismissTooltip,
   hoverForTooltip,
   isRowBlocked,
+  replaceValue,
   runDocumentAction,
   setValidationMode,
   SETTLE_TIMEOUT,
@@ -143,7 +144,7 @@ describe('characteristic grant + ability bonus', () => {
     // Buy Awareness up to 2, then add Puissant Ability targeting it.
     await $('[data-testid="tab-abilities"]').click();
     await $('[data-testid="xp-pool"]').waitForExist({ timeout: 10000 });
-    await $('[data-testid="xp-pool"]').setValue(30);
+    await replaceValue(await $('[data-testid="xp-pool"]'), 30);
     await $('[data-testid="add-ability.awareness"]').click();
     const awarenessInc = await $('[data-testid="ability-inc-ability.awareness-0"]');
     await awarenessInc.waitForExist({ timeout: 5000 });
@@ -192,7 +193,7 @@ describe('Puissant Ability targets one ability instance', () => {
     await abilitiesTab.waitForExist({ timeout: 30000 });
     await abilitiesTab.click();
     await $('[data-testid="xp-pool"]').waitForExist({ timeout: 10000 });
-    await $('[data-testid="xp-pool"]').setValue(100);
+    await replaceValue(await $('[data-testid="xp-pool"]'), 100);
 
     await addLore(0, 'Brandenburg', 2);
     await addLore(1, 'Berlin', 2);
@@ -264,7 +265,7 @@ describe('Ability parameter picker (CV7): choosing a catalogued value', () => {
     await abilitiesTab.waitForExist({ timeout: 30000 });
     await abilitiesTab.click();
     await $('[data-testid="xp-pool"]').waitForExist({ timeout: 10000 });
-    await $('[data-testid="xp-pool"]').setValue(100);
+    await replaceValue(await $('[data-testid="xp-pool"]'), 100);
 
     await $('[data-testid="add-ability.dead_language"]').click();
     const combo = await $('[data-testid="ability-param-select-ability.dead_language-0"]');
@@ -559,7 +560,7 @@ describe('phase-3 virtue/flaw effects', () => {
     await $(ARTS_TAB).click();
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
-    await pool.setValue('30');
+    await replaceValue(pool, '30');
     const inc = await $('[data-testid="art-inc-art.creo"]');
     await inc.waitForExist({ timeout: 5000 });
     for (let i = 0; i < 5; i++) await inc.click();
@@ -696,7 +697,7 @@ describe('warping-owed Virtues/Flaws', () => {
 
     // 5 Warping Points → Warping Score 1 → owes one Minor Flaw.
     await $(WARPING_POINTS).waitForExist({ timeout: 10000 });
-    await $(WARPING_POINTS).setValue('5');
+    await replaceValue(await $(WARPING_POINTS), '5');
 
     await $(WARPING_OWED).waitForExist({
       timeout: 10000,
@@ -718,7 +719,7 @@ describe('warping-owed Virtues/Flaws', () => {
     // 75 Warping Points → Warping Score 5 → owes 2 Minor Flaws + 1 supernatural
     // Minor Virtue (ArMDE:16553-16559), in two labelled groups.
     await $(WARPING_POINTS).waitForExist({ timeout: 10000 });
-    await $(WARPING_POINTS).setValue('75');
+    await replaceValue(await $(WARPING_POINTS), '75');
     await $(MINOR_FLAW_GROUP).waitForExist({ timeout: 10000 });
     await $(VIRTUE_GROUP).waitForExist({ timeout: 10000 });
     // Count only the slot selects: a parameterized pick adds its own control.
@@ -753,7 +754,7 @@ describe('warping-owed Virtues/Flaws', () => {
     await startCharacter('magus');
     await $(DETAILS_TAB).click();
     await $(WARPING_POINTS).waitForExist({ timeout: 10000 });
-    await $(WARPING_POINTS).setValue('75');
+    await replaceValue(await $(WARPING_POINTS), '75');
     await browser.waitUntil(async () => (await $(WARPING_POINTS).getValue()) === '75', {
       timeout: 10000,
       timeoutMsg: 'the magus should carry the same 75 Warping Points',
@@ -803,7 +804,7 @@ describe('character editor', () => {
     // Abilities tab: give an XP pool, then buy Awareness up to 2 (15 xp).
     await $('[data-testid="tab-abilities"]').click();
     await $('[data-testid="xp-pool"]').waitForExist({ timeout: 10000 });
-    await $('[data-testid="xp-pool"]').setValue(30);
+    await replaceValue(await $('[data-testid="xp-pool"]'), 30);
     await $('[data-testid="add-ability.awareness"]').click();
     const awarenessInc = await $('[data-testid="ability-inc-ability.awareness-0"]');
     await awarenessInc.waitForExist({ timeout: 5000 });
@@ -906,7 +907,7 @@ describe('character details', () => {
 
   it('flags an Ability above the age cap', async () => {
     await $(DETAILS_TAB).click();
-    await $('[data-testid="age-input"]').setValue('25'); // cap 5
+    await replaceValue(await $('[data-testid="age-input"]'), '25'); // cap 5
     await $(ABILITIES_TAB).click();
     await $('[data-testid="add-ability.awareness"]').click();
     const inc = await $('[data-testid="ability-inc-ability.awareness-0"]');

@@ -457,6 +457,51 @@ export async function standOnWizardStep(phase) {
   );
 }
 
+// The WebDriver keycode for Backspace (W3C WebDriver, "Keyboard actions").
+const WEBDRIVER_BACKSPACE = String.fromCharCode(0xe003);
+
+/**
+ * Replace a field's value the way a player does — select what is there, type over
+ * it — and leave the edit uncommitted, exactly as `setValue` used to.
+ *
+ * WHY NOT `setValue` (N2/N3, D84.2). `setValue` is WebDriver's Element Clear
+ * followed by Send Keys, and Element Clear runs the field's UNFOCUSING steps after
+ * emptying it — so a blank field is committed, and its `change` event fires, in the
+ * middle of the call. Every number field carries `actions.ts::commitStored`, which on
+ * that `change` writes the STORED value back (a blank saga year is ignored by the
+ * store, so the field shows 1220 again); Send Keys then types after it, and "1230"
+ * lands as "12201230". A player selecting the text and typing over it never commits
+ * the blank, so this helper does the same: it focuses and selects in the page, then
+ * types with Send Keys (`addValue`), which keeps the selection of a field that is
+ * already focused and so types over it. Committing (blur or Enter) is left to the
+ * caller, as before.
+ *
+ * Not `browser.keys`: that presses its keys as a CHORD — every key down, then every
+ * key up — so a repeated digit is one held key and "1190" arrives as "190".
+ *
+ * Fails at once if the field does not read back what was typed, rather than letting
+ * a mangled value surface later as an unrelated assertion.
+ *
+ * @param {WebdriverIO.Element} element an `<input>` (number or text) on screen
+ * @param {string|number} value the value to leave in the field
+ */
+export async function replaceValue(element, value) {
+  const text = String(value);
+  await element.waitForExist({ timeout: STEP_TIMEOUT });
+  await browser.execute((el) => {
+    el.focus();
+    el.select();
+  }, element);
+  // Emptying a field is one Backspace over the selection.
+  await element.addValue(text === '' ? WEBDRIVER_BACKSPACE : text);
+  await waitUntilExplained(
+    async () => (await element.getValue()) === text,
+    STEP_TIMEOUT,
+    async () =>
+      `the field should read "${text}" after typing over it, not "${await element.getValue()}"`,
+  );
+}
+
 /**
  * Type the character's age, and come back to the step you were standing on.
  *
@@ -479,7 +524,7 @@ export async function setWizardAge(age) {
 
   const input = await $('[data-testid="age-input"]');
   await input.waitForExist({ timeout: STEP_TIMEOUT });
-  await input.setValue(String(age));
+  await replaceValue(input, age);
   await browser.waitUntil(async () => (await input.getValue()) === String(age), {
     timeout: STEP_TIMEOUT,
     timeoutMsg: `the age ${age} did not stay in the concept step's field`,
@@ -552,7 +597,7 @@ export async function satisfyMagusMinimums(language = 'Latin') {
     // Under life-stage funding the field is a read-only span, so `isExisting()`
     // already makes the whole block a no-op.
     const existing = await pool.getValue();
-    if (existing === '' || existing === '0') await pool.setValue('30');
+    if (existing === '' || existing === '0') await replaceValue(pool, '30');
   }
 
   await addAbilityAtScoreOne('ability.parma_magica', 0);

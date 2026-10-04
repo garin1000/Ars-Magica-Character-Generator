@@ -33,6 +33,7 @@ import fs from 'node:fs';
 import {
   clean,
   isRowBlocked,
+  replaceValue,
   runDocumentAction,
   setLanguage,
   setValidationMode,
@@ -250,7 +251,7 @@ describe('D81 parameters survive a save and an Open', () => {
     await clickTab(ARTS_TAB);
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: STEP_TIMEOUT });
-    await pool.setValue('20');
+    await replaceValue(pool, '20');
     await raiseArt('art.creo', 3);
     await raiseArt('art.ignem', 3);
 
@@ -565,7 +566,7 @@ describe('German locale: a full companion sheet and its export', () => {
     await clickTab(ABILITIES_TAB);
     const pool = await $('[data-testid="xp-pool"]');
     await pool.waitForExist({ timeout: STEP_TIMEOUT });
-    await pool.setValue('30');
+    await replaceValue(pool, '30');
     await (await $('[data-testid="add-ability.awareness"]')).click();
     const inc = await $('[data-testid="ability-inc-ability.awareness-0"]');
     await inc.waitForExist({ timeout: STEP_TIMEOUT });

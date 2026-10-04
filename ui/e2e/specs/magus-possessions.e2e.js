@@ -20,6 +20,7 @@ import {
   dismissTooltip,
   hoverForTooltip,
   isRowBlocked,
+  replaceValue,
   runDocumentAction,
   setLanguage,
   startCharacter,
@@ -99,7 +100,7 @@ describe('spells', () => {
     const before = (await $$('[data-testid^="add-spell."]')).length;
     expect(await $('[data-testid="add-spell.pilum_of_fire"]').isExisting()).toBe(true);
 
-    await $('[data-testid="spell-level-max-filter"]').setValue('5');
+    await replaceValue(await $('[data-testid="spell-level-max-filter"]'), '5');
     await browser.waitUntil(async () => (await $$('[data-testid^="add-spell."]')).length < before, {
       timeout: 5000,
       timeoutMsg: 'a max-level filter should narrow the source list',
@@ -163,7 +164,7 @@ describe('spells', () => {
     // Raise Creo/Ignem (for Pilum) and Rego/Vim (for the General ritual added
     // later) so both clear their per-spell caps.
     await $(ARTS_TAB).click();
-    await $('[data-testid="art-xp-pool"]').setValue('1000');
+    await replaceValue(await $('[data-testid="art-xp-pool"]'), '1000');
     await raiseArt('art.creo', 12);
     await raiseArt('art.ignem', 12);
     await raiseArt('art.rego', 9);
@@ -272,7 +273,7 @@ describe('spells', () => {
     // Override the base to 80; Skilled Parens's +30 still adds on top (a 110
     // budget). Pilum's 20 levels are charged to the bonus, so the whole 80 base is
     // available.
-    await override.setValue('80');
+    await replaceValue(override, '80');
     await browser.waitUntil(async () => clean(await $(BAR_AVAILABLE).getText()).includes('80'), {
       timeout: 5000,
       timeoutMsg: 'overriding the base to 80 should leave the full 80 base available',
@@ -388,7 +389,7 @@ describe('spells', () => {
     // still in the list (e.g. leftover Wizard's Boost instances) don't shadow it.
     const levelInput = await $('[data-testid^="spell-level-input-spell.aegis_of_the_hearth-"]');
     await levelInput.waitForExist({ timeout: 5000 });
-    await levelInput.setValue('200');
+    await replaceValue(levelInput, '200');
 
     await browser.waitUntil(async () => codeExists('over_spell_levels'), {
       timeout: 5000,
@@ -446,7 +447,7 @@ describe('familiar', () => {
   async function set(testid, value) {
     const field = await $(`[data-testid="${testid}"]`);
     await field.waitForExist({ timeout: 10000 });
-    await field.setValue(value);
+    await replaceValue(field, value);
   }
 
   // An issue only a MAGUS raises (no House chosen yet), used to prove the validation
@@ -662,7 +663,7 @@ describe('talisman', () => {
     await $(ARTS_TAB).click();
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
-    await pool.setValue('200');
+    await replaceValue(pool, '200');
     const inc = async (art, times) => {
       const button = await $(`[data-testid="art-inc-${art}"]`);
       await button.waitForExist({ timeout: 5000 });
@@ -697,14 +698,14 @@ describe('talisman', () => {
     const attunement = await $('[data-testid="talisman-desc-0"]');
     await attunement.waitForExist({ timeout: 5000 });
     await attunement.setValue('Controlling things at a distance');
-    await $('[data-testid="talisman-bonus-0"]').setValue('4');
+    await replaceValue(await $('[data-testid="talisman-bonus-0"]'), '4');
 
     // An instilled effect at level 15.
     await $('[data-testid="talisman-effect-add"]').click();
     const effectName = await $('[data-testid="talisman-effect-name-0"]');
     await effectName.waitForExist({ timeout: 5000 });
     await effectName.setValue('Wielding the Invisible Sling');
-    await $('[data-testid="talisman-effect-level-0"]').setValue('15');
+    await replaceValue(await $('[data-testid="talisman-effect-level-0"]'), '15');
 
     // THE NON-GOAL, VISIBLE IN THE UI: 15 levels instilled in the talisman must not
     // touch the item-level budget, which belongs to the Redcap-only Virtues and can
@@ -913,7 +914,7 @@ describe('longevity ritual', () => {
     await $(ARTS_TAB).click();
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
-    await pool.setValue('200');
+    await replaceValue(pool, '200');
     const creoInc = await $('[data-testid="art-inc-art.creo"]');
     await creoInc.waitForExist({ timeout: 5000 });
     for (let i = 0; i < 5; i++) await creoInc.click();
@@ -924,7 +925,7 @@ describe('longevity ritual', () => {
     await $(POSSESSIONS_TAB).click();
     const auraInput = await $('[data-testid="aura-input"]');
     await auraInput.waitForExist({ timeout: 10000 });
-    await auraInput.setValue('5');
+    await replaceValue(auraInput, '5');
     await $(AGING_TAB).click();
     await $('[data-testid="longevity-add"]').waitForExist({ timeout: 10000 });
     await $('[data-testid="longevity-add"]').click();
@@ -952,7 +953,7 @@ describe('longevity ritual', () => {
     // Enter a bonus of 9 — a value no hint in this spec ever suggests, so the two
     // numbers can never be confused.
     await $(AGING_TAB).click();
-    await (await reach(BONUS)).setValue('9');
+    await replaceValue(await reach(BONUS), '9');
     await browser.waitUntil(
       async () => !(await $('[data-testid="longevity-not-entered"]').isExisting()),
       {
@@ -982,7 +983,7 @@ describe('longevity ritual', () => {
 
     // A typed 0, by contrast, IS a claim ("this ritual grants nothing"), so the
     // marker must stay gone — the 0-vs-empty distinction, pinned at both ends.
-    await (await reach(BONUS)).setValue('0');
+    await replaceValue(await reach(BONUS), '0');
     await browser.waitUntil(
       async () => !(await $('[data-testid="longevity-not-entered"]').isExisting()),
       {
@@ -993,7 +994,7 @@ describe('longevity ritual', () => {
     expect(await $(BONUS).getValue()).toBe('0');
 
     // Back to the 9 the rest of the spec asserts on.
-    await (await reach(BONUS)).setValue('9');
+    await replaceValue(await reach(BONUS), '9');
     await browser.waitUntil(async () => (await $(BONUS).getValue()) === '9', {
       timeout: 5000,
       timeoutMsg: 'the bonus should read 9 again',
@@ -1023,7 +1024,7 @@ describe('longevity ritual', () => {
     // Aura 0 still suggests a bonus — the removed `aura != 0` gate. The Aura
     // Modifier is a plain addend: 6 + 5 = 11 → ceil(11/5) = +3.
     await $(POSSESSIONS_TAB).click();
-    await (await reach('[data-testid="aura-input"]')).setValue('0');
+    await replaceValue(await reach('[data-testid="aura-input"]'), '0');
     await $(AGING_TAB).click();
     await waitForHint('11', '+3');
     expect(await $(BONUS).getValue()).toBe('9');
@@ -1174,7 +1175,7 @@ describe('markdown export', () => {
     await clickTab('abilities');
     const pool = await $('[data-testid="xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
-    await pool.setValue('200');
+    await replaceValue(pool, '200');
     await $('[data-testid="add-ability.single_weapon"]').click();
     const abilityInc = await $('[data-testid="ability-inc-ability.single_weapon-0"]');
     await abilityInc.waitForExist({ timeout: 5000 });
@@ -1219,12 +1220,12 @@ describe('markdown export', () => {
     await clickTab('possessions');
     const aura = await $('[data-testid="aura-input"]');
     await aura.waitForExist({ timeout: 10000 });
-    await aura.setValue('3');
+    await replaceValue(aura, '3');
     await $('[data-testid="device-add"]').click();
     const deviceName = await $('[data-testid="device-name-0"]');
     await deviceName.waitForExist({ timeout: 5000 });
     await deviceName.setValue('Ring of the Warding Flame');
-    await $('[data-testid="device-level-0"]').setValue('20');
+    await replaceValue(await $('[data-testid="device-level-0"]'), '20');
   });
 
   it('writes the entered values and the engine-computed read-outs', async () => {

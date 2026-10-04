@@ -24,7 +24,7 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
-import { clean, isRowBlocked, startCharacter, STEP_TIMEOUT } from '../helpers.js';
+import { clean, isRowBlocked, replaceValue, startCharacter, STEP_TIMEOUT } from '../helpers.js';
 
 const ARTS_TAB = '[data-testid="tab-arts"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
@@ -62,7 +62,7 @@ describe('requisite fold in the Casting Total (D81, ArMDE:12309-12313)', () => {
     await $(ARTS_TAB).click();
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
-    await pool.setValue('40');
+    await replaceValue(pool, '40');
     await raiseArt('art.muto', 5);
     await raiseArt('art.corpus', 5);
     await raiseArt('art.animal', 2);
@@ -114,7 +114,7 @@ describe('add within focus, and the stale-mark warning on removal (D81.5/D81.17)
     await $(ARTS_TAB).click();
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
-    await pool.setValue('20');
+    await replaceValue(pool, '20');
     await raiseArt('art.creo', 3);
     await raiseArt('art.ignem', 3);
 
@@ -145,7 +145,7 @@ describe('add within focus, and the stale-mark warning on removal (D81.5/D81.17)
     await $(ARTS_TAB).click();
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
-    await pool.setValue('20');
+    await replaceValue(pool, '20');
     await raiseArt('art.creo', 3);
     await raiseArt('art.ignem', 3);
 
@@ -216,7 +216,7 @@ describe('Incompatible Arts: barred pairs, the Unusable cell, and the spell erro
     await $(ARTS_TAB).click();
     const pool = await $('[data-testid="art-xp-pool"]');
     await pool.waitForExist({ timeout: 10000 });
-    await pool.setValue('10');
+    await replaceValue(pool, '10');
     await raiseArt('art.intellego', 1);
     await raiseArt('art.animal', 1);
 

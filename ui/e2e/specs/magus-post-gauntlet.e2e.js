@@ -45,6 +45,7 @@ import {
   advanceWizardTo,
   BOOT_TIMEOUT,
   clean,
+  replaceValue,
   runDocumentAction,
   satisfyMagusMinimums,
   setWizardAge,
@@ -131,7 +132,7 @@ describe('a magus past its Gauntlet', () => {
     // A magus carries two ages, and this is the test that they are two: the age comes
     // from the `concept` step and the Gauntlet age from the plan on this one.
     await setWizardAge(60);
-    await $(GAUNTLET_AGE_INPUT).setValue('25');
+    await replaceValue(await $(GAUNTLET_AGE_INPUT), '25');
     await $(NATIVE_LANGUAGE).setValue('German');
 
     // 35 years as a magus, worth 30 points each and nothing charged against them yet.
@@ -145,7 +146,7 @@ describe('a magus past its Gauntlet', () => {
   });
 
   it('charges lab seasons against the yearly points, and refuses more than the years hold', async () => {
-    await $(LAB_SEASONS_INPUT).setValue('13');
+    await replaceValue(await $(LAB_SEASONS_INPUT), '13');
 
     // 13 seasons pack as 3 full lab years plus 1 (F1), so 10 are charged at 10
     // points each: 1050 - 100 = 950.
@@ -160,7 +161,7 @@ describe('a magus past its Gauntlet', () => {
     // A year holds four seasons (`ArMDE:2482`, "three or four seasons"; F1), so 35
     // years hold 140 and 200 is not a plan — past the cap the extra seasons are simply
     // free, which reads as a bargain unless it is said out loud.
-    await $(LAB_SEASONS_INPUT).setValue('200');
+    await replaceValue(await $(LAB_SEASONS_INPUT), '200');
     await browser.waitUntil(
       async () => (await issueCount('life_stage_lab_seasons_out_of_range')) === 1,
       {
@@ -178,7 +179,7 @@ describe('a magus past its Gauntlet', () => {
       timeoutMsg: 'lab seasons beyond the cap must block the Experience step',
     });
 
-    await $(LAB_SEASONS_INPUT).setValue('13');
+    await replaceValue(await $(LAB_SEASONS_INPUT), '13');
     await browser.waitUntil(
       async () => (await issueCount('life_stage_lab_seasons_out_of_range')) === 0,
       {
@@ -193,7 +194,7 @@ describe('a magus past its Gauntlet', () => {
   });
 
   it('splits the points between experience and levels of spells', async () => {
-    await $(SPELL_LEVELS_INPUT).setValue('300');
+    await replaceValue(await $(SPELL_LEVELS_INPUT), '300');
 
     // 950 points, 300 of them taken as levels of spells, so 650 are experience.
     await browser.waitUntil(async () => (await textOf(SUMMARY)).includes('650 XP'), {
@@ -210,7 +211,7 @@ describe('a magus past its Gauntlet', () => {
     // experience, abilities, arts, spells — filing it under `spells` would send the
     // wizard forward past the only surface that can correct it. The docked panel is
     // scoped to the current phase, so seeing it here IS the phase attribution.
-    await $(SPELL_LEVELS_INPUT).setValue('5000');
+    await replaceValue(await $(SPELL_LEVELS_INPUT), '5000');
     await browser.waitUntil(
       async () => (await issueCount('life_stage_spell_level_split_exceeds_points')) === 1,
       {
@@ -227,7 +228,7 @@ describe('a magus past its Gauntlet', () => {
       timeoutMsg: 'an over-large split must block the Experience step',
     });
 
-    await $(SPELL_LEVELS_INPUT).setValue('300');
+    await replaceValue(await $(SPELL_LEVELS_INPUT), '300');
     await browser.waitUntil(
       async () => (await issueCount('life_stage_spell_level_split_exceeds_points')) === 0,
       {
@@ -241,7 +242,7 @@ describe('a magus past its Gauntlet', () => {
     // The budget clamps a Gauntlet in the future to the character's age — Advisory and
     // Silent do not block an error, so the arithmetic has to stay sane — which would
     // otherwise cost this magus its 35 years without a word.
-    await $(GAUNTLET_AGE_INPUT).setValue('99');
+    await replaceValue(await $(GAUNTLET_AGE_INPUT), '99');
     await browser.waitUntil(
       async () => (await issueCount('life_stage_gauntlet_age_after_age')) === 1,
       {
@@ -254,7 +255,7 @@ describe('a magus past its Gauntlet', () => {
     expect(refusal.text).toContain('99');
     expect(refusal.severity).toBe('error');
 
-    await $(GAUNTLET_AGE_INPUT).setValue('25');
+    await replaceValue(await $(GAUNTLET_AGE_INPUT), '25');
     await browser.waitUntil(
       async () =>
         (await issueCount('life_stage_gauntlet_age_after_age')) === 0 &&
