@@ -828,6 +828,28 @@ presumption of correctness.
 
 ---
 
+## D85 — P8 re-sync: the seven design questions (Norbert, 2026-10-08)
+
+Answers to `design-p8-resync.md` § QUESTIONS.
+1. **Q1:** the design does not authorize execution. A separate go comes before P8-2.
+2. **Q2:** refresh only the books already carried. No new books.
+3. **Q3:** nothing needs re-applying. Upstream already fixed both "guarter"s and
+   "In such as case". "-3 penalty" is fixed upstream (commit pending there). The
+   Bound Casting Tools line was never truncated: the PDF reads "…for a few weeks,
+   his last years.", with "last" as the verb. So **D39 is withdrawn**: our
+   reconstruction goes, and the copy-in restores the book's text, including in
+   any shipped description.
+4. **Q4:** settled in P8-6. The name check (`tmp/q4-name-check.md`, 30 entries)
+   found 8 resolved, 13 where table and heading agree but we ship an older name
+   (adopt), and 9 where they still differ (heading wins by default per D7.1,
+   other-book rows excluded per rule 4).
+5. **Q5:** text-search relocation, not an alignment table.
+6. **Q6:** update verbatim texts where upstream fixed a scan error.
+7. **Q7:** the excerpt-based `rulebook_citations.rs` check lands first, as its own
+   slice, proven against today's files.
+
+---
+
 ## D84 — the second try-out's findings (N1–N11)
 
 **Norbert, 2026-10-04** (`tmp/tryout-2026-10-04.md`).
