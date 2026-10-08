@@ -28,7 +28,7 @@ line-pinned rows in `RULES.md` and `book_templates.rs`.
 
 ## Measurements (read-only pass, 2026-10-02)
 
-Performed against `../arm-de-translation`
+Performed against the sibling project `../arm-de-translation`
 (`original-english/reviewed/`, `german-reviewed/`). Working files are in
 `tmp/resync-measure/`.
 

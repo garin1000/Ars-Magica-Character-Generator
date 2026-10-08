@@ -570,7 +570,7 @@ non-allowlisted stage is **auto-DENIED**, not queued. So these rules must be inl
 in every subagent prompt. **Re-read `.claude/skills/full-review/SKILL.md` lines
 17-203 before pasting, in case it has changed** — the text below was copied verbatim
 from that file at commit `721224a`. Substitute `<repo>` with
-`<repo>`.
+the absolute path of the repository root.
 
 ```
 ### Command hygiene (ALL agents — required, paste into every agent prompt)

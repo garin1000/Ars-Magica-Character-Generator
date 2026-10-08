@@ -146,7 +146,7 @@ when generating `rules/i18n/de/` text, the German label for any term whose
 English form appears in a table MUST match the table's `Deutsch (DE)` value —
 **subject to the precedence rules below, which are not optional.**
 
-**This directory is a COPY, and `../arm-de-translation` is the
+**This directory is a COPY, and the sibling project `../arm-de-translation` is the
 source of truth.** It is synced from there, not maintained here, and it *drifts*
 between syncs — the V/F audit found rows that disagreed with the rulebook and
 turned out to be stale rather than wrong. So a correction goes into the source
@@ -209,7 +209,7 @@ while pointing at the wrong text. A whole-file re-sync from upstream is a
 different act and is not covered by this rule; a hand edit is.
 
 **And `rules/source/` is a COPY — repair defects upstream, not here.**
-`../arm-de-translation` holds the authoritative originals, for
+The sibling project `../arm-de-translation` holds the authoritative originals, for
 the **English** text as well as the German: its
 `original-english/reviewed/…Core Rules.md` is **newer than ours and 80 lines
 longer** (25,803 against 25,723, measured 2026-09-24). So a hand repair in this

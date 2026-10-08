@@ -24,7 +24,7 @@ carried out of earlier findings, not new observations from a test session.
 ## Progress log
 
 Appended as work lands, so a session that dies mid-flight can be resumed from
-here. The plan this executes is `~/.claude/plans/done-doocument-issues-in-jolly-quiche.md`
+here. The plan this executes is the local plan file `done-doocument-issues-in-jolly-quiche.md` (not in the repo)
 (machine-local, not in the repo). Implementation order: WP1 → WP2 → WP3 → WP4 →
 WP5 → WP6 → WP7, one finding at a time.
 
