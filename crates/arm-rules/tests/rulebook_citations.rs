@@ -174,13 +174,34 @@
 //! exclusion untouched — `commands.rs` also has six `Core Rules.md:NNNN`
 //! citations (missing the `Ars Magica - Definitive Edition (` prefix), and
 //! those are still flagged and were fixed in the sweep.
+//!
+//! **P8-1/T3** (`docs/vf-audit/design-p8-resync.md` § "P8-1", `docs/open-todos.md`
+//! "P8 is a line-number earthquake") strengthens this guard's central blind
+//! spot: every test above checks that a cited range lands on non-blank
+//! lines, never that those lines say what the citing comment claims. A
+//! wholesale line-number shift (a rulebook re-sync) would leave every
+//! citation here passing while pointing at the wrong text. T3 adds an
+//! **expected-excerpt snapshot**: each distinct `(acronym, range)` a citation
+//! names gets a stored first-line excerpt
+//! (`crates/arm-rules/tests/fixtures/citation_excerpts.json`, produced by the
+//! `#[ignore]`d `regenerate_citation_excerpts`, mirroring
+//! `rules_source_provenance.rs`'s `regenerate_source_anchors`), and the guard
+//! fails on a mismatch, on a citation with no snapshot entry, and on a stale
+//! snapshot entry no live citation resolves to (so the file can't silently
+//! rot either direction). [`citation_key`] dedupes by acronym + cited range
+//! rather than by citing file, since the excerpt depends only on the
+//! rulebook — this keeps the snapshot sized by distinct passages, not by
+//! citation occurrences. This slice (Phase 1) lands the checking logic and
+//! its tests against synthetic fixtures only, proven against known-good data
+//! before Phase 2 wires it into the live corpus and generates the real
+//! snapshot — see Q7's recommendation to land T3 before the resync itself.
 
 mod citation_support;
 
 use citation_support::{
     comment_blocks, relative, repo_root, rust_files, source_files_in, web_comment_blocks,
 };
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -765,18 +786,57 @@ fn find_bare_rulebook_citations_in_markdown(text: &str) -> Vec<String> {
     found
 }
 
-fn book_line_count(book_file: &str) -> usize {
-    let content = fs::read_to_string(rules_source_en().join(book_file))
-        .unwrap_or_else(|e| panic!("{book_file} is readable under rules/source/en: {e}"));
-    content.lines().count()
+/// Every [`BOOK_ACRONYMS`] book's lines, read from `rules/source/en/` exactly
+/// **once** per book and reused by every citation check that needs book
+/// content — `every_rulebook_citation_lands_inside_its_file`'s range check,
+/// the P8-1/T3 excerpt check, and `regenerate_citation_excerpts`. Before this,
+/// `book_line_count`/`book_is_blank_in_range` each re-read the whole book file
+/// from disk **per citation occurrence** (thousands of times across the live
+/// corpus), which is almost certainly why this suite's runtime sat at ~75s;
+/// loading each of the 9 books exactly once brings that down to 9 reads total
+/// regardless of how many citations are checked against them.
+struct BookLinesCache {
+    books: BTreeMap<&'static str, Vec<String>>,
 }
 
-fn book_is_blank_in_range(book_file: &str, start: i64, end: i64) -> bool {
-    let content = fs::read_to_string(rules_source_en().join(book_file))
-        .unwrap_or_else(|e| panic!("{book_file} is readable under rules/source/en: {e}"));
-    let lines: Vec<&str> = content.lines().collect();
-    let bracketed = &lines[(start as usize - 1)..(end as usize)];
-    bracketed.iter().all(|line| line.trim().is_empty())
+impl BookLinesCache {
+    /// Reads every book in [`BOOK_ACRONYMS`] from `rules/source/en/` once.
+    fn load() -> Self {
+        let mut books = BTreeMap::new();
+        for &(_, book_file) in BOOK_ACRONYMS {
+            let content = fs::read_to_string(rules_source_en().join(book_file))
+                .unwrap_or_else(|e| panic!("{book_file} is readable under rules/source/en: {e}"));
+            books.insert(book_file, content.lines().map(str::to_string).collect());
+        }
+        Self { books }
+    }
+
+    fn lines(&self, book_file: &str) -> &[String] {
+        self.books
+            .get(book_file)
+            .unwrap_or_else(|| panic!("{book_file} is not among the cached books"))
+    }
+
+    fn line_count(&self, book_file: &str) -> usize {
+        self.lines(book_file).len()
+    }
+
+    fn is_blank_in_range(&self, book_file: &str, start: i64, end: i64) -> bool {
+        let lines = self.lines(book_file);
+        lines[(start as usize - 1)..(end as usize)]
+            .iter()
+            .all(|line| line.trim().is_empty())
+    }
+
+    /// Borrows every cached book's lines as `&str`, the shape
+    /// [`check_citation_excerpts`] takes — so the same single read backs both
+    /// the existing range check and the new excerpt check.
+    fn as_str_map(&self) -> BTreeMap<&'static str, Vec<&str>> {
+        self.books
+            .iter()
+            .map(|(&book, lines)| (book, lines.iter().map(String::as_str).collect()))
+            .collect()
+    }
 }
 
 /// Every citation found across [`all_rust_files`] (via [`comment_blocks`])
@@ -902,6 +962,7 @@ fn every_rulebook_citation_lands_inside_its_file() {
         citations.len()
     );
 
+    let cache = BookLinesCache::load();
     let mut errors = Vec::new();
     for (path, line, citation) in &citations {
         let Citation {
@@ -918,7 +979,7 @@ fn every_rulebook_citation_lands_inside_its_file() {
             ));
             continue;
         }
-        let total = book_line_count(book_file) as i64;
+        let total = cache.line_count(book_file) as i64;
         if *end > total {
             errors.push(format!(
                 "{}:{line}: cites {acronym}:{start}-{end}, but {book_file} has only {total} \
@@ -927,7 +988,7 @@ fn every_rulebook_citation_lands_inside_its_file() {
             ));
             continue;
         }
-        if book_is_blank_in_range(book_file, *start, *end) {
+        if cache.is_blank_in_range(book_file, *start, *end) {
             errors.push(format!(
                 "{}:{line}: cites {acronym}:{start}-{end}, but every line in that range is blank",
                 relative(path)
@@ -1815,5 +1876,437 @@ fn docs_markdown_files_includes_a_known_file_and_excludes_non_markdown() {
     assert!(
         names.contains("open-todos.md"),
         "expected docs/open-todos.md among {names:?}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// P8-1/T3: excerpt-snapshot strengthening. See this file's module doc
+// comment for the design. **Phase 1**: the functions below are stubs — Phase
+// 2 implements them for real, writes `fixtures/citation_excerpts.json`, and
+// adds the live-corpus test. The tests in this section exercise the stubs
+// against small synthetic fixtures only, per the Phase-1 brief; a `todo!()`
+// stub makes a calling test panic rather than fail an `assert!` inside it,
+// which is the documented fallback when the real body does not exist yet.
+// ---------------------------------------------------------------------------
+
+/// The maximum byte length of a normalized excerpt — long enough to catch a
+/// real wording change, short enough to keep the committed snapshot small.
+const EXCERPT_MAX_CHARS: usize = 80;
+
+/// Trims `line` and caps it to [`EXCERPT_MAX_CHARS`] bytes, snapped to the
+/// nearest earlier UTF-8 char boundary so a multi-byte character (e.g. a
+/// German umlaut) is never split mid-codepoint.
+fn normalize_excerpt(line: &str) -> String {
+    let trimmed = line.trim();
+    let mut end = trimmed.len().min(EXCERPT_MAX_CHARS);
+    while end > 0 && !trimmed.is_char_boundary(end) {
+        end -= 1;
+    }
+    trimmed[..end].to_string()
+}
+
+/// The canonical snapshot key for a citation: `ACRONYM:START` for a
+/// single-line citation, `ACRONYM:START-END` for a range. Two citations into
+/// the same range — however many files repeat it — share one key, which is
+/// why the snapshot is sized by distinct passages, not by citation
+/// occurrences (see this file's module doc comment).
+fn citation_key(citation: &Citation) -> String {
+    if citation.start == citation.end {
+        format!("{}:{}", citation.acronym, citation.start)
+    } else {
+        format!("{}:{}-{}", citation.acronym, citation.start, citation.end)
+    }
+}
+
+/// One excerpt-snapshot discrepancy, bucketed by kind so a test can assert on
+/// each kind independently.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct ExcerptCheckResult {
+    /// A citation whose snapshot entry exists but no longer matches the
+    /// cited range's actual (normalized) first line. Each entry names the
+    /// citing file:line, the cited range, and the expected vs. actual text.
+    mismatches: Vec<String>,
+    /// A citation with no snapshot entry at all, naming the citing
+    /// file:line and the cited range.
+    missing: Vec<String>,
+    /// A snapshot entry that no citation's [`citation_key`] resolves to,
+    /// naming the stale key.
+    stale: Vec<String>,
+}
+
+/// Checks every found citation's cited range against `snapshot`, using
+/// `book_lines` (book basename -> that book's lines, in cited-line order) as
+/// the rulebook content. A real run reads this once per book from
+/// `rules/source/en/`; a test supplies a tiny synthetic book so the check can
+/// be proven without touching the filesystem.
+///
+/// Planned message shapes for Phase 2 (not yet produced by this stub):
+/// - mismatch: `"{file}:{line}: cites {key}, expected first line {expected:?}, found {actual:?}"`
+/// - missing: `"{file}:{line}: cites {key}, which has no snapshot entry"`
+/// - stale: `"{key}: stale snapshot entry — no citation uses this range"`
+fn check_citation_excerpts(
+    citations: &[(PathBuf, usize, Citation)],
+    book_lines: &BTreeMap<&'static str, Vec<&str>>,
+    snapshot: &BTreeMap<String, String>,
+) -> ExcerptCheckResult {
+    let mut result = ExcerptCheckResult::default();
+    let mut used_keys: BTreeSet<String> = BTreeSet::new();
+    for (path, line, citation) in citations {
+        let key = citation_key(citation);
+        used_keys.insert(key.clone());
+        let actual = book_lines
+            .get(citation.book_file)
+            .and_then(|lines| lines.get((citation.start as usize).saturating_sub(1)))
+            .map(|text| normalize_excerpt(text))
+            .unwrap_or_default();
+        match snapshot.get(&key) {
+            None => {
+                result.missing.push(format!(
+                    "{}:{line}: cites {key}, which has no snapshot entry",
+                    relative(path)
+                ));
+            }
+            Some(expected) if *expected != actual => {
+                result.mismatches.push(format!(
+                    "{}:{line}: cites {key}, expected first line {expected:?}, found {actual:?}",
+                    relative(path)
+                ));
+            }
+            Some(_) => {}
+        }
+    }
+    for key in snapshot.keys() {
+        if !used_keys.contains(key) {
+            result.stale.push(format!(
+                "{key}: stale snapshot entry — no citation uses this range"
+            ));
+        }
+    }
+    result
+}
+
+/// Builds a synthetic [`Citation`] for the tests below — shorthand so each
+/// fixture reads as data, not boilerplate.
+fn fixture_citation(
+    acronym: &'static str,
+    book_file: &'static str,
+    start: i64,
+    end: i64,
+) -> Citation {
+    Citation {
+        acronym,
+        book_file,
+        start,
+        end,
+    }
+}
+
+#[test]
+fn normalize_excerpt_trims_whitespace_and_caps_long_lines_at_a_char_boundary() {
+    assert_eq!(
+        normalize_excerpt("   Give quarter to a defeated foe.   "),
+        "Give quarter to a defeated foe."
+    );
+
+    // A line far longer than EXCERPT_MAX_CHARS, with a multi-byte character
+    // (ß, 2 bytes in UTF-8) sitting right at the cut point — proves the cap
+    // never splits a codepoint even when the naive byte offset would.
+    let long_line = format!(
+        "{}ß{}",
+        "A".repeat(EXCERPT_MAX_CHARS - 1),
+        "more text that must be dropped entirely by the cap"
+    );
+    let normalized = normalize_excerpt(&long_line);
+    assert!(
+        normalized.len() <= EXCERPT_MAX_CHARS,
+        "expected at most {EXCERPT_MAX_CHARS} bytes, got {} ({normalized:?})",
+        normalized.len()
+    );
+    assert!(
+        long_line.starts_with(&normalized),
+        "expected the normalized excerpt to be an exact prefix of the original line, got \
+         {normalized:?}"
+    );
+}
+
+#[test]
+fn citation_key_uses_a_single_number_for_a_single_line_and_a_range_for_a_span() {
+    let single = fixture_citation(
+        "ArMDE",
+        "Ars Magica - Definitive Edition (Core Rules).md",
+        2774,
+        2774,
+    );
+    assert_eq!(citation_key(&single), "ArMDE:2774");
+
+    let range = fixture_citation(
+        "ArMDE",
+        "Ars Magica - Definitive Edition (Core Rules).md",
+        4822,
+        4826,
+    );
+    assert_eq!(citation_key(&range), "ArMDE:4822-4826");
+}
+
+#[test]
+fn check_citation_excerpts_passes_when_every_citation_matches_its_snapshot() {
+    let book_lines: BTreeMap<&'static str, Vec<&'static str>> = BTreeMap::from([(
+        "Tiny Rulebook.md",
+        vec!["Heading", "Give quarter to a defeated foe.", "Next line"],
+    )]);
+    let citations = vec![(
+        PathBuf::from("crates/arm-rules/src/fake.rs"),
+        10,
+        fixture_citation("Fake", "Tiny Rulebook.md", 2, 2),
+    )];
+    let snapshot = BTreeMap::from([(
+        "Fake:2".to_string(),
+        "Give quarter to a defeated foe.".to_string(),
+    )]);
+
+    let result = check_citation_excerpts(&citations, &book_lines, &snapshot);
+    assert_eq!(
+        result,
+        ExcerptCheckResult::default(),
+        "expected no mismatch, missing, or stale entries when everything matches"
+    );
+}
+
+#[test]
+fn check_citation_excerpts_flags_a_citation_whose_cited_line_no_longer_matches_its_snapshot() {
+    let book_lines: BTreeMap<&'static str, Vec<&'static str>> = BTreeMap::from([(
+        "Tiny Rulebook.md",
+        vec!["Heading", "Give quarter to a defeated foe.", "Next line"],
+    )]);
+    let citations = vec![(
+        PathBuf::from("crates/arm-rules/src/fake.rs"),
+        10,
+        fixture_citation("Fake", "Tiny Rulebook.md", 2, 2),
+    )];
+    // The snapshot still records the OLD wording — simulating the rulebook
+    // text having moved under this citation (e.g. a re-sync, or an upstream
+    // fix landing on the same line).
+    let snapshot = BTreeMap::from([(
+        "Fake:2".to_string(),
+        "Give guarter to a defeated foe.".to_string(),
+    )]);
+
+    let result = check_citation_excerpts(&citations, &book_lines, &snapshot);
+    assert_eq!(
+        result.missing,
+        Vec::<String>::new(),
+        "a mismatch is not a missing entry"
+    );
+    assert_eq!(
+        result.stale,
+        Vec::<String>::new(),
+        "a mismatch is not a stale entry"
+    );
+    assert_eq!(
+        result.mismatches.len(),
+        1,
+        "expected exactly one mismatch, found {:?}",
+        result.mismatches
+    );
+    let message = &result.mismatches[0];
+    assert!(
+        message.contains("fake.rs:10"),
+        "expected the citing file:line in the message: {message}"
+    );
+    assert!(
+        message.contains("Fake:2"),
+        "expected the cited range's key in the message: {message}"
+    );
+    assert!(
+        message.contains("Give guarter"),
+        "expected the snapshot's expected text in the message: {message}"
+    );
+    assert!(
+        message.contains("Give quarter"),
+        "expected the book's actual text in the message: {message}"
+    );
+}
+
+#[test]
+fn check_citation_excerpts_flags_a_citation_with_no_snapshot_entry() {
+    let book_lines: BTreeMap<&'static str, Vec<&'static str>> = BTreeMap::from([(
+        "Tiny Rulebook.md",
+        vec!["Heading", "Give quarter to a defeated foe.", "Next line"],
+    )]);
+    let citations = vec![(
+        PathBuf::from("crates/arm-rules/src/fake.rs"),
+        10,
+        fixture_citation("Fake", "Tiny Rulebook.md", 2, 2),
+    )];
+    let snapshot: BTreeMap<String, String> = BTreeMap::new();
+
+    let result = check_citation_excerpts(&citations, &book_lines, &snapshot);
+    assert_eq!(
+        result.mismatches,
+        Vec::<String>::new(),
+        "a missing entry is not a mismatch"
+    );
+    assert_eq!(
+        result.stale,
+        Vec::<String>::new(),
+        "a missing entry is not a stale entry"
+    );
+    assert_eq!(
+        result.missing.len(),
+        1,
+        "expected exactly one missing entry, found {:?}",
+        result.missing
+    );
+    let message = &result.missing[0];
+    assert!(
+        message.contains("fake.rs:10"),
+        "expected the citing file:line in the message: {message}"
+    );
+    assert!(
+        message.contains("Fake:2"),
+        "expected the cited range's key in the message: {message}"
+    );
+}
+
+#[test]
+fn check_citation_excerpts_flags_a_snapshot_entry_no_citation_uses() {
+    let book_lines: BTreeMap<&'static str, Vec<&'static str>> = BTreeMap::from([(
+        "Tiny Rulebook.md",
+        vec!["Heading", "Give quarter to a defeated foe.", "Next line"],
+    )]);
+    let citations = vec![(
+        PathBuf::from("crates/arm-rules/src/fake.rs"),
+        10,
+        fixture_citation("Fake", "Tiny Rulebook.md", 2, 2),
+    )];
+    // "Fake:3" matches no citation above — it must be reported stale rather
+    // than silently ignored, which is what lets the committed snapshot file
+    // be trusted not to rot.
+    let snapshot = BTreeMap::from([
+        (
+            "Fake:2".to_string(),
+            "Give quarter to a defeated foe.".to_string(),
+        ),
+        ("Fake:3".to_string(), "Next line".to_string()),
+    ]);
+
+    let result = check_citation_excerpts(&citations, &book_lines, &snapshot);
+    assert_eq!(
+        result.mismatches,
+        Vec::<String>::new(),
+        "an unused snapshot entry is not a mismatch"
+    );
+    assert_eq!(
+        result.missing,
+        Vec::<String>::new(),
+        "an unused snapshot entry is not a missing entry"
+    );
+    assert_eq!(
+        result.stale.len(),
+        1,
+        "expected exactly one stale entry, found {:?}",
+        result.stale
+    );
+    assert!(
+        result.stale[0].contains("Fake:3"),
+        "expected the stale key in the message: {}",
+        result.stale[0]
+    );
+}
+
+/// `crates/arm-rules/tests/fixtures/citation_excerpts.json`'s path, resolved
+/// at runtime from [`repo_root`] (itself `CARGO_MANIFEST_DIR`-based) — never a
+/// hardcoded absolute path, so the guard works from any checkout.
+fn citation_excerpts_fixture_path() -> PathBuf {
+    repo_root().join("crates/arm-rules/tests/fixtures/citation_excerpts.json")
+}
+
+/// Reads and parses the committed excerpt snapshot.
+fn load_citation_excerpts_snapshot() -> BTreeMap<String, String> {
+    let path = citation_excerpts_fixture_path();
+    let content = fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("{} is readable: {e}", relative(&path)));
+    serde_json::from_str(&content)
+        .unwrap_or_else(|e| panic!("{} parses as a string map: {e}", relative(&path)))
+}
+
+/// **Regenerates `crates/arm-rules/tests/fixtures/citation_excerpts.json` from
+/// the live corpus — not a test the gate runs.** Walks every citation
+/// [`collect_all_citations`] finds, dedupes by [`citation_key`] (the excerpt
+/// depends only on the rulebook, not on which file cites it), and records
+/// each distinct range's [`normalize_excerpt`]d first line from
+/// [`BookLinesCache`]. Written with `serde_json::to_string_pretty` over a
+/// `BTreeMap`, whose iteration order is already sorted by key — satisfying
+/// `CLAUDE.md`'s "Canonical serialization" (sorted keys) without a separate
+/// sort step.
+///
+/// `#[ignore]`d like its siblings in `rules_source_provenance.rs`
+/// (`regenerate_source_anchors`, `regenerate_blank_range_ends`) because it
+/// writes into the repository: `cargo test -p arm-rules --test
+/// rulebook_citations -- --ignored regenerate_citation_excerpts`. Its output
+/// is then reviewed as a diff like any other change, and
+/// `every_citation_excerpt_matches_its_snapshot` is what proves the result
+/// stays correct afterwards.
+#[test]
+#[ignore = "writes crates/arm-rules/tests/fixtures/citation_excerpts.json; run deliberately"]
+fn regenerate_citation_excerpts() {
+    let (_, citations) = collect_all_citations();
+    let cache = BookLinesCache::load();
+
+    let mut snapshot: BTreeMap<String, String> = BTreeMap::new();
+    for (_, _, citation) in &citations {
+        let key = citation_key(citation);
+        let line_index = (citation.start as usize).saturating_sub(1);
+        let excerpt = cache
+            .lines(citation.book_file)
+            .get(line_index)
+            .map(|text| normalize_excerpt(text))
+            .unwrap_or_default();
+        snapshot.insert(key, excerpt);
+    }
+
+    let json = serde_json::to_string_pretty(&snapshot).expect("a string map serializes");
+    fs::write(citation_excerpts_fixture_path(), format!("{json}\n"))
+        .expect("citation_excerpts.json is writable");
+}
+
+/// **The live guard**: every citation [`collect_all_citations`] finds across
+/// the whole corpus must resolve to a snapshot entry, and that entry must
+/// still match the cited range's actual first line — the check this file's
+/// module doc comment (P8-1/T3) describes. A future rulebook re-sync that
+/// silently shifts every line number would otherwise leave every other test
+/// in this file green while every citation points at the wrong text; this is
+/// the one that catches it. The snapshot must also carry no entry that
+/// nothing cites, so it cannot quietly accumulate dead rows across edits.
+#[test]
+fn every_citation_excerpt_matches_its_snapshot() {
+    let (files_scanned, citations) = collect_all_citations();
+    assert!(
+        files_scanned > 10,
+        "expected to scan many source files, saw {files_scanned}"
+    );
+    assert!(
+        citations.len() > 100,
+        "expected many acronym'd rulebook citations across {files_scanned} files, found {}",
+        citations.len()
+    );
+
+    let cache = BookLinesCache::load();
+    let book_lines = cache.as_str_map();
+    let snapshot = load_citation_excerpts_snapshot();
+    assert!(
+        !snapshot.is_empty(),
+        "expected a non-empty citation-excerpt snapshot"
+    );
+
+    let result = check_citation_excerpts(&citations, &book_lines, &snapshot);
+    let mut errors = result.mismatches;
+    errors.extend(result.missing);
+    errors.extend(result.stale);
+    assert!(
+        errors.is_empty(),
+        "{} citation-excerpt snapshot discrepancy(ies):\n{}",
+        errors.len(),
+        errors.join("\n")
     );
 }
