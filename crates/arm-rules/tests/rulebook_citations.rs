@@ -1881,12 +1881,19 @@ fn docs_markdown_files_includes_a_known_file_and_excludes_non_markdown() {
 
 // ---------------------------------------------------------------------------
 // P8-1/T3: excerpt-snapshot strengthening. See this file's module doc
-// comment for the design. **Phase 1**: the functions below are stubs — Phase
-// 2 implements them for real, writes `fixtures/citation_excerpts.json`, and
-// adds the live-corpus test. The tests in this section exercise the stubs
-// against small synthetic fixtures only, per the Phase-1 brief; a `todo!()`
-// stub makes a calling test panic rather than fail an `assert!` inside it,
-// which is the documented fallback when the real body does not exist yet.
+// comment for the design. Landed for real in `efbccd51`: `fixtures/
+// citation_excerpts.json` is a live, regenerated snapshot and
+// `every_citation_excerpt_matches_its_snapshot` runs against the real corpus.
+//
+// **Extended for P8-1/T2** (text-search relocation,
+// `crates/arm-rules/tests/citation_relocation.rs`): each snapshot entry now
+// also carries `next_line` — the normalized text of the line immediately
+// following the cited one. T2's relocation tool needs this to disambiguate a
+// cited line whose own text recurs elsewhere in the same book (e.g.
+// `"*Minor, General*<br>"`), and it must be captured **now**, against today's
+// pre-resync files, or the context is gone once the sync happens. See
+// `check_citation_excerpts_flags_a_mismatched_next_line_even_when_the_excerpt_itself_still_matches`
+// for the new field's own red-then-green test.
 // ---------------------------------------------------------------------------
 
 /// The maximum byte length of a normalized excerpt — long enough to catch a
@@ -1918,6 +1925,60 @@ fn citation_key(citation: &Citation) -> String {
     }
 }
 
+/// One committed snapshot entry: the cited line's own normalized excerpt,
+/// plus the normalized text of the nearest **non-blank** line following it —
+/// the disambiguating context `citation_relocation.rs`'s relocation tool
+/// needs (see this section's header comment). Blank lines are skipped
+/// deliberately: a Markdown paragraph is almost always followed by a blank
+/// separator line, so the literal next line is empty for roughly half the
+/// live corpus (measured while building this) and would carry no
+/// disambiguating signal at all. `next_line` is `""` only when no non-blank
+/// line remains before the end of the book.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+struct ExcerptSnapshotEntry {
+    excerpt: String,
+    next_line: String,
+    /// The nearest Markdown heading line preceding the cited one, normalized.
+    /// A second, independent disambiguation signal alongside `next_line` —
+    /// the live corpus has passages (repeated statblock fields) whose cited
+    /// line *and* its follower are both duplicated across occurrences, so
+    /// `next_line` alone cannot narrow them, but their enclosing section
+    /// heading differs. Captured **now**, against today's pre-resync files,
+    /// for the same reason `next_line` is (see this section's header
+    /// comment). `""` when no heading precedes the cited line.
+    heading: String,
+}
+
+/// Finds the nearest non-blank line at or after `start_index` (0-based) in
+/// `lines`, normalized — see [`ExcerptSnapshotEntry::next_line`] for why
+/// blank lines are skipped rather than taking the literal next one. Returns
+/// `""` when every remaining line is blank (or `start_index` is past the end).
+fn next_non_blank_excerpt<S: AsRef<str>>(lines: &[S], start_index: usize) -> String {
+    let Some(rest) = lines.get(start_index..) else {
+        return String::new();
+    };
+    rest.iter()
+        .map(AsRef::as_ref)
+        .find(|line| !line.trim().is_empty())
+        .map(normalize_excerpt)
+        .unwrap_or_default()
+}
+
+/// Finds the nearest Markdown heading line (trimmed text starting with `#`)
+/// strictly before `before_index` (0-based — callers pass the cited line's
+/// own index, so the cited line itself is never mistaken for its own
+/// heading), scanning backward, normalized. See
+/// [`ExcerptSnapshotEntry::heading`]. Returns `""` if no heading precedes it.
+fn nearest_preceding_heading_excerpt<S: AsRef<str>>(lines: &[S], before_index: usize) -> String {
+    lines[..before_index.min(lines.len())]
+        .iter()
+        .map(AsRef::as_ref)
+        .rev()
+        .find(|line| line.trim_start().starts_with('#'))
+        .map(normalize_excerpt)
+        .unwrap_or_default()
+}
+
 /// One excerpt-snapshot discrepancy, bucketed by kind so a test can assert on
 /// each kind independently.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -1940,24 +2001,35 @@ struct ExcerptCheckResult {
 /// `rules/source/en/`; a test supplies a tiny synthetic book so the check can
 /// be proven without touching the filesystem.
 ///
-/// Planned message shapes for Phase 2 (not yet produced by this stub):
-/// - mismatch: `"{file}:{line}: cites {key}, expected first line {expected:?}, found {actual:?}"`
+/// Message shapes:
+/// - mismatch: `"{file}:{line}: cites {key}, expected first line {expected:?} (next line {expected_next:?}), found {actual:?} (next line {actual_next:?})"`
 /// - missing: `"{file}:{line}: cites {key}, which has no snapshot entry"`
 /// - stale: `"{key}: stale snapshot entry — no citation uses this range"`
 fn check_citation_excerpts(
     citations: &[(PathBuf, usize, Citation)],
     book_lines: &BTreeMap<&'static str, Vec<&str>>,
-    snapshot: &BTreeMap<String, String>,
+    snapshot: &BTreeMap<String, ExcerptSnapshotEntry>,
 ) -> ExcerptCheckResult {
     let mut result = ExcerptCheckResult::default();
     let mut used_keys: BTreeSet<String> = BTreeSet::new();
     for (path, line, citation) in citations {
         let key = citation_key(citation);
         used_keys.insert(key.clone());
-        let actual = book_lines
-            .get(citation.book_file)
+        let lines = book_lines.get(citation.book_file);
+        let actual_excerpt = lines
             .and_then(|lines| lines.get((citation.start as usize).saturating_sub(1)))
             .map(|text| normalize_excerpt(text))
+            .unwrap_or_default();
+        let actual_next_line = lines
+            .map(|lines| next_non_blank_excerpt(lines.as_slice(), citation.start as usize))
+            .unwrap_or_default();
+        let actual_heading = lines
+            .map(|lines| {
+                nearest_preceding_heading_excerpt(
+                    lines.as_slice(),
+                    (citation.start as usize).saturating_sub(1),
+                )
+            })
             .unwrap_or_default();
         match snapshot.get(&key) {
             None => {
@@ -1966,9 +2038,19 @@ fn check_citation_excerpts(
                     relative(path)
                 ));
             }
-            Some(expected) if *expected != actual => {
+            Some(expected)
+                if expected.excerpt != actual_excerpt
+                    || expected.next_line != actual_next_line
+                    || expected.heading != actual_heading =>
+            {
+                let expected_excerpt = &expected.excerpt;
+                let expected_next_line = &expected.next_line;
+                let expected_heading = &expected.heading;
                 result.mismatches.push(format!(
-                    "{}:{line}: cites {key}, expected first line {expected:?}, found {actual:?}",
+                    "{}:{line}: cites {key}, expected first line {expected_excerpt:?} (next line \
+                     {expected_next_line:?}, heading {expected_heading:?}), found \
+                     {actual_excerpt:?} (next line {actual_next_line:?}, heading \
+                     {actual_heading:?})",
                     relative(path)
                 ));
             }
@@ -1998,6 +2080,15 @@ fn fixture_citation(
         book_file,
         start,
         end,
+    }
+}
+
+/// Builds a synthetic [`ExcerptSnapshotEntry`] for the tests below.
+fn fixture_excerpt_entry(excerpt: &str, next_line: &str, heading: &str) -> ExcerptSnapshotEntry {
+    ExcerptSnapshotEntry {
+        excerpt: excerpt.to_string(),
+        next_line: next_line.to_string(),
+        heading: heading.to_string(),
     }
 }
 
@@ -2061,7 +2152,7 @@ fn check_citation_excerpts_passes_when_every_citation_matches_its_snapshot() {
     )];
     let snapshot = BTreeMap::from([(
         "Fake:2".to_string(),
-        "Give quarter to a defeated foe.".to_string(),
+        fixture_excerpt_entry("Give quarter to a defeated foe.", "Next line", ""),
     )]);
 
     let result = check_citation_excerpts(&citations, &book_lines, &snapshot);
@@ -2085,10 +2176,11 @@ fn check_citation_excerpts_flags_a_citation_whose_cited_line_no_longer_matches_i
     )];
     // The snapshot still records the OLD wording — simulating the rulebook
     // text having moved under this citation (e.g. a re-sync, or an upstream
-    // fix landing on the same line).
+    // fix landing on the same line). The next-line context still matches, so
+    // this test isolates an excerpt-text mismatch alone.
     let snapshot = BTreeMap::from([(
         "Fake:2".to_string(),
-        "Give guarter to a defeated foe.".to_string(),
+        fixture_excerpt_entry("Give guarter to a defeated foe.", "Next line", ""),
     )]);
 
     let result = check_citation_excerpts(&citations, &book_lines, &snapshot);
@@ -2128,6 +2220,128 @@ fn check_citation_excerpts_flags_a_citation_whose_cited_line_no_longer_matches_i
 }
 
 #[test]
+fn check_citation_excerpts_flags_a_mismatched_next_line_even_when_the_excerpt_itself_still_matches()
+{
+    let book_lines: BTreeMap<&'static str, Vec<&'static str>> = BTreeMap::from([(
+        "Tiny Rulebook.md",
+        vec!["Heading", "Give quarter to a defeated foe.", "Next line"],
+    )]);
+    let citations = vec![(
+        PathBuf::from("crates/arm-rules/src/fake.rs"),
+        10,
+        fixture_citation("Fake", "Tiny Rulebook.md", 2, 2),
+    )];
+    // The excerpt itself still matches, but the snapshot's captured
+    // disambiguation context (the line that used to follow it) is stale —
+    // simulating a line inserted, removed, or reworded immediately after the
+    // cited line. `citation_relocation.rs`'s relocation tool depends on this
+    // context staying accurate, so a stale `next_line` must be caught even
+    // though the citation "passes" by excerpt text alone.
+    let snapshot = BTreeMap::from([(
+        "Fake:2".to_string(),
+        fixture_excerpt_entry(
+            "Give quarter to a defeated foe.",
+            "A line that no longer follows it.",
+            "",
+        ),
+    )]);
+
+    let result = check_citation_excerpts(&citations, &book_lines, &snapshot);
+    assert_eq!(
+        result.missing,
+        Vec::<String>::new(),
+        "a next-line mismatch is not a missing entry"
+    );
+    assert_eq!(
+        result.stale,
+        Vec::<String>::new(),
+        "a next-line mismatch is not a stale entry"
+    );
+    assert_eq!(
+        result.mismatches.len(),
+        1,
+        "expected exactly one mismatch for the stale next-line context, found {:?}",
+        result.mismatches
+    );
+    let message = &result.mismatches[0];
+    assert!(
+        message.contains("Fake:2"),
+        "expected the cited range's key in the message: {message}"
+    );
+    assert!(
+        message.contains("A line that no longer follows it."),
+        "expected the snapshot's stale next-line text in the message: {message}"
+    );
+    assert!(
+        message.contains("Next line"),
+        "expected the book's actual next-line text in the message: {message}"
+    );
+}
+
+#[test]
+fn check_citation_excerpts_flags_a_mismatched_heading_even_when_excerpt_and_next_line_match() {
+    let book_lines: BTreeMap<&'static str, Vec<&'static str>> = BTreeMap::from([(
+        "Tiny Rulebook.md",
+        vec![
+            "## Entry One",
+            "Give quarter to a defeated foe.",
+            "Next line",
+        ],
+    )]);
+    let citations = vec![(
+        PathBuf::from("crates/arm-rules/src/fake.rs"),
+        10,
+        fixture_citation("Fake", "Tiny Rulebook.md", 2, 2),
+    )];
+    // Excerpt and next_line both still match; only the captured heading
+    // context is stale — simulating the section heading above this passage
+    // having been renamed or moved even though the passage's own text and its
+    // immediate follower are untouched. `citation_relocation.rs`'s heading
+    // tiebreaker depends on this staying accurate, so a stale `heading` must
+    // be caught even though the citation "passes" by excerpt and next_line
+    // alone.
+    let snapshot = BTreeMap::from([(
+        "Fake:2".to_string(),
+        fixture_excerpt_entry(
+            "Give quarter to a defeated foe.",
+            "Next line",
+            "## A Different Entry",
+        ),
+    )]);
+
+    let result = check_citation_excerpts(&citations, &book_lines, &snapshot);
+    assert_eq!(
+        result.missing,
+        Vec::<String>::new(),
+        "a heading mismatch is not a missing entry"
+    );
+    assert_eq!(
+        result.stale,
+        Vec::<String>::new(),
+        "a heading mismatch is not a stale entry"
+    );
+    assert_eq!(
+        result.mismatches.len(),
+        1,
+        "expected exactly one mismatch for the stale heading context, found {:?}",
+        result.mismatches
+    );
+    let message = &result.mismatches[0];
+    assert!(
+        message.contains("Fake:2"),
+        "expected the cited range's key in the message: {message}"
+    );
+    assert!(
+        message.contains("## A Different Entry"),
+        "expected the snapshot's stale heading text in the message: {message}"
+    );
+    assert!(
+        message.contains("## Entry One"),
+        "expected the book's actual heading text in the message: {message}"
+    );
+}
+
+#[test]
 fn check_citation_excerpts_flags_a_citation_with_no_snapshot_entry() {
     let book_lines: BTreeMap<&'static str, Vec<&'static str>> = BTreeMap::from([(
         "Tiny Rulebook.md",
@@ -2138,7 +2352,7 @@ fn check_citation_excerpts_flags_a_citation_with_no_snapshot_entry() {
         10,
         fixture_citation("Fake", "Tiny Rulebook.md", 2, 2),
     )];
-    let snapshot: BTreeMap<String, String> = BTreeMap::new();
+    let snapshot: BTreeMap<String, ExcerptSnapshotEntry> = BTreeMap::new();
 
     let result = check_citation_excerpts(&citations, &book_lines, &snapshot);
     assert_eq!(
@@ -2185,9 +2399,12 @@ fn check_citation_excerpts_flags_a_snapshot_entry_no_citation_uses() {
     let snapshot = BTreeMap::from([
         (
             "Fake:2".to_string(),
-            "Give quarter to a defeated foe.".to_string(),
+            fixture_excerpt_entry("Give quarter to a defeated foe.", "Next line", ""),
         ),
-        ("Fake:3".to_string(), "Next line".to_string()),
+        (
+            "Fake:3".to_string(),
+            fixture_excerpt_entry("Next line", "", ""),
+        ),
     ]);
 
     let result = check_citation_excerpts(&citations, &book_lines, &snapshot);
@@ -2222,23 +2439,28 @@ fn citation_excerpts_fixture_path() -> PathBuf {
 }
 
 /// Reads and parses the committed excerpt snapshot.
-fn load_citation_excerpts_snapshot() -> BTreeMap<String, String> {
+fn load_citation_excerpts_snapshot() -> BTreeMap<String, ExcerptSnapshotEntry> {
     let path = citation_excerpts_fixture_path();
     let content = fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("{} is readable: {e}", relative(&path)));
-    serde_json::from_str(&content)
-        .unwrap_or_else(|e| panic!("{} parses as a string map: {e}", relative(&path)))
+    serde_json::from_str(&content).unwrap_or_else(|e| {
+        panic!(
+            "{} parses as the excerpt-snapshot map: {e}",
+            relative(&path)
+        )
+    })
 }
 
 /// **Regenerates `crates/arm-rules/tests/fixtures/citation_excerpts.json` from
 /// the live corpus — not a test the gate runs.** Walks every citation
 /// [`collect_all_citations`] finds, dedupes by [`citation_key`] (the excerpt
 /// depends only on the rulebook, not on which file cites it), and records
-/// each distinct range's [`normalize_excerpt`]d first line from
-/// [`BookLinesCache`]. Written with `serde_json::to_string_pretty` over a
-/// `BTreeMap`, whose iteration order is already sorted by key — satisfying
-/// `CLAUDE.md`'s "Canonical serialization" (sorted keys) without a separate
-/// sort step.
+/// each distinct range's [`normalize_excerpt`]d first line, plus the
+/// following line's excerpt as `next_line` (P8-1/T2's disambiguation
+/// context — see this section's header comment), from [`BookLinesCache`].
+/// Written with `serde_json::to_string_pretty` over a `BTreeMap`, whose
+/// iteration order is already sorted by key — satisfying `CLAUDE.md`'s
+/// "Canonical serialization" (sorted keys) without a separate sort step.
 ///
 /// `#[ignore]`d like its siblings in `rules_source_provenance.rs`
 /// (`regenerate_source_anchors`, `regenerate_blank_range_ends`) because it
@@ -2253,21 +2475,101 @@ fn regenerate_citation_excerpts() {
     let (_, citations) = collect_all_citations();
     let cache = BookLinesCache::load();
 
-    let mut snapshot: BTreeMap<String, String> = BTreeMap::new();
+    let mut snapshot: BTreeMap<String, ExcerptSnapshotEntry> = BTreeMap::new();
     for (_, _, citation) in &citations {
         let key = citation_key(citation);
+        let lines = cache.lines(citation.book_file);
         let line_index = (citation.start as usize).saturating_sub(1);
-        let excerpt = cache
-            .lines(citation.book_file)
+        let excerpt = lines
             .get(line_index)
             .map(|text| normalize_excerpt(text))
             .unwrap_or_default();
-        snapshot.insert(key, excerpt);
+        let next_line = next_non_blank_excerpt(lines, citation.start as usize);
+        let heading = nearest_preceding_heading_excerpt(lines, line_index);
+        snapshot.insert(
+            key,
+            ExcerptSnapshotEntry {
+                excerpt,
+                next_line,
+                heading,
+            },
+        );
     }
 
-    let json = serde_json::to_string_pretty(&snapshot).expect("a string map serializes");
+    let json =
+        serde_json::to_string_pretty(&snapshot).expect("the excerpt-snapshot map serializes");
     fs::write(citation_excerpts_fixture_path(), format!("{json}\n"))
         .expect("citation_excerpts.json is writable");
+}
+
+/// **Diagnostic, not part of the gate — prints and asserts nothing.** For
+/// every distinct cited passage ([`citation_key`]-deduped), counts how many
+/// lines in its book share its normalized excerpt, its captured `next_line`,
+/// **and** its captured `heading` — i.e. would still be ambiguous for
+/// `citation_relocation.rs`'s relocation tool even with every disambiguation
+/// signal P8-1/T2 captures. A count greater than one (the cited line itself
+/// always counts once) means no context this slice captures can resolve that
+/// passage on its own; P8-4's human-review pass needs to know this risk
+/// exists going in. Run deliberately: `cargo test -p arm-rules --test
+/// rulebook_citations -- --ignored --nocapture
+/// report_citation_excerpt_duplicates_even_with_full_context`.
+#[test]
+#[ignore = "diagnostic only; prints to stdout, run deliberately"]
+fn report_citation_excerpt_duplicates_even_with_full_context() {
+    let (_, citations) = collect_all_citations();
+    let cache = BookLinesCache::load();
+
+    // Dedupe by citation_key first — the risk is per distinct cited passage,
+    // not per citing occurrence (mirrors `regenerate_citation_excerpts`).
+    let mut by_key: BTreeMap<String, Citation> = BTreeMap::new();
+    for (_, _, citation) in &citations {
+        by_key
+            .entry(citation_key(citation))
+            .or_insert_with(|| citation.clone());
+    }
+
+    let mut duplicate_count = 0usize;
+    let mut examples: Vec<String> = Vec::new();
+    for (key, citation) in &by_key {
+        let lines = cache.lines(citation.book_file);
+        let line_index = (citation.start as usize).saturating_sub(1);
+        let Some(cited_text) = lines.get(line_index) else {
+            continue;
+        };
+        let excerpt = normalize_excerpt(cited_text);
+        let next_line = next_non_blank_excerpt(lines, citation.start as usize);
+        let heading = nearest_preceding_heading_excerpt(lines, line_index);
+
+        let occurrences = lines
+            .iter()
+            .enumerate()
+            .filter(|(idx, text)| {
+                normalize_excerpt(text) == excerpt
+                    && next_non_blank_excerpt(lines, idx + 1) == next_line
+                    && nearest_preceding_heading_excerpt(lines, *idx) == heading
+            })
+            .count();
+
+        if occurrences > 1 {
+            duplicate_count += 1;
+            if examples.len() < 10 {
+                examples.push(format!(
+                    "{key}: {excerpt:?} (next: {next_line:?}, heading: {heading:?}) recurs \
+                     {occurrences} times in {}",
+                    citation.book_file
+                ));
+            }
+        }
+    }
+
+    println!(
+        "{duplicate_count} of {} distinct cited passages remain ambiguous even with \
+         excerpt+next_line+heading context",
+        by_key.len()
+    );
+    for example in &examples {
+        println!("{example}");
+    }
 }
 
 /// **The live guard**: every citation [`collect_all_citations`] finds across
