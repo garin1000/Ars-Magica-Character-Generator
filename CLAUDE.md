@@ -151,34 +151,34 @@ source of truth.** It is synced from there, not maintained here, and it *drifts*
 between syncs — the V/F audit found rows that disagreed with the rulebook and
 turned out to be stale rather than wrong. So a correction goes into the source
 project first, and a row that looks wrong is checked against it **before** being
-called an error. Re-sync by copying `translation-tables/*.md` across; the local
-`README.md` then needs its audit warning re-applied, since the source project's
-copy is worded for that project.
+called an error. Re-sync with the gitignored `rules/source/sync-sources.sh`, which
+copies the books and tables together. Since 2026-10-09 the upstream `README.md`
+carries the audit warning and the precedence rules itself, so nothing needs
+re-applying locally.
 
 **The tables are AI-generated and fallible — but less often than the audit first
 thought.** The V/F audit (2026-09-19 to -21, all 655 entries) recorded **ten**
-proven errors. **D31 withdrew seven of them**: they were *name* disagreements
-convicted with a heading from our **stale** German rulebook copy, which is
-circular. What survives is the shape that actually matters — *a terminology table
-making a factual claim about the rules* — and a translation revision cannot
-excuse that, because it renames rather than reassigning mechanics. Hence the
-precedence rules, which live in full in
-`docs/vf-audit/decisions.md` **D6**, **D7** and **D31**:
+proven errors. Seven of them were *name* disagreements judged against a stale
+German rulebook copy, which D31 withdrew. What survives is the shape that
+actually matters: *a terminology table making a factual claim about the rules*.
+A translation revision cannot excuse that, because it renames rather than
+reassigning mechanics. The precedence rules live in full in
+`docs/vf-audit/decisions.md` **D6**, **D7** and **D86**:
 
 1. A **factual claim about the rules** (which Virtue grants which Reputation, at
    which level, in which magnitude) — the **rulebook** wins, always.
-2. An **entry's name** — **the table wins** (D31). This reverses the original
-   rule, which gave the heading precedence: our German rulebook copy is **older**
-   than the tables, so convicting a table row with a stale heading is circular.
-   The heading regains precedence only once a current German rulebook lands, at
-   which point D31 retires.
+2. An **entry's name**: the **German rulebook heading** wins (D7.1, restored by
+   D86). The table wins only where the heading is defective, i.e. it collides
+   with another entry's heading or is absent. D31's interim "table wins" rule
+   retired with the 2026-10-09 re-sync, which brought in a current German
+   rulebook.
 3. **Other terminology** — thematic table before `tugenden-fehler.md`, which is
    the broadest and so the likeliest to be wrong.
 4. A row tagged with **another book's acronym** (`HdH:WL`, `SdM:G`) is not in
    the dispute at all; it describes that book's terminology.
 
-`README.md` indexes the tables, carries the audit warning and the corrected-error
-log, and records resolved naming conflicts;
+`README.md` indexes the tables, carries the audit warning and the precedence
+rules, and records resolved naming conflicts;
 `uebersetzungsregeln.md` gives the prose/formatting rules (natural German
 syntax, `n/a`→`n/v`, Latin terms kept untranslated, etc.). Key conventions:
 Latin terms tagged `(Lat.)` stay untranslated; the type-label `Tainted` →
@@ -205,16 +205,19 @@ invalidates **every** citation into that file — the `SourceRef` ranges in
 and every dated record under `docs/`. Nothing detects it:
 `crates/arm-rules/tests/rulebook_citations.rs` checks only that a cited range
 lands on **non-blank lines**, so after a shift every citation still *passes*
-while pointing at the wrong text. A whole-file re-sync from upstream is a
-different act and is not covered by this rule; a hand edit is.
+while pointing at the wrong text. That was true until 2026-10-09; now
+`rulebook_citations.rs` also checks every citation against a snapshot of its
+text (`tests/fixtures/citation_excerpts.json`), so a shift fails loudly. A
+whole-file re-sync from upstream is a different act and is not covered by this
+rule; a hand edit is. The re-sync procedure (P8, D85) is: save the old sources to
+`tmp/p8-old-source/`, run `sync-sources.sh`, then relocate with the `#[ignore]`d
+sweeps in `source_relocation.rs` and `rulebook_citations.rs`.
 
 **And `rules/source/` is a COPY — repair defects upstream, not here.**
 The sibling project `../arm-de-translation` holds the authoritative originals, for
-the **English** text as well as the German: its
-`original-english/reviewed/…Core Rules.md` is **newer than ours and 80 lines
-longer** (25,803 against 25,723, measured 2026-09-24). So a hand repair in this
-repo is throwaway work — the file is replaced wholesale at the next re-sync, and
-the edit is lost along with it.
+the **English** text as well as the German (re-synced 2026-10-09; both at 25,806
+lines then). A hand repair in this repo is throwaway work — the file is replaced
+wholesale at the next re-sync, and the edit is lost along with it.
 
 A source defect is therefore **recorded here and fixed there**, as a todo in
 `arm-de-translation/docs/todo.md`. In-place same-line edits here are not *wrong*,
@@ -222,10 +225,11 @@ but they buy only the interval until the next sync, and they widen the drift
 between the two copies meanwhile. Prefer the upstream fix; make a local one only
 when something shipping depends on it now.
 
-**Corollary, and it is uncomfortable: every `ArMDE:NNNN` citation in this
-repository is already offset from the authoritative file.** That is not a reason
-to renumber anything — it is the reason `source.anchor` exists and is mandatory
-(see `docs/vf-audit/decisions.md` **D30**).
+**Corollary: between re-syncs, upstream moves on and every `ArMDE:NNNN`
+citation here drifts from the authoritative file.** That is not a reason to
+renumber anything by hand. It is the reason `source.anchor` exists and is
+mandatory (see `docs/vf-audit/decisions.md` **D30**), and the next re-sync
+relocates everything at once.
 
 ## Architecture invariants
 
@@ -427,13 +431,14 @@ relevant surface MUST preserve them and keep their tests green.
   book — and never spell the book out by its full basename
   (`Ars Magica - Definitive Edition (Core Rules).md:2774`); the acronym is the
   only spelling. Verify every line range against the actual file before
-  committing it — do not trust recalled numbers; the guard below only checks
-  that a range lands on non-blank lines, not that it says what the comment
-  claims.
+  committing it — do not trust recalled numbers. The guard below checks that a
+  range lands on non-blank lines and still matches its text snapshot, but not
+  that it says what the comment claims; a new citation's snapshot entry is
+  added by `regenerate_citation_excerpts`.
 
   The nine acronyms, canonically defined in
-  `rules/source/de/translation-tables/grundbegriffe.md:212-229` (whose `:212`
-  row offers both `ArM5` and `ArMDE` for the core book — this repo uses `ArMDE`
+  the acronym table in `rules/source/de/translation-tables/grundbegriffe.md`
+  (whose core-book row offers both `ArM5` and `ArMDE` — this repo uses `ArMDE`
   only, so `ArM5` is a rejected spelling):
 
   | Acronym | File under `rules/source/en/` |
