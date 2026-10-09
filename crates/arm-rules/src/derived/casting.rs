@@ -50,10 +50,10 @@ pub struct CastingWithinPotentField {
 /// The non-standard-casting variants of a cell's **Formulaic** Casting Total:
 /// casting with no voice ("silent") and/or no gestures ("still"). The Words and
 /// Gestures penalties apply to Formulaic and Spontaneous casting, never to Ritual
-/// (ArMDE:9236); these variants adjust the Formulaic total. Quiet Magic reduces the
+/// (ArMDE:9308); these variants adjust the Formulaic total. Quiet Magic reduces the
 /// no-voice penalty, Subtle Magic the no-gesture penalty, and Deft Form waives
 /// both for spells in its Form; each residual penalty clamps at 0. Source:
-/// ArMDE:9236-9245, :4822-4826, :5073-5076, :3645-3648.
+/// ArMDE:9308-9317, :4893-4897, :5144-5147, :3716-3719.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NonStandardCasting {
     /// Residual no-voice penalty (≤ 0) after Quiet Magic / Deft Form.
@@ -61,7 +61,7 @@ pub struct NonStandardCasting {
     /// Residual no-gesture penalty (≤ 0) after Subtle Magic / Deft Form.
     pub gesture_penalty: i32,
     /// Formulaic total cast with no voice. The penalty is a **Casting-Score**
-    /// term (ArMDE:9236), so it is summed with the others *before* any
+    /// term (ArMDE:9308), so it is summed with the others *before* any
     /// Deficient-Art halving: `halve(score + voice_penalty)`, which for a
     /// non-deficient magus is just `formulaic + voice_penalty`.
     pub silent: i32,
@@ -80,7 +80,7 @@ pub struct NonStandardCasting {
 /// CastingTotalMod (per scope). Formulaic = the score; Ritual = the score +
 /// Artes Liberales + Philosophiae; fatiguing Spontaneous = ÷2; non-fatiguing
 /// Spontaneous = ÷5. Within a Magical Focus the lower Art is added again; a
-/// Deficient Art halves the totals. Source: ArMDE:9089 (Casting Score), :9103-9145
+/// Deficient Art halves the totals. Source: ArMDE:9161 (Casting Score), :9103-9145
 /// (cast types), :4524-4527 (Method Caster), :4399-4422 (focus), :5909-5915
 /// (Deficient halving).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -133,7 +133,7 @@ pub struct CastingTotal {
     pub deficient: bool,
     /// Whether this cell's `(Technique, Form)` pair is one of a held Incompatible
     /// Arts Flaw's two combinations (D81.8, `docs/vf-audit/decisions.md`;
-    /// ArMDE:6290-6292). A requisite spell may still be unusable through this
+    /// ArMDE:6361-6363). A requisite spell may still be unusable through this
     /// cell without the cell itself being flagged — see
     /// `effective/spell.rs::spell_touches_barred_combination`, which the
     /// per-spell figure reads instead.
@@ -161,33 +161,33 @@ impl CastingBase {
     }
 }
 
-/// The lesser-of-requisite-and-primary fold for one Art class (ArMDE:12309,
+/// The lesser-of-requisite-and-primary fold for one Art class (ArMDE:12381,
 /// `### Requisites`): the effective score used is the lowest of `primary_score`
 /// and every requisite in `requisites` whose own `ArtType` matches `art_type` —
 /// a requisite of the other class (e.g. a Technique requisite, while folding
 /// the Form side) is skipped, and several requisites of the same class fold to
-/// the lowest of the whole group (ArMDE:12311). Every side is read through
+/// the lowest of the whole group (ArMDE:12383). Every side is read through
 /// [`effective_art_score`], so a Puissant Art bonus is included before the
-/// comparison on whichever side carries it (ArMDE:4820) — no separate
+/// comparison on whichever side carries it (ArMDE:4891) — no separate
 /// case needed, since "use the lesser of the two bonus-inclusive scores"
 /// already produces exactly that rule's worked example.
 ///
 /// `elemental_forms` is `Some` only for an entity holding Elemental Magic
 /// (`InPlayMods::elemental_forms`). When both `primary_id` and a candidate
 /// requisite are members of that set, the requisite is skipped outright
-/// (ArMDE:3737: "you use the primary Form to calculate totals, even if the
+/// (ArMDE:3808: "you use the primary Form to calculate totals, even if the
 /// requisite is lower") — Elemental Magic pools only Forms, so this can only
 /// ever matter when `art_type` is [`ArtType::Form`]; a Technique is never a
 /// member of `elemental_forms`, so the check is simply never true for the
 /// Technique side.
 ///
 /// Deliberately does **not** reach Magic Resistance, vis-boosting, or any
-/// other "effects that affect spells based on their Arts" (ArMDE:12313) —
+/// other "effects that affect spells based on their Arts" (ArMDE:12385) —
 /// those rely on the primary Arts only and call neither this function nor
 /// [`formulaic_casting_score`].
 ///
 /// `pub(crate)`: `effective/spell.rs::spell_level_cap` (X11b) reuses this
-/// same fold for the per-spell creation-time level cap — `ArMDE:2465`'s own
+/// same fold for the per-spell creation-time level cap — `ArMDE:2533`'s own
 /// closing sentence calls that cap "the appropriate Lab Total", so the
 /// identical lesser-of-requisite-and-primary rule governs it too. One fold,
 /// shared by both call sites, rather than a second copy that could disagree.
@@ -229,7 +229,7 @@ pub(crate) fn fold_requisite(
 /// and a Potent Magic field are two free-text themes that need not coincide).
 #[derive(Clone, Copy)]
 struct CastingVariant {
-    /// Doubles the folded lower Art (ArMDE:4403).
+    /// Doubles the folded lower Art (ArMDE:4474).
     focus: bool,
     /// Adds the Potent Magic field bonus (D79).
     potent: bool,
@@ -290,7 +290,7 @@ fn formulaic_casting_score(
     score
 }
 
-/// Casting Totals for every `(Technique, Form)` pair. Source: ArMDE:9089-9145.
+/// Casting Totals for every `(Technique, Form)` pair. Source: ArMDE:9161-9217.
 pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
     let mods = in_play_mods(entity, ruleset);
     let CastingBase {
@@ -357,8 +357,8 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
             // `extra` is a further **Casting-Score** term, summed with the rest
             // *before* `post` applies the Deficient-Art halving — which is where
             // every Casting-Score term belongs. The Words/Gestures penalties are
-            // its only caller: ArMDE:9236 classifies them as "a penalty to the
-            // casting score", and ArMDE:5911 halves the total that score feeds,
+            // its only caller: ArMDE:9308 classifies them as "a penalty to the
+            // casting score", and ArMDE:5982 halves the total that score feeds,
             // so `halve(score + penalty)` is the order on either reading.
             // Passing them to `variant` rather than adding them to its result is
             // what keeps that true — see
@@ -402,12 +402,12 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
                     deficient,
                 );
                 // Rounded down, like every other division the rules leave
-                // undirected. Source: ArMDE:547; see `derived.rs::halve`.
+                // undirected. Source: ArMDE:615; see `derived.rs::halve`.
                 let spontaneous_non_fatiguing = spont_base.div_euclid(5);
                 CastingScores {
                     formulaic,
                     ritual,
-                    // Weak Spontaneous Magic (ArMDE:7084-7086): "You may not exert yourself
+                    // Weak Spontaneous Magic (ArMDE:7155-7157): "You may not exert yourself
                     // when casting spontaneous magic, so you always divide
                     // your Casting Score by five." This does not add a second
                     // halving on top of the normal ÷2 fatiguing rate (that
@@ -489,7 +489,7 @@ pub fn casting_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CastingTotal> {
     out
 }
 
-/// The Casting Total the book prints beside one known spell (ArMDE:1179's
+/// The Casting Total the book prints beside one known spell (ArMDE:1247's
 /// "TeFo X/+Y"; formulaic only — Ritual/Spontaneous stay grid-only).
 /// Independently applies [`SpellSelection::within_focus`] (X10c, Magical
 /// Focus doubling) and [`SpellSelection::within_potent_field`] (D79, Potent
@@ -536,7 +536,7 @@ pub fn spell_casting_total(
 /// Applies the Deficient-Art halving to a casting score. Weak Spontaneous
 /// Magic is handled separately (it fixes the spontaneous *divisor* to 5
 /// rather than halving an already-computed score — see the `spontaneous_fatiguing`
-/// field comment in [`casting_totals`]'s `variant` closure). Source: ArMDE:5909-5915.
+/// field comment in [`casting_totals`]'s `variant` closure). Source: ArMDE:5980-5986.
 fn post(score: i32, deficient: bool) -> i32 {
     if deficient { halve(score) } else { score }
 }
@@ -553,9 +553,9 @@ struct CastingScores {
 /// A Penetration line for one known spell.
 ///
 /// Penetration Total = Casting Total − Spell Level + Penetration Ability score
-/// (ArMDE:9159-9161). Weak Magic
+/// (ArMDE:9231-9233). Weak Magic
 /// halves the Penetration Total *after* subtracting the level
-/// (ArMDE:7064-7067).
+/// (ArMDE:7135-7138).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PenetrationLine {
     /// The known spell's id.
@@ -580,7 +580,7 @@ pub struct PenetrationLine {
     pub weak_magic: bool,
 }
 
-/// Per-known-spell Penetration Totals. Source: ArMDE:9159-9161, :7064-7067.
+/// Per-known-spell Penetration Totals. Source: ArMDE:9231-9233, :7135-7138.
 pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
     let mods = in_play_mods(entity, ruleset);
     let pen_ability = ability(entity, ruleset, ID_PENETRATION);
@@ -654,20 +654,20 @@ pub fn penetration(entity: &Entity, ruleset: &Ruleset) -> Vec<PenetrationLine> {
 
 /// A per-Form Magic Resistance line.
 ///
-/// A magus's Magic Resistance = Form + 5 × Parma Magica (ArMDE:9390-9398). A
+/// A magus's Magic Resistance = Form + 5 × Parma Magica (ArMDE:9462-9470). A
 /// supernatural being uses
 /// its **Might Score** as a blanket resistance instead of Parma — the two do
-/// not stack; the higher is the base (RoP:M:1472; ArMDE:2627), and
+/// not stack; the higher is the base (RoP:M:1370; ArMDE:2695), and
 /// the Form bonus is compatible with either. Limited Magic Resistance drops one
 /// named Form's bonus; Flawed Parma Magica halves the Parma contribution
 /// against one named Form. Both are per-Form, never blanket.
 ///
 /// A True Faith Score adds a **third, wholly independent** source: "a True
 /// Faith Score gains Magic Resistance equal to this score multiplied by ten"
-/// (ArMDE:17611). Unlike Might, no passage states the Form bonus is compatible
+/// (ArMDE:17688). Unlike Might, no passage states the Form bonus is compatible
 /// with it, so it competes with the Form's **entire** total, not just the
 /// might/parma base — "these totals do not stack … you simply use the higher
-/// total" (ArMDE:2627). Because it is a separate source, it is unaffected by a
+/// total" (ArMDE:2695). Because it is a separate source, it is unaffected by a
 /// Flaw that reduces only the Parma/Form side (Flawed Parma Magica, Limited
 /// Magic Resistance) and so can override that Flaw's reduction on the very
 /// Form it names (D37, F-329).
@@ -681,27 +681,27 @@ pub struct MagicResistance {
     pub total: i32,
 }
 
-/// Per-Form Magic Resistance. Source: ArMDE:9390-9398, :6142-6145, :6346-6349;
-/// RoP:M:1472 (Might grants MR = Might
+/// Per-Form Magic Resistance. Source: ArMDE:9462-9470, :6213-6216, :6417-6420;
+/// RoP:M:1370 (Might grants MR = Might
 /// Score, not stacking with Parma).
 pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistance> {
     let mods = in_play_mods(entity, ruleset);
     let parma = ability(entity, ruleset, ID_PARMA_MAGICA);
     let parma_mr = 5 * parma;
     // A Might-being's blanket resistance = its effective Might Score. Might and
-    // Parma do not stack; the higher is the base (RoP:M:1472, ArMDE:2627).
+    // Parma do not stack; the higher is the base (RoP:M:1370, ArMDE:2695).
     let might = crate::effective::effective_might(entity, ruleset)
         .map(|m| i32::from(m.score))
         .unwrap_or(0);
-    // True Faith's blanket floor (ArMDE:17611), compared against each Form's
-    // WHOLE total below, never added to it (ArMDE:2627). `true_faith` already
+    // True Faith's blanket floor (ArMDE:17688), compared against each Form's
+    // WHOLE total below, never added to it (ArMDE:2695). `true_faith` already
     // sums every `Effect::TrueFaithGrant`, so this is a consumer change only.
     let true_faith_floor = i32::from(crate::effective::true_faith(entity, ruleset)) * 10;
     let mut out = Vec::new();
     for form in ruleset.art_ids_of(ArtType::Form) {
         let fo = effective_art_score(entity, ruleset, &form);
         // Limited Magic Resistance drops the bonus of the ONE Form its copy names,
-        // and leaves every other Form's alone. Source: ArMDE:6346-6349.
+        // and leaves every other Form's alone. Source: ArMDE:6417-6420.
         let form_bonus = if mods.no_form_bonus_forms.contains(&form) {
             0
         } else {
@@ -710,14 +710,14 @@ pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistan
         // Flawed Parma Magica halves the PARMA contribution against the Form its
         // copy names, and nothing else: the Flaw's subject is the Parma, while
         // :9396 puts the rest of the resistance on the Form scores, so it cannot
-        // touch `form_bonus`. Source: ArMDE:6142-6145, :9396.
+        // touch `form_bonus`. Source: ArMDE:6213-6216, :9468.
         let parma_for_form = if mods.halved_parma_forms.contains(&form) {
             halve(parma_mr)
         } else {
             parma_mr
         };
-        // Might and Parma do not stack; the higher is the base (RoP:M:1472,
-        // ArMDE:2627). The comparison uses this Form's own Parma figure, so a
+        // Might and Parma do not stack; the higher is the base (RoP:M:1370,
+        // ArMDE:2695). The comparison uses this Form's own Parma figure, so a
         // defective Parma lowers only the Parma side of it — a Might base is a
         // being's own resistance, not a Parma contribution, and is never halved.
         let base_addend = if might > parma_for_form {
@@ -741,7 +741,7 @@ pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistan
         // X6a/e1-e2: Commanding Aura's flat bonus competes with (never adds
         // to) the ordinary/True-Faith floor above, via the same `max()`
         // idiom — the "relic absent" branch of the book's composition rule
-        // (ArMDE:3583, :17653, :2627). The "relic present" branch (adds
+        // (ArMDE:3654, :17730, :2695). The "relic present" branch (adds
         // instead of competing) is X7b-d's F-256 and not yet wired: `relic_mr`
         // is a permanent 0 until that slice lands, so this is always the
         // relic-absent path today.

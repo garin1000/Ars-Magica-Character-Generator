@@ -1,11 +1,20 @@
 # Heckenzauber (Überarbeitete Ausgabe)
-Ein Quellenband für Ars Magica, 5. Edition.
+Ein Quellenband für Ars Magica Fünfte Edition.
 
 > *Open-License-Markdown-Version von YairRezek & OriginalMadman, https://github.com/OriginalMadman/Ars-Magica-Open-License*
-> 
+>
 > *[Fertigstellungsstand: Gesamtes Buch manuell überarbeitet (einschließlich Errata).]*
-> 
+>
 > *Basierend auf dem Material für Ars Magica, ©1993–2024, lizenziert von Trident, Inc. d/b/a Atlas Games®, unter [Creative Commons Attribution-ShareAlike 4.0 International License 4.0](https://creativecommons.org/licenses/by-sa/4.0/) („CC-BY-SA 4.0"). Order of Hermes, Tremere, Doissetep und Grimgroth sind Marken von Paradox Interactive AB und werden mit Genehmigung verwendet.*
+
+### Bekannte Fehler aus der PDF-Quelle
+
+- Inhaltsverzeichnis und Überschriftenebenen normalisiert.
+- Chartae und Amulette können *Form- und Materialboni* nutzen; im Original stand „form and material" statt „shape and material".
+- *Vitkar* wurde teilweise „viktar" geschrieben.
+- Heide: Die Definitive Edition hat den Fehler als Persönlichkeits-Fehler (Groß und Klein) neu eingeordnet; unverändert übernommen.
+
+---
 
 Hermetische Magi glauben, die unangefochtenen Meister der Magie im Mythischen Europa zu sein. Gewiss, es gibt einige wenige Heckenzauberer, aber deren Zahl und Macht sind im Vergleich zur Stärke des Orden des Hermes sicherlich vernachlässigbar.
 
@@ -23,7 +32,7 @@ COVERILLUSTRATION: Grey Thornberry
 
 INNENILLUSTRATIONEN: Ross Bonilla, Kelley Hensing, Brad McDevitt, Jeff Menges, Robert Scott, Grey Thornberry,
 
-ARS MAGICA FIFTH EDITION TRADE DRESS: J. Scott Reeves
+ARS MAGICA FÜNFTE EDITION – REIHENGESTALTUNG: J. Scott Reeves
 
 Besonderer Dank des Verlegers: An Jerry Corrick und die Belegschaft von The Source.
 
@@ -51,337 +60,351 @@ Ars Magica, Mythic Europe, Hedge Magic und Charting New Realms of Imagination si
 DIGITALE VERSION 1.0
 
 
-[Inhaltsverzeichnis](#inhaltsverzeichnis)
+# Inhaltsverzeichnis
 
-**[Kapitel Eins: Einleitung](#kapitel-eins-einleitung)**<br>
-&nbsp;[Wofür ist dieses Buch?](#wofür-ist-dieses-buch)<br>
-[HECKENTRADITIONEN UND DER ORDEN](#heckentraditionen-und-der-orden)<br>
-&nbsp;[Konvertiten zum Orden](#konvertiten-zum-orden)<br>
-&nbsp;[Verbündete des Ordens](#verbündete-des-ordens)<br>
-&nbsp;[Der Schatten des Hermes](#der-schatten-des-hermes)<br>
-[HECKENZAUBER](#heckenzauber)<br>
-&nbsp;[Die Gabe](#die-gabe)<br>
-&nbsp;[Die Grenzen der Magie](#die-grenzen-der-magie)<br>
-&nbsp;[Heckenkünste und Übernatürliche Fertigkeiten](#heckenkünste-und-übernatürliche-fertigkeiten)<br>
-&nbsp;[Magische Abwehr](#magische-abwehr-3)<br>
-&nbsp;[Verzerrung](#verzerrung-2)<br>
-&nbsp;[Vis](#vis-2)<br>
-[ERSCHAFFUNG VON HECKENCHARAKTEREN](#erschaffung-von-heckencharakteren)<br>
-&nbsp;[Magi, Gefährten oder Grogs?](#magi-gefährten-oder-grogs)<br>
-&nbsp;[Häufige Heckentugenden und -fehler](#häufige-heckentugenden-und--fehler)<br>
-&nbsp;[Häufige Heckenfertigkeiten](#häufige-heckenfertigkeiten)<br>
-&nbsp;[Erwerb von Heckenzauberer-Kräften](#erwerb-von-heckenzauberer-kräften)<br>
-&nbsp;[Integration von Heckenzauber](#integration-von-heckenzauber)<br>
-**[Kapitel Zwei: Elementaristen](#kapitel-zwei-elementaristen)**<br>
-[ELEMENTARISTEN-CHARAKTERE](#elementaristen-charaktere)<br>
-&nbsp;[Neue oder überarbeitete Tugenden](#neue-oder-überarbeitete-tugenden-1)<br>
-&nbsp;[Neue Fehler](#neue-fehler)<br>
-&nbsp;[Verzerrung](#verzerrung-2)<br>
-[ELEMENTARISTISCHE FORMEN](#elementaristische-formen)<br>
-&nbsp;[Elementaristische Luft](#elementaristische-luft-1)<br>
-&nbsp;[Elementaristische Erde](#elementaristische-erde-1)<br>
-[Elementaristisches Feuer](#elementaristisches-feuer-1)<br>
-[Elementaristisches Wasser](#elementaristisches-wasser-1)<br>
-[ELEMENTARISTISCHE TECHNIKEN](#elementaristische-techniken)<br>
-&nbsp;[Herbeirufen](#herbeirufen)<br>
-&nbsp;[Beherrschen](#beherrschen)<br>
-&nbsp;[Weissagen](#weissagen)<br>
-&nbsp;[Läutern](#läutern)<br>
-&nbsp;[Elementaristische Gesellschaften](#elementaristische-gesellschaften)<br>
-&nbsp;[Apostel des Apollonius](#apostel-des-apollonius)<br>
-&nbsp;[Ikhwan as-Safa'](#ikhwan-as-safa)<br>
-&nbsp;[Tulab Ibn Sina](#tulab-ibn-sina)<br>
-[HERMETISCHE INTEGRATION](#hermetische-integration-3)<br>
-**[Volkshexe](#volkshexe)**<br>
-[ERSCHAFFUNG EINES VOLKSHEXEN-CHARAKTERS](#erschaffung-eines-volkshexen-charakters)<br>
-&nbsp;[Mindestwerte für Fertigkeiten](#mindestwerte-für-fertigkeiten)<br>
-&nbsp;[Neue Tugenden und Fehler](#neue-tugenden-und-fehler)<br>
-&nbsp;[Bestehende Tugenden und Fehler](#bestehende-tugenden-und-fehler)<br>
-[VOLKSHEXEN-MAGIE](#volkshexen-magie)<br>
-&nbsp;[Kräfte der Volkshexen](#kräfte-der-volkshexen)<br>
-&nbsp;[Magische Abwehr](#magische-abwehr-3)<br>
-&nbsp;[Hexenküche](#hexenküche)<br>
-&nbsp;[Vertraute](#vertraute)<br>
-&nbsp;[Verzerrung](#verzerrung-2)<br>
-[HEXENZIRKEL](#hexenzirkel)<br>
-&nbsp;[Hexenzirkel-Einweihungen](#hexenzirkel-einweihungen)<br>
-&nbsp;[Sabbat](#sabbat)<br>
-&nbsp;[Erschaffung eines Hexenzirkels](#erschaffung-eines-hexenzirkels)<br>
-[HERMETISCHE INTEGRATION](#hermetische-integration-3)<br>
-&nbsp;[Behutsame Erschließung](#behutsame-erschließung)<br>
-&nbsp;[Energiemagie](#energiemagie-1)<br>
-&nbsp;[Gespür für das Mystische](#gespür-für-das-mystische)<br>
-&nbsp;[Ritualgegenstände](#ritualgegenstände)<br>
-**[Kapitel Vier: Gruagachan](#kapitel-vier-gruagachan)**<br>
-[CHARAKTERERSCHAFFUNG](#charaktererschaffung-1)<br>
-&nbsp;[Ausbildung](#ausbildung-1)<br>
-&nbsp;[Tugenden und Fehler](#tugenden-und-fehler-1)<br>
-[GRUAGACH-MAGIE](#gruagach-magie)<br>
-&nbsp;[Gruagach-Künste](#gruagach-künste)<br>
-&nbsp;[Gruagach-Zauber](#gruagach-zauber)<br>
-&nbsp;[Gruagach-Laboraktivitäten](#gruagach-laboraktivitäten)<br>
-&nbsp;[Einweihungen](#einweihungen)<br>
-&nbsp;[Einweihungen](#einweihungen)<br>
-&nbsp;[Magische Abwehr](#magische-abwehr-3)<br>
-&nbsp;[Geas- und Grenze-Dauern](#geas--und-grenze-dauern)<br>
-[ZAUBERLEITLINIEN](#zauberleitlinien)<br>
-&nbsp;[Segen](#segen)<br>
-&nbsp;[Flüche](#flüche)<br>
-&nbsp;[Gestaltzauber](#gestaltzauber)<br>
-&nbsp;[Visionszauber](#visionszauber)<br>
-[MAGISCHE GEFAHREN](#magische-gefahren-1)<br>
-[GRUAGACHAN IN EURER SAGA](#gruagachan-in-eurer-saga)<br>
-&nbsp;[Geschichte der Gruagachan](#geschichte-der-gruagachan)<br>
-&nbsp;[Kultur der Gruagachan](#kultur-der-gruagachan)<br>
-&nbsp;[Gruagachan im Spiel](#gruagachan-im-spiel)<br>
-[ALTERNATIVE TRADITIONEN](#alternative-traditionen-1)<br>
-&nbsp;[Trollsynir](#trollsynir)<br>
-&nbsp;[Kolduni](#kolduni)<br>
-[INTEGRATION DER GRUAGACH-MAGIE](#integration-der-gruagach-magie)<br>
-&nbsp;[Cailleach-Magie](#cailleach-magie)<br>
-&nbsp;[Flexible Formulaische Magie](#flexible-formulaische-magie)<br>
-&nbsp;[Verbesserte Stimmen-Reichweite](#verbesserte-stimmen-reichweite)<br>
-**[Magie](#magie-3)**<br>
-[CHARAKTERERSCHAFFUNG](#charaktererschaffung-1)<br>
-&nbsp;[Ausbildung](#ausbildung-1)<br>
-&nbsp;[Tugenden und Fehler](#tugenden-und-fehler-1)<br>
-[MAGIE DER GELEHRTEN MAGIER](#magie-der-gelehrten-magier)<br>
-&nbsp;[Die Künste](#die-künste)<br>
-&nbsp;[Zauberformeln](#zauberformeln)<br>
-&nbsp;[Laboraktivitäten](#laboraktivitäten)<br>
-&nbsp;[Abschwächung von Sphäreninteraktionseffekten](#abschwächung-von-sphäreninteraktionseffekten)<br>
-&nbsp;[Einweihungen UnBegabter Mathematici](#einweihungen-unbegabter-mathematici)<br>
-&nbsp;[Magische Abwehr](#magische-abwehr-3)<br>
-[ZAUBERLEITLINIEN](#zauberleitlinien)<br>
-&nbsp;[Fortunam](#fortunam)<br>
-&nbsp;[Magicam](#magicam)<br>
-&nbsp;[Salutem](#salutem)<br>
-&nbsp;[Magische Gefahren](#magische-gefahren-1)<br>
-[GELEHRTE MAGIER IN EURER SAGA](#gelehrte-magier-in-eurer-saga)<br>
-&nbsp;[Geschichte der Mathematici](#geschichte-der-mathematici)<br>
-&nbsp;[Kultur der Mathematici](#kultur-der-mathematici)<br>
-&nbsp;[Gelehrte Magier im Spiel](#gelehrte-magier-im-spiel)<br>
-[ALTERNATIVE TRADITIONEN](#alternative-traditionen-1)<br>
-&nbsp;[Mythische Alchemisten](#mythische-alchemisten)<br>
-&nbsp;[Weise Leute](#weise-leute)<br>
-[INTEGRATION DER MAGIE DER GELEHRTEN MAGIER](#integration-der-magie-der-gelehrten-magier)<br>
-&nbsp;[Kleine Hermetische Tugend: Schnelle Aufgeladene Artefakte](#kleine-hermetische-tugend-schnelle-aufgeladene-artefakte)<br>
-**[Nachtwandler<br>](#nachtwandlerbr)**<br>
-[CHARAKTERE](#charaktere-6)<br>
-&nbsp;[Neue Tugenden](#neue-tugenden)<br>
-&nbsp;[Kleine Tugenden im Zusammenhang mit Umherstreifen-Traditionen](#kleine-tugenden-im-zusammenhang-mit-umherstreifen-traditionen)<br>
-&nbsp;[Tugenden, die Nachtwandler häufig besitzen](#tugenden-die-nachtwandler-häufig-besitzen)<br>
-&nbsp;[Fehler, die Nachtwandler häufig besitzen](#fehler-die-nachtwandler-häufig-besitzen)<br>
-[KRÄFTE IM DETAIL](#kräfte-im-detail)<br>
-&nbsp;[Ekstasis](#ekstasis)<br>
-&nbsp;[Kampf und der umherstreifende Geist](#kampf-und-der-umherstreifende-geist)<br>
-&nbsp;[Fruchtbarkeitsschlachten](#fruchtbarkeitsschlachten)<br>
-&nbsp;[Prozessionen](#prozessionen)<br>
-&nbsp;[Wachaktivitäten](#wachaktivitäten)<br>
-[LOKALE TRADITIONEN DER NACHTWANDLER](#lokale-traditionen-der-nachtwandler)<br>
-&nbsp;[Benandanti](#benandanti)<br>
-&nbsp;[Die Hunde Gottes](#die-hunde-gottes)<br>
-&nbsp;[Kresniki und Kudlaki](#kresniki-und-kudlaki)<br>
-&nbsp;[Mazzeru](#mazzeru)<br>
-&nbsp;[Taltós](#taltós)<br>
-[MYTHISCHE GEFÄHRTEN](#mythische-gefährten)<br>
-[HERMETISCHE INTEGRATION](#hermetische-integration-3)<br>
-&nbsp;[Teilweise laufende Integration](#teilweise-laufende-integration)<br>
-[ABENTEUERIDEEN](#abenteuerideen)<br>
-**[VII. Vitkir](#kapitel-sieben-vitkir)**<br>
-[VITKIR ALS CHARAKTERE](#vitkir-als-charaktere)<br>
-&nbsp;[Neue oder überarbeitete Tugenden](#neue-oder-überarbeitete-tugenden-1)<br>
-&nbsp;[Neue oder überarbeitete Fehler](#neue-oder-überarbeitete-fehler)<br>
-&nbsp;[Neue Fertigkeiten](#neue-fertigkeiten)<br>
-&nbsp;[Nátt-thel](#nátt-thel)<br>
-&nbsp;[Erlernen der Vitkar-Magie](#erlernen-der-vitkar-magie)<br>
-[VITKAR-MAGIE](#vitkar-magie)<br>
-&nbsp;[Vitkar-Runenskripte](#vitkar-runenskripte)<br>
-&nbsp;[Wirken von Runenzaubern](#wirken-von-runenzaubern)<br>
-[DIE RUNEN](#die-runen)<br>
-&nbsp;[A, Ansuz, „Mund"](#a-ansuz-mund)<br>
-&nbsp;[B, Berkanan, „Birke"](#b-berkanan-birke)<br>
-&nbsp;[D, Dagaz, „Tag"](#d-dagaz-tag)<br>
-&nbsp;[E, Ehwaz, „Pferd"](#e-ehwaz-pferd)<br>
-&nbsp;[F, Fehu, „Reichtum"](#f-fehu-reichtum)<br>
-&nbsp;[G, Gebo, „Gabe"](#g-gebo-gabe)<br>
-&nbsp;[H, Hagalaz, „Hagel"](#h-hagalaz-hagel)<br>
-&nbsp;[I, Isa, „Eis"](#i-isa-eis)<br>
-&nbsp;[J, Jera, „Jahr"](#j-jera-jahr)<br>
-&nbsp;[K, Kauno, „Schmerz"](#k-kauno-schmerz)<br>
-&nbsp;[L, Laguz, „Wasser"](#l-laguz-wasser)<br>
-&nbsp;[M, Mannaz, „Mensch"](#m-mannaz-mensch)<br>
-&nbsp;[N, Naudiz, „Not"](#n-naudiz-not)<br>
-&nbsp;[Ng, Ingwaz, „Herr"](#ng-ingwaz-herr)<br>
-&nbsp;[O, Othila, „Erbe"](#o-othila-erbe)<br>
-&nbsp;[P, Perth, „Becher"](#p-perth-becher)<br>
-&nbsp;[R, Raido, „Reiten"](#r-raido-reiten)<br>
-&nbsp;[S, Sowilo, „Sonne"](#s-sowilo-sonne)<br>
-&nbsp;[T, Tiwaz, „Tyr"](#t-tiwaz-tyr)<br>
-&nbsp;[Þ, Thurisaz, „Riese"](#þ-thurisaz-riese)<br>
-&nbsp;[U, Uruz, „Auerochse"](#u-uruz-auerochse)<br>
-&nbsp;[W, Wunjo, „Freude"](#w-wunjo-freude)<br>
-&nbsp;[Y, Ihwaz, „Eibe"](#y-ihwaz-eibe)<br>
-&nbsp;[Z, Algiz, „Elch"](#z-algiz-elch)<br>
-&nbsp;[Modifizierte Runen](#modifizierte-runen)<br>
-&nbsp;[Hermetische Integration](#hermetische-integration-3)<br>
-**[VIII. Bibliographie](#kapitel-acht-bibliographie)**
+#### [I. Einleitung](#kapitel-eins-einleitung)
+- &nbsp;[Wofür ist dieses Buch?](#wofür-ist-dieses-buch)
+- [Heckentraditionen und der Orden](#heckentraditionen-und-der-orden)
+- &nbsp;[Konvertiten zum Orden](#konvertiten-zum-orden)
+- &nbsp;[Verbündete des Ordens](#verbündete-des-ordens)
+- &nbsp;[Der Schatten des Hermes](#der-schatten-des-hermes)
+- [Heckenzauber](#heckenzauber)
+- &nbsp;[Die Gabe](#die-gabe)
+- &nbsp;[Die Grenzen der Magie](#die-grenzen-der-magie)
+- &nbsp;[Heckenkünste und Übernatürliche Fertigkeiten](#heckenkünste-und-übernatürliche-fertigkeiten)
+- &nbsp;[Magische Abwehr](#magische-abwehr)
+- &nbsp;[Verzerrung](#verzerrung)
+- &nbsp;[Vis](#vis)
+- [Erschaffung von Heckencharakteren](#erschaffung-von-heckencharakteren)
+- &nbsp;[Magi, Gefährten oder Grogs?](#magi-gefährten-oder-grogs)
+- &nbsp;[Häufige Heckentugenden und -fehler](#häufige-heckentugenden-und--fehler)
+- &nbsp;[Häufige Heckenfertigkeiten](#häufige-heckenfertigkeiten)
+- &nbsp;[Erwerb von Heckenzauberer-Kräften](#erwerb-von-heckenzauberer-kräften)
+- [Integration von Heckenzauber](#integration-von-heckenzauber)
 
-## Kastenverzeichnis
+#### [II. Elementaristen](#kapitel-zwei-elementaristen)
+- [Elementaristen-Charaktere](#elementaristen-charaktere)
+- &nbsp;[Neue oder überarbeitete Tugenden](#neue-oder-überarbeitete-tugenden)
+- &nbsp;[Neue Fehler](#neue-fehler)
+- &nbsp;[Elementaristische Verzerrung](#elementaristische-verzerrung)
+- [Elementaristische Formen](#elementaristische-formen)
+- &nbsp;[Elementaristische Luft](#elementaristische-luft-1)
+- &nbsp;[Elementaristische Erde](#elementaristische-erde-1)
+- &nbsp;[Elementaristisches Feuer](#elementaristisches-feuer-1)
+- &nbsp;[Elementaristisches Wasser](#elementaristisches-wasser-1)
+- [Elementaristische Techniken](#elementaristische-techniken)
+- &nbsp;[Herbeirufen](#herbeirufen)
+- &nbsp;[Beherrschen](#beherrschen)
+- &nbsp;[Weissagen](#weissagen)
+- &nbsp;[Läutern](#läutern)
+- [Elementaristische Gesellschaften](#elementaristische-gesellschaften)
+- &nbsp;[Apostel des Apollonius](#apostel-des-apollonius)
+- &nbsp;[Ikhwan as-Safa'](#ikhwan-as-safa)
+- &nbsp;[Tulab Ibn Sina](#tulab-ibn-sina)
+- [Hermetische Integration](#hermetische-integration)
 
-I. EINLEITUNG<br>
-Neuer Zauber: Die Taubheit der Gabe <br>
-Fehlerhafte Erschließung der Gabe<br>
-Erschließung der Künste <br>
-Schwierige Künste – Mechanik <br>
-Die Grenze der Magieresistenz <br>
-Einweihungen für UnBegabte <br>
-Der Integrationsprozess <br>
-ABENTEUERIDEEN: Geschichten über Lehrer<br>
-Hermetischer Gebrauch der Heckentheorie  <br>
-Originäre Forschung und Alte Magie <br>
+#### [III. Volkshexen](#kapitel-drei-volkshexen)
+- [Erschaffung eines Volkshexen-Charakters](#erschaffung-eines-volkshexen-charakters)
+- &nbsp;[Mindestwerte für Fertigkeiten](#mindestwerte-für-fertigkeiten)
+- &nbsp;[Neue Tugenden und Fehler](#neue-tugenden-und-fehler)
+- &nbsp;[Bestehende Tugenden und Fehler](#bestehende-tugenden-und-fehler)
+- [Volkshexen-Magie](#volkshexen-magie)
+- &nbsp;[Kräfte der Volkshexen](#kräfte-der-volkshexen)
+- &nbsp;[Magische Abwehr](#magische-abwehr-1)
+- &nbsp;[Hexenküche](#hexenküche)
+- &nbsp;[Vertraute](#vertraute)
+- &nbsp;[Verzerrung](#verzerrung-1)
+- [Hexenzirkel](#hexenzirkel)
+- &nbsp;[Hexenzirkel-Einweihungen](#hexenzirkel-einweihungen)
+- &nbsp;[Sabbat](#sabbat)
+- &nbsp;[Erschaffung eines Hexenzirkels](#erschaffung-eines-hexenzirkels)
+- [Hermetische Integration](#hermetische-integration-1)
+- &nbsp;[Behutsame Erschließung](#behutsame-erschließung)
+- &nbsp;[Energiemagie](#energiemagie)
+- &nbsp;[Gespür für das Mystische](#gespür-für-das-mystische)
+- &nbsp;[Ritualgegenstände](#ritualgegenstände)
 
-II. ELEMENTARISTEN<br>
-Tugenden der Elementaristen <br>
-Elementare Affinitäten und Charaktererschaffung <br>
-Andere Herbeirufungskünste <br>
-Fehler der Elementaristen <br>
-Elementare Eigenschaften <br>
-ABENTEUERIDEE: Rachsüchtige Flammen <br>
-Herbeirufen von Elementaren <br>
-ABENTEUERIDEE: Der Leibarzt des Bischofs <br>
-ABENTEUERIDEE: Das Recht auf Vis <br>
-ABENTEUERIDEE: Der zweigeteilte Elementarist<br>
-Elisavet („Psychorrhax") <br>
-Episteln der Brüder der Reinheit und Getreuen Freunde  <br>
-Schriften des Ibn Sina 
+#### [IV. Gruagachan](#kapitel-vier-gruagachan)
+- [Charaktererschaffung](#charaktererschaffung)
+- &nbsp;[Ausbildung](#ausbildung)
+- &nbsp;[Tugenden und Fehler](#tugenden-und-fehler)
+- [Gruagach-Magie](#gruagach-magie)
+- &nbsp;[Gruagach-Künste](#gruagach-künste)
+- &nbsp;[Gruagach-Zauber](#gruagach-zauber)
+- &nbsp;[Gruagach-Laboraktivitäten](#gruagach-laboraktivitäten)
+- &nbsp;[Einweihungen Begabter Gruagachan](#einweihungen-begabter-gruagachan)
+- &nbsp;[Einweihungen UnBegabter Gruagachan](#einweihungen-unbegabter-gruagachan)
+- &nbsp;[Magische Abwehr](#magische-abwehr-2)
+- &nbsp;[Geas- und Grenze-Dauern](#geas--und-grenze-dauern)
+- [Zauberleitlinien](#zauberleitlinien)
+- &nbsp;[Segen](#segen)
+- &nbsp;[Flüche](#flüche)
+- &nbsp;[Gestaltzauber](#gestaltzauber)
+- &nbsp;[Visionszauber](#visionszauber)
+- &nbsp;[Magische Gefahren](#magische-gefahren)
+- [Gruagachan in eurer Saga](#gruagachan-in-eurer-saga)
+- &nbsp;[Geschichte der Gruagachan](#geschichte-der-gruagachan)
+- &nbsp;[Kultur der Gruagachan](#kultur-der-gruagachan)
+- &nbsp;[Gruagachan im Spiel](#gruagachan-im-spiel)
+- [Alternative Traditionen](#alternative-traditionen)
+- &nbsp;[Trollsynir](#trollsynir)
+- &nbsp;[Kolduni](#kolduni)
+- [Integration der Gruagach-Magie](#integration-der-gruagach-magie)
+- &nbsp;[Cailleach-Magie](#cailleach-magie)
+- &nbsp;[Flexible Formulaische Magie](#flexible-formulaische-magie)
+- &nbsp;[Verbesserte Stimmen-Reichweite](#verbesserte-stimmen-reichweite)
 
-III. VOLKSHEXEN<br>
-ABENTEUERIDEE: Sklaven <br>
-Männliche Hexer <br>
-Magietheorie der Volkshexen <br>
-Eine Trank untersuchen<br>
-Organisationskunde: Volkshexen  <br>
-Frühreife Mädchen  <br>
-Sabbatzeiten <br>
-Sabbats ABENTEUERIDEE: Der Große Sabbat <br>
-Matilda <br>
-Eliza  <br>
-Meisterin Greta <br>
-Janine Kyteler <br>
-Anne Kors <br>
-Jean die Weise <br>
-Neue Tugend: Behutsame Erschließung <br>
-ABENTEUERIDEEN zur Behutsamen Erschließung <br>
-Neue Tugend und Leitlinien: Energiemagie <br>
-ABENTEUERIDEEN zur Energiemagie <br>
-Neue Tugend: Gespür für das Mystische<br>
-ABENTEUERIDEE: Den Drachen wecken  <br>
-ABENTEUERIDEEN zu Ritualgegenständen<br>
-Neue Tugend: Ritualgegenstände 
+#### [V. Gelehrte Magier](#kapitel-fünf-gelehrte-magier)
+- [Charaktererschaffung](#charaktererschaffung-1)
+- &nbsp;[Ausbildung](#ausbildung-1)
+- &nbsp;[Tugenden und Fehler](#tugenden-und-fehler-1)
+- [Magie der Gelehrten Magier](#magie-der-gelehrten-magier)
+- &nbsp;[Die Künste](#die-künste)
+- &nbsp;[Zauberformeln](#zauberformeln)
+- &nbsp;[Laboraktivitäten](#laboraktivitäten)
+- &nbsp;[Abschwächung von Sphäreninteraktionseffekten](#abschwächung-von-sphäreninteraktionseffekten)
+- &nbsp;[Einweihungen UnBegabter Mathematici](#einweihungen-unbegabter-mathematici)
+- &nbsp;[Magische Abwehr](#magische-abwehr-3)
+- [Zauberleitlinien](#zauberleitlinien-1)
+- &nbsp;[Fortunam](#fortunam)
+- &nbsp;[Magicam](#magicam)
+- &nbsp;[Salutem](#salutem)
+- &nbsp;[Magische Gefahren](#magische-gefahren-1)
+- [Gelehrte Magier in eurer Saga](#gelehrte-magier-in-eurer-saga)
+- &nbsp;[Geschichte der Mathematici](#geschichte-der-mathematici)
+- &nbsp;[Kultur der Mathematici](#kultur-der-mathematici)
+- &nbsp;[Gelehrte Magier im Spiel](#gelehrte-magier-im-spiel)
+- [Alternative Traditionen](#alternative-traditionen-1)
+- &nbsp;[Mythische Alchemisten](#mythische-alchemisten)
+- &nbsp;[Weise Leute](#weise-leute)
+- [Integration der Magie der Gelehrten Magier](#integration-der-magie-der-gelehrten-magier)
+- &nbsp;[Aufgeladene Artefakte für den einmaligen Gebrauch](#aufgeladene-artefakte-für-den-einmaligen-gebrauch)
 
-IV. GRUAGACHAN  <br>
-Neue Tugend: Gruagach<br>
-Geeignete Reichweiten, Dauern und Zielgrößen<br>
-Gestaltboni der Gruagach<br>
-Geistermagie<br>
-ABENTEUERIDEE: Suche nach dem Turm der Zauberer<br>
-ABENTEUERIDEE: Poetische Gerechtigkeit <br>
-ABENTEUERIDEE: Gestalt und Form <br>
-Geas- und Grenzdauer-Magnituden<br>
-Gruagach-Alternative<br>
-Leitlinien: Segen geben<br>
-Leitlinien: Segen nehmen<br>
-Leitlinien: Fluch geben<br>
-Leitlinien: Fluch nehmen<br>
-Leitlinien: Gestalt geben<br>
-Leitlinien: Gestalt nehmen<br>
-ABENTEUERIDEEN zu Gruagachan-Formen und -Techniken <br>
-Leitlinien: Vision geben<br>
-Leitlinien: Vision nehmen<br>
-Der Gott Gruagach und die Feen-Gruagachan<br>
-Domhnall, der Gruagach-Meister<br>
-Conall der Gruagach<br>
-ABENTEUERIDEE: Koschtschei der Unsterbliche
+#### [VI. Nachtwandler](#kapitel-sechs-nachtwandler)
+- [Charaktere](#charaktere-6)
+- &nbsp;[Neue Tugenden](#neue-tugenden)
+- &nbsp;[Kleine Tugenden im Zusammenhang mit Umherstreifen-Traditionen](#kleine-tugenden-im-zusammenhang-mit-umherstreifen-traditionen)
+- &nbsp;[Tugenden, die Nachtwandler häufig besitzen](#tugenden-die-nachtwandler-häufig-besitzen)
+- &nbsp;[Fehler, die Nachtwandler häufig besitzen](#fehler-die-nachtwandler-häufig-besitzen)
+- [Kräfte im Detail](#kräfte-im-detail)
+- &nbsp;[Ekstasis](#ekstasis)
+- &nbsp;[Kampf und der umherstreifende Geist](#kampf-und-der-umherstreifende-geist)
+- &nbsp;[Fruchtbarkeitsschlachten](#fruchtbarkeitsschlachten)
+- &nbsp;[Prozessionen](#prozessionen)
+- &nbsp;[Wachaktivitäten](#wachaktivitäten)
+- [Lokale Traditionen der Nachtwandler](#lokale-traditionen-der-nachtwandler)
+- &nbsp;[Benandanti](#benandanti)
+- &nbsp;[Die Hunde Gottes](#die-hunde-gottes)
+- &nbsp;[Kresniki und Kudlaki](#kresniki-und-kudlaki)
+- &nbsp;[Mazzeru](#mazzeru)
+- &nbsp;[Taltós](#taltós)
+- [Mythische Gefährten](#mythische-gefährten)
+- [Hermetische Integration](#hermetische-integration-2)
+- &nbsp;[Teilweise laufende Integration](#teilweise-laufende-integration)
+- [Abenteuerideen](#abenteuerideen)
 
-V. Gelehrte Magier <br>
-Kunde der Mathematici<br>
-Neue Reagenzien-Leitlinien<br>
-Beispielreagenzien <br>
-Reichweiten, Dauern und Zielgrößen für Zauberformeln <br>
-Reichweiten, Dauern und Zielgrößen für Amulette und Chartae <br>
-Leitlinien: Tueor Fortunam <br>
-Leitlinien: Succurro Fortunam <br>
-Leitlinien: Vulnero Fortunam <br>
-Leitlinien: Tueor Magicam <br>
-Leitlinien: Succurro Magicam <br>
-Leitlinien: Vulnero Magicam <br>
-Leitlinien: Tueor Salutem <br>
-Leitlinien: Succurro Salutem <br>
-Leitlinien: Vulnero Salutem <br>
-ABENTEUERIDEEN für Gelehrte Magier <br>
-Zauberleitlinien <br>
-ABENTEUERIDEE: Historische Untersuchung<br>
-ABENTEUERIDEE: Gebrauchte Bücher <br>
-Stefano der Meister <br>
-Marco der Schüler <br>
-Kleine Hermetische Tugend: Schnell Aufgeladene Artefakte
+#### [VII. Vitkir](#kapitel-sieben-vitkir)
+- [Vitkir als Charaktere](#vitkir-als-charaktere)
+- &nbsp;[Neue oder überarbeitete Tugenden](#neue-oder-überarbeitete-tugenden-1)
+- &nbsp;[Neue oder überarbeitete Fehler](#neue-oder-überarbeitete-fehler)
+- &nbsp;[Neue Fertigkeiten](#neue-fertigkeiten)
+- &nbsp;[Nátt-thel](#nátt-thel)
+- &nbsp;[Erlernen der Vitkar-Magie](#erlernen-der-vitkar-magie)
+- [Vitkar-Magie](#vitkar-magie)
+- &nbsp;[Vitkar-Runenskripte](#vitkar-runenskripte)
+- &nbsp;[Wirken von Runenzaubern](#wirken-von-runenzaubern)
+- [Die Runen](#die-runen)
+- &nbsp;[A, Ansuz, „Mund"](#a-ansuz-mund)
+- &nbsp;[B, Berkanan, „Birke"](#b-berkanan-birke)
+- &nbsp;[D, Dagaz, „Tag"](#d-dagaz-tag)
+- &nbsp;[E, Ehwaz, „Pferd"](#e-ehwaz-pferd)
+- &nbsp;[F, Fehu, „Reichtum"](#f-fehu-reichtum)
+- &nbsp;[G, Gebo, „Gabe"](#g-gebo-gabe)
+- &nbsp;[H, Hagalaz, „Hagel"](#h-hagalaz-hagel)
+- &nbsp;[I, Isa, „Eis"](#i-isa-eis)
+- &nbsp;[J, Jera, „Jahr"](#j-jera-jahr)
+- &nbsp;[K, Kauno, „Schmerz"](#k-kauno-schmerz)
+- &nbsp;[L, Laguz, „Wasser"](#l-laguz-wasser)
+- &nbsp;[M, Mannaz, „Mensch"](#m-mannaz-mensch)
+- &nbsp;[N, Naudiz, „Not"](#n-naudiz-not)
+- &nbsp;[Ng, Ingwaz, „Herr"](#ng-ingwaz-herr)
+- &nbsp;[O, Othila, „Erbe"](#o-othila-erbe)
+- &nbsp;[P, Perth, „Becher"](#p-perth-becher)
+- &nbsp;[R, Raido, „Reiten"](#r-raido-reiten)
+- &nbsp;[S, Sowilo, „Sonne"](#s-sowilo-sonne)
+- &nbsp;[T, Tiwaz, „Tyr"](#t-tiwaz-tyr)
+- &nbsp;[Þ, Thurisaz, „Riese"](#þ-thurisaz-riese)
+- &nbsp;[U, Uruz, „Auerochse"](#u-uruz-auerochse)
+- &nbsp;[W, Wunjo, „Freude"](#w-wunjo-freude)
+- &nbsp;[Y, Ihwaz, „Eibe"](#y-ihwaz-eibe)
+- &nbsp;[Z, Algiz, „Elch"](#z-algiz-elch)
+- &nbsp;[Modifizierte Runen](#modifizierte-runen)
+- &nbsp;[Hermetische Integration](#hermetische-integration-3)
 
-VI. NACHTWANDLER<br>
-Mit einer Glückshaube geboren <br>
-Kampfwerte für Tier-Phantastica <br>
-Modifikatoren aus dem Quellenband Covenants <br>
-ABENTEUERIDEE: Den falsch Beschuldigten retten <br>
-Woher kommen Anführer?<br>
-In die Schlachten eingreifen  <br>
-Überlegungen für die Saga <br>
-Andere Prozessionen der Toten<br>
-Fenchel  <br>
-ABENTEUERIDEE: Aristeas <br>
-Weißdorn<br>
-Asphodill<br>
-Werte und Fertigkeiten für die Flammengestalt <br>
-Rothiger, ein Gefährte der Hunde Gottes<br>
-Rothiger in Wolfsgestalt <br>
-Arno, ein Benandante-Gefährte <br>
+#### [VIII. Bibliographie](#kapitel-acht-bibliographie)
+- &nbsp;[Quellen zu Volkshexen](#quellen-zu-volkshexen)
+- &nbsp;[Quellen zu Gruagachan](#quellen-zu-gruagachan)
+- &nbsp;[Quellen zu Gelehrten Magiern](#quellen-zu-gelehrten-magiern)
+- &nbsp;[Quellen zu Nachtwandlern](#quellen-zu-nachtwandlern)
 
-VII. VITKIR  <br>
-Der Orden Odins <br>
-Weibliche Vitkir <br>
-Vitkar-Tugenden  <br>
-Magische Foki der Vitkar <br>
-Vitkar-Fehler <br>
-Die Runengedichte<br>
-Odins Opfer<br>
-Varianten des Runenwirkens <br>
-Das Ältere Futhark <br>
-Ansuz-Leitlinien<br>
-Berkanan-Leitlinien <br>
-Dagaz-Leitlinien <br>
-Ehwaz-Leitlinien <br>
-Fehu-Leitlinien <br>
-Gebo-Leitlinien <br>
-Hagalaz-Leitlinien  <br>
-Isa-Leitlinien <br>
-Jera-Leitlinien <br>
-Kauno-Leitlinien <br>
-Laguz-Leitlinien <br>
-Mannaz-Leitlinien <br>
-Naudiz-Leitlinien<br>
-Ingwaz-Leitlinien  <br>
-Othila-Leitlinien  <br>
-Perth-Leitlinien  <br>
-Raido-Leitlinien  <br>
-Sowilo-Leitlinien <br>
-Tiwaz-Leitlinien  <br>
-Thurisaz-Leitlinien  <br>
-Uruz-Leitlinien <br>
-Wunjo-Leitlinien  <br>
-Ihwaz-Leitlinien<br>
-Algiz-Leitlinien  <br>
-Der Angelsächsische Futhorc <br>
-Das Jüngere Futhark   <br>
-Eirik Svennson, Krieger-Vitki 
+
+> ### Kastenverzeichnis
+>
+> #### I. EINLEITUNG
+> - [Neuer Zauber: Die Taubheit der Gabe](#neuer-zauber-die-taubheit-der-gabe)
+> - [Fehlerhafte Erschließung der Gabe](#fehlerhafte-erschließung-der-gabe)
+> - [Erschließung der Künste](#erschließung-der-künste)
+> - [Schwierige Künste – Mechanik](#schwierige-künste--mechanik)
+> - [Die Grenze der Magieresistenz](#die-grenze-der-magieresistenz)
+> - [Einweihungen für UnBegabte](#einweihungen-für-unbegabte)
+> - [Der Integrationsprozess](#der-integrationsprozess)
+> - [Abenteuerideen: Geschichten über Lehrer](#abenteuerideen-geschichten-über-lehrer)
+> - [Hermetischer Gebrauch der Heckentheorie](#hermetischer-gebrauch-der-heckentheorie)
+> - [Originäre Forschung und Alte Magie](#originäre-forschung-und-alte-magie)
+>
+> #### II. ELEMENTARISTEN
+> - [Tugenden der Elementaristen](#tugenden-der-elementaristen)
+> - [Elementare Affinitäten und Charaktererschaffung](#elementare-affinitäten-und-charaktererschaffung)
+> - [Andere Herbeirufungskünste](#andere-herbeirufungskünste)
+> - [Fehler der Elementaristen](#fehler-der-elementaristen)
+> - [Elementare Eigenschaften](#elementare-eigenschaften)
+> - [Abenteueridee: Rachsüchtige Flammen](#abenteueridee-rachsüchtige-flammen)
+> - [Herbeirufen von Elementaren](#herbeirufen-von-elementaren)
+> - [Abenteueridee: Der Leibarzt des Bischofs](#abenteueridee-der-leibarzt-des-bischofs)
+> - [Abenteueridee: Das Recht auf Vis](#abenteueridee-das-recht-auf-vis)
+> - [Abenteueridee: Der zweigeteilte Elementarist](#abenteueridee-der-zweigeteilte-elementarist)
+> - [Elisavet („Psychorrhax")](#elisavet-psychorrhax)
+> - [Episteln der Brüder der Reinheit und Getreuen Freunde](#episteln-der-brüder-der-reinheit-und-getreuen-freunde)
+> - [Schriften des Ibn Sina](#schriften-des-ibn-sina)
+>
+> #### III. VOLKSHEXEN
+> - [Abenteueridee: Sklaven](#abenteueridee-sklaven)
+> - [Männliche Hexer](#männliche-hexer)
+> - [Magietheorie der Volkshexen](#magietheorie-der-volkshexen)
+> - [Einen Trank untersuchen](#einen-trank-untersuchen)
+> - [Organisationskunde: Volkshexen](#organisationskunde-volkshexen)
+> - [Frühreife Mädchen](#frühreife-mädchen)
+> - [Sabbatzeiten](#sabbatzeiten)
+> - [Abenteueridee: Der Große Sabbat](#abenteueridee-der-große-sabbat)
+> - [Matilda](#matilda)
+> - [Eliza](#eliza)
+> - [Meisterin Greta](#meisterin-greta)
+> - [Janine Kyteler](#janine-kyteler)
+> - [Anne Kors](#anne-kors)
+> - [Jean der Weise](#jean-der-weise)
+> - [Neue Tugend: Behutsame Erschließung](#neue-tugend-behutsame-erschließung)
+> - [Abenteuerideen zur Behutsamen Erschließung](#abenteuerideen-zur-behutsamen-erschließung)
+> - [Neue Energiemagie-Tugend und Leitlinien](#neue-energiemagie-tugend-und-leitlinien)
+> - [Abenteuerideen zur Energiemagie](#abenteuerideen-zur-energiemagie)
+> - [Neue Tugend: Gespür für das Mystische](#neue-tugend-gespür-für-das-mystische)
+> - [Abenteueridee: Den Drachen wecken](#abenteueridee-den-drachen-wecken)
+> - [Abenteuerideen zu Ritualgegenständen](#abenteuerideen-zu-ritualgegenständen)
+> - [Neue Tugend: Ritualgegenstände](#neue-tugend-ritualgegenstände)
+>
+> #### IV. GRUAGACHAN
+> - [Neue Tugend: Gruagach](#neue-tugend-gruagach)
+> - [Geeignete Reichweiten, Dauern und Ziele](#geeignete-reichweiten-dauern-und-ziele)
+> - [Gruagach-Formboni](#gruagach-formboni)
+> - [Geistermagie](#geistermagie)
+> - [Abenteueridee: Suche nach dem Turm des Zauberers](#abenteueridee-suche-nach-dem-turm-des-zauberers)
+> - [Abenteueridee: Poetische Gerechtigkeit](#abenteueridee-poetische-gerechtigkeit)
+> - [Abenteueridee: Gestalt und Form](#abenteueridee-gestalt-und-form)
+> - [Geas- und Grenze-Dauer-Magnituden](#geas--und-grenze-dauer-magnituden)
+> - [Gruagach-Alternative](#gruagach-alternative)
+> - [Leitlinien: Segen geben](#leitlinien-segen-geben)
+> - [Leitlinien: Segen nehmen](#leitlinien-segen-nehmen)
+> - [Leitlinien: Fluch geben](#leitlinien-fluch-geben)
+> - [Leitlinien: Fluch nehmen](#leitlinien-fluch-nehmen)
+> - [Leitlinien: Gestalt geben](#leitlinien-gestalt-geben)
+> - [Leitlinien: Gestalt nehmen](#leitlinien-gestalt-nehmen)
+> - [Abenteuerideen zu Gruagachan-Formen und -Techniken](#abenteuerideen-zu-gruagachan-formen-und--techniken)
+> - [Leitlinien: Vision geben](#leitlinien-vision-geben)
+> - [Leitlinien: Vision nehmen](#leitlinien-vision-nehmen)
+> - [Der Gott Gruagach und die Feen-Gruagachan](#der-gott-gruagach-und-die-feen-gruagachan)
+> - [Domhnall, der Gruagach-Meister](#domhnall-der-gruagach-meister)
+> - [Conall der Gruagach](#conall-der-gruagach)
+> - [Abenteueridee: Koschtschei der Unsterbliche](#abenteueridee-koschtschei-der-unsterbliche)
+>
+> #### V. Gelehrte Magier
+> - [Kunde der Mathematici](#kunde-der-mathematici)
+> - [Neue Reagenzien-Leitlinien](#neue-reagenzien-leitlinien)
+> - [Beispielreagenzien](#beispielreagenzien)
+> - [Reichweiten, Dauern und Zielgrößen für Zauberformeln](#reichweiten-dauern-und-zielgrößen-für-zauberformeln)
+> - [Reichweiten, Dauern und Zielgrößen für Amulette und Chartae](#reichweiten-dauern-und-zielgrößen-für-amulette-und-chartae)
+> - [Tueor-Fortunam-Leitlinien](#tueor-fortunam-leitlinien)
+> - [Succurro-Fortunam-Leitlinien](#succurro-fortunam-leitlinien)
+> - [Vulnero-Fortunam-Leitlinien](#vulnero-fortunam-leitlinien)
+> - [Tueor-Magicam-Leitlinien](#tueor-magicam-leitlinien)
+> - [Succurro-Magicam-Leitlinien](#succurro-magicam-leitlinien)
+> - [Vulnero-Magicam-Leitlinien](#vulnero-magicam-leitlinien)
+> - [Tueor-Salutem-Leitlinien](#tueor-salutem-leitlinien)
+> - [Succurro-Salutem-Leitlinien](#succurro-salutem-leitlinien)
+> - [Vulnero-Salutem-Leitlinien](#vulnero-salutem-leitlinien)
+> - [Abenteuerideen für die Zauberleitlinien der Gelehrten Magier](#abenteuerideen-für-die-zauberleitlinien-der-gelehrten-magier)
+> - Zauberleitlinien
+> - [Abenteueridee: Historische Erkundung](#abenteueridee-historische-erkundung)
+> - [Abenteueridee: Bücher aus zweiter Hand](#abenteueridee-bücher-aus-zweiter-hand)
+> - [Stefano der Meister](#stefano-der-meister)
+> - [Marco der Student](#marco-der-student)
+> - [Kleine Hermetische Tugend: Schnelle Aufgeladene Artefakte](#kleine-hermetische-tugend-schnelle-aufgeladene-artefakte)
+>
+> #### VI. NACHTWANDLER
+> - [Mit einer Glückshaube geboren](#mit-einer-glückshaube-geboren)
+> - [Kampfwerte für Tier-Phantastika](#kampfwerte-für-tier-phantastika)
+> - [Modifikatoren aus dem Quellenband Covenants](#modifikatoren-aus-dem-quellenband-covenants)
+> - [Abenteueridee: Die falsch Beschuldigte retten](#abenteueridee-die-falsch-beschuldigte-retten)
+> - [Woher kommen die Hauptleute?](#woher-kommen-die-hauptleute)
+> - [In die Schlachten eingreifen](#in-die-schlachten-eingreifen)
+> - [Saga-Überlegungen](#saga-überlegungen)
+> - [Andere Prozessionen der Toten](#andere-prozessionen-der-toten)
+> - [Fenchel](#fenchel)
+> - [Abenteueridee: Aristeas](#abenteueridee-aristeas)
+> - [Weißdorn](#weißdorn)
+> - [Asphodelos](#asphodelos)
+> - [Werte und Fertigkeiten für Flammengestalt](#werte-und-fertigkeiten-für-flammengestalt)
+> - [Rothiger, ein Hund-Gottes-Gefährte](#rothiger-ein-hund-gottes-gefährte)
+> - [Rothiger in Wolfsform](#rothiger-in-wolfsform)
+> - [Arno, ein Benandante-Gefährte](#arno-ein-benandante-gefährte)
+>
+> #### VII. VITKIR
+> - [Der Orden Odins](#der-orden-odins)
+> - [Weibliche Vitkir](#weibliche-vitkir)
+> - [Vitkar-Tugenden](#vitkar-tugenden)
+> - [Vitkar-Magiefoki](#vitkar-magiefoki)
+> - [Vitkar-Fehler](#vitkar-fehler)
+> - [Die Runengedichte](#die-runengedichte)
+> - [Odins Opfer](#odins-opfer)
+> - [Varianten des Runenwirkens](#varianten-des-runenwirkens)
+> - [Das Ältere Futhark](#das-ältere-futhark)
+> - [Ansuz-Leitlinien](#ansuz-leitlinien)
+> - [Berkanan-Leitlinien](#berkanan-leitlinien)
+> - [Dagaz-Leitlinien](#dagaz-leitlinien)
+> - [Ehwaz-Leitlinien](#ehwaz-leitlinien)
+> - [Fehu-Leitlinien](#fehu-leitlinien)
+> - [Gebo-Leitlinien](#gebo-leitlinien)
+> - [Hagalaz-Leitlinien](#hagalaz-leitlinien)
+> - [Isa-Leitlinien](#isa-leitlinien)
+> - [Jera-Leitlinien](#jera-leitlinien)
+> - [Kauno-Leitlinien](#kauno-leitlinien)
+> - [Laguz-Leitlinien](#laguz-leitlinien)
+> - [Mannaz-Leitlinien](#mannaz-leitlinien)
+> - [Naudiz-Leitlinien](#naudiz-leitlinien)
+> - [Ingwaz-Leitlinien](#ingwaz-leitlinien)
+> - [Othila-Leitlinien](#othila-leitlinien)
+> - [Perth-Leitlinien](#perth-leitlinien)
+> - [Raido-Leitlinien](#raido-leitlinien)
+> - [Sowilo-Leitlinien](#sowilo-leitlinien)
+> - [Tiwaz-Leitlinien](#tiwaz-leitlinien)
+> - [Thurisaz-Leitlinien](#thurisaz-leitlinien)
+> - [Uruz-Leitlinien](#uruz-leitlinien)
+> - [Wunjo-Leitlinien](#wunjo-leitlinien)
+> - [Ihwaz-Leitlinien](#ihwaz-leitlinien)
+> - [Algiz-Leitlinien](#algiz-leitlinien)
+> - [Der Angelsächsische Futhorc](#der-angelsächsische-futhorc)
+> - [Das Jüngere Futhark](#das-jüngere-futhark)
+> - [Eirik Svennson, Krieger-Vitki](#eirik-svennson-krieger-vitki)
+
+---
 
 # Kapitel Eins: Einleitung
 
@@ -393,7 +416,7 @@ Die meisten Mitglieder des Ordens des Hermes glauben (weitgehend zutreffend), da
 
 ### Wofür ist dieses Buch?
 
-Dieses Buch enthält Beispiele für Heckentraditionen, die ihre Kraft aus der Magiesphäre beziehen, und all diese Traditionen existieren (möglicherweise) im Mythischen Europa des Jahres 1220. Die Traditionen in diesem Buch sind nicht ausgestorben – ausgestorbene Traditionen werden in Alte Magie behandelt. Manche der hier beschriebenen Heckentraditionen könnten die Überreste einst mächtiger Traditionen sein (das hängt von der Ausrichtung der jeweiligen Saga ab), aber sie sind nicht als direkte Überreste irgendeiner Gründertradition gedacht. Andere Heckentraditionen beziehen ihre Kraft aus der Göttlichen, Höllischen oder Feensphäre, und diese Möglichkeiten werden in den entsprechenden Sphärenbüchern behandelt. Die hier beschriebenen Traditionen wurden auch (noch) nicht über das Haus Ex Miscellanea in den Orden des Hermes eingegliedert, aber ein solches Ereignis könnte die Grundlage einer spannenden Saga bilden. Natürlich können diese Traditionen auch als Vorbilder für die Entwicklung eigener Heckentraditionen dienen.
+Dieses Buch enthält Beispiele für Heckentraditionen, die ihre Kraft aus der Magiesphäre beziehen, und all diese Traditionen existieren (möglicherweise) im Mythischen Europa des Jahres 1220. Die Traditionen in diesem Buch sind nicht ausgestorben – ausgestorbene Traditionen werden in Ancient Magic behandelt. Manche der hier beschriebenen Heckentraditionen könnten die Überreste einst mächtiger Traditionen sein (das hängt von der Ausrichtung der jeweiligen Saga ab), aber sie sind nicht als direkte Überreste irgendeiner Gründertradition gedacht. Andere Heckentraditionen beziehen ihre Kraft aus der Göttlichen, Höllischen oder Feensphäre, und diese Möglichkeiten werden in den entsprechenden Sphärenbüchern behandelt. Die hier beschriebenen Traditionen wurden auch (noch) nicht über das Haus Ex Miscellanea in den Orden des Hermes eingegliedert, aber ein solches Ereignis könnte die Grundlage einer spannenden Saga bilden. Natürlich können diese Traditionen auch als Vorbilder für die Entwicklung eigener Heckentraditionen dienen.
 
 ## Heckentraditionen und der Orden
 
@@ -401,11 +424,11 @@ Im Laufe der Jahrhunderte hatten Heckentraditionen ein gespanntes Verhältnis zu
 
 Es ist auch wichtig zu beachten, dass der Begriff „Heckenzauberer" in diesem Buch zwar für jeden Angehörigen einer Hecken-Tradition verwendet wird, der Orden des Hermes selbst aber gewöhnlich nur jene als „richtige" Zauberer betrachtet, die die Gabe besitzen. Schwache, unBegabte Heckenzauberer werden daher oft weder für würdig befunden, dem Orden beizutreten, noch als lohnenswert genug erachtet, um sie zu töten.
 
-Drei Gruppen von Magi interessieren sich wirklich für Heckentraditionen: eifrige Hopliten, die bisweilen das Land auf der Suche nach Heckenzauberern durchstreifen, um sich mit ihnen im Kampf zu messen; die Linie des Pralix (siehe *Häuser des Hermes: Gemeinschaften*, [Seite 126](<Ars Magica 5e - Häuser des Hermes - Societates.md#die-abstammungslinie-der-pralix>)), die versucht, Heckenzauberer in das Haus Ex Miscellanea einzuladen; und hermetische Theoretiker, die das Wissen der Heckentraditionen plündern und die Macht der hermetischen Magie erweitern wollen.
+Drei Gruppen von Magi interessieren sich wirklich für Heckentraditionen: eifrige Hopliten, die bisweilen das Land auf der Suche nach Heckenzauberern durchstreifen, um sich mit ihnen im Kampf zu messen; die Linie des Pralix (siehe *Häuser des Hermes: Societates*, [Seite 126](<Ars Magica 5e - Häuser des Hermes - Societates.md#die-abstammungslinie-der-pralix>)), die versucht, Heckenzauberer in das Haus Ex Miscellanea einzuladen; und hermetische Theoretiker, die das Wissen der Heckentraditionen plündern und die Macht der hermetischen Magie erweitern wollen.
 
 ### Konvertiten zum Orden
 
-Manchmal tritt ein Heckenzauberer dem Orden des Hermes bei und wird Mitglied des Hauses Ex Miscellanea. *Häuser des Hermes: Gemeinschaften* beschreibt das Haus Ex Miscellanea im Detail, einschließlich der Stellung neu konvertierter Heckenzauberer im Haus und im weiteren Orden.
+Manchmal tritt ein Heckenzauberer dem Orden des Hermes bei und wird Mitglied des Hauses Ex Miscellanea. *Häuser des Hermes: Societates* beschreibt das Haus Ex Miscellanea im Detail, einschließlich der Stellung neu konvertierter Heckenzauberer im Haus und im weiteren Orden.
 
 Wenn du einen einzelnen Begabten Heckenzauberer-Charakter spielen möchtest, der dem Orden des Hermes beigetreten ist, verwende die Charaktererschaffungsregeln der Hecken-Tradition bis zu dem Zeitpunkt, an dem der Charakter den Eid des Hermes schwört. Sobald der Charakter den Eid des Hermes geschworen hat, erhält er die freie Sozialer-Status-Tugend Hermetischer Magus (siehe ArM5, [Seite 43](<Ars Magica Definitive Edition Basisregeln.md#detaillierte-charaktererschaffung>)), die alle anderen Sozialen Status ersetzt, und setzt dann die Charaktererschaffung fort, als wäre er ein hermetischer Magus. Er kann in der Arkanen Fertigkeit Parma Magica und jeder anderen Fertigkeit unterrichtet werden, die einem normalen hermetischen Magus-Charakter zugänglich ist; er kann auch an einigen Mysterienkults teilnehmen. Er ist jedoch nicht in der Lage, hermetische Künste zu erlernen, es sei denn, seine Gabe wird für die hermetischen Künste erschlossen. Dies ist häufig unmöglich und kann seine Heckenzauber-Kräfte zerstören (siehe unten und ArM5, [Seite 106–107](<Ars Magica Definitive Edition Basisregeln.md#die-künste-öffnen>)).
 
@@ -415,15 +438,15 @@ Das Schwören des Eides des Hermes ist der offizielle Zeitpunkt, an dem der Heck
 
 Die Mitgliedschaft im Orden des Hermes ist auf Charaktere mit der Gabe beschränkt. Rotkappen sind bemerkenswerte Ausnahmen und können durch das Gewicht der Tradition als Ehrenmagi verbleiben, aber die meisten Magi würden die Aufnahme eines weiteren unBegabten Charakters nicht dulden. Andere Ausnahmen sind jedoch unter sehr seltenen Umständen ebenfalls möglich, da die Stellung der Rotkappen dazu geführt hat, dass es keine Kodex-Urteile gibt, die ausdrücklich verlangen, dass Magi die Gabe besitzen müssen. Zum Beispiel könnten reguläre Magi davon überzeugt werden, dass ihre Würde nicht allzu sehr leidet, wenn ein mächtiger Mythischer Gefährte als Heckenzauberer in das Haus Ex Miscellanea aufgenommen wird.
 
->#### Neuer Zauber: Die Taubheit der Gabe
+> ### Neuer Zauber: Die Taubheit der Gabe
 >
->InVi Stufe 20
+> InVi Stufe 20
 >
->R: Persönlich, D: Konzentration, Z: Berührung 
+> R: Persönlich, D: Konzentration, Z: Berührung
 >
->Wenn der Zaubernde seine Hand auf einen anderen Charakter legt, der die Gabe besitzt, fühlt sich seine Hand taub an. Dieser Effekt muss die Magieresistenz (falls vorhanden) des Charakters, dessen Gabe erspürt wird, durchdringen, und wenn dieser Charakter ein Mitglied des Ordens des Hermes ist, gilt das Wirken dieses Zaubers normalerweise als Ausspähen (was durch den Kodex verboten ist). Dieser Zauber basiert auf der Leitlinie „Spuren mächtiger Magie aufspüren". Falls das Ziel die Auffällige oder Sanfte Gabe besitzt, funktioniert der Zauber dennoch.
+> Wenn der Zaubernde seine Hand auf einen anderen Charakter legt, der die Gabe besitzt, fühlt sich seine Hand taub an. Dieser Effekt muss die Magieresistenz (falls vorhanden) des Charakters, dessen Gabe erspürt wird, durchdringen, und wenn dieser Charakter ein Mitglied des Ordens des Hermes ist, gilt das Wirken dieses Zaubers normalerweise als Ausspähen (was durch den Kodex verboten ist). Dieser Zauber basiert auf der Leitlinie „Spuren mächtiger Magie aufspüren". Falls das Ziel die Auffällige oder Sanfte Gabe besitzt, funktioniert der Zauber dennoch.
 >
->(Basis 10, +1 Konzentration, +1 Berührung).
+> (Basis 10, +1 Konzentration, +1 Berührung).
 
 Im Extremfall könnte eine kleine, in sich geschlossene Tradition, die überwiegend aus Begabten Mitgliedern besteht, die Aufnahme der gesamten Tradition aushandeln können, selbst wenn ein Mitglied ein Gefährten-Charakter mit nur wenigen Übernatürlichen Tugenden ist. In diesem Fall wird vom unBegabten Magus möglicherweise als informelle Bedingung der Mitgliedschaft erwartet, auf die Ausübung seines Stimmrechts im Tribunal zu verzichten, so wie es eine Rotkappe tut. Natürlich kann ein unBegabter Heckenzauberer, selbst wenn er dem Orden beitritt, keine hermetischen Künste erlernen, keine Parma Magica erlernen, nicht am Certamen teilnehmen oder irgendeine andere Tätigkeit ausüben, die die Gabe erfordert.
 
@@ -456,13 +479,13 @@ Die meisten Heckenzauberer-Charaktere sind weder Verbündete des noch Konvertite
 - Eine Hecken-Tradition kann der Feind eines Konvents sein (Großer Konventshaken Hecken-Tradition; Covenants, Seite 21). Die Heckenzauberer (denen hermetische Normen wahrscheinlich unbekannt sind) konkurrieren möglicherweise mit dem Konvent um lokale Vis-Quellen. Die Heckenzauberer haben vielleicht erheblichen weltlichen Einfluss – etwa als Mitglieder eines Adelshofs –, was einen offenen Angriff für den Konvent heikel macht.
 - Eine weitere interessante Option ist eine Saga, in der die Charaktere allesamt Heckenzauberer (und ihre weltlichen Verbündeten) sind. Kapitel 3 enthält zum Beispiel Regeln zur Erschaffung eines Volkshexen-Zirkels auf Grundlage der Regeln zur Konventserschaffung. Die Spieltruppe könnte ähnliche Regeln für Gruppen anderer Heckenzauberer entwickeln.
 
-#### Heckenzauberer und die Ägide des Herdes
+#### Heckenzauberer und der Aegis des Herdes
 
-Viele hermetische Stätten, insbesondere Konvente, sind durch eine Anrufung der *Ägide* des *Herdes* (ArM5, [Seite 161](<Ars Magica Definitive Edition Basisregeln.md#aegis-des-herdes-1>)) geschützt. Diese betrifft Heckenzauberer auf die übliche Weise, was bedeutet, dass ein Heckenzauberer – sofern er keinen Machtwert besitzt (was unwahrscheinlich ist) – die Ägide auf weltlichem Weg ohne Weiteres betreten kann. Besitzt er die Gabe, spürt er dabei ein Kribbeln, aber er erkennt natürlich möglicherweise nicht, was dies bedeutet.
+Viele hermetische Stätten, insbesondere Konvente, sind durch eine Anrufung des *Aegis des Herdes* (ArM5, [Seite 161](<Ars Magica Definitive Edition Basisregeln.md#aegis-des-herdes-1>)) geschützt. Dieser betrifft Heckenzauberer auf die übliche Weise, was bedeutet, dass ein Heckenzauberer – sofern er keinen Machtwert besitzt (was unwahrscheinlich ist) – den Aegis auf weltlichem Weg ohne Weiteres betreten kann. Besitzt er die Gabe, spürt er dabei ein Kribbeln, aber er erkennt natürlich möglicherweise nicht, was dies bedeutet.
 
-- Wenn ein Heckenzauberer einen Effekt auf eine Ägide hin wirkt, muss der Effekt die Ägide penetrieren, um erfolgreich zu sein. Dies schließt Transporteffekte ein; zum Beispiel kann eine Volkshexe nicht durch eine Ägide fliegen, es sei denn, ihre Penetrationssumme übersteigt die Stufe der Ägide.
-- Wenn ein Heckenzauberer einen Effekt innerhalb einer Ägide wirkt, wird die Hälfte der Stufe der Ägide von seiner Zaubersumme abgezogen.
-- Wenn ein Heckenzauberer einen Marker besitzt oder an der Anrufung der Ägide teilgenommen hat, wird er von der Ägide nicht beeinträchtigt.
+- Wenn ein Heckenzauberer einen Effekt auf einen Aegis hin wirkt, muss der Effekt den Aegis penetrieren, um erfolgreich zu sein. Dies schließt Transporteffekte ein; zum Beispiel kann eine Volkshexe nicht durch einen Aegis fliegen, es sei denn, ihre Penetrationssumme übersteigt die Stufe des Aegis.
+- Wenn ein Heckenzauberer einen Effekt innerhalb eines Aegis wirkt, wird die Hälfte der Stufe des Aegis von seiner Zaubersumme abgezogen.
+- Wenn ein Heckenzauberer einen Marker besitzt oder an der Anrufung des Aegis teilgenommen hat, wird er vom Aegis nicht beeinträchtigt.
 
 ## Heckenzauber
 
@@ -488,11 +511,11 @@ Der Erschließungs-Schwierigkeitsgrad entspricht dem Doppelten der Summe der bes
 
 **Erschließungs-Schwierigkeitsgrad:** Doppelte Übernatürliche Fertigkeits- + Kunstwerte des Lehrlings (+12, wenn Gabe bereits erschlossen)
 
->#### Fehlerhafte Erschließung der Gabe
+> ### Fehlerhafte Erschließung der Gabe
 >
->Um ein vollständig kompetenter Meister zu sein, muss der Charakter einen Wert von mindestens 2 in jeder Übernatürlichen Fertigkeit und Kunst der Tradition haben. Für jede Übernatürliche Fertigkeit oder Kunst, bei der der Meister dieses Kriterium nicht erfüllt, erhält der Lehrling einen Fehler, der seinen Magiegebrauch beeinträchtigt. Gewöhnlich handelt es sich um etwas wie Defizitäre Kunst, aber die Spieltruppe kann nach Bedarf andere Fehler einsetzen.
+> Um ein vollständig kompetenter Meister zu sein, muss der Charakter einen Wert von mindestens 2 in jeder Übernatürlichen Fertigkeit und Kunst der Tradition haben. Für jede Übernatürliche Fertigkeit oder Kunst, bei der der Meister dieses Kriterium nicht erfüllt, erhält der Lehrling einen Fehler, der seinen Magiegebrauch beeinträchtigt. Gewöhnlich handelt es sich um etwas wie Defizitäre Kunst, aber die Spieltruppe kann nach Bedarf andere Fehler einsetzen.
 
-Wenn die Erschließungssumme des Meisters geringer ist als der Erschließungs-Schwierigkeitsgrad, ist es ihm nicht möglich, die Gabe des Lehrlings zu erschließen. 
+Wenn die Erschließungssumme des Meisters geringer ist als der Erschließungs-Schwierigkeitsgrad, ist es ihm nicht möglich, die Gabe des Lehrlings zu erschließen.
 
 Wenn die Erschließungssumme des Meisters größer oder gleich dem Erschließungs-Schwierigkeitsgrad ist, wird die Gabe des Lehrlings erschlossen. Allerdings verliert der Lehrling seine bestehenden Übernatürlichen Fertigkeits- und Kunstwerte, sofern die Erschließungssumme nicht das Doppelte des Erschließungs-Schwierigkeitsgrades übersteigt. Gehen seine Übernatürlichen Fertigkeits- und Kunstwerte verloren, verliert er auch alle damit verbundenen Tugenden (oder Fehler). Selbst wenn der Meister in der Lage ist, die Gabe des Lehrlings zu erschließen, kann die Erschließung dennoch fehlerhaft sein, wie im Kasten beschrieben.
 
@@ -510,9 +533,9 @@ Ein Charakter, dessen Gabe erschlossen wurde, muss beim Versuch, eine neue Über
 
 *Was wäre, wenn Sarah keine Betörungs-Fertigkeit hätte? Der Schwierigkeitsgrad wäre 6 (nur basierend auf Magiegespür). Stefanos Erschließungssumme (17) reicht aus, um Sarahs Gabe zu erschließen, und da sie das Doppelte des Schwierigkeitsgrades übersteigt, behält Sarah auch ihre Magiegespür-Fertigkeit.*
 
->#### Erschließung der Künste
+> ### Erschließung der Künste
 >
->Die hermetische Erschließung der Künste ist das Äquivalent des Ordens des Hermes zur Erschließung der Gabe. Regeln hierfür finden sich in ArM5 ([Seite 106](<Ars Magica Definitive Edition Basisregeln.md#die-künste-öffnen>)) und erneut in Häuser des Hermes: Gemeinschaften ([Seite 128](<Ars Magica 5e - Häuser des Hermes - Societates.md#erschließung-der-künste-eines-heckenzauberers>)), aber sie behandeln nicht die Möglichkeit, dass die Gabe des Lehrlings bereits von einer anderen Tradition erschlossen wurde. Wenn ein Magus versucht, die Künste eines Lehrlings zu erschließen, dessen Gabe bereits von einer Hecken-Tradition erschlossen wurde, werden 30 zur erforderlichen Intellego-Vim-Laborsumme des Magus addiert.
+> Die hermetische Erschließung der Künste ist das Äquivalent des Ordens des Hermes zur Erschließung der Gabe. Regeln hierfür finden sich in ArM5 ([Seite 106](<Ars Magica Definitive Edition Basisregeln.md#die-künste-öffnen>)) und erneut in Häuser des Hermes: Societates ([Seite 128](<Ars Magica 5e - Häuser des Hermes - Societates.md#erschließung-der-künste-eines-heckenzauberers>)), aber sie behandeln nicht die Möglichkeit, dass die Gabe des Lehrlings bereits von einer anderen Tradition erschlossen wurde. Wenn ein Magus versucht, die Künste eines Lehrlings zu erschließen, dessen Gabe bereits von einer Hecken-Tradition erschlossen wurde, werden 30 zur erforderlichen Intellego-Vim-Laborsumme des Magus addiert.
 
 #### Sozialer Nachteil der Gabe
 
@@ -532,9 +555,9 @@ Einige Heckentraditionen erzeugen Effekte durch Kombinationen von Künsten, ähn
 
 Heckenkünste sind normalerweise nicht mit hermetischen Künsten (oder den Heckenkünsten anderer Traditionen) kompatibel. Wenn ein Charakter also auf irgendeine Weise Künste mehrerer Traditionen erlernt, dürfen diese nicht kombiniert werden, um exotische Effekte zu erzeugen. Dies könnte jedoch ein fruchtbarer Ansatz für Integrationsforschungsprojekte sein (siehe weiter unten).
 
->#### Schwierige Künste – Mechanik
+> ### Schwierige Künste – Mechanik
 >
->Schwierige Künste sind notwendig, um zu verhindern, dass Heckentraditionen allzu leicht hohe Penetrationswerte erzeugen können, um die Magieresistenz hermetischer Magi zu umgehen. Die Spieltruppe sollte dies bedenken, wenn sie eigene Traditionen entwickelt. Eine gute Richtlinie für die Spielbalance ist, dass mindestens eine der kombinierten Heckenkünste eine Schwierige Kunst sein sollte, wenn eine Kombination von Heckenkünsten Magi beeinflussen kann.
+> Schwierige Künste sind notwendig, um zu verhindern, dass Heckentraditionen allzu leicht hohe Penetrationswerte erzeugen können, um die Magieresistenz hermetischer Magi zu umgehen. Die Spieltruppe sollte dies bedenken, wenn sie eigene Traditionen entwickelt. Eine gute Richtlinie für die Spielbalance ist, dass mindestens eine der kombinierten Heckenkünste eine Schwierige Kunst sein sollte, wenn eine Kombination von Heckenkünsten Magi beeinflussen kann.
 
 #### Schwierige Künste
 
@@ -544,19 +567,19 @@ Originäre Forschung (entweder durch die Heckenzauberer selbst oder durch hilfre
 
 #### Beschleunigte Fertigkeiten
 
-Beschleunigte Fertigkeiten sind das Gegenstück zu Schwierigen Künsten, eingeführt in *Häuser des Hermes: Gemeinschaften*. Sie werden auf dieselbe Weise wie Künste gesteigert und kosten einen Erfahrungspunkt für einen Wert von 1; bei der Charaktererschaffung sind sie nicht in ihrer Stufe beschränkt, werden aber ansonsten in jeder Hinsicht als Fertigkeiten behandelt.
+Beschleunigte Fertigkeiten sind das Gegenstück zu Schwierigen Künsten, eingeführt in *Häuser des Hermes: Societates*. Sie werden auf dieselbe Weise wie Künste gesteigert und kosten einen Erfahrungspunkt für einen Wert von 1; bei der Charaktererschaffung sind sie nicht in ihrer Stufe beschränkt, werden aber ansonsten in jeder Hinsicht als Fertigkeiten behandelt.
 
 #### Bevorzugte Fertigkeiten
 
 Manche Traditionen verfügen über eine Reihe von bevorzugten Übernatürlichen Fertigkeiten. Begabte Charaktere, die diesen Traditionen angehören, müssen die Summe ihrer Übernatürlichen Fertigkeitswerte nicht von der Quellqualität abziehen, um andere Fertigkeiten zu erlernen, die von ihrer Tradition bevorzugt werden. In der Regel muss der Charakter ein Ritual – die Erschließung der Gabe – durchlaufen, bevor er diesen Vorteil der Tradition erhält. Bevorzugte Fertigkeiten haben für unBegabte Charaktere keine Bedeutung, da diese überhaupt keine Übernatürlichen Fertigkeiten erlernen können. Charaktere mit Bevorzugten Fertigkeiten müssen die Summe all ihrer Übernatürlichen Fertigkeiten, einschließlich der Bevorzugten Fertigkeiten, von der Quellqualität abziehen, wenn sie Übernatürliche Fertigkeiten erlernen, die nicht bevorzugt sind.
 
->#### Die Grenze der Magieresistenz
+> ### Die Grenze der Magieresistenz
 >
->Keine Hecken-Tradition besitzt eine allgemeine Resistenz gegen Magie.
+> Keine Hecken-Tradition besitzt eine allgemeine Resistenz gegen Magie.
 >
->Dies ist offensichtlich keine wahre Grenze der Magie, denn ein hermetischer Magus verfügt eindeutig über eine allgemeine Magieresistenz durch seine Form-Kunstwerte (die durch seine Parma Magica noch verstärkt wird). Hermetische Theoretiker haben jedoch festgestellt, dass Heckentraditionen durch diese scheinbare Grenze eingeschränkt werden. Warum das so ist, bleibt unklar, aber es ist unleugbar vorteilhaft für den Orden des Hermes. Tatsächlich würden die Mitglieder einer Hecken-Tradition, die eine Methode zur Überwindung der Grenze der Magieresistenz entwickeln würde, vom Orden des Hermes erbarmungslos ausgelöscht werden. Dies liegt daran, dass der gesamte Orden sehr wohl versteht, dass seine Vormachtstellung über die Heckentraditionen darauf beruht, dass Magi den magischen Effekten von Heckenzauberern widerstehen können und die Heckenzauberer ihrerseits nicht in der Lage sind, der Magie der Magi zu widerstehen. Vielleicht genügt die historische Effizienz des Ordens des Hermes bei der Identifizierung und Vernichtung solcher Herausforderungen seiner Macht, um die scheinbare Grenze der Magieresistenz zu erklären.
+> Dies ist offensichtlich keine wahre Grenze der Magie, denn ein hermetischer Magus verfügt eindeutig über eine allgemeine Magieresistenz durch seine Form-Kunstwerte (die durch seine Parma Magica noch verstärkt wird). Hermetische Theoretiker haben jedoch festgestellt, dass Heckentraditionen durch diese scheinbare Grenze eingeschränkt werden. Warum das so ist, bleibt unklar, aber es ist unleugbar vorteilhaft für den Orden des Hermes. Tatsächlich würden die Mitglieder einer Hecken-Tradition, die eine Methode zur Überwindung der Grenze der Magieresistenz entwickeln würde, vom Orden des Hermes erbarmungslos ausgelöscht werden. Dies liegt daran, dass der gesamte Orden sehr wohl versteht, dass seine Vormachtstellung über die Heckentraditionen darauf beruht, dass Magi den magischen Effekten von Heckenzauberern widerstehen können und die Heckenzauberer ihrerseits nicht in der Lage sind, der Magie der Magi zu widerstehen. Vielleicht genügt die historische Effizienz des Ordens des Hermes bei der Identifizierung und Vernichtung solcher Herausforderungen seiner Macht, um die scheinbare Grenze der Magieresistenz zu erklären.
 
-## Magische Abwehr
+### Magische Abwehr
 
 Wie oben angemerkt, kann kein Heckenzauberer Magie widerstehen, aber einige besitzen begrenzte magische Abwehrmechanismen, die die Wirkung von Magie verringern.
 
@@ -584,7 +607,7 @@ Einige magische Abwehrmechanismen sind unten aufgeführt, und eine bestimmte Tra
 
 Zauber, die auf den Heckenzauberer in seinem Spezialgebiet gewirkt werden, verfallen unerwartet schnell. Zauber mit Durchmesser-Dauer verfallen eine Anzahl Runden zu früh, die dem Magischen Abwehrbonus des Heckenzauberers entspricht, halten aber mindestens eine Runde. Zauber mit Sonne-Dauer verfallen eine entsprechende Anzahl Stunden zu früh, halten aber mindestens Durchmesser-Dauer. Zauber mit Mond-Dauer verfallen eine entsprechende Anzahl Tage zu früh, halten aber mindestens Sonne-Dauer. Zauber mit Jahr-Dauer verfallen eine entsprechende Anzahl Wochen zu früh, halten aber mindestens Mond-Dauer. Zauber mit Momentaner, Konzentrations- oder Ring-Dauer sind davon nicht betroffen. Wenn andere Charaktere vom selben Zauber betroffen sind, hält der Zauber bei ihnen seine übliche Dauer.
 
-#### Glückhafte Fügung
+#### Flinke Fügung
 
 Der Heckenzauberer addiert seinen Magischen Abwehrbonus zu seiner Verteidigungssumme, wenn Zauber auf ihn gezielt werden.
 
@@ -604,13 +627,13 @@ Wenn der Heckenzauberer von einem Effekt in seinem Spezialgebiet betroffen ist, 
 
 Wenn der Heckenzauberer von einem Effekt in seinem Spezialgebiet betroffen ist, der seine Gestalt verändert (gewöhnlich ein Muto-Effekt), darf er einen Wurf auf Ausdauer + Magischer Abwehrbonus + Einfacher Würfel gegen einen Schwierigkeitsgrad von 9 machen, um in seine natürliche Gestalt zurückzukehren. Die Bjornaer-Herztier-Fertigkeit verleiht eine ähnliche Abwehr, die aus der vorhermetischen Tradition des Hauses erhalten geblieben ist.
 
-## Verzerrung
+### Verzerrung
 
 Ein Heckenzauberer sammelt wie die meisten Charaktere Verzerrungspunkte an, die zu seinem Verzerrungswert beitragen. Der Heckenzauberer erhält Verzerrungspunkte auf die üblichen Weisen (siehe ArM5, [Seite 167](<Ars Magica Definitive Edition Basisregeln.md#lebende-sprache>)), aber da Heckenzauberer ihre Kraft aus der Magiesphäre beziehen, sammelt er keine Verzerrungspunkte durch das Leben in einer starken Magieaura an.
 
 Die Reaktion jeder magischen Tradition auf Verzerrung ist einzigartig. Das Zwielicht des Magiers ist die Reaktion des Ordens des Hermes, und keine Hecken-Tradition hat diese besondere Reaktion. Gewöhnlich reagieren unBegabte Heckenzauberer ähnlich wie Sterbliche und erhalten Fehler und Tugenden (siehe ArM5, [Seite 168](<Ars Magica Definitive Edition Basisregeln.md#altern>)), aber Begabte Heckenzauberer reagieren eigenständiger und unvorhersehbarer (siehe die einzelnen Kapitel).
 
-## Vis
+### Vis
 
 Einige Heckentraditionen verwenden Vis, wie in den Traditionskapiteln beschrieben. Natürlich verwenden selbst diese Heckenzauberer möglicherweise ein anderes Wort für Vis oder erkennen nur Vis bestimmter Formen. Allerdings drängt sich eine wichtige Frage auf: Wie entdecken Heckenzauberer Vis?
 
@@ -690,7 +713,7 @@ Die Art und Weise, wie die Übernatürlichen Fertigkeiten und Künste des Hecken
 
 Häufige Fertigkeiten für Heckenzauberer sind:
 
-### Arkane Fertigkeiten
+#### Arkane Fertigkeiten
 
 Die Sozialer-Status-Tugend (Heckenzauberer), die die Tradition des Heckenzauberers repräsentiert, gewährt ihm Zugang zu mindestens den Arkanen Fertigkeiten Finesse, Magiekunde und Penetration. Viele Heckentraditionen besitzen auch eine Arkane Fertigkeit, die der Fertigkeit Magietheorie des Ordens des Hermes entspricht.
 
@@ -702,7 +725,7 @@ Diese Arkane Fertigkeit befasst sich mit den technischen Einzelheiten, wie eine 
 
 Es gibt eine Allgemeine Fertigkeit (Organisations-)Kunde für jede Hecken-Tradition. Diese umfasst Wissen über die Legenden, Geschichte, Struktur und Ziele der Tradition. Einige Traditionen nutzen diese Fertigkeit bei Einweihungen. Ein Charakter muss kein Mitglied der Tradition sein, um diese Fertigkeit zu besitzen. Beachte, dass dies keine neue Fertigkeit ist (siehe ArM5, [Seite 66](<Ars Magica Definitive Edition Basisregeln.md#organisations-kunde>)). Spezialisierungen: Persönlichkeiten, Geschichte, Politik.
 
-## Erwerb von Heckenzauberer-Kräften
+### Erwerb von Heckenzauberer-Kräften
 
 Es gibt mehrere Wege, Kräfte zu erlangen:
 
@@ -726,7 +749,7 @@ Während des Spiels kann ein Heckenzauberer-Charakter Fertigkeiten und Künste a
 
 #### Einweihungen
 
-Einige Heckentraditionen vermitteln einige ihrer Kräfte durch Einweihungsriten. Diese ähneln den Einweihungsriten hermetischer Mysterienkults; vollständige Regeln dafür sind in Häuser des Hermes: Mysterienkulte und Die Mysterien (Überarbeitete Ausgabe) abgedruckt.
+Einige Heckentraditionen vermitteln einige ihrer Kräfte durch Einweihungsriten. Diese ähneln den Einweihungsriten hermetischer Mysterienkults; vollständige Regeln dafür sind in Häuser des Hermes: Mysterienkulte und The Mysteries Revised Edition abgedruckt.
 
 Das allgemeine Verfahren für eine Einweihung in einer Hecken-Tradition ist, dass ein Mitglied der Hecken-Tradition (der Mystagoge) den Charakter (den Einzuweihenden) bei einer Aufgabe oder einer Reihe von Aufgaben anleitet, die für die Tradition mystische Bedeutung haben und in der Regel mindestens ein Quartal in Anspruch nehmen. Nach Abschluss der Aufgabe(n) wird eine Einweihungssumme berechnet und mit einem Schwierigkeitsgrad verglichen. Wird der Schwierigkeitsgrad überschritten, ist die Einweihung erfolgreich, und der Einzuweihende erlangt eine neue Kraft (gewöhnlich als Tugend dargestellt). Wenn der Mystagoge die Kraft nicht persönlich beherrscht, erhöht sich der Schwierigkeitsgrad um 3 (bei einer Kleinen Tugend) oder um 9 (bei einer Großen Tugend). Dies ist am häufigsten der Fall, wenn der Charakter als sein eigener Mystagoge fungiert und versucht, sich selbst einzuweihen. Einige Heckentraditionen bieten den Charakteren nicht die Möglichkeit, sich selbst einzuweihen – auch wenn die Gründer der Tradition dies möglicherweise beherrschten.
 
@@ -738,7 +761,7 @@ Siehe die jeweilige Hecken-Tradition für Einzelheiten darüber, zu welchen Einw
 
 Einige hermetische Magi, insbesondere die Sucher unter den Bonisagus, jagen eifrig Gerüchten über Heckentraditionen nach, um Erkenntnisse über die Magietheorie zu gewinnen. Denn manche Heckentraditionen vollbringen ungewöhnliche Effekte, die mit erheblichem Aufwand in die hermetische Theorie der Magie integriert und somit von hermetischen Magi nachgeahmt werden könnten. Ein neuer Effekt könnte sogar eine Grenze der Magie durchbrechen, und der für die Erweiterung der Macht hermetischer Magie verantwortliche Sucher würde großes Ansehen erlangen.
 
-### Der Durchbruch
+#### Der Durchbruch
 
 Ein ehrgeiziger Magus kann versuchen, die Effekte einer Heckenzauber-Tradition in die hermetische Theorie einzuarbeiten und durch Forschung und Experiment einen Durchbruch in der hermetischen Theorie zu erzielen. Jeder Magus kann jederzeit einen Durchbruch versuchen; es gibt keine Mindestanforderungen an Künste oder Fertigkeitswerte. Um die Magie einer Hecken-Tradition erfolgreich in die hermetische Theorie zu integrieren, muss der Charakter eine Anzahl von Durchbruchpunkten ansammeln, die von der Art des Durchbruchs abhängt, den der Magus anstrebt.
 
@@ -772,24 +795,23 @@ Lehrer sind Personen, die Mitglieder der Hecken-Tradition sind und in der Lage u
 
 Darüber hinaus kann ein Begabter Lehrer als Assistent des hermetischen Magus fungieren; in diesem Fall addiere die Intelligenz des Lehrers + (Heckenzauber-)Theorie zur Summe des Magus, wenn der Wurf zur Erstellung eines Einsichts-Labortextes gemacht wird. Ein Lehrer kann nur einem Magus pro Quartal assistieren, und ein Magus kann bei der Suche nach einer Einsicht nur von einem Lehrer pro Quartal unterstützt werden – denn zusätzliche Lehrer verwirren die Angelegenheit eher mit ihrer eigenen Deutung.
 
->#### Einweihungen für UnBegabte
+> ### Einweihungen für UnBegabte
 >
->Gewöhnlich können nur Begabte Charaktere eingeweiht werden. Einige Heckentraditionen können jedoch unBegabte Charaktere einweihen. Diese Einweihungen folgen allen üblichen Regeln, mit folgenden Ausnahmen:
+> Gewöhnlich können nur Begabte Charaktere eingeweiht werden. Einige Heckentraditionen können jedoch unBegabte Charaktere einweihen. Diese Einweihungen folgen allen üblichen Regeln, mit folgenden Ausnahmen:
 >
->- Einweihungen, die unBegabte Charaktere betreffen, müssen eine Prüfung beinhalten (d.h. der Charakter muss einen Fehler erhalten oder eine Tugend verlieren).
->- UnBegabte Charaktere können nicht von Prüfungen profitieren, die sie bei früheren Einweihungen erlitten haben.
->- Ein unBegabter Charakter kann nicht als Mystagoge fungieren, es sei denn, er beherrscht die Kraft, die durch die Einweihung entwickelt wird – das bedeutet, er kann sich nicht selbst einweihen.
+> - Einweihungen, die unBegabte Charaktere betreffen, müssen eine Prüfung beinhalten (d.h. der Charakter muss einen Fehler erhalten oder eine Tugend verlieren).
+> - UnBegabte Charaktere können nicht von Prüfungen profitieren, die sie bei früheren Einweihungen erlitten haben.
+> - Ein unBegabter Charakter kann nicht als Mystagoge fungieren, es sei denn, er beherrscht die Kraft, die durch die Einweihung entwickelt wird – das bedeutet, er kann sich nicht selbst einweihen.
 
->#### Der Integrationsprozess
+> ### Der Integrationsprozess
 >
->1. **Finde eine Quelle für Informationen** über die Heckenzauber-Tradition, wie Zaubertexte, Gegenstände, erbeutete Laboratorien, Bücher oder Ähnliches. Dies erfordert typischerweise eine Queste oder ein Abenteuer.
->2. **Untersuche die Quelle**, um Einsicht zu gewinnen; dies dauert typischerweise zwei bis drei Quartale.
->3. **Erfinde einen Zauber oder ein magisches Gerät**, das die Einsicht einbezieht. Dabei musst du experimentieren. Wenn es dir gelingt, den Zauber zu erfinden, erhältst du eine Anzahl von Durchbruchpunkten gleich der Magnitude des Zaubers oder Geräts. Die Erfindung darf hermetische Grenzen durchbrechen, aber wenn dies der Fall ist, kann sie von einem anderen Charakter nicht ohne Labortext erfunden werden und darf in keiner Weise abgewandelt werden. 
->4. **Forsche weiter** und sammle weitere Durchbruchpunkte, bis du den Schwellenwert erreichst oder überschreitest.
->5. **Genieße den Ruhm**, die hermetische Theorie verbessert zu haben; oder bereite dich alternativ auf die politischen Konsequenzen deiner Anmaßung vor.
+> 1. **Finde eine Quelle für Informationen** über die Heckenzauber-Tradition, wie Zaubertexte, Gegenstände, erbeutete Laboratorien, Bücher oder Ähnliches. Dies erfordert typischerweise eine Queste oder ein Abenteuer.
+> 2. **Untersuche die Quelle**, um Einsicht zu gewinnen; dies dauert typischerweise zwei bis drei Quartale.
+> 3. **Erfinde einen Zauber oder ein magisches Gerät**, das die Einsicht einbezieht. Dabei musst du experimentieren. Wenn es dir gelingt, den Zauber zu erfinden, erhältst du eine Anzahl von Durchbruchpunkten gleich der Magnitude des Zaubers oder Geräts. Die Erfindung darf hermetische Grenzen durchbrechen, aber wenn dies der Fall ist, kann sie von einem anderen Charakter nicht ohne Labortext erfunden werden und darf in keiner Weise abgewandelt werden.
+> 4. **Forsche weiter** und sammle weitere Durchbruchpunkte, bis du den Schwellenwert erreichst oder überschreitest.
+> 5. **Genieße den Ruhm**, die hermetische Theorie verbessert zu haben; oder bereite dich alternativ auf die politischen Konsequenzen deiner Anmaßung vor.
 
-
-### Den Effekt erschaffen
+#### Den Effekt erschaffen
 
 Eine bestimmte Einsicht erlaubt dem Forscher, einen festgelegten Effekt zu erschaffen. Dieser Effekt kann ein Zauber oder ein in einen Gegenstand verzauberter Effekt sein. Es könnte theoretisch auch ein anderes Laborprojekt sein; alles, was eine Laborsumme verwendet und etwas erzeugt. Allerdings sind Zauber bei weitem am häufigsten, gefolgt von Gegenstandsverzauberungen.
 
@@ -807,53 +829,53 @@ Wird der Effekt erfolgreich erschaffen, erhält der Magus eine Anzahl von Durchb
 
 Der auf diese Weise erzeugte Effekt kann von anderen hermetischen Magi reproduziert werden. Allerdings können sie dies nur tun, wenn sie Zugang zu einem Labortext haben, der ihn beschreibt, und es ist nicht möglich, den Effekt in irgendeiner Weise zu variieren; er muss exakt so reproduziert werden, wie er ursprünglich erschaffen wurde. Das Reproduzieren des Effekts auf diese Weise gewährt keine Durchbruchpunkte, es sei denn, der reproduzierende Magus gewinnt ebenfalls die entsprechende Einsicht, sei es durch die Untersuchung desselben Gegenstands oder durch das Studium der Einsichts-Labortexte des ursprünglichen Forschers. Es ist möglich, den Effekt zuerst zu reproduzieren und die Einsichts-Labortexte später zu studieren.
 
->#### ABENTEUERIDEEN: Geschichten über Lehrer
+> ### Abenteuerideen: Geschichten über Lehrer
 >
->Einige Geschichten, die entstehen können, wenn ein Heckenzauberer mit einem Magus zusammenarbeitet, um Einsicht zu gewinnen, sind nachstehend aufgeführt. Wenn der Heckenzauberer ein NSC ist, muss der Magus natürlich unter Umständen erheblichen Aufwand betreiben, um überhaupt erst einen Lehrer zu finden.
+> Einige Geschichten, die entstehen können, wenn ein Heckenzauberer mit einem Magus zusammenarbeitet, um Einsicht zu gewinnen, sind nachstehend aufgeführt. Wenn der Heckenzauberer ein NSC ist, muss der Magus natürlich unter Umständen erheblichen Aufwand betreiben, um überhaupt erst einen Lehrer zu finden.
 >
->#### Der Saboteur
+> #### Der Saboteur
 >
->Der Heckenzauberer möchte dem Magus nicht helfen und liefert möglicherweise Einsichten unter Zwang. Der Heckenzauberer kann sich entscheiden, jedes Experiment, bei dem er assistiert, zu sabotieren; behandle dies so, als wäre auf der Tabelle Außergewöhnlicher Ergebnisse ein Patzer gewürfelt worden (siehe ArM5, [Seite 107](<Ars Magica Definitive Edition Basisregeln.md#tabelle-außergewöhnlicher-ergebnisse>)). Subtiler kann der Heckenzauberer das Quartal, das für die Suche nach einer Einsicht aufgewendet wird, auf eine wilde Verfolgungsjagd verschwenden; mache einen Täuschungswurf (siehe ArM5, [Seite 65](<Ars Magica Definitive Edition Basisregeln.md#täuschung>)), um festzustellen, ob diese Arglist erfolgreich ist. Natürlich ist der Heckenzauberer möglicherweise nicht in der Lage, das Experiment auf eine der beiden Arten zu ruinieren, sei es wegen kontrollierender Mentem-Magie oder schlicht, weil er den Magus zu sehr fürchtet.
+> Der Heckenzauberer möchte dem Magus nicht helfen und liefert möglicherweise Einsichten unter Zwang. Der Heckenzauberer kann sich entscheiden, jedes Experiment, bei dem er assistiert, zu sabotieren; behandle dies so, als wäre auf der Tabelle Außergewöhnlicher Ergebnisse ein Patzer gewürfelt worden (siehe ArM5, [Seite 107](<Ars Magica Definitive Edition Basisregeln.md#tabelle-außergewöhnlicher-ergebnisse>)). Subtiler kann der Heckenzauberer das Quartal, das für die Suche nach einer Einsicht aufgewendet wird, auf eine wilde Verfolgungsjagd verschwenden; mache einen Täuschungswurf (siehe ArM5, [Seite 65](<Ars Magica Definitive Edition Basisregeln.md#täuschung>)), um festzustellen, ob diese Arglist erfolgreich ist. Natürlich ist der Heckenzauberer möglicherweise nicht in der Lage, das Experiment auf eine der beiden Arten zu ruinieren, sei es wegen kontrollierender Mentem-Magie oder schlicht, weil er den Magus zu sehr fürchtet.
 >
->#### Der Schützling
+> #### Der Schützling
 >
->Andere Magi werden darauf aufmerksam, dass der Magus Einsichten von einem Heckenzauberer-Lehrer lernt, und sie versuchen, den Heckenzauberer für ihre eigenen Projekte abzuwerben. Schlägt diese Abwerbung fehl, könnten besonders neidische Magi versuchen, das Recht auf das Wissen des Heckenzauberers per Certamen zu erstreiten, oder sie könnten versuchen, den Heckenzauberer zu entführen oder sogar zu ermorden. Diese Geschichte ist besonders geeignet, wenn der Heckenzauberer ein Spielercharakter ist.
+> Andere Magi werden darauf aufmerksam, dass der Magus Einsichten von einem Heckenzauberer-Lehrer lernt, und sie versuchen, den Heckenzauberer für ihre eigenen Projekte abzuwerben. Schlägt diese Abwerbung fehl, könnten besonders neidische Magi versuchen, das Recht auf das Wissen des Heckenzauberers per Certamen zu erstreiten, oder sie könnten versuchen, den Heckenzauberer zu entführen oder sogar zu ermorden. Diese Geschichte ist besonders geeignet, wenn der Heckenzauberer ein Spielercharakter ist.
 >
->#### Der Spion
+> #### Der Spion
 >
->Der Heckenzauberer nutzt seinen Zugang zum Labor des Magus, um heimlich die Geheimnisse des Ordens des Hermes zu erlernen, die er zu seiner eigenen Tradition zurückbringen will. Wenn der Heckenzauberer sich dafür entscheidet, kann er jedes Quartal 2 Erfahrungspunkte aus Umgang in entweder Magietheorie, Parma Magica, Kunde des Ordens des Hermes oder einer Mysterienkultkunde sammeln, die der Magus kennt. Alternativ könnte der Heckenzauberer einfach versuchen, ein Buch über eines dieser Themen zu stehlen. Die Gefahr, dass ein Heckenzauberer auf diesem Weg die Parma Magica erlernt, genügt, damit andere Magi die Klugheit von Heckenzauberer-Lehrern anzweifeln. Beachte, dass ein Heckenzauberer auf diesem Weg keine hermetischen Künste erlernen kann (da seine Gabe nicht vom Orden des Hermes erschlossen wurde).
+> Der Heckenzauberer nutzt seinen Zugang zum Labor des Magus, um heimlich die Geheimnisse des Ordens des Hermes zu erlernen, die er zu seiner eigenen Tradition zurückbringen will. Wenn der Heckenzauberer sich dafür entscheidet, kann er jedes Quartal 2 Erfahrungspunkte aus Umgang in entweder Magietheorie, Parma Magica, Kunde des Ordens des Hermes oder einer Mysterienkultkunde sammeln, die der Magus kennt. Alternativ könnte der Heckenzauberer einfach versuchen, ein Buch über eines dieser Themen zu stehlen. Die Gefahr, dass ein Heckenzauberer auf diesem Weg die Parma Magica erlernt, genügt, damit andere Magi die Klugheit von Heckenzauberer-Lehrern anzweifeln. Beachte, dass ein Heckenzauberer auf diesem Weg keine hermetischen Künste erlernen kann (da seine Gabe nicht vom Orden des Hermes erschlossen wurde).
 >
->### Der Plagiator
+> #### Der Plagiator
 >
->Andere Magi werden darauf aufmerksam, dass der Magus Einsichten von einem Heckenzauberer lernt, und sind abfällig über seine Methoden. Selbst wenn der Durchbruch bedeutend und erfolgreich ist, wird der Magus nicht als dessen Urheber verehrt. Der Magus erlangt eine Reputation für minderwertige Forschung, und ein Bonisagus-Magus erhält kein Ansehen für die Vollendung dieses Durchbruchs (siehe *Häuser des Hermes: Wahre Linien*, [Seite 21](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#ansehen-im-haus-status-in-haus-bonisagus>)), es sei denn, er kann seine Fachkollegen davon überzeugen, dass der Heckenzauberer nur einen geringen Beitrag zum Projekt geleistet hat. Diese Geschichte ist besonders geeignet, wenn der Heckenzauberer ein Spielercharakter ist.
+> Andere Magi werden darauf aufmerksam, dass der Magus Einsichten von einem Heckenzauberer lernt, und sind abfällig über seine Methoden. Selbst wenn der Durchbruch bedeutend und erfolgreich ist, wird der Magus nicht als dessen Urheber verehrt. Der Magus erlangt eine Reputation für minderwertige Forschung, und ein Bonisagus-Magus erhält kein Ansehen für die Vollendung dieses Durchbruchs (siehe *Häuser des Hermes: Wahre Linien*, [Seite 21](<Ars Magica 5e - Häuser des Hermes - Wahre Linien.md#ansehen-im-haus-status-in-haus-bonisagus>)), es sei denn, er kann seine Fachkollegen davon überzeugen, dass der Heckenzauberer nur einen geringen Beitrag zum Projekt geleistet hat. Diese Geschichte ist besonders geeignet, wenn der Heckenzauberer ein Spielercharakter ist.
 
-### Nach dem Durchbruch
+#### Nach dem Durchbruch
 
 Kleine Durchbrüche sind sofort im Spiel verwendbar und für alle hermetischen Magi verständlich. Neue Reichweiten oder Dauern können in neue Zauber oder Gegenstände eingearbeitet werden, und die Labortexte können für einen Zauber verteilt werden, den ein anderer hermetischer Magus verwenden kann, ohne den Durchbruch selbst erforschen zu müssen. Jeder Magus, der einen Effekt unter Verwendung des Durchbruchs erschaffen hat, kann diese Reichweite oder Dauer dann frei in seinen anderen Zaubern verwenden, und jeder Magus, der von diesem Magus – sei es in Künsten oder Zaubern – unterrichtet wird, darf dies ebenfalls tun.
 
 Große und Hermetische Durchbrüche müssen hermetischen Magi direkt vermittelt werden. Eine Fertigkeit kann auf die übliche Weise gelehrt werden, entweder persönlich oder durch Bücher. Der Entdecker wandelt seine Durchbruchpunkte in Erfahrungspunkte in der neuen Fertigkeit um, sodass ein Magus, der 50 Durchbruchpunkte zur Integration einer Fertigkeit angesammelt hat, mit einem Wert von 4 beginnen würde.
 
-Eine neue Tugend kann nach den normalen Regeln für Mysterien eingeweiht werden. Der Entdecker erhält die Tugend, wenn er die Integration abschließt, und muss nicht selbst eingeweiht werden. Er muss ein Einweihungsskript entwerfen, nach den Regeln in *Die Mysterien (Überarbeitete Ausgabe)*.
+Eine neue Tugend kann nach den normalen Regeln für Mysterien eingeweiht werden. Der Entdecker erhält die Tugend, wenn er die Integration abschließt, und muss nicht selbst eingeweiht werden. Er muss ein Einweihungsskript entwerfen, nach den Regeln in *The Mysteries Revised Edition*.
 
 Einen Großen oder Hermetischen Durchbruch zu erfinden, der kein Unterrichten erfordert, erfordert einen weiteren Großen Durchbruch, der entweder nach diesen Regeln oder den Regeln für Originäre Forschung erzielt werden kann. Gelingt dies, kann jeder Magus einen Effekt unter Verwendung des Durchbruchs erschaffen, solange er einen Labortext besitzt, und den Durchbruch dann frei verwenden. Wie bei Kleinen Durchbrüchen gilt dasselbe für jeden Magus, der von einem Magus in Künsten oder Zaubern unterrichtet wird, der den Durchbruch versteht.
 
->#### Hermetischer Gebrauch der Heckentheorie
+> ### Hermetischer Gebrauch der Heckentheorie
 >
->Wenn einer Hecken-Tradition eine theoretische Grundlage fehlt (und daher eine (Heckenzauber-)Theorie-Fertigkeit), kann ein hermetischer Forscher eine solche Fertigkeit als Hermetischen Durchbruch erfinden. Ein hermetischer Forscher kann eine (Heckenzauber-)Theorie-Fertigkeit auch erfinden, wenn ihm der Zugang zu Lehrern mit dieser Fertigkeit fehlt, und ein Heckenzauberer kann versuchen, diese Fertigkeit für seine eigene Tradition zu erfinden. Dieser Durchbruch erfordert normalerweise 60 Durchbruchpunkte, aber der Forscher reduziert diese Zahl um seinen höchsten bestehenden (Heckenzauber-)Theorie- oder Magietheorie-Fertigkeitswert.
+> Wenn einer Hecken-Tradition eine theoretische Grundlage fehlt (und daher eine (Heckenzauber-)Theorie-Fertigkeit), kann ein hermetischer Forscher eine solche Fertigkeit als Hermetischen Durchbruch erfinden. Ein hermetischer Forscher kann eine (Heckenzauber-)Theorie-Fertigkeit auch erfinden, wenn ihm der Zugang zu Lehrern mit dieser Fertigkeit fehlt, und ein Heckenzauberer kann versuchen, diese Fertigkeit für seine eigene Tradition zu erfinden. Dieser Durchbruch erfordert normalerweise 60 Durchbruchpunkte, aber der Forscher reduziert diese Zahl um seinen höchsten bestehenden (Heckenzauber-)Theorie- oder Magietheorie-Fertigkeitswert.
 >
->Sobald er diesen Durchbruch abgeschlossen hat, wandelt der Forscher seine Durchbruchpunkte in Erfahrungspunkte in der betreffenden Fertigkeit um. Er kann dann als seine eigene Einsichtsquelle für nachfolgende Durchbrüche (basierend auf derselben Hecken-Tradition) fungieren, wie oben beschrieben. Wenn der Forscher mehrere Effekte einer einzelnen Tradition integrieren möchte, ist dies effizient, da es die Gesamtmenge an Originalmaterial der Hecken-Tradition (Texte und Artefakte) reduziert, die der Forscher benötigt.
+> Sobald er diesen Durchbruch abgeschlossen hat, wandelt der Forscher seine Durchbruchpunkte in Erfahrungspunkte in der betreffenden Fertigkeit um. Er kann dann als seine eigene Einsichtsquelle für nachfolgende Durchbrüche (basierend auf derselben Hecken-Tradition) fungieren, wie oben beschrieben. Wenn der Forscher mehrere Effekte einer einzelnen Tradition integrieren möchte, ist dies effizient, da es die Gesamtmenge an Originalmaterial der Hecken-Tradition (Texte und Artefakte) reduziert, die der Forscher benötigt.
 >
->Wenn ein Heckenzauberer (Heckenzauber-)Theorie für seine eigene Tradition erfindet, erlangt er die Vorteile eines theoretischen Verständnisses der Magie. Zum Beispiel kann er sein Labor verbessern, addiert seinen (Heckenzauber-)Theorie-Fertigkeitswert zu seinen Laborsummen usw.
+> Wenn ein Heckenzauberer (Heckenzauber-)Theorie für seine eigene Tradition erfindet, erlangt er die Vorteile eines theoretischen Verständnisses der Magie. Zum Beispiel kann er sein Labor verbessern, addiert seinen (Heckenzauber-)Theorie-Fertigkeitswert zu seinen Laborsummen usw.
 
->#### Originäre Forschung und Alte Magie
+> ### Originäre Forschung und Alte Magie
 >
->Häuser des Hermes: Wahre Linien enthält Regeln für Originäre Forschung – das Hinzufügen von Merkmalen zur hermetischen Magie, die allein auf der Inspiration eines Magus beruhen. Die Integration von Heckentraditionen ist tendenziell schneller und sicherer, hat aber zwei Nachteile. Erstens kann der Magus nur auf die Durchbrüche abzielen, die in der Hecken-Tradition vorhanden sind. Zweitens muss er sein Labor verlassen und (möglicherweise unkooperative) Einsichtsquellen finden. Aus der Perspektive des Spielleiters können dies natürlich Vorteile sein.
+> Häuser des Hermes: Wahre Linien enthält Regeln für Originäre Forschung – das Hinzufügen von Merkmalen zur hermetischen Magie, die allein auf der Inspiration eines Magus beruhen. Die Integration von Heckentraditionen ist tendenziell schneller und sicherer, hat aber zwei Nachteile. Erstens kann der Magus nur auf die Durchbrüche abzielen, die in der Hecken-Tradition vorhanden sind. Zweitens muss er sein Labor verlassen und (möglicherweise unkooperative) Einsichtsquellen finden. Aus der Perspektive des Spielleiters können dies natürlich Vorteile sein.
 >
->Die beiden Regelwerke sind ähnlich, und beide Ansätze können für einen einzelnen Durchbruch verwendet werden. Das bedeutet, dass Durchbruchpunkte aus der Integration zu Durchbruchpunkten aus Originärer Forschung addiert werden können, um festzustellen, ob ein Durchbruch erzielt wurde.
+> Die beiden Regelwerke sind ähnlich, und beide Ansätze können für einen einzelnen Durchbruch verwendet werden. Das bedeutet, dass Durchbruchpunkte aus der Integration zu Durchbruchpunkten aus Originärer Forschung addiert werden können, um festzustellen, ob ein Durchbruch erzielt wurde.
 >
->Alte Magie enthält ebenfalls ähnliche Regeln für die Integration ausgestorbener, antiker Traditionen in die hermetische Magie. Technisch gesehen sind Durchbruchpunkte, die aus der Integration antiker Traditionen gesammelt werden, mit jenen kompatibel, die aus der Integration von Heckentraditionen gesammelt werden, und umgekehrt. In der Praxis wäre es jedoch äußerst selten, dass eine antike und eine Hecken-Tradition einen gemeinsamen Durchbruch teilen: Antike Traditionen gelten als ausgestorben.
+> Ancient Magic enthält ebenfalls ähnliche Regeln für die Integration ausgestorbener, alter Traditionen in die hermetische Magie. Technisch gesehen sind Durchbruchpunkte, die aus der Integration alter Traditionen gesammelt werden, mit jenen kompatibel, die aus der Integration von Heckentraditionen gesammelt werden, und umgekehrt. In der Praxis wäre es jedoch äußerst selten, dass eine alte und eine Hecken-Tradition einen gemeinsamen Durchbruch teilen: Alte Traditionen gelten als ausgestorben.
 
-### Integration durch Heckenzauberer-Forscher
+#### Integration durch Heckenzauberer-Forscher
 
 Einige Heckenzauberer haben Artefakte anderer Heckentraditionen geborgen, und sogar solche hermetischen Ursprungs, und haben versucht, die entdeckten Effekte nachzubilden. Abgesehen von der Erfindung der (Heckenzauber-)Theorie selbst kann ein Heckenzauberer nur dann Forschung betreiben, wenn er einen Wert in der Fertigkeit (Heckenzauber-)Theorie besitzt.
 
@@ -863,9 +885,7 @@ Die möglichen Auswirkungen solcher Aktivitäten durch Hecken-Forscher sind zu z
 
 Die Gelehrten, die die Welt des Mythischen Europas erforschten, entdeckten schon vor langer Zeit, dass alles im physischen Universum aus vier verschiedenen Grundbausteinen der Schöpfung besteht, die man Elemente nennt. Diese Elemente verbinden sich in unterschiedlichem Maße zur Materie und Energie, die die physische Wirklichkeit ausmachen, und werden üblicherweise als Luft, Feuer, Erde und Wasser beschrieben. Ein Stein besteht vorwiegend aus Erde, eine Flamme ist größtenteils Feuer, und ein Mensch setzt sich aus mehr oder weniger gleichen Anteilen aller vier Elemente zusammen. Viele übernatürliche Wesen sind ebenfalls stark mit einem der vier Elemente verbunden.
 
-Manche Männer und Frauen der Vorzeit besaßen eine übernatürliche Gabe oder Begabung, die ihnen Macht über Geister und andere unsichtbare Wesenheiten verlieh – darunter auch jene, die mit den vier Elementen verbunden waren –, und im Laufe der Jahre verfeinerten sie diese Kunst zu einem Magiesystem, das als Ars Goetia oder Goetische Künste bekannt wurde. Diese Formeln und Beschwörungen konnten einen Geist zum Beschwörer ziehen und ihn dazu bringen, vor ihm zu erscheinen. Verwandte Pfade goetischen Wissens ermöglichten es ihm, das Wesen des Geistes zu manipulieren, ihn an die physische Welt zu binden oder sogar seinen Dienst zu erzwingen. Da die Ars Goetia dem Magier jedoch Einfluss über die unsichtbare Geisterwelt gewährten
-
-und nicht über die sichtbare Welt der Natur, wurden diese Künste vom Rest der Gesellschaft oft als böse angesehen und von anderen Zauberern als Hexerei oder Schwarze Magie gebrandmarkt.
+Manche Männer und Frauen der Vorzeit besaßen eine übernatürliche Gabe oder Begabung, die ihnen Macht über Geister und andere unsichtbare Wesenheiten verlieh – darunter auch jene, die mit den vier Elementen verbunden waren –, und im Laufe der Jahre verfeinerten sie diese Kunst zu einem Magiesystem, das als Ars Goetia oder Goetische Künste bekannt wurde. Diese Formeln und Beschwörungen konnten einen Geist zum Beschwörer ziehen und ihn dazu bringen, vor ihm zu erscheinen. Verwandte Pfade goetischen Wissens ermöglichten es ihm, das Wesen des Geistes zu manipulieren, ihn an die physische Welt zu binden oder sogar seinen Dienst zu erzwingen. Da die Ars Goetia dem Magier jedoch Einfluss über die unsichtbare Geisterwelt gewährten und nicht über die sichtbare Welt der Natur, wurden diese Künste vom Rest der Gesellschaft oft als böse angesehen und von anderen Zauberern als Hexerei oder Schwarze Magie gebrandmarkt.
 
 Andere im Mythischen Europa nutzten die Wissenschaften der Medizin, der Philosophiae und der Theurgie, um diese Mächte weiterzuentwickeln, sodass sie die physische Welt statt der geistigen beeinflussen, übernatürliche Herrschaft über die rohen Elemente der Natur ausüben und diese sogar dazu bringen konnten, sich zu belebten Kreaturen zusammenzufügen, die als Elementare bekannt sind. Man nimmt an, dass diese Elementaristenkünste weit jenseits des Mittelmeers im Nahen Osten und in Nordafrika ihren Ursprung haben, sich aber während der arabischen Eroberungen Iberiens in der ersten Hälfte des achten Jahrhunderts in Europa ausbreiteten. Sogenannte „Elementaristen" wären ebenso schlecht behandelt worden wie andere Zauberer und Beschwörer jener Zeit, und so hielten sie ihre Fähigkeiten im Allgemeinen geheim und gaben sich als gelehrte Forscher oder heilige Männer aus. Im Laufe der Zeit hoben ihre Gelehrsamkeit und ihre Verbindungen zur Gemeinschaft sie über ihre finstereren Gegenstücke hinaus, und im Jahr 1220 gleichen Elementaristen eher Akademikern als anderen Heckenzauberern.
 
@@ -883,41 +903,41 @@ Elementaristen können ihre Künste auch aus Vis studieren. Diese Quartalsaktivi
 
 Charaktere können die Elementaristischen Künste wie alle anderen Künste studieren, obwohl Bücher zu diesen Themen sehr selten sind. Das Studium aus Vis ist eine weitaus üblichere Methode für Elementaristen. Nach Ermessen des Spielleiters können Bücher über die Hermetischen Formen Aquam, Auram, Ignem und Terram den Elementaristen einige Erfahrung in den entsprechenden Elementaristischen Formen einbringen, wenn auch weitaus weniger als für Magi. Ebenso könnte ein Buch über eine der Elementaristischen Formen von einem Magus als minderwertiger Text über die entsprechende Hermetische Kunst studiert werden.
 
-Im Folgenden werden mehrere neue Tugenden und Fehler vorgestellt, die mit der Elementaristentradition und der elementaristischen Magie verbunden sind. Außerdem gibt es einige Tugenden und Fehler für Elementaristen, die Hermetischen Tugenden und Fehlern gleichen Namens ähnlich sind, jedoch auf die elementaristische Magie angewandt werden. Diese sind unten aufgeführt, aber die Spieler sollten einfach die hermetischen Beschreibungen in Ars Magica 5th Edition nachlesen. Beachte, dass unBegabte Elementaristen diese Fehler zwar wählen können, sie jedoch nur von Charakteren gewählt werden dürfen, für die sie einen tatsächlichen Nachteil darstellen. Charaktere ohne elementaristische Kräfte dürfen keine Fehler wählen, die diese Kräfte einschränken. Ebenso darf ein Charakter keinen Fehler besitzen, der eine Kraft einschränkt, die er nicht hat, selbst wenn er über andere elementaristische Kräfte verfügt.
+Im Folgenden werden mehrere neue Tugenden und Fehler vorgestellt, die mit der Elementaristentradition und der elementaristischen Magie verbunden sind. Außerdem gibt es einige Tugenden und Fehler für Elementaristen, die Hermetischen Tugenden und Fehlern gleichen Namens ähnlich sind, jedoch auf die elementaristische Magie angewandt werden. Diese sind unten aufgeführt, aber die Spieler sollten einfach die hermetischen Beschreibungen in Ars Magica Fünfte Edition nachlesen. Beachte, dass unBegabte Elementaristen diese Fehler zwar wählen können, sie jedoch nur von Charakteren gewählt werden dürfen, für die sie einen tatsächlichen Nachteil darstellen. Charaktere ohne elementaristische Kräfte dürfen keine Fehler wählen, die diese Kräfte einschränken. Ebenso darf ein Charakter keinen Fehler besitzen, der eine Kraft einschränkt, die er nicht hat, selbst wenn er über andere elementaristische Kräfte verfügt.
 
->#### Tugenden der Elementaristen
+> ### Tugenden der Elementaristen
 >
->**GROSS, ÜBERNATÜRLICH**<br>
->Elementaristische Magie\*<br> 
->Elementarmedizin\* <br>
->Elementare Philosophiae\* <br>
->Elementare Theurgie\* <br>
->Sanfte Gabe (Typ) <br>
->Beherrschen\*<br>
->(Typ) Weissagen\*<br>
->(Typ) Läutern\*<br>
->(Typ) Herbeirufen\*<br>
+> **GROSS, ÜBERNATÜRLICH**<br>
+> Elementaristische Magie\*<br>
+> Elementarmedizin\* <br>
+> Elementare Philosophiae\* <br>
+> Elementare Theurgie\* <br>
+> Sanfte Gabe (Typ) <br>
+> Beherrschen\*<br>
+> (Typ) Weissagen\*<br>
+> (Typ) Läutern\*<br>
+> (Typ) Herbeirufen\*<br>
 >
->**KLEIN, ÜBERNATÜRLICH**<br>
->Affinität zu (Kunst)  <br>
->Zyklische Magie (positiv) <br>
->Elementare Affinität\* <br>
->Elementaristische Luft\* <br>
->Elementaristische Erde\* <br>
->Elementaristisches Feuer\* <br>
->Elementaristisches Wasser\* <br>
->Schneller Zauberer <br>
->Freies Studium <br>
->Unauffällig für Tiere <br>
->Persönliche Vis-Quelle <br>
->Begabung in (Kunst) <br>
->Besondere Umstände <br>
->(Typ) Beherrschen\* <br>
->(Typ) Weissagen\* <br>
->(Typ) Läutern\* <br>
->(Typ) Herbeirufen\*
+> **KLEIN, ÜBERNATÜRLICH**<br>
+> Affinität zu (Kunst)  <br>
+> Zyklische Magie (positiv) <br>
+> Elementare Affinität\* <br>
+> Elementaristische Luft\* <br>
+> Elementaristische Erde\* <br>
+> Elementaristisches Feuer\* <br>
+> Elementaristisches Wasser\* <br>
+> Schneller Zauberer <br>
+> Freies Studium <br>
+> Unauffällig für Tiere <br>
+> Persönliche Vis-Quelle <br>
+> Begabung in (Kunst) <br>
+> Besondere Umstände <br>
+> (Typ) Beherrschen\* <br>
+> (Typ) Weissagen\* <br>
+> (Typ) Läutern\* <br>
+> (Typ) Herbeirufen\*
 >
->\* Neue oder überarbeitete Tugenden
+> \* Neue oder überarbeitete Tugenden
 
 ### Neue oder überarbeitete Tugenden
 
@@ -983,9 +1003,9 @@ Der Charakter besitzt eine übernatürliche Begabung für Elementarmagie, die au
 
 Darüber hinaus darf er, wenn er mit seiner Elementarmagie mehrere Elemente gleichzeitig beeinflusst, seinen höchsten Formwert verwenden anstatt des niedrigsten. Wenn der höchste Wert seinen Wert in der entsprechenden (Sphären-)Kunde übersteigt, verwende stattdessen seinen Wert in der (Sphären-)Kunde.
 
->#### Elementare Affinitäten und Charaktererschaffung
+> ### Elementare Affinitäten und Charaktererschaffung
 >
->Mehrere der in diesem Kapitel vorgestellten Tugenden (Elementarmagie, Elementarmedizin, Elementare Philosophiae und Elementare Theurgie) gewähren dem Spieler Erfahrungspunkte in den vier Elementaristischen Formen, wann immer der Charakter eine verwandte Fertigkeit studiert. Um diesen Effekt bei der Charaktererschaffung anzunähern, kann man die Tugend optional so behandeln, als wäre sie eine Affinität zu den verwandten Formen. Das bedeutet, man berechnet die Anzahl der für die Fertigkeit aufgewendeten Erfahrungspunkte und verteilt die Hälfte davon auf die Formen (oder nimmt bei Elementarmagie die Gesamtpunkte, die für die vier Formen ausgegeben wurden, und verteilt die Hälfte davon gleichmäßig).
+> Mehrere der in diesem Kapitel vorgestellten Tugenden (Elementarmagie, Elementarmedizin, Elementare Philosophiae und Elementare Theurgie) gewähren dem Spieler Erfahrungspunkte in den vier Elementaristischen Formen, wann immer der Charakter eine verwandte Fertigkeit studiert. Um diesen Effekt bei der Charaktererschaffung anzunähern, kann man die Tugend optional so behandeln, als wäre sie eine Affinität zu den verwandten Formen. Das bedeutet, man berechnet die Anzahl der für die Fertigkeit aufgewendeten Erfahrungspunkte und verteilt die Hälfte davon auf die Formen (oder nimmt bei Elementarmagie die Gesamtpunkte, die für die vier Formen ausgegeben wurden, und verteilt die Hälfte davon gleichmäßig).
 
 #### (Typ) Beherrschen
 *Groß oder Klein, Übernatürlich*
@@ -994,7 +1014,7 @@ Beherrschen ist eine Elementaristische Kunst, die mit der Meisterschaft über di
 
 Diese Tugend kann bis zu dreimal gewählt werden, um anzuzeigen, dass der Charakter mehrere Arten elementarer Ziele beherrschen kann (Medizinisch, Philosophisch oder Theurgisch). Der erste gewählte Typ erfordert eine Große Tugend, die weiteren sind Kleine. Jeder Typ von Beherrschen muss separat erlernt werden, aber alle drei verwenden denselben Kunstwert, sodass ein Charakter, der diese Tugend dreimal wählt, nur eine einzige Beherrschen-Kunst hätte und nicht (Medizinisches) Beherrschen, (Philosophisches) Beherrschen und (Theurgisches) Beherrschen.
 
-### (TYP) WEISSAGEN
+#### (Typ) Weissagen
 *Groß oder Klein, Übernatürlich*
 
 Diese Elementaristische Kunst ermöglicht es einem Elementaristen, die vier Elemente aufzuspüren, zu verstehen und ihr Verhalten vorherzusagen, wie unter Elementaristische Techniken weiter unten in diesem Kapitel beschrieben. Diese Tugend gibt dem Charakter einen Anfangswert von 0 in Weissagen.
@@ -1013,31 +1033,31 @@ Diese Tugend kann bis zu dreimal gewählt werden, um anzuzeigen, dass der Charak
 
 Herbeirufen ist eine Elementaristische Kunst, die es dem Charakter ermöglicht, sein Wissen über die Elementaristischen Formen einzusetzen, um ein mit dem jeweiligen Element verbundenes Ziel zu sich zu rufen. Dieses Ziel passt zu seinem Hintergrund – eine Krankheit, ein Naturaspekt oder ein elementares Wesen, je nachdem, welchen Typ des Herbeirufens er erlernt hat (Medizinisch, Philosophisch oder Theurgisch). Dies wird unter Elementaristische Techniken weiter unten in diesem Kapitel genauer beschrieben. Die Wahl dieser Tugend gibt dem Charakter einen Wert von 0 in Herbeirufen. Diese Tugend kann bis zu dreimal gewählt werden, um anzuzeigen, dass der Charakter mehr als eine Art elementarer Ziele herbeirufen kann. Der erste gewählte Typ erfordert eine Große Tugend, die weiteren sind Kleine Tugenden. Jeder Typ von Herbeirufen muss separat erlernt werden, aber alle drei Typen verwenden denselben Kunstwert, sodass ein Charakter, der diese Tugend dreimal wählt, nur eine einzige Herbeirufen-Kunst hätte und nicht (Medizinisches) Herbeirufen, (Philosophisches) Herbeirufen und (Theurgisches) Herbeirufen.
 
->#### Andere Herbeirufungskünste
+> ### Andere Herbeirufungskünste
 >
->Herbeirufungskräfte werden auch in Sphären der Macht: Das Infernale (Seiten 87, 114-115) erwähnt. Um die infernale Herbeirufen-Kunst vom elementaristischen Herbeirufen zu unterscheiden, sollte man die infernale Version als (Geister-)Herbeirufen und die elementaristische Version als (Elementar-)Herbeirufen bezeichnen. Zum Beispiel könnte ein Elementartheurg mit infernalen Kräften (Elementar-)Herbeirufen, Beherrschen, (Geister-)Herbeirufen und Befehligen besitzen. Ein solcher Charakter wäre in der Lage, sowohl Geister als auch Elementare mit seinen Herbeirufungskünsten zu beschwören, könnte aber Geister nur mit seiner Befehligen-Kunst befehligen und Elementare nur mit seiner Beherrschen-Kunst kontrollieren. Wenn er einen Geist beschwöre, der mit einem der vier Elemente verbunden ist, und dafür entweder (Geister-) oder (Elementar-)Herbeirufen verwendete, könnte er ihn sowohl mit Befehligen als auch mit Beherrschen beeinflussen, da das Ziel sowohl ein Elementar als auch ein Geist wäre.
+> Herbeirufungskräfte werden auch in Sphären der Macht: Das Infernale (Seiten 87, 114-115) erwähnt. Um die infernale Herbeirufen-Kunst vom elementaristischen Herbeirufen zu unterscheiden, sollte man die infernale Version als (Geister-)Herbeirufen und die elementaristische Version als (Elementar-)Herbeirufen bezeichnen. Zum Beispiel könnte ein Elementartheurg mit infernalen Kräften (Elementar-)Herbeirufen, Beherrschen, (Geister-)Herbeirufen und Befehligen besitzen. Ein solcher Charakter wäre in der Lage, sowohl Geister als auch Elementare mit seinen Herbeirufungskünsten zu beschwören, könnte aber Geister nur mit seiner Befehligen-Kunst befehligen und Elementare nur mit seiner Beherrschen-Kunst kontrollieren. Wenn er einen Geist beschwöre, der mit einem der vier Elemente verbunden ist, und dafür entweder (Geister-) oder (Elementar-)Herbeirufen verwendete, könnte er ihn sowohl mit Befehligen als auch mit Beherrschen beeinflussen, da das Ziel sowohl ein Elementar als auch ein Geist wäre.
 
 ### Neue Fehler
 
->#### Fehler der Elementaristen
+> ### Fehler der Elementaristen
 >
->**Groß, Übernatürlich**<br>
->Auffällige Gabe <br>
->Einschränkung <br>
->Studienbedingung <br>
->Schwache Elementarresistenz\*<br>
+> **Groß, Übernatürlich**<br>
+> Auffällige Gabe <br>
+> Einschränkung <br>
+> Studienbedingung <br>
+> Schwache Elementarresistenz\*<br>
 >
->**KLEIN, ÜBERNATÜRLICH**<br>
->Zyklische Magie (negativ)<br>
->Schädliche Umstände<br>
->Abstoßend für Tiere<br>
->Langsamer Zauberer<br>
->Anfälligkeit für Göttliche Kraft<br>
->Anfälligkeit für Feenkraft<br>
->Anfälligkeit für Infernale Kraft<br>
->Anfällig gegen (Form)\*
+> **KLEIN, ÜBERNATÜRLICH**<br>
+> Zyklische Magie (negativ)<br>
+> Abträgliche Umstände<br>
+> Abstoßend für Tiere<br>
+> Langsamer Zauberer<br>
+> Anfälligkeit für Göttliche Macht<br>
+> Anfälligkeit für Feenmacht<br>
+> Anfälligkeit für Infernale Macht<br>
+> Anfällig gegen (Form)\*
 >
->\* Neue Fehler
+> \* Neue Fehler
 
 
 #### Anfällig gegen (Form)
@@ -1056,9 +1076,9 @@ Vielleicht betrachtet der Charakter seine übernatürliche Verbindung zu den vie
 
 Dieser Fehler kann von einem Magus als Hermetischer Fehler gewählt werden; in diesem Fall ist seine Magieresistenz anfällig gegenüber physischem Schaden, der den Elementen entspricht, sowie gegenüber jeglichem Schaden durch Zauber, die mit Aquam, Auram, Ignem und Terram verbunden sind. Unter diesen Umständen wird seine Magieresistenz nicht durch seinen Wert in der entsprechenden Form erhöht, und seine Absorption wird nicht durch seinen (Formwert / 5) erhöht.
 
-## Elementaristische Verzerrung
+### Elementaristische Verzerrung
 
-Wenn ein Elementarist Verzerrung ansammelt, erhält er anstelle neuer Tugenden und Fehler, wie in Ars Magica 5th Edition beschrieben, eine noch stärkere Bindung an die vier Elemente, sowohl geistig als auch körperlich. Dies zeigt sich am deutlichsten in der Persönlichkeit des Charakters: Sein Verhalten und seine Emotionen verändern sich in Richtung der Temperamente, die durch die vier Elemente angezeigt werden. Gewöhnlich ist dies zu seinem Nachteil, da es ihn in den Wahnsinn treibt und dem Spieler weniger Kontrolle darüber gibt, wie sich sein Charakter verhält; gleichzeitig verwickelt es ihn jedoch in Geschichten und bietet eine interessante Richtung für die Entwicklung seines Charakters. Darüber hinaus verwandelt es ihn körperlich und macht ihn widerstandsfähiger gegenüber diesen Elementen.
+Wenn ein Elementarist Verzerrung ansammelt, erhält er anstelle neuer Tugenden und Fehler, wie in Ars Magica Fünfte Edition beschrieben, eine noch stärkere Bindung an die vier Elemente, sowohl geistig als auch körperlich. Dies zeigt sich am deutlichsten in der Persönlichkeit des Charakters: Sein Verhalten und seine Emotionen verändern sich in Richtung der Temperamente, die durch die vier Elemente angezeigt werden. Gewöhnlich ist dies zu seinem Nachteil, da es ihn in den Wahnsinn treibt und dem Spieler weniger Kontrolle darüber gibt, wie sich sein Charakter verhält; gleichzeitig verwickelt es ihn jedoch in Geschichten und bietet eine interessante Richtung für die Entwicklung seines Charakters. Darüber hinaus verwandelt es ihn körperlich und macht ihn widerstandsfähiger gegenüber diesen Elementen.
 
 Der Spieler muss bis zu vier zusätzliche Persönlichkeitseigenschaften für den Charakter wählen, eine für jedes elementare Temperament (Cholerisch, Melancholisch, Phlegmatisch und Sanguinisch), die einer seiner Elementaristischen Formen entspricht (Elementaristisches Feuer, Elementaristische Erde, Elementaristisches Wasser und Elementaristische Luft), mit einem Anfangswert gleich dem Verzerrungswert des Charakters. Diese Werte werden auch durch seinen Wert in der Elementaristischen Form modifiziert – teile die Form durch 5 (aufgerundet) und addiere das Ergebnis zum Wert der entsprechenden Eigenschaft.
 
@@ -1074,23 +1094,23 @@ Zum Beispiel: Wenn der Elementarist im obigen Beispiel eine phlegmatische Krankh
 
 Der Spielleiter sollte diese elementaren Eigenschaften nutzen, um den Elementaristen und sein Umfeld in Geschichten einzubeziehen. Wenn eine dieser Eigenschaften einen Wert von +3 oder mehr hat, solltest du sie als Kleine Persönlichkeitsfehler behandeln, die das Verhalten des Charakters in begrenztem Maße bestimmen, etwa eine seltsame Besessenheit mit dem zugehörigen Element oder gelegentliche Stimmungsschwankungen. Behandle Eigenschaften von +6 oder mehr als Große Persönlichkeitsfehler, ein Verhalten, zu dem sich der Charakter oft gezwungen fühlt und das gewöhnlich alle anderen Wünsche des Charakters überlagert. Wenn eine dieser Eigenschaften einen Wert von +10 oder mehr erreicht, hat der Spieler in allen Umständen, auf die der Spielleiter die Eigenschaft für anwendbar erklärt, keine Kontrolle mehr über die Handlungen des Charakters – der Charakter ist im Wesentlichen wahnsinnig geworden. Wie ein ohne Beschränkungen freigelassenes Elementar wird er wahrscheinlich früher oder später sein eigenes Ende herbeiführen und dabei vermutlich ein großes Maß an Zerstörung anrichten.
 
->#### Elementare Eigenschaften
+> ### Elementare Eigenschaften
 >
->Vier Persönlichkeitseigenschaften werden verwendet, um Elementaristen zu beschreiben, die Verzerrung ausgesetzt waren: Cholerisch, Melancholisch, Phlegmatisch und Sanguinisch.
+> Vier Persönlichkeitseigenschaften werden verwendet, um Elementaristen zu beschreiben, die Verzerrung ausgesetzt waren: Cholerisch, Melancholisch, Phlegmatisch und Sanguinisch.
 >
->**Cholerisch** (Elementaristisches Feuer): Diese Eigenschaft fördert Zorn und Wut im Charakter, ähnlich den Persönlichkeitsfehlern Jähzornig oder Hass. Sie steht Phlegmatisch entgegen.
+> **Cholerisch** (Elementaristisches Feuer): Diese Eigenschaft fördert Zorn und Wut im Charakter, ähnlich den Persönlichkeitsfehlern Jähzornig oder Hass. Sie steht Phlegmatisch entgegen.
 >
->**Melancholisch** (Elementaristische Erde): Diese Eigenschaft steht für die Trauer und den Trübsinn des Charakters, als hätte der Charakter die Persönlichkeitsfehler Deprimiert oder Zurückgezogen. Sie steht Sanguinisch entgegen.
+> **Melancholisch** (Elementaristische Erde): Diese Eigenschaft steht für die Trauer und den Trübsinn des Charakters, als hätte der Charakter die Persönlichkeitsfehler Schwermütig oder Zurückgezogen. Sie steht Sanguinisch entgegen.
 >
->**Phlegmatisch** (Elementaristisches Wasser): Eifersucht und Sorge sind Zeichen dieser Eigenschaft bei einem Charakter, ähnlich den Persönlichkeitsfehlern Neidisch oder Furcht. Sie steht Cholerisch entgegen.
+> **Phlegmatisch** (Elementaristisches Wasser): Eifersucht und Sorge sind Zeichen dieser Eigenschaft bei einem Charakter, ähnlich den Persönlichkeitsfehlern Neidisch oder Angst. Sie steht Cholerisch entgegen.
 >
->**Sanguinisch** (Elementaristische Luft): Freude und das Gefühl des Verliebtseins sind Zeichen dieser Eigenschaft, am ehesten durch Persönlichkeitsfehler wie Sorglos oder Optimistisch dargestellt. Sie steht Melancholisch entgegen.
+> **Sanguinisch** (Elementaristische Luft): Freude und das Gefühl des Verliebtseins sind Zeichen dieser Eigenschaft, am ehesten durch Persönlichkeitsfehler wie Sorglos oder Optimistisch dargestellt. Sie steht Melancholisch entgegen.
 >
->Die Auswirkungen dieser Eigenschaften auf die Persönlichkeit des Charakters heben sich niemals gegenseitig auf, selbst wenn sie mit einander entgegengesetzten Elementen verbunden sind. Charaktere mit ausgeglichenen Eigenschaften werden sich dennoch unberechenbar verhalten – vielleicht neigen sie zeitweise zu einer Eigenschaft und handeln zu anderen Zeiten unter dem Einfluss einer anderen, oder sie verletzen sich selbst oder greifen andere an, die sie als unausgeglichen wahrnehmen.
+> Die Auswirkungen dieser Eigenschaften auf die Persönlichkeit des Charakters heben sich niemals gegenseitig auf, selbst wenn sie mit einander entgegengesetzten Elementen verbunden sind. Charaktere mit ausgeglichenen Eigenschaften werden sich dennoch unberechenbar verhalten – vielleicht neigen sie zeitweise zu einer Eigenschaft und handeln zu anderen Zeiten unter dem Einfluss einer anderen, oder sie verletzen sich selbst oder greifen andere an, die sie als unausgeglichen wahrnehmen.
 
 ## Elementaristische Formen
 
-Jede der Formen kann potenziell Elementare und andere übernatürliche Wesen beeinflussen, die mit den vier Elementen verbunden sind, sowie die vier Körpersäfte und Tiere oder andere Naturphänomene, abhängig von der Art der Elementaristischen Techniken, mit denen sie kombiniert werden. Weitere Informationen über Elementare finden sich in Sphären der Macht: Magie, Seiten 132-139, und das Studium der Medizin und Philosophiae wird in Kunst & Gelehrsamkeit ausführlicher behandelt.
+Jede der Formen kann potenziell Elementare und andere übernatürliche Wesen beeinflussen, die mit den vier Elementen verbunden sind, sowie die vier Körpersäfte und Tiere oder andere Naturphänomene, abhängig von der Art der Elementaristischen Techniken, mit denen sie kombiniert werden. Weitere Informationen über Elementare finden sich in Sphären der Macht: Magie, [Seiten 132-139](<Ars Magica 5e - Sphären der Macht - Magie.md#elementare>), und das Studium der Medizin und Philosophiae wird in Art & Academe ausführlicher behandelt.
 
 ### Elementaristische Luft
 
@@ -1098,11 +1118,11 @@ Elementaristische Luft ist das Studium der übernatürlichen Qualitäten der Luf
 
 Die konkreten Anwendungen der Elementaristischen Luft hängen davon ab, mit welcher Art von Elementaristischer Technik sie gepaart wird:
 
-**Medizinisch**: Elementarmediziner können mit Elementaristischer Luft die sanguinischen Körpersäfte des menschlichen Körpers beeinflussen, die typischerweise mit Schwindel und Blutkrankheiten verbunden sind. Ein Beispiel wäre das Quotidianfieber.
+**Medizinisch:** Elementarmediziner können mit Elementaristischer Luft die sanguinischen Körpersäfte des menschlichen Körpers beeinflussen, die typischerweise mit Schwindel und Blutkrankheiten verbunden sind. Ein Beispiel wäre das Quotidianfieber.
 
-**Philosophisch**: Elementarphilosophen können Elementaristische Luft einsetzen, um natürliche Wetterphänomene mit ihren Kräften zu beeinflussen. Sie können auch Tiere beeinflussen, die ein vorwiegend sanguinisches Temperament besitzen, wie etwa Vögel.
+**Philosophisch:** Elementarphilosophen können Elementaristische Luft einsetzen, um natürliche Wetterphänomene mit ihren Kräften zu beeinflussen. Sie können auch Tiere beeinflussen, die ein vorwiegend sanguinisches Temperament besitzen, wie etwa Vögel.
 
-**Theurgisch**: Elementartheurgen können mit Elementaristischer Luft Luftelementare und andere Kreaturen mit Magischer Macht beeinflussen, die mit Auram verbunden ist. Luftelementare neigen zu hohen geistigen Eigenschaften, aber niedrigen körperlichen Eigenschaften.
+**Theurgisch:** Elementartheurgen können mit Elementaristischer Luft Luftelementare und andere Kreaturen mit Magischer Macht beeinflussen, die mit Auram verbunden ist. Luftelementare neigen zu hohen geistigen Eigenschaften, aber niedrigen körperlichen Eigenschaften.
 
 Der Charakter addiert seine Sanguinische Eigenschaft zu seiner Absorption, wann immer er durch das Element Luft Schaden erleidet, einschließlich Erstickung, Einatmen giftiger Gase oder Beeinträchtigung durch mächtige Wetterphänomene wie Wind, Hagelkörner oder Blitze.
 
@@ -1110,11 +1130,11 @@ Der Charakter addiert seine Sanguinische Eigenschaft zu seiner Absorption, wann 
 
 Elementaristische Erde ist das Studium der übernatürlichen Qualitäten der Erde und wie man sie mit den Elementaristischen Techniken manipulieren kann. Es ist eine Schwierige Kunst. Was der Charakter mit Elementaristischer Erde tun kann, hängt davon ab, mit welcher Art von Elementaristischer Technik sie gepaart wird:
 
-**Medizinisch**: Elementaristische Erde ermöglicht es einem Elementarmediziner, auf sein medizinisches Wissen zurückzugreifen, um die melancholischen Körpersäfte des menschlichen Körpers zu beeinflussen. Dazu gehören Traurigkeitsgefühle oder Krankheiten wie Verstopfung.
+**Medizinisch:** Elementaristische Erde ermöglicht es einem Elementarmediziner, auf sein medizinisches Wissen zurückzugreifen, um die melancholischen Körpersäfte des menschlichen Körpers zu beeinflussen. Dazu gehören Traurigkeitsgefühle oder Krankheiten wie Verstopfung.
 
-**Philosophisch**: Elementarphilosophen können die Erde und ihre Mineralien mit ihrer Magie beeinflussen, einschließlich Tieren mit melancholischem Temperament, wie langsame Tiere wie Rinder oder allgemein gutmütige Tiere wie Mäuse und Dachse.
+**Philosophisch:** Elementarphilosophen können die Erde und ihre Mineralien mit ihrer Magie beeinflussen, einschließlich Tieren mit melancholischem Temperament, wie langsame Tiere wie Rinder oder allgemein gutmütige Tiere wie Mäuse und Dachse.
 
-**Theurgisch**: Elementartheurgen können Elementaristische Erde einsetzen, um Erdelementare und andere übernatürliche Wesen zu beeinflussen, die mit Terram verbunden sind. Erdelementare haben im Allgemeinen hohe körperliche Eigenschaften, aber niedrige geistige Eigenschaften.
+**Theurgisch:** Elementartheurgen können Elementaristische Erde einsetzen, um Erdelementare und andere übernatürliche Wesen zu beeinflussen, die mit Terram verbunden sind. Erdelementare haben im Allgemeinen hohe körperliche Eigenschaften, aber niedrige geistige Eigenschaften.
 
 Der Charakter addiert seine Melancholische Eigenschaft zu seiner Absorption, wann immer er durch das Element Erde Schaden erleidet, einschließlich Erstickung, Verletzungen durch Metall- oder Steinwaffen, Quetschungen oder Stürze auf festen Boden.
 
@@ -1122,9 +1142,9 @@ Der Charakter addiert seine Melancholische Eigenschaft zu seiner Absorption, wan
 
 Elementaristisches Feuer ist eine Schwierige Kunst, bei der die übernatürlichen Qualitäten des Feuers studiert werden und wie man sie mit der Elementarmagie des Charakters manipulieren kann. Die Art der Elementaristischen Technik, mit der der Charakter diese Form paart, bestimmt, welche Arten von Feuer er beeinflussen kann:
 
-**Philosophisch**: Hitze und Flammen sind die Domäne des Elementarphilosophen mit Elementaristischem Feuer, einschließlich gewöhnlicher Tiere mit cholerischem Temperament – im Allgemeinen solche, die schnell sind (wie Pferde) oder wild (wie Raubtiere).
+**Philosophisch:** Hitze und Flammen sind die Domäne des Elementarphilosophen mit Elementaristischem Feuer, einschließlich gewöhnlicher Tiere mit cholerischem Temperament – im Allgemeinen solche, die schnell sind (wie Pferde) oder wild (wie Raubtiere).
 
-**Theurgisch**: Elementartheurgen beeinflussen Feuerelementare und andere übernatürliche Kreaturen, die mit Hitze, Licht und Flammen verbunden sind. Feuerelementare haben typischerweise hohe Werte in Präsenz, Kommunikation, Geschicklichkeit und Schnelligkeit.
+**Theurgisch:** Elementartheurgen beeinflussen Feuerelementare und andere übernatürliche Kreaturen, die mit Hitze, Licht und Flammen verbunden sind. Feuerelementare haben typischerweise hohe Werte in Präsenz, Kommunikation, Geschicklichkeit und Schnelligkeit.
 
 Der Charakter addiert seine Cholerische Eigenschaft zu seiner Absorption, wann immer er durch das Element Feuer Schaden erleidet, einschließlich extremer Temperaturen, blendendem Licht oder brennenden Flammen.
 
@@ -1132,11 +1152,11 @@ Der Charakter addiert seine Cholerische Eigenschaft zu seiner Absorption, wann i
 
 Elementaristisches Wasser ist das Studium der übernatürlichen Qualitäten des Wassers und wie sie mit Elementarmagie manipuliert werden können. Es ist eine Schwierige Kunst. Die Art der Ziele, die der Elementarist mit dieser Elementaristischen Form beeinflussen kann, hängt von der Art der Technik ab, mit der sie gepaart wird:
 
-**Medizinisch**: Elementarmediziner können mit ihren Elementaristischen Künsten die phlegmatischen Körpersäfte des menschlichen Körpers beeinflussen. Diese Körpersäfte sind mit langsamen, teilnahmslosen Gefühlen und feuchten, phlegmatischen Krankheiten wie Durchfall verbunden.
+**Medizinisch:** Elementarmediziner können mit ihren Elementaristischen Künsten die phlegmatischen Körpersäfte des menschlichen Körpers beeinflussen. Diese Körpersäfte sind mit langsamen, teilnahmslosen Gefühlen und feuchten, phlegmatischen Krankheiten wie Durchfall verbunden.
 
-**Philosophisch**: Der Elementarphilosoph beeinflusst mit Elementaristischem Wasser alle Arten natürlicher Flüssigkeiten und kann auch Tiere mit phlegmatischem Temperament beeinflussen, wozu Tiere gehören, die schwimmen wie Fische oder kriechen wie Reptilien.
+**Philosophisch:** Der Elementarphilosoph beeinflusst mit Elementaristischem Wasser alle Arten natürlicher Flüssigkeiten und kann auch Tiere mit phlegmatischem Temperament beeinflussen, wozu Tiere gehören, die schwimmen wie Fische oder kriechen wie Reptilien.
 
-**Theurgisch**: Elementaristisches Wasser ermöglicht es einem Elementartheurgen, Wasserelementare und andere übernatürliche Kreaturen zu beeinflussen, die mit Kälte und Flüssigkeiten verbunden sind. Wasserelementare haben typischerweise hohe Werte in Gerissenheit, Wahrnehmung, Stärke und Ausdauer.
+**Theurgisch:** Elementaristisches Wasser ermöglicht es einem Elementartheurgen, Wasserelementare und andere übernatürliche Kreaturen zu beeinflussen, die mit Kälte und Flüssigkeiten verbunden sind. Wasserelementare haben typischerweise hohe Werte in Gerissenheit, Wahrnehmung, Stärke und Ausdauer.
 
 Der Charakter addiert seine Phlegmatische Eigenschaft zu seiner Absorption, wenn er durch das Element Wasser Schaden erleidet, einschließlich Durst, Ertrinken, Trinken giftiger Flüssigkeiten, Aufprall auf Wasser oder Zerquetschung durch mächtige Wellen.
 
@@ -1166,7 +1186,7 @@ Diese wird mit der folgenden Tabelle verglichen, um die maximale Größe und Mac
 | 5     | 5     | —6    | Eidechse, Hermelin                    |
 | 10    | 10    | -3    | Dachs, Katze                          |
 | 15    | 15    | 0     | Erwachsener, zehn Katzen              |
-| 20    | 20    | +3    | Schlachtross, zehn Erwachsene         | 
+| 20    | 20    | +3    | Schlachtross, zehn Erwachsene         |
 | 25    | 25    | -6    | Schwertwal, 100 Erwachsene            |
 | 30    | 30    | +9    | Buckelwal, 100 Pferde                 |
 | 35    | 35    | +12   | Turm, Burg                            |
@@ -1188,7 +1208,7 @@ Ein Patzer beim Herbeirufungswurf bedeutet, dass der Elementarist die Kontrolle 
 
 #### Medizinisch
 
-Mit Medizinischer Magie kann der Charakter Herbeirufen einsetzen, um die Körpersäfte im menschlichen Körper zu verändern, Krankheiten zu heilen und Krisen zu überwinden. Dies könnte als Herbeirufen der notwendigen Körpersäfte betrachtet werden, um den Körper in sein natürliches Gleichgewicht zurückzuführen, obwohl dies keine Wirkung auf Wunden hat, die nicht durch Entbehrung, Krankheit oder Altern verursacht wurden. Herbeirufen kann die Körpersäfte auch stark genug aus dem Gleichgewicht bringen, um eine Krankheit zu verursachen, indem die Körpersäfte aus dem Körper gezogen werden. Der Elementarmediziner muss das Ziel berühren, und wenn du die Krankheitsregeln aus Kunst & Gelehrsamkeit verwendest, bestimmt die Herbeirufen-Summe die Stärke der Krankheit, die verursacht oder geheilt wird. Andernfalls beeinflusst eine Herbeirufen-Summe, die der Größe des Ziels entspricht (wie in der obigen Tabelle aufgeführt), eine Krankheit, die einer Leichten Wunde oder einer geringfügigen Krankheit entspricht; eine Magnitude mehr beeinflusst eine Krankheit, die einer Mittelschweren Wunde oder einer ernsthaften Krankheit entspricht, zwei Magnituden mehr für eine Schwere Wunde oder eine schwere Krankheit, und drei Magnituden mehr für eine Lähmende Wunde oder eine kritische Krankheit. Die in der Herbeirufen-Summe verwendete Elementaristische Form sollte die Form sein, die am besten zur Art der Krankheit passt, und dieser Effekt muss die Magieresistenz des Ziels penetrieren, falls vorhanden.
+Mit Medizinischer Magie kann der Charakter Herbeirufen einsetzen, um die Körpersäfte im menschlichen Körper zu verändern, Krankheiten zu heilen und Krisen zu überwinden. Dies könnte als Herbeirufen der notwendigen Körpersäfte betrachtet werden, um den Körper in sein natürliches Gleichgewicht zurückzuführen, obwohl dies keine Wirkung auf Wunden hat, die nicht durch Entbehrung, Krankheit oder Altern verursacht wurden. Herbeirufen kann die Körpersäfte auch stark genug aus dem Gleichgewicht bringen, um eine Krankheit zu verursachen, indem die Körpersäfte aus dem Körper gezogen werden. Der Elementarmediziner muss das Ziel berühren, und wenn du die Krankheitsregeln aus Art & Academe verwendest, bestimmt die Herbeirufen-Summe die Stärke der Krankheit, die verursacht oder geheilt wird. Andernfalls beeinflusst eine Herbeirufen-Summe, die der Größe des Ziels entspricht (wie in der obigen Tabelle aufgeführt), eine Krankheit, die einer Leichten Wunde oder einer geringfügigen Krankheit entspricht; eine Magnitude mehr beeinflusst eine Krankheit, die einer Mittelschweren Wunde oder einer ernsthaften Krankheit entspricht, zwei Magnituden mehr für eine Schwere Wunde oder eine schwere Krankheit, und drei Magnituden mehr für eine Lähmende Wunde oder eine kritische Krankheit. Die in der Herbeirufen-Summe verwendete Elementaristische Form sollte die Form sein, die am besten zur Art der Krankheit passt, und dieser Effekt muss die Magieresistenz des Ziels penetrieren, falls vorhanden.
 
 #### Philosophisch
 
@@ -1196,20 +1216,20 @@ Der Elementarphilosoph beschwört Naturphänomene (Wind, Flammen) oder Grundstof
 
 Der Elementarphilosoph kann auch lebende Tiere herbeirufen, die in der Gegend heimisch sind und ein dominantes Temperament (cholerisch, melancholisch, phlegmatisch oder sanguinisch) besitzen, das dem in der Herbeirufung verwendeten Element entspricht. Der Charakter kann sogar eine Gruppe von Tieren herbeirufen, solange deren Gesamtgröße die in der Tabelle für die Herbeirufen-Summe angegebene Größe nicht überschreitet und die Summe ihrer Machtwerte die für die Stufe des Effekts in der Tabelle angegebene Macht nicht übersteigt. Wenn eines der herbeigerufenen Tiere Magieresistenz besitzt, muss der Effekt penetrieren.
 
->#### ABENTEUERIDEE: Rachsüchtige Flammen
->Während einer erbitterten Schlacht ruft ein Elementartheurg eine Horde Feuerelementare herbei, um die gegnerische Armee anzugreifen. Diese Kreaturen geraten bald außer Kontrolle, verwunden den Elementaristen schwer und richten in der Umgebung Verwüstung an. Diese Elementare könnten den Konvent der Spielercharaktere bedrohen, physisch oder möglicherweise sogar politisch, wenn die Herren der gegnerischen Armee ihrerseits nach Zauberern rufen, um Vergeltung zu üben.
+> ### Abenteueridee: Rachsüchtige Flammen
+> Während einer erbitterten Schlacht ruft ein Elementartheurg eine Horde Feuerelementare herbei, um die gegnerische Armee anzugreifen. Diese Kreaturen geraten bald außer Kontrolle, verwunden den Elementaristen schwer und richten in der Umgebung Verwüstung an. Diese Elementare könnten den Konvent der Spielercharaktere bedrohen, physisch oder möglicherweise sogar politisch, wenn die Herren der gegnerischen Armee ihrerseits nach Zauberern rufen, um Vergeltung zu üben.
 
 #### Theurgisch
 
 Der Elementartheurg kann ein Elementar aus einer Menge reinen Grundmaterials zum Leben erwecken, wie unbearbeitetem Stein, frischem Wasser oder einer natürlichen Brise. Die Herbeirufen-Summe bestimmt den maximalen Machtwert des Wesens, basierend auf der Größe der vorhandenen Materialien, wie in der Tabelle gezeigt. Zum Beispiel könnte eine Herbeirufen-Summe von 15 potenziell ein Erdelementar mit Magischer Macht 15 aus einem menschengroßen Erdhaufen herbeirufen. Du kannst die Regeln in Sphären der Macht: Magie verwenden, um dieses Elementar zu gestalten, oder ihm einfach Werte und Kräfte zuweisen, die für seine Größe und Form angemessen erscheinen – ein Erdelementar mit Macht 20 könnte zwei Terram-Kräfte und 20 Punkte für körperliche Eigenschaften haben, und ein Luftelementar mit Macht 15 könnte eine Auram-Kraft und 15 Punkte für geistige Eigenschaften haben. Elementare werden permanent herbeigerufen, erholen jedoch ihre Machtpunkte nicht über die Zeit, es sei denn, sie konsumieren Vis, und kehren in ihre natürliche Form zurück, wenn all ihre Machtpunkte verbraucht sind, ohne Vis zu hinterlassen. (Siehe den Kasten Herbeirufen von Elementaren für weitere Einzelheiten.)
 
->#### Herbeirufen von Elementaren
+> ### Herbeirufen von Elementaren
 >
->Wenn Herbeirufen mit Elementarmagie verwendet wird, wird ein Elementar im Wesentlichen aus einer entsprechenden Menge Grundmaterial ins Leben gerufen. Wie oben angemerkt, dauert diese Herbeirufung unbegrenzt, obwohl die Elementare tatsächlich vorübergehend sind und ihre Machtpunkte nicht über die Zeit erholen wie andere übernatürliche Wesen. Wenn der Machtvorrat eines dieser Elementare leer ist, hört es auf, ein Elementar zu sein, und kehrt in seine natürliche Form zurück, ohne Vis zu hinterlassen. Das heißt, ein Elementar, das aus einem Erdhaufen herbeigerufen wurde, wird wieder ein normaler Erdhaufen.
+> Wenn Herbeirufen mit Elementarmagie verwendet wird, wird ein Elementar im Wesentlichen aus einer entsprechenden Menge Grundmaterial ins Leben gerufen. Wie oben angemerkt, dauert diese Herbeirufung unbegrenzt, obwohl die Elementare tatsächlich vorübergehend sind und ihre Machtpunkte nicht über die Zeit erholen wie andere übernatürliche Wesen. Wenn der Machtvorrat eines dieser Elementare leer ist, hört es auf, ein Elementar zu sein, und kehrt in seine natürliche Form zurück, ohne Vis zu hinterlassen. Das heißt, ein Elementar, das aus einem Erdhaufen herbeigerufen wurde, wird wieder ein normaler Erdhaufen.
 >
->Die verbrauchte Macht eines herbeigerufenen Elementars kann wiederhergestellt werden, indem man es mit Vis füttert: Jeder Bauer, den ein Elementar konsumiert, gibt ihm 5 Machtpunkte zurück. Die meisten Elementare bevorzugen es, Vis der Elementaristischen Form zu konsumieren, die ihrer eigenen entgegengesetzt ist, statt der ihrer eigenen Form – d.h. Feuerelementare suchen im Allgemeinen nach Aquam-Vis und verschmähen Ignem-Vis. Dies könnte als eine Art Raubinstinkt gesehen werden, das Element zu jagen, das ihnen am unähnlichsten ist, und als übernatürliches Tabu dagegen, die eigene Art zu verzehren. Elementare werden jedoch bereitwillig Vis jeder Art konsumieren, wenn sie hungrig sind (das heißt, sie haben einen Teil ihrer Macht verbraucht) und es leicht zugänglich ist.
+> Die verbrauchte Macht eines herbeigerufenen Elementars kann wiederhergestellt werden, indem man es mit Vis füttert: Jeder Bauer, den ein Elementar konsumiert, gibt ihm 5 Machtpunkte zurück. Die meisten Elementare bevorzugen es, Vis der Elementaristischen Form zu konsumieren, die ihrer eigenen entgegengesetzt ist, statt der ihrer eigenen Form – d.h. Feuerelementare suchen im Allgemeinen nach Aquam-Vis und verschmähen Ignem-Vis. Dies könnte als eine Art Raubinstinkt gesehen werden, das Element zu jagen, das ihnen am unähnlichsten ist, und als übernatürliches Tabu dagegen, die eigene Art zu verzehren. Elementare werden jedoch bereitwillig Vis jeder Art konsumieren, wenn sie hungrig sind (das heißt, sie haben einen Teil ihrer Macht verbraucht) und es leicht zugänglich ist.
 >
->Elementare sind im Allgemeinen wild und unbezähmbar, wie eine entfesselte Naturgewalt. Wird es nicht in einem Behälter gehalten, ist es nahezu sicher, dass ein Elementar versuchen wird, alles zu zerstören, was ihm in den Weg kommt, einschließlich des Elementaristen, der es herbeigerufen hat. Man kann nicht mit ihnen verhandeln, und obwohl Magieresistenz den Charakter gegen die Kräfte eines Elementars schützen kann, schützt sie nicht gegen seine physischen Angriffe. Magi und Elementaristen haben typischerweise einen Absorptionsbonus, der ihnen einen gewissen Schutz bietet, aber es ist im Allgemeinen zu gefährlich, ein Elementar einfach ohne Schutzmaßnahmen herbeizurufen.
+> Elementare sind im Allgemeinen wild und unbezähmbar, wie eine entfesselte Naturgewalt. Wird es nicht in einem Behälter gehalten, ist es nahezu sicher, dass ein Elementar versuchen wird, alles zu zerstören, was ihm in den Weg kommt, einschließlich des Elementaristen, der es herbeigerufen hat. Man kann nicht mit ihnen verhandeln, und obwohl Magieresistenz den Charakter gegen die Kräfte eines Elementars schützen kann, schützt sie nicht gegen seine physischen Angriffe. Magi und Elementaristen haben typischerweise einen Absorptionsbonus, der ihnen einen gewissen Schutz bietet, aber es ist im Allgemeinen zu gefährlich, ein Elementar einfach ohne Schutzmaßnahmen herbeizurufen.
 
 ### Beherrschen
 
@@ -1231,9 +1251,9 @@ Der Elementarmediziner kann die Emotionen von Menschen kontrollieren, indem er d
 
 Elementarmediziner können auch Befehle (wie „Verschwinde!") an übernatürliche Kreaturen erteilen, die Teil eines menschlichen Körpers geworden sind, wie Krankheitsgeister oder besitzergreifende Dämonen, auf die gleiche Weise wie ein Elementartheurg elementare Wesen befehligen kann. Die Beherrschen-Summe des Mediziners muss den Machtwert des Ziels in der Herbeirufen-Tabelle übersteigen, und er muss den niedrigsten seiner Werte in den vier Elementaristischen Formen für die Formel verwenden.
 
->#### ABENTEUERIDEE: Der Leibarzt des Bischofs
+> ### Abenteueridee: Der Leibarzt des Bischofs
 >
->Der Bischof in einer nahen Stadt ist kürzlich erkrankt, hat aber einen wunderbaren Arzt angestellt, der seine Schmerzen allein durch Handauflegen auf seine Brust lindern kann. Gerüchte über diese wundersame Heilung haben begonnen, sich in der Region zu verbreiten, und obwohl der Bischof noch nicht vollständig genesen ist, behaupten viele, sein Arzt sei ein heiliger Mann. In Wahrheit ist der Doktor ein Elementarmediziner, der die Körpersäfte einer kranken Person magisch manipulieren kann, um sie glücklich und fit fühlen zu lassen, aber sich auf sein (nicht vorhandenes) Wissen über weltliche Medizin verlassen muss, um die Krankheit tatsächlich zu behandeln. Bisher hatte der Bischof Glück, da sich seine Krankheit nicht verschlimmert hat, aber er wird bald sterben, wenn ihm nicht jemand mit fundierterem medizinischem Wissen (oder Magie) hilft.
+> Der Bischof in einer nahen Stadt ist kürzlich erkrankt, hat aber einen wunderbaren Arzt angestellt, der seine Schmerzen allein durch Handauflegen auf seine Brust lindern kann. Gerüchte über diese wundersame Heilung haben begonnen, sich in der Region zu verbreiten, und obwohl der Bischof noch nicht vollständig genesen ist, behaupten viele, sein Arzt sei ein heiliger Mann. In Wahrheit ist der Doktor ein Elementarmediziner, der die Körpersäfte einer kranken Person magisch manipulieren kann, um sie glücklich und fit fühlen zu lassen, aber sich auf sein (nicht vorhandenes) Wissen über weltliche Medizin verlassen muss, um die Krankheit tatsächlich zu behandeln. Bisher hatte der Bischof Glück, da sich seine Krankheit nicht verschlimmert hat, aber er wird bald sterben, wenn ihm nicht jemand mit fundierterem medizinischem Wissen (oder Magie) hilft.
 
 #### Philosophisch
 
@@ -1269,9 +1289,9 @@ Der Elementarist kann natürliche Materialien erspüren, die mit einer Form verb
 
 Der Elementarist kann Wesen mit Macht des entsprechenden Elements in der allgemeinen Umgebung spüren. Er kann die ungefähre Entfernung und Richtung zum Ziel bestimmen, und er kann mental mit ihm kommunizieren, indem er es oder den Behälter berührt, in dem es gehalten wird. Wenn das Wesen intelligent ist, können die beiden so lange miteinander reden, wie der Elementarist die Konzentration aufrechterhält. Wenn es nicht intelligent ist, kann der Elementarist vergangene Ereignisse wahrnehmen, wie das Wesen sie erlebte, oder wie die Rohmaterialien sie erlebten, die die Kreatur belebt.
 
->#### ABENTEUERIDEE: Das Recht auf Vis
+> ### Abenteueridee: Das Recht auf Vis
 >
->Eine der Vis-Quellen eines Konvents versiegt, nachdem ein umherziehender Elementarist sie aufgespürt und ausgeräumt hat, um sich bei seinen magischen Aktivitäten zu helfen. Um das Ihre zurückzubekommen, müssen die Magi ihn aufspüren und ihn davon überzeugen, ihren Anspruch auf das anzuerkennen, was er genommen hat. Erschwerend kommt hinzu, dass der Elementarist das Vis bereits verbraucht hat, als sie ihn einholen.
+> Eine der Vis-Quellen eines Konvents versiegt, nachdem ein umherziehender Elementarist sie aufgespürt und ausgeräumt hat, um sich bei seinen magischen Aktivitäten zu helfen. Um das Ihre zurückzubekommen, müssen die Magi ihn aufspüren und ihn davon überzeugen, ihren Anspruch auf das anzuerkennen, was er genommen hat. Erschwerend kommt hinzu, dass der Elementarist das Vis bereits verbraucht hat, als sie ihn einholen.
 
 ### Läutern
 
@@ -1279,8 +1299,7 @@ Die Läutern-Kunst ermöglicht es dem Elementaristen, das Ziel zu verbessern, in
 
 **LÄUTERN-SUMME:** Intelligenz + (zugehörige Fertigkeit) + Läutern + (Form) + Aura
 
-Die Anwendung der Läutern-Kunst ergibt häufig rohes Vis, und dieses ist typischerweise mit der Form verbunden, die der in der Formel verwendeten Elementaristischen Form entspricht. Zum Beispiel ergibt Elementaristisches Wasser das, was Magi als
-Aquam-Vis bezeichnen würden, und Elementaristisches Feuer erzeugt Ignem-Vis.
+Die Anwendung der Läutern-Kunst ergibt häufig rohes Vis, und dieses ist typischerweise mit der Form verbunden, die der zur Beeinflussung des Ziels verwendeten Elementaristischen Form entspricht. Zum Beispiel ergibt Elementaristisches Wasser das, was Magi als Aquam-Vis bezeichnen würden, und Elementaristisches Feuer erzeugt Ignem-Vis.
 
 Ein Elementarist mit der Läutern-Kunst kann Vis verwenden, um sich eine Art Trank herzustellen, der einem hermetischen Langlebigkeitsritual ähnelt. Der Trank gewährt ihm einen Bonus auf seine Alterungswürfe in Höhe seiner (Läutern-Summe / 5), wobei seine niedrigste Elementaristische Form als Requisit einbezogen wird, und hält an, bis er eine Alterungskrise erleidet. Dieser Trank benötigt ein Quartal zur Herstellung und kostet eine Anzahl Bauern Vis gleich seinem (Alter / 5), aufgerundet. Zum Beispiel müsste ein 50 Jahre alter Elementarist zehn Bauern Vis jeder Form aufwenden, die er besitzt. Beachte, dass ein Elementarist nur so viel Vis aufwenden kann wie die Summe seiner Werte in den Elementaristischen Formen.
 
@@ -1316,17 +1335,17 @@ Wenn das Wesen mehr Machtpunkte erhalten würde, als sein Machtvorrat fassen kan
 
 Der Elementartheurg addiert (Sphären-)Kunde derselben Sphäre wie das Ziel zu seinen Läutern-Summen.
 
->#### ABENTEUERIDEE: Der zweigeteilte Elementarist
+> ### Abenteueridee: Der zweigeteilte Elementarist
 >
->Eine Angelegenheit wird vor das Tribunal gebracht, in der zwei rivalisierende Konvente behaupten, der jeweils andere habe den Kodex gebrochen. Der erste Konvent hatte einen unBegabten Heckenzauberer bei sich leben (einen Elementarphilosophen), den sie jedes Quartal mit der Vis-Herstellung für sie beschäftigten. Ein Mitglied des zweiten Konvents traf diesen Heckenzauberer bei einem Besuch des ersten Konvents und bot ihm die Mitgliedschaft im Orden des Hermes an; dieser nahm an und schwor den Eid auf der Stelle. Mitglieder des ersten Konvents weigerten sich, den Elementaristen mit dem Magus ziehen zu lassen, und töteten den Heckenzauberer bei der Konfrontation. Der besuchende Magus erhob daraufhin Anklage gegen den Konvent wegen der Tötung eines Mitglieds des Ordens. Mitglieder des ersten Konvents erhoben Anklage gegen jenen Magus, weil er ihnen ihr magisches Eigentum genommen habe.
+> Eine Angelegenheit wird vor das Tribunal gebracht, in der zwei rivalisierende Konvente behaupten, der jeweils andere habe den Kodex gebrochen. Der erste Konvent hatte einen unBegabten Heckenzauberer bei sich leben (einen Elementarphilosophen), den sie jedes Quartal mit der Vis-Herstellung für sie beschäftigten. Ein Mitglied des zweiten Konvents traf diesen Heckenzauberer bei einem Besuch des ersten Konvents und bot ihm die Mitgliedschaft im Orden des Hermes an; dieser nahm an und schwor den Eid auf der Stelle. Mitglieder des ersten Konvents weigerten sich, den Elementaristen mit dem Magus ziehen zu lassen, und töteten den Heckenzauberer bei der Konfrontation. Der besuchende Magus erhob daraufhin Anklage gegen den Konvent wegen der Tötung eines Mitglieds des Ordens. Mitglieder des ersten Konvents erhoben Anklage gegen jenen Magus, weil er ihnen ihr magisches Eigentum genommen habe.
 >
->Die wesentlichen Fragen für das Tribunal sind im ersten Fall, ob das bloße Schwören des Eides ausreicht, um einen Zauberer zum Mitglied des Ordens des Hermes zu machen, wie der zweite Konvent behauptet; oder ob es mehr erfordert, etwa die Bestätigung durch einen Quaesitor, wie es die Position des ersten Konvents ist. Im zweiten Fall muss das Tribunal entscheiden, ob ein Mitglied eines Konvents als Eigentum dieses Konvents betrachtet werden kann und ob die Gefährdung dieser Person eine Enteignung der magischen Macht des Konvents darstellt.
+> Die wesentlichen Fragen für das Tribunal sind im ersten Fall, ob das bloße Schwören des Eides ausreicht, um einen Zauberer zum Mitglied des Ordens des Hermes zu machen, wie der zweite Konvent behauptet; oder ob es mehr erfordert, etwa die Bestätigung durch einen Quaesitor, wie es die Position des ersten Konvents ist. Im zweiten Fall muss das Tribunal entscheiden, ob ein Mitglied eines Konvents als Eigentum dieses Konvents betrachtet werden kann und ob die Gefährdung dieser Person eine Enteignung der magischen Macht des Konvents darstellt.
 
 ## Elementaristische Gesellschaften
 
 Viele Elementaristen gehören Elementaristischen Gesellschaften an – Gruppen gleichgesinnter Elementaristen, die ähnliche Vorstellungen und Praktiken teilen und so ihr Wissen leichter mit anderen austauschen können. Jede Gesellschaft lehrt bestimmte Elementaristische Techniken und Formen, die dann wie alle anderen Künste erlernt werden können. Um andere Techniken (oder Formen, obwohl die meisten Gesellschaften alle vier Formen lehren) zu erlernen, muss der Elementarist durch einen Mysterienkult eingeweiht werden.
 
-Es ist möglich, dass ein Begabtes Mitglied einer Elementaristengesellschaft die Gabe eines Begabten Schülers für alle Künste der Gesellschaft erschließt. Dies gibt ihm einen Wert von 0 in all jenen Künsten und ermöglicht ihm ihre Verwendung, wenngleich nicht besonders gut. Die Erschließung der Bevorzugten Künste der Gesellschaft folgt dem in der Einleitung unter Erschließung der Gabe beschriebenen Verfahren. Für die Erschließungssumme sollte der einweihende Elementarist (seine Intelligenz + seine höchste Elementaristische Technik + seine niedrigste Elementaristische Form + die Stufe der Aura) verwenden. Wenn der die Zeremonie durchführende Elementarist in einer oder mehreren der von der Gesellschaft bevorzugten Künste einen Wert unter 2 hat, erhält der Schüler einen Elementaristen-Fehler wie Schädliche Umstände oder Anfällig gegen (Form).
+Es ist möglich, dass ein Begabtes Mitglied einer Elementaristengesellschaft die Gabe eines Begabten Schülers für alle Künste der Gesellschaft erschließt. Dies gibt ihm einen Wert von 0 in all jenen Künsten und ermöglicht ihm ihre Verwendung, wenngleich nicht besonders gut. Die Erschließung der Bevorzugten Künste der Gesellschaft folgt dem in der Einleitung unter Erschließung der Gabe beschriebenen Verfahren. Für die Erschließungssumme sollte der einweihende Elementarist (seine Intelligenz + seine höchste Elementaristische Technik + seine niedrigste Elementaristische Form + die Stufe der Aura) verwenden. Wenn der die Zeremonie durchführende Elementarist in einer oder mehreren der von der Gesellschaft bevorzugten Künste einen Wert unter 2 hat, erhält der Schüler einen Elementaristen-Fehler wie Abträgliche Umstände oder Anfällig gegen (Form).
 
 **ERSCHLIESSUNGSSUMME:** Intelligenz + höchste Technik + niedrigste Form + Aura
 
@@ -1335,7 +1354,7 @@ Die mit einer Gesellschaft verbundenen Künste zeigen auch an, in welche Tugende
 Eine Gesellschaft bevorzugt im Allgemeinen nur zwei Techniken und die vier Formen; im Folgenden werden drei Beispiele für Elementaristengesellschaften vorgestellt, die im Mythischen Europa des Jahres 1220 zu finden sein könnten.
 
 ### Apostel des Apollonius
-**Künste**: (Theurgisches) Herbeirufen, (Theurgisches) Beherrschen und alle vier Elementaristischen Formen (Elementaristische Luft, Elementaristische Erde, Elementaristisches Feuer, Elementaristisches Wasser)
+**Künste:** (Theurgisches) Herbeirufen, (Theurgisches) Beherrschen und alle vier Elementaristischen Formen (Elementaristische Luft, Elementaristische Erde, Elementaristisches Feuer, Elementaristisches Wasser)
 
 Die ersten Elementaristen waren antike Zauberer, die von der Philosophie griechischer Lehrer wie Empedokles, Galen und Pythagoras beeinflusst waren. Anstatt ihre Mächte zur Herbeirufung der Geister der Unterwelt einzusetzen, wandten sie sich der Magie der Natur und den grundlegenden Gesetzen zu, die ihre Welt bestimmten. Indem sie die magischen Qualitäten natürlicher Objekte hervorzogen, riefen sie jene Wesen ins Leben, die Magi später Elementare nennen sollten. Durch die Zähmung und geschickte Anwendung der Kräfte dieser seltsamen Kreaturen konnten diese Elementarbeschwörer erstaunliche Taten vollbringen.
 
@@ -1349,45 +1368,45 @@ Da diese Heckenzauberer vorwiegend asketisch leben und ihnen die heidnischen Unt
 
 Im Jahre 1220 sind die Apostel des Apollonius selten, können aber überall im Mythischen Europa angetroffen werden. Ihr magischer Einfluss ist wahrscheinlich im östlichen Mittelmeerraum am stärksten, in den wilden Gebieten zwischen dem Tribunal der Levante und dem Tribunal von Theben, wo theurgische Magie häufiger vorkommt. Es heißt auch, eine Gruppe von ihnen lebe in einem kleinen Dorf in den Hohen Alpen, in der Nähe der Höhle der Zuckenden Schatten, wo sie von einigen der dort ansässigen Criamon-Magi unterstützt werden. Man betrachtet sie allgemein als magische Kuriositäten – würdige Gefährten für Magi, aber sicherlich keine Bedrohung für die Vorherrschaft des Ordens des Hermes.
 
->#### Elisavet („Psychorrhax")
+> ### Elisavet („Psychorrhax")
 >
->Eigenschaften: Int 0, Wah -1, Prä +2, Kom -1, Stä -1, Aus +2, Ges -2, Sck -2
+> Eigenschaften: Int 0, Wah -1, Prä +2, Kom -1, Stä -1, Aus +2, Ges -2, Sck -2
 >
->Größe: 0 
+> Größe: 0
 >
->Alter: 51
+> Alter: 51
 >
->Gebrechlichkeit: 1 (6) 
+> Gebrechlichkeit: 1 (6)
 >
->Selbstvertrauenswert: 1 (3) 
+> Selbstvertrauenswert: 1 (3)
 >
->Verzerrungswert: 3 (0)
+> Verzerrungswert: 3 (0)
 >
->Tugenden und Fehler: Ausgestoßene, (Theurgisches) Beherrschen, (Theurgisches) Herbeirufen, Affinität zu Beherrschen, Gebildet, Elementaristische Luft, Einmischer (groß), Von Übernatürlichem Wesen geplagt, Berüchtigt, Anfällig gegen Elementaristische Erde
+> Tugenden und Fehler: Ausgestoßene, (Theurgisches) Beherrschen, (Theurgisches) Herbeirufen, Affinität zu Beherrschen, Gebildet, Elementaristische Luft, Einmischer (groß), Von übernatürlichem Wesen geplagt, Berüchtigt, Anfällig gegen Elementaristische Erde
 >
->Persönlichkeitseigenschaften: Sanguinisch +5, Grausam +3, Einsam +3
+> Persönlichkeitseigenschaften: Sanguinisch +5, Grausam +3, Einsam +3
 >
->Reputationen: Hexe 4 (Seeleute)
+> Reputationen: Hexe 4 (Seeleute)
 >
->Kampf:
+> Kampf:
 >
->Ausweichen: Init -2, Ang n/v, Vert -2, Sch n/v Absorption: +2 (+7 gegen Luft, -5 gegen Erde)
+> Ausweichen: Init -2, Ang n/v, Vert -2, Sch n/v Absorption: +2 (+7 gegen Luft, -5 gegen Erde)
 >
->Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
 >
->Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
+> Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
 >
->Fertigkeiten: Organisationskunde: Apostel des Apollonius 1 (Einweihungsrituale), Artes Liberales 3 (Lesen), Aufmerksamkeit 3 (Geräusche), Konzentration 3 (Kontrolle aufrechterhalten), Griechisch 5 (Fragen stellen), Täuschung 3 (naiv wirken), Latein 4 (schriftlich), Magiekunde 4 (Elementare), Gebietskunde: Mittelmeer 4 (Schiffe), Penetration 5 (Beherrschen), Überleben 5 (Inseln), Schwimmen 3 (Wassertreten)
+> Fertigkeiten: Organisationskunde: Apostel des Apollonius 1 (Einweihungsrituale), Artes Liberales 3 (Lesen), Aufmerksamkeit 3 (Geräusche), Konzentration 3 (Kontrolle aufrechterhalten), Griechisch 5 (Fragen stellen), Täuschung 3 (naiv wirken), Latein 4 (schriftlich), Magiekunde 4 (Elementare), Gebietskunde: Mittelmeer 4 (Schiffe), Penetration 5 (Beherrschen), Überleben 5 (Inseln), Schwimmen 3 (Wassertreten)
 >
->Künste: Beherrschen 18, Herbeirufen 16 Schwierige Künste: Elementaristische Luft 6
+> Künste: Beherrschen 18, Herbeirufen 16 Schwierige Künste: Elementaristische Luft 6
 >
->Ausrüstung: Roben Behinderung: 0 (0)
+> Ausrüstung: Roben Behinderung: 0 (0)
 >
->Erscheinungsbild: Eine dünne Frau mittleren Alters mit silbrigem Haar und scharfen Gesichtszügen, darunter tiefliegenden, aber wachen Augen. Sie trägt die Überreste reicher Roben und einer Kapuze, vom Wind und Regen verwittert und mit Stücken von Sackleinwand und Segeltuch geflickt.
+> Erscheinungsbild: Eine dünne Frau mittleren Alters mit silbrigem Haar und scharfen Gesichtszügen, darunter tiefliegenden, aber wachen Augen. Sie trägt die Überreste reicher Roben und einer Kapuze, vom Wind und Regen verwittert und mit Stücken von Sackleinwand und Segeltuch geflickt.
 >
->Elisavet war die Tochter eines wohlhabenden und gelehrten Beraters des Herzogs einer großen Stadt (ein hermetischer Magus im Dienst eines weltlichen Herrn), aber gegen seinen Befehl schloss sie sich einer Gruppe seltsamer Mystiker an, die sie in die Wege der Apostel des Apollonius einweihten. Es wurde bald am Hof offensichtlich, dass sie schwanger geworden war, obwohl sie beteuerte, noch Jungfrau zu sein. Beschämt durch ihr Verhalten verstieß ihr Vater sie und ihren Namen und nannte sie fortan nur noch Psychorrhax („Herzbrecherin"). Auf Befehl des Herzogs wurde sie aus seinen Landen verbannt und sollte nach Italien transportiert werden, um bei entfernten Verwandten zu leben. Ihr Schiff ging während der Überfahrt in einem schrecklichen Sturm unter, aber sie überlebte und wurde an einer Insel irgendwo im Mittelmeer angespült. Bald darauf gebar sie einen Sohn – eine seltsame und missgestaltete Kreatur mit übernatürlichen Kräften über Erde und Meer.
+> Elisavet war die Tochter eines wohlhabenden und gelehrten Beraters des Herzogs einer großen Stadt (ein hermetischer Magus im Dienst eines weltlichen Herrn), aber gegen seinen Befehl schloss sie sich einer Gruppe seltsamer Mystiker an, die sie in die Wege der Apostel des Apollonius einweihten. Es wurde bald am Hof offensichtlich, dass sie schwanger geworden war, obwohl sie beteuerte, noch Jungfrau zu sein. Beschämt durch ihr Verhalten verstieß ihr Vater sie und ihren Namen und nannte sie fortan nur noch Psychorrhax („Herzbrecherin"). Auf Befehl des Herzogs wurde sie aus seinen Landen verbannt und sollte nach Italien transportiert werden, um bei entfernten Verwandten zu leben. Ihr Schiff ging während der Überfahrt in einem schrecklichen Sturm unter, aber sie überlebte und wurde an einer Insel irgendwo im Mittelmeer angespült. Bald darauf gebar sie einen Sohn – eine seltsame und missgestaltete Kreatur mit übernatürlichen Kräften über Erde und Meer.
 >
->Mehr als dreißig Jahre später hat sich Elisavet auf ihrer Inselheimat eine komfortable, wenn auch etwas einsame Existenz aufgebaut; sie besitzt ein mächtiges Luftelementar, das sie herbeigerufen und an einen Baum in der Mitte der Insel gebunden hat, das sie oft aussendet, um vorbeifahrende Schiffe auszuspähen und gelegentlich zu versenken, wobei sie Materialien von besonderem Interesse für sie rettet, wie Schmuck, Wein und Bücher. Sie hat auch ihren Sohn angewiesen, ihr einen grottenähnlichen Palast aus Stein und Treibholz zu bauen, aber sie ist grausam zu ihm und glaubt, sie müsse ihn schlagen, um ihn gefügig zu halten. Um Elisavet in eine Saga einzuführen, kann ein Spielleiter sie ein Schiff angreifen lassen, das Vorräte für den Konvent transportiert, oder möglicherweise sogar einen Magus befördert. Das Alter ist ihr größter Feind, und sie weiß, dass sie bald ihren Jahren erliegen wird, aber sie hörte einmal ihren Vater sagen, er sei durch ein besonderes Langlebigkeitsritual geschützt, das unter Angehörigen seines Ordens verbreitet sei. Sie könnte daran denken, magische Ausrüstung oder einen entführten Magus gegen ein solches Ritual zu erpressen.
+> Mehr als dreißig Jahre später hat sich Elisavet auf ihrer Inselheimat eine komfortable, wenn auch etwas einsame Existenz aufgebaut; sie besitzt ein mächtiges Luftelementar, das sie herbeigerufen und an einen Baum in der Mitte der Insel gebunden hat, das sie oft aussendet, um vorbeifahrende Schiffe auszuspähen und gelegentlich zu versenken, wobei sie Materialien von besonderem Interesse für sie rettet, wie Schmuck, Wein und Bücher. Sie hat auch ihren Sohn angewiesen, ihr einen grottenähnlichen Palast aus Stein und Treibholz zu bauen, aber sie ist grausam zu ihm und glaubt, sie müsse ihn schlagen, um ihn gefügig zu halten. Um Elisavet in eine Saga einzuführen, kann ein Spielleiter sie ein Schiff angreifen lassen, das Vorräte für den Konvent transportiert, oder möglicherweise sogar einen Magus befördert. Das Alter ist ihr größter Feind, und sie weiß, dass sie bald ihren Jahren erliegen wird, aber sie hörte einmal ihren Vater sagen, er sei durch ein besonderes Langlebigkeitsritual geschützt, das unter Angehörigen seines Ordens verbreitet sei. Sie könnte daran denken, magische Ausrüstung oder einen entführten Magus gegen ein solches Ritual zu erpressen.
 
 ### Ikhwan as-Safa'
 **Künste:** Philosophisches Herbeirufen, Philosophisches Läutern und alle vier Elementaristischen Formen (Elementaristische Luft, Elementaristische Erde, Elementaristisches Feuer, Elementaristisches Wasser)
@@ -1432,29 +1451,29 @@ Die Elementaristische Form, die der Charakter erwirbt, ist stets an seine Körpe
 
 #### Ritual, das die Seele Tatsächlich Wissend Macht
 **Einweihungs-Schwierigkeitsgrad:** 21<br>
-**Skriptbonus:** +18 (+3 Queste, +9 Große Prüfung, +3 Zeit des Mystagogen, +1 Zeit des Einzuweihenden, +1 +1 Opfer, +1 Sympathiebonus)
+**Skriptbonus:** +18 (+3 Queste, +9 Große Prüfung, +3 Zeit des Mystagogen, +1 Zeit des Einzuweihenden, +1 Opfer, +1 Sympathiebonus)
 
 Der Bittsteller muss eine Summa von mindestens Stufe 3 verfassen und die einzige Kopie seinem Sponsor übergeben. Sobald der Bittsteller diese Aufgaben erfüllt hat, verbringt er ein Quartal unter der Anleitung seines Sponsors. Am Ende dieses Quartals erwirbt der Charakter die Große Tugend Elementare Philosophiae und den Großen Fehler Studienbedingung. Dieses Skript schlägt immer fehl, wenn der Bittsteller nicht die erforderlichen Werte von 4 oder mehr in Artes Liberales, Philosophiae und Theologie (Islam) sowie einen Wert von 5 in Arabisch besitzt.
 
->#### Episteln der Brüder der Reinheit und Getreuen Freunde
+> ### Episteln der Brüder der Reinheit und Getreuen Freunde
 >
->Die Episteln der Brüder der Reinheit und Getreuen Freunde, Rasa'il Ikhwan as-Safa' wa Khillan al-Wafa, sind 52 Rasa'il oder Briefe, die in vier Abschnitte gegliedert sind, gewöhnlich als Bücher bezeichnet. Jedes Buch ist eine Sammlung von Tractatus über eine bestimmte Fertigkeit, aber wenn sie zusammen mit Hilfe der „Umfassenden Epistel" gelesen werden, dienen die Bücher als Summae für Läutern und die vier Elementaristischen Künste. Die Umfassende Epistel, oder Al-Risala al-Jami'a, ist der Schlüssel zur Entschlüsselung der Geheimnisse der Episteln, und ohne sie kann kein Charakter die in den vier Büchern enthaltenen Geheimnisse der Brüder erlangen.
+> Die Episteln der Brüder der Reinheit und Getreuen Freunde, Rasa'il Ikhwan as-Safa' wa Khillan al-Wafa, sind 52 Rasa'il oder Briefe, die in vier Abschnitte gegliedert sind, gewöhnlich als Bücher bezeichnet. Jedes Buch ist eine Sammlung von Tractatus über eine bestimmte Fertigkeit, aber wenn sie zusammen mit Hilfe der „Umfassenden Epistel" gelesen werden, dienen die Bücher als Summae für Läutern und die vier Elementaristischen Künste. Die Umfassende Epistel, oder Al-Risala al-Jami'a, ist der Schlüssel zur Entschlüsselung der Geheimnisse der Episteln, und ohne sie kann kein Charakter die in den vier Büchern enthaltenen Geheimnisse der Brüder erlangen.
 >
->Buch Eins, Mathematische Wissenschaften, enthält 14 Tractatus über Artes Liberales mit Qualität 6–10 und einer durchschnittlichen Qualität von 8. Das Buch dient auch als Summa für Elementaristische Luft, Stufe 3, Qualität 8.
+> Buch Eins, Mathematische Wissenschaften, enthält 14 Tractatus über Artes Liberales mit Qualität 6–10 und einer durchschnittlichen Qualität von 8. Das Buch dient auch als Summa für Elementaristische Luft, Stufe 3, Qualität 8.
 >
->Buch Zwei, Naturwissenschaften, enthält 17 Tractatus über Philosophiae (Naturphilosophie) mit Qualität 5–9 und einer durchschnittlichen Qualität von 7. Das Buch dient auch als Summa für Elementaristisches Wasser, Stufe 4, Qualität 8.
+> Buch Zwei, Naturwissenschaften, enthält 17 Tractatus über Philosophiae (Naturphilosophie) mit Qualität 5–9 und einer durchschnittlichen Qualität von 7. Das Buch dient auch als Summa für Elementaristisches Wasser, Stufe 4, Qualität 8.
 >
->Buch Drei, Psychologische und Rationale Wissenschaften, enthält 10 Tractatus über Philosophiae (Moralphilosophie) mit Qualität 5–9 und einer durchschnittlichen Qualität von 7. Das Buch dient auch als Summa für Elementaristisches Feuer, Stufe 3, Qualität 8.
+> Buch Drei, Psychologische und Rationale Wissenschaften, enthält 10 Tractatus über Philosophiae (Moralphilosophie) mit Qualität 5–9 und einer durchschnittlichen Qualität von 7. Das Buch dient auch als Summa für Elementaristisches Feuer, Stufe 3, Qualität 8.
 >
->Buch Vier, Theologische Wissenschaften, enthält 11 Tractatus über Theologie (Islam) mit Qualität 7–11 und einer durchschnittlichen Qualität von 9. Das Buch dient auch als Summa für Elementaristische Erde, Stufe 3, Qualität 8.
+> Buch Vier, Theologische Wissenschaften, enthält 11 Tractatus über Theologie (Islam) mit Qualität 7–11 und einer durchschnittlichen Qualität von 9. Das Buch dient auch als Summa für Elementaristische Erde, Stufe 3, Qualität 8.
 >
->Die „Umfassende Epistel" ist eine Summa über Philosophiae (Metaphysik), Stufe 4, Qualität 9, und wenn sie zusammen mit einem der anderen vier Bücher gelesen wird, dient sie als Summa für Philosophisches Läutern, Stufe 2, Qualität 8. Der Charakter muss während des Studienquartals Zugang zu beiden Texten haben, und die „Umfassende Epistel" bietet keinen zusätzlichen Nutzen, wenn sie zusammen mit weiteren Büchern über das erste hinaus gelesen wird.
+> Die „Umfassende Epistel" ist eine Summa über Philosophiae (Metaphysik), Stufe 4, Qualität 9, und wenn sie zusammen mit einem der anderen vier Bücher gelesen wird, dient sie als Summa für Philosophisches Läutern, Stufe 2, Qualität 8. Der Charakter muss während des Studienquartals Zugang zu beiden Texten haben, und die „Umfassende Epistel" bietet keinen zusätzlichen Nutzen, wenn sie zusammen mit weiteren Büchern über das erste hinaus gelesen wird.
 
 #### Charaktere
 
 Manche unBegabte Brüder werden mit der Tugend Elementare Philosophiae geboren, aber diese Charaktere sind selten. Das durchschnittliche Begabte Mitglied hat keine Kenntnis von den Brüdern oder ihrer Magie, bevor es die Episteln liest. Für jedes Jahr, das die Brüder mit Studien verbringen, erhalten sie 30 Erfahrungspunkte, die sie für Arkane und Akademische Fertigkeiten ausgeben können. Alle Brüder besitzen einige Kenntnisse in Organisationskunde: Brüder der Reinheit. Jüngere Brüder konzentrieren ihr Studium auf Akademische Fertigkeiten, insbesondere Artes Liberales, Philosophiae und Theologie. Der eklektische Charakter der Lehren der Brüder bedeutet, dass Mitglieder Theologie aller Religionen studieren dürfen. Mitglieder der Brüder studieren auch Arkane Fertigkeiten, insbesondere (Sphären-)Kunde, aber diese Themen werden nie öffentlich besprochen, und sie verbergen sorgfältig alle Bücher zu diesen Themen. Die Brüder ermutigen ihre Mitglieder auch, andere Sprachen zu lernen, insbesondere Hebräisch, Persisch, Griechisch und Latein.
 
-Anders als die Tulab Ibn Sina (siehe unten) sind die Brüder der Reinheit recht egalitär in ihrer Mitgliedschaft. Alle Mitglieder müssen des Lesens kundig sein, bevor sie überhaupt für eine Einweihung in Betracht gezogen werden, aber die Brüder ermutigen manchmal fromme Charaktere oder solche mit Wissensdurst durch anonyme Geschenke von Büchern oder Geldmitteln, die es potenziellen Mitgliedern ermöglichen, sich auf ihr Studium zu konzentrieren. Zusätzlich zu ihren Künsten beherrschen viele Ikhwan as-Safa' Mythische Alchemie oder Mythische Kräuterkunde. (Siehe Kapitel 5: Gelehrte Magier.) Ikhwan as-Safa' haben oft Fehler, die mit ihrer isma'ilitischen Strömung des Islam zusammenhängen, die in vielen Gebieten unterdrückt wird, und ihre Hingabe an das Streben nach Wissen führt häufig zu den Fehlern Getrieben, Höheres Ziel, Besessenheit, Überempfindlich oder Fromm.
+Anders als die Tulab Ibn Sina (siehe unten) sind die Brüder der Reinheit recht egalitär in ihrer Mitgliedschaft. Alle Mitglieder müssen des Lesens kundig sein, bevor sie überhaupt für eine Einweihung in Betracht gezogen werden, aber die Brüder ermutigen manchmal fromme Charaktere oder solche mit Wissensdurst durch anonyme Geschenke von Büchern oder Geldmitteln, die es potenziellen Mitgliedern ermöglichen, sich auf ihr Studium zu konzentrieren. Zusätzlich zu ihren Künsten beherrschen viele Ikhwan as-Safa' Mythische Alchemie oder Mythisches Kräuterwissen. (Siehe Kapitel 5: Gelehrte Magier.) Ikhwan as-Safa' haben oft Fehler, die mit ihrer isma'ilitischen Strömung des Islam zusammenhängen, die in vielen Gebieten unterdrückt wird, und ihre Hingabe an das Streben nach Wissen führt häufig zu den Fehlern Getrieben, Höheres Ziel, Besessen, Überempfindlich oder Fromm.
 
 ### Tulab Ibn Sina
 **Künste:** Medizinisches Herbeirufen, Medizinisches Weissagen und alle vier Elementaristischen Formen (Elementaristische Luft, Elementaristische Erde, Elementaristisches Feuer, Elementaristisches Wasser)
@@ -1502,23 +1521,23 @@ Ibn Sina lehrte seine Schüler, dass ein disziplinierter, rechtschaffener und er
 
 Der Bittsteller muss zum Grab des Ibn Sina in der persischen Stadt Hamadan reisen, wo er ein Quartal damit verbringt, während der Tagesstunden zu fasten, zu meditieren und zu beten. Der Charakter muss sich ein ganzes Quartal lang der Sünde enthalten. Am Ende des Quartals macht der Spieler einen Ausdauerwurf gegen einen Schwierigkeitsgrad von 9. Der Schwierigkeitsgrad wird durch alle Persönlichkeitseigenschaften modifiziert, die rechtschaffenes Verhalten fördern oder entmutigen würden. Ist der Wurf nicht erfolgreich, darf der Charakter ein weiteres Quartal bleiben. Sobald der Charakter ein Quartal lang rechtschaffen gelebt hat, kehrt er zum Sponsor zurück für ein Quartal der Unterweisung. Am Ende dieses Quartals erwirbt der Charakter einen Wert von 1 in Vorahnungen und den Fehler Visionen. Dieses Skript schlägt immer fehl, wenn der Bittsteller nicht die erforderlichen Werte von 5 oder mehr in Medizin, Artes Liberales, Arabisch, Philosophiae und Theologie (Islam) besitzt.
 
->#### Schriften des Ibn Sina
+> ### Schriften des Ibn Sina
 >
->Ibn Sina war ein produktiver Autor und ermutigte seine Schüler, seinem Beispiel zu folgen und frühere Werke zu synthetisieren und sein eigenes Wissen zu den Themen Medizin, Artes Liberales, Philosophiae und Theologie (Islam) hinzuzufügen. Ibn Sinas berühmtestes Werk, Al-Qanun fil-Tibb, ist eine Übersicht über das gesamte medizinische Wissen von den Schriften der Antike bis zu zeitgenössischen muslimischen Quellen. Die meisten westlichen Gelehrten betrachten die fünf Bücher des Kanon der Medizin, wie er im Westen bekannt ist, als die Autorität auf diesem Gebiet.
+> Ibn Sina war ein produktiver Autor und ermutigte seine Schüler, seinem Beispiel zu folgen und frühere Werke zu synthetisieren und sein eigenes Wissen zu den Themen Medizin, Artes Liberales, Philosophiae und Theologie (Islam) hinzuzufügen. Ibn Sinas berühmtestes Werk, Al-Qanun fil-Tibb, ist eine Übersicht über das gesamte medizinische Wissen von den Schriften der Antike bis zu zeitgenössischen muslimischen Quellen. Die meisten westlichen Gelehrten betrachten die fünf Bücher des Kanon der Medizin, wie er im Westen bekannt ist, als die Autorität auf diesem Gebiet.
 >
->Al-Qanun fil-Tibb (Kanon der Medizin), Summa Stufe 6, Qualität 9, für Medizin und Summa Stufe 6, Qualität 9, für Medizinisches Weissagen. Die Abschnitte über Weissagen sind für jeden nutzlos, der nicht die Tugend Elementarmedizin besitzt.
+> Al-Qanun fil-Tibb (Kanon der Medizin), Summa Stufe 6, Qualität 9, für Medizin und Summa Stufe 6, Qualität 9, für Medizinisches Weissagen. Die Abschnitte über Weissagen sind für jeden nutzlos, der nicht die Tugend Elementarmedizin besitzt.
 >
->Ibn Sina schrieb auch das *Kitab ash-Shifa* (Buch der Heilung), das im Westen nicht so bekannt ist, aber in der islamischen Welt sehr einflussreich.
+> Ibn Sina schrieb auch das *Kitab ash-Shifa* (Buch der Heilung), das im Westen nicht so bekannt ist, aber in der islamischen Welt sehr einflussreich.
 >
->Kitab ash-Shifa, Summa Stufe 4, Qualität 9, Artes Liberales und Summa Stufe 5, Qualität 9, für jede der vier Elementaristischen Künste (Elementaristische Luft, Elementaristische Erde, Elementaristisches Feuer und Elementaristisches Wasser). Die Abschnitte über Elementarfertigkeiten sind für jeden unverständlich, der nicht die Tugenden Medizinisches Weissagen, Medizinisches Herbeirufen oder Elementarmedizin besitzt.
+> Kitab ash-Shifa, Summa Stufe 4, Qualität 9, Artes Liberales und Summa Stufe 5, Qualität 9, für jede der vier Elementaristischen Künste (Elementaristische Luft, Elementaristische Erde, Elementaristisches Feuer und Elementaristisches Wasser). Die Abschnitte über Elementarfertigkeiten sind für jeden unverständlich, der nicht die Tugenden Medizinisches Weissagen, Medizinisches Herbeirufen oder Elementarmedizin besitzt.
 
 #### Charaktere
 
 Die große Mehrheit der Mitglieder der Tulab Ibn Sina wird nicht mit den entsprechenden Tugenden geboren, sondern erwirbt Elementarmedizin, Herbeirufen, Weissagen und eine der vier Elementaristischen Künste, wenn die Tulab Ibn Sina sie für würdig der Einweihung befinden. Die Ausbildungszeit bei den Tulab Ibn Sina ist relativ kurz, aber intensiv. In einem Zeitraum von fünf Jahren erhält der Student 150 Erfahrungspunkte, die er für Akademische und Arkane Fertigkeiten ausgeben kann. Die Tulab Ibn Sina konzentrieren sich auf folgende Fertigkeiten: Artes Liberales, Organisationskunde: Schüler Avicennas, Medizin, Philosophiae, Theologie (Islam) und Chirurgie. Alle Mitglieder der Tradition beherrschen Arabisch und Medizin, und ein Student mit einem Wert unter 4 in einem von beiden ist selten.
 
-Mitglieder der Tulab Ibn Sina stammen im Allgemeinen aus wohlhabenden Verhältnissen, und selbst jene, die in bescheidenere Umstände geboren wurden, können durch ihr Wissen über Medizin Wohlstand und gesellschaftlichen Status erlangen. Geeignete Soziale Status für Charaktere in islamischen Ländern werden in *Sphären der Macht: Das Göttliche*, [Seite 114](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#tugenden-1>), besprochen. Sie besitzen häufig die Tugenden Arkanes Wissen, Gebildet, Berühmt, Privilegierte Erziehung, Soziale Kontakte, Weltlicher Einfluss, Wohlhabend und Vielgereist. Charaktere, die in islamischen Ländern aufgewachsen sind und die Tugend Gebildet besitzen, können 50 Erfahrungspunkte auf Arabisch, Persisch, Griechisch, Latein, Theologie (Islam), Islamisches Recht und Artes Liberales verteilen. Islamisches Recht ist das Äquivalent zum Kanonischen Recht im Westen.
+Mitglieder der Tulab Ibn Sina stammen im Allgemeinen aus wohlhabenden Verhältnissen, und selbst jene, die in bescheidenere Umstände geboren wurden, können durch ihr Wissen über Medizin Wohlstand und gesellschaftlichen Status erlangen. Geeignete Soziale Status für Charaktere in islamischen Ländern werden in *Sphären der Macht: Das Göttliche*, [Seite 114](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#tugenden-1>), besprochen. Sie besitzen häufig die Tugenden Arkanes Wissen, Gebildet, Berühmt, Privilegierte Erziehung, Soziale Kontakte, Zeitlicher Einfluss, Wohlhabend und Vielgereist. Charaktere, die in islamischen Ländern aufgewachsen sind und die Tugend Gebildet besitzen, können 50 Erfahrungspunkte auf Arabisch, Persisch, Griechisch, Latein, Theologie (Islam), Islamisches Recht und Artes Liberales verteilen. Islamisches Recht ist das Äquivalent zum Kanonischen Recht im Westen.
 
-Zusätzlich zu ihren Bevorzugten Künsten beherrschen einige Mitglieder der Tulab Ibn Sina auch Mythische Kräuterkunde. (Siehe Kapitel 5: Gelehrte Magier.) Tulab Ibn Sina haben oft Fehler, die mit ihrer Religion zusammenhängen – Fromm, Gemäßigt und Höheres Ziel sind besonders passend. Für eine vollständigere Beschreibung des Islam siehe *Sphären der Macht: Das Göttliche*, [Seite 101](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#glaubensvorstellungen-und-praktiken>).
+Zusätzlich zu ihren Bevorzugten Künsten beherrschen einige Mitglieder der Tulab Ibn Sina auch Mythisches Kräuterwissen. (Siehe Kapitel 5: Gelehrte Magier.) Tulab Ibn Sina haben oft Fehler, die mit ihrer Religion zusammenhängen – Fromm, Gemäßigt und Höheres Ziel sind besonders passend. Für eine vollständigere Beschreibung des Islam siehe *Sphären der Macht: Das Göttliche*, [Seite 101](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#glaubensvorstellungen-und-praktiken>).
 
 ## Hermetische Integration
 
@@ -1536,25 +1555,25 @@ Volkshexen sind eine weit verbreitete Hecken-Tradition im Mythischen Europa, und
 
 Fast alle Volkshexen sind unBegabt, sodass gewöhnliche Leute sich nicht scheuen, sie um Hilfe zu bitten, wenn sie von übernatürlichen Plagen heimgesucht werden, einschließlich Krankheiten, und diese Frauen bilden somit einen wichtigen Teil der Gemeinschaft. Andererseits besitzen einige wenige Volkshexen die Gabe und leiden daher unter den üblichen sozialen Nachteilen. Diese Begabten Volkshexen werden mit Furcht und Misstrauen behandelt und vom einfachen Volk oft als Quelle übernatürlicher Gefahren betrachtet.
 
-Die Kirche missbilligt Volkshexen, die sie (weitgehend unzutreffend) als Überreste primitiven, heidnischen Aberglaubens ansieht, doch im Großen und Ganzen werden Volkshexen von der Kirchenhierarchie auf allen Ebenen ignoriert. Einige wenige Kirchenvertreter glauben, dass Volkshexen ihre Macht aus dem Infernalen beziehen, und erheben auf dieser Grundlage tatsächlich erfolgreich Anklage wegen des vollstreckbaren Verbrechens der Ketzerei. Volkshexen haben in Wahrheit keinerlei Verbindung zum Infernalen – obwohl einige andere Heckentraditionen von „Hexen" dies durchaus haben. Wenn eure Saga der historischen Entwicklung folgt, treten kirchlich inspirierte Hexenverfolgungen aller Art und Massenverbrennungen von Hexen erst mehrere Jahrhunderte nach dem Zeitraum der fünften Edition von Ars Magica (1220 n. Chr.) auf.
+Die Kirche missbilligt Volkshexen, die sie (weitgehend unzutreffend) als Überreste primitiven, heidnischen Aberglaubens ansieht, doch im Großen und Ganzen werden Volkshexen von der Kirchenhierarchie auf allen Ebenen ignoriert. Einige wenige Kirchenvertreter glauben, dass Volkshexen ihre Macht aus dem Infernalen beziehen, und erheben auf dieser Grundlage tatsächlich erfolgreich Anklage wegen des vollstreckbaren Verbrechens der Ketzerei. Volkshexen haben in Wahrheit keinerlei Verbindung zum Infernalen – obwohl einige andere Heckentraditionen von „Hexen" dies durchaus haben. Wenn eure Saga der historischen Entwicklung folgt, treten kirchlich inspirierte Hexenverfolgungen aller Art und Massenverbrennungen von Hexen erst mehrere Jahrhunderte nach dem Zeitraum der Ars Magica Fünften Edition (1220 n. Chr.) auf.
 
 Anders als hermetische Magi haben Volkshexen kein Äquivalent zum Orden des Hermes mit seinen Häusern, seinen Tribunalsintrigen und seinen lateinischen Ansprüchen. Stattdessen praktizieren Volkshexen ihre Magie still in kleinen, lokal begrenzten Gruppen, den sogenannten Hexenzirkeln, die in der Regel aus einer älteren „Mutter"-Hexe und einer Anzahl „Töchter" bestehen. Wie das einfache Volk reisen die meisten Volkshexen nie weit von ihrem Geburtsort fort und begegnen folglich niemals einem Mitglied eines anderen Hexenzirkels, es sei denn bei einem der seltenen und unglückseligen Sabbate. Das abgeschiedene Leben der Volkshexen führt dazu, dass Neuerungen in dieser Hecken-Tradition stagnieren und die Praktiken einzelner Hexenzirkel je nach Art und Fähigkeiten ihrer Mitglieder stark voneinander abweichen können.
 
 Der Orden des Hermes weiß durchaus, dass Volkshexen existieren, doch werden die Hexen im Allgemeinen arrogant als klägliche Praktizierende einer Bauernmagie betrachtet, die von keinerlei besonderer Bedeutung oder Bedrohung ist. Weniger bekannt ist, dass manche Volkshexen Begabt sind, und über die genauen Eigenschaften der Volkshexen-Magie ist im Orden wenig bekannt.
 
->#### ABENTEUERIDEE: Sklaven
+> ### Abenteueridee: Sklaven
 >
->Die Magi eines von einem Tytalus-Zirkel beherrschten Konvents entdeckten, dass (zumindest einige) Volkshexen Tränke brauen können, die Erschöpfung wiederherstellen – ein Verstoß gegen die vermeintliche Grenze der Energie in der hermetischen Magie. Wäre dies von Bonisagus-Magi entdeckt worden, hätte es eine vielversprechende neue Forschungsrichtung eingeläutet, doch die Tytalus-Magi wählten einen direkteren Ansatz. Sie spürten einen Hexenzirkel auf, griffen ihn an und nahmen die Volkshexen gefangen, die sie in einem Kerker unter ihrem Festungskonvent einsperrten. Die Magi setzen Rego-Mentem-Magie ein, um sie zur Herstellung von Tränken zu zwingen.
+> Die Magi eines von einem Tytalus-Zirkel beherrschten Konvents entdeckten, dass (zumindest einige) Volkshexen Tränke brauen können, die Erschöpfung wiederherstellen – ein Verstoß gegen die vermeintliche Grenze der Energie in der hermetischen Magie. Wäre dies von Bonisagus-Magi entdeckt worden, hätte es eine vielversprechende neue Forschungsrichtung eingeläutet, doch die Tytalus-Magi wählten einen direkteren Ansatz. Sie spürten einen Hexenzirkel auf, griffen ihn an und nahmen die Volkshexen gefangen, die sie in einem Kerker unter ihrem Festungskonvent einsperrten. Die Magi setzen Rego-Mentem-Magie ein, um sie zur Herstellung von Tränken zu zwingen.
 >
->Der Tytalus-Zirkel hat seither mehrere Certamen-Duelle unter heimlichem Einsatz dieser Tränke gewonnen, und sie genießen zudem die Freiheit, sich beim Zaubern zu erschöpfen, ohne Konsequenzen befürchten zu müssen. Die Spieler könnten verwickelt werden, wenn die Tytalus beginnen, Erschöpfungstränke zu verkaufen, oder wenn sie übermütig werden und Ärger verursachen. Quaesitores könnten entsandt werden, um Nachforschungen anzustellen, oder Tremere-Certamen-Meister könnten vermuten, dass die Tytalus eine neue Strategie verfolgen. Natürlich könnten die Spielercharaktere stattdessen auch Mitglieder des Tytalus-Zirkels sein.
+> Der Tytalus-Zirkel hat seither mehrere Certamen-Duelle unter heimlichem Einsatz dieser Tränke gewonnen, und sie genießen zudem die Freiheit, sich beim Zaubern zu erschöpfen, ohne Konsequenzen befürchten zu müssen. Die Spieler könnten verwickelt werden, wenn die Tytalus beginnen, Erschöpfungstränke zu verkaufen, oder wenn sie übermütig werden und Ärger verursachen. Quaesitores könnten entsandt werden, um Nachforschungen anzustellen, oder Tremere-Certamen-Meister könnten vermuten, dass die Tytalus eine neue Strategie verfolgen. Natürlich könnten die Spielercharaktere stattdessen auch Mitglieder des Tytalus-Zirkels sein.
 
 ## Erschaffung eines Volkshexen-Charakters
 
 Eine Volkshexe kann entweder als Begabter oder als unBegabter Charakter erstellt werden. Eine unBegabte Volkshexe kann als Gefährten- oder Grog-Charakter erschaffen werden. In allen Fällen müssen die normalen Regeln für die Zuweisung von Tugenden und Fehlern an einen Charakter eingehalten werden. Unabhängig davon, ob die Volkshexe Begabt ist oder nicht, muss ihr mindestens ein Fehler zugewiesen werden, der ihre magischen Fähigkeiten beeinträchtigt. Schließlich müssen alle Volkshexen die freie Sozialer-Status-Tugend Volkshexe wählen.
 
->#### Männliche Hexer
+> ### Männliche Hexer
 >
->Männliche Volkshexen sind ungewöhnlich, und manche Versionen der Volkshexen-Einweihungen wirken nur bei weiblichen Charakteren. Einige Hexenzirkel bestehen ausschließlich aus männlichen Volkshexen, obwohl dies selten ist.
+> Männliche Volkshexen sind ungewöhnlich, und manche Versionen der Volkshexen-Einweihungen wirken nur bei weiblichen Charakteren. Einige Hexenzirkel bestehen ausschließlich aus männlichen Volkshexen, obwohl dies selten ist.
 
 Weise der Volkshexe Erfahrungspunkte wie für einen normalen Charakter zu – mit der Ausnahme, dass der Charakter irgendwann, üblicherweise um das zehnte Lebensjahr, von einer Volkshexe aufgenommen wird, die ihren Schützling in einen Volkshexen-Zirkel einweiht. Dies ist das Volkshexen-Äquivalent zur hermetischen Lehrzeit und dauert gewöhnlich zehn Jahre. Um die Volkshexen-Lehrzeit abzubilden, darfst du 200 Erfahrungspunkte für den Charakter auf beliebige Fertigkeiten ausgeben. Dies ist weniger, als ein Magus erhält, da die Lehrzeit einer Volkshexe kürzer ist und Volkshexen keine derart systematische und organisierte Ausbildungsmethode besitzen. Nach der Lehrzeit erhält die Volkshexe die normale Anzahl an Erfahrungspunkten pro Jahr; das sind 15 EP pro Jahr, wobei dies durch die Tugend Wohlhabend oder den Fehler Arm beeinflusst werden kann.
 
@@ -1663,7 +1682,7 @@ Die Volkshexe erleidet während jedes Monats ihres Hexenmonds (siehe unten) eine
 
 Kleiner Übernatürlicher Fehler
 
-Flüche der Volkshexe wirken nur, wenn sich der Fluch-Fetisch innerhalb von 100 Schritten vom Ziel befindet. Der Fluch wirkt in dem Moment, in dem das Ziel in die Reichweite des fertigen Fetischs gelangt. Sobald ein Krankheits-, Alterungs- oder Fehlgeburt-Fluchfetisch auf diese Weise aktiviert wurde, hat das Entfernen des Ziels aus der Nähe des Fetischs keine Auswirkung auf den Fluch. Wenn andererseits ein Ziel aus der Reichweite eines Emotions-, Zungen-, Lähmungs-, Verkleinerungs- oder Tierfluch-Fetischs entfernt wird, endet der Effekt, setzt aber wieder ein, wenn das Ziel erneut in Reichweite kommt (und der Effekt erneut penetriert) – dies setzt sich fort, bis entweder die den Fetisch antreibende Arkane Verbindung abläuft oder der Fetisch zerstört wird. Dieser Fehler hat keine Auswirkung auf Fluchtränke, die von der Hexe gebraut werden. Dieser Fehler ist nur verfügbar, wenn der Charakter eine Begabte Volkshexe ist oder die Große Übernatürliche Tugend Fluchen besitzt. Dieser Fehler eignet sich für einen Begabten Charakter, dessen Erschließung der Gabe fehlerhaft war.
+Flüche der Volkshexe wirken nur, wenn sich der Fluch-Fetisch innerhalb von 100 Metern vom Ziel befindet. Der Fluch wirkt in dem Moment, in dem das Ziel in die Reichweite des fertigen Fetischs gelangt. Sobald ein Krankheits-, Alterungs- oder Fehlgeburt-Fluchfetisch auf diese Weise aktiviert wurde, hat das Entfernen des Ziels aus der Nähe des Fetischs keine Auswirkung auf den Fluch. Wenn andererseits ein Ziel aus der Reichweite eines Emotions-, Zungen-, Lähmungs-, Verkleinerungs- oder Tierfluch-Fetischs entfernt wird, endet der Effekt, setzt aber wieder ein, wenn das Ziel erneut in Reichweite kommt (und der Effekt erneut penetriert) – dies setzt sich fort, bis entweder die den Fetisch antreibende Arkane Verbindung abläuft oder der Fetisch zerstört wird. Dieser Fehler hat keine Auswirkung auf Fluchtränke, die von der Hexe gebraut werden. Dieser Fehler ist nur verfügbar, wenn der Charakter eine Begabte Volkshexe ist oder die Große Übernatürliche Tugend Fluchen besitzt. Dieser Fehler eignet sich für einen Begabten Charakter, dessen Erschließung der Gabe fehlerhaft war.
 
 #### Stumme Tradition
 
@@ -1693,14 +1712,13 @@ Die folgenden bestehenden Hermetischen Tugenden und Fehler aus ArM5 sind für Be
 
 **Große Hermetische Fehler:** Auffällige Gabe, Schwieriges Langlebigkeitsritual, Notwendige Bedingung, Schmerzhafte Magie, Einschränkung, Starre Magie, Vis-Verschwender.
 
-**Kleine Hermetische Fehler:** Nachlässiger Zauberer, Kreative Blockade, Zyklische Magie (negativ), Schädliche Umstände, Desorientierungsmagie, Anfälligkeit für Göttliche Kraft, Anfälligkeit für Feenkraft, Anfälligkeit für Infernale Kraft, Phantasieloser Lerner, Verzerrte Magie, Schwache Magie, Sonderbare Magie.
+**Kleine Hermetische Fehler:** Nachlässiger Zauberer, Schaffensblockade, Zyklische Magie (negativ), Abträgliche Umstände, Desorientierende Magie, Anfälligkeit für Göttliche Macht, Anfälligkeit für Feenmacht, Anfälligkeit für Infernale Macht, Einfallsloser Lerner, Verzerrte Magie, Schwache Magie, Sonderbare Magie.
 
 ## Volkshexen-Magie
 
-Wie bereits erwähnt, haben Begabte Volkshexen Zugang zu sieben Übernatürlichen Fertigkeiten: Tierverständnis, Fluchen, Wünschelrutengehen, Flug, Heilung, Zweites Gesicht und Gestaltwandler. Jede davon wird im Regelwerk Ars Magica 5th Edition durch eine Übernatürliche Tugend dargestellt, doch für Begabte Volkshexen sind dies Bevorzugte Fertigkeiten (siehe die Einleitung). UnBegabte Volkshexen müssen die entsprechenden Übernatürlichen Tugenden besitzen und haben daher möglicherweise nicht alle sieben Übernatürlichen Fertigkeiten. In beiden Fällen verwenden Volkshexen die Standard-Fertigkeits-Erfahrungssteigerungstabelle, wenn sie diese Fertigkeiten verbessern (siehe ArM5, [Seite 31](<Ars Magica Definitive Edition Basisregeln.md#grog-vorlagen>)).
+Wie bereits erwähnt, haben Begabte Volkshexen Zugang zu sieben Übernatürlichen Fertigkeiten: Tierverständnis, Fluchen, Wünschelrutengehen, Flug, Heilung, Zweites Gesicht und Gestaltwandler. Jede davon wird im Regelwerk Ars Magica Fünfte Edition durch eine Übernatürliche Tugend dargestellt, doch für Begabte Volkshexen sind dies Bevorzugte Fertigkeiten (siehe die Einleitung). UnBegabte Volkshexen müssen die entsprechenden Übernatürlichen Tugenden besitzen und haben daher möglicherweise nicht alle sieben Übernatürlichen Fertigkeiten. In beiden Fällen verwenden Volkshexen die Standard-Fertigkeits-Erfahrungssteigerungstabelle, wenn sie diese Fertigkeiten verbessern (siehe ArM5, [Seite 31](<Ars Magica Definitive Edition Basisregeln.md#grog-vorlagen>)).
 
-Volkshexen setzen ihre Übernatürlichen Fertigkeiten nicht auf dieselbe Weise ein wie viele andere Charaktere – selbst wenn diese Charaktere über dieselben Übernatürlichen Fertigkeiten verfügen. Stattdessen nutzen Volkshexen eine von drei Methoden, um auf ihre Kräfte zuzugreifen: durch das Brauen von Tränken (was in einigen Fällen anderen Charakteren vorübergehenden Zugang zu den Übernatürlichen Fertigkeiten der Volkshexe gewährt), durch das Rezitieren von Beschwörungen oder
-durch das Herstellen von Fetisch-Gegenständen, die die Kräfte der Volkshexe verkörpern (ein Hexenbesen ist zum Beispiel ein Fetisch-Gegenstand für die Flug-Fertigkeit).
+Volkshexen setzen ihre Übernatürlichen Fertigkeiten nicht auf dieselbe Weise ein wie viele andere Charaktere – selbst wenn diese Charaktere über dieselben Übernatürlichen Fertigkeiten verfügen. Stattdessen nutzen Volkshexen eine von drei Methoden, um auf ihre Kräfte zuzugreifen: durch das Brauen von Tränken (was in einigen Fällen anderen Charakteren vorübergehenden Zugang zu den Übernatürlichen Fertigkeiten der Volkshexe gewährt), durch das Rezitieren von Beschwörungen oder durch das Herstellen von Fetisch-Gegenständen, die die Kräfte der Volkshexe verkörpern (ein Hexenbesen ist zum Beispiel ein Fetisch-Gegenstand für die Flug-Fertigkeit).
 
 Obwohl Volkshexen keine allgemeine Magieresistenz besitzen, verfügen sie wie viele Heckentraditionen über begrenzte Magische Abwehrmechanismen.
 
@@ -1756,7 +1774,7 @@ Eigenschaft: Geschicklichkeit<br>
 Form: Hängt vom Fluch ab (Corpus für Krankheit, Alterung, Lähmung oder Verkleinerung; Mentem für Emotion oder Zunge; und Animal für Tierfluch).<br>
 Methode: Fetisch (jedes Mal, wenn die Volkshexe einen anderen Charakter verflucht, muss sie einen neuen Fetisch herstellen) oder Trank.
 
-Die Volkshexe kann einen anderen (menschlichen) Charakter verfluchen, zu dem sie eine Arkane Verbindung besitzt, indem sie die Arkane Verbindung in einen Gegenstand (den Fetisch) einarbeitet – üblicherweise handelt es sich um ein Stück Stoff, das auf einem Webstuhl hergestellt wird. Die Vorbereitung des Fluches ist eine Laboraktivität, die die Volkshexe ein ganzes Quartal lang beschäftigt (siehe unten), und der Fluch muss die Magieresistenz des Ziels während des gesamten Vorbereitungsquartals penetrieren, um wirksam zu sein. Dies ist die einzige Methode, mit der Volkshexen normalerweise einen bestimmten Charakter verfluchen können – obwohl sie Fluchtränke brauen kann, die jeden Charakter betreffen, der überredet werden kann, sie zu trinken. Wenn die Magieresistenz des Ziels im Laufe des Quartals schwankt (zum Beispiel wenn das Ziel in eine Ägide des Herdes ein- und wieder austritt), verwende die höchste Magieresistenz, die das Ziel während des Quartals besitzt. Der Schwierigkeitsgrad hängt von der Art des Fluches ab.
+Die Volkshexe kann einen anderen (menschlichen) Charakter verfluchen, zu dem sie eine Arkane Verbindung besitzt, indem sie die Arkane Verbindung in einen Gegenstand (den Fetisch) einarbeitet – üblicherweise handelt es sich um ein Stück Stoff, das auf einem Webstuhl hergestellt wird. Die Vorbereitung des Fluches ist eine Laboraktivität, die die Volkshexe ein ganzes Quartal lang beschäftigt (siehe unten), und der Fluch muss die Magieresistenz des Ziels während des gesamten Vorbereitungsquartals penetrieren, um wirksam zu sein. Dies ist die einzige Methode, mit der Volkshexen normalerweise einen bestimmten Charakter verfluchen können – obwohl sie Fluchtränke brauen kann, die jeden Charakter betreffen, der überredet werden kann, sie zu trinken. Wenn die Magieresistenz des Ziels im Laufe des Quartals schwankt (zum Beispiel wenn das Ziel in einen Aegis des Herdes ein- und wieder austritt), verwende die höchste Magieresistenz, die das Ziel während des Quartals besitzt. Der Schwierigkeitsgrad hängt von der Art des Fluches ab.
 
 **Schwierigkeitsgrad: 9**<br>
 Krankheitsfluch: Der Fluch verursacht sofort eine Krankheit, die Fieber auslöst und eine Mittelschwere Wunde zufügt. Die Krankheit schreitet normal voran (siehe ArM5, [Seite 180](<Ars Magica Definitive Edition Basisregeln.md#krankheiten>)), und der Charakter gilt nicht als unter einem magischen Effekt stehend.
@@ -1865,13 +1883,13 @@ Für manche Aktivitäten wird keine Übernatürliche Fertigkeit zur Laborsumme d
 
 Eine unBegabte Volkshexe ist in der Lage, die meisten Laborarbeiten durchzuführen (sie kann Tränke brauen, Fetische herstellen usw.), allerdings nur, wenn sie über die entsprechenden Tugenden verfügt.
 
->#### Magietheorie der Volkshexen
+> ### Magietheorie der Volkshexen
 >
->Diese Arkane Fertigkeit ist das Gegenstück zur Magietheorie-Fertigkeit hermetischer Magi. Sie umfasst die technischen Einzelheiten der Volkshexen-Magie und wird bei Laboraktivitäten eingesetzt. Jeder Charakter kann in dieser Fertigkeit unterrichtet werden. Spezialisierungen: bestimmte Laboraktivitäten.
+> Diese Arkane Fertigkeit ist das Gegenstück zur Magietheorie-Fertigkeit hermetischer Magi. Sie umfasst die technischen Einzelheiten der Volkshexen-Magie und wird bei Laboraktivitäten eingesetzt. Jeder Charakter kann in dieser Fertigkeit unterrichtet werden. Spezialisierungen: bestimmte Laboraktivitäten.
 
-### Einrichtung der Küche
+#### Einrichtung der Küche
 
-Eine Volkshexen-Küche ähnelt konzeptionell einem hermetischen Laboratorium, nimmt aber normalerweise einen wesentlich kleineren Raum ein (100 Quadratfuß). Trotz dieser Ähnlichkeit kann eine Volkshexe das Laboratorium eines Magus nicht verwenden und umgekehrt, aber beide können den Arbeitsraum des anderen als eine Art magisches Laboratorium erkennen.
+Eine Volkshexen-Küche ähnelt konzeptionell einem hermetischen Laboratorium, nimmt aber normalerweise einen wesentlich kleineren Raum ein (9 m²). Trotz dieser Ähnlichkeit kann eine Volkshexe das Laboratorium eines Magus nicht verwenden und umgekehrt, aber beide können den Arbeitsraum des anderen als eine Art magisches Laboratorium erkennen.
 
 Ein Grund, warum Volkshexen und Magi die Laboratorien des jeweils anderen nicht nutzen können, liegt darin, dass eine Volkshexen-Küche nicht dieselbe physische Ausstattung enthält wie die meisten Magi-Laboratorien. Eine Volkshexen-Küche basiert gewöhnlich auf einem Kessel (zum Brauen von Tränken), verfügt kaum über teure Glaswaren, und die Hexe verwendet lokale Kräuterzutaten anstelle exotischer Materialien.
 
@@ -1879,7 +1897,7 @@ Ein Grund, warum Volkshexen und Magi die Laboratorien des jeweils anderen nicht 
 
 **UMWANDLUNG EINES HERMETISCHEN LABORATORIUMS IN EINE VOLKSHEXEN-KÜCHE (UND UMGEKEHRT):** 1 Quartal und sowohl Magietheorie der Volkshexen als auch Magietheorie von 3.
 
-Wenn eure Spieltruppe Zugang zu Covenants hat, sind viele der dortigen Regeln (Seite 106) zur Verfeinerung und Modifikation hermetischer Laboratorien auch auf eine Volkshexen-Küche anwendbar. Wenn ihr diese Regeln verwendet, addiert 3 zur Laborgrößenskala (Covenants, Seite 110), wenn ihr die effektive Größe der Küche bewertet; somit ist ein Raum von 100 Quadratfuß eine Küche der Größe 0, ein Raum von 500 Quadratfuß eine Küche der Größe +3 usw. Das bedeutet, dass ein hermetisches Standardlaboratorium, das in eine Volkshexen-Küche umgewandelt wird, eine sehr große Küche ergäbe.
+Wenn eure Spieltruppe Zugang zu Covenants hat, sind viele der dortigen Regeln (Seite 106) zur Verfeinerung und Modifikation hermetischer Laboratorien auch auf eine Volkshexen-Küche anwendbar. Wenn ihr diese Regeln verwendet, addiert 3 zur Laborgrößenskala (Covenants, Seite 110), wenn ihr die effektive Größe der Küche bewertet; somit ist ein Raum von 9 m² eine Küche der Größe 0, ein Raum von 45 m² eine Küche der Größe +3 usw. Das bedeutet, dass ein hermetisches Standardlaboratorium, das in eine Volkshexen-Küche umgewandelt wird, eine sehr große Küche ergäbe.
 
 #### Hilfe in der Küche
 
@@ -2004,13 +2022,13 @@ Eine Volkshexe kann Tugendobjekte anreichern, indem sie die Regeln aus Sphären 
 
 Eine Volkshexe kann für sich selbst ein Langlebigkeitsritual nach denselben Regeln herstellen, die ein hermetischer Magus verwendet (siehe ArM5, [Seite 101](<Ars Magica Definitive Edition Basisregeln.md#langlebigkeitsrituale>)). Verwende ihre Laborsumme der Heilungs-Fertigkeit für diese Aktivität, was bedeutet, dass das Langlebigkeitsritual einer Volkshexe wahrscheinlich erheblich schwächer sein wird als das eines Magus. Bedenke auch, dass eine Volkshexe einen Labortext nur erstellen kann, wenn sie lesen und schreiben kann, sodass sie das Ritual möglicherweise nicht einfach wiederholen kann, wenn es fehlschlägt. Eine Volkshexe kann kein Langlebigkeitsritual für einen anderen Charakter herstellen.
 
->#### Einen Trank untersuchen
+> ### Einen Trank untersuchen
 >
->Eine Volkshexe kann einen Trank untersuchen, um seinen Effekt zu bestimmen, was durch einen Magietheorie-der-Volkshexen-Fertigkeitswurf dargestellt wird. Dies dauert einige Minuten und enthüllt die Brau-Stärke und den genauen Effekt des Tranks.
+> Eine Volkshexe kann einen Trank untersuchen, um seinen Effekt zu bestimmen, was durch einen Magietheorie-der-Volkshexen-Fertigkeitswurf dargestellt wird. Dies dauert einige Minuten und enthüllt die Brau-Stärke und den genauen Effekt des Tranks.
 >
->**TRANKUNTERSUCHUNG:** Intelligenz + Magietheorie der Volkshexen + Stresswurf gegen Schwierigkeitsgrad 9
+> **TRANKUNTERSUCHUNG:** Intelligenz + Magietheorie der Volkshexen + Stresswurf gegen Schwierigkeitsgrad 9
 >
->Für einen hermetischen Magus erscheint ein Trank als magischer Effekt mit einer Magnitude gleich der Brau-Stärke / 5 und kann daher durch einen geeigneten Intellego-Vim-Zauber entdeckt werden. Beachte, dass ein Standard-Erkennungszauber lediglich feststellt, dass der Trank „ein magischer Effekt" ist, aber eine zusätzliche Magnitude den Trank als „nicht-hermetisch" identifiziert, und eine zweite zusätzliche Magnitude die Form des Effekts enthüllt (siehe ArM5, [Seite 158](<Ars Magica Definitive Edition Basisregeln.md#intellego-vim--leitlinien>)). Um die Form des Effekts korrekt zu identifizieren, muss der Magus mit Volkshexen-Magie vertraut sein; ein Magus mit einem Wert in Magietheorie der Volkshexen oder Organisationskunde: Volkshexen oder der durch den Trank verliehenen Übernatürlichen Fertigkeit ist hinreichend vertraut. Um den Effekt eines Tranks genau zu bestimmen, kann ein Magus ihn in seinem Laboratorium untersuchen, was wiederum nur möglich ist, wenn er mit Volkshexen-Magie vertraut ist. Behandle den Trank als einen einzelnen Effekt mit einer Stufe gleich der Brau-Stärke (siehe ArM5, [Seite 100](<Ars Magica Definitive Edition Basisregeln.md#verzauberungen-untersuchen>)).
+> Für einen hermetischen Magus erscheint ein Trank als magischer Effekt mit einer Magnitude gleich der Brau-Stärke / 5 und kann daher durch einen geeigneten Intellego-Vim-Zauber entdeckt werden. Beachte, dass ein Standard-Erkennungszauber lediglich feststellt, dass der Trank „ein magischer Effekt" ist, aber eine zusätzliche Magnitude den Trank als „nicht-hermetisch" identifiziert, und eine zweite zusätzliche Magnitude die Form des Effekts enthüllt (siehe ArM5, [Seite 158](<Ars Magica Definitive Edition Basisregeln.md#intellego-vim--leitlinien>)). Um die Form des Effekts korrekt zu identifizieren, muss der Magus mit Volkshexen-Magie vertraut sein; ein Magus mit einem Wert in Magietheorie der Volkshexen oder Organisationskunde: Volkshexen oder der durch den Trank verliehenen Übernatürlichen Fertigkeit ist hinreichend vertraut. Um den Effekt eines Tranks genau zu bestimmen, kann ein Magus ihn in seinem Laboratorium untersuchen, was wiederum nur möglich ist, wenn er mit Volkshexen-Magie vertraut ist. Behandle den Trank als einen einzelnen Effekt mit einer Stufe gleich der Brau-Stärke (siehe ArM5, [Seite 100](<Ars Magica Definitive Edition Basisregeln.md#verzauberungen-untersuchen>)).
 
 ### Vertraute
 
@@ -2080,7 +2098,7 @@ Angenommen, die Volkshexe erholt sich vom Hexenmond, so erhält sie eine Art Zei
 
 Ein Hexenzirkel ist eine Gruppe von Volkshexen (gewöhnlich drei oder vier, vielleicht bis zu einem Dutzend), die eine Gemeinschaft von Heckenzauberern bilden. Jeder Hexenzirkel kann als eine Art Minitradition für sich betrachtet werden, und die meisten Volkshexen treffen selten Hexen aus anderen Zirkeln.
 
-Ein Hexenzirkel ist zudem das Äquivalent eines hermetischen Konvents, obwohl die Volkshexen üblicherweise nicht zusammenleben. Stattdessen erstreckt sich der Zirkel wie ein Netz über ein geographisches Gebiet, wobei jede Hexe mindestens eine Tagesreise von ihren Schwestern entfernt lebt; jede Volkshexe könnte zum Beispiel in einem eigenen Dorf wohnen. Die verteilte Natur des Zirkels bedeutet einerseits, dass die Hexen die meisten Aktivitäten (übernatürlicher oder anderer Art) in ihrem Gebiet rasch bemerken, und andererseits, dass sie wenig Aufmerksamkeit auf sich ziehen; selbst übernatürliche Kräfte finden es manchmal schwierig, den vollen Umfang eines Zirkels zu erfassen. Andererseits sind einzelne Volkshexen sehr verwundbar, selbst gegenüber weltlicher Verfolgung, da sie sich weder auf die Hilfe ihrer Gefährtinnen verlassen können noch auf die Stärke gemeinsamer Rituale wie der Ägide des Herdes oder der Gemeinschaft der Zauberer.
+Ein Hexenzirkel ist zudem das Äquivalent eines hermetischen Konvents, obwohl die Volkshexen üblicherweise nicht zusammenleben. Stattdessen erstreckt sich der Zirkel wie ein Netz über ein geographisches Gebiet, wobei jede Hexe mindestens eine Tagesreise von ihren Schwestern entfernt lebt; jede Volkshexe könnte zum Beispiel in einem eigenen Dorf wohnen. Die verteilte Natur des Zirkels bedeutet einerseits, dass die Hexen die meisten Aktivitäten (übernatürlicher oder anderer Art) in ihrem Gebiet rasch bemerken, und andererseits, dass sie wenig Aufmerksamkeit auf sich ziehen; selbst übernatürliche Kräfte finden es manchmal schwierig, den vollen Umfang eines Zirkels zu erfassen. Andererseits sind einzelne Volkshexen sehr verwundbar, selbst gegenüber weltlicher Verfolgung, da sie sich weder auf die Hilfe ihrer Gefährtinnen verlassen können noch auf die Stärke gemeinsamer Rituale wie des Aegis des Herdes oder der Gemeinschaft der Zauberer.
 
 Viele Volkshexen sind unBegabt, und obwohl solche Hexen gewöhnlich weniger mächtig sind als ihre Begabten Schwestern, können sie leichter miteinander und mit der weltlichen Welt interagieren. Ein Zirkel könnte mehrere unBegabte Mitglieder haben, die in Dörfern leben und ihre übernatürlichen Fähigkeiten gegen Nahrung und Holz eintauschen, die eine Begabte Schwester unterstützen, die in einer abgelegenen Höhle lebt.
 
@@ -2096,6 +2114,10 @@ Begabte Volkshexen erhalten ihre Erschließung der Gabe in einer besonderen Zere
 
 Wenn die Spieltruppe es wünscht, können einige der Standardkräfte durch andere Übernatürliche Fertigkeiten ersetzt werden. Wahrscheinliche Kräfte, die ein Zirkel nutzen könnte, sind Tierheilung, Betörung, Bezaubernde Musik, Nachtwandeln, Vorahnungen und Natursinn. Es muss entschieden werden, welche Wirkmethoden diese Fertigkeiten verwenden, und es müssen Tränke für sie ersonnen werden sowie (falls gewünscht) Einweihungsskripte, um die entsprechenden Übernatürlichen Tugenden an unBegabte Charaktere zu lehren.
 
+> ### Organisationskunde: Volkshexen
+>
+> Ein Charakter mit dieser Fertigkeit (siehe die Einleitung) kennt die Arten von Effekten, zu denen Volkshexen fähig sind, wo sich Zirkelmitglieder treffen und leben, sowie die Namen und Reputationen einiger Volkshexen. Die Spezialisierung für die Fertigkeit Organisationskunde: Volkshexen muss ein bestimmter „Heimat"-Zirkel sein. Wann immer ein Wurf gemacht wird, um zu bestimmen, was der Charakter über einen anderen Zirkel weiß, ist es stets ein Stresswurf; würfle zudem einen zusätzlichen Patzerwürfel für jede Woche Reisezeit, die dieser Zirkel vom „Heimat"-Zirkel des Charakters entfernt ist. Spezialisierungen: ein bestimmter Zirkel.
+
 #### Einweihungen für unBegabte Volkshexen
 
 UnBegabte Volkshexen werden ebenfalls in die Volkshexen-Kräfte eingeweiht, wobei die allgemeinen Regeln aus der Einleitung gelten. Gewöhnlich durchläuft eine Volkshexe ihre erste Einweihung während des ersten Jahres oder so ihrer Lehrzeit. Die erste Einweihung gipfelt üblicherweise in einer formellen Zeremonie, die bei einem Sabbat abgehalten wird, wenn die neue Hexe dem Zirkel vorgestellt wird, aber es ist auch möglich, dass eine Hexe ein junges Mädchen heimlich einweiht.
@@ -2108,13 +2130,9 @@ Sobald ein Mädchen ihre erste Einweihung durchlaufen hat, wird sie von ihresgle
 
 Wenn eine abgewandelte Volkshexen-Tradition gespielt wird, möchte die Spieltruppe vielleicht verschiedene Einweihungen für die unterschiedlichen Übernatürlichen Fertigkeiten der Hexen erstellen.
 
->#### Frühreife Mädchen
+> ### Frühreife Mädchen
 >
->Es ist nicht ungewöhnlich, dass ein Zirkel versehentlich ein Begabtes Mädchen in die Volkshexen-Kräfte einweiht, als wäre sie unBegabt, insbesondere wenn keine der aktuellen Hexen im Zirkel die Gabe besitzt. Dieser Fehler wird möglicherweise bemerkt, wenn das Begabte Mädchen beginnt, die Übernatürlichen Fertigkeiten ihrer Meisterin (durch Exposition) zu erlernen, ohne die entsprechenden Einweihungsrituale abzuschließen. An diesem Punkt hat der Zirkel zwei Möglichkeiten: Entweder kann eine Begabte Volkshexe gefunden werden, um die Gabe des Mädchens ordnungsgemäß zu erschließen (obwohl dies schwieriger sein wird, da das Mädchen bereits einige Übernatürliche Fertigkeiten erlernt hat); alternativ kann das Mädchen von den unBegabten Hexen in Übernatürlichen Fertigkeiten unterrichtet werden (was ebenfalls schwierig sein wird – da ihre Gabe nicht erschlossen ist, hat sie keine Bevorzugten Fertigkeiten).
-
->#### Organisationskunde: Volkshexen
->
->Ein Charakter mit dieser Fertigkeit (siehe die Einleitung) kennt die Arten von Effekten, zu denen Volkshexen fähig sind, wo sich Zirkelmitglieder treffen und leben, sowie die Namen und Reputationen einiger Volkshexen. Die Spezialisierung für die Fertigkeit Organisationskunde: Volkshexen muss ein bestimmter „Heimat"-Zirkel sein. Wann immer ein Wurf gemacht wird, um zu bestimmen, was der Charakter über einen anderen Zirkel weiß, ist es stets ein Stresswurf; würfle zudem einen zusätzlichen Patzerwürfel für jede Woche Reisezeit, die dieser Zirkel vom „Heimat"-Zirkel des Charakters entfernt ist. Spezialisierungen: ein bestimmter Zirkel.
+> Es ist nicht ungewöhnlich, dass ein Zirkel versehentlich ein Begabtes Mädchen in die Volkshexen-Kräfte einweiht, als wäre sie unBegabt, insbesondere wenn keine der aktuellen Hexen im Zirkel die Gabe besitzt. Dieser Fehler wird möglicherweise bemerkt, wenn das Begabte Mädchen beginnt, die Übernatürlichen Fertigkeiten ihrer Meisterin (durch Exposition) zu erlernen, ohne die entsprechenden Einweihungsrituale abzuschließen. An diesem Punkt hat der Zirkel zwei Möglichkeiten: Entweder kann eine Begabte Volkshexe gefunden werden, um die Gabe des Mädchens ordnungsgemäß zu erschließen (obwohl dies schwieriger sein wird, da das Mädchen bereits einige Übernatürliche Fertigkeiten erlernt hat); alternativ kann das Mädchen von den unBegabten Hexen in Übernatürlichen Fertigkeiten unterrichtet werden (was ebenfalls schwierig sein wird – da ihre Gabe nicht erschlossen ist, hat sie keine Bevorzugten Fertigkeiten).
 
 **REIM DES TIERES** <br>
 **Einweihungs-Schwierigkeitsgrad:** 15<br>
@@ -2132,7 +2150,7 @@ Diese Einweihung kann nur im Winter durchgeführt werden – die Einzuweihende f
 **Einweihungs-Schwierigkeitsgrad:** 15<br>
 **Skriptbonus:** +6 (+3 Kleine Prüfung, +1 Zeit, +2 Sympathiebonus)
 
-Die Einzuweihende muss das Einweihungsquartal damit verbringen, denselben Weg auf und ab zu wandern, der nicht länger als einen Tagesmarsch ist. Sie darf knapp neben dem Weg rasten, sich aber zu keiner Zeit mehr als 100 Fuß vom Weg entfernen. Die Einzuweihende erhält den Kleinen Allgemeinen Fehler Reisekrankheit sowie die Kleine Übernatürliche Tugend Wünschelrutengehen.
+Die Einzuweihende muss das Einweihungsquartal damit verbringen, denselben Weg auf und ab zu wandern, der nicht länger als einen Tagesmarsch ist. Sie darf knapp neben dem Weg rasten, sich aber zu keiner Zeit mehr als 30 Meter vom Weg entfernen. Die Einzuweihende erhält den Kleinen Allgemeinen Fehler Reisekrankheit sowie die Kleine Übernatürliche Tugend Wünschelrutengehen.
 
 **Ungebunden vom Land**<br>
 **Einweihungs-Schwierigkeitsgrad:** 15<br>
@@ -2144,7 +2162,7 @@ Die Einzuweihende muss das Einweihungsquartal über dem Boden verbringen. Sie k�
 **Einweihungs-Schwierigkeitsgrad:** 21<br>
 **Skriptbonus:** +10 (+9 Große Prüfung, +1 Zeit)
 
-Diese Einweihung kann nur im Frühling durchgeführt werden – die Einzuweihende führt an jedem Abend des Quartals Reinigungsrituale durch. Die Einzuweihende erhält den Großen Allgemeinen Fehler Gebrechlich sowie die Große Übernatürliche Tugend Heilung.
+Diese Einweihung kann nur im Frühling durchgeführt werden – die Einzuweihende führt an jedem Abend des Quartals Reinigungsrituale durch. Die Einzuweihende erhält den Großen Allgemeinen Fehler Geschwächt sowie die Große Übernatürliche Tugend Heilung.
 
 **DAS AUGE DES TEUFELS**<br>
 **Einweihungs-Schwierigkeitsgrad:** 15<br>
@@ -2166,7 +2184,7 @@ Gewöhnlich wird ein Sabbat auf neutralem Gebiet abgehalten, abseits der Wohnst�
 
 #### Sabbattermine
 
-Die üblichen Termine für den Sabbat sind im Kasten aufgelistet. Diese Termine entsprechen üblicherweise denen heidnischer Feste, und obwohl nur wenige Volkshexen praktizierende Heidinnen sind, ist vielen dieses Faktum vage bewusst. Doch obwohl manche Zirkel die Überbleibsel heidnischer Priesterschaften sind, haben die Hexen gewöhnlich längst jedes wirkliche Wissen über ihre heidnischen Vorfahren verloren. Die Termine der Sabbate haben für die meisten Volkshexen keine größere religiöse Bedeutung als die traditionelle Anrufung der *Ägide des Herdes* zur Wintersonnwende für die meisten Magi.
+Die üblichen Termine für den Sabbat sind im Kasten aufgelistet. Diese Termine entsprechen üblicherweise denen heidnischer Feste, und obwohl nur wenige Volkshexen praktizierende Heidinnen sind, ist vielen dieses Faktum vage bewusst. Doch obwohl manche Zirkel die Überbleibsel heidnischer Priesterschaften sind, haben die Hexen gewöhnlich längst jedes wirkliche Wissen über ihre heidnischen Vorfahren verloren. Die Termine der Sabbate haben für die meisten Volkshexen keine größere religiöse Bedeutung als die traditionelle Anrufung des *Aegis des Herdes* zur Wintersonnwende für die meisten Magi.
 
 Überall im Mythischen Europa werden auch christliche Feste an oder um diese Termine abgehalten, sodass viele Zirkel ihren Sabbat inmitten der christlichen Festlichkeiten abhalten, da die Feste gute Anlässe sind, in benachbarte Dörfer zu reisen. In manchen Teilen des Mythischen Europas sind Volkshexen sogar so gut in ihre Gemeinschaft integriert, dass es allgemein bekannt ist, dass sich zum Beispiel in der Walpurgisnacht die örtlichen Hexen treffen.
 
@@ -2208,22 +2226,22 @@ Sabbat-Einweihungen funktionieren ähnlich. Eine Einzuweihende wird mitgebracht,
 
 An jedem Sabbattermin gibt es nur ein begrenztes Zeitfenster, in dem diese hilfreichen Beschwörungen gewirkt werden können. Daher kann an jedem Sabbat jede Hexe nur an einer einzigen Aktivität beteiligt sein, sei es als Hauptbrauerin oder Assistentin, als Mystagoge oder als Einzuweihende. Außerdem kann jede Aktivität nur von einem einzigen Sabbat profitieren; es hat zum Beispiel keinen Sinn, denselben Trankansatz zu mehreren Sabbattreffen mitzubringen.
 
->#### Sabbatzeiten
+> ### Sabbatzeiten
 >
->**WINTERSONNWENDE**
+> **WINTERSONNWENDE**
 >
->**Imbolg/Brigid/Lichtmess:** 1. Februar <br>
->**Eostre:** Frühjahrstagundnachtgleiche<br>
->**Beltane/Maifest/Walpurgisnacht:** 30. April/1. Mai
+> **Imbolg/Brigid/Lichtmess:** 1. Februar <br>
+> **Eostre:** Frühjahrstagundnachtgleiche<br>
+> **Beltane/Maifest/Walpurgisnacht:** 30. April/1. Mai
 >
->**SOMMERSONNWENDE**<br>
->**Lammas/Lugnasad:** 2. August <br>
->**Mabon:** Herbsttagundnachtgleiche <br>
->**Samhain/Allerheiligenabend:** 31. Oktober/1. November
+> **SOMMERSONNWENDE**<br>
+> **Lammas/Lugnasad:** 2. August <br>
+> **Mabon:** Herbsttagundnachtgleiche <br>
+> **Samhain/Allerheiligenabend:** 31. Oktober/1. November
 
->#### ABENTEUERIDEE: Der Große Sabbat
+> ### Abenteueridee: Der Große Sabbat
 >
->Manche Magi behaupten, von einem Großen Sabbat zu wissen, der alle 101 Jahre stattfindet und an dem Volkshexen aus dem gesamten Mythischen Europa teilnehmen. Doch angesichts der unorganisierten Natur der Volkshexen findet ein solches Ereignis wahrscheinlich nur in ihrer Vorstellung statt. Im Stonehenge-Tribunal trifft sich jedoch eine kleine Anzahl von Volkshexen-Zirkeln tatsächlich jedes Jahr zu Allerheiligen zu einem Fest, das sie in der Tat Großer Sabbat nennen. Im Rheintribunal trifft sich eine andere Gruppe von Zirkeln zu einem Großen Sabbat, der in der Walpurgisnacht am Hexenaltar auf dem Blocksberg (dem Brocken) abgehalten wird (siehe *Wächter des Waldes*, [Seite 80](<Ars Magica 5e - Wächter des Waldes - Das Rhein-Tribunal.md#der-brocken>)). Magi, die zufällig auf diese Ereignisse stoßen, könnten über eine derart organisierte Aktivität beunruhigt sein und sogar spekulieren, dass diese „Schattentribunale" Beweise für Flüchtlinge des Schismakriegs sind – oder deren Nachkommen –, die sich als Volkshexen tarnen.
+> Manche Magi behaupten, von einem Großen Sabbat zu wissen, der alle 101 Jahre stattfindet und an dem Volkshexen aus dem gesamten Mythischen Europa teilnehmen. Doch angesichts der unorganisierten Natur der Volkshexen findet ein solches Ereignis wahrscheinlich nur in ihrer Vorstellung statt. Im Stonehenge-Tribunal trifft sich jedoch eine kleine Anzahl von Volkshexen-Zirkeln tatsächlich jedes Jahr zu Allerheiligen zu einem Fest, das sie in der Tat Großer Sabbat nennen. Im Rheintribunal trifft sich eine andere Gruppe von Zirkeln zu einem Großen Sabbat, der in der Walpurgisnacht am Hexenaltar auf dem Blocksberg (dem Brocken) abgehalten wird (siehe *Wächter des Waldes*, [Seite 80](<Ars Magica 5e - Wächter des Waldes - Das Rhein-Tribunal.md#der-brocken>)). Magi, die zufällig auf diese Ereignisse stoßen, könnten über eine derart organisierte Aktivität beunruhigt sein und sogar spekulieren, dass diese „Schattentribunale" Beweise für Flüchtlinge des Schismakriegs sind – oder deren Nachkommen –, die sich als Volkshexen tarnen.
 
 ### Erschaffung eines Hexenzirkels
 
@@ -2249,12 +2267,12 @@ Ein Zirkel wird wahrscheinlich keine Turba haben, obwohl manche einzelne Volkshe
 
 Die Gesamtzahl der verfügbaren Baupunkte für einen Zirkel hängt von der Machtebene des Zirkels ab. Ein Zirkel mittlerer Macht oder darüber wird wahrscheinlich von benachbarten Konventen bemerkt, da sie um Vis-Quellen konkurrieren. Daher können nur Zirkel geringer Macht möglicherweise gänzlich unbemerkt bleiben.
 
-| Machtebene   | **BAUPUNKTE** |
-|--------------|---------------|
-| Gering       | 0–149         |
-| Mittel       | 150–299       |
-| Hoch         | 300–599       |
-| Legendär     | 600+          |
+| Machtebene | Baupunkte |
+|------------|-----------|
+| Gering     | 0–149     |
+| Mittel     | 150–299   |
+| Hoch       | 300–599   |
+| Legendär   | 600+      |
 
 #### Die Hexen von Reims
 
@@ -2264,131 +2282,131 @@ Der Zirkel von Reims hat seinen Sitz in und um die französische Stadt Reims (si
 
 Der Zirkel wurde jedoch nicht vollständig zerstört, und Meisterin Greta entkam dem Scheiterhaufen, indem sie durch das Fenster des erzbischöflichen Gerichts flog.
 
-**Einweihungsskripte**: Reim des Tieres (+6), Ungebunden vom Land (+6), Hände des Lebens (+10), Das Auge des Teufels (+7).
+**Einweihungsskripte:** Reim des Tieres (+6), Ungebunden vom Land (+6), Hände des Lebens (+10), Das Auge des Teufels (+7).
 
-**Waldhöhle:** Meisterin Greta (eine Begabte Volkshexe) floh vom Scheiterhaufen in diese abgelegene Waldhöhle (Magieaura 6), wo sie seither lebt, gewöhnlich allein. Die Höhle befindet sich tatsächlich in einer Regio, die nur von jemandem betreten werden kann, der den richtigen Weg kennt (die anderen Zirkelmitglieder kennen den richtigen Weg). Meisterin Greta nimmt nur gelegentlich am Sabbat des Zirkels teil. **Haken**: keine. **Vorzüge**: Regio (Groß), Aura (x 3) (Klein). **Vis-Quellen**: 5 Bauern Herbam pro Jahr (Pilze aus einer Waldlichtung), 1 Bauer Auram pro Jahr (vom ersten Herbstwind), 1 Bauer Animal pro Jahr (vom ersten Kaninchen des Frühlings). **Bibliothek**: Ars Grammatica, von Donatus (eine sehr schlechte Kopie; Summa der Fertigkeit Artes Liberales; Qualität 5, Stufe 4), Duft des Wassers, anonym (Summa der Fertigkeit Wünschelrutengehen; Qualität 10, Stufe 5), Die Durchdringende Zunge, von Luzabel (Summa der Fertigkeit Penetration; Qualität 10, Stufe 3).
+**Waldhöhle:** Meisterin Greta (eine Begabte Volkshexe) floh vom Scheiterhaufen in diese abgelegene Waldhöhle (Magieaura 6), wo sie seither lebt, gewöhnlich allein. Die Höhle befindet sich tatsächlich in einer Regio, die nur von jemandem betreten werden kann, der den richtigen Weg kennt (die anderen Zirkelmitglieder kennen den richtigen Weg). Meisterin Greta nimmt nur gelegentlich am Sabbat des Zirkels teil. **Haken:** keine. **Vorzüge:** Regio (Groß), Aura (x 3) (Klein). **Vis-Quellen:** 5 Bauern Herbam pro Jahr (Pilze aus einer Waldlichtung), 1 Bauer Auram pro Jahr (vom ersten Herbstwind), 1 Bauer Animal pro Jahr (vom ersten Kaninchen des Frühlings). **Bibliothek:** Ars Grammatica, von Donatus (eine sehr schlechte Kopie; Summa der Fertigkeit Artes Liberales; Qualität 5, Stufe 4), Duft des Wassers, anonym (Summa der Fertigkeit Wünschelrutengehen; Qualität 10, Stufe 5), Die Durchdringende Zunge, von Luzabel (Summa der Fertigkeit Penetration; Qualität 10, Stufe 3).
 
-**Stadthaus:** Dieses baufällige Stadthaus steht im Armenviertel der Stadt Reims (Göttliche Aura 3) und wird von den Geistern der Hexen heimgesucht, die vor über zwanzig Jahren verbrannt wurden. Eliza, eine alte unBegabte Volkshexe, lebt jetzt im Stadthaus, und sie wird oft gebeten, den Armen von Reims bei der Heilung zu helfen. Im Gegenzug wird Eliza von den Bürgern gut versorgt, die ihre Existenz vor den bischöflichen Behörden verborgen gehalten haben. **Haken**: fehlende Aura (Groß), städtisch (Groß), Spuk (Klein). **Vorzüge**: loyale Konventsmitglieder (Klein). **Vis-Quellen**: 3 Bauern Corpus pro Jahr (vom Armenfriedhof), 2 Bauern Animal pro Jahr (aus den Gerbereien der Stadt).
+**Stadthaus:** Dieses baufällige Stadthaus steht im Armenviertel der Stadt Reims (Göttliche Aura 3) und wird von den Geistern der Hexen heimgesucht, die vor über zwanzig Jahren verbrannt wurden. Eliza, eine alte unBegabte Volkshexe, lebt jetzt im Stadthaus, und sie wird oft gebeten, den Armen von Reims bei der Heilung zu helfen. Im Gegenzug wird Eliza von den Bürgern gut versorgt, die ihre Existenz vor den bischöflichen Behörden verborgen gehalten haben. **Haken:** fehlende Aura (Groß), städtisch (Groß), Spuk (Klein). **Vorzüge:** loyale Konventsbewohner (Klein). **Vis-Quellen:** 3 Bauern Corpus pro Jahr (vom Armenfriedhof), 2 Bauern Animal pro Jahr (aus den Gerbereien der Stadt).
 
-**Weinberg:** Nahe Reims, am Ufer der Marne, liegt ein Weinberg (Magieaura 1), wo die junge Begabte Volkshexe Matilda lebt. Sie ist die Tochter einer Familie von Weinlesern und hat ihre Ausbildung vor zwei Jahren bei Meisterin Greta in der Waldhöhle abgeschlossen. Die Arbeiter auf dem Weinberg wissen von Matildas Gabe, doch ein Großteil ihres Misstrauens wurde zerstreut, als sie ein Kind heilte, das von einem Karren zerquetscht worden war. Die abwesenden Besitzer des Weinbergs (ein kleines Kloster) wissen nichts von Matilda. **Haken**: Kloster (Klein) **Vorzüge**: Aura (Klein). **Vis-Quellen**: 2 Bauern Mentem pro Jahr (aus Wein).
+**Weinberg:** Nahe Reims, am Ufer der Marne, liegt ein Weinberg (Magieaura 1), wo die junge Begabte Volkshexe Matilda lebt. Sie ist die Tochter einer Familie von Weinlesern und hat ihre Ausbildung vor zwei Jahren bei Meisterin Greta in der Waldhöhle abgeschlossen. Die Arbeiter auf dem Weinberg wissen von Matildas Gabe, doch ein Großteil ihres Misstrauens wurde zerstreut, als sie ein Kind heilte, das von einem Karren zerquetscht worden war. Die abwesenden Besitzer des Weinbergs (ein kleines Kloster) wissen nichts von Matilda. **Haken:** Kloster (Klein) **Vorzüge:** Aura (Klein). **Vis-Quellen:** 2 Bauern Mentem pro Jahr (aus Wein).
 
->#### Matilda
+> ### Matilda
 >
->Eigenschaften: Int +3, Wah +1, Prä +2 Kom 0, Stä –1, Aus 0, Ges +1, Sck 0
+> Eigenschaften: Int +3, Wah +1, Prä +2 Kom 0, Stä –1, Aus 0, Ges +1, Sck 0
 >
->Größe: 0 
+> Größe: 0
 >
->Alter: 22 (22) 
+> Alter: 22 (22)
 >
->Gebrechlichkeit: 0
+> Gebrechlichkeit: 0
 >
->Verzerrungswert: 0 (3) 
+> Verzerrungswert: 0 (3)
 >
->Selbstvertrauenswert: 1 (3)
+> Selbstvertrauenswert: 1 (3)
 >
->Tugenden und Fehler: Die Gabe; Volkshexe; Zyklische Magie (positiv) (Frühling und Sommer), Verbesserte Eigenschaften, Stille Magie; Schützling, Kurzreichweitige Flüche.
+> Tugenden und Fehler: Die Gabe; Volkshexe; Zyklische Magie (positiv) (Frühling und Sommer), Verbesserte Eigenschaften, Stille Magie; Schützling, Kurzreichweitige Flüche.
 >
->Persönlichkeitseigenschaften: Loyal +2, Freundlich +1
+> Persönlichkeitseigenschaften: Loyal +2, Freundlich +1
 >
->Reputationen: Seltsame Heilerfrau am Weinberg 2 (lokal)
+> Reputationen: Seltsame Heilerfrau am Weinberg 2 (lokal)
 >
->Kampf:
+> Kampf:
 >
->Ausweichen: Init 0, Angriff n/v, Verteidigung +2, Schaden n/v
+> Ausweichen: Init 0, Angriff n/v, Verteidigung +2, Schaden n/v
 >
->Messer: Init 0, Angriff +3, Verteidigung +1, Schaden +1
+> Messer: Init 0, Angriff +3, Verteidigung +1, Schaden +1
 >
->Absorption: 0
+> Absorption: 0
 >
->Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
 >
->Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
+> Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
 >
->Fertigkeiten: Gebietskunde: Reims 2 (Fluss), Artes Liberales 1 (Grammatik), Tierumgang 2 (Hunde), Tierverständnis 2 (Hunde), Athletik 1 (Laufen), Aufmerksamkeit 2 (Kind), Raufen 1 (Ausweichen), Konzentration 1 (Flug), Fluchen 2 (Zunge), Handwerk: Winzer 2 (Sortieren), Handwerk: Weben 1 (Wolle), Tote Sprache: Latein 4 (magische Begriffe), Wünschelrutengehen 3 (Flussufer), Flug 1 (in Gebäuden), Magietheorie der Volkshexen 2 (Trankbrauen), Heilung 5 (Kinder), Lebende Sprache: Französisch 5 (Reimser Dialekt), Organisationskunde: Volkshexen 1 (Persönlichkeiten), Penetration 2 (Wünschelrutengehen), Zweites Gesicht 2 (Feenwesen), Gestaltwandler 1 (Hund), Überleben 2 (Wald).
+> Fertigkeiten: Gebietskunde: Reims 2 (Fluss), Artes Liberales 1 (Grammatik), Tierumgang 2 (Hunde), Tierverständnis 2 (Hunde), Athletik 1 (Laufen), Aufmerksamkeit 2 (Kind), Raufen 1 (Ausweichen), Konzentration 1 (Flug), Fluchen 2 (Zunge), Handwerk: Winzer 2 (Sortieren), Handwerk: Weben 1 (Wolle), Tote Sprache: Latein 4 (magische Begriffe), Wünschelrutengehen 3 (Flussufer), Flug 1 (in Gebäuden), Magietheorie der Volkshexen 2 (Trankbrauen), Heilung 5 (Kinder), Lebende Sprache: Französisch 5 (Reimser Dialekt), Organisationskunde: Volkshexen 1 (Persönlichkeiten), Penetration 2 (Wünschelrutengehen), Zweites Gesicht 2 (Feenwesen), Gestaltwandler 1 (Hund), Überleben 2 (Wald).
 >
->Hexenmond-Narben: Keine.
+> Hexenmond-Narben: Keine.
 >
->Ausrüstung: Verbandsmaterial, Messer, Hund, Kind, Holzspielzeug.
+> Ausrüstung: Verbandsmaterial, Messer, Hund, Kind, Holzspielzeug.
 >
->Erscheinungsbild: Matilda ist eine attraktive Frau, die auf dem Weinberg lebt, auf dem ihre Großfamilie arbeitet. Aufgrund ihrer Gabe wird sie von den anderen Bauern etwas gemieden (obwohl sie nicht unfreundlich zu ihr sind), und sie schläft in einem Verschlag über den Hundezwingern mit ihrem Mann und ihrem kleinen Sohn. Ihr Mann ist Arbeiter auf dem Weinberg und verbringt so wenig Zeit wie möglich mit Matilda, vor der er sich fürchtet. Der Verschlag ist tatsächlich recht geräumig, und Matilda hat darin ihre Küche eingerichtet. Matilda verdient sich ihren Unterhalt, indem sie bei der Versorgung der Hunde hilft, und sie hilft auch beim Sortieren der Trauben während der Ernte. Die meisten Bauern, die das umliegende Land bewirtschaften, wissen, dass sie eine Heilerin ist, und selbst der Vogt wendet sich manchmal hilfesuchend an sie. Die Mönche, denen der Weinberg gehört, kommen selten vorbei, obwohl sie in der Nähe leben, und wissen nichts von Matildas Kräften. Mit ihrer Gestaltwandler-Fertigkeit kann sie sich in einen Hund verwandeln.
+> Erscheinungsbild: Matilda ist eine attraktive Frau, die auf dem Weinberg lebt, auf dem ihre Großfamilie arbeitet. Aufgrund ihrer Gabe wird sie von den anderen Bauern etwas gemieden (obwohl sie nicht unfreundlich zu ihr sind), und sie schläft in einem Verschlag über den Hundezwingern mit ihrem Mann und ihrem kleinen Sohn. Ihr Mann ist Arbeiter auf dem Weinberg und verbringt so wenig Zeit wie möglich mit Matilda, vor der er sich fürchtet. Der Verschlag ist tatsächlich recht geräumig, und Matilda hat darin ihre Küche eingerichtet. Matilda verdient sich ihren Unterhalt, indem sie bei der Versorgung der Hunde hilft, und sie hilft auch beim Sortieren der Trauben während der Ernte. Die meisten Bauern, die das umliegende Land bewirtschaften, wissen, dass sie eine Heilerin ist, und selbst der Vogt wendet sich manchmal hilfesuchend an sie. Die Mönche, denen der Weinberg gehört, kommen selten vorbei, obwohl sie in der Nähe leben, und wissen nichts von Matildas Kräften. Mit ihrer Gestaltwandler-Fertigkeit kann sie sich in einen Hund verwandeln.
 
->#### Eliza
+> ### Eliza
 >
->Eigenschaften: Int +1, Wah +2 (1), Prä +2 (1), Kom -1, Stä +1, Aus -1, Ges 0, Sck -2 (1)
+> Eigenschaften: Int +1, Wah +2 (1), Prä +2 (1), Kom -1, Stä +1, Aus -1, Ges 0, Sck -2 (1)
 >
->Größe: 0 
+> Größe: 0
 >
->Alter: 45 (45) 
+> Alter: 45 (45)
 >
->Gebrechlichkeit: 1 (3) 
+> Gebrechlichkeit: 1 (3)
 >
->Verzerrungswert: 1 (8) 
+> Verzerrungswert: 1 (8)
 >
->Selbstvertrauenswert: 1 (3)
+> Selbstvertrauenswert: 1 (3)
 >
->Tugenden und Fehler: Volkshexe; Heilung; Tierverständnis, Flug, Schmerzfreier Hexenmond, Zweites Gesicht, Scharfe Ohren, Soziale Kontakte (arme Stadtbevölkerung); Gebrechlich; Tierischer Gefährte, Arthritis, Unverständlich, Fehlendes Auge, Nichtkämpfer.
+> Tugenden und Fehler: Volkshexe; Heilung; Tierverständnis, Flug, Schmerzfreier Hexenmond, Zweites Gesicht, Scharfe Ohren, Soziale Kontakte (arme Stadtbevölkerung); Geschwächt; Tierbegleiter, Arthritis, Unverständlich, Fehlendes Auge, Nichtkämpfer.
 >
->Persönlichkeitseigenschaften: Gutherzig +3, Bemutternd +2, Klatschbase +1
+> Persönlichkeitseigenschaften: Gutherzig +3, Bemutternd +2, Klatschbase +1
 >
->Reputationen: Heilerin, die in der Nähe der Gerberei lebt 4 (lokal)
+> Reputationen: Heilerin, die in der Nähe der Gerberei lebt 4 (lokal)
 >
->Kampf:
+> Kampf:
 >
->Ausweichen: Init −2, Angriff n/v, Verteidigung −2, Schaden n/v
+> Ausweichen: Init −2, Angriff n/v, Verteidigung −2, Schaden n/v
 >
->Absorption: -1
+> Absorption: -1
 >
->Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
 >
->Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
+> Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
 >
->Fertigkeiten: Gebietskunde: Reims 5 (Stadt), Tierumgang 3 (Hühner), Tierverständnis 4 (Hahn), Athletik 1 (Fliegen), Aufmerksamkeit 3 (Besucher), Feilschen 1 (Gerste), Zechen 2 (Mengen an Bier), Charme 1 (ältere Männer), Konzentration 3 (Flug), Handwerk: Brauen 3 (große Mengen), Tote Sprache: Latein 2 (magische Begriffe), Flug 3 (niedrig), Menschenkenntnis 3 (Stadtbevölkerung), Täuschung 2 (Geistliche), Magietheorie der Volkshexen 5 (Trankbrauen), Heilung 6 (Krankheit), Intrige 2 (Stadt), Führung 2 (Stadtbevölkerung), Lebende Sprache: Französisch 5 (Reimser Dialekt), Organisationskunde: Volkshexen 4 (Persönlichkeiten), Penetration 1 (Heilung), Zweites Gesicht 4 (Geister), Schleichen 2 (Stadt), Unterrichten 1 (Volkshexen).
+> Fertigkeiten: Gebietskunde: Reims 5 (Stadt), Tierumgang 3 (Hühner), Tierverständnis 4 (Hahn), Athletik 1 (Fliegen), Aufmerksamkeit 3 (Besucher), Feilschen 1 (Gerste), Zechen 2 (Mengen an Bier), Charme 1 (ältere Männer), Konzentration 3 (Flug), Handwerk: Brauen 3 (große Mengen), Tote Sprache: Latein 2 (magische Begriffe), Flug 3 (niedrig), Menschenkenntnis 3 (Stadtbevölkerung), Täuschung 2 (Geistliche), Magietheorie der Volkshexen 5 (Trankbrauen), Heilung 6 (Krankheit), Intrige 2 (Stadt), Führung 2 (Stadtbevölkerung), Lebende Sprache: Französisch 5 (Reimser Dialekt), Organisationskunde: Volkshexen 4 (Persönlichkeiten), Penetration 1 (Heilung), Zweites Gesicht 4 (Geister), Schleichen 2 (Stadt), Unterrichten 1 (Volkshexen).
 >
->Hexenmond-Narben: 1. Erhält Schmerzfreier Hexenmond (Kleine Tugend).
+> Hexenmond-Narben: 1. Erhält Schmerzfreier Hexenmond (Kleine Tugend).
 >
->Ausrüstung: Töpfe und Pfannen, Brauausrüstung.
+> Ausrüstung: Töpfe und Pfannen, Brauausrüstung.
 >
->Erscheinungsbild: Eliza lebt in einem großen, baufälligen Stadthaus im Zentrum des Armenviertels der Stadt Reims. Sie ist eine alte, korpulente Frau, die Schwierigkeiten hat, sich in ihrem Haus zu bewegen. Sie ist stets bereit, denjenigen Rat zu geben, die sie besuchen, und tatsächlich hat sie viele Besucher, da sie gewöhnlich einen großen Kessel Bier in der Küche braut. Eliza beherbergt auch oft mehrere arme Familien, die keinen anderen Zufluchtsort haben, in einem der Zimmer des Hauses. Eliza ist folglich bei den Bürgern beliebt, die auch zu ihr kommen, um spezielle Gebräue zu erhalten, wenn ein Familienmitglied an irgendeiner Krankheit leidet, und sie hat viele Kontakte und Freunde unter den Bürgern. Das Stadthaus wird tatsächlich von den Geistern einer Reihe von Volkshexen heimgesucht, die vor etwa zwanzig Jahren am erzbischöflichen Gericht auf dem Scheiterhaufen verbrannt wurden. Die Geister zanken häufig miteinander (sie geben sich gegenseitig die Schuld am Ausgang ihres desaströsen Prozesses), aber sie halten sich gewöhnlich von Elizas Besuchern fern. Ein großer, schwarzgefiederter Hahn (der einen Harem von Hennen beherrscht, die Eliza in einem Zimmer des Stadthauses hält) begleitet Eliza oft, und manche spekulieren (unzutreffenderweise), dass der Hahn die Quelle ihrer Kräfte sei. Der Hahn ist ihr Vertrauter; er ist ansonsten ein gewöhnliches Tier.
+> Erscheinungsbild: Eliza lebt in einem großen, baufälligen Stadthaus im Zentrum des Armenviertels der Stadt Reims. Sie ist eine alte, korpulente Frau, die Schwierigkeiten hat, sich in ihrem Haus zu bewegen. Sie ist stets bereit, denjenigen Rat zu geben, die sie besuchen, und tatsächlich hat sie viele Besucher, da sie gewöhnlich einen großen Kessel Bier in der Küche braut. Eliza beherbergt auch oft mehrere arme Familien, die keinen anderen Zufluchtsort haben, in einem der Zimmer des Hauses. Eliza ist folglich bei den Bürgern beliebt, die auch zu ihr kommen, um spezielle Gebräue zu erhalten, wenn ein Familienmitglied an irgendeiner Krankheit leidet, und sie hat viele Kontakte und Freunde unter den Bürgern. Das Stadthaus wird tatsächlich von den Geistern einer Reihe von Volkshexen heimgesucht, die vor etwa zwanzig Jahren am erzbischöflichen Gericht auf dem Scheiterhaufen verbrannt wurden. Die Geister zanken häufig miteinander (sie geben sich gegenseitig die Schuld am Ausgang ihres desaströsen Prozesses), aber sie halten sich gewöhnlich von Elizas Besuchern fern. Ein großer, schwarzgefiederter Hahn (der einen Harem von Hennen beherrscht, die Eliza in einem Zimmer des Stadthauses hält) begleitet Eliza oft, und manche spekulieren (unzutreffenderweise), dass der Hahn die Quelle ihrer Kräfte sei. Der Hahn ist ihr Vertrauter; er ist ansonsten ein gewöhnliches Tier.
 
->#### Meisterin Greta
+> ### Meisterin Greta
 >
->Eigenschaften: Int +2, Wah 0, Prä 0, Kom 0, Stä –1, Aus –2 (2), Ges +1, Sck –3 (3)
+> Eigenschaften: Int +2, Wah 0, Prä 0, Kom 0, Stä –1, Aus –2 (2), Ges +1, Sck –3 (3)
 >
->Größe: 0
+> Größe: 0
 >
->Alter: 76 (50) (Langlebigkeitsritual verleiht +4 Bonus; sie hat einen Labortext dafür)
+> Alter: 76 (50) (Langlebigkeitsritual verleiht +4 Bonus; sie hat einen Labortext dafür)
 >
->Gebrechlichkeit: 2 (5) 
+> Gebrechlichkeit: 2 (5)
 >
->Verzerrungswert: 3 (7) 
+> Verzerrungswert: 3 (7)
 >
->Selbstvertrauenswert: 1 (3)
+> Selbstvertrauenswert: 1 (3)
 >
->Tugenden und Fehler: Die Gabe; Volkshexe; Lebensgebundene Volkshexen-Magie, Affinität zu (Fertigkeit) (Wünschelrutengehen), Tierheiler, Klarer Denker, Meisterbrauerin, Erfinderisches Genie; Auffällige Gabe, Arm, Arthritis, Zurückgezogen.
+> Tugenden und Fehler: Die Gabe; Volkshexe; Lebensgebundene Volkshexen-Magie, Affinität zu (Fertigkeit) (Wünschelrutengehen), Tierheiler, Klarer Denker, Meisterbrauerin, Erfinderisches Genie; Auffällige Gabe, Arm, Arthritis, Zurückgezogen.
 >
->Persönlichkeitseigenschaften: Arrogant +3, Zurückgezogen +2
+> Persönlichkeitseigenschaften: Arrogant +3, Zurückgezogen +2
 >
->Reputationen: Volkshexe, die dem Scheiterhaufen entkam 4 (lokal)
+> Reputationen: Volkshexe, die dem Scheiterhaufen entkam 4 (lokal)
 >
->Kampf:
+> Kampf:
 >
->Tritt: Init –4, Angriff +3, Verteidigung –2, Schaden +2
+> Tritt: Init –4, Angriff +3, Verteidigung –2, Schaden +2
 >
->Ausweichen: Init −3, Angriff n/v, Verteidigung −2, Schaden n/v
+> Ausweichen: Init −3, Angriff n/v, Verteidigung −2, Schaden n/v
 >
->Absorption: -2
+> Absorption: -2
 >
->Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
 >
->Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
+> Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
 >
->Fertigkeiten: Gebietskunde: Reims 3 (Wald), Artes Liberales 4 (Grammatik), Tierumgang 3 (Ochsen), Tierverständnis 4 (Vögel), Athletik 2 (Fliegen), Aufmerksamkeit 3 (Wald), Raufen 1 (Tritt), Zivil- und Kanonisches Recht 1 (Häresie), Konzentration 2 (Flug), Fluchen 4 (Krankheit), Handwerk: Weben 3 (Wolle), Tote Sprache: Latein 5 (magische Begriffe), Wünschelrutengehen 8 (im Wald), Flug 2 (nachts), Magietheorie der Volkshexen 5 (Vis-Gewinnung), Heilung 4 (Geburtsverletzungen), Führung 1 (Lehrlinge), Lebende Sprache: Französisch 5 (Reimser Dialekt), Organisationskunde: Volkshexen 4 (Einweihungen), Penetration 3 (Fluchen), Vorahnungen 1 (Besucher), Zweites Gesicht 5 (Geister), Gestaltwandler 2 (Katze), Überleben 4 (Wald), Unterrichten 1 (Lehrlinge)
+> Fertigkeiten: Gebietskunde: Reims 3 (Wald), Artes Liberales 4 (Grammatik), Tierumgang 3 (Ochsen), Tierverständnis 4 (Vögel), Athletik 2 (Fliegen), Aufmerksamkeit 3 (Wald), Raufen 1 (Tritt), Zivil- und Kanonisches Recht 1 (Häresie), Konzentration 2 (Flug), Fluchen 4 (Krankheit), Handwerk: Weben 3 (Wolle), Tote Sprache: Latein 5 (magische Begriffe), Wünschelrutengehen 8 (im Wald), Flug 2 (nachts), Magietheorie der Volkshexen 5 (Vis-Gewinnung), Heilung 4 (Geburtsverletzungen), Führung 1 (Lehrlinge), Lebende Sprache: Französisch 5 (Reimser Dialekt), Organisationskunde: Volkshexen 4 (Einweihungen), Penetration 3 (Fluchen), Vorahnungen 1 (Besucher), Zweites Gesicht 5 (Geister), Gestaltwandler 2 (Katze), Überleben 4 (Wald), Unterrichten 1 (Lehrlinge)
 >
->Hexenmond-Narben: 1. Erhält Vorahnungen (Kleine Tugend) 2. Erhält Tierheiler (Kleine Tugend) 3. Erleidet Arthritis (Kleiner Fehler).
+> Hexenmond-Narben: 1. Erhält Vorahnungen (Kleine Tugend) 2. Erhält Tierheiler (Kleine Tugend) 3. Erleidet Arthritis (Kleiner Fehler).
 >
->Ausrüstung: Stab, Kräuter, Teekanne.
+> Ausrüstung: Stab, Kräuter, Teekanne.
 >
->Erscheinungsbild: Meisterin Greta ist eine runzlige und gebückte Frau mit dickem, grauem Haar, das ungezähmt bis zur Hüfte fließt. Sie kleidet sich in einfache Bauerntracht und ist oft hockend vor dem Höhleneingang ihrer Behausung anzutreffen, wo sie einen scharfen Tee aus wilden Kräutern braut. Sie verbringt auch viel Zeit damit, im Wald nach den Nüssen und Wurzeln zu suchen, von denen sie lebt. Mit ihrer Gestaltwandler-Fertigkeit kann sie sich in eine Katze oder einen schwarzen Vogel verwandeln.
+> Erscheinungsbild: Meisterin Greta ist eine runzlige und gebückte Frau mit dickem, grauem Haar, das ungezähmt bis zur Hüfte fließt. Sie kleidet sich in einfache Bauerntracht und ist oft hockend vor dem Höhleneingang ihrer Behausung anzutreffen, wo sie einen scharfen Tee aus wilden Kräutern braut. Sie verbringt auch viel Zeit damit, im Wald nach den Nüssen und Wurzeln zu suchen, von denen sie lebt. Mit ihrer Gestaltwandler-Fertigkeit kann sie sich in eine Katze oder einen schwarzen Vogel verwandeln.
 
 #### DER KILKENNY-ZIRKEL
 (106 Baupunkte)
@@ -2397,89 +2415,89 @@ Dieser Hexenzirkel ist zerstritten. Es gibt zwei Begabte Hexen im Zirkel, von de
 
 **Skripte:** Ungebunden vom Land (+6), Das Auge des Teufels (+7), Zweites Leben (+13).
 
-**Janines Haus:** Janine ist die ältere der beiden rivalisierenden Cousinen. Ihr Stadthaus hat einen großen geheimen Keller, dessen eine Hälfte von ihrem Mann als Hilfslager für besonders wertvolle Waren genutzt wird. Die andere Hälfte nutzt Janine als Küche. Der Keller hat eine Magieaura von 4, und eine kleine Quelle tritt in der Mitte der Küche zutage. Das Quellwasser ist Vis, aber die Menge des Vis hat in den letzten Jahren abgenommen. **Haken**: städtisch (Groß), schwindende Ressource (Klein). **Vorzüge**: Aura (x4) (Klein). **Vis-Quellen**: 5 Bauern Aquam pro Jahr (aus der Quelle), 1 Bauer Corpus pro Jahr (vom Stadtfriedhof), 1 Bauer Mentem pro Jahr (aus den Geschäftsbüchern des Kaufmanns).
+**Janines Haus:** Janine ist die ältere der beiden rivalisierenden Cousinen. Ihr Stadthaus hat einen großen geheimen Keller, dessen eine Hälfte von ihrem Mann als Hilfslager für besonders wertvolle Waren genutzt wird. Die andere Hälfte nutzt Janine als Küche. Der Keller hat eine Magieaura von 4, und eine kleine Quelle tritt in der Mitte der Küche zutage. Das Quellwasser ist Vis, aber die Menge des Vis hat in den letzten Jahren abgenommen. **Haken:** städtisch (Groß), schwindende Ressource (Klein). **Vorzüge:** Aura (x4) (Klein). **Vis-Quellen:** 5 Bauern Aquam pro Jahr (aus der Quelle), 1 Bauer Corpus pro Jahr (vom Stadtfriedhof), 1 Bauer Mentem pro Jahr (aus den Geschäftsbüchern des Kaufmanns).
 
-**Annes Haus:** Anne besitzt ein Herrenhaus einige Meilen außerhalb der Stadt – ihr Mann ist der wohlhabendere der beiden Kaufleute. Ihr Laboratorium ist in einem Nebengebäude des Herrenhauses untergebracht, das eine Magieaura von 2 aufweist. Ohne Annes Wissen hat Janine mehrere Spione in ihrem Personal platziert. Am Rande des Gutslandes liegt ein sumpfiges Gelände, aus dem eine Reihe großer Felsen ragen. Die großen Felsen nageln einen sterbenden Riesen an die Erde – die feucht ist, da sie von seinem Blut durchtränkt wird. **Haken**: Ungeheuer (sterbender Riese) (Klein), Spione (Klein) **Vorzüge**: Aura (x2) (Klein), Herrenhaus (frei). **Vis-Quellen**: 5 Bauern Corpus pro Jahr (aus dem Blut des Riesen), 1 Bauer Auram pro Jahr (eine warme Brise, die aus einer Höhle nahe dem Herrenhaus aufsteigt).
+**Annes Haus:** Anne besitzt ein Herrenhaus einige Kilometer außerhalb der Stadt – ihr Mann ist der wohlhabendere der beiden Kaufleute. Ihr Laboratorium ist in einem Nebengebäude des Herrenhauses untergebracht, das eine Magieaura von 2 aufweist. Ohne Annes Wissen hat Janine mehrere Spione in ihrem Personal platziert. Am Rande des Gutslandes liegt ein sumpfiges Gelände, aus dem eine Reihe großer Felsen ragen. Die großen Felsen nageln einen sterbenden Riesen an die Erde – die feucht ist, da sie von seinem Blut durchtränkt wird. **Haken:** Ungeheuer (sterbender Riese) (Klein), Spione (Klein) **Vorzüge:** Aura (x2) (Klein), Herrenhaus (frei). **Vis-Quellen:** 5 Bauern Corpus pro Jahr (aus dem Blut des Riesen), 1 Bauer Auram pro Jahr (eine warme Brise, die aus einer Höhle nahe dem Herrenhaus aufsteigt).
 
-**Bauernhof:** Mehrere Tagesreisen von Kilkenny entfernt liegt der Bauernhof, auf dem Janines und Annes Großmutter sie in der Volkshexenkunst unterrichtete. Die Gebäude des Hofes stehen in einer Senke mit einer Feenaura von 4. Die Familie einer Tante bewirtschaftet den Hof, und Janines Schwester Agnes, eine unBegabte Volkshexe, lebt ebenfalls dort. Agnes hat versucht, in der Fehde neutral zu bleiben, und sendet Vis vom Hof an beide Stadtfraktionen des Zirkels. **Haken**: Feenaura (Klein). **Vorzüge**: Aura (Klein), Bauern (frei). **Vis-Quellen**: 2 Bauern Animal pro Jahr (vom letzten Lamm des Jahres), 2 Bauern Herbam pro Jahr (von Ernte, die um Mitternacht zur Herbsttagundnachtgleiche eingebracht wird).
+**Bauernhof:** Mehrere Tagesreisen von Kilkenny entfernt liegt der Bauernhof, auf dem Janines und Annes Großmutter sie in der Volkshexenkunst unterrichtete. Die Gebäude des Hofes stehen in einer Senke mit einer Feenaura von 4. Die Familie einer Tante bewirtschaftet den Hof, und Janines Schwester Agnes, eine unBegabte Volkshexe, lebt ebenfalls dort. Agnes hat versucht, in der Fehde neutral zu bleiben, und sendet Vis vom Hof an beide Stadtfraktionen des Zirkels. **Haken:** Feenaura (Klein). **Vorzüge:** Aura (Klein), Bauern (frei). **Vis-Quellen:** 2 Bauern Animal pro Jahr (vom letzten Lamm des Jahres), 2 Bauern Herbam pro Jahr (von Ernte, die um Mitternacht zur Herbsttagundnachtgleiche eingebracht wird).
 
->#### Janine Kyteler
+> ### Janine Kyteler
 >
->Eigenschaften: Int +2, Wah 0, Prä +1, Kom 0, Stä +1, Aus +1, Ges +1, Sck 0
+> Eigenschaften: Int +2, Wah 0, Prä +1, Kom 0, Stä +1, Aus +1, Ges +1, Sck 0
 >
->Alter: 32 (32)
+> Alter: 32 (32)
 >
->Gebrechlichkeit: 0 (0)
+> Gebrechlichkeit: 0 (0)
 >
->Verzerrungswert: 1 (9)
+> Verzerrungswert: 1 (9)
 >
->Selbstvertrauenswert: 1 (3)
+> Selbstvertrauenswert: 1 (3)
 >
->Tugenden und Fehler: Die Gabe, Volkshexe, Wohlhabend, Durchdringender Blick, Kraftreserven, Weltlicher Einfluss, Fehde, Beleibt, Instabile Magie.
+> Tugenden und Fehler: Die Gabe, Volkshexe, Wohlhabend, Durchdringender Blick, Kraftreserven, Zeitlicher Einfluss, Fehde, Fettleibig, Instabile Magie.
 >
->Persönlichkeitseigenschaften: Zornig +3, Besessen +1
+> Persönlichkeitseigenschaften: Zornig +3, Besessen +1
 >
->Reputationen: Seltsame, einschüchternde Kaufmannsfrau 4 (lokal)
+> Reputationen: Seltsame, einschüchternde Kaufmannsfrau 4 (lokal)
 >
->Kampf:
+> Kampf:
 >
->Dolch: Init: 0, Angriff +5, Verteidigung +2, Schaden +4
+> Dolch: Init: 0, Angriff +5, Verteidigung +2, Schaden +4
 >
->Ausweichen: Init 0, Angriff n/v, Verteidigung +1, Schaden n/v
+> Ausweichen: Init 0, Angriff n/v, Verteidigung +1, Schaden n/v
 >
->Absorption: +1
+> Absorption: +1
 >
->Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
 >
->Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
+> Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
 >
->Fertigkeiten: Gebietskunde: Kilkenny 3 (Kaufleute), Artes Liberales 1 (Astronomie), Tierumgang 1 (Schweine), Tierverständnis 2 (Schweine), Athletik 1 (Fliegen), Aufmerksamkeit 1 (fehlerhafte Ware), Feilschen (Kaufleute), Raufen 1 (Dolch), Konzentration 2 (Flug), Fluchen 4 (Tier), Handwerk: Weben 2 (Wolle), Tote Sprache: Latein 4 (magische Begriffe), Wünschelrutengehen 5 (Moor), Flug 2 (ländlich), Magietheorie der Volkshexen 3 (Fluchstoff), Heilung 3 (Krankheit), Intrige 2 (Kaufleute), Führung 3 (Einschüchterung), Lebende Sprache: Irisch 5 (Kilkenny-Dialekt), Organisationskunde: Volkshexen 3 (Einweihungen), Penetration 2 (Fluchen), Beruf: Kauffrau 1 (Strafgebühren einschätzen), Zweites Gesicht 1 (Feenwesen), Gestaltwandler 2 (Schwein), Unterrichten 1 (Lehrlinge).
+> Fertigkeiten: Gebietskunde: Kilkenny 3 (Kaufleute), Artes Liberales 1 (Astronomie), Tierumgang 1 (Schweine), Tierverständnis 2 (Schweine), Athletik 1 (Fliegen), Aufmerksamkeit 1 (fehlerhafte Ware), Feilschen (Kaufleute), Raufen 1 (Dolch), Konzentration 2 (Flug), Fluchen 4 (Tier), Handwerk: Weben 2 (Wolle), Tote Sprache: Latein 4 (magische Begriffe), Wünschelrutengehen 5 (Moor), Flug 2 (ländlich), Magietheorie der Volkshexen 3 (Fluchstoff), Heilung 3 (Krankheit), Intrige 2 (Kaufleute), Führung 3 (Einschüchterung), Lebende Sprache: Irisch 5 (Kilkenny-Dialekt), Organisationskunde: Volkshexen 3 (Einweihungen), Penetration 2 (Fluchen), Beruf: Kauffrau 1 (Strafgebühren einschätzen), Zweites Gesicht 1 (Feenwesen), Gestaltwandler 2 (Schwein), Unterrichten 1 (Lehrlinge).
 >
->Hexenmond-Narben: 1. Erhält Kraftreserven (Kleine Tugend).
+> Hexenmond-Narben: 1. Erhält Kraftreserven (Kleine Tugend).
 >
->Ausrüstung: Stadtkleidung, Dolch.
+> Ausrüstung: Stadtkleidung, Dolch.
 >
->Erscheinungsbild: Janine ist eine schwere, rotgesichtige Frau mit schmalen, durchdringenden Augen. Sie hilft ihrem Mann bei der Führung seines Handelsgeschäfts, hauptsächlich indem sie Schuldnern nachjagt – alle Kaufleute von Kilkenny fürchten einen Besuch von Janine und ihrer Magd. Sie kann sich in ein Schwein und eine Möwe verwandeln. Ihr Vertrauter ist ein Schwein, das in einem Stall am Stadthaus lebt.
+> Erscheinungsbild: Janine ist eine schwere, rotgesichtige Frau mit schmalen, durchdringenden Augen. Sie hilft ihrem Mann bei der Führung seines Handelsgeschäfts, hauptsächlich indem sie Schuldnern nachjagt – alle Kaufleute von Kilkenny fürchten einen Besuch von Janine und ihrer Magd. Sie kann sich in ein Schwein und eine Möwe verwandeln. Ihr Vertrauter ist ein Schwein, das in einem Stall am Stadthaus lebt.
 
->#### Anne Kors
+> ### Anne Kors
 >
->Eigenschaften: Int +1, Wah +1, Prä +2, Kom 0, Stä -1, Aus +1, Ges +1, Sck +1
+> Eigenschaften: Int +1, Wah +1, Prä +2, Kom 0, Stä -1, Aus +1, Ges +1, Sck +1
 >
->Größe: 0 
+> Größe: 0
 >
->Alter: 30 (30) 
+> Alter: 30 (30)
 >
->Gebrechlichkeit: 0 (0) 
+> Gebrechlichkeit: 0 (0)
 >
->Verzerrungswert: 1 (8) 
+> Verzerrungswert: 1 (8)
 >
->Selbstvertrauenswert: 1 (3)
+> Selbstvertrauenswert: 1 (3)
 >
->Tugenden und Fehler: Die Gabe, Volkshexe, Wohlhabend, Affinität zu Fluchen, Meisterbrauerin, Glück, Venussegen, Starre Magie, Fehde, Unfair beurteilt.
+> Tugenden und Fehler: Die Gabe, Volkshexe, Wohlhabend, Affinität zu Fluchen, Meisterbrauerin, Glück, Venussegen, Starre Magie, Fehde, Ungerecht beurteilt.
 >
->Persönlichkeitseigenschaften: Temperamentvoll +3, Besessen +1
+> Persönlichkeitseigenschaften: Temperamentvoll +3, Besessen +1
 >
->Reputationen: Verderbte Kaufmannsfrau 2 (lokal)
+> Reputationen: Verderbte Kaufmannsfrau 2 (lokal)
 >
->Kampf:
+> Kampf:
 >
->Faust: Init +1, Angriff +4, Verteidigung +4, Schaden -1
+> Faust: Init +1, Angriff +4, Verteidigung +4, Schaden -1
 >
->Dolch: Init +1, Angriff +5, Verteidigung +3, Schaden +2
+> Dolch: Init +1, Angriff +5, Verteidigung +3, Schaden +2
 >
->Ausweichen: Init +1, Angriff n/v, Verteidigung +3, Schaden n/v
+> Ausweichen: Init +1, Angriff n/v, Verteidigung +3, Schaden n/v
 >
->Absorption: 0
+> Absorption: 0
 >
->Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
 >
->Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
+> Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
 >
->Fertigkeiten: Gebietskunde: Kilkenny 3 (Umland), Artes Liberales 1 (Logik), Tierumgang 1 (Pferd), Tierverständnis 2 (Pferd), Athletik 1 (Fliegen), Aufmerksamkeit 2 (ländlich), Raufen 2 (Faust), Konzentration 1 (Flug), Fluchen 6 (Zunge), Handwerk: Weben 2 (Wolle), Tote Sprache: Latein 4 (magische Begriffe), Wünschelrutengehen 3 (Moor), Etikette 1 (Gastgeberin), Flug 2 (ländlich), Magietheorie der Volkshexen 3 (Trankbrauen), Täuschung 2 (Ehemann), Heilung 3 (Stichwunden) (5), Führung 2 (Personal), Lebende Sprache: Irisch 5 (Kilkenny-Dialekt), Organisationskunde: Volkshexen 3 (Vis-Quellen), Penetration 2 (Fluchen), Zweites Gesicht 2 (Feenwesen), Gestaltwandler 1 (Pferd), Unterrichten 1 (Lehrlinge).
+> Fertigkeiten: Gebietskunde: Kilkenny 3 (Umland), Artes Liberales 1 (Logik), Tierumgang 1 (Pferd), Tierverständnis 2 (Pferd), Athletik 1 (Fliegen), Aufmerksamkeit 2 (ländlich), Raufen 2 (Faust), Konzentration 1 (Flug), Fluchen 6 (Zunge), Handwerk: Weben 2 (Wolle), Tote Sprache: Latein 4 (magische Begriffe), Wünschelrutengehen 3 (Moor), Etikette 1 (Gastgeberin), Flug 2 (ländlich), Magietheorie der Volkshexen 3 (Trankbrauen), Täuschung 2 (Ehemann), Heilung 3 (Stichwunden) (5), Führung 2 (Personal), Lebende Sprache: Irisch 5 (Kilkenny-Dialekt), Organisationskunde: Volkshexen 3 (Vis-Quellen), Penetration 2 (Fluchen), Zweites Gesicht 2 (Feenwesen), Gestaltwandler 1 (Pferd), Unterrichten 1 (Lehrlinge).
 >
->Hexenmond-Narben: 1. Erhält zusätzliche 5 EP in Heilung.
+> Hexenmond-Narben: 1. Erhält zusätzliche 5 EP in Heilung.
 >
->Ausrüstung: Dolch, Wanderkleidung, Stab. Erscheinungsbild: Anne ist eine attraktive Frau, hat aber ein sehr aufbrausendes Temperament. Sie hält sich gewöhnlich im Herrenhaus auf, arbeitet in ihrer Küche oder durchstreift die nahen Moorflächen und reist nur gelegentlich in die Stadt. Sie hat die Reputation erlangt, ausschweifende Feste zu veranstalten, während ihr Mann geschäftlich abwesend ist. Das stimmt nicht wirklich, obwohl sie tatsächlich Sabbate im Herrenhaus abhält. Anne kann sich in die Gestalt einer wunderschönen Stute verwandeln.
+> Ausrüstung: Dolch, Wanderkleidung, Stab. Erscheinungsbild: Anne ist eine attraktive Frau, hat aber ein sehr aufbrausendes Temperament. Sie hält sich gewöhnlich im Herrenhaus auf, arbeitet in ihrer Küche oder durchstreift die nahen Moorflächen und reist nur gelegentlich in die Stadt. Sie hat die Reputation erlangt, ausschweifende Feste zu veranstalten, während ihr Mann geschäftlich abwesend ist. Das stimmt nicht wirklich, obwohl sie tatsächlich Sabbate im Herrenhaus abhält. Anne kann sich in die Gestalt einer wunderschönen Stute verwandeln.
 
 #### DIE HEXEN VON ORLÉANS
 (110 Baupunkte)
@@ -2488,49 +2506,49 @@ Dieser Volkshexen-Zirkel praktiziert eine abgewandelte Tradition, die die Übern
 
 **Skripte:** Gespür für den Ort (+6), Gespür für die Zeit (Skript für Vorahnungen; +6).
 
-**Claudes Hütte:** Claude lebt allein in einer Hütte am Ufer eines kleinen Baches, etwa eine Tagesreise nördlich von Orléans. In dem Gebiet herrscht eine Magieaura der Stufe 3, und in der Nähe befindet sich eine verfallene römische Villa mit einem großen magischen Apfelbaum, der in dem wächst, was einst der Innenhof war. **Haken**: Römische Ruine (Klein). **Vorzüge**: Abgeschiedenheit (Klein). **Vis-Quellen**: 5 Bauern Herbam pro Jahr (magischer Baum), 1 Bauer Aquam pro Jahr (Fischlaich).
+**Claudes Hütte:** Claude lebt allein in einer Hütte am Ufer eines kleinen Baches, etwa eine Tagesreise nördlich von Orléans. In dem Gebiet herrscht eine Magieaura der Stufe 3, und in der Nähe befindet sich eine verfallene römische Villa mit einem großen magischen Apfelbaum, der in dem wächst, was einst der Innenhof war. **Haken:** Römische Ruine (Klein). **Vorzüge:** Abgeschiedenheit (Klein). **Vis-Quellen:** 5 Bauern Herbam pro Jahr (magischer Baum), 1 Bauer Aquam pro Jahr (Fischlaich).
 
-**Richtergericht:** Ein Schreiber namens Jean der Weise, der am Richtergericht von Orléans arbeitet, ist ein unBegabtes Mitglied des Zirkels. Er nutzt seine Wünschelrutengehen-Kräfte, um dem Richter beim Auffinden gestohlener Gegenstände zu helfen – was häufig rasch zu einem Geständnis führt. Der Richter hat gelernt, Jeans Meinung bei juristischen Entscheidungen zu respektieren. **Haken**: fehlende Aura (Groß), städtisch (Groß). **Vorzüge**: mächtiger Verbündeter (Groß; Richter). **Vis-Quellen**: 2 Bauern Corpus pro Jahr (Blut des ersten und letzten Galgenopfers eines jeden Jahres). **Bibliothek**: Die Erschütterungen des Ortes lesen, von Goodwin (Summa der Fertigkeit Wünschelrutengehen; Qualität 10, Stufe 3), Civitas Orleans, von Richter Bayne (Tractatus über Zivil- und Kanonisches Recht; Qualität 9).
+**Richtergericht:** Ein Schreiber namens Jean der Weise, der am Richtergericht von Orléans arbeitet, ist ein unBegabtes Mitglied des Zirkels. Er nutzt seine Wünschelrutengehen-Kräfte, um dem Richter beim Auffinden gestohlener Gegenstände zu helfen – was häufig rasch zu einem Geständnis führt. Der Richter hat gelernt, Jeans Meinung bei juristischen Entscheidungen zu respektieren. **Haken:** fehlende Aura (Groß), städtisch (Groß). **Vorzüge:** mächtiger Verbündeter (Groß; Richter). **Vis-Quellen:** 2 Bauern Corpus pro Jahr (Blut des ersten und letzten Galgenopfers eines jeden Jahres). **Bibliothek:** Die Erschütterungen des Ortes lesen, von Goodwin (Summa der Fertigkeit Wünschelrutengehen; Qualität 10, Stufe 3), Civitas Orleans, von Richter Bayne (Tractatus über Zivil- und Kanonisches Recht; Qualität 9).
 
-**Josephs Haus:** Joseph lebt knapp außerhalb von Orléans in einem großen Haus, das in einer Regio errichtet wurde, mit einer Magieaura von 3. Er ist ein unBegabtes Mitglied des Zirkels und nutzt seine Wünschelrutengehen-Fertigkeit, um Gegenstände für Leute in der Stadt aufzufinden. Er unterhält ein Stadthaus in der Stadt, in das Klienten kommen, um seine Dienste in Anspruch zu nehmen. Durch das Einfordern eines Honorars für das Finden von Gegenständen ist Joseph ein wohlhabender Mann geworden. **Haken**: Stadt (Groß) **Vorzüge**: Regio (Groß), Aura (x3) (Klein), Herrenhaus (frei) **Vis-Quellen**: 2 Bauern Animal pro Jahr (Gerberei), 2 Bauern Terram (Schmied), 2 Bauern Vim (eine Quelle in der Regio).
+**Josephs Haus:** Joseph lebt knapp außerhalb von Orléans in einem großen Haus, das in einer Regio errichtet wurde, mit einer Magieaura von 3. Er ist ein unBegabtes Mitglied des Zirkels und nutzt seine Wünschelrutengehen-Fertigkeit, um Gegenstände für Leute in der Stadt aufzufinden. Er unterhält ein Stadthaus in der Stadt, in das Klienten kommen, um seine Dienste in Anspruch zu nehmen. Durch das Einfordern eines Honorars für das Finden von Gegenständen ist Joseph ein wohlhabender Mann geworden. **Haken:** Stadt (Groß) **Vorzüge:** Regio (Groß), Aura (x3) (Klein), Herrenhaus (frei) **Vis-Quellen:** 2 Bauern Animal pro Jahr (Gerberei), 2 Bauern Terram (Schmied), 2 Bauern Vim (eine Quelle in der Regio).
 
->#### Jean der Weise
->Eigenschaften: Int +3, Wah +1, Prä 0, Kom 0, Stä +1, Aus +1, Ges 0, Sck +1
+> ### Jean der Weise
+> Eigenschaften: Int +3, Wah +1, Prä 0, Kom 0, Stä +1, Aus +1, Ges 0, Sck +1
 >
->Größe: 0
+> Größe: 0
 >
->Alter: 28 (28)
+> Alter: 28 (28)
 >
->Gebrechlichkeit: 0 (0)
+> Gebrechlichkeit: 0 (0)
 >
->Verzerrungswert: 2 (3) Selbstvertrauenswert: 1 (3)
+> Verzerrungswert: 2 (3) Selbstvertrauenswert: 1 (3)
 >
->Tugenden und Fehler: Volkshexe; Konzentrierte Tränke, Wünschelrutengehen, Gebildet, Verbesserte Eigenschaften, Vorahnungen, Weltlicher Einfluss; Einmischer, Reisekrankheit, Abstoßend für Tiere, Sonderbare Magie. 
+> Tugenden und Fehler: Volkshexe; Konzentrierte Tränke, Wünschelrutengehen, Gebildet, Verbesserte Eigenschaften, Vorahnungen, Zeitlicher Einfluss; Einmischer, Reisekrankheit, Abstoßend für Tiere, Verzerrte Magie.
 >
->Persönlichkeitseigenschaften: Wissbegierig +2, Einmischer +3
+> Persönlichkeitseigenschaften: Wissbegierig +2, Einmischer +3
 >
->Reputationen: Zauberer am Richtergericht 3 (lokal)
+> Reputationen: Zauberer am Richtergericht 3 (lokal)
 >
->Kampf:
+> Kampf:
 >
 >
->Ausweichen: Init +1, Angriff n/v, Verteidigung +3,
+> Ausweichen: Init +1, Angriff n/v, Verteidigung +3,
 >
->Schaden n/v
+> Schaden n/v
 >
->Absorption: +1
+> Absorption: +1
 >
->Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
 >
->Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
+> Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
 >
->Fertigkeiten: Gebietskunde: Orléans 4 (Kriminelle), Artes Liberales 3 (Logik), Athletik 1 (Laufen), Aufmerksamkeit 1 (Hinterhalt), Raufen 1 (Ausweichen), Zechen 1 (Studenten), Zivil- und Kanonisches Recht 2 (Landrechte), Charme 1 (Frauen), Konzentration 2 (Schreiben), Tote Sprache: Latein 5 (Rechtsbegriffe), Wünschelrutengehen 6 (hergestellte Gegenstände), Etikette 2 (Gericht), Menschenkenntnis 2 (Lügner), Magietheorie der Volkshexen 3 (Trankbrauen), Intrige 1 (Gericht), Führung 2 (Schreiber), Lebende Sprache: Französisch 5 (Orléans-Dialekt), Organisationskunde: Volkshexen 1 (Geschichte), Penetration 3 (Wünschelrutengehen), Philosophiae 3 (Moral), Vorahnungen 3 (Naturereignisse), Beruf: Schreiber 3 (Rechtsdokumente), Unterrichten 1 (Artes Liberales).
+> Fertigkeiten: Gebietskunde: Orléans 4 (Kriminelle), Artes Liberales 3 (Logik), Athletik 1 (Laufen), Aufmerksamkeit 1 (Hinterhalt), Raufen 1 (Ausweichen), Zechen 1 (Studenten), Zivil- und Kanonisches Recht 2 (Landrechte), Charme 1 (Frauen), Konzentration 2 (Schreiben), Tote Sprache: Latein 5 (Rechtsbegriffe), Wünschelrutengehen 6 (hergestellte Gegenstände), Etikette 2 (Gericht), Menschenkenntnis 2 (Lügner), Magietheorie der Volkshexen 3 (Trankbrauen), Intrige 1 (Gericht), Führung 2 (Schreiber), Lebende Sprache: Französisch 5 (Orléans-Dialekt), Organisationskunde: Volkshexen 1 (Geschichte), Penetration 3 (Wünschelrutengehen), Philosophiae 3 (Moral), Vorahnungen 3 (Naturereignisse), Beruf: Schreiber 3 (Rechtsdokumente), Unterrichten 1 (Artes Liberales).
 >
->Hexenmond-Narben: 1. Erhält Konzentrierte Tränke (Kleine Tugend). 2. Erleidet Sonderbare Magie (klingelndes Geräusch) (Kleiner Fehler).
+> Hexenmond-Narben: 1. Erhält Konzentrierte Tränke (Kleine Tugend). 2. Erleidet Verzerrte Magie (klingelndes Geräusch) (Kleiner Fehler).
 >
->Ausrüstung: Schreibutensilien, Dokumente, juristisches
+> Ausrüstung: Schreibutensilien, Dokumente, juristisches
 >
->Erscheinungsbild: Jean kleidet sich in die schlichte Kleidung eines Schreibers; er hat eine Glatze und eine lange, spitze Nase. Wann immer Jean seine Übernatürlichen Fertigkeiten einsetzt, hören alle anderen Charaktere in Stimmreichweite ein lästiges Klingeln in den Ohren (Sonderbare Magie).
+> Erscheinungsbild: Jean kleidet sich in die schlichte Kleidung eines Schreibers; er hat eine Glatze und eine lange, spitze Nase. Wann immer Jean seine Übernatürlichen Fertigkeiten einsetzt, hören alle anderen Charaktere in Stimmreichweite ein lästiges Klingeln in den Ohren (Verzerrte Magie).
 
 ## Hermetische Integration
 
@@ -2543,28 +2561,10 @@ Durch die Einarbeitung des Rituals der Erschließung der Gabe Begabter Volkshexe
 
 Anders als bei einem normalen Integrationsergebnis gewinnt der erfindende Charakter persönlich nichts durch diesen Durchbruch, da seine Künste bereits erschlossen wurden. Stattdessen kann er, sobald die Forschung abgeschlossen ist, die Künste eines Lehrlings mit einer besonderen Technik erschließen (was dennoch ein Quartal dauert), und der Lehrling erhält die Kleine Hermetische Tugend: Behutsame Erschließung. Der Charakter kann auch einen Labortext der Stufe 30 verfassen, der die spezielle Kunsterschließungstechnik beschreibt, dem jeder andere Magus folgen kann, der die Künste eines Lehrlings erschließt.
 
->##### Neue Tugend: Behutsame Erschließung
->Kleine Hermetische Tugend
+> ### Neue Tugend: Behutsame Erschließung
+> Kleine Hermetische Tugend
 >
->Dem Magus wurden seine Künste mit einer behutsameren und flexibleren Technik als üblich erschlossen. Folglich erleidet er keinen Abzug auf die Quellenqualität für seine Kunstwerte, wenn er Übernatürliche Fertigkeiten erlernt (siehe ArM5, [Seite 166](<Ars Magica Definitive Edition Basisregeln.md#übernatürliche-fertigkeiten-erlernen>)). Der Magus wird weiterhin für Werte in anderen Übernatürlichen Fertigkeiten bestraft.
-
->#### ABENTEUERIDEEN zur Behutsamen Erschließung
->
->**Ruinierte Lehrlinge**
->
->Ein vom Pech verfolgter Bonisagus-Magus, der diesen Durchbruch zu erforschen versucht, beschlagnahmt eine Reihe vielversprechender „Lehrlinge" und beschädigt oder zerstört deren Gaben durch experimentelle Methoden der Erschließung der Künste. Dies sind aufrichtige Fehler – der Bonisagus-Magus handelt nicht böswillig –, und da seine „Opfer" noch nicht ihre Künste erschlossen bekommen hatten, waren sie technisch gesehen niemandes Lehrlinge. Nichtsdestotrotz sind die anderen Magi des Tribunals entsetzt über diese Verschwendung Begabten Talents und versuchen, die Forschung des Magus zu unterbinden.
->
->**Lang verlorene Macht**
->
->Die Magi der Linie des Pralix (siehe *Häuser des Hermes: Gemeinschaften*, [Seite 126](<Ars Magica 5e - Häuser des Hermes - Societates.md#die-abstammungslinie-der-pralix>)) erzielen diesen Durchbruch und erschließen die Künste einer Reihe von Lehrlingen mithilfe der Behutsamen Erschließung. Den neuen Lehrlingen wird dann Zugang zu einer geheimen Bibliothek gewährt, die viele Bücher enthält, die im Laufe der Jahrhunderte von zum Orden des Hermes konvertierten Heckenzauberern geschrieben wurden. Durch das Studium des Bücherbestands können die Lehrlinge exotische Übernatürliche Fertigkeiten erlernen, die dem Orden des Hermes als verloren galten.
->
->**Unterwanderung durch den Orden Odins**
->
->Heckenzauberer des Ordens Odins erfahren von dieser Verbesserung der hermetischen Theorie und nutzen sie zusammen mit einem Bonisagus-Verbündeten als Grundlage eines neuen Forschungsprojekts, das es einem Lehrling ermöglicht, sowohl Runenmagie als auch hermetische Magie ohne Abzug zu erlernen. Sobald dieses Projekt abgeschlossen ist, kann der Orden Odins beginnen, den Orden des Hermes praktisch unentdeckt zu unterwandern.
->
->**Ein behutsamerer Preis**
->
->Ein Tytalus-Magus erfindet die Behutsame Erschließung, weigert sich aber, seine Methode zu teilen, und verlangt stattdessen ein Honorar von anderen Magi, um sie an deren Lehrlingen durchzuführen. Sein Preis ist angemessen, aber die Behutsame Erschließung wird so beliebt, dass der Magus der Nachfrage nicht nachkommen kann, und dieser Engpass verursacht eine Verzögerung in der Ausbildung einer großen Zahl von Lehrlingen im Tribunal. Einige besorgte Magi versuchen, ein Tribunalsurteil durchzusetzen, das den Magus zwingt, die Methode der Behutsamen Erschließung zu teilen. Es ist möglich, dass andere Magi versuchen, die Methode zu stehlen, oder alternativ darum wetteifern, die Forschung selbst durchzuführen (wobei sie die Gabe einiger unglücklicher Lehrlinge während der Experimente beschädigen).
+> Dem Magus wurden seine Künste mit einer behutsameren und flexibleren Technik als üblich erschlossen. Folglich erleidet er keinen Abzug auf die Quellenqualität für seine Kunstwerte, wenn er Übernatürliche Fertigkeiten erlernt (siehe ArM5, [Seite 166](<Ars Magica Definitive Edition Basisregeln.md#übernatürliche-fertigkeiten-erlernen>)). Der Magus wird weiterhin für Werte in anderen Übernatürlichen Fertigkeiten bestraft.
 
 #### Integrationseffekte
 
@@ -2574,6 +2574,24 @@ Vim-Effekte sind die am besten geeigneten Laborprojekte, die aus Einsichten für
 
 Diese Erweiterung der hermetischen Theorie ermöglicht es Lehrlingen, problemlos exotische Magien zu erlernen. Hinsichtlich der Spielbalance werden Lehrlinge, deren Gaben mit den neuen Techniken erschlossen wurden, wahrscheinlich mächtiger als herkömmliche hermetische Magi. Der Grund dafür ist, dass die neuen Lehrlinge ihre hermetischen Künste leicht mit einer Reihe exotischer Übernatürlicher Fertigkeiten ergänzen können. Da dieses Integrationsprojekt jedoch Magi, deren Künste bereits erschlossen wurden, nicht direkt betrifft, könnten viele Magi zögern, die Zeit und Mühe in ein Projekt zu investieren, das nur ihren Lehrlingen nützt – sei es aus Eigennutz oder aus Furcht vor mächtigen Lehrlingen. Andererseits könnten Magi, die in hochrangige Hauspolitik oder andere langfristige strategische Bündnisse involviert sind, sehr daran interessiert sein, eine neue Generation mächtiger Magi heranzubilden.
 
+> ### Abenteuerideen zur Behutsamen Erschließung
+>
+> **Ruinierte Lehrlinge**
+>
+> Ein vom Pech verfolgter Bonisagus-Magus, der diesen Durchbruch zu erforschen versucht, beschlagnahmt eine Reihe vielversprechender „Lehrlinge" und beschädigt oder zerstört deren Gaben durch experimentelle Methoden der Erschließung der Künste. Dies sind aufrichtige Fehler – der Bonisagus-Magus handelt nicht böswillig –, und da seine „Opfer" noch nicht ihre Künste erschlossen bekommen hatten, waren sie technisch gesehen niemandes Lehrlinge. Nichtsdestotrotz sind die anderen Magi des Tribunals entsetzt über diese Verschwendung Begabten Talents und versuchen, die Forschung des Magus zu unterbinden.
+>
+> **Lang verlorene Macht**
+>
+> Die Magi der Linie des Pralix (siehe *Häuser des Hermes: Societates*, [Seite 126](<Ars Magica 5e - Häuser des Hermes - Societates.md#die-abstammungslinie-der-pralix>)) erzielen diesen Durchbruch und erschließen die Künste einer Reihe von Lehrlingen mithilfe der Behutsamen Erschließung. Den neuen Lehrlingen wird dann Zugang zu einer geheimen Bibliothek gewährt, die viele Bücher enthält, die im Laufe der Jahrhunderte von zum Orden des Hermes konvertierten Heckenzauberern geschrieben wurden. Durch das Studium des Bücherbestands können die Lehrlinge exotische Übernatürliche Fertigkeiten erlernen, die dem Orden des Hermes als verloren galten.
+>
+> **Unterwanderung durch den Orden Odins**
+>
+> Heckenzauberer des Ordens Odins erfahren von dieser Verbesserung der hermetischen Theorie und nutzen sie zusammen mit einem Bonisagus-Verbündeten als Grundlage eines neuen Forschungsprojekts, das es einem Lehrling ermöglicht, sowohl Runenmagie als auch hermetische Magie ohne Abzug zu erlernen. Sobald dieses Projekt abgeschlossen ist, kann der Orden Odins beginnen, den Orden des Hermes praktisch unentdeckt zu unterwandern.
+>
+> **Ein behutsamer Preis**
+>
+> Ein Tytalus-Magus erfindet die Behutsame Erschließung, weigert sich aber, seine Methode zu teilen, und verlangt stattdessen ein Honorar von anderen Magi, um sie an deren Lehrlingen durchzuführen. Sein Preis ist angemessen, aber die Behutsame Erschließung wird so beliebt, dass der Magus der Nachfrage nicht nachkommen kann, und dieser Engpass verursacht eine Verzögerung in der Ausbildung einer großen Zahl von Lehrlingen im Tribunal. Einige besorgte Magi versuchen, ein Tribunalsurteil durchzusetzen, das den Magus zwingt, die Methode der Behutsamen Erschließung zu teilen. Es ist möglich, dass andere Magi versuchen, die Methode zu stehlen, oder alternativ darum wetteifern, die Forschung selbst durchzuführen (wobei sie die Gabe einiger unglücklicher Lehrlinge während der Experimente beschädigen).
+
 ### Energiemagie
 
 Empfohlene Durchbruchpunkte: 55 Volkshexen sind nicht in derselben Weise wie ein Magus durch die Grenze der Energie eingeschränkt, sodass das Studium ihrer Praktiken und deren Integration in die hermetische Magie es einem Magus ermöglichen könnte, auch diese Grenze zu überwinden. Das Ergebnis dieser Integration sind zusätzliche Creo-Corpus- und Perdo-Corpus-Leitlinien.
@@ -2582,31 +2600,31 @@ Empfohlene Durchbruchpunkte: 55 Volkshexen sind nicht in derselben Weise wie ein
 
 Corpus-Effekte sind die am besten geeigneten Laborprojekte, die aus Einsichten für diesen Durchbruch hervorgebracht werden können. Einige Beispieleffekte sind:
 
->#### Neue Energiemagie-Tugend und Leitlinien
+> ### Neue Energiemagie-Tugend und Leitlinien
 >
->#### Energiemagie
->Kleine Hermetische Tugend
+> #### Energiemagie
+> Kleine Hermetische Tugend
 >
->Der Magus kann auf zusätzliche Creo-Corpus- und Perdo-Corpus-Leitlinien zugreifen.
+> Der Magus kann auf zusätzliche Creo-Corpus- und Perdo-Corpus-Leitlinien zugreifen.
 >
->#### Neue Perdo-Corpus-Leitlinien
->Stufe 5: Verdoppelt die Zeit, die ein Charakter zur Erholung einer verlorenen Kurzzeit-Erschöpfungsstufe benötigt (siehe Tabelle zur Erschöpfungserholung, ArM5, [Seite 179](<Ars Magica Definitive Edition Basisregeln.md#erholungstabelle-für-erschöpfung>)).
+> #### Neue Perdo-Corpus-Leitlinien
+> Stufe 5: Verdoppelt die Zeit, die ein Charakter zur Erholung einer verlorenen Kurzzeit-Erschöpfungsstufe benötigt (siehe Tabelle zur Erschöpfungserholung, ArM5, [Seite 179](<Ars Magica Definitive Edition Basisregeln.md#erholungstabelle-für-erschöpfung>)).
 >
->Stufe 5: Bewirkt, dass ein Ziel eine Kurzzeit-Erschöpfungsstufe verliert.
+> Stufe 5: Bewirkt, dass ein Ziel eine Kurzzeit-Erschöpfungsstufe verliert.
 >
->Stufe 10: Bewirkt, dass ein Ziel eine Langzeit-Erschöpfungsstufe verliert. Beachte, dass dies keine neue Leitlinie ist. Jeder Magus kann mit dieser Effektstufe den Verlust einer Erschöpfungsstufe bewirken (siehe ArM5, [Seite 133](<Ars Magica Definitive Edition Basisregeln.md#creo-corpus--leitlinien>)).
+> Stufe 10: Bewirkt, dass ein Ziel eine Langzeit-Erschöpfungsstufe verliert. Beachte, dass dies keine neue Leitlinie ist. Jeder Magus kann mit dieser Effektstufe den Verlust einer Erschöpfungsstufe bewirken (siehe ArM5, [Seite 133](<Ars Magica Definitive Edition Basisregeln.md#creo-corpus--leitlinien>)).
 >
->Stufe 15: Solange dieser Effekt wirkt, können Charaktere keine Erschöpfungsstufen durch Ruhen zurückgewinnen.
+> Stufe 15: Solange dieser Effekt wirkt, können Charaktere keine Erschöpfungsstufen durch Ruhen zurückgewinnen.
 >
->#### Neue Creo-Corpus-Leitlinien
+> #### Neue Creo-Corpus-Leitlinien
 >
->Ritualzauber, die nach diesen Leitlinien mit Momentaner Dauer formuliert werden, stellen Erschöpfungsstufen tatsächlich wieder her. Zauber mit anderen Dauern stellen Erschöpfungsstufen nur vorübergehend wieder her, und am Ende der Zauberdauer gehen die Erschöpfungsstufen wieder als Langzeit-Erschöpfungsstufen verloren, selbst wenn sie ursprünglich nur Kurzzeit-Erschöpfungsstufen waren.
+> Ritualzauber, die nach diesen Leitlinien mit Momentaner Dauer formuliert werden, stellen Erschöpfungsstufen tatsächlich wieder her. Zauber mit anderen Dauern stellen Erschöpfungsstufen nur vorübergehend wieder her, und am Ende der Zauberdauer gehen die Erschöpfungsstufen wieder als Langzeit-Erschöpfungsstufen verloren, selbst wenn sie ursprünglich nur Kurzzeit-Erschöpfungsstufen waren.
 >
->Stufe 5: Halbiert die Zeit, die ein Charakter zur Erholung einer verlorenen Kurzzeit-Erschöpfungsstufe benötigt (siehe Tabelle zur Erschöpfungserholung, ArM5, [Seite 179](<Ars Magica Definitive Edition Basisregeln.md#erholungstabelle-für-erschöpfung>)).
+> Stufe 5: Halbiert die Zeit, die ein Charakter zur Erholung einer verlorenen Kurzzeit-Erschöpfungsstufe benötigt (siehe Tabelle zur Erschöpfungserholung, ArM5, [Seite 179](<Ars Magica Definitive Edition Basisregeln.md#erholungstabelle-für-erschöpfung>)).
 >
->Stufe 10: Stellt eine verlorene Kurzzeit-Erschöpfungsstufe wieder her.
+> Stufe 10: Stellt eine verlorene Kurzzeit-Erschöpfungsstufe wieder her.
 >
->Stufe 15: Stellt eine verlorene Langzeit-Erschöpfungsstufe wieder her.
+> Stufe 15: Stellt eine verlorene Langzeit-Erschöpfungsstufe wieder her.
 
 **Scharfer Trank der Linderung** <br>
 CrCo Stufe 20 Pen +0, aufgeladenes Artefakt <br>
@@ -2626,9 +2644,9 @@ Dieser Ritualzauber stellt eine Langzeit-Erschöpfungsstufe für bis zu 10 Indiv
 
 **Energiegespür** <br>
 InCo(Me) Stufe 20<br>
-R: Stimme, D: Momentan, Z: Individuum 
+R: Stimme, D: Momentan, Z: Individuum
 
-Der Zaubernde erspürt den Erschöpfungszustand des Ziels (außer Atem, erschöpft, müde usw.). 
+Der Zaubernde erspürt den Erschöpfungszustand des Ziels (außer Atem, erschöpft, müde usw.).
 
 (Basis: 5, +2 Stimme, +1 Requisit)
 
@@ -2644,23 +2662,23 @@ Ziele innerhalb des Kreises können keine Erschöpfungsstufen durch Ruhen zurüc
 
 Dieser Integrationseffekt verändert das Kräftegleichgewicht zwischen Formulaischer und Spontaner Magie, da die Fähigkeit, Erschöpfung wiederherzustellen, es einem Zaubernden erlaubt, bereitwilliger zu riskieren, sie für Ermüdende Spontane Zauber aufzuwenden. Ein weiterer Effekt ist, dass das Wirken Formulaischer Zauber in Grenzsituationen – die zum Verlust von Erschöpfung führen können – für Magi tragfähiger wird. Das bedeutet, dass Magi williger und fähiger sind, Ziele innerhalb feindlicher Auren anzugreifen, was den Orden gegenüber dem Göttlichen und Infernalen stärkt.
 
->#### ABENTEUERIDEEN zur Energiemagie
+> ### Abenteuerideen zur Energiemagie
 >
->**Ein prestigeträchtiges Projekt**
+> **Ein prestigeträchtiges Projekt**
 >
->Ein Zirkel hat erschöpfungswiederherstellende Tränke an einen hermetischen Konvent verkauft, welche die ansässigen Magi heimlich studieren. Die Magi haben das Geheimnis ihrer Herstellung ergründet (das heißt, sie erfinden die Energiemagie) und sind bemüht, den Ursprung ihres hermetischen Durchbruchs zu verschleiern – sie möchten den Durchbruch dem Orden als Frucht eines prestigeträchtigeren, originären Forschungsprojekts präsentieren. Daher versuchen die Magi, den Volkshexen-Zirkel aufzuspüren und auszulöschen.
+> Ein Zirkel hat erschöpfungswiederherstellende Tränke an einen hermetischen Konvent verkauft, welche die ansässigen Magi heimlich studieren. Die Magi haben das Geheimnis ihrer Herstellung ergründet (das heißt, sie erfinden die Energiemagie) und sind bemüht, den Ursprung ihres hermetischen Durchbruchs zu verschleiern – sie möchten den Durchbruch dem Orden als Frucht eines prestigeträchtigeren, originären Forschungsprojekts präsentieren. Daher versuchen die Magi, den Volkshexen-Zirkel aufzuspüren und auszulöschen.
 >
->**Kräftegleichgewicht**
+> **Kräftegleichgewicht**
 >
->Ein Tytalus-Magus erfindet heimlich die Energiemagie und lehrt sie einer Clique niedrigrangiger Tremere. Diese Tremere nutzen ihre neue Fähigkeit, Erschöpfung wiederherzustellen und zu zerstören, um ihre Vorgesetzten sowohl im Certamen als auch im Krieg der Zauberer anzugreifen und so rasch ihre eigenen Sigile zu beanspruchen. Dies stört das Kräftegleichgewicht unter den Tremere und fragmentiert vorübergehend den Tremere-Stimmblock bei vielen Tribunalen. Während die neuen Tremere-Meister ihre Macht konsolidieren, nutzen andere Tribunalsfraktionen die Gelegenheit, eine Reihe von Tribunalsurteilen durchzusetzen, die seit Jahrzehnten von den Tremere blockiert wurden.
+> Ein Tytalus-Magus erfindet heimlich die Energiemagie und lehrt sie einer Clique niedrigrangiger Tremere. Diese Tremere nutzen ihre neue Fähigkeit, Erschöpfung wiederherzustellen und zu zerstören, um ihre Vorgesetzten sowohl im Certamen als auch im Krieg der Zauberer anzugreifen und so rasch ihre eigenen Sigile zu beanspruchen. Dies stört das Kräftegleichgewicht unter den Tremere und fragmentiert vorübergehend den Tremere-Stimmblock bei vielen Tribunalen. Während die neuen Tremere-Meister ihre Macht konsolidieren, nutzen andere Tribunalsfraktionen die Gelegenheit, eine Reihe von Tribunalsurteilen durchzusetzen, die seit Jahrzehnten von den Tremere blockiert wurden.
 >
->**Eine Diedne-Wiederkehr?**
+> **Eine Diedne-Wiederkehr?**
 >
->Die Magi des Hauses Diedne waren Meister der Spontanen Magie. Als mehrere Gruppen von Hopliten im Römischen Tribunal eine überraschende Fertigkeit in der Spontanen Magie demonstrieren, vermuten die leitenden Quaesitoren des Tribunals, dass die Hopliten auf Diedne-Geheimnisse gestoßen sind. Ermittler werden ausgesandt, um die Quelle dieser vermeintlich „wiederentdeckten" Diedne-Magie aufzuklären.
+> Die Magi des Hauses Diedne waren Meister der Spontanen Magie. Als mehrere Gruppen von Hopliten im Römischen Tribunal eine überraschende Fertigkeit in der Spontanen Magie demonstrieren, vermuten die leitenden Quaesitoren des Tribunals, dass die Hopliten auf Diedne-Geheimnisse gestoßen sind. Ermittler werden ausgesandt, um die Quelle dieser vermeintlich „wiederentdeckten" Diedne-Magie aufzuklären.
 >
->**Der Bjornaer-Kreuzzug**
+> **Der Bjornaer-Kreuzzug**
 >
->Ermutigt durch die Fähigkeit, Erschöpfung wiederherzustellen – und somit leichter in einer Göttlichen Aura zu agieren – bricht ein Bjornaer-Konventikel aus dem Wald hervor. Die brüllenden Bestien zerstören eine Reihe von Städten am Rand der Wildnis, und die Angriffe fordern mehrere Bischöfe. Das empörte Papsttum ruft einen Kreuzzug aus, und Tausende von Rittern, darunter Gruppen, die mit Heiligenreliquien bewaffnet sind, stehen am Waldrand zum Krieg bereit. Die Bjornaer sind relativ sicher – sie verbergen sich in einer Reihe von Wald-Regiones, aus denen sie gelegentlich Ausfälle unternehmen, um die Kreuzfahrer zu belästigen –, doch die frustrierten Kreuzfahrer könnten benachbarte Konvente angreifen.
+> Ermutigt durch die Fähigkeit, Erschöpfung wiederherzustellen – und somit leichter in einer Göttlichen Aura zu agieren – bricht ein Bjornaer-Konventikel aus dem Wald hervor. Die brüllenden Bestien zerstören eine Reihe von Städten am Rand der Wildnis, und die Angriffe fordern mehrere Bischöfe. Das empörte Papsttum ruft einen Kreuzzug aus, und Tausende von Rittern, darunter Gruppen, die mit Heiligenreliquien bewaffnet sind, stehen am Waldrand zum Krieg bereit. Die Bjornaer sind relativ sicher – sie verbergen sich in einer Reihe von Wald-Regiones, aus denen sie gelegentlich Ausfälle unternehmen, um die Kreuzfahrer zu belästigen –, doch die frustrierten Kreuzfahrer könnten benachbarte Konvente angreifen.
 
 ### Gespür für das Mystische
 **Empfohlene Durchbruchpunkte:** 45
@@ -2673,22 +2691,19 @@ Intellego-Effekte sind die am besten geeigneten Laborprojekte, die aus Einsichte
 
 **Linse des Geisterblicks** <br>
 InIm(Me) Stufe 34 Pen +0, Artefakt mit konstantem Effekt. <br>
-R: Berührung, D: Konstant, Z: Sicht
+R: Berührung, D: Konstant, Z: Sehsinn
 
 Dieses Artefakt ist eine Kristalllinse etwa von der Größe einer Faust, die in einen Messingring mit hermetischer Schrift eingesetzt ist. Wenn ein Charakter durch diese Linse blickt, kann er Geister mit Mentem-Machtwert sehen, selbst wenn sie normalerweise unsichtbar sind. Der Charakter kann auf diese Weise gesehene Geister mit Zaubern angreifen, muss aber aufgrund der Unbeholfenheit der Linse 3 zu allen Schwierigkeitsgraden für Konzentration addieren. Der Charakter kann die Linse auch nutzen, um mit einem unsichtbaren Geist in den Nahkampf zu treten, mit einem Abzug von 3 auf seinen Angriffswert, wobei er natürlich eine geeignete magische Waffe benötigt, wenn der Geist unkörperlich ist. Die Linse muss die Magieresistenz des Geistes nicht durchdringen.
 
-(Effekt: Basis 3, +1 Berührung, +2 Sonne, +4 Sicht; Modifikationen: +4 Stufen Umgebungsauslöser)
+(Effekt: Basis 3, +1 Berührung, +2 Sonne, +4 Sehsinn; Modifikationen: +4 Stufen Umgebungsauslöser)
 
 **Augen für den Fürsten**<br>
 InVi Stufe 15<br>
-R: Persönlich, D: Konzentration, Z: Sicht
+R: Persönlich, D: Konzentration, Z: Sehsinn
 
-Der Zaubernde kann Feenwesen
-mit einem Machtwert von 40 oder höher aufspüren. Der Effekt erlaubt es dem Zaubernden, die Kreatur zu erkennen, selbst\nwenn sie verkleidet oder unsichtbar ist, und muss die Magieresistenz der Kreatur nicht durchdringen.
-Der Effekt erlaubt es dem Zaubernden jedoch nicht,
-durch dazwischenliegende Objekte zu sehen.
+Der Zaubernde kann Feenwesen mit einem Machtwert von 40 oder höher aufspüren. Der Effekt erlaubt es dem Zaubernden, die Kreatur zu erkennen, selbst wenn sie verkleidet oder unsichtbar ist, und muss die Magieresistenz der Kreatur nicht durchdringen. Der Effekt erlaubt es dem Zaubernden jedoch nicht, durch dazwischenliegende Objekte zu sehen.
 
-(Basis: 2, +1 Konzentration, +4 Sicht)
+(Basis: 2, +1 Konzentration, +4 Sehsinn)
 
 #### Konsequenzen der Integration
 
@@ -2712,21 +2727,21 @@ Der Charakter, der diesen dunklen, bitteren Trank trinkt, erhält seine Ausdauer
 
 (Effekt: Basis 55, +1 Berührung)
 
->#### Neue Tugend: Gespür für das Mystische
->Große Hermetische Tugend
+> ### Neue Tugend: Gespür für das Mystische
+> Große Hermetische Tugend
 >
->Intellego-Effekte, die von diesem Magus gewirkt oder erfunden werden und magische Sinne verleihen (siehe ArM5, [Seite 113](<Ars Magica Definitive Edition Basisregeln.md#wahrer-glaube>)), müssen die Magieresistenz der erspürten Kreaturen nicht durchdringen. Der Effekt muss dennoch die Magieresistenz (falls vorhanden) der Person durchdringen, der der Sinn verliehen wird. Dies gilt nur für Effekte, die eine Sinnes-Zielgröße haben.
+> Intellego-Effekte, die von diesem Magus gewirkt oder erfunden werden und magische Sinne verleihen (siehe ArM5, [Seite 113](<Ars Magica Definitive Edition Basisregeln.md#wahrer-glaube>)), müssen die Magieresistenz der erspürten Kreaturen nicht durchdringen. Der Effekt muss dennoch die Magieresistenz (falls vorhanden) der Person durchdringen, der der Sinn verliehen wird. Dies gilt nur für Effekte, die eine Sinnes-Zielgröße haben.
+
+> ### Abenteueridee: Den Drachen wecken
 >
->#### ABENTEUERIDEE: Den Drachen wecken
->
->Die Magi erzielen diesen Durchbruch und entdecken bei ihrer Rückkehr zu ihrer Überraschung, dass ihr Konvent einen schlafenden Drachen beherbergt (dies könnte ein Haken Unbekanntes Ungeheuer sein). Der Drache ist im Schlaf unsichtbar und wurde von den Aktivitäten der Magi bisher nicht gestört. Es ist jedoch unklar, wie lange der Drache schon schläft. Vielleicht ist er erst kürzlich eingetroffen, oder er ist älter als die Gründung des Konvents. Da sie nun von seiner Existenz wissen, können die Magi der Versuchung widerstehen, den Drachen zu wecken? Der Drache befindet sich innerhalb der Ägide des Herdes.
+> Die Magi erzielen diesen Durchbruch und entdecken bei ihrer Rückkehr zu ihrer Überraschung, dass ihr Konvent einen schlafenden Drachen beherbergt (dies könnte ein Haken Unbekanntes Ungeheuer sein). Der Drache ist im Schlaf unsichtbar und wurde von den Aktivitäten der Magi bisher nicht gestört. Es ist jedoch unklar, wie lange der Drache schon schläft. Vielleicht ist er erst kürzlich eingetroffen, oder er ist älter als die Gründung des Konvents. Da sie nun von seiner Existenz wissen, können die Magi der Versuchung widerstehen, den Drachen zu wecken? Der Drache befindet sich innerhalb des Aegis des Herdes.
 
 **Öl des Prometheus** <br>
 CrIg Stufe 60<br>
 Pen +0, aufgeladenes Artefakt.<br>
-R: Berührung, D: Durchmesser, Z: Grenze, Ritual 
+R: Berührung, D: Durchmesser, Z: Grenze, Ritual
 
-Dieses Öl wird vorsichtig an einer Grenze auf den Boden gegossen – etwa einer Stadtmauer oder dem Rand eines Waldes –, die daraufhin in Flammen ausbricht. Vom Entzündungsort, der etwa einen Schritt im Durchmesser misst, breitet sich der Brand rasch über die Grenze aus und verdoppelt seinen Durchmesser jede Runde, bis er ein Gebiet von bis zu 60 Meilen Durchmesser erfasst. Das Feuer brennt unglaublich heftig (+20 Schaden) für die Wirkdauer des Effekts – selbst Steine brennen und Eisen schmilzt. Wenn der Effekt endet, breitet sich das Feuer nicht mehr mit übernatürlicher Geschwindigkeit oder Hitze aus, aber bereits begonnene Brände brennen auf natürliche Weise weiter. Der Trank muss am Rand einer definierten Grenze auf den Boden gegossen werden, um zu wirken (siehe ArM5, [Seite 113](<Ars Magica Definitive Edition Basisregeln.md#wahrer-glaube>)).
+Dieses Öl wird vorsichtig an einer Grenze auf den Boden gegossen – etwa einer Stadtmauer oder dem Rand eines Waldes –, die daraufhin in Flammen ausbricht. Vom Entzündungsort, der etwa einen Schritt im Durchmesser misst, breitet sich der Brand rasch über die Grenze aus und verdoppelt seinen Durchmesser jede Runde, bis er ein Gebiet von bis zu 90 Kilometer Durchmesser erfasst. Das Feuer brennt unglaublich heftig (+20 Schaden) für die Wirkdauer des Effekts – selbst Steine brennen und Eisen schmilzt. Wenn der Effekt endet, breitet sich das Feuer nicht mehr mit übernatürlicher Geschwindigkeit oder Hitze aus, aber bereits begonnene Brände brennen auf natürliche Weise weiter. Der Trank muss am Rand einer definierten Grenze auf den Boden gegossen werden, um zu wirken (siehe ArM5, [Seite 113](<Ars Magica Definitive Edition Basisregeln.md#wahrer-glaube>)).
 
 (Effekt: Basis 15, +1 Berührung, +1 Durchmesser, +4 Grenze, +3 Größe)
 
@@ -2743,20 +2758,20 @@ Das Trinken dieses Tranks bewirkt, dass sich der Charakter für ein Jahr in eine
 
 In mancher Hinsicht hat dieses Integrationsprojekt begrenzte Konsequenzen; es eröffnet den Magi nicht wirklich neue Kräfte. Seine hauptsächliche Wirkung besteht darin, dass es mächtigen Magi ermöglicht, Untergebene effektiver einzusetzen, da der Magus, anstatt seine Untergebenen persönlich begleiten zu müssen, um einen Ritualeffekt zu wirken, einen Ritualgegenstand mitgeben kann.
 
->#### ABENTEUERIDEEN zu Ritualgegenständen
+> ### Abenteuerideen zu Ritualgegenständen
 >
->**Aufstand der Konventsmitglieder**
+> **Aufstand der Konventsbewohner**
 >
->Ein abgelegener Konvent wird von einer Rotkappe entdeckt, verwüstet durch einen Regen aus feurigem, geschmolzenem Metall; er vermutet, dass alle Magi tot sind. Das Tribunal entsendet eine Gruppe zur Untersuchung der Ruine, und es wird offensichtlich, dass die Verwüstung durch einen mächtigen Ritualzauber verursacht wurde, der aus dem Konvent selbst heraus gewirkt wurde. Einige der Konventsmitglieder werden in den umliegenden Hügeln versteckt aufgefunden. Die Ermittler stellen möglicherweise fest, dass der Konvent durch einen Aufstand der Konventsmitglieder zerstört wurde, die die Magi törichterweise mit mächtigen Ritualgegenständen bewaffnet hatten. Es ist möglich, dass die Konventsmitglieder von Feinden des Konvents angestiftet wurden.
+> Ein abgelegener Konvent wird von einer Rotkappe entdeckt, verwüstet durch einen Regen aus feurigem, geschmolzenem Metall; er vermutet, dass alle Magi tot sind. Das Tribunal entsendet eine Gruppe zur Untersuchung der Ruine, und es wird offensichtlich, dass die Verwüstung durch einen mächtigen Ritualzauber verursacht wurde, der aus dem Konvent selbst heraus gewirkt wurde. Einige der Konventsbewohner werden in den umliegenden Hügeln versteckt aufgefunden. Die Ermittler stellen möglicherweise fest, dass der Konvent durch einen Aufstand der Konventsbewohner zerstört wurde, die die Magi törichterweise mit mächtigen Ritualgegenständen bewaffnet hatten. Es ist möglich, dass die Konventsbewohner von Feinden des Konvents angestiftet wurden.
 >
->**Türme des Krieges**
+> **Türme des Krieges**
 >
->Auf der Rheintribunal-Seite der Grenze zwischen Rhein- und Novgorod-Tribunal werden rasch eine Reihe schmuckloser Türme errichtet, jeder durch mächtige Anrufungen der Ägide des Herdes geschützt. Die Türme werden fast direkt über bekannten Vis-Quellen errichtet, und die Rhein-Magi stellen bald fest, dass ihre Vis-Quellen gegen sie geschützt sind. Frühe Kommunikationsversuche mit den Bewohnern der Türme bleiben unbeantwortet, doch ein Quaesitor erkennt schließlich in allen Effekten das Sigil eines einzigen mächtigen Novgorod-Erzmagus. Auf Nachfrage bestreitet der betreffende Erzmagus jedoch jede Beteiligung – und er war nachweislich weit vom Gebiet entfernt, als die Türme erschienen. Tatsächlich steckt eine kleine Gruppe frisch geprüfter Magi hinter dem Angriff auf das Rheintribunal, die eine Reihe aufgeladener Ritual-Zauberstäbe führen, die vom Erzmagus erschaffen wurden. Die jungen Magi haben die Stäbe möglicherweise gestohlen, oder sie handeln mit dem Segen ihrer Novgorod-Ältesten. Wie dem auch sei, die beiden Tribunale stehen nun durch den rücksichtslosen Einsatz von Ritualmagie am Rande eines Krieges.
+> Auf der Rheintribunal-Seite der Grenze zwischen Rhein- und Novgorod-Tribunal werden rasch eine Reihe schmuckloser Türme errichtet, jeder durch mächtige Anrufungen des Aegis des Herdes geschützt. Die Türme werden fast direkt über bekannten Vis-Quellen errichtet, und die Rhein-Magi stellen bald fest, dass ihre Vis-Quellen gegen sie geschützt sind. Frühe Kommunikationsversuche mit den Bewohnern der Türme bleiben unbeantwortet, doch ein Quaesitor erkennt schließlich in allen Effekten das Sigil eines einzigen mächtigen Novgorod-Erzmagus. Auf Nachfrage bestreitet der betreffende Erzmagus jedoch jede Beteiligung – und er war nachweislich weit vom Gebiet entfernt, als die Türme erschienen. Tatsächlich steckt eine kleine Gruppe frisch geprüfter Magi hinter dem Angriff auf das Rheintribunal, die eine Reihe aufgeladener Ritual-Zauberstäbe führen, die vom Erzmagus erschaffen wurden. Die jungen Magi haben die Stäbe möglicherweise gestohlen, oder sie handeln mit dem Segen ihrer Novgorod-Ältesten. Wie dem auch sei, die beiden Tribunale stehen nun durch den rücksichtslosen Einsatz von Ritualmagie am Rande eines Krieges.
 
->#### Neue Tugend: Ritualgegenstände
->Kleine Hermetische Tugend
+> ### Neue Tugend: Ritualgegenstände
+> Kleine Hermetische Tugend
 >
->Der Magus kann aufgeladene Artefakte herstellen, die Ritualeffekte beinhalten. Jede Ladung erfordert dieselbe Anzahl Bauern Vis, die das normale Wirken des Effekts kosten würde. Zum Beispiel würde ein Zauberstab, der einen Effekt ähnlich dem *Fluch der Unvorhergesehenen Seuche* (PeCo 55; ArM5, [Seite 133](<Ars Magica Definitive Edition Basisregeln.md#fluch-der-unangekündigten-seuche>)) erzeugt, 11 Bauern Perdo- oder Corpus-Vis pro Ladung erfordern. Die Anzahl der Bauern Vis, die der Magus in einem Quartal verwenden darf, ist wie üblich begrenzt, und die Anzahl der Ladungen wird ebenfalls auf die normale Weise berechnet.
+> Der Magus kann aufgeladene Artefakte herstellen, die Ritualeffekte beinhalten. Jede Ladung erfordert dieselbe Anzahl Bauern Vis, die das normale Wirken des Effekts kosten würde. Zum Beispiel würde ein Zauberstab, der einen Effekt ähnlich dem *Fluch der Unvorhergesehenen Seuche* (PeCo 55; ArM5, [Seite 133](<Ars Magica Definitive Edition Basisregeln.md#fluch-der-unangekündigten-seuche>)) erzeugt, 11 Bauern Perdo- oder Corpus-Vis pro Ladung erfordern. Die Anzahl der Bauern Vis, die der Magus in einem Quartal verwenden darf, ist wie üblich begrenzt, und die Anzahl der Ladungen wird ebenfalls auf die normale Weise berechnet.
 
 # Kapitel Vier: Gruagachan
 
@@ -2764,9 +2779,7 @@ Die Gruagachan (Sg.: Gruagach) sind eine Tradition von Heckenzauberern, die von 
 
 Die Gruagachan agieren als Richter Gruagachs, indem sie Segen erteilen und furchtbare Flüche verhängen, stets mit dem Ziel poetischer Gerechtigkeit. Gruagach gewährt ihnen zudem eine äußere Seele, die den Tod durch körperliche Verletzung verhindert, sowie Tätowierungsmagie, die Fähigkeit zur Gestaltwandlung, ein Talent für Illusionen und das Empfangen von Vorahnungen sowie unsichtbare Tierbegleiter, die Fetche genannt werden. Die Heckenzauberer zahlen jedoch einen Preis für diese Gunst, denn Verzerrung verwandelt jeden Gruagach langsam in einen Troll.
 
-Die Gruagachan finden sich vorwiegend im Loch-Leglean-Tribunal, existieren aber auch im
-
-Stonehenge- und Hibernischen Tribunal. Die Gruagachan blicken auf eine lange gemeinsame Geschichte mit dem Orden des Hermes zurück. Sie waren erbitterte Rivalen der Tradition, die später Haus Diedne werden sollte, sowohl vor als auch nach deren Beitritt zum Orden, und schlossen sich wegen dieser Feindschaft dem Zauberer Damhan-Allaidh gegen den Orden an. Nach dem Schismakrieg und der Vernichtung von Haus Diedne erwärmten sich die Beziehungen zwischen dem Orden und den Gruagachan leicht. Einige Gruagachan sind sogar dem Orden beigetreten, doch die große Mehrheit bleibt unabhängig.
+Die Gruagachan finden sich vorwiegend im Loch-Leglean-Tribunal, existieren aber auch im Stonehenge- und Hibernischen Tribunal. Die Gruagachan blicken auf eine lange gemeinsame Geschichte mit dem Orden des Hermes zurück. Sie waren erbitterte Rivalen der Tradition, die später Haus Diedne werden sollte, sowohl vor als auch nach deren Beitritt zum Orden, und schlossen sich wegen dieser Feindschaft dem Zauberer Damhan-Allaidh gegen den Orden an. Nach dem Schismakrieg und der Vernichtung von Haus Diedne erwärmten sich die Beziehungen zwischen dem Orden und den Gruagachan leicht. Einige Gruagachan sind sogar dem Orden beigetreten, doch die große Mehrheit bleibt unabhängig.
 
 ## Charaktererschaffung
 
@@ -2782,10 +2795,10 @@ UnBegabte Gruagachan werden in der Regel nicht als Kinder in die Lehre genommen.
 
 Die UnBegabte Gruagach-Lehrzeit ist kürzer, und oft werden Lehrlinge nicht in alle Gruagach-Künste eingeweiht. Da UnBegabte Gruagach Mitglieder ihrer Gemeinschaften bleiben, erhalten sie ihre Ausbildung neben ihren normalen Berufen. Die UnBegabte Lehrzeit dauert im Allgemeinen drei bis fünf Jahre. Für jedes Ausbildungsjahr darf der Spieler 16 Erfahrungspunkte für Fertigkeiten oder Gruagach-Künste ausgeben und 8 Stufen an Zaubersprüchen erlernen.
 
->#### Neue Tugend: Gruagach
->Freie, Sozialer Status
+> ### Neue Tugend: Gruagach
+> Freie, Sozialer Status
 >
->Der Charakter ist Mitglied der magischen Tradition der Gruagachan. Der Charakter darf Gruagach-Laboraktivitäten durchführen und ist Mitglied eines Gruagach-Kollektivs. Diese Tugend ist mit vielen anderen Sozialen Tugenden und Fehlern sowie mit Wohlhabend und Arm kompatibel. Ein normaler Gruagach muss Zeit für den eigenen Lebensunterhalt aufwenden. UnBegabte Gruagachan tun dies üblicherweise durch die Ausübung ihrer normalen Berufe, während mächtigere Begabte Gruagachan Dienste für die Gemeinschaft leisten, örtlichen Herren zu Diensten stehen oder Belohnungen für die Durchsetzung von Gerechtigkeit erhalten – diese Dienste werden üblicherweise von UnBegabten Gruagachan vermittelt, die mit der allgemeinen Bevölkerung in Kontakt stehen.
+> Der Charakter ist Mitglied der magischen Tradition der Gruagachan. Der Charakter darf Gruagach-Laboraktivitäten durchführen und ist Mitglied eines Gruagach-Kollektivs. Diese Tugend ist mit vielen anderen Sozialen Tugenden und Fehlern sowie mit Wohlhabend und Arm kompatibel. Ein normaler Gruagach muss Zeit für den eigenen Lebensunterhalt aufwenden. UnBegabte Gruagachan tun dies üblicherweise durch die Ausübung ihrer normalen Berufe, während mächtigere Begabte Gruagachan Dienste für die Gemeinschaft leisten, örtlichen Herren zu Diensten stehen oder Belohnungen für die Durchsetzung von Gerechtigkeit erhalten – diese Dienste werden üblicherweise von UnBegabten Gruagachan vermittelt, die mit der allgemeinen Bevölkerung in Kontakt stehen.
 
 ### Ausbildung
 
@@ -2933,9 +2946,9 @@ Gruagach-Charaktere können das Äquivalent einer Reihe hermetischer Tugenden un
 
 **Große Hermetische Fehler:** Auffällige Gabe, Defizitäre Technik, Notwendige Bedingung, Schmerzhafte Magie, Einschränkung, Kurzreichweitige Magie, Vis-Verschwender.
 
-**Kleine Hermetische Fehler:** Nachlässiger Zauberer, Kreativitätsblock, Defizitäre Form, Schädliche Umstände, Desorientierungsmagie, Unvereinbare Künste, Berüchtigter Meister, Abstoßend für Tiere, Anfälligkeit für Göttliche Kraft, Anfälligkeit für Feenkraft, Anfälligkeit für Infernale Kraft, Einfallsloser Lerner, Unvorhersehbare Magie, Verzerrte Magie, Schwache Magie, Sonderbare Magie.
+**Kleine Hermetische Fehler:** Nachlässiger Zauberer, Schaffensblockade, Defizitäre Form, Abträgliche Umstände, Desorientierende Magie, Unvereinbare Künste, Berüchtigter Meister, Abstoßend für Tiere, Anfälligkeit für Göttliche Macht, Anfälligkeit für Feenmacht, Anfälligkeit für Infernale Macht, Einfallsloser Lerner, Unberechenbare Magie, Verzerrte Magie, Schwache Magie, Sonderbare Magie.
 
-Gruagachan dürfen nur Hermetische Tugenden oder Fehler aus der obigen Liste wählen, es sei denn, die Spieltruppe entscheidet anders. Sollte die Spieltruppe jedoch entscheiden, dass ein Gruagach-Charakter Stille Magie besitzen darf, sollte diese als Große Tugend behandelt werden. Die Spieltruppe darf Tugenden und Fehler aus anderen Büchern der Ars-Magica-5.-Edition zu dieser Liste hinzufügen, sofern sie angemessen sind. UnBegabte Gruagachan sollten niemals die Fehler Zwerg oder Zierlicher Körperbau besitzen, da diese Fehler als dem Wesen Gruagachs zuwiderlaufend und als Zeichen seiner Ungnade betrachtet werden.
+Gruagachan dürfen nur Hermetische Tugenden oder Fehler aus der obigen Liste wählen, es sei denn, die Spieltruppe entscheidet anders. Sollte die Spieltruppe jedoch entscheiden, dass ein Gruagach-Charakter Stille Magie besitzen darf, sollte diese als Große Tugend behandelt werden. Die Spieltruppe darf Tugenden und Fehler aus anderen Büchern für Ars Magica Fünfte Edition zu dieser Liste hinzufügen, sofern sie angemessen sind. UnBegabte Gruagachan sollten niemals die Fehler Zwerg oder Zierlicher Körperbau besitzen, da diese Fehler als dem Wesen Gruagachs zuwiderlaufend und als Zeichen seiner Ungnade betrachtet werden.
 
 ## Gruagach-Magie
 
@@ -2947,7 +2960,7 @@ Um einen dieser Zauber zu wirken, muss der Charakter Kenntnis der jeweiligen Tec
 
 #### Techniken
 
-**Geben** 
+**Geben**
 
 Diese Technik regelt die Fähigkeit eines Gruagach, Segen zu erteilen, Flüche zu verhängen, Gestalten zu verleihen und Visionen zu gewähren. Sie hat kein nahes hermetisches Äquivalent, umfasst aber Aspekte der meisten Techniken. Sie kann einem Ziel auch Flüche und Geasa (Sg.: Geas) auferlegen.
 
@@ -2991,7 +3004,7 @@ Gruagachan können die Effekte ihrer Formulaischen Magie in gewissem Umfang vari
 
 #### Zaubermeisterschaft
 
-Gruagachan können ihre Formulaischen Zauber meistern, wie es hermetische Magi tun (siehe ArM5, [Seite 86–87](<Ars Magica Definitive Edition Basisregeln.md#zaubermeisterschaft>)). Zusätzlich zu den in Ars Magica, 5. Edition, aufgeführten Meisterschaftsfertigkeiten dürfen Gruagachan jede weitere Meisterschaftsfertigkeit verwenden, die die Spieltruppe für angemessen hält. Die einzige Ausnahme ist, dass ein Gruagach unter keinen Umständen die Meisterschaftsfertigkeit Stilles Zaubern besitzen darf. Die folgende Meisterschaftsfertigkeit steht ebenfalls Gruagachan zur Verfügung.
+Gruagachan können ihre Formulaischen Zauber meistern, wie es hermetische Magi tun (siehe ArM5, [Seite 86–87](<Ars Magica Definitive Edition Basisregeln.md#zaubermeisterschaft>)). Zusätzlich zu den in Ars Magica Fünfte Edition aufgeführten Meisterschaftsfertigkeiten dürfen Gruagachan jede weitere Meisterschaftsfertigkeit verwenden, die die Spieltruppe für angemessen hält. Die einzige Ausnahme ist, dass ein Gruagach unter keinen Umständen die Meisterschaftsfertigkeit Stilles Zaubern besitzen darf. Die folgende Meisterschaftsfertigkeit steht ebenfalls Gruagachan zur Verfügung.
 
 #### Flexible Zauberei
 
@@ -3005,13 +3018,13 @@ Alle Gruagach-Zauber erfordern Vokalisierung. Ein Gruagach darf niemals einen Za
 
 *Zum Beispiel könnte ein Gruagach, der vermutet, dass jemand sein Gespräch belauscht, ein Geas gegen „jeden verhängen, der sich nicht um seine eigenen Angelegenheiten kümmert". Wenn sich jemand innerhalb der Hörweite der Stimme des Gruagach befände, der unter diese Beschreibung fällt, könnte das Geas diese Person treffen.*
 
->#### Geeignete Reichweiten, Dauern und Ziele
+> ### Geeignete Reichweiten, Dauern und Ziele
 >
->Reichweite: Persönlich, Gespräch (0/+1) und Stimme (+1/+2)
+> Reichweite: Persönlich, Gespräch (0/+1) und Stimme (+1/+2)
 >
->Dauer: Momentan, Durchmesser (+1), Sonne (+2), Mond (+3) und Geas/Grenze (siehe später)
+> Dauer: Momentan, Durchmesser (+1), Sonne (+2), Mond (+3) und Geas/Grenze (siehe später)
 >
->Ziel: Individuum, Gruppe (+1) und Blutlinie (+2)
+> Ziel: Individuum, Gruppe (+1) und Blutlinie (+2)
 
 Die Reichweite Gespräch entspricht der hermetischen Reichweite Berührung/Auge. Der Gruagach darf diese Reichweite nur nutzen, wenn er mit dem beabsichtigten Ziel in ein Gespräch verwickelt ist, das Ziel den Zaubernden den Zauber tatsächlich verbalisieren hören muss und der Zaubernde sich innerhalb von etwa drei Schritten seines Ziels befindet.
 
@@ -3047,37 +3060,37 @@ Die Gruagach-Tätowierungen haben üblicherweise die Gestalt von Tieren und ahme
 
 *Ein Geben-Segen-Zauber der Stufe 15 gewährt +2 auf einen einzelnen Fertigkeitswert für die Dauer Durchmesser (Stufe 10, +1 Durchmesser). Da Dombnall 1 Stufe übrig hat, darf er den Effekt nur zweimal pro Tag nutzen. Die Tätowierung benötigt ein Quartal zur Herstellung, erfordert zwei Bauern Animal- oder Corpus-Vis und muss nicht größer sein als ein menschliches Ohr.*
 
->#### Gruagach-Formboni
+> ### Gruagach-Formboni
 >
->Bär: +3 Stärke, +5 Verteidigung gegen Angriffe
+> Bär: +3 Stärke, +5 Verteidigung gegen Angriffe
 >
->Vogel: +5 magischer Flug
+> Vogel: +5 magischer Flug
 >
->Eber: +3 Wildheit, +4 Angriff
+> Eber: +3 Wildheit, +4 Angriff
 >
->Stier: +3 Ausdauer
+> Stier: +3 Ausdauer
 >
->Krähe: +3 Kommunikation, +5 Wissen oder Weisheit gewähren
+> Krähe: +3 Kommunikation, +5 Wissen oder Weisheit gewähren
 >
->Taube: +6 Visionen oder Vorahnungen gewähren
+> Taube: +6 Visionen oder Vorahnungen gewähren
 >
->Adler: +7 Sehkraft verbessern, +3 Wahrnehmung
+> Adler: +7 Sehkraft verbessern, +3 Wahrnehmung
 >
->Wildziege: +3 Geschicklichkeit
+> Wildziege: +3 Geschicklichkeit
 >
->Habicht: +3 Schnelligkeit
+> Habicht: +3 Schnelligkeit
 >
->Pferd: +3 Ausdauer, +5 magische Fortbewegung
+> Pferd: +3 Ausdauer, +5 magische Fortbewegung
 >
->Löwe: +3 Präsenz, +5 Tapferkeit Rebhuhn: +6 Tarnung
+> Löwe: +3 Präsenz, +5 Tapferkeit Rebhuhn: +6 Tarnung
 >
->Lachs: +4 Langlebigkeit gewähren
+> Lachs: +4 Langlebigkeit gewähren
 >
->Hirsch: +5 Gehör verbessern, +6 Virilität
+> Hirsch: +5 Gehör verbessern, +6 Virilität
 >
->Schwan: +4 Glück gewähren
+> Schwan: +4 Glück gewähren
 >
->Wolf: +6 Geruchssinn verbessern, +7 Wildheit
+> Wolf: +6 Geruchssinn verbessern, +7 Wildheit
 
 #### Vis
 
@@ -3109,9 +3122,9 @@ Der Gruagach muss zu einem besonderen Berggipfel innerhalb einer mächtigen Magi
 
 Der Fetch ist ein magischer Geist, der ein Aspekt der Persönlichkeit des Charakters und eine Erweiterung seiner Seele ist. Ein Fetch ist stets ein edles Tier und sollte unter Verwendung der Richtlinien ausgewählt werden, die im Abschnitt „Wahl des Herztiers" des Bjornaer-Kapitels in Die Häuser der Hermetik: Mysterienkulte, [Seite 19](<Ars Magica 5e - Häuser des Hermes - Mysterienkulte.md#wahl-des-herztieres>), vorgestellt werden. Edle Tiere sind weder Haustiere noch Ungeziefer. Wilde Entsprechungen von Haustieren sind zulässig; ein Wildschwein ist geeignet, ein gewöhnliches Schwein jedoch nicht. Am Ende des Fastens erhält der Charakter die Tugend Fetch und den Fehler Einschränkung. Der Charakter darf niemals Magie auf die Tierart anwenden, die sein Fetch ist. Zum Beispiel darf ein Charakter, dessen Fetch ein Wolf ist, niemals Magie auf Hunde anwenden, ob wild oder domestiziert.
 
->#### Geistermagie
+> ### Geistermagie
 >
->Die Magie der Gruagachan kann die Toten oder ihre Geister nicht beeinflussen. Einige Gruagachan sind jedoch in der Lage, Geister über andere Machtquellen zu kontaktieren, zu beschwören und zu befehligen. Sollte ein Spieler einen solchen Charakter erstellen wollen, möge er die Regeln für Ars Goetica konsultieren (Sphären der Macht: Das Infernale, [Seite 114](<Ars Magica 5e - Sphären der Macht - Das Infernale.md#kapitel-11-ars-goetia-1>)).
+> Die Magie der Gruagachan kann die Toten oder ihre Geister nicht beeinflussen. Einige Gruagachan sind jedoch in der Lage, Geister über andere Machtquellen zu kontaktieren, zu beschwören und zu befehligen. Sollte ein Spieler einen solchen Charakter erstellen wollen, möge er die Regeln für Ars Goetica konsultieren (Sphären der Macht: Das Infernale, [Seite 114](<Ars Magica 5e - Sphären der Macht - Das Infernale.md#kapitel-11-ars-goetia-1>)).
 
 #### Extraktion der Seele aus ihrer Hülle
 **Einweihungs-Schwierigkeitsgrad:** 21/30<br>
@@ -3119,11 +3132,11 @@ Der Fetch ist ein magischer Geist, der ein Aspekt der Persönlichkeit des Charak
 
 Vor der Einweihung muss der Charakter mehrere Aufgaben erfüllen. Er muss eine Begabte Person finden, die als Lehrling geeignet ist. Der Gruagach muss ein feierliches Gelübde ablegen, alle seine Lehrlinge ordnungsgemäß auszubilden, was voraussetzt, dass er über die notwendigen Fertigkeits- und Kunstwerte verfügt, um einen Lehrling auszubilden, ohne ihm Fehler aufzuprägen, und genug Zeit in die Ausbildung investiert, damit die Werte des Lehrlings ausreichen, um selbst Lehrlinge auszubilden. Der Gruagach muss außerdem einen vollkommenen magischen Stein finden, der als Gefäß für seine Seele dienen wird. Der Stein ist in der Regel einer, der Vis enthält und eine gewisse mystische Bedeutung besitzt. Der Mystagoge und der Einzuweihende verbringen dann ein Quartal gemeinsam, um das Ritual zur Extraktion der Seele des Einzuweihenden durchzuführen und sie in den Stein zu setzen. Am Ende des Quartals erhält der Gruagach die Tugend Äußere Seele und den Fehler Auffällige Magie oder verliert die Sanfte Gabe, falls der Charakter sie besaß.
 
->#### ABENTEUERIDEE: Aufgabe zum Turm des Zauberers
+> ### Abenteueridee: Suche nach dem Turm des Zauberers
 >
->Ein Gruagach, der von seinem Meister entfremdet ist, möchte die Tugenden Fetch und Äußere Seele durch Selbsteinweihung erlangen. Der Gruagach entdeckt, dass die Einweihungsskripte auf einer Reihe von Menhiren eingraviert sind, die sich unter der Kontrolle der Charaktere befinden. Wie reagieren die Charaktere, als der Gruagach und seine Verbündeten versuchen, Zugang zu den Steinen zu erlangen? Der Gruagach erklärt seinen wahren Grund für das Aufsuchen der Steine nicht und möchte nicht, dass sie in den Händen des Ordens bleiben. Die Charaktere sind möglicherweise nicht bereit, sie dem Gruagach zu überlassen, weil sie für den Zugang zu einer Regio oder als Teil einer Vis-Quelle wichtig sind. Wenn die Steine verschwinden, ermitteln die Charaktere. Hat der Gruagach sie genommen, oder hat sein Meister sie entwendet, um dem unzufriedenen Lehrling Schwierigkeiten zu bereiten?
+> Ein Gruagach, der von seinem Meister entfremdet ist, möchte die Tugenden Fetch und Äußere Seele durch Selbsteinweihung erlangen. Der Gruagach entdeckt, dass die Einweihungsskripte auf einer Reihe von Menhiren eingraviert sind, die sich unter der Kontrolle der Charaktere befinden. Wie reagieren die Charaktere, als der Gruagach und seine Verbündeten versuchen, Zugang zu den Steinen zu erlangen? Der Gruagach erklärt seinen wahren Grund für das Aufsuchen der Steine nicht und möchte nicht, dass sie in den Händen des Ordens bleiben. Die Charaktere sind möglicherweise nicht bereit, sie dem Gruagach zu überlassen, weil sie für den Zugang zu einer Regio oder als Teil einer Vis-Quelle wichtig sind. Wenn die Steine verschwinden, ermitteln die Charaktere. Hat der Gruagach sie genommen, oder hat sein Meister sie entwendet, um dem unzufriedenen Lehrling Schwierigkeiten zu bereiten?
 
-## Einweihungen UnBegabter Gruagachan
+### Einweihungen UnBegabter Gruagachan
 
 UnBegabte Gruagachan sind nicht in der Lage, Übernatürliche Tugenden durch Unterricht zu erlangen, wie es Begabte Individuen können. Jede der UnBegabten Gruagach-Künste muss durch ein Einweihungsskript erworben werden. Jedes Gruagach-Einweihungsskript ist von den anderen unabhängig, und ein Gruagach-Meister darf die Künste in beliebiger Reihenfolge einweihen oder bestimmte Künste ganz auslassen. UnBegabte Gruagachan werden in die Gruagach-Künste unter Verwendung der allgemeinen Regeln eingeweiht, die in der Einleitung dieses Buches beschrieben sind. Wie dort dargelegt, darf ein UnBegabter Gruagach keine Selbsteinweihung in Künste vornehmen.
 
@@ -3195,24 +3208,24 @@ Stärke der Gestalt: Abwehr gegen Corpus- oder Animal-Effekte.
 
 Verwirrende Magie: Abwehr gegen Imaginem-Effekte.
 
->#### ABENTEUERIDEE: Poetische Gerechtigkeit
+> ### Abenteueridee: Poetische Gerechtigkeit
 >
->Einer der Charaktere misshandelt die Bauern eines Dorfes schwer, und ein Gruagach erfährt davon. Der Gruagach beschließt, dass er die Fluch-Einweihung absolvieren kann, indem er den Charakter bestraft.
+> Einer der Charaktere misshandelt die Bauern eines Dorfes schwer, und ein Gruagach erfährt davon. Der Gruagach beschließt, dass er die Fluch-Einweihung absolvieren kann, indem er den Charakter bestraft.
 
->#### ABENTEUERIDEE: Gestalt und Form
+> ### Abenteueridee: Gestalt und Form
 >
->Ein UnBegabter Gruagach wird Zeuge, wie ein Bjornaer-Magus sich in sein Herztier verwandelt. Der Gruagach und seine Verbündeten beginnen, den Magus zu verfolgen, um seine Gestalt-Einweihung zu erfüllen.
+> Ein UnBegabter Gruagach wird Zeuge, wie ein Bjornaer-Magus sich in sein Herztier verwandelt. Der Gruagach und seine Verbündeten beginnen, den Magus zu verfolgen, um seine Gestalt-Einweihung zu erfüllen.
 
 ### Geas- und Grenze-Dauern
 
 Die Dauern Geas und Grenze ähneln den Dauern Bis (Bedingung), Solange (Bedingung), Nicht (Bedingung) und Wenn (Bedingung) des Hauses Merinita; siehe ArM5, [Seite 92](<Ars Magica Definitive Edition Basisregeln.md#merinita--feenmagie>), und Die Häuser der Hermetik: Mysterienkulte, [Seite 100](<Ars Magica 5e - Häuser des Hermes - Mysterienkulte.md#zauberzeitpunkt-kleines-illusionsmysterium>). Die Gruagach-Dauern erfordern niemals ein Ritual, und anders als die Merinita-Dauern variiert die Schwierigkeit des Wirkens eines Geas- oder Grenze-Dauer-Zaubers je nach der Breite des dem Ziel des Zaubers auferlegten Verbots oder der Leichtigkeit, mit der der Zauber beendet werden kann. Ein Geas, das ein umfassendes Verbot für die Handlungen eines Opfers auferlegt, ist schwieriger zu wirken als ein enger gefasstes, und ein Fluch, dem das Opfer leicht entgegenwirken kann, ist verhältnismäßig einfach zu wirken. In jedem Fall muss das Verbot für das Ziel des Zaubers erfüllbar sein, und eine Bedingung, die den Charakter nicht einschränkt, ist niemals angemessen.
 
->#### Geas- und Grenze-Dauer-Magnituden
+> ### Geas- und Grenze-Dauer-Magnituden
 >
->| ZAUBERDAUER       | UMFASSENDES VERBOT | ALLGEMEINES VERBOT | SPEZIFISCHES VERBOT |
->|-------------------|--------------------|--------------------|---------------------|
->| Geas (Bedingung)  | +4 Magnituden      | +2 Magnituden      | +1 Magnitude        |
->| Grenze (Bedingung) | +1 Magnitude       | +2 Magnituden      | +4 Magnituden       |
+> | ZAUBERDAUER       | UMFASSENDES VERBOT | ALLGEMEINES VERBOT | SPEZIFISCHES VERBOT |
+> |-------------------|--------------------|--------------------|---------------------|
+> | Geas (Bedingung)  | +4 Magnituden      | +2 Magnituden      | +1 Magnitude        |
+> | Grenze (Bedingung) | +1 Magnitude       | +2 Magnituden      | +4 Magnituden       |
 
 #### Geas-Dauer (Bedingung)
 
@@ -3267,9 +3280,9 @@ Da Gruagach-Magie sehr flexibel ist, kann ein typischer Gruagach die Reichweite,
 
 Ein Zauber mit Geas-Dauer gilt nicht als aktiver übernatürlicher Effekt, bis der Charakter das Verbot bricht, und somit wird ein Charakter, der ein Geas respektiert, nicht von Verzerrung betroffen. Ein Zauber mit Grenze-Dauer ist ein aktiver übernatürlicher Effekt, bis der Charakter die Grenze verletzt, und verursacht somit Verzerrung.
 
->#### Gruagach-Alternative
+> ### Gruagach-Alternative
 >
->Unter den Standardregeln sind nur Segen- und Fluch-Zauber verpflichtet, die Geas- und Grenze-Dauern zu verwenden. Um die Gruagachan noch exotischer zu gestalten, kann die Spieltruppe beschließen, dass alle Zauber und Laboreffekte der Gruagachan die Grenze- oder Geas-Dauern verwenden müssen. Dies verkompliziert die Angelegenheit etwas, verleiht den Gruagachan aber mehr Eigenart und distanziert sie weiter von der hermetischen Standardmagie.
+> Unter den Standardregeln sind nur Segen- und Fluch-Zauber verpflichtet, die Geas- und Grenze-Dauern zu verwenden. Um die Gruagachan noch exotischer zu gestalten, kann die Spieltruppe beschließen, dass alle Zauber und Laboreffekte der Gruagachan die Grenze- oder Geas-Dauern verwenden müssen. Dies verkompliziert die Angelegenheit etwas, verleiht den Gruagachan aber mehr Eigenart und distanziert sie weiter von der hermetischen Standardmagie.
 
 ## Zauberleitlinien
 
@@ -3281,41 +3294,41 @@ Ein Gruagach mit Kenntnis dieser Kunst kann vorübergehend Tugenden verleihen, B
 
 #### Segen geben
 
->#### Leitlinien: Segen geben
+> ### Leitlinien: Segen geben
 >
->Diese Form kann einige Tugenden nicht beeinflussen – Sozialer Status sowie Göttliche, Feen-, Hermetische oder Infernale Tugenden zum Beispiel bleiben unberührt. Ein Segen darf keine Tugenden verleihen, die die Ansammlung von Erfahrungspunkten beeinflussen, das Erlernen bestimmter Fertigkeitsarten ermöglichen, dem Charakter Vorteile von Dritten verschaffen oder einen physischen Gegenstand gewähren. Wird eine Übernatürliche Tugend verliehen, die eine entsprechende Fertigkeit besitzt, kann der Charakter die Fertigkeit auf einem Wert von 4 ausüben. Das dem Segen auferlegte Verbot muss mit der Tugend, dem Charakter oder der Geschichte zusammenhängen. Ein Gruagach darf niemals einen Segen-Geben-Zauber auf sich selbst wirken.
+> Diese Form kann einige Tugenden nicht beeinflussen – Sozialer Status sowie Göttliche, Feen-, Hermetische oder Infernale Tugenden zum Beispiel bleiben unberührt. Ein Segen darf keine Tugenden verleihen, die die Ansammlung von Erfahrungspunkten beeinflussen, das Erlernen bestimmter Fertigkeitsarten ermöglichen, dem Charakter Vorteile von Dritten verschaffen oder einen physischen Gegenstand gewähren. Wird eine Übernatürliche Tugend verliehen, die eine entsprechende Fertigkeit besitzt, kann der Charakter die Fertigkeit auf einem Wert von 4 ausüben. Das dem Segen auferlegte Verbot muss mit der Tugend, dem Charakter oder der Geschichte zusammenhängen. Ein Gruagach darf niemals einen Segen-Geben-Zauber auf sich selbst wirken.
 >
->Umfassende Verbote sind solche, die sehr leicht zu erfüllen sind und sich auf die verliehene Tugend beziehen, wodurch die Tugend nur in relativ wenigen Situationen nützlich ist. Zum Beispiel: Wenn ein Zauber einem Charakter Zähigkeit verleiht, die nur nützlich ist, bis der Charakter einen anderen angreift, wäre dies ein umfassendes Verbot.
+> Umfassende Verbote sind solche, die sehr leicht zu erfüllen sind und sich auf die verliehene Tugend beziehen, wodurch die Tugend nur in relativ wenigen Situationen nützlich ist. Zum Beispiel: Wenn ein Zauber einem Charakter Zähigkeit verleiht, die nur nützlich ist, bis der Charakter einen anderen angreift, wäre dies ein umfassendes Verbot.
 >
->Allgemeine Verbote sind relativ leicht zu erfüllen und beziehen sich auf die verliehene Tugend, was verhindert, dass die Tugend ohne Einschränkung fortbesteht. Zum Beispiel: Wenn ein Charakter einen Segen der Zähigkeit erhält, der nur wirkt, bis er eine Mittelschwere Wunde erleidet, wäre dies ein allgemeines Verbot.
+> Allgemeine Verbote sind relativ leicht zu erfüllen und beziehen sich auf die verliehene Tugend, was verhindert, dass die Tugend ohne Einschränkung fortbesteht. Zum Beispiel: Wenn ein Charakter einen Segen der Zähigkeit erhält, der nur wirkt, bis er eine Mittelschwere Wunde erleidet, wäre dies ein allgemeines Verbot.
 >
->Spezifische Verbote sind Einschränkungen, die die Nutzung der verliehenen Tugend kaum begrenzen. Zum Beispiel: Wenn ein Charakter die Tugend Zähigkeit mit der Einschränkung erhält, dass sie nur bis zu einem bestimmten Schadenstyp wie Feuer bestehen bleibt, wäre dies ein spezifisches Verbot.
+> Spezifische Verbote sind Einschränkungen, die die Nutzung der verliehenen Tugend kaum begrenzen. Zum Beispiel: Wenn ein Charakter die Tugend Zähigkeit mit der Einschränkung erhält, dass sie nur bis zu einem bestimmten Schadenstyp wie Feuer bestehen bleibt, wäre dies ein spezifisches Verbot.
 >
->Segen-Geben-Zauber werden mit der Dauer Grenze (Bedingung) gewirkt, die bestimmt, wie lange die magischen Effekte anhalten. Zauber mit der Dauer Grenze (Bedingung) sind dauerhaft, es sei denn, der Charakter erfüllt das Verbot des Segens. Für jede mögliche Tugend existiert ein eigener Segen, aber ein Gruagach kann die spezifischen Bedingungen der Dauer an die Umstände anpassen, ohne einen neuen Zauber erlernen zu müssen. Die Basisstufe aller Segenzauber beinhaltet die Reichweite Gespräch.
+> Segen-Geben-Zauber werden mit der Dauer Grenze (Bedingung) gewirkt, die bestimmt, wie lange die magischen Effekte anhalten. Zauber mit der Dauer Grenze (Bedingung) sind dauerhaft, es sei denn, der Charakter erfüllt das Verbot des Segens. Für jede mögliche Tugend existiert ein eigener Segen, aber ein Gruagach kann die spezifischen Bedingungen der Dauer an die Umstände anpassen, ohne einen neuen Zauber erlernen zu müssen. Die Basisstufe aller Segenzauber beinhaltet die Reichweite Gespräch.
 >
->Ein einzelner Segen-Geben-Zauber betrifft eine bestimmte Fertigkeit oder Eigenschaft oder verleiht eine bestimmte Tugend.
+> Ein einzelner Segen-Geben-Zauber betrifft eine bestimmte Fertigkeit oder Eigenschaft oder verleiht eine bestimmte Tugend.
 >
->Stufe 5: Gewähre einen Bonus von +1 auf einen einzelnen Fertigkeitswurf.
+> Stufe 5: Gewähre einen Bonus von +1 auf einen einzelnen Fertigkeitswurf.
 >
->Stufe 10: Verleihe eine Kleine Allgemeine oder Übernatürliche (Magie) Tugend.
+> Stufe 10: Verleihe eine Kleine Allgemeine oder Übernatürliche (Magie) Tugend.
 >
->Stufe 10: Gewähre einen Bonus von +2 auf einen einzelnen Fertigkeitswurf.
+> Stufe 10: Gewähre einen Bonus von +2 auf einen einzelnen Fertigkeitswurf.
 >
->Stufe 15: Gewähre einen Bonus von +3 auf einen einzelnen Fertigkeitswurf.
+> Stufe 15: Gewähre einen Bonus von +3 auf einen einzelnen Fertigkeitswurf.
 >
->Stufe 15: Gewähre einen Bonus von +1 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
+> Stufe 15: Gewähre einen Bonus von +1 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
 >
->Stufe 20: Verleihe eine Große Allgemeine oder Übernatürliche (Magie) Tugend.
+> Stufe 20: Verleihe eine Große Allgemeine oder Übernatürliche (Magie) Tugend.
 >
->Stufe 20: Gewähre einen Bonus von +2 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
+> Stufe 20: Gewähre einen Bonus von +2 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
 >
->Stufe 20: Erhöhe eine Eigenschaft einer Person um einen Punkt auf maximal 0.
+> Stufe 20: Erhöhe eine Eigenschaft einer Person um einen Punkt auf maximal 0.
 >
->Stufe 25: Gewähre einen Bonus von +3 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
+> Stufe 25: Gewähre einen Bonus von +3 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
 >
->Stufe 25: Erhöhe eine Eigenschaft einer Person um einen Punkt auf maximal +1.
+> Stufe 25: Erhöhe eine Eigenschaft einer Person um einen Punkt auf maximal +1.
 >
->Stufe 30: Erhöhe eine Eigenschaft einer Person um einen Punkt auf maximal +2.
+> Stufe 30: Erhöhe eine Eigenschaft einer Person um einen Punkt auf maximal +2.
 
 **Segen der städtischen Weisheit für den Landmann**<br>
 GbSe Stufe 20<br>
@@ -3339,29 +3352,29 @@ Dieser Zauber gibt dem Ziel +2 auf seinen Wert in der Fertigkeit Einzelwaffe. Ob
 
 #### Segen nehmen
 
->#### Leitlinien: Segen nehmen
+> ### Leitlinien: Segen nehmen
 >
->Segen-Nehmen-Zauber heben die Tugenden, Fertigkeiten oder Eigenschaften eines Charakters auf, bis der Zauber endet oder das auferlegte Verbot erfüllt wird. Jede entfernte Tugend muss den zuvor besprochenen Leitlinien entsprechen. Der Zaubernde muss die Tugenden, Fertigkeiten oder Eigenschaftswerte des Opfers nicht kennen, um einen Segen-Nehmen-Zauber zu wirken. Der Gruagach wirkt den Zauber auf der gewünschten Stufe und teilt dem Spielleiter mit, wie er das Ziel schädigen möchte. Der Spielleiter wählt dann die am besten passende Tugend, Eigenschaft oder Fertigkeit zur Aufhebung aus. Ein Zauber, der auf eine Große Tugend abzielt, kann, wenn keine vorhanden ist, stattdessen eine Kleine Tugend, Eigenschaft oder Fertigkeit beeinflussen. Erfüllen mehrere Optionen die Anforderungen des Zaubers, wählt der Spielleiter diejenige, die am besten zur Geschichte passt. Das den Zauber begleitende Verbot muss an den Charakter, die Eigenschaft, die Tugend und die Geschichte geknüpft sein.
+> Segen-Nehmen-Zauber heben die Tugenden, Fertigkeiten oder Eigenschaften eines Charakters auf, bis der Zauber endet oder das auferlegte Verbot erfüllt wird. Jede entfernte Tugend muss den zuvor besprochenen Leitlinien entsprechen. Der Zaubernde muss die Tugenden, Fertigkeiten oder Eigenschaftswerte des Opfers nicht kennen, um einen Segen-Nehmen-Zauber zu wirken. Der Gruagach wirkt den Zauber auf der gewünschten Stufe und teilt dem Spielleiter mit, wie er das Ziel schädigen möchte. Der Spielleiter wählt dann die am besten passende Tugend, Eigenschaft oder Fertigkeit zur Aufhebung aus. Ein Zauber, der auf eine Große Tugend abzielt, kann, wenn keine vorhanden ist, stattdessen eine Kleine Tugend, Eigenschaft oder Fertigkeit beeinflussen. Erfüllen mehrere Optionen die Anforderungen des Zaubers, wählt der Spielleiter diejenige, die am besten zur Geschichte passt. Das den Zauber begleitende Verbot muss an den Charakter, die Eigenschaft, die Tugend und die Geschichte geknüpft sein.
 >
->Umfassende Verbote sind solche, die leicht zu erfüllen sind und mit der Tugend, Fertigkeit oder Eigenschaft zusammenhängen, wodurch der Fluch leicht aufgehoben werden kann. Zum Beispiel: Wenn ein Charakter mit Schwäche verflucht wird und seine Stärke auf 0 sinkt, der Fluch aber aufgehoben wird, sobald der Spieler den Stärkewert des Charakters zu einer Fertigkeit hinzurechnet, wäre dies ein umfassendes Verbot.
+> Umfassende Verbote sind solche, die leicht zu erfüllen sind und mit der Tugend, Fertigkeit oder Eigenschaft zusammenhängen, wodurch der Fluch leicht aufgehoben werden kann. Zum Beispiel: Wenn ein Charakter mit Schwäche verflucht wird und seine Stärke auf 0 sinkt, der Fluch aber aufgehoben wird, sobald der Spieler den Stärkewert des Charakters zu einer Fertigkeit hinzurechnet, wäre dies ein umfassendes Verbot.
 >
->Allgemeine Verbote sind ungewöhnlich, aber nicht übermäßig schwer zu erfüllen und hängen mit der Tugend, Fertigkeit oder Eigenschaft zusammen, wodurch der Fluch relativ leicht aufgehoben werden kann. Zum Beispiel: Ein Charakter kann mit Schwäche verflucht werden und seine Stärke auf 0 sinken, was nur so lange bestehen bleibt, bis der Charakter einen anderen in einem Kräftemessen besiegt.
+> Allgemeine Verbote sind ungewöhnlich, aber nicht übermäßig schwer zu erfüllen und hängen mit der Tugend, Fertigkeit oder Eigenschaft zusammen, wodurch der Fluch relativ leicht aufgehoben werden kann. Zum Beispiel: Ein Charakter kann mit Schwäche verflucht werden und seine Stärke auf 0 sinken, was nur so lange bestehen bleibt, bis der Charakter einen anderen in einem Kräftemessen besiegt.
 >
->Spezifische Verbote erfordern ungewöhnliche Umstände zur Erfüllung, hängen mit der Tugend, Fertigkeit oder Eigenschaft zusammen und machen den Fluch schwer aufhebbar. Zum Beispiel: Ein Charakter könnte mit Schwäche verflucht werden und seine Stärke auf 0 sinken, was erst aufgehoben wird, nachdem der Charakter einen Patzer erlitten hat, der seinen Stärkewert einbezieht.
+> Spezifische Verbote erfordern ungewöhnliche Umstände zur Erfüllung, hängen mit der Tugend, Fertigkeit oder Eigenschaft zusammen und machen den Fluch schwer aufhebbar. Zum Beispiel: Ein Charakter könnte mit Schwäche verflucht werden und seine Stärke auf 0 sinken, was erst aufgehoben wird, nachdem der Charakter einen Patzer erlitten hat, der seinen Stärkewert einbezieht.
 >
->Wenn der Segen-Nehmen-Zauber die Magieresistenz des Ziels überwindet, hat das Ziel die Möglichkeit, ihm mit einem Ausdauerwurf gegen einen Schwierigkeitsgrad von 9 zu widerstehen. Die Spieltruppe entscheidet dann über die Angemessenheit der genommenen Tugend und des auferlegten Verbots, und der Ausdauerwurf des Opfers wird gemäß den zuvor aufgeführten Modifikatoren für Poetische Gerechtigkeit modifiziert.
+> Wenn der Segen-Nehmen-Zauber die Magieresistenz des Ziels überwindet, hat das Ziel die Möglichkeit, ihm mit einem Ausdauerwurf gegen einen Schwierigkeitsgrad von 9 zu widerstehen. Die Spieltruppe entscheidet dann über die Angemessenheit der genommenen Tugend und des auferlegten Verbots, und der Ausdauerwurf des Opfers wird gemäß den zuvor aufgeführten Modifikatoren für Poetische Gerechtigkeit modifiziert.
 >
->Alle Segen-Nehmen-Zauber werden mit der Dauer Grenze (Bedingung) oder Geas (Bedingung) gewirkt. Jene mit der Dauer Geas (Bedingung) müssen zusätzlich eine zweite Dauer besitzen, wie zuvor beschrieben, für die Zeitspanne, die die Strafe andauert. Ein als Geas gewirkter Segen-Nehmen-Zauber verwendet den größeren der beiden Dauermodifikatoren zur Bestimmung der Zauberstufe. Zauber mit der Dauer Grenze (Bedingung) sind dauerhaft, es sei denn, der Charakter erfüllt das Verbot des Segens. Die Basisstufe aller Segenzauber beinhaltet die Reichweite Gespräch.
+> Alle Segen-Nehmen-Zauber werden mit der Dauer Grenze (Bedingung) oder Geas (Bedingung) gewirkt. Jene mit der Dauer Geas (Bedingung) müssen zusätzlich eine zweite Dauer besitzen, wie zuvor beschrieben, für die Zeitspanne, die die Strafe andauert. Ein als Geas gewirkter Segen-Nehmen-Zauber verwendet den größeren der beiden Dauermodifikatoren zur Bestimmung der Zauberstufe. Zauber mit der Dauer Grenze (Bedingung) sind dauerhaft, es sei denn, der Charakter erfüllt das Verbot des Segens. Die Basisstufe aller Segenzauber beinhaltet die Reichweite Gespräch.
 >
->Ein einzelner Segen-Nehmen-Zauber betrifft einen bestimmten Tätigkeitsbereich wie Kampf, Verhandlung, Handwerksarbeit, Athletik und dergleichen. Dies ist breiter gefasst als Segen geben, aber der Zaubernde kann nicht genau kontrollieren, was dem Ziel genommen wird.
+> Ein einzelner Segen-Nehmen-Zauber betrifft einen bestimmten Tätigkeitsbereich wie Kampf, Verhandlung, Handwerksarbeit, Athletik und dergleichen. Dies ist breiter gefasst als Segen geben, aber der Zaubernde kann nicht genau kontrollieren, was dem Ziel genommen wird.
 >
->Stufe 10: Nimm eine Kleine Allgemeine oder Übernatürliche (Magie) Tugend.
+> Stufe 10: Nimm eine Kleine Allgemeine oder Übernatürliche (Magie) Tugend.
 >
->Stufe 10: Senke den Wert einer einzelnen Eigenschaft auf 0.
+> Stufe 10: Senke den Wert einer einzelnen Eigenschaft auf 0.
 >
->Stufe 10: Senke den Wert einer einzelnen Fertigkeit auf 0.
+> Stufe 10: Senke den Wert einer einzelnen Fertigkeit auf 0.
 >
->Stufe 20: Nimm eine Große Allgemeine oder Übernatürliche (Magie) Tugend.
+> Stufe 20: Nimm eine Große Allgemeine oder Übernatürliche (Magie) Tugend.
 
 **Den Stolzen erniedrigen**<br>
 NeSe Stufe 25<br>
@@ -3389,49 +3402,49 @@ Gruagachan sind in der Lage, dem Ziel bestimmte Fehler aufzuerlegen, seine Eigen
 
 #### Fluch geben
 
->#### Leitlinien: Fluch geben
+> ### Leitlinien: Fluch geben
 >
->Diese Form kann einige Fehler nicht beeinflussen – Sozialer Status, Geschichte-Fehler sowie Hermetische, Göttliche, Infernale oder Feen-Fehler zum Beispiel bleiben unberührt. Ein Fluch darf keine Allgemeinen Fehler auferlegen, die die Ansammlung von Erfahrungspunkten beeinflussen, das Erlernen bestimmter Fertigkeitsarten einschränken oder sich auf den Wohlstand des Charakters beziehen. Das dem Fluch auferlegte Verbot muss mit dem Fehler, dem Charakter oder der Geschichte zusammenhängen. Obwohl die Leitlinien Flucheffekte ohne Verbot auflisten, dienen diese nur der Veranschaulichung. Ein Fluch ohne begleitendes Verbot darf nur als Strafe für den Bruch eines Geas existieren, da das Geas selbst das Verbot liefert.
+> Diese Form kann einige Fehler nicht beeinflussen – Sozialer Status, Geschichte-Fehler sowie Hermetische, Göttliche, Infernale oder Feen-Fehler zum Beispiel bleiben unberührt. Ein Fluch darf keine Allgemeinen Fehler auferlegen, die die Ansammlung von Erfahrungspunkten beeinflussen, das Erlernen bestimmter Fertigkeitsarten einschränken oder sich auf den Wohlstand des Charakters beziehen. Das dem Fluch auferlegte Verbot muss mit dem Fehler, dem Charakter oder der Geschichte zusammenhängen. Obwohl die Leitlinien Flucheffekte ohne Verbot auflisten, dienen diese nur der Veranschaulichung. Ein Fluch ohne begleitendes Verbot darf nur als Strafe für den Bruch eines Geas existieren, da das Geas selbst das Verbot liefert.
 >
->Umfassende Verbote sind solche, die leicht zu erfüllen sind und mit dem Fehler zusammenhängen, wodurch der Fluch leicht aufgehoben werden kann. Zum Beispiel: Wenn ein Charakter mit Stumm verflucht wird, der Fluch aber aufgehoben wird, sobald jemand den Namen des Charakters ausspricht, wäre dies ein umfassendes Verbot.
+> Umfassende Verbote sind solche, die leicht zu erfüllen sind und mit dem Fehler zusammenhängen, wodurch der Fluch leicht aufgehoben werden kann. Zum Beispiel: Wenn ein Charakter mit Stumm verflucht wird, der Fluch aber aufgehoben wird, sobald jemand den Namen des Charakters ausspricht, wäre dies ein umfassendes Verbot.
 >
->Allgemeine Verbote sind solche, die ungewöhnlich, aber nicht übermäßig schwer zu erfüllen sind und mit dem Fehler zusammenhängen, wodurch der Fluch relativ leicht aufgehoben werden kann. Zum Beispiel: Wenn ein Charakter mit dem Fehler Stumm verflucht wird und dieser erst aufgehoben wird, wenn der Charakter den Namen des Zaubernden hört, wäre dies ein allgemeines Verbot.
+> Allgemeine Verbote sind solche, die ungewöhnlich, aber nicht übermäßig schwer zu erfüllen sind und mit dem Fehler zusammenhängen, wodurch der Fluch relativ leicht aufgehoben werden kann. Zum Beispiel: Wenn ein Charakter mit dem Fehler Stumm verflucht wird und dieser erst aufgehoben wird, wenn der Charakter den Namen des Zaubernden hört, wäre dies ein allgemeines Verbot.
 >
->Spezifische Verbote erfordern ungewöhnliche Umstände zur Erfüllung, hängen mit dem Fehler zusammen und machen den Fluch schwer aufhebbar. Zum Beispiel: Wenn ein Charakter mit dem Fehler Stumm verflucht wird und dieser erst aufgehoben werden kann, nachdem der Charakter hört, wie jemand aufrichtige Dankbarkeit für eine selbstlose Tat des Charakters zum Ausdruck bringt, wäre dies ein spezifisches Verbot.
+> Spezifische Verbote erfordern ungewöhnliche Umstände zur Erfüllung, hängen mit dem Fehler zusammen und machen den Fluch schwer aufhebbar. Zum Beispiel: Wenn ein Charakter mit dem Fehler Stumm verflucht wird und dieser erst aufgehoben werden kann, nachdem der Charakter hört, wie jemand aufrichtige Dankbarkeit für eine selbstlose Tat des Charakters zum Ausdruck bringt, wäre dies ein spezifisches Verbot.
 >
->Wenn der Fluch-Geben-Zauber die Magieresistenz des Ziels überwindet, hat das Ziel die Möglichkeit, ihm mit einem Ausdauerwurf gegen einen Schwierigkeitsgrad von 9 zu widerstehen. Die Spieltruppe entscheidet dann über die Angemessenheit des Fluchs und des auferlegten Verbots. Der Ausdauerwurf des Opfers wird dann gemäß den zuvor aufgeführten Modifikatoren für Poetische Gerechtigkeit modifiziert.
+> Wenn der Fluch-Geben-Zauber die Magieresistenz des Ziels überwindet, hat das Ziel die Möglichkeit, ihm mit einem Ausdauerwurf gegen einen Schwierigkeitsgrad von 9 zu widerstehen. Die Spieltruppe entscheidet dann über die Angemessenheit des Fluchs und des auferlegten Verbots. Der Ausdauerwurf des Opfers wird dann gemäß den zuvor aufgeführten Modifikatoren für Poetische Gerechtigkeit modifiziert.
 >
->Alle Fluch-Geben-Zauber müssen entweder die Geas- oder Grenze-Dauer besitzen. Jene mit einer Geas-Dauer können jede verfügbare Dauer für die Dauer des auferlegten Fluchs bei Bruch des Geas verwenden, auf die übliche Weise. Insbesondere kann der Fluch eine Grenze-Dauer besitzen. Alle Leitlinien gelten für eine Reichweite von Gespräch.
+> Alle Fluch-Geben-Zauber müssen entweder die Geas- oder Grenze-Dauer besitzen. Jene mit einer Geas-Dauer können jede verfügbare Dauer für die Dauer des auferlegten Fluchs bei Bruch des Geas verwenden, auf die übliche Weise. Insbesondere kann der Fluch eine Grenze-Dauer besitzen. Alle Leitlinien gelten für eine Reichweite von Gespräch.
 >
->Ein einzelner Fluch-Geben-Zauber betrifft eine bestimmte Fertigkeit, Krankheit, einen bestimmten Fehler, Sinn und dergleichen. Zauber zum Verfluchen von Intelligenz und Wahrnehmung sind verschiedene Zauber und müssen getrennt erlernt werden.
+> Ein einzelner Fluch-Geben-Zauber betrifft eine bestimmte Fertigkeit, Krankheit, einen bestimmten Fehler, Sinn und dergleichen. Zauber zum Verfluchen von Intelligenz und Wahrnehmung sind verschiedene Zauber und müssen getrennt erlernt werden.
 >
->Stufe 5: Modifiziere den Wert einer einzelnen Fertigkeit um −1.
+> Stufe 5: Modifiziere den Wert einer einzelnen Fertigkeit um −1.
 >
->Stufe 5: Verleihe einen Kleinen Allgemeinen, Übernatürlichen (Magie) oder Persönlichkeits-Fehler.
+> Stufe 5: Verleihe einen Kleinen Allgemeinen, Übernatürlichen (Magie) oder Persönlichkeits-Fehler.
 >
->Stufe 10: Verleihe eine leichte Krankheit.
+> Stufe 10: Verleihe eine leichte Krankheit.
 >
->Stufe 10: Modifiziere den Wert einer einzelnen Fertigkeit um -2.
+> Stufe 10: Modifiziere den Wert einer einzelnen Fertigkeit um -2.
 >
->Stufe 15: Verkrüpple ein Glied, so dass es unbrauchbar wird (aber dennoch als Mittelschwere Wunde heilen kann).
+> Stufe 15: Verkrüpple ein Glied, so dass es unbrauchbar wird (aber dennoch als Mittelschwere Wunde heilen kann).
 >
->Stufe 15: Deaktiviere einen der Nebensinne einer Person. Er heilt als Mittelschwere Wunde.
+> Stufe 15: Deaktiviere einen der Nebensinne einer Person. Er heilt als Mittelschwere Wunde.
 >
->Stufe 15: Verleihe eine schwere Krankheit.
+> Stufe 15: Verleihe eine schwere Krankheit.
 >
->Stufe 15: Modifiziere den Wert einer einzelnen Fertigkeit um -3.
+> Stufe 15: Modifiziere den Wert einer einzelnen Fertigkeit um -3.
 >
->Stufe 15: Modifiziere den Wert einer einzelnen Eigenschaft um -1.
+> Stufe 15: Modifiziere den Wert einer einzelnen Eigenschaft um -1.
 >
->Stufe 15: Verleihe einen Großen Allgemeinen, Übernatürlichen (Magie) oder Persönlichkeits-Fehler.
+> Stufe 15: Verleihe einen Großen Allgemeinen, Übernatürlichen (Magie) oder Persönlichkeits-Fehler.
 >
->Stufe 20: Deaktiviere einen der Hauptsinne einer Person. Er heilt als Schwere Wunde.
+> Stufe 20: Deaktiviere einen der Hauptsinne einer Person. Er heilt als Schwere Wunde.
 >
->Stufe 20: Verleihe eine schwere Krankheit.
+> Stufe 20: Verleihe eine schwere Krankheit.
 >
->Stufe 20: Modifiziere den Wert einer einzelnen Eigenschaft um –2.
+> Stufe 20: Modifiziere den Wert einer einzelnen Eigenschaft um –2.
 >
->Stufe 25: Modifiziere den Wert einer einzelnen Eigenschaft um –3.
+> Stufe 25: Modifiziere den Wert einer einzelnen Eigenschaft um –3.
 
 **GEAS FÜR DIE NARZISSTISCHE JUNGFRAU**<br>
 GbFl Stufe 15<br>
@@ -3441,7 +3454,7 @@ Der Zauber verleiht dem Opfer den Kleinen Fehler Entstellt. Obwohl dieses Beispi
 
 *Beispiel: Um eine eitle Jungfrau dafür zu bestrafen, dass sie seine Avancen zurückwies, wirkt der Gruagach ein Geas, das ihr befiehlt, mit Demut zu handeln, oder sie werde es bereuen. Der Fluch, der das Geas begleitet, verleiht dem Ziel den Kleinen Fehler Entstellt, bis das Opfer eine aufrichtige Entschuldigung an jemanden richtet (allgemeines Verbot). Das Ziel muss einen Ausdauerwurf gegen einen Schwierigkeitsgrad von 9 ablegen, mit einem Modifikator von -6 wegen der Angemessenheit des Geas und des Fluchs.*
 
-(Basis 5, +2 Geas (allgemein, Grenze (allgemein))
+(Basis 5, +2 Geas (allgemein), Grenze (allgemein))
 
 **Geas der Vergeltung für die unbedachte Ohrfeige** <br>
 GbFl Stufe 25<br>
@@ -3451,9 +3464,9 @@ Der Zauber verkrüppelt einen Arm des Ziels, wenn es das Geas bricht, bis er nor
 
 *Beispiel: Als die Worte zwischen einem Gruagach und einem Magus hitzig werden, hebt ein Schildgrog seine Hand als Drohung gegen den Heckenzauberer. Der Gruagach wirkt ein Geas auf den Grog und warnt ihn: „Wenn du jemals wieder deine Hand gegen mich erhebst, wirst du sie verlieren." Der Fluch, der das Geas begleitet, lässt das Opfer den Gebrauch seines Schwertarms vollständig verlieren. Der Grog kann dem Geas mit einem Ausdauerwurf gegen einen Schwierigkeitsgrad von 9 widerstehen, mit einem Modifikator von -3 wegen der Angemessenheit des Geas und des Fluchs.*
 
-(Basis 15, +2 Geas (allgemein, Momentan)
+(Basis 15, +2 Geas (allgemein), Momentan)
 
-**Fluch für den ertappten Spion**<br> 
+**Fluch für den ertappten Spion**<br>
 GbFl Stufe 35<br>
 R: Stimme, D: Grenze, Z: Ind
 
@@ -3463,7 +3476,7 @@ Der Zauber blendet das Ziel, bis die Bedingung des Zaubers erfüllt wird oder di
 
 (Basis 20, +1 Stimme, +2 Grenze (allgemein))
 
-**Fluch für die ungerechte Gerechtigkeit**<br> 
+**Fluch für die ungerechte Gerechtigkeit**<br>
 GbFl Stufe 25<br>
 R: Gespräch, D: Grenze, Z: Blutlinie
 
@@ -3475,17 +3488,17 @@ Der Zauber verflucht eine Blutlinie mit dem Kleinen Fehler Ungerecht beurteilt f
 
 #### Fluch nehmen
 
->#### Leitlinien: Fluch nehmen
+> ### Leitlinien: Fluch nehmen
 >
->Fluch-Nehmen-Zauber sind gefährlich zu wirken. Wenn ein Gruagach beim Entfernen eines Fluchs scheitert, erleidet der Zaubernde ebenfalls die Wirkung des Fluchs. Wenn der Zaubernde beim Versuch, einen Fluch zu entfernen, patzt, wird er von einer mächtigeren Version des Fluchs heimgesucht, die speziell auf ihn zugeschnitten ist. Die Basisparameter für Fluch-Nehmen-Zauber sind Gespräch, Momentan und Individuum.
+> Fluch-Nehmen-Zauber sind gefährlich zu wirken. Wenn ein Gruagach beim Entfernen eines Fluchs scheitert, erleidet der Zaubernde ebenfalls die Wirkung des Fluchs. Wenn der Zaubernde beim Versuch, einen Fluch zu entfernen, patzt, wird er von einer mächtigeren Version des Fluchs heimgesucht, die speziell auf ihn zugeschnitten ist. Die Basisparameter für Fluch-Nehmen-Zauber sind Gespräch, Momentan und Individuum.
 >
->Hermetische Magie kann Flüche mithilfe der üblichen Leitlinien in ArM5, [Seite 160](<Ars Magica Definitive Edition Basisregeln.md#artes-liberales>), auflösen. Ein Magus muss einige Kenntnisse der Gruagach-Magie besitzen, um einen spezifischen Perdo-Vim-Zauber zu ihrer Auflösung zu erfinden. Der Spielleiter bestimmt, wann der Magus ausreichende Kenntnisse hat, um einen Zauber zur Bekämpfung von Gruagach-Magie zu erfinden. Mehrere Begegnungen mit Gruagachan-Magiern sollten als ausreichende Kenntnis genügen, aber auch Gebietskunde (Schottisches Hochland) 2 oder Magiekunde 5 wären angemessen. Perdo-Vim-Zauber, die darauf ausgelegt sind, jede Art von Magie aufzulösen, können ohne Kenntnisse verwendet werden, sind aber bei gleicher Stufe wesentlich schwächer.
+> Hermetische Magie kann Flüche mithilfe der üblichen Leitlinien in ArM5, [Seite 160](<Ars Magica Definitive Edition Basisregeln.md#artes-liberales>), auflösen. Ein Magus muss einige Kenntnisse der Gruagach-Magie besitzen, um einen spezifischen Perdo-Vim-Zauber zu ihrer Auflösung zu erfinden. Der Spielleiter bestimmt, wann der Magus ausreichende Kenntnisse hat, um einen Zauber zur Bekämpfung von Gruagach-Magie zu erfinden. Mehrere Begegnungen mit Gruagachan-Magiern sollten als ausreichende Kenntnis genügen, aber auch Gebietskunde (Schottisches Hochland) 2 oder Magiekunde 5 wären angemessen. Perdo-Vim-Zauber, die darauf ausgelegt sind, jede Art von Magie aufzulösen, können ohne Kenntnisse verwendet werden, sind aber bei gleicher Stufe wesentlich schwächer.
 >
->Generell: Bestimme die Bedingungen eines Fluchs und das damit verbundene Verbot.
+> Generell: Bestimme die Bedingungen eines Fluchs und das damit verbundene Verbot.
 >
->Generell: Entferne einen Fluch, den der Zaubernde selbst jemandem auferlegt hat.
+> Generell: Entferne einen Fluch, den der Zaubernde selbst jemandem auferlegt hat.
 >
->Generell: Entferne einen Fluch, eine Verhexung oder einen fortdauernden Zauber eines anderen.
+> Generell: Entferne einen Fluch, eine Verhexung oder einen fortdauernden Zauber eines anderen.
 
 **Den Verfluchten befragen**<br>
 NeFl Stufe Gen<br>
@@ -3499,7 +3512,7 @@ Wenn die Stufe des Zaubers plus eines einzelnen Stresswürfels die Stufe des ang
 NeFl Stufe Gen<br>
 R: Gespräch, D: Mom, Z: Ind
 
-Wenn die Stufe des Zaubers plus eines einzelnen Stresswürfels das Doppelte der Zauberstufe des angezielten Zaubers erreicht oder übertrifft, wird er entfernt. Um die äquivalente Zauberstufe einer Übernatürlichen Fertigkeit zu bestimmen, verwende den Fertigkeitswert x 5. Siehe Häuser des Hermes: Gemeinschaften, Ex Miscellanea, [Seite 104](<Ars Magica 5e - Häuser des Hermes - Societates.md#übernatürliche-fertigkeiten>). Ein Gruagach muss lediglich die Zauberstufe eines Fluchs, den er selbst gewirkt hat, erreichen oder übertreffen, um ihn zu entfernen.
+Wenn die Stufe des Zaubers plus eines einzelnen Stresswürfels das Doppelte der Zauberstufe des angezielten Zaubers erreicht oder übertrifft, wird er entfernt. Um die äquivalente Zauberstufe einer Übernatürlichen Fertigkeit zu bestimmen, verwende den Fertigkeitswert x 5. Siehe Häuser des Hermes: Societates, Ex Miscellanea, [Seite 104](<Ars Magica 5e - Häuser des Hermes - Societates.md#übernatürliche-fertigkeiten>). Ein Gruagach muss lediglich die Zauberstufe eines Fluchs, den er selbst gewirkt hat, erreichen oder übertreffen, um ihn zu entfernen.
 
 (Basis)
 
@@ -3509,27 +3522,27 @@ Diese Form ermöglicht es einem Gruagach, die physische Gestalt eines anderen od
 
 #### Gestalt geben
 
->##### Leitlinien: Gestalt geben
+> ### Leitlinien: Gestalt geben
 >
->Gestalt-Geben-Zauber sind nur bei einem bereitwilligen Empfänger wirksam. Jedes Ziel kann sich entscheiden, die Veränderung abzulehnen, wenn der Zauber zu wirken beginnt; im Allgemeinen erhält das Ziel dabei eine ungefähre Vorstellung von der endgültigen Gestalt, die jedoch leicht irreführend sein kann. Zum Beispiel könnte ein Zauber zur Verleihung von Flügeln leicht mit einem Zauber verwechselt werden, der jemanden in einen Vogel verwandelt, es sei denn, das Ziel hat Erfahrung mit beidem. Sobald das Ziel die Veränderung akzeptiert hat, kann es seine Meinung nicht mehr ändern und den Effekt nicht vor Ablauf seiner Dauer aufheben.
+> Gestalt-Geben-Zauber sind nur bei einem bereitwilligen Empfänger wirksam. Jedes Ziel kann sich entscheiden, die Veränderung abzulehnen, wenn der Zauber zu wirken beginnt; im Allgemeinen erhält das Ziel dabei eine ungefähre Vorstellung von der endgültigen Gestalt, die jedoch leicht irreführend sein kann. Zum Beispiel könnte ein Zauber zur Verleihung von Flügeln leicht mit einem Zauber verwechselt werden, der jemanden in einen Vogel verwandelt, es sei denn, das Ziel hat Erfahrung mit beidem. Sobald das Ziel die Veränderung akzeptiert hat, kann es seine Meinung nicht mehr ändern und den Effekt nicht vor Ablauf seiner Dauer aufheben.
 >
->Stufe 1: Verwandle jemanden, um ihm eine geringe Fähigkeit zu verleihen, die von der Gestalt einer anderen Kreatur abgeleitet ist, wie Katzenaugen für Nachtsicht oder Adleraugen für Scharfe Sicht. Während die Verwandlung wirkt, leidet der Charakter unter dem Fehler Sozialer Nachteil wegen seines offensichtlich unnatürlichen Aussehens.
+> Stufe 1: Verwandle jemanden, um ihm eine geringe Fähigkeit zu verleihen, die von der Gestalt einer anderen Kreatur abgeleitet ist, wie Katzenaugen für Nachtsicht oder Adleraugen für Scharfe Sicht. Während die Verwandlung wirkt, leidet der Charakter unter dem Fehler Sozialer Makel wegen seines offensichtlich unnatürlichen Aussehens.
 >
->Stufe 2: Erhöhe die Größe eines Menschen auf maximal +3.
+> Stufe 2: Erhöhe die Größe eines Menschen auf maximal +3.
 >
->Stufe 3: Verwandle einen Menschen in ein Landtier.
+> Stufe 3: Verwandle einen Menschen in ein Landtier.
 >
->Stufe 3: Verwandle einen Menschen in ein Landtier. Stufe 4: Verleihe jemandem einen Aspekt einer anderen Gestalt, der eine bedeutende Fähigkeit gewährt, wie die Stärke eines Bären oder die Flügel eines Vogels zum Fliegen. Während die Verwandlung wirkt, erleidet der Charakter einen Abzug von –6 auf alle Würfe, die Vertrauen erfordern, wegen seines monströsen Aussehens.
+> Stufe 3: Verwandle einen Menschen in ein Landtier. Stufe 4: Verleihe jemandem einen Aspekt einer anderen Gestalt, der eine bedeutende Fähigkeit gewährt, wie die Stärke eines Bären oder die Flügel eines Vogels zum Fliegen. Während die Verwandlung wirkt, erleidet der Charakter einen Abzug von –6 auf alle Würfe, die Vertrauen erfordern, wegen seines monströsen Aussehens.
 >
->Stufe 5: Verwandle einen Menschen in einen Vogel oder Fisch. Stufe 5: Verwandle ein Tier in ein anderes Tier.
+> Stufe 5: Verwandle einen Menschen in einen Vogel oder Fisch. Stufe 5: Verwandle ein Tier in ein anderes Tier.
 >
->Stufe 5: Erhöhe die Größe eines Menschen auf maximal +5.
+> Stufe 5: Erhöhe die Größe eines Menschen auf maximal +5.
 >
->Stufe 10: Verwandle einen Menschen in einen festen, unbelebten Gegenstand.
+> Stufe 10: Verwandle einen Menschen in einen festen, unbelebten Gegenstand.
 >
->Stufe 10: Verwandle einen Menschen in eine Pflanze.
+> Stufe 10: Verwandle einen Menschen in eine Pflanze.
 >
->Stufe 15: Verwandle einen Menschen in einen unkörperlichen Gegenstand.
+> Stufe 15: Verwandle einen Menschen in einen unkörperlichen Gegenstand.
 
 **Die Nase des Jagdhunds borgen**<br>
 GbGe Stufe 3<br>
@@ -3547,7 +3560,7 @@ Die Arme des Zaubernden verwandeln sich in riesige Flügel. Der Gruagach kann so
 
 (Basis 4, +2 Sonne)
 
-**Die Gestalt der Ahnen annehmen**<br> 
+**Die Gestalt der Ahnen annehmen**<br>
 GbGe Stufe 15 <br>
 R: Per, D: Sonne, Z: Ind
 
@@ -3557,35 +3570,35 @@ Für die Dauer des Zaubers wächst der Zaubernde zu Riesengröße heran. Die Gr�
 
 #### Gestalt nehmen
 
->#### Leitlinien: Gestalt nehmen
+> ### Leitlinien: Gestalt nehmen
 >
->Gestalt-Nehmen-Zauber ermöglichen es dem Zaubernden, die Gestalt von Kreaturen in seiner Gegenwart anzunehmen oder einen anderen dazu zu zwingen, eine fremde Gestalt anzunehmen. Wenn ein Gestalt-Nehmen-Zauber die Magieresistenz eines Charakters überwindet, kann der Charakter den Effekten dennoch mit einem Ausdauerwurf gegen einen Schwierigkeitsgrad von 9 widerstehen. Der Ausdauerwurf wird durch eine passende Persönlichkeitseigenschaft modifiziert. Zum Beispiel wird ein gieriger oder gefräßiger Charakter leichter in ein Schwein oder einen Vielfraß verwandelt, die beide für ihren unersättlichen Appetit bekannt sind. Ebenso ist es schwieriger, einen sehr mutigen Charakter in eine Maus, ein Kaninchen oder ein anderes scheues Tier zu verwandeln. Wenn zum Beispiel ein Gruagach einen Zauber wirkt, um einen Charakter mit der Persönlichkeitseigenschaft Tapfer +3 in eine Maus zu verwandeln, müsste der Spieler gegen einen Schwierigkeitsgrad von 6 bestehen, um zu widerstehen, während ein Charakter mit der Persönlichkeitseigenschaft Tapfer –3 der Verwandlung gegen einen Schwierigkeitsgrad von 12 widerstehen müsste.
+> Gestalt-Nehmen-Zauber ermöglichen es dem Zaubernden, die Gestalt von Kreaturen in seiner Gegenwart anzunehmen oder einen anderen dazu zu zwingen, eine fremde Gestalt anzunehmen. Wenn ein Gestalt-Nehmen-Zauber die Magieresistenz eines Charakters überwindet, kann der Charakter den Effekten dennoch mit einem Ausdauerwurf gegen einen Schwierigkeitsgrad von 9 widerstehen. Der Ausdauerwurf wird durch eine passende Persönlichkeitseigenschaft modifiziert. Zum Beispiel wird ein gieriger oder gefräßiger Charakter leichter in ein Schwein oder einen Vielfraß verwandelt, die beide für ihren unersättlichen Appetit bekannt sind. Ebenso ist es schwieriger, einen sehr mutigen Charakter in eine Maus, ein Kaninchen oder ein anderes scheues Tier zu verwandeln. Wenn zum Beispiel ein Gruagach einen Zauber wirkt, um einen Charakter mit der Persönlichkeitseigenschaft Tapfer +3 in eine Maus zu verwandeln, müsste der Spieler gegen einen Schwierigkeitsgrad von 6 bestehen, um zu widerstehen, während ein Charakter mit der Persönlichkeitseigenschaft Tapfer –3 der Verwandlung gegen einen Schwierigkeitsgrad von 12 widerstehen müsste.
 >
->Generell: Bewirke, dass jemand auf Gesprächsreichweite zu seiner wahren Gestalt zurückkehrt.
+> Generell: Bewirke, dass jemand auf Gesprächsreichweite zu seiner wahren Gestalt zurückkehrt.
 >
->Stufe 5: Verwandle einen Menschen in ein Landtier.
+> Stufe 5: Verwandle einen Menschen in ein Landtier.
 >
->Stufe 5: Ahme das Aussehen
+> Stufe 5: Ahme das Aussehen
 >
->Stufe 5: Ahme das Aussehen einer anderen Person perfekt nach.
+> Stufe 5: Ahme das Aussehen einer anderen Person perfekt nach.
 >
->Stufe 5: Verwandle ein Tier in ein anderes Tier. Stufe 15: Verwandle einen Menschen in einen Vogel oder Fisch.
+> Stufe 5: Verwandle ein Tier in ein anderes Tier. Stufe 15: Verwandle einen Menschen in einen Vogel oder Fisch.
 >
->Stufe 20: Verwandle einen Menschen in einen festen, unbelebten Gegenstand.
+> Stufe 20: Verwandle einen Menschen in einen festen, unbelebten Gegenstand.
 >
->Stufe 20: Verwandle einen Menschen in eine Pflanze.
+> Stufe 20: Verwandle einen Menschen in eine Pflanze.
 >
->Stufe 25: Verwandle einen Menschen in einen unkörperlichen Gegenstand.
+> Stufe 25: Verwandle einen Menschen in einen unkörperlichen Gegenstand.
 
 **Den Lykanthropen in seine wahre Gestalt zurückführen**<br>
 NeGe Stufe Gen<br>
 R: Gespräch, D: Mom, Z: Ind
 
-Wenn die Stufe des Zaubers plus eines einzelnen Stresswürfels das Doppelte der Zauberstufe des die Verwandlung verursachenden Zaubers erreicht oder übertrifft, wird er aufgehoben. Um die äquivalente Zauberstufe einer Übernatürlichen Fertigkeit zu bestimmen, verwende den Fertigkeitswert x 5. Siehe Häuser des Hermes: Gemeinschaften, Ex Miscellanea, [Seite 104](<Ars Magica 5e - Häuser des Hermes - Societates.md#übernatürliche-fertigkeiten>). Ein Gruagach muss lediglich die Zauberstufe eines Zaubers, den er selbst gewirkt hat, erreichen oder übertreffen, um das Ziel in seine ursprüngliche Gestalt zurückkehren zu lassen.
+Wenn die Stufe des Zaubers plus eines einzelnen Stresswürfels das Doppelte der Zauberstufe des die Verwandlung verursachenden Zaubers erreicht oder übertrifft, wird er aufgehoben. Um die äquivalente Zauberstufe einer Übernatürlichen Fertigkeit zu bestimmen, verwende den Fertigkeitswert x 5. Siehe Häuser des Hermes: Societates, Ex Miscellanea, [Seite 104](<Ars Magica 5e - Häuser des Hermes - Societates.md#übernatürliche-fertigkeiten>). Ein Gruagach muss lediglich die Zauberstufe eines Zaubers, den er selbst gewirkt hat, erreichen oder übertreffen, um das Ziel in seine ursprüngliche Gestalt zurückkehren zu lassen.
 
 (Basis)
 
-**Den Menschen in seine angemessene Gestalt verwandeln**<br> 
+**Den Menschen in seine angemessene Gestalt verwandeln**<br>
 NeGe Stufe 20<br>
 R: Gespräch, D: Sonne, Z: Ind
 
@@ -3603,19 +3616,19 @@ Der Zauber erlaubt es dem Zaubernden nicht, die Stimme oder die Eigenheiten des 
 
 (Basis 5, +1 Gespräch, +2 Sonne)
 
->#### ABENTEUERIDEEN zu Gruagachan-Formen und -Techniken
+> ### Abenteuerideen zu Gruagachan-Formen und -Techniken
 >
->**DER MACHINATOR DER MAGIER**
+> **DER MACHINATOR DER MAGIER**
 >
->Ein mächtiger Gruagach verliert den Verstand und stellt eine Armee von Gruagachan auf, indem er Segen geben nutzt, um seinen Gefolgsleuten die Gruagach-Techniken und -Formen zu verleihen. Andere Gruagachan sehen dies als Affront gegen ihre Tradition, aber wegen der Größe seiner Armee sind sie machtlos, ihn aufzuhalten. Diese Gruagachan wenden sich an die Charaktere um Hilfe.
+> Ein mächtiger Gruagach verliert den Verstand und stellt eine Armee von Gruagachan auf, indem er Segen geben nutzt, um seinen Gefolgsleuten die Gruagach-Techniken und -Formen zu verleihen. Andere Gruagachan sehen dies als Affront gegen ihre Tradition, aber wegen der Größe seiner Armee sind sie machtlos, ihn aufzuhalten. Diese Gruagachan wenden sich an die Charaktere um Hilfe.
 >
->**Verflucht, wenn du es tust …**
+> **Verflucht, wenn du es tust …**
 >
->Ein Gruagach verflucht einen Verbündeten des Konvents, der daraufhin die Charaktere um Hilfe bittet. Der Fluch ist zu stark, als dass die Charaktere ihn mit allgemeinem Perdo Vim auflösen könnten, daher müssen die Charaktere, falls sie mit Gruagach-Magie nicht vertraut sind, zunächst einige Kenntnisse darüber erwerben, bevor sie den Fluch entfernen können. Wenn die Charaktere den Fluch entfernen, entdeckt der Gruagach ihre Taten, ersinnt einen härteren Fluch für ihren Verbündeten und sucht Vergeltung gegen den Konvent, weil er es seinem Verbündeten erlaubt hat, „Gerechtigkeit" zu unterlaufen.
+> Ein Gruagach verflucht einen Verbündeten des Konvents, der daraufhin die Charaktere um Hilfe bittet. Der Fluch ist zu stark, als dass die Charaktere ihn mit allgemeinem Perdo Vim auflösen könnten, daher müssen die Charaktere, falls sie mit Gruagach-Magie nicht vertraut sind, zunächst einige Kenntnisse darüber erwerben, bevor sie den Fluch entfernen können. Wenn die Charaktere den Fluch entfernen, entdeckt der Gruagach ihre Taten, ersinnt einen härteren Fluch für ihren Verbündeten und sucht Vergeltung gegen den Konvent, weil er es seinem Verbündeten erlaubt hat, „Gerechtigkeit" zu unterlaufen.
 >
->**Die Katze im Sack**
+> **Die Katze im Sack**
 >
->Ein Gruagach-Lehrling verwandelt sich in prächtige Exemplare verschiedener Tiere und lässt sich von seinem Vater auf dem Markt verkaufen. Der Gruagach entkommt später seinen Käufern und kehrt zu seinem Vater zurück. Ein Charakter besucht den Markt und kauft den Lehrling, da er den verwandelten Gruagach für ein magisches Tier hält, das als Vertrauter geeignet wäre oder aus dem sich das Vis gewinnen ließe, das er dem Tier zuschreibt. Als der Lehrling nicht zurückkehrt, meldet sein Vater sein Fehlen, und der Meister des Gruagach beginnt Nachforschungen.
+> Ein Gruagach-Lehrling verwandelt sich in prächtige Exemplare verschiedener Tiere und lässt sich von seinem Vater auf dem Markt verkaufen. Der Gruagach entkommt später seinen Käufern und kehrt zu seinem Vater zurück. Ein Charakter besucht den Markt und kauft den Lehrling, da er den verwandelten Gruagach für ein magisches Tier hält, das als Vertrauter geeignet wäre oder aus dem sich das Vis gewinnen ließe, das er dem Tier zuschreibt. Als der Lehrling nicht zurückkehrt, meldet sein Vater sein Fehlen, und der Meister des Gruagach beginnt Nachforschungen.
 
 ### Visionszauber
 
@@ -3623,23 +3636,23 @@ Gruagachan, die Visionszauber anwenden, können die Wahrnehmung einer Person von
 
 #### Vision geben
 
->#### Leitlinien: Vision geben
+> ### Leitlinien: Vision geben
 >
->Anders als hermetische Imaginem-Zauber beeinflussen Vision-Geben-Zauber nur Sicht und Ton. Auf ihren niedrigsten Stufen sind sie nach hermetischen Maßstäben relativ einfach. Komplexe Illusionen – solche, die über einfache Bilder oder Töne hinausgehen – erfordern eine zusätzliche Magnitude. Bilder, die sich auf Anweisung des Zaubernden bewegen oder verändern, sind 2 Magnituden höher. Im Allgemeinen unterliegen die Effekte von Vision-Geben-Zaubern den Creo- oder Rego-Imaginem-Zaubern, und deren Leitlinien gelten hier.
+> Anders als hermetische Imaginem-Zauber beeinflussen Vision-Geben-Zauber nur Sicht und Ton. Auf ihren niedrigsten Stufen sind sie nach hermetischen Maßstäben relativ einfach. Komplexe Illusionen – solche, die über einfache Bilder oder Töne hinausgehen – erfordern eine zusätzliche Magnitude. Bilder, die sich auf Anweisung des Zaubernden bewegen oder verändern, sind 2 Magnituden höher. Im Allgemeinen unterliegen die Effekte von Vision-Geben-Zaubern den Creo- oder Rego-Imaginem-Zaubern, und deren Leitlinien gelten hier.
 >
->Vision-Geben-Zauber, die Visionen oder Vorahnungen verleihen, sind fokussierter als der jeweilige Fehler und die Tugend. Der Zaubernde muss ein bestimmtes Thema oder eine bestimmte Frage wählen, auf die sich alle Visionen beziehen müssen. Geeignete Themen umfassen: die wahre Liebe des Ziels, den geschworenen Feind des Ziels, die Reise einer Person oder Ähnliches.
+> Vision-Geben-Zauber, die Visionen oder Vorahnungen verleihen, sind fokussierter als der jeweilige Fehler und die Tugend. Der Zaubernde muss ein bestimmtes Thema oder eine bestimmte Frage wählen, auf die sich alle Visionen beziehen müssen. Geeignete Themen umfassen: die wahre Liebe des Ziels, den geschworenen Feind des Ziels, die Reise einer Person oder Ähnliches.
 >
->Stufe 1: Erzeuge ein Bild, das Sicht oder Ton betrifft.
+> Stufe 1: Erzeuge ein Bild, das Sicht oder Ton betrifft.
 >
->Stufe 2: Erzeuge ein Bild, das Sicht und Ton betrifft.
+> Stufe 2: Erzeuge ein Bild, das Sicht und Ton betrifft.
 >
->Stufe 2: Lasse einen Gegenstand erscheinen oder klingen, als befinde er sich bis zu einen Schritt von seiner tatsächlichen Position entfernt.
+> Stufe 2: Lasse einen Gegenstand erscheinen oder klingen, als befinde er sich bis zu einen Schritt von seiner tatsächlichen Position entfernt.
 >
->Stufe 3: Lasse Gegenstände sich schnell auf eine desorientierende Weise zu bewegen scheinen.
+> Stufe 3: Lasse Gegenstände sich schnell auf eine desorientierende Weise zu bewegen scheinen.
 >
->Stufe 5: Verleihe einer Person den Fehler Visionen, der sich nur auf eine einzelne Frage oder ein einzelnes Thema bezieht.
+> Stufe 5: Verleihe einer Person den Fehler Visionen, der sich nur auf eine einzelne Frage oder ein einzelnes Thema bezieht.
 >
->Stufe 10: Verleihe einer Person die Tugend Vorahnungen mit einem Fertigkeitswert von 4, der sich nur auf eine bestimmte Art von Gefahr bezieht.
+> Stufe 10: Verleihe einer Person die Tugend Vorahnungen mit einem Fertigkeitswert von 4, der sich nur auf eine bestimmte Art von Gefahr bezieht.
 
 **Einen Blick in die Zukunft gewähren**<br>
 GbVi Stufe 30<br>
@@ -3649,7 +3662,7 @@ Wenn dieser Zauber gewirkt wird, erhält der Empfänger für die Dauer des Zaube
 
 (Basis 10, +1 Gespräch, +3 Mond)
 
-**Den Jägerverschlag erschaffen**<br> 
+**Den Jägerverschlag erschaffen**<br>
 GbVi Stufe 10<br>
 R: Stimme, D: Sonne, Z: Gruppe
 
@@ -3659,41 +3672,41 @@ Dieser Zauber bedeckt eine kleine Gruppe von Personen mit der Illusion von Felsb
 
 #### Vision nehmen
 
->#### Leitlinien: Vision nehmen
+> ### Leitlinien: Vision nehmen
 >
->Vision-Nehmen-Zauber unterliegen den Leitlinien für Intellego- und Perdo-Imaginem-Zauber. Wie alle Visionszauber betreffen sie nur Sicht und Ton. Bei Zaubern, die einem Charakter erlauben, einen Sinn auf Entfernung einzusetzen, entsendet der Gruagach seinen Fetch zur Erkundung. Dies hat kaum Auswirkung auf die praktische Anwendung des Zaubers, außer dass jeder Charakter mit Zweites Gesicht den Fetch des Gruagach sieht.
+> Vision-Nehmen-Zauber unterliegen den Leitlinien für Intellego- und Perdo-Imaginem-Zauber. Wie alle Visionszauber betreffen sie nur Sicht und Ton. Bei Zaubern, die einem Charakter erlauben, einen Sinn auf Entfernung einzusetzen, entsendet der Gruagach seinen Fetch zur Erkundung. Dies hat kaum Auswirkung auf die praktische Anwendung des Zaubers, außer dass jeder Charakter mit Zweites Gesicht den Fetch des Gruagach sieht.
 >
->Generell: Durchschaue Illusionen, die durch Zauber gleicher oder niedrigerer Stufe als die Stufe dieses Zaubers verursacht wurden (Visions-Ziel).
+> Generell: Durchschaue Illusionen, die durch Zauber gleicher oder niedrigerer Stufe als die Stufe dieses Zaubers verursacht wurden (Visions-Ziel).
 >
->Generell: Löse Illusionen auf, die durch Zauber verursacht wurden, deren Stufe die Stufe des Zaubers plus einen Stresswürfel nicht übersteigt (Stimmen-Reichweite).
+> Generell: Löse Illusionen auf, die durch Zauber verursacht wurden, deren Stufe die Stufe des Zaubers plus einen Stresswürfel nicht übersteigt (Stimmen-Reichweite).
 >
->Stufe 1: Nutze einen Sinn auf Entfernung.
+> Stufe 1: Nutze einen Sinn auf Entfernung.
 >
->Stufe 1: Entdecke die Anwesenheit von Vis.
+> Stufe 1: Entdecke die Anwesenheit von Vis.
 >
->Stufe 2: Nutze zwei Sinne auf Entfernung.
+> Stufe 2: Nutze zwei Sinne auf Entfernung.
 >
->Stufe 3: Zerstöre die Fähigkeit eines Gegenstands, das Gehör zu beeinflussen.
+> Stufe 3: Zerstöre die Fähigkeit eines Gegenstands, das Gehör zu beeinflussen.
 >
->Stufe 4: Zerstöre die Fähigkeit eines Gegenstands, die Sicht zu beeinflussen.
+> Stufe 4: Zerstöre die Fähigkeit eines Gegenstands, die Sicht zu beeinflussen.
 
 **Mit den Augen lauschen**<br>
 NeVi Stufe 10<br>
-R: Per, D: Durchm, Z: Vision
+R: Per, D: Durchm, Z: Sehsinn
 
 Dieser Zauber ermöglicht es dem Fetch des Gruagach, den Inhalt jedes Gesprächs wiederzugeben, das von Teilnehmern geführt wird, die sich innerhalb des Sichtfelds des Zaubernden befinden.
 
-(Basis 1, +1 Durchmesser, +4 Vision)
+(Basis 1, +1 Durchmesser, +4 Sehsinn)
 
 **Die Anwesenheit von Vis aufspüren**<br>
 NeVi Stufe 5<br>
-R: Per, D: Durchm, Z: Vision
+R: Per, D: Durchm, Z: Sehsinn
 
 Der Zauber ermöglicht es dem Fetch eines Gruagach, den Standort von nahegelegenem Vis zu identifizieren. Wenn es Vis gibt, von dem der Gruagach nichts weiß, begibt sich sein Fetch dorthin und gibt für die Dauer des Zaubers Laute von sich, auf welche Art auch immer er kann. Nur der den Zauber wirkende Magier kann das Bellen, Knurren, Krächzen oder sonstige Lautgeben des Fetch hören.
 
 (Basis 1, +1 Durchmesser, +3 Ton)
 
-**Mantel für den Dieb in der Nacht**<br> 
+**Mantel für den Dieb in der Nacht**<br>
 NeVi Stufe 25<br>
 R: Gespräch, D: Sonne, Z: Ind
 
@@ -3705,15 +3718,13 @@ Wenn der Zaubernde dem Ziel einen Mantel umhängt, wird es unfähig, Geräusche 
 
 Gruagachan setzen sich jedes Mal, wenn sie einen Zauber wirken, verschiedenen magischen Gefahren aus.
 
-### Patzer
+#### Patzer
 
 Die Patzer der Gruagachan ähneln denen hermetischer Magi, und die allgemeinen Leitlinien für hermetische Zauber sind auch hier anwendbar. Patzer bei Segen- und Fluchzaubern können dazu führen, dass das beabsichtigte Ziel entgegen der beabsichtigten Einschränkung handelt, oder der Zauber auf ein unbeabsichtigtes Ziel gewirkt wird. Gestaltzauber können dazu führen, dass das Ziel eine falsche Gestalt annimmt, ein anderes Ziel verwandelt wird oder eine völlig andere Dauer eintritt als vom Zaubernden beabsichtigt. Visionszauber können falsche Vorhersagen liefern. Obwohl alle Patzer das Potenzial haben, den Charakter der Verzerrung auszusetzen, ist dies bei Visionszaubern noch wahrscheinlicher, und jeder Visions-Patzer verursacht die doppelte Menge an Verzerrungspunkten (ArM5, [Seite 167](<Ars Magica Definitive Edition Basisregeln.md#lebende-sprache>)).
 
 #### Transformation
 
-Sowohl Begabte als auch unBegabte Gruagachan leiden unter den Auswirkungen von Verzerrung. Die Transformation ist das Gruagach-Äquivalent zum Zwielicht des Zauberers und ersetzt die normalen Regeln für Verzerrung. Diese Transformation wird als
-
-der Fluch des Gruagach bezeichnet, den, so heißt es, er Zauberern auferlegt, die das Geschenk seiner Magie übermäßig nutzen. Ein Gruagach, der den Fluch des Gruagach erleidet, kann seine Menschlichkeit verlieren, und während der Gruagach Verzerrungspunkte ansammelt, wird er langsam und unaufhaltsam mehr zu einer Kreatur der Magie und weniger menschlich, bis der Charakter schließlich zu einem Troll wird.
+Sowohl Begabte als auch unBegabte Gruagachan leiden unter den Auswirkungen von Verzerrung. Die Transformation ist das Gruagach-Äquivalent zum Zwielicht des Zauberers und ersetzt die normalen Regeln für Verzerrung. Diese Transformation wird als der Fluch des Gruagach bezeichnet, den, so heißt es, er Zauberern auferlegt, die das Geschenk seiner Magie übermäßig nutzen. Ein Gruagach, der den Fluch des Gruagach erleidet, kann seine Menschlichkeit verlieren, und während der Gruagach Verzerrungspunkte ansammelt, wird er langsam und unaufhaltsam mehr zu einer Kreatur der Magie und weniger menschlich, bis der Charakter schließlich zu einem Troll wird.
 
 Während ein Gruagach Verzerrungspunkte ansammelt, erwirbt er stetig die geistigen und körperlichen Merkmale eines Trolls, bis er zu einem wird. Wenn ein Gruagach zwei oder mehr Verzerrungspunkte durch einen einzelnen Patzer erhält oder unter einem anderen mächtigen magischen Effekt leidet, den der Spielleiter als angemessen erachtet, kann er eine Transformation erleiden. Der Gruagach hat eine Gelegenheit, dem Effekt zu entgehen.
 
@@ -3721,7 +3732,7 @@ Während ein Gruagach Verzerrungspunkte ansammelt, erwirbt er stetig die geistig
 
 Wenn der Charakter die Transformation vermeidet, geschieht nichts Negatives. Der Charakter konzentriert sich lediglich einen Moment lang und richtet seine Aufmerksamkeit auf seinen Körper. Wenn der Charakter die Transformation jedoch nicht vermeiden kann, nähert er sich seinem magischen Erbe auf positive oder negative Weise an.
 
-#### Auswirkungen der Transformation 
+#### Auswirkungen der Transformation
 
 Ein Gruagach, der eine Transformation durchläuft, kann ein tieferes Verständnis seiner Magie entwickeln oder ein Merkmal eines Trolls erwerben. Wenn ihm sein Wurf auf Transformation verstehen gelingt, ist die Erfahrung gut. Wenn er scheitert, ist die Erfahrung schlecht. Der Spielleiter sollte einen angemessenen Effekt aus den später in diesem Abschnitt aufgeführten auswählen.
 
@@ -3731,17 +3742,17 @@ Wenn ein Charakter einen Verzerrungswert von 10 erreicht, ist die Transformation
 
 #### Gute Erfahrungen
 
-**Gruagach-Magie-Tugend:** Der Gruagach erwirbt Kenntnisse einer Gruagach-Kunst oder des Gruagach-Äquivalents von Großer Magischer Fokus, Nebenerkenntnis, Affinität zu Kunst, Vorsichtiger Zauberer, Gewandte Form, Schneller Zauberer, Freies Studium, Gezügelte Magie, Kleiner Magischer Fokus, Magisches Gedächtnis, Persönliche Vis-Quelle, Begabung in Kunst, Nebeneffekt, Besondere Umstände oder Subtile Magie
+**Gruagach-Magie-Tugend:** Der Gruagach erwirbt Kenntnisse einer Gruagach-Kunst oder des Gruagach-Äquivalents von Großer Magischer Fokus, Nebenerkenntnis, Affinität zu (Kunst), Vorsichtiger Zauberer, Gewandte Form, Schneller Zauberer, Freies Studium, Gezügelte Magie, Kleiner Magischer Fokus, Magisches Gedächtnis, Persönliche Vis-Quelle, Begabung in (Kunst), Nebeneffekt, Besondere Umstände oder Subtile Magie
 
-**Troll-Tugend:** Der Gruagach erwirbt eine Tugend, die für einen Troll angemessen wäre. Beispiele umfassen: Großgewachsen, Spitze Ohren, Riesenblut, Zäh oder Kraftreserven.
+**Troll-Tugend:** Der Gruagach erwirbt eine Tugend, die für einen Troll angemessen wäre. Beispiele umfassen: Großgewachsen, Scharfe Ohren, Riesenblut, Zäh oder Kraftreserven.
 
 **Vermehrtes Wissen:** Der Gruagach erwirbt Erfahrungspunkte in einer bereits vorhandenen Kunst in Höhe des Verzerrungswerts des Charakters + einfachem Würfel.
 
 #### Schlechte Erfahrungen
 
-**Gruagach-Magie-Fehler:** Der Gruagach erwirbt das Gruagach-Äquivalent von Auffällige Gabe, Defizitäre Technik, Notwendige Bedingung, Schmerzhafte Magie, Einschränkung, Starre Magie, Nachlässiger Zauberer, Defizitäre Form, Schädliche Umstände, Desorientierungsmagie, Unvereinbare Künste, Verzerrte Magie, Schwache Magie oder Sonderbare Magie.
+**Gruagach-Magie-Fehler:** Der Gruagach erwirbt das Gruagach-Äquivalent von Auffällige Gabe, Defizitäre Technik, Notwendige Bedingung, Schmerzhafte Magie, Einschränkung, Starre Magie, Nachlässiger Zauberer, Defizitäre Form, Abträgliche Umstände, Desorientierende Magie, Unvereinbare Künste, Verzerrte Magie, Schwache Magie oder Sonderbare Magie.
 
-**Troll-Fehler:** Der Gruagach erwirbt einen Fehler, der für einen Troll angemessen wäre. Beispiele umfassen: Entstellt (Blaue Haut), Magische Ausstrahlung, Nachtaktiv, Gierig, Jähzornig, Abstoßend für Tiere oder Abstoßend\* (Hörner, Reißzähne, Klauen oder Schuppen).
+**Troll-Fehler:** Der Gruagach erwirbt einen Fehler, der für einen Troll angemessen wäre. Beispiele umfassen: Entstellt (Blaue Haut), Magische Ausstrahlung, Nachtmensch, Gierig, Jähzornig, Abstoßend für Tiere oder Abstoßend\* (Hörner, Reißzähne, Klauen oder Schuppen).
 
 **Vermindertes Wissen:** Der Gruagach verliert Erfahrungspunkte in einer bereits vorhandenen Kunst in Höhe des Verzerrungswerts des Charakters + einfachem Würfel.
 
@@ -3799,15 +3810,15 @@ Da die Gruagachan vom Priestertum des Gottes Gruagach abstammen, bewahren sie no
 
 Die meisten Begabten Gruagachan sind Heiden und verehren im Verborgenen Gruagach und die Götter der Pikten. Bei den unBegabten Gruagachan gibt es eine breite religiöse Vielfalt. Einige leisten der Verehrung des Gruagach Lippenbekenntnisse, während sie ihren christlichen Glauben beibehalten, um Zugang zu mehr magischer Ausbildung zu erhalten. Andere erkennen, dass die Aura des Dominiums ihre Magie beeinträchtigt, und verlassen die Kirche vollständig, um den Alten Wegen zu folgen. Gruagachan sind sensibel gegenüber den Lehren der Kirche bezüglich Magie und tun ihr Bestes, ihre heidnischen Praktiken zu verbergen. Fromme Personen, selbst solche mit Begabung für Gruagach-Magie, werden selten angesprochen, aus Furcht, das Interesse der örtlichen Kirchenbehörden zu wecken.
 
->#### Der Gott Gruagach und die Feen-Gruagachan
+> ### Der Gott Gruagach und die Feen-Gruagachan
 >
->Als die Pikten dem Gruagach zum ersten Mal begegneten, war er ein magisches Wesen, das sich nur um die Sonne, Pflanzen und Tiere kümmerte. Die Pikten verehrten Gruagach in der Hoffnung, günstiges Wetter für ihre Ernten zu erhalten und die Fruchtbarkeit ihrer Rinderherden zu steigern. Die Pikten betrachteten Gruagach schließlich als den Gott des Viehs und des Ackerbaus und brachten Opfergaben in Form von Milch- und Viehopfern dar.
+> Als die Pikten dem Gruagach zum ersten Mal begegneten, war er ein magisches Wesen, das sich nur um die Sonne, Pflanzen und Tiere kümmerte. Die Pikten verehrten Gruagach in der Hoffnung, günstiges Wetter für ihre Ernten zu erhalten und die Fruchtbarkeit ihrer Rinderherden zu steigern. Die Pikten betrachteten Gruagach schließlich als den Gott des Viehs und des Ackerbaus und brachten Opfergaben in Form von Milch- und Viehopfern dar.
 >
->Es ist möglich, dass diese zunehmende Betonung menschlicher Belange eine Feen-Version des Gruagach erschuf. Als das Christentum die heidnischen Religionen verdrängte und die Pikten aufhörten, als unabhängiges Volk zu existieren, wurde der Gott Gruagach vergessen, aber die Praxis, Milch in seinem Namen zu opfern, blieb erhalten.
+> Es ist möglich, dass diese zunehmende Betonung menschlicher Belange eine Feen-Version des Gruagach erschuf. Als das Christentum die heidnischen Religionen verdrängte und die Pikten aufhörten, als unabhängiges Volk zu existieren, wurde der Gott Gruagach vergessen, aber die Praxis, Milch in seinem Namen zu opfern, blieb erhalten.
 >
->Im Mythischen Europa haben viele schottische Milchbauernhöfe in Stein gemeißelte Vertiefungen, in die ein Bauer eine kleine Menge Milch für einen „Gruagach" gießt. Die Schotten glauben, dass die Gruagachan kleine Feenwesen sind, etwa kniehoch, mit langem Haar und in Herrenkleidung gekleidet. Die Feen-Gruagachan können Milch gerinnen lassen oder Kühe versiegen lassen, wenn ihnen nicht der gebührende Respekt erwiesen wird. Wenn die Bauern den Feen täglich Milch opfern, sorgen sie dafür, dass die Sahne aufsteigt und die Kühe des Hofes ertragreich sind.
+> Im Mythischen Europa haben viele schottische Milchbauernhöfe in Stein gemeißelte Vertiefungen, in die ein Bauer eine kleine Menge Milch für einen „Gruagach" gießt. Die Schotten glauben, dass die Gruagachan kleine Feenwesen sind, etwa kniehoch, mit langem Haar und in Herrenkleidung gekleidet. Die Feen-Gruagachan können Milch gerinnen lassen oder Kühe versiegen lassen, wenn ihnen nicht der gebührende Respekt erwiesen wird. Wenn die Bauern den Feen täglich Milch opfern, sorgen sie dafür, dass die Sahne aufsteigt und die Kühe des Hofes ertragreich sind.
 >
->Die genaue Natur des Gruagach, seine Beziehung zu den Gruagachan-Feen und sein Grad der Interaktion mit den Gruagach-Zauberern in der Saga bleibt dem Ermessen der Spieltruppe überlassen.
+> Die genaue Natur des Gruagach, seine Beziehung zu den Gruagachan-Feen und sein Grad der Interaktion mit den Gruagach-Zauberern in der Saga bleibt dem Ermessen der Spieltruppe überlassen.
 
 #### Organisation der Gruagachan
 
@@ -3827,7 +3838,7 @@ Dies ist eine Variante des Konventsvorzugs Hecken-Tradition (siehe Covenants, Se
 
 Der Konvent hat bedeutenden Einfluss auf ein nahegelegenes Gruagach-Kollektiv. Das Kollektiv nutzt seine engen Verbindungen zur Gemeinschaft, um dem Konvent nützliche Informationen über Ereignisse auf dem Land zu liefern, tauscht Vis mit dem Konvent und warnt den Konvent vor magischen Ereignissen in der Umgebung. Seine Mitglieder leisten auch regelmäßig geringfügige magische Hilfe und kämpfen im Krisenfall für den Konvent.
 
-#### Großer Konventshaken: Feindliches Gruagach-Kollektiv 
+#### Großer Konventshaken: Feindliches Gruagach-Kollektiv
 
 Wähle diesen Haken, wenn die Spieltruppe mit Gruagach-Magie experimentieren möchte, bevor einer der Spieler sich entscheidet, einen Gruagach-Charakter zu erstellen.
 
@@ -3849,116 +3860,118 @@ Ein oder mehrere Gruagachan leben im Konvent. Sofern der Konvent die Existenz de
 
 Einige Gruagachan sind dem Namen nach Mitglieder des Ordens des Hermes. Sie praktizieren weiterhin ihre Geas-Magie, sind aber dem Orden beigetreten, um Verfolgung zu vermeiden oder die Vorteile der Parma Magica zu genießen. Ein nominell hermetischer Gruagach-Charakter sollte den Fehler Heckenzauberer und die Tugend Arkanes Wissen nehmen. Die 50 Erfahrungspunkte aus Arkanes Wissen können zum Erlernen beliebiger Arkaner Fertigkeiten verwendet werden, aber der Charakter sollte Mindestwerte von 1 in Kodex des Hermes und Parma Magica haben. Ansonsten erschafft der Spieler den Gruagach genau wie zuvor beschrieben.
 
->#### Domhnall, der Gruagach-Meister
+> ### Domhnall, der Gruagach-Meister
 >
->Eigenschaften: Int +2, Wah 0, Prä +2, Kom 0, Stä +1, Aus +2, Ges 0, Sck 0
+> Eigenschaften: Int +2, Wah 0, Prä +2, Kom 0, Stä +1, Aus +2, Ges 0, Sck 0
 >
->Größe: +1 
+> Größe: +1
 >
->Alter: 31 
+> Alter: 31
 >
->Gebrechlichkeit: 0 
+> Gebrechlichkeit: 0
 >
->Verzerrungswert: 1 (2) 
+> Verzerrungswert: 1 (2)
 >
->Selbstvertrauenswert: 1 (3)
+> Selbstvertrauenswert: 1 (3)
 >
->Tugenden und Fehler: Die Gabe; Gruagach, Gruagach-Meister; Sanfte Gabe; Flexible Magie, Verbesserte Eigenschaften, Großgewachsen, Kleiner Magischer Fokus (Selbstverwandlung), Krieger, Neidisch, Vis-Verschwender, Nachlässiger Zauberer, Enge Familienbande, Heide
+> Tugenden und Fehler: Die Gabe; Gruagach, Gruagach-Meister; Sanfte Gabe; Flexible Magie, Verbesserte Eigenschaften, Großgewachsen, Kleiner Magischer Fokus (Selbstverwandlung), Krieger, Neidisch, Vis-Verschwender, Nachlässiger Zauberer, Enge Familienbande, Heide
 >
->Persönlichkeitseigenschaften: Tapfer +3, Stolz +2,
+> Persönlichkeitseigenschaften: Tapfer +3, Stolz +2,
 >
->Reputationen: Weise jenseits seiner Jahre 3 (lokal)
+> Reputationen: Weise jenseits seiner Jahre 3 (lokal)
 >
->Kampf:
+> Kampf:
 >
->Knüppel (normal): Init 0, Ang +8, Vert +5, Sch +8
+> Knüppel (normal): Init 0, Ang +8, Vert +5, Sch +8
 >
->Knüppel (Riesengestalt): Init -3, Ang +8, Vert +2, Sch +16
+> Knüppel (Riesengestalt): Init -3, Ang +8, Vert +2, Sch +16
 >
->Absorption: +4
+> Absorption: +4
 >
->Erschöpfungsstufen: OK,  $O_1$ , -1, -3, -5, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
 >
->Wundabzüge (normal): -1 (1-6), -3 (7–12), –5 (13–18), Kampfunfähig (19– 24), Tot (25+)
+> Wundabzüge (normal): -1 (1-6), -3 (7–12), –5 (13–18), Kampfunfähig (19– 24), Tot (25+)
 >
->Wundabzüge (Riesengestalt): -1 (1-10), (31-40), -3 (11-20), -5 (21-30), Kampfunfähig (31-40), Tot (41+)
+> Wundabzüge (Riesengestalt): -1 (1-10), (31-40), -3 (11-20), -5 (21-30), Kampfunfähig (31-40), Tot (41+)
 >
->Fertigkeiten: Tierumgang 2 (Rinder), Athletik 1 (Laufen), Artes Liberales 1 (Ogham), Raufen 2 (Schlagen), Charme 2 (Frauen), Menschenkenntnis 2 (Adlige), Gälisch 5 (Flüche), Große Waffe 3 (Knüppel), Gruagach-Kunde 2 (Einweihungen), Täuschung 2 (Unwissenheit vortäuschen), Hochland-Kunde 2 (Legenden), Magiekunde 2 (Auren), Piktisch 2 (religiös), Wurfwaffe 1 (Speer), Dorf-Kunde 2 (Geschichte)
+> Fertigkeiten: Tierumgang 2 (Rinder), Athletik 1 (Laufen), Artes Liberales 1 (Ogham), Raufen 2 (Schlagen), Charme 2 (Frauen), Menschenkenntnis 2 (Adlige), Gälisch 5 (Flüche), Große Waffe 3 (Knüppel), Gruagach-Kunde 2 (Einweihungen), Täuschung 2 (Unwissenheit vortäuschen), Hochland-Kunde 2 (Legenden), Magiekunde 2 (Auren), Piktisch 2 (religiös), Wurfwaffe 1 (Speer), Dorf-Kunde 2 (Geschichte)
 >
->Künste: Gb 2, Ne 2, Se 14, Fl 14, Ge 9, Vi 5 
+> Künste: Gb 2, Ne 2, Se 14, Fl 14, Ge 9, Vi 5
 >
->Ausrüstung: Teilweise schwere Lederrüstung, Überlebensausrüstung und Knüppel.
+> Ausrüstung: Teilweise schwere Lederrüstung, Überlebensausrüstung und Knüppel.
 >
->Behinderung: 1 (2) (in Menschengestalt; keine in Riesengestalt)
+> Behinderung: 1 (2) (in Menschengestalt; keine in Riesengestalt)
 >
->Bekannte Zauber:
+> Bekannte Zauber:
 >
->Segen der Schwertkunst (Große Waffe) (GbSe 20/+18)
+> Segen der Schwertkunst (Große Waffe) (GbSe 20/+18)
 >
->Segen der Schwertkunst (Einzelwaffe) (GbSe 20/+18)
+> Segen der Schwertkunst (Einzelwaffe) (GbSe 20/+18)
 >
->Geas für die narzisstische Jungfrau (GbFl 15/+18) Die Gestalt der Ahnen annehmen (GbGe 15/+15
+> Geas für die narzisstische Jungfrau (GbFl 15/+18)
 >
->Den Jägerverschlag erschaffen (GbVi 10/+9)
+> Die Gestalt der Ahnen annehmen (GbGe 15/+15)
 >
->Vis: 2 Bauern Animal-Vis in Form eines über seine Schulter geworfenen Hirschfells.
+> Den Jägerverschlag erschaffen (GbVi 10/+9)
 >
->Erscheinungsbild: Domhnall ist ein großer Mann mit sandbraunem Haar und grünen Augen. Er ist fit und trägt seine Lederrüstung, wann immer er Ärger erwartet. Er trägt einen großen hölzernen Knüppel mit Metallbeschlägen am Ende. Er spricht mit donnernder Stimme und lacht schnell. Seine gebräunte Haut beginnt Falten zu zeigen.
+> Vis: 2 Bauern Animal-Vis in Form eines über seine Schulter geworfenen Hirschfells.
+>
+> Erscheinungsbild: Domhnall ist ein großer Mann mit sandbraunem Haar und grünen Augen. Er ist fit und trägt seine Lederrüstung, wann immer er Ärger erwartet. Er trägt einen großen hölzernen Knüppel mit Metallbeschlägen am Ende. Er spricht mit donnernder Stimme und lacht schnell. Seine gebräunte Haut beginnt Falten zu zeigen.
 >
 > Domhnall wurde in einem kleinen Dorf im schottischen Hochland geboren und aufgezogen. Er wurde von seinem Meister entdeckt, als er 10 Jahre alt war. Nach seiner Lehrlingszeit wurde Domhnall in eine lokale Armee eingezogen, um gegen die Engländer zu kämpfen. Obwohl er im Kampf hervorragend war, hatte er kein Verlangen danach und kehrte so bald wie möglich ins Hochland zurück. Als er zurückkam, entdeckte Domhnall, dass sein Meister und seine Mitgruagachan verschwunden waren. Domhnall sehnt sich nach einem besseren Leben, in dem er seine Magie nutzen kann, um für sich und andere zu sorgen, aber er ist nicht bereit, sein Dorf und seine Familie zu verlassen, um neue Schüler zu suchen, die ihm helfen. Domhnall hatte Schwierigkeiten, die wenigen potenziellen Mitglieder der Gemeinschaft davon zu überzeugen, seine Schüler zu werden, und erwägt, Conall zu bitten, mit ihm aufzubrechen, um anderswo ein neues Kollektiv zu gründen.
 
->#### Conall der Gruagach
+> ### Conall der Gruagach
 >
->Eigenschaften: Int 0, Wah +3, Prä -2, Kom -2, Stä 0, Aus +1, Ges +2, Sck +2
+> Eigenschaften: Int 0, Wah +3, Prä -2, Kom -2, Stä 0, Aus +1, Ges +2, Sck +2
 >
->Größe: 0 
+> Größe: 0
 >
->Alter: 25 
+> Alter: 25
 >
->Gebrechlichkeit: 0 
->Verzerrungswert: 0 
+> Gebrechlichkeit: 0
+> Verzerrungswert: 0
 >
->Selbstvertrauenswert: 1 (3)
+> Selbstvertrauenswert: 1 (3)
 >
->Tugenden und Fehler: Gruagach, Landvolk; Geben, Gestaltwandler, Nehmen, Gestalt, Krieger, Dunkles Geheimnis, Einschränkung (kann keine Magie anwenden, solange er kahl ist); Ungerecht beurteilt, Mentor, Keine Magische Abwehr, Einfallsloser Schüler, Schwache Tätowierungsmagie
+> Tugenden und Fehler: Gruagach, Bauer; Geben, Gestaltwandler, Nehmen, Gestalt, Krieger, Dunkles Geheimnis, Einschränkung (kann keine Magie anwenden, solange er kahl ist); Ungerecht beurteilt, Mentor, Keine Magische Abwehr, Einfallsloser Lerner, Schwache Tätowierungsmagie
 >
->Persönlichkeitseigenschaften: Loyal +2, Tapfer +1 Reputationen: Vom Pech verfolgt 3 (lokal)
+> Persönlichkeitseigenschaften: Loyal +2, Tapfer +1 Reputationen: Vom Pech verfolgt 3 (lokal)
 >
->Kampf:
+> Kampf:
 >
->Kurzbogen: Init -1, Ang +9, Vert +6, Sch +6
+> Kurzbogen: Init -1, Ang +9, Vert +6, Sch +6
 >
->Klauen (in Bärengestalt): Init 0, Ang +13, Vert +9, Sch +10
+> Klauen (in Bärengestalt): Init 0, Ang +13, Vert +9, Sch +10
 >
->Absorption: +3 (+10 in Bärengestalt)
+> Absorption: +3 (+10 in Bärengestalt)
 >
->Erschöpfungsstufen: OK, 0, -1, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, Bewusstlos
 >
->Wundabzüge (normal): -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
+> Wundabzüge (normal): -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
 >
->Wundabzüge (Bärengestalt): -1 (1-7), -3 (8-14), -5 (15-21), Kampfunfähig (22-28), Tot (29+)
+> Wundabzüge (Bärengestalt): -1 (1-7), -3 (8-14), -5 (15-21), Kampfunfähig (22-28), Tot (29+)
 >
->Fertigkeiten: Athletik 1 (Klettern), Aufmerksamkeit 3 (Hochland), Bogenschießen 4 (Schießen aus Deckung), Raufen 3 (Ausweichen), Gälisch 5 (sich verteidigen), Gruagach-Kunde 1 (Geschichte), Jagen 5 (Hirsche), Magiekunde 1 (Tiere), Piktisch 2 (Traditionen), Gestaltwandler 4 (Bär), Schleichen 3 (Hinterhalte), Überleben 4 (Hochland), Dorf-Kunde 2 (Wildpfade)
+> Fertigkeiten: Athletik 1 (Klettern), Aufmerksamkeit 3 (Hochland), Bogenschießen 4 (Schießen aus Deckung), Raufen 3 (Ausweichen), Gälisch 5 (sich verteidigen), Gruagach-Kunde 1 (Geschichte), Jagen 5 (Hirsche), Magiekunde 1 (Tiere), Piktisch 2 (Traditionen), Gestaltwandler 4 (Bär), Schleichen 3 (Hinterhalte), Überleben 4 (Hochland), Dorf-Kunde 2 (Wildpfade)
 >
->Künste: Gb 1, Ne 1, Se (n/v), Fl (n/v), Ge 10,  Vi (n/v)
+> Künste: Gb 1, Ne 1, Se (n/v), Fl (n/v), Ge 10,  Vi (n/v)
 >
->Ausrüstung: Teilweise schwere Lederrüstung, Kurzbogen, Pfeile und Überlebensausrüstung.
+> Ausrüstung: Teilweise schwere Lederrüstung, Kurzbogen, Pfeile und Überlebensausrüstung.
 >
->Behinderung: 2 (2)
+> Behinderung: 2 (2)
 >
->Bekannte Zauber:
+> Bekannte Zauber:
 >
->Die Nase des Jagdhunds borgen (GbGe 3/+12) 
+> Die Nase des Jagdhunds borgen (GbGe 3/+12)
 >
->Die Augen der Katze borgen (GbGe 5/+12) (Stimmen-Reichweite)
+> Die Augen der Katze borgen (GbGe 5/+12) (Stimmen-Reichweite)
 >
->Die Schwingen des Adlers borgen (GbGe 10/+12) 
+> Die Schwingen des Adlers borgen (GbGe 10/+12)
 >
->Den Menschen in seine angemessene Gestalt verwandeln (NeGe 20/+12)
+> Den Menschen in seine angemessene Gestalt verwandeln (NeGe 20/+12)
 >
->Erscheinungsbild: Conall ist ein mittelgroßer Mann mit langem, ungepflegtem schwarzem Haar. Seine blassblauenAugen sind hinter den herabfallenden Haaren kaum zu erkennen. Conall kleidet sich häufig in sein Leder und ist selten weit von seinem Bogen entfernt. Er zappelt nervös beim Reden.
+> Erscheinungsbild: Conall ist ein mittelgroßer Mann mit langem, ungepflegtem schwarzem Haar. Seine blassblauenAugen sind hinter den herabfallenden Haaren kaum zu erkennen. Conall kleidet sich häufig in sein Leder und ist selten weit von seinem Bogen entfernt. Er zappelt nervös beim Reden.
 >
->Conall wurde im selben Dorf wie Domhnall geboren. Seit Conall denken kann, haben die Leute ihn für jedes Missgeschick, jeden Unfall und jedes Unglück verantwortlich gemacht. Conall muss nicht einmal in der Nähe des Unfalls gewesen sein, und trotzdem bekommt er die Schuld. Conall begegnete dem, indem er so wenig Zeit wie möglich in der Nähe von Menschen verbrachte und durch das Hochland auf der Suche nach Wild streifte. Als Conall sich einsam fühlte, suchte er Domhnall auf, der einer der wenigen Menschen war, die bereit waren, mit ihm zu sprechen. Als Domhnall von seiner Einberufung zurückkehrte, begannen sie, mehr Zeit miteinander zu verbringen. Domhnall unterrichtet ihn seit fünf Jahren in den Wegen der Gruagachan. Conall war nie besonders gläubig und war bereit, die Wege der Gruagachan zu erlernen. Er nahm Domhnalls Unterricht schnell an und wurde von der Gruagach-Ethik inspiriert, Ungerechtigkeit zu bekämpfen. Conall sehnt sich danach, Menschen davor zu bewahren, fälschlich beschuldigt zu werden, wie es ihm selbst so oft widerfährt.
+> Conall wurde im selben Dorf wie Domhnall geboren. Seit Conall denken kann, haben die Leute ihn für jedes Missgeschick, jeden Unfall und jedes Unglück verantwortlich gemacht. Conall muss nicht einmal in der Nähe des Unfalls gewesen sein, und trotzdem bekommt er die Schuld. Conall begegnete dem, indem er so wenig Zeit wie möglich in der Nähe von Menschen verbrachte und durch das Hochland auf der Suche nach Wild streifte. Als Conall sich einsam fühlte, suchte er Domhnall auf, der einer der wenigen Menschen war, die bereit waren, mit ihm zu sprechen. Als Domhnall von seiner Einberufung zurückkehrte, begannen sie, mehr Zeit miteinander zu verbringen. Domhnall unterrichtet ihn seit fünf Jahren in den Wegen der Gruagachan. Conall war nie besonders gläubig und war bereit, die Wege der Gruagachan zu erlernen. Er nahm Domhnalls Unterricht schnell an und wurde von der Gruagach-Ethik inspiriert, Ungerechtigkeit zu bekämpfen. Conall sehnt sich danach, Menschen davor zu bewahren, fälschlich beschuldigt zu werden, wie es ihm selbst so oft widerfährt.
 
 ## Alternative Traditionen
 
@@ -4000,11 +4013,11 @@ Es gibt keine formelle Lehrlingszeit für Trollsynir. Da Trollsynir gewöhnlich 
 
 Ebenso gibt es keine formellen Ausbildungsanforderungen für Trollsynir, und jede Familie hat unterschiedliche Stärken und Schwächen. Dennoch gibt es bestimmte Fertigkeiten, die universell gelehrt werden, und alle Trollsynir werden einige Kenntnisse in den folgenden Fertigkeiten besitzen: Jötnar-Sprache, Magiekunde, Feenkunde, Penetration, Finesse und Jötnar-Kunde. Über diese Fertigkeiten hinaus kann jede einzelne Familie und jeder Clan in den Fertigkeiten, die er betont, stark variieren.
 
-Trollsynir besitzen häufig eine oder mehrere der folgenden Tugenden: Mythisches Kräuterwissen, Wege des (Landes) oder Natursinn. Über diese Tugenden und jene in diesem Kapitel hinaus sind Trollsynir für keine besondere Begabung bekannt. Die Fehler Enge Familienbande, Heide und Behütetes Aufwachsen sind besonders passend, aber nicht erforderlich. Gebildet und Weltlicher Einfluss sind für Trollsynir nicht angemessen, und ein Spieler, der sie wählt, muss die Zustimmung der Spieltruppe einholen.
+Trollsynir besitzen häufig eine oder mehrere der folgenden Tugenden: Mythisches Kräuterwissen, Wege des (Landes) oder Natursinn. Über diese Tugenden und jene in diesem Kapitel hinaus sind Trollsynir für keine besondere Begabung bekannt. Die Fehler Enge Familienbande, Heide und Behütete Kindheit sind besonders passend, aber nicht erforderlich. Gebildet und Zeitlicher Einfluss sind für Trollsynir nicht angemessen, und ein Spieler, der sie wählt, muss die Zustimmung der Spieltruppe einholen.
 
 ### Kolduni
 
-**Erforderliche Fehler:** Keine Tätowierungsmagie <br> 
+**Erforderliche Fehler:** Keine Tätowierungsmagie <br>
 **Künste und Bevorzugte Fertigkeiten:** Alle Gruagach-Künste, Tierverständnis und Mythisches Kräuterwissen
 
 In den wilden Gebieten des Novgorod-Tribunals leben heidnische Zauberer am Rand der bäuerlichen Gesellschaft. Diese Zauberer tauschen ihre Dienste im Entfernen von Flüchen, Heilen von Verletzten und Vermitteln mit der Feenwelt gegen die Grundlagen des Lebens. Diese heidnischen Zauberer sind als Kolduni (Singular: Koldun) bekannt.
@@ -4019,11 +4032,11 @@ Da die Kolduni keine unBegabten Vertreter haben, ist ihre Beziehung zur weltlich
 
 Koldun-Magie, von ihren Praktizierenden „Koldovali" genannt, ist der Gruagach-Magie sehr ähnlich. Die Kolduni erlernen und wirken Zauber nach denselben Mechanismen wie Gruagachan, außer dass die Fertigkeit Koldovali-Theorie die Piktische Sprache in den entsprechenden Formeln ersetzt. Anders als die Gruagachan praktizieren die Kolduni eine vollständig mündliche Magietradition und können daher keine der Gruagach-Laboraktivitäten durchführen, die Lese- und Schreibfähigkeit erfordern. Die Kolduni verwenden nicht den Begriff Geas, sondern bezeichnen ein Geas oder einen Fluch als „Kara".
 
->#### ABENTEUERIDEE: Koschtschei der Unsterbliche
+> ### Abenteueridee: Koschtschei der Unsterbliche
 >
->Ein Koldun-Zauberer entführt die Verlobte eines Freundes des Konvents, der die Charaktere um Hilfe bittet. Der Zauberer ist aufgrund seiner Äußeren Seele immun gegen den Tod. Wenn die Charaktere den Aufbewahrungsort der Äußeren Seele entdecken können, können die Magi sie untersuchen und die genaue Art ihrer Zerstörung bestimmen.
+> Ein Koldun-Zauberer entführt die Verlobte eines Freundes des Konvents, der die Charaktere um Hilfe bittet. Der Zauberer ist aufgrund seiner Äußeren Seele immun gegen den Tod. Wenn die Charaktere den Aufbewahrungsort der Äußeren Seele entdecken können, können die Magi sie untersuchen und die genaue Art ihrer Zerstörung bestimmen.
 >
->Koschtschei der Unsterbliche ist ein mächtiger Koldun, der seine Seele in ein Ei in einer Ente in einem Hasen in einer Truhe legte, die unter einer Eiche im Zentrum einer abgelegenen Insel in einer mächtigen Regio begraben ist. Koschtschei kann nur sterben, wenn das Ei, das seine Seele enthält, an seiner Stirn zerschmettert wird.
+> Koschtschei der Unsterbliche ist ein mächtiger Koldun, der seine Seele in ein Ei in einer Ente in einem Hasen in einer Truhe legte, die unter einer Eiche im Zentrum einer abgelegenen Insel in einer mächtigen Regio begraben ist. Koschtschei kann nur sterben, wenn das Ei, das seine Seele enthält, an seiner Stirn zerschmettert wird.
 
 Wasser spielt eine wichtige Rolle in der Magie der Kolduni und ist für ihre mächtigsten Zauber notwendig. Wenn ein Koldun einen Visionszauber wirkt, der ihm erlaubt, Dinge aus der Ferne wahrzunehmen, muss er dies tun, indem er ins Wasser starrt. Die Kolduni haben Zugang zur Reichweite Arkane Verbindung, die +4 Magnituden zur Stufe eines Zaubers hinzufügt. Wenn der Zauberer einen Zauber mit Arkaner Verbindung wirkt, muss er die Verbindung in eine Menge Wasser eintauchen, die groß genug ist, sie vollständig zu bedecken, damit der Zauber wirkt.
 
@@ -4033,7 +4046,7 @@ Der Verzerrungsprozess der Kolduni verwandelt sie nicht in Trolle, sondern folgt
 
 #### Charaktere
 
-Kolduni verwenden die gleichen grundlegenden Regeln zur Charaktererschaffung, die zuvor beschrieben wurden. Neben ihren Künsten widmen Kolduni ihre Zeit häufig dem Erlernen von Chirurgie, Kräuterkunde, Koldovali-Theorie, Koldun-Kunde, Feenkunde und Magiekunde. Kolduni können den Sozialen Status Weiser oder Ausgestoßener besitzen. Neben den erforderlichen und Bevorzugten Tugenden umfassen passende Tugenden und Fehler: Feenblut, Vorahnungen, Zweites Gesicht, Student der Feensphäre, Feenfreund und Visionen. Siehe Sphären der Macht: Feenwelt für zusätzliche Tugenden, Fehler und Geschichtsideen.
+Kolduni verwenden die gleichen grundlegenden Regeln zur Charaktererschaffung, die zuvor beschrieben wurden. Neben ihren Künsten widmen Kolduni ihre Zeit häufig dem Erlernen von Chirurgie, Kräuterkunde, Koldovali-Theorie, Koldun-Kunde, Feenkunde und Magiekunde. Kolduni können den Sozialen Status Weise Frau / Weiser Mann oder Ausgestoßener besitzen. Neben den erforderlichen und Bevorzugten Tugenden umfassen passende Tugenden und Fehler: Feenblut, Vorahnungen, Zweites Gesicht, Student der Feensphäre, Feenfreund und Visionen. Siehe Sphären der Macht: Feenwelt für zusätzliche Tugenden, Fehler und Geschichtsideen.
 
 ## Integration der Gruagach-Magie
 
@@ -4121,13 +4134,13 @@ Gelehrte Magier erwerben das Wissen über ihre Magie auf weitgehend dieselbe Wei
 
 Gelehrte Magier sind keine von der Gesellschaft abgeschiedenen Einsiedler, wie es solche mit der Gabe oft sind. Sie neigen dazu, integrierte Mitglieder ihrer Gemeinschaften zu sein. Die Praktizierenden dieser Magie sind zudem nach den Maßstäben des Mythischen Europas gut gebildet. Je nach dem vom Spieler gewählten Sozialen Status wird ein Gelehrter Magier wahrscheinlich einige Fertigkeiten in den folgenden Bereichen besitzen: Artes Liberales, Zivil- und Kanonisches Recht, Medizin, Philosophiae, Beruf (Schreiber) und Theologie. Nachdem die Ausbildung beginnt, studieren Gelehrte Magier häufig auch Konzentration, Penetration und (Sphären-)Kunde, zusätzlich zu den in diesem Kapitel vorgestellten Fertigkeiten und Künsten.
 
-Alle Magier müssen Mindestwerte von 1 in Latein besitzen, um Zauberformeln zu erlernen, und 1 in Artes Liberales, um Amulette und Chartae zu erstellen oder Zauberformeln aus einem Text zu wirken. Da die meisten Magier jedoch Studenten an der Universität oder Mitglieder des Klerus sind, liegen ihre Werte deutlich höher. Die für Gelehrte Magier spezifischen Tugenden sind unten aufgeführt, doch Magier können auch eine Reihe anderer Tugenden und Fehler besitzen. Mythisches Kräuterwissen und Mythische Alchemie als Tugenden sind verbreitet. Da Gelehrte Magier aus dem Gelehrtenstand stammen, sind Tugenden wie Begabter Schüler, Klarer Denker, Gebildet, Guter Lehrer und Privilegierte Erziehung besonders passend. Die Studenten und Kommilitonen der Gelehrten Magier sind oft über das gesamte Mythische Europa verstreut; Soziale Kontakte, Vielgereist und Weltlicher Einfluss sind alle verbreitet.
+Alle Magier müssen Mindestwerte von 1 in Latein besitzen, um Zauberformeln zu erlernen, und 1 in Artes Liberales, um Amulette und Chartae zu erstellen oder Zauberformeln aus einem Text zu wirken. Da die meisten Magier jedoch Studenten an der Universität oder Mitglieder des Klerus sind, liegen ihre Werte deutlich höher. Die für Gelehrte Magier spezifischen Tugenden sind unten aufgeführt, doch Magier können auch eine Reihe anderer Tugenden und Fehler besitzen. Mythisches Kräuterwissen und Mythische Alchemie als Tugenden sind verbreitet. Da Gelehrte Magier aus dem Gelehrtenstand stammen, sind Tugenden wie Begabter Schüler, Klarer Denker, Gebildet, Guter Lehrer und Privilegierte Erziehung besonders passend. Die Studenten und Kommilitonen der Gelehrten Magier sind oft über das gesamte Mythische Europa verstreut; Soziale Kontakte, Vielgereist und Zeitlicher Einfluss sind alle verbreitet.
 
-Ebenso haben Magier oft Fehler, die mit ihrer Stellung in der Gesellschaft zusammenhängen; Schützling, Gefälligkeiten, Klösterliche Gelübde, Treueeid, Enge Familienbande und Erbe können für sie passend sein. Und wenn Magier die Mächte der Sphären anrufen, verärgern sie diese bisweilen, sodass die folgenden Fehler angemessen sind: Große Verfluchung, Von Übernatürlichem Wesen geplagt und Übernatürliche Plage. Jeder der unter Magische Gefahren, Verzerrung (später) aufgeführten Fehler ist ebenfalls für einen Charakter geeignet.
+Ebenso haben Magier oft Fehler, die mit ihrer Stellung in der Gesellschaft zusammenhängen; Schützling, Gefälligkeiten, Klostergelübde, Treueeid, Enge Familienbande und Erbe können für sie passend sein. Und wenn Magier die Mächte der Sphären anrufen, verärgern sie diese bisweilen, sodass die folgenden Fehler angemessen sind: Große Verfluchung, Von übernatürlichem Wesen geplagt und Übernatürliche Plage. Jeder der unter Magische Gefahren, Verzerrung (später) aufgeführten Fehler ist ebenfalls für einen Charakter geeignet.
 
->#### Kunde der Mathematici
+> ### Kunde der Mathematici
 >
->Dies ist die (Organisations-)Kunde der Tradition der Gelehrten Magier mit Sitz in Bologna. Ein Charakter mit dieser Fertigkeit besitzt Wissen über die allgemeinen Effekte, die Zauberformeln und Amulettmagie hervorbringen, die Identitäten der mächtigen Mitglieder der Mathematici von Bologna, ihre Geschichte und die Geheimnisse der Tradition. Zu den Geheimnissen der Mathematici gehört das Wissen über die Riten und Rituale, um einen anderen in die Kräfte der Tradition einzuweihen. Andere Gruppen von Gelehrten Magiern mögen im Mythischen Europa existieren und ihre eigenen (Organisations-)Kunde-Fertigkeiten besitzen.
+> Dies ist die (Organisations-)Kunde der Tradition der Gelehrten Magier mit Sitz in Bologna. Ein Charakter mit dieser Fertigkeit besitzt Wissen über die allgemeinen Effekte, die Zauberformeln und Amulettmagie hervorbringen, die Identitäten der mächtigen Mitglieder der Mathematici von Bologna, ihre Geschichte und die Geheimnisse der Tradition. Zu den Geheimnissen der Mathematici gehört das Wissen über die Riten und Rituale, um einen anderen in die Kräfte der Tradition einzuweihen. Andere Gruppen von Gelehrten Magiern mögen im Mythischen Europa existieren und ihre eigenen (Organisations-)Kunde-Fertigkeiten besitzen.
 
 ### Tugenden und Fehler
 
@@ -4142,18 +4155,17 @@ Frei, Sozialer Status
 
 Der Charakter ist Mitglied der magischen Tradition der Mathematici von Bologna. Der Charakter darf Zauberformeln wirken und Laboraktivitäten nach den Regeln dieses Kapitels durchführen. Um diesen Sozialen Status zu besitzen, muss der Charakter mindestens eine Heckentechnik und -form aus diesem Kapitel haben.
 
-Ein Mathematicus muss zudem einen Sozialen Status besitzen, der seine Rolle in der weltlichen Gesellschaft definiert; geeignete Beispiele umfassen: Kleriker, Edelmann, Landadliger, Magister in Artibus, Bettelmönch oder Priester. Die in den Kapiteln über Universitäten und Medizin von Kunst & Gelehrsamkeit aufgeführten Sozialen Status sind sehr passend, ebenso wie jene in Sphären der Macht: Das Göttliche, [Seiten 92–93](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#tugenden>). Diese Listen sind nicht erschöpfend, und die Spieltruppe darf zusätzliche Soziale Status einbeziehen, die für den Charakter des Gelehrten Magiers angemessen sind. Das Maß an Freiheit, das ein Mathematicus zum Studieren hat, basiert auf seinem anderen Sozialen Status oder darauf, ob er die Tugend Wohlhabend oder den Fehler Arm besitzt.
+Ein Mathematicus muss zudem einen Sozialen Status besitzen, der seine Rolle in der weltlichen Gesellschaft definiert; geeignete Beispiele umfassen: Kleriker, Edelmann, Landadliger, Magister in Artibus, Bettelbruder oder Priester. Die in den Kapiteln über Universitäten und Medizin von Art & Academe aufgeführten Sozialen Status sind sehr passend, ebenso wie jene in Sphären der Macht: Das Göttliche, [Seiten 92–93](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#tugenden>). Diese Listen sind nicht erschöpfend, und die Spieltruppe darf zusätzliche Soziale Status einbeziehen, die für den Charakter des Gelehrten Magiers angemessen sind. Das Maß an Freiheit, das ein Mathematicus zum Studieren hat, basiert auf seinem anderen Sozialen Status oder darauf, ob er die Tugend Wohlhabend oder den Fehler Arm besitzt.
 
 **Die Mächte anrufen**<br>
 Groß, Übernatürlich
 
-Diese Tugend verleiht dem Charakter die Fähigkeit, die negativen Effekte, die mit dem Einsatz magisch ausgerichteter Kräfte in Göttlichen oder Infernalen Auren verbunden sind, zu minimieren oder zu überwinden. Die Mechanik für den Einsatz dieser Tugend wird weiter un-
-ten ausführlich beschrieben. Siehe Magie der Gelehrten Magier: Abschwächung von Sphäreninteraktionseffekten.
+Diese Tugend verleiht dem Charakter die Fähigkeit, die negativen Effekte, die mit dem Einsatz magisch ausgerichteter Kräfte in Göttlichen oder Infernalen Auren verbunden sind, zu minimieren oder zu überwinden. Die Mechanik für den Einsatz dieser Tugend wird weiter unten ausführlich beschrieben. Siehe Magie der Gelehrten Magier: Abschwächung von Sphäreninteraktionseffekten.
 
 **Mythische Alchemie**<br>
 Groß, Übernatürlich
 
-Diese Tugend verleiht dem Charakter einen Wert von 1 in der Übernatürlichen Fertigkeit Mythische Alchemie. Mythische Alchemisten können tatsächlich Arten von Atomen durch die Anwendung magischer statt philosophischer Techniken in andere Arten von Atomen umwandeln. Diese Fertigkeit erfordert stets mindestens ein Quartal Arbeit in einem ordnungsgemäß ausgestatteten alchemistischen Laboratorium. Die hier beschriebenen Regeln bauen auf den Regeln für Alchemisten in *Kunst & Gelehrsamkeit*, Kapitel 5: Experimentelle Philosophie, auf.
+Diese Tugend verleiht dem Charakter einen Wert von 1 in der Übernatürlichen Fertigkeit Mythische Alchemie. Mythische Alchemisten können tatsächlich Arten von Atomen durch die Anwendung magischer statt philosophischer Techniken in andere Arten von Atomen umwandeln. Diese Fertigkeit erfordert stets mindestens ein Quartal Arbeit in einem ordnungsgemäß ausgestatteten alchemistischen Laboratorium. Die hier beschriebenen Regeln bauen auf den Regeln für Alchemisten in *Art & Academe*, Kapitel 5: Experimentelle Philosophie, auf.
 
 Kurzgefasst: Eine Formel wird in einem Quartal erfunden, indem 5 Erfahrungspunkte erworben werden. Formeln werden wie Zauber beschrieben, mit einem einzelnen Parameter namens Veränderung, der die Magnitude der Änderung beschreibt. Die Formel wird verwendet, um in einem Quartal eine Reagenz herzustellen, unter Verwendung einer Laborsumme gleich Intelligenz + Philosophiae, und der Alchemist muss Punkte über der Stufe der Formel ansammeln, genau wie beim Erfinden eines Zaubers. Mythische Alchemisten sind ihren nicht-magischen Kollegen darin überlegen, und sie dürfen ihre Mythische Alchemie zu ihren Laborsummen für die Herstellung beliebiger alchemistischer Reagenzien addieren.
 
@@ -4161,37 +4173,37 @@ Charaktere mit dieser Tugend können Formeln ersinnen, die Leitlinien für alche
 
 Gelehrte Magier mit der Tugend Mythische Alchemie dürfen Vis gewinnen und überführen, wie in ArM5, [Seite 94](<Ars Magica Definitive Edition Basisregeln.md#kapitel-8-das-laboratorium>), beschrieben. Der Mythische Alchemist verwendet seine Succurro-Magicam-Laborsumme, um die Anzahl der Bauern Vim-Vis zu bestimmen, die er aus einer Magieaura gewinnen kann. Ersetze den Wert des Charakters in Mythische Alchemie durch die Magietheorie, um die Anzahl der Bauern zu bestimmen, die ein Charakter in einem einzelnen Quartal verwenden darf.
 
-Mythische Alchemisten können auch die Rohmaterialien für einen Handwerker so aufbereiten, dass der Schwierigkeitsgrad für die Herstellung Überlegener, Exzellenter oder Wunderbarer Gegenstände gesenkt wird; siehe Stadt & Gilde, Seiten 63–73. Der Alchemist stellt eine Reagenz in Form der Hauptkomponente des herzustellenden Gegenstands her. Um zum Beispiel überlegene Schwerter oder Rüstungen herzustellen, müsste der Alchemist das verwendete Metall behandeln, nicht aber das Leder für den Griff oder die Riemen. Der Alchemist darf genug Rohmaterialien aufbereiten, damit ein Handwerker sie in einem Quartal verwenden kann (Stadt & Gilde, Seite 68). Dieser Vorgang erfordert kein Vis. Eine Geringfügige Veränderung zieht 1 vom Handwerks-Schwierigkeitsgrad ab, eine Kleine Veränderung zieht 2 ab, eine Erhebliche Veränderung zieht 3 ab und eine Große Veränderung zieht 4 ab.
+Mythische Alchemisten können auch die Rohmaterialien für einen Handwerker so aufbereiten, dass der Schwierigkeitsgrad für die Herstellung Überlegener, Exzellenter oder Wunderbarer Gegenstände gesenkt wird; siehe City & Guild, Seiten 63–73. Der Alchemist stellt eine Reagenz in Form der Hauptkomponente des herzustellenden Gegenstands her. Um zum Beispiel überlegene Schwerter oder Rüstungen herzustellen, müsste der Alchemist das verwendete Metall behandeln, nicht aber das Leder für den Griff oder die Riemen. Der Alchemist darf genug Rohmaterialien aufbereiten, damit ein Handwerker sie in einem Quartal verwenden kann (City & Guild, Seite 68). Dieser Vorgang erfordert kein Vis. Eine Geringfügige Veränderung zieht 1 vom Handwerks-Schwierigkeitsgrad ab, eine Kleine Veränderung zieht 2 ab, eine Erhebliche Veränderung zieht 3 ab und eine Große Veränderung zieht 4 ab.
 
 Die Umwandlung eines komplexen Elements in ein ähnliches komplexes Element ist eine Geringfügige Veränderung, wenn sich die Art der Substanz nicht ändert; zum Beispiel die Umwandlung von walisischem Kupfer in kornisches Kupfer (das einen leicht anderen Glanz besitzt). Eine Kleine Veränderung kann eine Umwandlung der Spezies bewirken; zum Beispiel unedles Metall in unedles Metall oder verarbeitete Flüssigkeit in verarbeitete Flüssigkeit. Und eine Erhebliche Veränderung kann die Gattung ändern; zum Beispiel unedles Metall in Edelmetall oder Öl in Säure. Große Veränderungen können höhere Kategorien der Gattung betreffen; so kann zum Beispiel Holz in Zinn verwandelt werden. Feststoffe müssen bei jeder Umwandlung Feststoffe bleiben, und Flüssigkeiten müssen Flüssigkeiten bleiben, und dies gilt auch bei der Umwandlung von einfacher Materie in komplexe Materie und umgekehrt. Jede Dosis einer umwandelnden Reagenz erfordert einen Bauer Vim-Vis oder Vis der entsprechenden Form für je 5 Punkte (aufgerundet) der endgültigen Stufe der Reagenz. Ein Mythischer Alchemist kann in einem Quartal eine Anzahl von Bauern Vis handhaben, die dem Doppelten seines Mythische-Alchemie-Werts entspricht; dies kann die Anzahl der Dosen begrenzen, die er unabhängig von seiner Laborsumme oder vorhandenen Labortexten herstellen kann.
 
->#### Neue Reagenzien-Leitlinien
+> ### Neue Reagenzien-Leitlinien
 >
->Stufe 2: Bereite Rohmaterialien auf, damit ein Handwerker überlegene Waren herstellen kann.
+> Stufe 2: Bereite Rohmaterialien auf, damit ein Handwerker überlegene Waren herstellen kann.
 >
->Stufe 5: Wandle komplexe Materie in eine andere Art komplexer Materie um.
+> Stufe 5: Wandle komplexe Materie in eine andere Art komplexer Materie um.
 >
->Stufe 10: Wandle komplexe Materie in einfache Materie um.
+> Stufe 10: Wandle komplexe Materie in einfache Materie um.
 >
->Stufe 15: Wandle einfache Materie in komplexe Materie um.
+> Stufe 15: Wandle einfache Materie in komplexe Materie um.
+
+> ### Beispielreagenzien
 >
->#### Beispielreagenzien
+> **Lapis Maior**<br>
+> Reagenz Stufe 15<br>
+> Veränderung: Erheblich
 >
->**Lapis Maior**<br>
->Reagenz Stufe 15<br>
->Veränderung: Erheblich
+> Dies ist das höchste Ziel vieler materialistischer Alchemisten: die Umwandlung eines unedlen Metalls in Gold. Dieser wachsartige rote Stein verwandelt bis zu 800 cm³ Blei in reines Gold, wenn er in einem Tiegel damit zusammengeschmolzen wird. Diese Reagenz erfordert drei Bauern Vim- oder Terram-Vis pro Dosis.
 >
->Dies ist das höchste Ziel vieler materialistischer Alchemisten: die Umwandlung eines unedlen Metalls in Gold. Dieser wachsartige rote Stein verwandelt bis zu 50 Kubikzoll Blei in reines Gold, wenn er in einem Tiegel damit zusammengeschmolzen wird. Diese Reagenz erfordert drei Bauern Vim- oder Terram-Vis pro Dosis.
+> (Basis 5, +2 Erheblich)
 >
->(Basis 5, +2 Erheblich)
+> **Córdobaner Cuirbolli**<br>
+> Reagenz Stufe 5<br>
+> Veränderung: Klein
 >
->**Córdobaner Cuirbolli**<br>
->Reagenz Stufe 5<br>
->Veränderung: Klein
+> Bereitet rohe Tierhäute zu überlegenem Siedleder auf, sodass jeder Handwerker, der damit arbeitet, den Schwierigkeitsgrad für seine Fertigkeit Handwerk (Leder) oder eine ähnliche Fertigkeit um 2 senkt. Das Leder kann als Teil des Umwandlungsprozesses in jede erdenkliche Farbe gefärbt werden. Jede Dosis dieser Reagenz liefert genug Leder für einen Satz volle Lederrüstung.
 >
->Bereitet rohe Tierhäute zu überlegenem Siedleder auf, sodass jeder Handwerker, der damit arbeitet, den Schwierigkeitsgrad für seine Fertigkeit Handwerk (Leder) oder eine ähnliche Fertigkeit um 2 senkt. Das Leder kann als Teil des Umwandlungsprozesses in jede erdenkliche Farbe gefärbt werden. Jede Dosis dieser Reagenz liefert genug Leder für einen Satz volle Lederrüstung.
->
->(Basis 2, +1 Klein, +2 Größe)
+> (Basis 2, +1 Klein, +2 Größe)
 
 **Mythisches Kräuterwissen**<br>
 Groß, Übernatürlich
@@ -4252,7 +4264,7 @@ Verwende die obigen Schwierigkeitsgrade, um ein einzunehmendes Gift herzustellen
 
 Tränke, die durch Mythisches Kräuterwissen hergestellt werden und körperliche Boni gewähren, halten für die Dauer Sonne. Die Wirkungen der Tränke sind nicht kumulativ. Der Bonus auf Erschöpfungswürfe darf +2 nicht übersteigen, nur eine Erschöpfungsstufe darf pro Tag ignoriert werden, und die Boni auf Absorption lassen sich nicht stapeln.
 
-**Spezialisierungen**: Wunden heilen, Tränke herstellen, Gifte herstellen. (Übernatürlich)
+**Spezialisierungen:** Wunden heilen, Tränke herstellen, Gifte herstellen. (Übernatürlich)
 
 **Starke Amulettmagie**<br>
 Groß, Übernatürlich
@@ -4375,7 +4387,7 @@ Gelehrte Magier können eine Reihe hermetischer Tugenden und Fehler besitzen. Di
 
 **Große Hermetische Fehler:** Auffällige Gabe, Defizitäre Technik, Notwendige Bedingung, Schmerzhafte Magie, Einschränkung, Starre Magie, Kurzreichweitige Magie.
 
-**Kleine Hermetische Fehler:** Nachlässiger Zauberer, Kreative Blockade, Defizitäre Form, Schädliche Umstände, Desorientierungsmagie, Kurzlebige Magie, Anfälligkeit für Göttliche Kraft, Anfälligkeit für Feenkraft, Anfälligkeit für Infernale Kraft, Verzerrte Magie, Schwache Magie, Schwacher Gelehrter, Sonderbare Magie.
+**Kleine Hermetische Fehler:** Nachlässiger Zauberer, Schaffensblockade, Defizitäre Form, Abträgliche Umstände, Desorientierende Magie, Kurzlebige Magie, Anfälligkeit für Göttliche Macht, Anfälligkeit für Feenmacht, Anfälligkeit für Infernale Macht, Verzerrte Magie, Schwache Magie, Schwacher Gelehrter, Sonderbare Magie.
 
 ## Magie der Gelehrten Magier
 
@@ -4447,13 +4459,13 @@ Die Fähigkeit, sowohl bekannte verbale Zauberformeln als auch Zauberformeln aus
 
 Wenn die Zauberformelsumme größer oder gleich der Stufe der Zauberformel ist, gelingt die Zauberformel, und der Magier verliert keine Erschöpfung. Wenn die Zauberformelsumme geringer als die Zauberformelstufe ist, aber innerhalb von 10 unter der Zauberformelstufe liegt, verliert der Magier eine Erschöpfungsstufe, und die Zauberformel wird erfolgreich gewirkt. Ist die Zauberformelsumme mehr als 10 unter der Stufe der Zauberformel, scheitert die Zauberformel, und der Zaubernde verliert eine Erschöpfungsstufe. Die Art des geworfenen Würfels hängt davon ab, ob sich der Zaubernde in einer Stresssituation befindet. Normale, kampffreie Situationen erfordern nur einen einfachen Wurf. Zauberformeln, die aus einem Text gewirkt werden, erfordern stets einen Stresswurf.
 
->#### Reichweiten, Dauern und Zielgrößen für Zauberformeln
+> ### Reichweiten, Dauern und Zielgrößen für Zauberformeln
 >
->Reichweite: Persönlich, Auge/Berührung (+1) und Stimme (+2)
+> Reichweite: Persönlich, Auge/Berührung (+1) und Stimme (+2)
 >
->Dauer: Momentan, Durchmesser (+1) und Sonne (+2)
+> Dauer: Momentan, Durchmesser (+1) und Sonne (+2)
 >
->Zielgröße: Individuum und Gruppe (+1)
+> Zielgröße: Individuum und Gruppe (+1)
 
 #### Ablesen von Zauberformeln aus einem Text
 
@@ -4467,11 +4479,11 @@ Die Wirkungen einer Zauberformel sind sehr spezifisch. Zum Beispiel existieren v
 
 #### Reichweiten, Dauern und Zielgrößen
 
-Wie hermetische Zauber müssen alle Zauberformeln eine Reichweite, Dauer und Zielgröße besitzen. Für Zauberformeln sind diese Parameter dieselben wie die der hermetischen Magi (ArM5, Seiten 111–13). Die Basisparameter für eine Zauberformel sind Persönlich, Momentan und Individuum. Zauberformeln, die von diesen Parametern abweichen, sind schwieriger zu wirken, und die Stufe der Zauberformel wird ebenso erhöht wie bei hermetischen Zaubern. Nur die unten aufgeführten Parameter stehen für den Einsatz in Zauberformeln zur Verfügung. Darüber hinaus sind die Reichweite, Dauer und Zielgröße einer bekannten oder aus einem Text gelesenen Zauberformel festgelegt und dürfen während des Wirkens nicht verändert werden. Stattdessen muss der Charakter eine neue Zauberformel erfinden, um die Parameter einer bekannten Zauberformel zu ändern. Der Charakter erhält den Bonus auf seine Laborsumme für die Kenntnis einer verwandten Zauberformel auf dieselbe Weise, wie es ein hermetischer Magus täte (ArM5, [Seite 101](<Ars Magica Definitive Edition Basisregeln.md#ähnliche-zauber>)).
+Wie hermetische Zauber müssen alle Zauberformeln eine Reichweite, Dauer und Zielgröße besitzen. Für Zauberformeln sind diese Parameter dieselben wie die der hermetischen Magi (ArM5, [Seiten 111–13](<Ars Magica Definitive Edition Basisregeln.md#reichweiten-dauern-ziele>)). Die Basisparameter für eine Zauberformel sind Persönlich, Momentan und Individuum. Zauberformeln, die von diesen Parametern abweichen, sind schwieriger zu wirken, und die Stufe der Zauberformel wird ebenso erhöht wie bei hermetischen Zaubern. Nur die unten aufgeführten Parameter stehen für den Einsatz in Zauberformeln zur Verfügung. Darüber hinaus sind die Reichweite, Dauer und Zielgröße einer bekannten oder aus einem Text gelesenen Zauberformel festgelegt und dürfen während des Wirkens nicht verändert werden. Stattdessen muss der Charakter eine neue Zauberformel erfinden, um die Parameter einer bekannten Zauberformel zu ändern. Der Charakter erhält den Bonus auf seine Laborsumme für die Kenntnis einer verwandten Zauberformel auf dieselbe Weise, wie es ein hermetischer Magus täte (ArM5, [Seite 101](<Ars Magica Definitive Edition Basisregeln.md#ähnliche-zauber>)).
 
 #### Vis-Einsatz
 
-Gelehrte Magier dürfen rohes Vis beim Wirken von Zauberformeln einsetzen. Der Modifikator auf den Zauberwert, die Patzer-Modifikatoren und das Vis-Limit sind dieselben wie für hermetische Magi (ArM5, Seiten 82–83). Das Wissen der Gelehrten Magier über ihre Künste harmoniert nicht perfekt mit den hermetischen Künsten, und der Spielleiter sollte seinen gesunden Menschenverstand walten lassen, wenn er entscheidet, ob Vis beim Wirken von Zauberformeln eingesetzt werden darf. Wenn die Wirkungen einer Zauberformel durch einen hermetischen Zauber dupliziert werden könnten, unterstützt jedes Vis, das diesen Zauber unterstützen könnte, auch die Zauberformel. Gelehrte Magier dürfen nicht aus Vis studieren.
+Gelehrte Magier dürfen rohes Vis beim Wirken von Zauberformeln einsetzen. Der Modifikator auf den Zauberwert, die Patzer-Modifikatoren und das Vis-Limit sind dieselben wie für hermetische Magi (ArM5, [Seiten 82–83](<Ars Magica Definitive Edition Basisregeln.md#rohes-vis-einsetzen>)). Das Wissen der Gelehrten Magier über ihre Künste harmoniert nicht perfekt mit den hermetischen Künsten, und der Spielleiter sollte seinen gesunden Menschenverstand walten lassen, wenn er entscheidet, ob Vis beim Wirken von Zauberformeln eingesetzt werden darf. Wenn die Wirkungen einer Zauberformel durch einen hermetischen Zauber dupliziert werden könnten, unterstützt jedes Vis, das diesen Zauber unterstützen könnte, auch die Zauberformel. Gelehrte Magier dürfen nicht aus Vis studieren.
 
 Im Allgemeinen darf ein Zaubernder beim Wirken von Tueor-Zauberformeln Rego-Vis verwenden. Succurro-Zauberformeln dürfen Creo-Vis nutzen, und Vulnero-Zauberformeln profitieren von Perdo-Vis. Gelehrte Magier dürfen Vim-Vis beim Wirken von Magicam- oder Fortunam-Zauberformeln verwenden. Eine Salutem-Zauberformel darf Corpus-, Herbam-, Animal- oder Mentem-Vis verwenden, je nach Art des Ziels. Salutem-Zauberformeln, die gegen eine bestimmte Art von Schaden schützen, dürfen je nach den Einzelheiten der Zauberformel Aquam-, Auram-, Terram- oder Ignem-Vis verwenden.
 
@@ -4501,12 +4513,12 @@ Der Hauptvorteil der Chartae ist, dass Gelehrte Magier sie verhältnismäßig sc
 
 Ein Gelehrter Magier darf auch eine Charta im Voraus für einen unbekannten Empfänger erstellen und die Identität des Ziels der Charta offenlassen. Wenn der Gelehrte Magier die Person bestimmt, für die er die Charta erstellen will, verbringt er eine Stunde damit, ein Horoskop zu erstellen und die Charta mit den relevanten astronomischen Informationen und dem Namen des Empfängers zu vervollständigen. Eine unvollständige Charta kann den Laborsummenbonus für ein Geburtshoroskop nicht erhalten; die astronomischen Informationen des Geburtshoroskops müssen durchgehend in die Charta eingearbeitet sein. Magier dürfen niemals ähnlich unvollständige Amulette herstellen; der Empfänger eines Amuletts muss von Anfang an bekannt sein und darf sich während des Prozesses nicht ändern. Wird der Empfänger nicht vor dem Verfallsdatum zur Charta hinzugefügt, ist die Charta nutzlos. Ebenso erhält ein Empfänger, der hinzugefügt wird, den Nutzen der Charta nur für den verbleibenden Teil ihrer Dauer.
 
->#### Reichweiten, Dauern und Zielgrößen für Amulette und Chartae
->Reichweite: Berührung
+> ### Reichweiten, Dauern und Zielgrößen für Amulette und Chartae
+> Reichweite: Berührung
 >
->Dauer: Momentan, Sonne (+1), Mond (+2) und Quartal (+3)
+> Dauer: Momentan, Sonne (+1), Mond (+2) und Quartal (+3)
 >
->Zielgröße: Individuum, Gruppe (+1), Blutlinie (+2), Bauwerk (+3) und Grenze (+4)
+> Zielgröße: Individuum, Gruppe (+1), Blutlinie (+2), Bauwerk (+3) und Grenze (+4)
 
 #### Astronomische Anforderungen
 
@@ -4606,7 +4618,7 @@ Der Einzuweihende muss ein Quartal im Dienst seines Meisters verbringen und nach
 Gelehrte Magier erhalten eine Magische Abwehr gegen bestimmte hermetische formspezifische magische Effekte. Die spezifischen Abwehrmechanismen, die sie besitzen, sind unten aufgeführt, in Bezug zu jeder der Künste der Gelehrten Magier, und ihre Mechanik wird in der Einleitung dieses Buches beschrieben. Wenn ein Charakter eine bestimmte Kunst oder Übernatürliche Fertigkeit nicht besitzt, gewährt sie ihm keine Abwehr.
 
 **Kunst:** Tueor<br>
-**Abwehr:** Glückhafte Fügung<br>
+**Abwehr:** Flinke Fügung<br>
 **Wirkung:** Abwehr gegen Terram-Effekte.
 
 **Kunst:** Succurro<br>
@@ -4630,9 +4642,9 @@ Gelehrte Magier erhalten eine Magische Abwehr gegen bestimmte hermetische formsp
 **Abwehr:** Magische Widerstandskraft<br>
 **Wirkung:** Abwehr gegen Corpus-Effekte.
 
-## Spruchleitlinien
+## Zauberleitlinien
 
-Die folgenden Spruchleitlinien und Beispielzauberformeln gelten für Gelehrte Magier.
+Die folgenden Zauberleitlinien und Beispielzauberformeln gelten für Gelehrte Magier.
 
 ### Fortunam
 
@@ -4642,27 +4654,27 @@ Vulnero-Fortunam-Zauberformeln müssen selbstverständlich die Magieresistenz ü
 
 #### Tueor Fortunam
 
->#### Tueor-Fortunam-Leitlinien
+> ### Tueor-Fortunam-Leitlinien
 >
->Immer wenn ein Charakter unter dem Einfluss einer Tueor-Fortunam-Zauberformel einen vergleichenden Wurf gegen einen Charakter mit Magieresistenz durchführt, muss die Zauberformel die Magieresistenz des gegnerischen Charakters penetrieren, um wirksam zu sein. Für jede betroffene Fertigkeit muss eine andere Zauberformel verwendet werden. Fortunam-Zauberformeln beeinflussen Würfe auf Fertigkeiten, nicht alle Stresswürfel- oder Patzerwürfe. Sie haben beispielsweise keine Auswirkung auf Würfe für das Lernen aus Vis, Experimentieren oder Zwielicht-bezogene Patzerwürfel.
+> Immer wenn ein Charakter unter dem Einfluss einer Tueor-Fortunam-Zauberformel einen vergleichenden Wurf gegen einen Charakter mit Magieresistenz durchführt, muss die Zauberformel die Magieresistenz des gegnerischen Charakters penetrieren, um wirksam zu sein. Für jede betroffene Fertigkeit muss eine andere Zauberformel verwendet werden. Fortunam-Zauberformeln beeinflussen Würfe auf Fertigkeiten, nicht alle Stresswürfel- oder Patzerwürfe. Sie haben beispielsweise keine Auswirkung auf Würfe für das Lernen aus Vis, Experimentieren oder Zwielicht-bezogene Patzerwürfel.
 >
->Generell: Verringere die Anzahl der Patzerwürfel, die ein Charakter für eine einzelne Fertigkeit würfeln muss. Jede Magnitude des Effekts eliminiert einen Patzerwürfel.
+> Generell: Verringere die Anzahl der Patzerwürfel, die ein Charakter für eine einzelne Fertigkeit würfeln muss. Jede Magnitude des Effekts eliminiert einen Patzerwürfel.
 >
->Stufe 1: Erlaube einem Spieler, einen misslungenen Wurf auf eine einzelne Fertigkeit, bei dem der Schwierigkeitsgrad höchstens 3 beträgt, erneut zu würfeln und das bessere der beiden Ergebnisse zu verwenden.
+> Stufe 1: Erlaube einem Spieler, einen misslungenen Wurf auf eine einzelne Fertigkeit, bei dem der Schwierigkeitsgrad höchstens 3 beträgt, erneut zu würfeln und das bessere der beiden Ergebnisse zu verwenden.
 >
->Stufe 2: Erlaube einem Spieler, einen misslungenen Wurf auf eine einzelne Fertigkeit, bei dem der Schwierigkeitsgrad höchstens 6 beträgt, erneut zu würfeln und das bessere der beiden Ergebnisse zu verwenden.
+> Stufe 2: Erlaube einem Spieler, einen misslungenen Wurf auf eine einzelne Fertigkeit, bei dem der Schwierigkeitsgrad höchstens 6 beträgt, erneut zu würfeln und das bessere der beiden Ergebnisse zu verwenden.
 >
->Stufe 2: Verhindere, dass dem Charakter zufällige Missgeschicke zustoßen.
+> Stufe 2: Verhindere, dass dem Charakter zufällige Missgeschicke zustoßen.
 >
->Stufe 3: Erlaube einem Spieler, einen misslungenen Wurf auf eine einzelne Fertigkeit, bei dem der Schwierigkeitsgrad höchstens 9 beträgt, erneut zu würfeln und das bessere der beiden Ergebnisse zu verwenden.
+> Stufe 3: Erlaube einem Spieler, einen misslungenen Wurf auf eine einzelne Fertigkeit, bei dem der Schwierigkeitsgrad höchstens 9 beträgt, erneut zu würfeln und das bessere der beiden Ergebnisse zu verwenden.
 >
->Stufe 4: Erlaube einem Spieler, einen misslungenen Wurf auf eine einzelne Fertigkeit, bei dem der Schwierigkeitsgrad höchstens 12 beträgt, erneut zu würfeln und das bessere der beiden Ergebnisse zu verwenden.
+> Stufe 4: Erlaube einem Spieler, einen misslungenen Wurf auf eine einzelne Fertigkeit, bei dem der Schwierigkeitsgrad höchstens 12 beträgt, erneut zu würfeln und das bessere der beiden Ergebnisse zu verwenden.
 >
->Stufe 5: Erlaube einem Charakter, einen misslungenen vergleichenden Wurf auf eine einzelne Fertigkeit erneut zu würfeln.
+> Stufe 5: Erlaube einem Charakter, einen misslungenen vergleichenden Wurf auf eine einzelne Fertigkeit erneut zu würfeln.
 >
->Stufe 5: Erlaube einem Spieler, einen misslungenen Wurf auf eine einzelne Fertigkeit, bei dem der Schwierigkeitsgrad höchstens 15 beträgt, erneut zu würfeln und das bessere der beiden Ergebnisse zu verwenden.
+> Stufe 5: Erlaube einem Spieler, einen misslungenen Wurf auf eine einzelne Fertigkeit, bei dem der Schwierigkeitsgrad höchstens 15 beträgt, erneut zu würfeln und das bessere der beiden Ergebnisse zu verwenden.
 >
->Stufe 10: Erlaube einem Spieler, eine 0 bei einem Stresswurf auf eine einzelne Fertigkeit als 10 zu behandeln, wodurch die Möglichkeit eines Patzers eliminiert wird.
+> Stufe 10: Erlaube einem Spieler, eine 0 bei einem Stresswurf auf eine einzelne Fertigkeit als 10 zu behandeln, wodurch die Möglichkeit eines Patzers eliminiert wird.
 
 **DIE WANKELMÜTIGE HAND DES SCHICKSALS AUFHALTEN**<br>
 TuFa Stufe 5<br>
@@ -4690,29 +4702,29 @@ Für die Dauer der Zauberformel behandelt der Spieler alle Stresswürfe auf die 
 
 #### Succurro Fortunam
 
->#### Succurro-Fortunam-Leitlinien
+> ### Succurro-Fortunam-Leitlinien
 >
->Succurro-Fortunam-Zauberformeln beeinflussen sowohl den Charakter, auf den sie gewirkt werden, als auch jede Person, mit der dieser Charakter interagiert; daher müssen sie die Magieresistenz des Ziels und jedes Charakters penetrieren, gegen den der Charakter versucht, die verbesserte Fertigkeit oder Eigenschaft einzusetzen. Für jede betroffene Fertigkeit oder Eigenschaft müssen unterschiedliche Zauberformeln verwendet werden. Der Spieler hat nicht die Möglichkeit, auszuwählen, welche Fertigkeit oder Eigenschaft die Zauberformel beeinflusst, ohne eine neue Zauberformel zu erfinden. Die Spieltruppe sollte bei der Auswahl der für Zauberformeln geeigneten Tugenden gesunden Menschenverstand walten lassen. Ein Fortunam-Effekt darf beispielsweise keine Tugenden verleihen, die den Erwerb von Erfahrungspunkten beeinflussen, bestimmte Arten von Fertigkeiten erlernbar machen, dem Charakter Vorteile durch Dritte verschaffen oder einen physischen Gegenstand gewähren. Diese Form kann auch einige andere Tugenden nicht verleihen – Soziale Status sowie Göttliche oder Infernale Tugenden zum Beispiel.
+> Succurro-Fortunam-Zauberformeln beeinflussen sowohl den Charakter, auf den sie gewirkt werden, als auch jede Person, mit der dieser Charakter interagiert; daher müssen sie die Magieresistenz des Ziels und jedes Charakters penetrieren, gegen den der Charakter versucht, die verbesserte Fertigkeit oder Eigenschaft einzusetzen. Für jede betroffene Fertigkeit oder Eigenschaft müssen unterschiedliche Zauberformeln verwendet werden. Der Spieler hat nicht die Möglichkeit, auszuwählen, welche Fertigkeit oder Eigenschaft die Zauberformel beeinflusst, ohne eine neue Zauberformel zu erfinden. Die Spieltruppe sollte bei der Auswahl der für Zauberformeln geeigneten Tugenden gesunden Menschenverstand walten lassen. Ein Fortunam-Effekt darf beispielsweise keine Tugenden verleihen, die den Erwerb von Erfahrungspunkten beeinflussen, bestimmte Arten von Fertigkeiten erlernbar machen, dem Charakter Vorteile durch Dritte verschaffen oder einen physischen Gegenstand gewähren. Diese Form kann auch einige andere Tugenden nicht verleihen – Soziale Status sowie Göttliche oder Infernale Tugenden zum Beispiel.
 >
->Stufe 1: Gewähre einen Bonus von +1 auf alle Glücks-bezogenen Würfe. (Wie die Tugend Glück, siehe ArM5, [Seite 45](<Ars Magica Definitive Edition Basisregeln.md#glück>).)
+> Stufe 1: Gewähre einen Bonus von +1 auf alle Glücks-bezogenen Würfe. (Wie die Tugend Glück, siehe ArM5, [Seite 45](<Ars Magica Definitive Edition Basisregeln.md#glück>).)
 >
->Stufe 2: Gewähre einen Bonus von +1 auf Würfe für eine einzelne, nicht-übernatürliche Fertigkeit.
+> Stufe 2: Gewähre einen Bonus von +1 auf Würfe für eine einzelne, nicht-übernatürliche Fertigkeit.
 >
->Stufe 2: Gewähre einen Bonus von +2 auf alle Glücks-bezogenen Würfe.
+> Stufe 2: Gewähre einen Bonus von +2 auf alle Glücks-bezogenen Würfe.
 >
->Stufe 5: Gewähre einen Bonus von +3 auf alle Glücks-bezogenen Würfe.
+> Stufe 5: Gewähre einen Bonus von +3 auf alle Glücks-bezogenen Würfe.
 >
->Stufe 5: Gewähre einen Bonus von +2 auf Würfe für eine einzelne, nicht-übernatürliche Fertigkeit.
+> Stufe 5: Gewähre einen Bonus von +2 auf Würfe für eine einzelne, nicht-übernatürliche Fertigkeit.
 >
->Stufe 10: Verleihe eine Kleine Allgemeine Tugend.
+> Stufe 10: Verleihe eine Kleine Allgemeine Tugend.
 >
->Stufe 10: Gewähre einen Bonus von +3 auf Würfe für eine einzelne, nicht-übernatürliche Fertigkeit.
+> Stufe 10: Gewähre einen Bonus von +3 auf Würfe für eine einzelne, nicht-übernatürliche Fertigkeit.
 >
->Stufe 10: Gewähre einen Bonus von +1 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
+> Stufe 10: Gewähre einen Bonus von +1 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
 >
->Stufe 15: Gewähre einen Bonus von +2 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
+> Stufe 15: Gewähre einen Bonus von +2 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
 >
->Stufe 20: Verleihe eine Große Allgemeine Tugend. Stufe 20: Gewähre einen Bonus von +3 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
+> Stufe 20: Verleihe eine Große Allgemeine Tugend. Stufe 20: Gewähre einen Bonus von +3 auf alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden.
 
 **Das Glück begünstigt die Kühnen** <br>
 SuFa Stufe 5<br>
@@ -4722,7 +4734,7 @@ Der Spieler erhält einen Bonus von +2 auf alle Würfe, die seinen Charakter bet
 
 (Basis 2, +1 Berührung, +2 Sonne)
 
-**Gabe der Venus (Venussegen)**<br> 
+**Gabe der Venus (Venussegen)**<br>
 SuFa Stufe 25<br>
 R: Berührung, D: Sonne, Z: Ind
 
@@ -4740,27 +4752,27 @@ Für die Dauer der Zauberformel profitiert der Charakter von glücklichen Umstä
 
 (Basis 10, +2 Sonne)
 
-### Vulnero Fortunam
+#### Vulnero Fortunam
 
->#### Vulnero-Fortunam-Leitlinien
+> ### Vulnero-Fortunam-Leitlinien
 >
->Für jede betroffene Fertigkeit oder Eigenschaft muss eine andere Vulnero-Fortunam-Zauberformel verwendet werden. Der Spieler hat nicht die Möglichkeit, auszuwählen, welche Fertigkeit oder Eigenschaft die Zauberformel beeinflusst. Alle Vulnero-Fortunam-Zauberformeln bewirken neben den spielmechanischen Effekten, dass ihren Opfern kleinere unglückliche oder unangenehme Dinge widerfahren. Je mächtiger der Fluch, desto häufiger und lästiger müssen die Unannehmlichkeiten sein. Aufmerksame Charaktere bemerken möglicherweise, dass sie verflucht wurden. Um den Fluch zu entdecken, muss der Spieler Wahrnehmung + Magiekunde gegen einen Schwierigkeitsgrad von 12 würfeln, abzüglich der Magnitude der Vulnero-Fortunam-Zauberformel; je mächtiger der Fluch, desto offensichtlicher ist er.
+> Für jede betroffene Fertigkeit oder Eigenschaft muss eine andere Vulnero-Fortunam-Zauberformel verwendet werden. Der Spieler hat nicht die Möglichkeit, auszuwählen, welche Fertigkeit oder Eigenschaft die Zauberformel beeinflusst. Alle Vulnero-Fortunam-Zauberformeln bewirken neben den spielmechanischen Effekten, dass ihren Opfern kleinere unglückliche oder unangenehme Dinge widerfahren. Je mächtiger der Fluch, desto häufiger und lästiger müssen die Unannehmlichkeiten sein. Aufmerksame Charaktere bemerken möglicherweise, dass sie verflucht wurden. Um den Fluch zu entdecken, muss der Spieler Wahrnehmung + Magiekunde gegen einen Schwierigkeitsgrad von 12 würfeln, abzüglich der Magnitude der Vulnero-Fortunam-Zauberformel; je mächtiger der Fluch, desto offensichtlicher ist er.
 >
->Generell: Erhöhe die Anzahl der Patzerwürfel, die ein Spieler würfeln muss. Jede Magnitude der Zauberformel fügt einen Patzerwürfel hinzu.
+> Generell: Erhöhe die Anzahl der Patzerwürfel, die ein Spieler würfeln muss. Jede Magnitude der Zauberformel fügt einen Patzerwürfel hinzu.
 >
->Stufe 2: Modifiziere einen einzelnen Fertigkeitswurf um -1. Stufe 2: Zwinge einen Charakter, einen erfolgreichen vergleichenden Wurf auf eine einzelne Fertigkeit einmal erneut zu würfeln und das schlechtere der beiden Ergebnisse zu verwenden.
+> Stufe 2: Modifiziere einen einzelnen Fertigkeitswurf um -1. Stufe 2: Zwinge einen Charakter, einen erfolgreichen vergleichenden Wurf auf eine einzelne Fertigkeit einmal erneut zu würfeln und das schlechtere der beiden Ergebnisse zu verwenden.
 >
->Stufe 5: Modifiziere einen einzelnen Fertigkeitswurf um -2. Stufe 10: Modifiziere einen einzelnen Fertigkeitswurf um -3.
+> Stufe 5: Modifiziere einen einzelnen Fertigkeitswurf um -2. Stufe 10: Modifiziere einen einzelnen Fertigkeitswurf um -3.
 >
->Stufe 10: Modifiziere alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden, um -1.
+> Stufe 10: Modifiziere alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden, um -1.
 >
->Stufe 10: Zwinge einen Spieler, alle einfachen Würfe auf eine einzelne Fertigkeit als Stresswürfe zu behandeln; aber wenn der Spieler eine 1 würfelt, wird nicht erneut gewürfelt.
+> Stufe 10: Zwinge einen Spieler, alle einfachen Würfe auf eine einzelne Fertigkeit als Stresswürfe zu behandeln; aber wenn der Spieler eine 1 würfelt, wird nicht erneut gewürfelt.
 >
->Stufe 15: Modifiziere alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden, um -2.
+> Stufe 15: Modifiziere alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden, um -2.
 >
->Stufe 20: Modifiziere alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden, um –3.
+> Stufe 20: Modifiziere alle Fertigkeitswürfe, die eine einzelne Eigenschaft verwenden, um –3.
 
-**Fluch der Fortuna**<br> 
+**Fluch der Fortuna**<br>
 VuFa Stufe 20 <br>
 R: Auge, D: Sonne, Z: Ind
 
@@ -4794,15 +4806,15 @@ Viele Magicam-Zauberformel-Leitlinien werden als Generell beschrieben. Es ist wi
 
 #### Tueor Magicam
 
->#### Tueor-Magicam-Leitlinien
+> ### Tueor-Magicam-Leitlinien
 >
->Tueor-Magicam-Zauberformeln bieten ein gewisses Maß an Schutz gegen feindliche Magie. Magische Abwehrzauberformeln sind an eine bestimmte Art magischen Schadens gebunden, und Schutz gegen jede andere Art von Schaden erfordert eine andere Zauberformel. Zum Beispiel würde eine Magische-Widerstandskraft-Zauberformel (Feuer) Schutz gegen alles übernatürliche Feuer bieten, aber keinen Schutz gegen Kälte, obwohl Kälte ebenfalls ein Ignem-Effekt ist.
+> Tueor-Magicam-Zauberformeln bieten ein gewisses Maß an Schutz gegen feindliche Magie. Magische Abwehrzauberformeln sind an eine bestimmte Art magischen Schadens gebunden, und Schutz gegen jede andere Art von Schaden erfordert eine andere Zauberformel. Zum Beispiel würde eine Magische-Widerstandskraft-Zauberformel (Feuer) Schutz gegen alles übernatürliche Feuer bieten, aber keinen Schutz gegen Kälte, obwohl Kälte ebenfalls ein Ignem-Effekt ist.
 >
->Generell: Addiere +2 zur Absorption des Ziels gegen Schaden durch magischen Schaden einer bestimmten Art für jede Stufe des Basis-Zauberformeleffekts.
+> Generell: Addiere +2 zur Absorption des Ziels gegen Schaden durch magischen Schaden einer bestimmten Art für jede Stufe des Basis-Zauberformeleffekts.
 >
->Generell: Addiere +4 zur Verteidigungssumme des Ziels gegen auf ihn gerichtete magische Angriffe einer bestimmten Art für jede Magnitude des Basis-Zauberformeleffekts.
+> Generell: Addiere +4 zur Verteidigungssumme des Ziels gegen auf ihn gerichtete magische Angriffe einer bestimmten Art für jede Magnitude des Basis-Zauberformeleffekts.
 >
->Generell: Erhöhe den Schwierigkeitsgrad einer gegen das Ziel eingesetzten Übernatürlichen Fertigkeit um +3 für jede Stufe des Basis-Zauberformeleffekts.
+> Generell: Erhöhe den Schwierigkeitsgrad einer gegen das Ziel eingesetzten Übernatürlichen Fertigkeit um +3 für jede Stufe des Basis-Zauberformeleffekts.
 
 **Magische-Widerstandskraft-Zauberformel gegen Blitze** <br>
 TuMa Stufe 5 <br>
@@ -4812,7 +4824,7 @@ Diese Zauberformel addiert +8 zur Absorption des Wirkenden gegen jeglichen Schad
 
 (Basis 4, +1 Durchmesser)
 
-**Zauberformel der glückhaften Fügung gegen Erde** <br>
+**Zauberformel der flinken Fügung gegen Erde** <br>
 TuMa Stufe 10 <br>
 R: Per, D: Durchm, Z: Ind
 
@@ -4824,35 +4836,35 @@ Diese Zauberformel addiert +4 zur Verteidigungssumme des Wirkenden gegen alle ma
 TuMa Stufe 10 <br>
 R: Berührung, D: Sonne, Z: Ind
 
-Diese Zauberformel schützt das Ziel gegen eine einzelne Übernatürliche Fertigkeit, in diesem Fall Verhexung (*Sphären der Macht: Das Infernale*, [Seite 92](<Ars Magica 5e - Sphären der Macht - Das Infernale.md#verhexung>)). Der Schwierigkeitsgrad, um Verhexung gegen den Träger einzusetzen, wird für die Dauer der Zauberformel um +9 erhöht. Eine andere Version dieser Zauberformel existiert für andere Übernatürliche Fertigkeiten.
+Diese Zauberformel schützt das Ziel gegen eine einzelne Übernatürliche Fertigkeit, in diesem Fall Verhexung (*Sphären der Macht: Das Infernale*, [Seite 92](<Ars Magica 5e - Sphären der Macht - Das Infernale.md#verhexung-1>)). Der Schwierigkeitsgrad, um Verhexung gegen den Träger einzusetzen, wird für die Dauer der Zauberformel um +9 erhöht. Eine andere Version dieser Zauberformel existiert für andere Übernatürliche Fertigkeiten.
 
 (Basis 3, +1 Berührung, +2 Sonne)
 
 #### Succuro Magicam
 
->#### Succurro-Magicam-Leitlinien
+> ### Succurro-Magicam-Leitlinien
 >
->Succurro-Magicam-Zauberformeln gewähren Boni auf die Übernatürlichen Fertigkeiten eines Charakters oder ermöglichen es einem Charakter, vorübergehend den Vorteil solcher Fertigkeiten zu genießen. Die Spieltruppe sollte bei der Auswahl der für Zauberformeln geeigneten Tugenden gesunden Menschenverstand walten lassen. Ein Magicam-Effekt darf beispielsweise keine Tugenden verleihen, die den Erwerb von Erfahrungspunkten beeinflussen, bestimmte Arten von Fertigkeiten erlernbar machen, dem Charakter Vorteile durch Dritte verschaffen oder einen physischen Gegenstand gewähren. Diese Form kann einige Tugenden nicht verleihen – Soziale Status sowie Feen-, Hermetische, Göttliche oder Infernale Tugenden zum Beispiel. Eine Zauberformel darf nur Übernatürliche Tugenden verbessern oder verleihen, die ihre Kraft aus der Magiesphäre beziehen. Wo eine Übernatürliche Tugend verliehen wird, die eine entsprechende Fertigkeit besitzt, kann der Charakter die Fertigkeit so einsetzen, als hätte er einen Wert von 4. Keine magischen Effekte, die aus einer verliehenen Tugend resultieren, halten länger an als die Dauer der Zauberformel, des Amuletts oder der Charta. Die weltlichen Ergebnisse der Nutzung der verliehenen Tugend bleiben jedoch bestehen. Wenn die verliehene Tugend zum Beispiel die Erschaffung verzauberter Gegenstände ermöglicht, verlieren diese Gegenstände ihre Verzauberung, sobald die die Tugend verleihende Zauberformel ausläuft.
+> Succurro-Magicam-Zauberformeln gewähren Boni auf die Übernatürlichen Fertigkeiten eines Charakters oder ermöglichen es einem Charakter, vorübergehend den Vorteil solcher Fertigkeiten zu genießen. Die Spieltruppe sollte bei der Auswahl der für Zauberformeln geeigneten Tugenden gesunden Menschenverstand walten lassen. Ein Magicam-Effekt darf beispielsweise keine Tugenden verleihen, die den Erwerb von Erfahrungspunkten beeinflussen, bestimmte Arten von Fertigkeiten erlernbar machen, dem Charakter Vorteile durch Dritte verschaffen oder einen physischen Gegenstand gewähren. Diese Form kann einige Tugenden nicht verleihen – Soziale Status sowie Feen-, Hermetische, Göttliche oder Infernale Tugenden zum Beispiel. Eine Zauberformel darf nur Übernatürliche Tugenden verbessern oder verleihen, die ihre Kraft aus der Magiesphäre beziehen. Wo eine Übernatürliche Tugend verliehen wird, die eine entsprechende Fertigkeit besitzt, kann der Charakter die Fertigkeit so einsetzen, als hätte er einen Wert von 4. Keine magischen Effekte, die aus einer verliehenen Tugend resultieren, halten länger an als die Dauer der Zauberformel, des Amuletts oder der Charta. Die weltlichen Ergebnisse der Nutzung der verliehenen Tugend bleiben jedoch bestehen. Wenn die verliehene Tugend zum Beispiel die Erschaffung verzauberter Gegenstände ermöglicht, verlieren diese Gegenstände ihre Verzauberung, sobald die die Tugend verleihende Zauberformel ausläuft.
 >
->Succurro-Magicam-Zauberformeln unterstützen auch Zauberformeln, die bereits gewirkt wurden, oder Amulette, die bereits erstellt wurden. Das Ziel ist stets die Zauberformel oder das Amulett, und Reichweite Berührung genügt für jede Zauberformel, die noch wirkt. Zauberformeln, die abgelaufen sind, und Momentane Zauberformeln können nicht beeinflusst werden mit
+> Succurro-Magicam-Zauberformeln unterstützen auch Zauberformeln, die bereits gewirkt wurden, oder Amulette, die bereits erstellt wurden. Das Ziel ist stets die Zauberformel oder das Amulett, und Reichweite Berührung genügt für jede Zauberformel, die noch wirkt. Zauberformeln, die abgelaufen sind, und Momentane Zauberformeln können nicht beeinflusst werden mit
 >
->Succurro-Magicam-Zauberformeln. Eine generelle Zauberformel muss für einen Gelehrten Magier auf einer bestimmten Effektstufe erlernt werden. Um Zauberformeln im Dominium oder mit Penetration wirken zu können, erlernen Magier ihre Zauberformeln häufig auf einer Stufe unterhalb der höchsten, die sie wirken könnten.
+> Succurro-Magicam-Zauberformeln. Eine generelle Zauberformel muss für einen Gelehrten Magier auf einer bestimmten Effektstufe erlernt werden. Um Zauberformeln im Dominium oder mit Penetration wirken zu können, erlernen Magier ihre Zauberformeln häufig auf einer Stufe unterhalb der höchsten, die sie wirken könnten.
 >
->Generell: Verändere eine Zauberformel von weniger als der Stufe +1 Magnitude der Magicam-Zauberformel erheblich. Dies darf weder die Technik noch die Form der Ziel-Zauberformel verändern. Eine Änderung der Dauer, Reichweite, Zielgröße oder Stufe der Zauberformel ist angemessen, solange die Zauberformel um nicht mehr als eine Magnitude verändert wird. Der neue Zauberformel-Parameter muss einer sein, der für die betreffende Zauberformel verfügbar ist, und die endgültige Stufe der modifizierten Zauberformel darf nicht höher sein als die Stufe der Magicam-Zauberformel.
+> Generell: Verändere eine Zauberformel von weniger als der Stufe +1 Magnitude der Magicam-Zauberformel erheblich. Dies darf weder die Technik noch die Form der Ziel-Zauberformel verändern. Eine Änderung der Dauer, Reichweite, Zielgröße oder Stufe der Zauberformel ist angemessen, solange die Zauberformel um nicht mehr als eine Magnitude verändert wird. Der neue Zauberformel-Parameter muss einer sein, der für die betreffende Zauberformel verfügbar ist, und die endgültige Stufe der modifizierten Zauberformel darf nicht höher sein als die Stufe der Magicam-Zauberformel.
 >
->Generell: Erhöhe die Anzahl der Ladungen in einem Amulett einer Stufe, die kleiner oder gleich der Zauberformel +1 Magnitude ist, um eins. Das Amulett muss eines sein, das vom wirkenden Gelehrten Magier erstellt wurde.
+> Generell: Erhöhe die Anzahl der Ladungen in einem Amulett einer Stufe, die kleiner oder gleich der Zauberformel +1 Magnitude ist, um eins. Das Amulett muss eines sein, das vom wirkenden Gelehrten Magier erstellt wurde.
 >
->Stufe 1: Erkenne die Anwesenheit von Vis.
+> Stufe 1: Erkenne die Anwesenheit von Vis.
 >
->Stufe 2: Gewähre einen Bonus von +1 auf Würfe für eine einzelne Übernatürliche Fertigkeit.
+> Stufe 2: Gewähre einen Bonus von +1 auf Würfe für eine einzelne Übernatürliche Fertigkeit.
 >
->Stufe 5: Gewähre einen Bonus von +2 auf Würfe für eine einzelne Übernatürliche Fertigkeit.
+> Stufe 5: Gewähre einen Bonus von +2 auf Würfe für eine einzelne Übernatürliche Fertigkeit.
 >
->Stufe 10: Verleihe eine Kleine Übernatürliche Tugend der Magiesphäre.
+> Stufe 10: Verleihe eine Kleine Übernatürliche Tugend der Magiesphäre.
 >
->Stufe 10: Gewähre einen Bonus von +3 auf Würfe für eine einzelne Übernatürliche Fertigkeit.
+> Stufe 10: Gewähre einen Bonus von +3 auf Würfe für eine einzelne Übernatürliche Fertigkeit.
 >
->Stufe 20: Verleihe eine Große Übernatürliche Tugend der Magiesphäre.
+> Stufe 20: Verleihe eine Große Übernatürliche Tugend der Magiesphäre.
 
 **Verstärkung des Magiers (Form)** <br>
 SuMa Stufe <br>
@@ -4878,17 +4890,17 @@ Diese Zauberformel wird unmittelbar nach dem Wirken einer anderen Zauberformel g
 
 (Basiseffekt, +1 Berührung)
 
-### Vulnero Magicam
+#### Vulnero Magicam
 
->#### Vulnero-Magicam-Leitlinien
+> ### Vulnero-Magicam-Leitlinien
 >
->Vulnero-Magicam-Zauberformeln unterdrücken oder beseitigen die Auswirkungen von Magie auf das Ziel. Für Vulnero-Magicam-Zauberformeln bezieht sich ein Individuum-Ziel auf einen einzelnen Zauber oder magischen Effekt. Wenn das Opfer des Zaubers Magieresistenz besitzt, muss die Zauberformel penetrieren, um wirksam zu sein.
+> Vulnero-Magicam-Zauberformeln unterdrücken oder beseitigen die Auswirkungen von Magie auf das Ziel. Für Vulnero-Magicam-Zauberformeln bezieht sich ein Individuum-Ziel auf einen einzelnen Zauber oder magischen Effekt. Wenn das Opfer des Zaubers Magieresistenz besitzt, muss die Zauberformel penetrieren, um wirksam zu sein.
 >
->Generell: Verringere die Dauer einer bestimmten Art andauernder Magie mit einer Zaubersumme von weniger als der halben Stufe + 4 Magnituden der Zauberformel + einem Stresswurf (kein Patzer). Eine bestimmte Art von Magie sollte enger gefasst sein als eine einzelne Hermetische Form. Zum Beispiel würde ein Zauber gegen Flammen schützen, aber nicht gegen Hitze, Kälte und Rauch – allesamt Schadensarten, die von Ignem hervorgebracht werden.
+> Generell: Verringere die Dauer einer bestimmten Art andauernder Magie mit einer Zaubersumme von weniger als der halben Stufe + 4 Magnituden der Zauberformel + einem Stresswurf (kein Patzer). Eine bestimmte Art von Magie sollte enger gefasst sein als eine einzelne Hermetische Form. Zum Beispiel würde ein Zauber gegen Flammen schützen, aber nicht gegen Hitze, Kälte und Rauch – allesamt Schadensarten, die von Ignem hervorgebracht werden.
 >
->Generell: Banne das Ziel gegen Kreaturen aus einer einzelnen Sphäre mit einer Macht von weniger als der Stufe der Zauberformel. (Berührung, Sonne, Individuum)
+> Generell: Banne das Ziel gegen Kreaturen aus einer einzelnen Sphäre mit einer Macht von weniger als der Stufe der Zauberformel. (Berührung, Sonne, Individuum)
 
-**Die langwierige Krankheit ersticken**<br> 
+**Die langwierige Krankheit ersticken**<br>
 VuMa Stufe Gen<br>
 R: Stimme, D: Mom, Z: Individuum
 
@@ -4910,33 +4922,33 @@ Salutem-Zauberformeln befassen sich mit der Gesundheit des Ziels. Dies ist breit
 
 #### Tueor Salutem
 
->#### Tueor-Salutem-Leitlinien
+> ### Tueor-Salutem-Leitlinien
 >
->Für Tueor-Salutem-Zauberformeln, die gegen eine breite Schadenskategorie schützen, sollte die Spieltruppe die Leitlinien der Tugend Große Immunität heranziehen, um geeignete Kategorien zu bestimmen. Für breite Kategorien sollte der potenzielle Schaden sowohl häufig als auch potenziell tödlich sein. Geeignete Beispiele sind Feuer, Eisenwaffen, Schwerter oder dergleichen. Für Tueor-Salutem-Zauberformeln, die gegen eine enge Schadenskategorie schützen, sollte die Spieltruppe die Leitlinien der Tugend Mindere Immunität heranziehen, um geeignete Kategorien zu bestimmen. Für enge Kategorien sollte der potenzielle Schaden selten, nicht tödlich oder beides sein. Anders als die Tugenden Große Immunität und Mindere Immunität schützt eine Tueor-Salutem-Zauberformel niemals gegen magische Versionen der Schadenskategorie, gegen die sie verteidigt. Wenn der Gelehrte Magier Schutz gegen magische Schadensformen sucht, ist eine Tueor-Magicam-Zauberformel erforderlich.
+> Für Tueor-Salutem-Zauberformeln, die gegen eine breite Schadenskategorie schützen, sollte die Spieltruppe die Leitlinien der Tugend Große Immunität heranziehen, um geeignete Kategorien zu bestimmen. Für breite Kategorien sollte der potenzielle Schaden sowohl häufig als auch potenziell tödlich sein. Geeignete Beispiele sind Feuer, Eisenwaffen, Schwerter oder dergleichen. Für Tueor-Salutem-Zauberformeln, die gegen eine enge Schadenskategorie schützen, sollte die Spieltruppe die Leitlinien der Tugend Mindere Immunität heranziehen, um geeignete Kategorien zu bestimmen. Für enge Kategorien sollte der potenzielle Schaden selten, nicht tödlich oder beides sein. Anders als die Tugenden Große Immunität und Mindere Immunität schützt eine Tueor-Salutem-Zauberformel niemals gegen magische Versionen der Schadenskategorie, gegen die sie verteidigt. Wenn der Gelehrte Magier Schutz gegen magische Schadensformen sucht, ist eine Tueor-Magicam-Zauberformel erforderlich.
 >
->Tueor-Salutem-Bannzauber können nur auf Orte mit der Zielgröße Bauwerk oder Grenze gelegt werden. Sie dürfen niemals jemanden oder etwas in der gebannten Kategorie beeinflussen, wenn dieser einen Machtwert besitzt. Wenn ein Bannzauber einen Magus daran hindern würde, ein Gebiet zu betreten, muss er dessen Magieresistenz penetrieren, um irgendeine Wirkung zu entfalten. Bannzauber, die eine bestimmte Art von Person oder Tier fernhalten, sollten leicht durch ein einzelnes Wort beschreibbar sein, aber nicht so breit gefasst, dass sie erheblich mehr als die Hälfte der menschlichen Bevölkerung umfassen. Geeignete Beispiele für Tierbannzauber sind Ungeziefer, Raubtiere oder Vögel, und Beispiele für eine einzelne Art von Mensch wären Diebe, Mongolen oder Männer.
+> Tueor-Salutem-Bannzauber können nur auf Orte mit der Zielgröße Bauwerk oder Grenze gelegt werden. Sie dürfen niemals jemanden oder etwas in der gebannten Kategorie beeinflussen, wenn dieser einen Machtwert besitzt. Wenn ein Bannzauber einen Magus daran hindern würde, ein Gebiet zu betreten, muss er dessen Magieresistenz penetrieren, um irgendeine Wirkung zu entfalten. Bannzauber, die eine bestimmte Art von Person oder Tier fernhalten, sollten leicht durch ein einzelnes Wort beschreibbar sein, aber nicht so breit gefasst, dass sie erheblich mehr als die Hälfte der menschlichen Bevölkerung umfassen. Geeignete Beispiele für Tierbannzauber sind Ungeziefer, Raubtiere oder Vögel, und Beispiele für eine einzelne Art von Mensch wären Diebe, Mongolen oder Männer.
 >
->Generell: Gewähre +4 Bonus auf die Absorption einer Person gegen eine enge Schadenskategorie pro Stufe des Basiseffekts.
+> Generell: Gewähre +4 Bonus auf die Absorption einer Person gegen eine enge Schadenskategorie pro Stufe des Basiseffekts.
 >
->Generell: Gewähre +2 Bonus auf die Absorption einer Person gegen eine breite Schadenskategorie pro Stufe des Basiseffekts.
+> Generell: Gewähre +2 Bonus auf die Absorption einer Person gegen eine breite Schadenskategorie pro Stufe des Basiseffekts.
 >
->Generell: Gewähre +1 Bonus auf die Ausdauer einer Person für Krankheitsvermeidungswürfe für eine einzelne Krankheit pro Stufe des Basiseffekts. Siehe das Medizin-Kapitel von Kunst & Gelehrsamkeit.
+> Generell: Gewähre +1 Bonus auf die Ausdauer einer Person für Krankheitsvermeidungswürfe für eine einzelne Krankheit pro Stufe des Basiseffekts. Siehe das Medizin-Kapitel von Art & Academe.
 >
->Generell: Gewähre +1 Bonus auf die Ausdauer einer Person für Würfe zur Vermeidung von Gifteffekten pro Stufe des Basiseffekts.
+> Generell: Gewähre +1 Bonus auf die Ausdauer einer Person für Würfe zur Vermeidung von Gifteffekten pro Stufe des Basiseffekts.
 >
->Generell: Gewähre +2 Bonus auf die Absorption einer Person gegen jeden Schaden pro Magnitude des Basiseffekts.
+> Generell: Gewähre +2 Bonus auf die Absorption einer Person gegen jeden Schaden pro Magnitude des Basiseffekts.
 >
->Generell: Addiere +4 zur Verteidigungssumme des Ziels gegen Angriffe aus einer engen Schadenskategorie für jede Magnitude des Basis-Zauberformeleffekts.
+> Generell: Addiere +4 zur Verteidigungssumme des Ziels gegen Angriffe aus einer engen Schadenskategorie für jede Magnitude des Basis-Zauberformeleffekts.
 >
->Generell: Addiere +2 zur Verteidigungssumme des Ziels gegen Angriffe aus einer breiten Schadenskategorie für jede Magnitude des Basis-Zauberformeleffekts.
+> Generell: Addiere +2 zur Verteidigungssumme des Ziels gegen Angriffe aus einer breiten Schadenskategorie für jede Magnitude des Basis-Zauberformeleffekts.
 >
->Stufe 2: Banne das Ziel gegen eine einzelne Tierart.
+> Stufe 2: Banne das Ziel gegen eine einzelne Tierart.
 >
->Stufe 5: Banne das Ziel gegen eine einzelne Art von menschlichem Wesen.
+> Stufe 5: Banne das Ziel gegen eine einzelne Art von menschlichem Wesen.
 >
->Stufe 10: Verhindere, dass eine Person durch eine enge Schadenskategorie verletzt wird. Stufe 10: Banne ein einzelnes Ziel gegen alle Menschen.
+> Stufe 10: Verhindere, dass eine Person durch eine enge Schadenskategorie verletzt wird. Stufe 10: Banne ein einzelnes Ziel gegen alle Menschen.
 >
->Stufe 15: Verhindere, dass eine Person durch eine breite Schadenskategorie verletzt wird.
+> Stufe 15: Verhindere, dass eine Person durch eine breite Schadenskategorie verletzt wird.
 
 **Zauberformel des Schutzes gegen die Angriffe der Semita Errabunda**<br>
 TuSa Stufe 15<br>
@@ -4964,35 +4976,35 @@ Die Zauberformel schützt den Empfänger gegen alle Formen von Ungeziefer, einsc
 
 #### Succuro Salutem
 
->#### Succurro-Salutem-Leitlinien
+> ### Succurro-Salutem-Leitlinien
 >
->Succurro-Salutem-Zauberformeln folgen den Leitlinien für Creo-Corpus-Zauber sehr genau, außer dass sie nicht in der Lage sind, dauerhaft zu heilen. Abgesehen davon sollten alle Fragen bezüglich der Anwendung einer Succurro-Salutem-Zauberformel auf dieselbe Weise gelöst werden, wie ein Creo-Corpus-Zauber derselben Stufe gelöst werden würde. Da die Succurro-Salutem-Effekte über lange Zeiträume bestehen bleiben müssen, eignen sie sich am besten als magische Geräte, und Beispiele für Chartae und Amulette sind unten aufgeführt. Die unten aufgeführten Stufen sind die Mindest-Laborsummen, die zur Erstellung der Geräte erforderlich sind.
+> Succurro-Salutem-Zauberformeln folgen den Leitlinien für Creo-Corpus-Zauber sehr genau, außer dass sie nicht in der Lage sind, dauerhaft zu heilen. Abgesehen davon sollten alle Fragen bezüglich der Anwendung einer Succurro-Salutem-Zauberformel auf dieselbe Weise gelöst werden, wie ein Creo-Corpus-Zauber derselben Stufe gelöst werden würde. Da die Succurro-Salutem-Effekte über lange Zeiträume bestehen bleiben müssen, eignen sie sich am besten als magische Geräte, und Beispiele für Chartae und Amulette sind unten aufgeführt. Die unten aufgeführten Stufen sind die Mindest-Laborsummen, die zur Erstellung der Geräte erforderlich sind.
 >
->Generell: Addiere +1 zum Lebensbedingungen-Modifikator einer Person pro Stufe der Basis. Das Ziel muss für das gesamte Jahr unter dem Einfluss der Zauberformel stehen, damit diese einen Nutzen erbringt.
+> Generell: Addiere +1 zum Lebensbedingungen-Modifikator einer Person pro Stufe der Basis. Das Ziel muss für das gesamte Jahr unter dem Einfluss der Zauberformel stehen, damit diese einen Nutzen erbringt.
 >
->Stufe 1: Gewähre einem Charakter einen Bonus von +2 auf Genesungswürfe für eine einzelne nichtmagische Krankheit, ein Gift oder eine Verletzung.
+> Stufe 1: Gewähre einem Charakter einen Bonus von +2 auf Genesungswürfe für eine einzelne nichtmagische Krankheit, ein Gift oder eine Verletzung.
 >
->Stufe 1: Stelle sicher, dass eine Pflanze für die Dauer der Zauberformel gut gedeiht. Diese Leitlinie kann Pflanzen in einem Umkreis von bis zu zehn Schritt in jeder Richtung beeinflussen, zum Beispiel große Bäume.
+> Stufe 1: Stelle sicher, dass eine Pflanze für die Dauer der Zauberformel gut gedeiht. Diese Leitlinie kann Pflanzen in einem Umkreis von bis zu zehn Schritt in jeder Richtung beeinflussen, zum Beispiel große Bäume.
 >
->Stufe 2: Gewähre einem Charakter einen Bonus von +6 auf Genesungswürfe für eine einzelne nichtmagische Krankheit, ein Gift oder eine Verletzung.
+> Stufe 2: Gewähre einem Charakter einen Bonus von +6 auf Genesungswürfe für eine einzelne nichtmagische Krankheit, ein Gift oder eine Verletzung.
 >
->Stufe 3: Gewähre einem Charakter einen Bonus von +12 auf Genesungswürfe für eine einzelne nichtmagische Krankheit, ein Gift oder eine Verletzung.
+> Stufe 3: Gewähre einem Charakter einen Bonus von +12 auf Genesungswürfe für eine einzelne nichtmagische Krankheit, ein Gift oder eine Verletzung.
 >
->Stufe 4: Gewähre einem Charakter einen Bonus von +18 auf Genesungswürfe für eine einzelne nichtmagische Krankheit, ein Gift oder eine Verletzung.
+> Stufe 4: Gewähre einem Charakter einen Bonus von +18 auf Genesungswürfe für eine einzelne nichtmagische Krankheit, ein Gift oder eine Verletzung.
 >
->Stufe 5: Gewähre einem Charakter einen Bonus von +24 auf Genesungswürfe für eine einzelne nichtmagische Krankheit, ein Gift oder eine Verletzung.
+> Stufe 5: Gewähre einem Charakter einen Bonus von +24 auf Genesungswürfe für eine einzelne nichtmagische Krankheit, ein Gift oder eine Verletzung.
 >
->Stufe 10: Löse eine geringfügige Alterungskrise.
+> Stufe 10: Löse eine geringfügige Alterungskrise.
 >
->Stufe 15: Heile die schwächenden Nachwirkungen einer Krankheit, eines Gifts oder einer Verletzung.
+> Stufe 15: Heile die schwächenden Nachwirkungen einer Krankheit, eines Gifts oder einer Verletzung.
 >
->Stufe 15: Löse eine ernste Alterungskrise.
+> Stufe 15: Löse eine ernste Alterungskrise.
 >
->Stufe 20: Löse eine schwere Alterungskrise.
+> Stufe 20: Löse eine schwere Alterungskrise.
 >
->Stufe 25: Löse eine kritische Alterungskrise.
+> Stufe 25: Löse eine kritische Alterungskrise.
 >
->Stufe 30: Löse eine tödliche Alterungskrise.
+> Stufe 30: Löse eine tödliche Alterungskrise.
 
 **Amulett für eine reiche Ernte**<br>
 SuSa Stufe 20 Pen 0, 2 Ladungen <br>
@@ -5020,33 +5032,33 @@ Dieses Amulett gewährt dem Träger einen Bonus von +2 auf seinen Lebensbedingun
 
 #### Vulneto Salutem
 
->#### Vulnero-Salutem-Leitlinien
+> ### Vulnero-Salutem-Leitlinien
 >
->Die Vulnero-Salutem-Zauberformeln folgen den Leitlinien für Perdo-Corpus-Zauber sehr genau. Alle Fragen bezüglich der Anwendung einer Vulnero-Salutem-Zauberformel sollten auf dieselbe Weise gelöst werden, wie ein Perdo-Corpus-Zauber derselben Stufe gelöst werden würde. Für eine ausführliche Erörterung von Krankheiten siehe das Medizin-Kapitel von *Kunst & Gelehrsamkeit*.
+> Die Vulnero-Salutem-Zauberformeln folgen den Leitlinien für Perdo-Corpus-Zauber sehr genau. Alle Fragen bezüglich der Anwendung einer Vulnero-Salutem-Zauberformel sollten auf dieselbe Weise gelöst werden, wie ein Perdo-Corpus-Zauber derselben Stufe gelöst werden würde. Für eine ausführliche Erörterung von Krankheiten siehe das Medizin-Kapitel von *Art & Academe*.
 >
->Stufe 3: Füge dem Körper oberflächlichen Schaden zu.
+> Stufe 3: Füge dem Körper oberflächlichen Schaden zu.
 >
->Stufe 4: Verursache einer Person Schmerzen, aber keinen wirklichen Schaden.
+> Stufe 4: Verursache einer Person Schmerzen, aber keinen wirklichen Schaden.
 >
->Stufe 5: Füge eine Leichte Wunde zu.
+> Stufe 5: Füge eine Leichte Wunde zu.
 >
->Stufe 5: Behindere eine Person, ohne sie tatsächlich zu verletzen. Mache sie zum Beispiel lahm, trübe ihre Sicht oder verkrampfe ihre Hand schwer. Dies heilt wie eine Leichte Wunde.
+> Stufe 5: Behindere eine Person, ohne sie tatsächlich zu verletzen. Mache sie zum Beispiel lahm, trübe ihre Sicht oder verkrampfe ihre Hand schwer. Dies heilt wie eine Leichte Wunde.
 >
->Stufe 10: Füge eine Mittelschwere Wunde zu.
+> Stufe 10: Füge eine Mittelschwere Wunde zu.
 >
->Stufe 10: Verursache den Verlust einer Erschöpfungsstufe.
+> Stufe 10: Verursache den Verlust einer Erschöpfungsstufe.
 >
->Stufe 10: Verursache eine leichte Krankheit.
+> Stufe 10: Verursache eine leichte Krankheit.
 >
->Stufe 15: Verkrüpple ein Glied, sodass es unbrauchbar ist, aber dennoch als Mittelschwere Wunde heilen kann.
+> Stufe 15: Verkrüpple ein Glied, sodass es unbrauchbar ist, aber dennoch als Mittelschwere Wunde heilen kann.
 >
->Stufe 15: Zerstöre einen der untergeordneten Sinne einer Person. Dies heilt wie eine Mittelschwere Wunde.
+> Stufe 15: Zerstöre einen der untergeordneten Sinne einer Person. Dies heilt wie eine Mittelschwere Wunde.
 >
->Stufe 15: Verursache eine ernste Krankheit.
+> Stufe 15: Verursache eine ernste Krankheit.
 >
->Stufe 20: Zerstöre einen der Hauptsinne einer Person. Dies heilt wie eine Schwere Wunde.
+> Stufe 20: Zerstöre einen der Hauptsinne einer Person. Dies heilt wie eine Schwere Wunde.
 >
->Stufe 20: Verursache eine schwere Krankheit.
+> Stufe 20: Verursache eine schwere Krankheit.
 
 **Fluch der Hustenanfälle**<br>
 VuSa Stufe 10<br>
@@ -5070,23 +5082,23 @@ Der Fluch verursacht, dass das Opfer schmerzhafte Krämpfe und Steifheit in eine
 
 (Basis 5, +2 Stimme)
 
->#### ABENTEUERIDEEN für die Spruchleitlinien der Gelehrten Magier
+> ### Abenteuerideen für die Zauberleitlinien der Gelehrten Magier
 >
->ÜBLE NEUIGKEITEN
+> ÜBLE NEUIGKEITEN
 >
->Ein Freund des Konvents mit Verbindungen zur weltlichen Welt trifft verspätet am Konvent ein. Der Freund schickt Nachricht, dass er und seine gesamte Familie sehr krank sind und das Haus nicht verlassen können. Er bittet um die Hilfe des besten Heilers des Konvents. Als dieser Magus die Sache untersucht, entdeckt er, dass der Haushalt des Freundes aufgrund eines Vulnero-Salutem-Fluchs krank ist, der unter der Türschwelle ihres Hauses vergraben ist. Die Charaktere müssen herausfinden, warum jemand ihren Freund daran hindern wollte, am Konvent einzutreffen; oder war das Ziel, bestimmte Charaktere für eine Weile vom Konvent wegzulocken?
+> Ein Freund des Konvents mit Verbindungen zur weltlichen Welt trifft verspätet am Konvent ein. Der Freund schickt Nachricht, dass er und seine gesamte Familie sehr krank sind und das Haus nicht verlassen können. Er bittet um die Hilfe des besten Heilers des Konvents. Als dieser Magus die Sache untersucht, entdeckt er, dass der Haushalt des Freundes aufgrund eines Vulnero-Salutem-Fluchs krank ist, der unter der Türschwelle ihres Hauses vergraben ist. Die Charaktere müssen herausfinden, warum jemand ihren Freund daran hindern wollte, am Konvent einzutreffen; oder war das Ziel, bestimmte Charaktere für eine Weile vom Konvent wegzulocken?
 >
->IN KRIEG UND LIEBE IST ALLES ERLAUBT
+> IN KRIEG UND LIEBE IST ALLES ERLAUBT
 >
->Ein Ritter mit mittelmäßigen Fähigkeiten ist plötzlich das Gesprächsthema des Turniers. Seine kämpferischen Fähigkeiten bringen ihm großes Lob vom örtlichen Adel ein. Gegen Ende des Turniers wird der Ritter auf sein eigenes Schwert aufgespießt aufgefunden. Die Charaktere werden gebeten, die Angelegenheit zu untersuchen, und entdecken, dass der Ritter mehrere verbrauchte Succurro-Fortunam-Chartae bei sich trägt. Durch weitere Nachforschungen decken die Charaktere auf, dass der Ritter dringend Geld brauchte und gehofft hatte, seine Erfolge beim Turnier zu nutzen, um seine Position bei seinem Lehnsherrn zu verbessern. Wenn die Charaktere zum Anwesen des Ritters zurückkehren, entdecken sie, dass ein örtlicher Priester verschwunden ist. Als sie den Priester finden, entdecken sie, dass dieser dem Ritter Zauberformeln lieferte und ihn dann zu erpressen versuchte. Als der Ritter sich weigerte, den Priester zu bezahlen, und drohte, ihn zu töten, verfluchte der Priester ihn mit einer Vulnero-Fortunam-Zauberformel, und der Ritter patzte auf schreckliche Weise.
+> Ein Ritter mit mittelmäßigen Fähigkeiten ist plötzlich das Gesprächsthema des Turniers. Seine kämpferischen Fähigkeiten bringen ihm großes Lob vom örtlichen Adel ein. Gegen Ende des Turniers wird der Ritter auf sein eigenes Schwert aufgespießt aufgefunden. Die Charaktere werden gebeten, die Angelegenheit zu untersuchen, und entdecken, dass der Ritter mehrere verbrauchte Succurro-Fortunam-Chartae bei sich trägt. Durch weitere Nachforschungen decken die Charaktere auf, dass der Ritter dringend Geld brauchte und gehofft hatte, seine Erfolge beim Turnier zu nutzen, um seine Position bei seinem Lehnsherrn zu verbessern. Wenn die Charaktere zum Anwesen des Ritters zurückkehren, entdecken sie, dass ein örtlicher Priester verschwunden ist. Als sie den Priester finden, entdecken sie, dass dieser dem Ritter Zauberformeln lieferte und ihn dann zu erpressen versuchte. Als der Ritter sich weigerte, den Priester zu bezahlen, und drohte, ihn zu töten, verfluchte der Priester ihn mit einer Vulnero-Fortunam-Zauberformel, und der Ritter patzte auf schreckliche Weise.
 >
->ZAUBERFORMELN VON FREMDEN
+> ZAUBERFORMELN VON FREMDEN
 >
->Auf dem Rückweg von einem Besuch in der Stadt werden die Grogs des Konvents von schrecklichem Pech verfolgt. Ein Grog bricht sich das Bein, als er auf dem Pfad ausrutscht. Beim Kampf gegen Banditen spießt sich ein anderer Grog beinahe selbst auf. Die Missgeschicke werden so offensichtlich, dass schließlich jemand vermutet, dass Magie am Werk ist. Als die Magi ermitteln, entdecken sie, dass die Grogs Vulnero-Fortunam-Chartae bei sich tragen. Ein freundlicher alter Mann hatte den Grogs die Glücksbringer gegeben, als sie in der Stadt unterwegs waren. Als die Gruppe in die Stadt zurückkehrt, ist der Hersteller der Zauberformeln verschwunden. Die Charaktere sind gezwungen, die Identität des Gelehrten Magiers zu ermitteln und herauszufinden, warum er den Grogs die falschen Chartae gab. Hegt er einen Groll gegen die Charaktere, oder steht er lediglich im Dienst eines anderen?
+> Auf dem Rückweg von einem Besuch in der Stadt werden die Grogs des Konvents von schrecklichem Pech verfolgt. Ein Grog bricht sich das Bein, als er auf dem Pfad ausrutscht. Beim Kampf gegen Banditen spießt sich ein anderer Grog beinahe selbst auf. Die Missgeschicke werden so offensichtlich, dass schließlich jemand vermutet, dass Magie am Werk ist. Als die Magi ermitteln, entdecken sie, dass die Grogs Vulnero-Fortunam-Chartae bei sich tragen. Ein freundlicher alter Mann hatte den Grogs die Glücksbringer gegeben, als sie in der Stadt unterwegs waren. Als die Gruppe in die Stadt zurückkehrt, ist der Hersteller der Zauberformeln verschwunden. Die Charaktere sind gezwungen, die Identität des Gelehrten Magiers zu ermitteln und herauszufinden, warum er den Grogs die falschen Chartae gab. Hegt er einen Groll gegen die Charaktere, oder steht er lediglich im Dienst eines anderen?
 >
->UNFREIWILLIGE HILFE
+> UNFREIWILLIGE HILFE
 >
->Banditentum in den Wäldern nahe dem Konvent der Charaktere nimmt zu. Die schlecht organisierten und mangelhaft ausgerüsteten Banditen beginnen, die örtlichen Ordnungshüter mit Leichtigkeit zu besiegen. Die Preise beginnen zu steigen und jeglicher Handel geht zurück. Die Charaktere sind gezwungen, Nachforschungen anzustellen. Sie entdecken, dass die Banditen außergewöhnlich stark, zäh und waffengeschickt sind. Wenn die Charaktere einen der Banditen besiegen, entdecken sie, dass er Tueor-Salutem- und Fortunam-Chartae bei sich trägt. Als die Banditen zu ihrem Versteck zurückverfolgt werden, entdecken die Charaktere, dass die Wegelagerer einen Gelehrten gefangen genommen haben und ihn zwingen, sie mit Zauberformeln zu versorgen. Wenn der Gelehrte Magier befreit wird, ist er sehr dankbar und bietet dem Konvent seine Dienste für eine Zeit an.
+> Banditentum in den Wäldern nahe dem Konvent der Charaktere nimmt zu. Die schlecht organisierten und mangelhaft ausgerüsteten Banditen beginnen, die örtlichen Ordnungshüter mit Leichtigkeit zu besiegen. Die Preise beginnen zu steigen und jeglicher Handel geht zurück. Die Charaktere sind gezwungen, Nachforschungen anzustellen. Sie entdecken, dass die Banditen außergewöhnlich stark, zäh und waffengeschickt sind. Wenn die Charaktere einen der Banditen besiegen, entdecken sie, dass er Tueor-Salutem- und Fortunam-Chartae bei sich trägt. Als die Banditen zu ihrem Versteck zurückverfolgt werden, entdecken die Charaktere, dass die Wegelagerer einen Gelehrten gefangen genommen haben und ihn zwingen, sie mit Zauberformeln zu versorgen. Wenn der Gelehrte Magier befreit wird, ist er sehr dankbar und bietet dem Konvent seine Dienste für eine Zeit an.
 
 
 ### Magische Gefahren
@@ -5103,9 +5115,7 @@ Magier können Verzerrungspunkte aus allen normalen Quellen der Verzerrung erhal
 
 #### Intervention
 
-Wenn ein Gelehrter Magier eine Intervention erleidet, wird er von einer mächtigen Wesenheit derselben Sphäre konfrontiert, in der die den Verzerrung verursachende Zauberformel gewirkt wurde. Wenn der Gelehrte Magier in einem Gebiet ohne Aura gepatzt hat, interveniert eine magische Wesenheit. Der Gelehrte Magier hat eine Gelegenheit, eine Intervention zu vermeiden. Wenn der Charakter in der Lage ist, die Kräfte seiner Magie zu kontrollieren, tritt keine Intervention ein. Wenn dieser Versuch fehlschlägt, muss der
-
-Magier versuchen, die Wesenheit zu besänftigen. Wenn der Charakter die Intervention erfolgreich vermeidet, geschieht nichts Negatives außer der Ansammlung von Verzerrungspunkten.
+Wenn ein Gelehrter Magier eine Intervention erleidet, wird er von einer mächtigen Wesenheit jener Sphäre konfrontiert, in der die Zauberformel gewirkt wurde, welche die Verzerrung verursacht hat. Wenn der Gelehrte Magier in einem Gebiet ohne Aura gepatzt hat, interveniert eine magische Wesenheit. Der Gelehrte Magier hat eine Gelegenheit, eine Intervention zu vermeiden. Wenn der Charakter in der Lage ist, die Kräfte seiner Magie zu kontrollieren, tritt keine Intervention ein. Wenn dieser Versuch fehlschlägt, muss der Magier versuchen, die Wesenheit zu besänftigen. Wenn der Charakter die Intervention erfolgreich vermeidet, geschieht nichts Negatives außer der Ansammlung von Verzerrungspunkten.
 
 **INTERVENTIONSVERMEIDUNG:** Intelligenz + Konzentration + (Magicam-Wert / 5) + Stresswurf gegen Verzerrungswert + Anzahl der erlangten Verzerrungspunkte + (Sphären-)Aura + Stresswurf
 
@@ -5115,15 +5125,13 @@ Wenn der Spieler den Wurf nicht besteht, muss der Charakter die beleidigte Wesen
 
 Gunsterweisungen können sein, 2 Erfahrungspunkte in der entsprechenden (Sphären-)Kunde-Fertigkeit für jeden erlangten Verzerrungspunkt hinzuzufügen, 2 Erfahrungspunkte in der entsprechenden Form für jeden erlangten Verzerrungspunkt hinzuzufügen oder die Tugend Student der (Sphäre) zu erlangen.
 
-Bestrafungen umfassen den Erwerb von Anfälligkeit für (Sphären-)Kraft, Sonderbare Magie, Seltsame Magie, Schädliche Umstände oder Von Übernatürlichem Wesen geplagt.
+Bestrafungen umfassen den Erwerb von Anfälligkeit für (Sphären-)Macht, Verzerrte Magie, Sonderbare Magie, Abträgliche Umstände oder Von übernatürlichem Wesen geplagt.
 
-Die Anfälligkeit für (Sphären-)Kraft ist stets an die Sphäre gebunden, in der der Gelehrte Magier seinen Patzer erlitt. Wenn der Patzer in einer Magiesphäre auftrat, erleidet der Gelehrte Magier hingegen Sonderbare Magie oder Seltsame Magie. Der Fehler Schädliche Umstände schränkt stets die Fähigkeit des Charakters ein, Zauberformeln in der Sphäre zu wirken, in der der Patzer aufgetreten ist, und die Wesenheit von Von Übernatürlichem Wesen geplagt ist ebenfalls an die Sphäre gebunden, in der der Patzer aufgetreten ist. Wenn der Gelehrte Magier mehrere Interventionen in verschiedenen Sphären durchmacht, kann er zusätzliche Fehler erwerben, die für diese anderen Sphären spezifisch sind. Theoretisch könnte der Gelehrte Magier Fehler oder Tugenden für alle vier Sphären entwickeln.
+Die Anfälligkeit für (Sphären-)Macht ist stets an die Sphäre gebunden, in der der Gelehrte Magier seinen Patzer erlitt. Wenn der Patzer in einer Magiesphäre auftrat, erleidet der Gelehrte Magier hingegen Verzerrte Magie oder Sonderbare Magie. Der Fehler Abträgliche Umstände schränkt stets die Fähigkeit des Charakters ein, Zauberformeln in der Sphäre zu wirken, in der der Patzer aufgetreten ist, und die Wesenheit von Von übernatürlichem Wesen geplagt ist ebenfalls an die Sphäre gebunden, in der der Patzer aufgetreten ist. Wenn der Gelehrte Magier mehrere Interventionen in verschiedenen Sphären durchmacht, kann er zusätzliche Fehler erwerben, die für diese anderen Sphären spezifisch sind. Theoretisch könnte der Gelehrte Magier Fehler oder Tugenden für alle vier Sphären entwickeln.
 
 #### Entführung
 
-Sobald der Verzerrungswert des Gelehrten Magiers 7 erreicht, ergreift die Wesenheit direktere Maßnahmen. Diese Maßnahme dauert über eine Anzahl von Quartalen an, die dem Ergebnis eines Stresswurfs entspricht. Feen- und Infernale Wesenheiten bringen den Charakter in eine Regio, die mit ihrer Sphäre verbunden ist, und hindern ihn daran, diese für die Dauer zu verlassen. Dies ist normalerweise keine angenehme Erfahrung,
-
-obwohl eine Feen-Entführung es sein kann. Eine Göttliche Wesenheit wird einen Charakter nicht in eine Göttliche Regio entführen, es sei denn, er ist fromm und frei von Sünde. Stattdessen setzt die Göttliche Wesenheit den Charakter den Schrecken der Höllensphäre aus oder hindert den Magier daran, jegliche Magie zu verwenden, und plagt ihn, sodass er für die Dauer unter dem Fehler Von Übernatürlichem Wesen geplagt leidet. Magische Wesenheiten entführen selten Charaktere, und wenn sie sich über die Bitten eines Magiers ärgern, entziehen sie ihm einfach die Fähigkeit, Magie auszuüben, für den angegebenen Zeitraum. Wenn der Verzerrungswert des Charakters 10 erreicht, wird die Wirkung dauerhaft. Der Charakter wird in eine Regio versetzt, die mit der Sphäre der Wesenheit verbunden ist, um nie zurückzukehren, oder er verliert alle Fähigkeit, jegliche Magie auszuüben.
+Sobald der Verzerrungswert des Gelehrten Magiers 7 erreicht, ergreift die Wesenheit direktere Maßnahmen. Diese Maßnahme dauert über eine Anzahl von Quartalen an, die dem Ergebnis eines Stresswurfs entspricht. Feen- und Infernale Wesenheiten bringen den Charakter in eine Regio, die mit ihrer Sphäre verbunden ist, und hindern ihn daran, diese für die Dauer zu verlassen. Dies ist normalerweise keine angenehme Erfahrung, obwohl eine Feen-Entführung es sein kann. Eine Göttliche Wesenheit wird einen Charakter nicht in eine Göttliche Regio entführen, es sei denn, er ist fromm und frei von Sünde. Stattdessen setzt die Göttliche Wesenheit den Charakter den Schrecken der Höllensphäre aus oder hindert den Magier daran, jegliche Magie zu verwenden, und plagt ihn, sodass er für die Dauer unter dem Fehler Von übernatürlichem Wesen geplagt leidet. Magische Wesenheiten entführen selten Charaktere, und wenn sie sich über die Bitten eines Magiers ärgern, entziehen sie ihm einfach die Fähigkeit, Magie auszuüben, für den angegebenen Zeitraum. Wenn der Verzerrungswert des Charakters 10 erreicht, wird die Wirkung dauerhaft. Der Charakter wird in eine Regio versetzt, die mit der Sphäre der Wesenheit verbunden ist, um nie zurückzukehren, oder er verliert alle Fähigkeit, jegliche Magie auszuüben.
 
 ## Gelehrte Magier in eurer Saga
 
@@ -5141,11 +5149,11 @@ Bologna, im Norden Italiens gelegen, beherbergt eine der großen Universitäten 
 
 Obwohl es Begabte Mitglieder in der Gilde der Magister geben mag, unterrichten diese selten Studenten der Universität. Die sozialen Auswirkungen der Gabe verursachen viele Probleme für einen Magier, der Studenten unterrichtet, und ein Mathematicus mit einer Auffälligen Gabe wäre völlig unfähig, im universitären Umfeld Schüler anzuwerben. Stattdessen bleiben die Begabten Magier im Verborgenen, wo sie jene unterweisen, die daran interessiert sind, ihre Magie zu erlernen. Diese Begabten Magier sind gezwungen, ihren Lebensunterhalt auf andere Weise zu verdienen, und üben gewöhnlich einen Beruf aus, der keine häufige Interaktion mit der Öffentlichkeit erfordert. Sie können auch von den Studiengebühren ihrer Schüler abhängen oder Geld durch den Verkauf ihrer Amulette verdienen.
 
-Die Studenten von Bologna haben den Ruf, entspannt, nachlässig und sogar revolutionär zu sein. Diese anti-autoritäre Haltung könnte zum Wunsch der Studenten beitragen, Fächer jenseits des normalen Lehrplans zu erlernen. Für weitere Informationen über die Universität von Bologna oder das Führen einer Saga in Bologna siehe das Universitätskapitel von Kunst & Gelehrsamkeit.
+Die Studenten von Bologna haben den Ruf, entspannt, nachlässig und sogar revolutionär zu sein. Diese anti-autoritäre Haltung könnte zum Wunsch der Studenten beitragen, Fächer jenseits des normalen Lehrplans zu erlernen. Für weitere Informationen über die Universität von Bologna oder das Führen einer Saga in Bologna siehe das Universitätskapitel von Art & Academe.
 
->#### ABENTEUERIDEE: Historische Erkundung
+> ### Abenteueridee: Historische Erkundung
 >
->Trotz ihrer ambivalenten Gefühle bezüglich der Geschichte ihrer magischen Tradition erkennen viele Gelehrte Magier, dass griechische und ägyptische Quellen fruchtbaren Boden für die Entdeckung neuer Zauberformeln und Labortexte bieten. Die Charaktere könnten einem Mathematicus begegnen, der diese Länder nach neuen magischen Quellen durchforscht, oder ein weitgereister Mathematicus könnte eine wertvolle Quelle der Einsicht für hermetische Integration entdeckt haben.
+> Trotz ihrer ambivalenten Gefühle bezüglich der Geschichte ihrer magischen Tradition erkennen viele Gelehrte Magier, dass griechische und ägyptische Quellen fruchtbaren Boden für die Entdeckung neuer Zauberformeln und Labortexte bieten. Die Charaktere könnten einem Mathematicus begegnen, der diese Länder nach neuen magischen Quellen durchforscht, oder ein weitgereister Mathematicus könnte eine wertvolle Quelle der Einsicht für hermetische Integration entdeckt haben.
 
 #### Gründung der Mathematici
 
@@ -5181,7 +5189,7 @@ Andere Kirchenbeamte sorgen sich, dass Gelehrte Magier zu oft andere Kräfte als
 
 Die Meinungen gehen durchaus auseinander, aber die meisten Mitglieder der Kirche glauben, dass Amulette oder Chartae, die zu Schutzzwecken erstellt werden und das Göttliche anrufen, vollkommen akzeptabel sind oder schlimmstenfalls harmlose Symbole der Frömmigkeit eines Christen. Das einfache Volk ist sich der Feinheiten der Debatte über Zauberformeln und Amulette nicht bewusst und akzeptiert sie für das, was sie sind: ein kleines Maß an Schutz in einer gefährlichen Welt.
 
-#### Gelehrte Magier im Spiel
+### Gelehrte Magier im Spiel
 
 Neben dem Spielen eines Mathematicus von Bologna kann ein solcher Charakter als Verbündeter oder Widersacher eines Konvents in eine Saga einbezogen werden. Wenn der Mathematicus kein Mitglied des Ordens ist, erstelle den Charakter wie oben beschrieben. Wenn der Mathematicus ein Mitglied des Ordens ist, folge den unten unter „Hermetische Magier" aufgeführten Richtlinien. Mathematici außerhalb des Ordens können durch die folgenden Vorzüge und Haken dargestellt werden.
 
@@ -5201,149 +5209,149 @@ Ein oder mehrere Mathematici leben im Konvent. Wenn einer dieser Mathematici die
 
 Ein besonders mächtiges Mitglied der Mathematici von Bologna könnte eingeladen oder aufgefordert werden, dem Orden des Hermes beizutreten. Ein solcher Magier würde wahrscheinlich weiterhin die Magie seiner Tradition praktizieren, könnte dem Orden aber beitreten, um Verfolgung zu vermeiden oder die Vorteile der Parma Magica zu genießen. Ein nominell hermetischer Gelehrter-Magier-Charakter sollte den Fehler Heckenzauberer und die Tugend Arkanes Wissen nehmen. Die 50 Erfahrungspunkte aus Arkanes Wissen können verwendet werden, um beliebige Arkane Fertigkeiten zu erlernen, doch der Charakter hat bereits Zugang zu diesen und würde die Erfahrungspunkte daher wahrscheinlich ausschließlich für Kodex des Hermes und Parma Magica ausgeben. Ansonsten erstellt der Spieler den Charakter genau wie zuvor beschrieben.
 
->#### ABENTEUERIDEE: Bücher aus zweiter Hand
+> ### Abenteueridee: Bücher aus zweiter Hand
 >
->Der Konvent stellt unwissentlich einen unBegabten Mathematicus als Bibliothekar ein oder um Lehrlingen Latein und Artes Liberales beizubringen. Der Mathematicus kopiert und tauscht Texte über Kodex des Hermes, Magietheorie und Kunde des Ordens des Hermes mit seinen Begabten Brüdern, um die weltliche Bibliothek der Spielercharaktere zu verbessern. Wie reagieren die Charaktere, wenn sie diesen Handel entdecken? Wenn die Charaktere nicht aufpassen, könnte der Mathematicus die Geheimnisse der Parma Magica entdecken und verbreiten. Und wenn der Orden entdeckt, dass die Charaktere indirekt dafür verantwortlich waren, dass Informationen über die Parma Magica von anderen erlangt wurden, wäre dies ein schwerer Verstoß gegen den Kodex.
+> Der Konvent stellt unwissentlich einen unBegabten Mathematicus als Bibliothekar ein oder um Lehrlingen Latein und Artes Liberales beizubringen. Der Mathematicus kopiert und tauscht Texte über Kodex des Hermes, Magietheorie und Kunde des Ordens des Hermes mit seinen Begabten Brüdern, um die weltliche Bibliothek der Spielercharaktere zu verbessern. Wie reagieren die Charaktere, wenn sie diesen Handel entdecken? Wenn die Charaktere nicht aufpassen, könnte der Mathematicus die Geheimnisse der Parma Magica entdecken und verbreiten. Und wenn der Orden entdeckt, dass die Charaktere indirekt dafür verantwortlich waren, dass Informationen über die Parma Magica von anderen erlangt wurden, wäre dies ein schwerer Verstoß gegen den Kodex.
 
->#### Stefano der Meister
+> ### Stefano der Meister
 >
->Eigenschaften: Int +4, Wah +1, Prä +1, Kom +2, Stä –1, Aus –1, Ges 0, Sck +1
+> Eigenschaften: Int +4, Wah +1, Prä +1, Kom +2, Stä –1, Aus –1, Ges 0, Sck +1
 >
->Größe: 0 
+> Größe: 0
 >
->Alter: 30 
+> Alter: 30
 >
->Gebrechlichkeit: 0 
+> Gebrechlichkeit: 0
 >
->Verzerrungswert: 1 
+> Verzerrungswert: 1
 >
->Selbstvertrauenswert: 1 (3)
+> Selbstvertrauenswert: 1 (3)
 >
->Tugenden und Fehler: Die Gabe; Magister in Artibus, Mathematicus von Bologna; Affinität zu Göttlicher Kunde, Arkanes Wissen, Bücherwurm, Gebildet, Hervorragende Intelligenz, Verbesserte Eigenschaften, Erfahrener Meister; Getrieben, Schützling, Schädliche Umstände (Wildnis), Anfälligkeit für Infernale Kraft, Schwache Magie, Schlechtes Sehvermögen
+> Tugenden und Fehler: Die Gabe; Magister in Artibus, Mathematicus von Bologna; Affinität zu Göttlicher Kunde, Arkanes Wissen, Bücherwurm, Gebildet, Hervorragende Intelligenz, Verbesserte Eigenschaften, Erfahrener Meister; Getrieben, Schützling, Abträgliche Umstände (Wildnis), Anfälligkeit für Infernale Macht, Schwache Magie, Schlechtes Sehvermögen
 >
->Persönlichkeitseigenschaften: Getrieben +3, Gelehrt +3, Sturköpfig +2, Gerecht +1
+> Persönlichkeitseigenschaften: Getrieben +3, Gelehrt +3, Sturköpfig +2, Gerecht +1
 >
->Reputationen: Versierter Gelehrter 2 (lokal) 
+> Reputationen: Versierter Gelehrter 2 (lokal)
 >
->Kampf:
+> Kampf:
 >
->Ausweichen: Init +1, Angriff n/v, Verteidigung +1, Schaden n/v
+> Ausweichen: Init +1, Angriff n/v, Verteidigung +1, Schaden n/v
 >
->Absorption: -1
+> Absorption: -1
 >
->Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
 >
->Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
+> Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
 >
->Fertigkeiten: Arabisch 1 (Zauberformeln), Artes Liberales 5 (Astronomie), Bologna-Kunde 2 (Geographie), Charme 2 (andere beruhigen), Kirchenkunde 2 (Geschichte), Zivil- und Kanonisches Recht 2 (Behandlung von Magie), Göttliche Kunde 5 (Machtnamen), Etikette 2 (Adel), Feenkunde 2 (Machtnamen), Menschenkenntnis 2 (Klerus), Infernalkunde 2 (Machtnamen), Italienisch 5 (Dichtung), Latein 5 (Briefeschreiben), Kunde der Mathematici 2 (Einweihungen), Magiekunde 2 (Machtnamen), Medizin 3 (Arzt), Philosophiae 4 (Moralphilosophie), Beruf (Schreiber) 1 (Zierschrift), Unterrichten 3 (Artes Liberales), Theologie 2 (Behandlung von Magie)
+> Fertigkeiten: Arabisch 1 (Zauberformeln), Artes Liberales 5 (Astronomie), Bologna-Kunde 2 (Geographie), Charme 2 (andere beruhigen), Kirchenkunde 2 (Geschichte), Zivil- und Kanonisches Recht 2 (Behandlung von Magie), Göttliche Kunde 5 (Machtnamen), Etikette 2 (Adel), Feenkunde 2 (Machtnamen), Menschenkenntnis 2 (Klerus), Infernalkunde 2 (Machtnamen), Italienisch 5 (Dichtung), Latein 5 (Briefeschreiben), Kunde der Mathematici 2 (Einweihungen), Magiekunde 2 (Machtnamen), Medizin 3 (Arzt), Philosophiae 4 (Moralphilosophie), Beruf (Schreiber) 1 (Zierschrift), Unterrichten 3 (Artes Liberales), Theologie 2 (Behandlung von Magie)
 >
->Künste: Tu 2, Su 2, Vu 2, Fa 14, Ma 6, Sa 5
+> Künste: Tu 2, Su 2, Vu 2, Fa 14, Ma 6, Sa 5
 >
->Ausrüstung: Kleidung, Wanderstock und Schreibmaterial.
+> Ausrüstung: Kleidung, Wanderstock und Schreibmaterial.
 >
->Behinderung: 0 (0) 
+> Behinderung: 0 (0)
 >
->Bekannte Zauberformeln:
+> Bekannte Zauberformeln:
 >
->Verleihe Fortuna Belli (Einzelwaffe) (TuFa 15/+9)
+> Verleihe Fortuna Belli (Einzelwaffe) (TuFa 15/+9)
 >
->Verleihe Fortuna Belli (Raufen) (TuFa 15/+9)
+> Verleihe Fortuna Belli (Raufen) (TuFa 15/+9)
 >
->Zauberformel gegen Launenhaftigkeit (Medizin) (TuFa 15/+9) (Persönliche Reichweite)
+> Zauberformel gegen Launenhaftigkeit (Medizin) (TuFa 15/+9) (Persönliche Reichweite)
 >
->Magische-Widerstandskraft-Zauberformel gegen Magisches Feuer (+8 Absorption) (TuMa 5/+5)
+> Magische-Widerstandskraft-Zauberformel gegen Magisches Feuer (+8 Absorption) (TuMa 5/+5)
 >
->Magische-Widerstandskraft-Zauberformel gegen Magische Klauen (+8 Absorption) (TuMa 5/+5)
+> Magische-Widerstandskraft-Zauberformel gegen Magische Klauen (+8 Absorption) (TuMa 5/+5)
 >
->Magische-Widerstandskraft-Zauberformel gegen Magische Zähne (+8 Absorption) (TuMa 5/+5)
+> Magische-Widerstandskraft-Zauberformel gegen Magische Zähne (+8 Absorption) (TuMa 5/+5)
 >
->Zauberformel gegen Betörung (+9 Schwierigkeitsgrad) (TuMa 10/+5)
+> Zauberformel gegen Betörung (+9 Schwierigkeitsgrad) (TuMa 10/+5)
 >
->Zauberformel gegen Verhexung (+9 Schwierigkeitsgrad) (TuMa 10/+5)
+> Zauberformel gegen Verhexung (+9 Schwierigkeitsgrad) (TuMa 10/+5)
 >
->Gabe des Prometheus (Guter Lehrer) (SuFa 20/+9) (Persönliche Reichweite)
+> Gabe des Prometheus (Guter Lehrer) (SuFa 20/+9) (Persönliche Reichweite)
 >
->Zauberformel der Kommunikation (+1) (SuFa 20/+9) Zauberformel der Ausdauer (+1) (SuFa 20/+9)
+> Zauberformel der Kommunikation (+1) (SuFa 20/+9) Zauberformel der Ausdauer (+1) (SuFa 20/+9)
 >
->Zauberformel des Schutzes gegen die Schwachstelle des Achilles (Fäuste) (+8 Absorption) (TuSa 5/+5)
+> Zauberformel des Schutzes gegen die Schwachstelle des Achilles (Fäuste) (+8 Absorption) (TuSa 5/+5)
 >
->Zauberformel des Schutzes gegen die Schwachstelle des Achilles (Tritte) (+8 Absorption) (TuSa 5/+5)
+> Zauberformel des Schutzes gegen die Schwachstelle des Achilles (Tritte) (+8 Absorption) (TuSa 5/+5)
 >
->Fortuna Belli brechen (Raufen) (VuFa 5/+9)
+> Fortuna Belli brechen (Raufen) (VuFa 5/+9)
 >
->Fortuna Belli brechen (Einzelwaffe) (VuFa 5/+9)
+> Fortuna Belli brechen (Einzelwaffe) (VuFa 5/+9)
 >
->Zauberformel des Schutzes gegen die Feen (Macht 5) (VuMa 5/+5)
+> Zauberformel des Schutzes gegen die Feen (Macht 5) (VuMa 5/+5)
 >
->Zauberformel des Schutzes gegen das Infernale (Macht 5) (VuMa 5/+5)
+> Zauberformel des Schutzes gegen das Infernale (Macht 5) (VuMa 5/+5)
 >
->Fluch der Hustenanfälle (VuSa 10/+5)
+> Fluch der Hustenanfälle (VuSa 10/+5)
 >
->Erscheinungsbild: Stefano ist ein schmächtiger Mann mit dünnen Armen und Beinen. Er hat einen leichten Bauchansatz vom vielen Studieren. Er hat ein breites Lächeln und fröhliche braune Augen. Sein buschiger schwarzer Bart beginnt grau zu werden.
+> Erscheinungsbild: Stefano ist ein schmächtiger Mann mit dünnen Armen und Beinen. Er hat einen leichten Bauchansatz vom vielen Studieren. Er hat ein breites Lächeln und fröhliche braune Augen. Sein buschiger schwarzer Bart beginnt grau zu werden.
 >
->Stefano wurde in Rom geboren, wo sein Vater ein bekannter Jurist war. Die sozialen Auswirkungen der Gabe machten Stefanos Kindheit zu einer unangenehmen Zeit, und sein Vater schickte ihn zu den besten Lehrern, die man für Geld bekommen konnte, hauptsächlich um das seltsame Kind davon abzuhalten, die Familie in Verlegenheit zu bringen. Stefano besuchte die Universität von Bologna, wo er den Mathematici begegnete. Er war ein schneller Lerner und wurde ein versierter Gelehrter. Stefano beeindruckte die ranghohen Mitglieder der Gilde der Magister und erhielt eine Lehrstelle.
+> Stefano wurde in Rom geboren, wo sein Vater ein bekannter Jurist war. Die sozialen Auswirkungen der Gabe machten Stefanos Kindheit zu einer unangenehmen Zeit, und sein Vater schickte ihn zu den besten Lehrern, die man für Geld bekommen konnte, hauptsächlich um das seltsame Kind davon abzuhalten, die Familie in Verlegenheit zu bringen. Stefano besuchte die Universität von Bologna, wo er den Mathematici begegnete. Er war ein schneller Lerner und wurde ein versierter Gelehrter. Stefano beeindruckte die ranghohen Mitglieder der Gilde der Magister und erhielt eine Lehrstelle.
 >
->Stefanos Vater starb kürzlich, und seine Stiefmutter schickte seine heranwachsende Schwester nach Bologna, damit sie bei ihm lebt. Sie streiten sich häufig, weil Stefano seiner Schwester wenig Aufmerksamkeit schenkt und sie es übelnimmt, in der relativen Armut leben zu müssen, die Stefanos Beruf mit sich bringt. Obwohl ihre Beziehung angespannt ist, würde Stefano alles für seine Schwester tun.
+> Stefanos Vater starb kürzlich, und seine Stiefmutter schickte seine heranwachsende Schwester nach Bologna, damit sie bei ihm lebt. Sie streiten sich häufig, weil Stefano seiner Schwester wenig Aufmerksamkeit schenkt und sie es übelnimmt, in der relativen Armut leben zu müssen, die Stefanos Beruf mit sich bringt. Obwohl ihre Beziehung angespannt ist, würde Stefano alles für seine Schwester tun.
 >
->Stefano ist sehr darum bemüht, als Lehrer gute Arbeit zu leisten, und wirkt Gabe des Prometheus und Zauberformel der Kommunikation vor jeder Vorlesung. Diese Zauberformeln erlauben es ihm nicht, die Auswirkungen der Gabe zu überwinden, doch im Laufe des Jahres tauen seine Studenten auf, da die negativen Effekte etwas nachlassen, und sie beginnen, seine eloquenten Vorlesungen zu schätzen. Stefano ist besessen von der Kirche und ihrer Haltung zum Einsatz von Magie. Er sorgt sich, dass die Kirche die Mathematici aufdecken und ihnen und der Universität Ärger bereiten könnte. In seiner Freizeit korrespondiert Stefano mit Geistlichen im gesamten Mythischen Europa, um seine Forschung zum Kanonischen Recht bezüglich des Einsatzes von Magie zu erörtern.
+> Stefano ist sehr darum bemüht, als Lehrer gute Arbeit zu leisten, und wirkt Gabe des Prometheus und Zauberformel der Kommunikation vor jeder Vorlesung. Diese Zauberformeln erlauben es ihm nicht, die Auswirkungen der Gabe zu überwinden, doch im Laufe des Jahres tauen seine Studenten auf, da die negativen Effekte etwas nachlassen, und sie beginnen, seine eloquenten Vorlesungen zu schätzen. Stefano ist besessen von der Kirche und ihrer Haltung zum Einsatz von Magie. Er sorgt sich, dass die Kirche die Mathematici aufdecken und ihnen und der Universität Ärger bereiten könnte. In seiner Freizeit korrespondiert Stefano mit Geistlichen im gesamten Mythischen Europa, um seine Forschung zum Kanonischen Recht bezüglich des Einsatzes von Magie zu erörtern.
 >
->Da Stefano seine Magie während seines Studiums zum Magister erlernte, wurden keine zusätzlichen Erfahrungspunkte für die Jahre seiner „Lehrzeit" vergeben.
+> Da Stefano seine Magie während seines Studiums zum Magister erlernte, wurden keine zusätzlichen Erfahrungspunkte für die Jahre seiner „Lehrzeit" vergeben.
 
->#### Marco der Student
+> ### Marco der Student
 >
->Eigenschaften: Int +1, Wah +2, Prä +1, Kom +2, Stä 0, Aus 0, Ges -1, Sck 0
+> Eigenschaften: Int +1, Wah +2, Prä +1, Kom +2, Stä 0, Aus 0, Ges -1, Sck 0
 >
->Größe: 0 
+> Größe: 0
 >
->Alter: 27
+> Alter: 27
 >
->Gebrechlichkeit: 0 
+> Gebrechlichkeit: 0
 >
->Verzerrungswert: 0 
+> Verzerrungswert: 0
 >
->Selbstvertrauenswert: 1 (3)
+> Selbstvertrauenswert: 1 (3)
 >
->Tugenden und Fehler: Priester, Mathematicus von Bologna; Starke Amulettmagie, Tueor; Magicam, Reliquie, Salutem, Gespür für Heiliges und Unheiliges, Soziale Kontakte (niederer Klerus), Student des Göttlichen, Vielgereist; Mitfühlend, Interventionsanfällig, Von Engel geplagt; Unvereinbare Heckenkünste (Vulnero & Salutem), Gebrechliche Konstitution, Keine Magische Abwehr, Kurzlebige Magie, Kurzreichweitige Magie, Sozialer Makel (kränklich), Gelübde (Zölibat), Sonderbare Magie, Schwache Magie
+> Tugenden und Fehler: Priester, Mathematicus von Bologna; Starke Amulettmagie, Tueor; Magicam, Reliquie, Salutem, Gespür für Heiliges und Unheiliges, Soziale Kontakte (niederer Klerus), Student des Göttlichen, Vielgereist; Mitfühlend, Interventionsanfällig, Von Engel geplagt; Unvereinbare Heckenkünste (Vulnero & Salutem), Gebrechliche Konstitution, Keine Magische Abwehr, Kurzlebige Magie, Kurzreichweitige Magie, Sozialer Makel (kränklich), Gelübde (Zölibat), Verzerrte Magie, Schwache Magie
 >
->Persönlichkeitseigenschaften: Gütig +3, Neugierig +2, Schüchtern +1, Mutig -1
+> Persönlichkeitseigenschaften: Gütig +3, Neugierig +2, Schüchtern +1, Mutig -1
 >
->Reputationen: Unheimlich 2 (lokal)
+> Reputationen: Unheimlich 2 (lokal)
 >
->Kampf:
+> Kampf:
 >
->Ausweichen: Init +1, Angriff n/v, Verteidigung +1, Schaden n/v
+> Ausweichen: Init +1, Angriff n/v, Verteidigung +1, Schaden n/v
 >
->Absorption: —1
+> Absorption: —1
 >
->Erschöpfungsstufen: OK, 0, -1, -3, —5, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, -3, —5, Bewusstlos
 >
->Wundabzüge: —1 (1-5), —3 (6-10), —5 (11-15), Kampfunfähig (16-20), Tot (21+)
+> Wundabzüge: —1 (1-5), —3 (6-10), —5 (11-15), Kampfunfähig (16-20), Tot (21+)
 >
->Fertigkeiten: Artes Liberales 2 (Rhetorik), Raufen 1 (Ausweichen), Bologna-Kunde 3 (Friedhöfe), Charme 2 (Vorgesetzte), Kirchenkunde 2 (Legenden), Zivil- und Kanonisches Recht 2 (Vorschriften), Göttliche Kunde 3+2 (Machtnamen), Etikette 3 (Kirche), Menschenkenntnis 3 (Klerus), Intrige 1 (Ämter), Italienisch 5 (Predigen), Latein 4 (Kirchenriten), Kunde der Mathematici 1 (Geschichte), Magiekunde 2 (Geister), Philosophiae 2 (Naturphilosophie), Gespür für Heiliges und Unheiliges 4 (Geister), Theologie 2 (Fegefeuer)
+> Fertigkeiten: Artes Liberales 2 (Rhetorik), Raufen 1 (Ausweichen), Bologna-Kunde 3 (Friedhöfe), Charme 2 (Vorgesetzte), Kirchenkunde 2 (Legenden), Zivil- und Kanonisches Recht 2 (Vorschriften), Göttliche Kunde 3+2 (Machtnamen), Etikette 3 (Kirche), Menschenkenntnis 3 (Klerus), Intrige 1 (Ämter), Italienisch 5 (Predigen), Latein 4 (Kirchenriten), Kunde der Mathematici 1 (Geschichte), Magiekunde 2 (Geister), Philosophiae 2 (Naturphilosophie), Gespür für Heiliges und Unheiliges 4 (Geister), Theologie 2 (Fegefeuer)
 >
->Künste: Tu 1, Su (n/v), Vu (n/v), Fa (n/v), Ma 7, Sa 7 Ausrüstung: Einfache Kutte.
+> Künste: Tu 1, Su (n/v), Vu (n/v), Fa (n/v), Ma 7, Sa 7 Ausrüstung: Einfache Kutte.
 >
->Behinderung: 0 (0)
+> Behinderung: 0 (0)
 >
->Bekannte Zauberformeln:
+> Bekannte Zauberformeln:
 >
->Magische-Widerstandskraft-Zauberformel gegen Magische Klauen (+10 Absorption) (TuMa 10/+5)
+> Magische-Widerstandskraft-Zauberformel gegen Magische Klauen (+10 Absorption) (TuMa 10/+5)
 >
->Zauberformel der glückhaften Fügung gegen Klauen (+4 Verteidigung) (TuMa 10/+5)
+> Zauberformel der flinken Fügung gegen Klauen (+4 Verteidigung) (TuMa 10/+5)
 >
->Zauberformel gegen Verhexung (+9 Schwierigkeitsgrad) (TuMa 10/+5)
+> Zauberformel gegen Verhexung (+9 Schwierigkeitsgrad) (TuMa 10/+5)
 >
->Zauberformel des Schutzes gegen die Schwachstelle des Achilles (Messer) (+10 Absorption) (TuSa 10/+5)
+> Zauberformel des Schutzes gegen die Schwachstelle des Achilles (Messer) (+10 Absorption) (TuSa 10/+5)
 >
->Zauberformel des Schutzes gegen die Schwachstelle des Achilles (Knüppel) (+10 Absorption) (TuSa 10/+5)
+> Zauberformel des Schutzes gegen die Schwachstelle des Achilles (Knüppel) (+10 Absorption) (TuSa 10/+5)
 >
->Erscheinungsbild: Marco ist ein beleibter Mann mit einem schmalen Lächeln und kleinen schwarzen Augen. Marco hustet und keucht ständig und wischt sich die Nase am Ärmel seiner schwarzen Kutte ab.
+> Erscheinungsbild: Marco ist ein beleibter Mann mit einem schmalen Lächeln und kleinen schwarzen Augen. Marco hustet und keucht ständig und wischt sich die Nase am Ärmel seiner schwarzen Kutte ab.
 >
->Marco kam nach Bologna, nachdem er mehrere Jahre lang mit Stefano korrespondiert hatte. Durch ihre Korrespondenz erkannte Marco, dass Stefano über Wissen um das Übernatürliche verfügte. Marco suchte ihn auf, weil er, solange er sich erinnern kann, von einer Kreatur belästigt wird, die behauptet, ein Engel zu sein. Die Kreatur ermahnt Marco, die Geister der kürzlich Verstorbenen auf ihrem Weg ins Jenseits zu unterstützen. Marco ist nicht sicher, ob diese Kreatur ein Engel ist, doch sie scheint ihn zu guten Taten anzuspornen. Der Engel hat Marco auch ermutigt, mehr über das Fegefeuer zu erfahren. Auf seinen Reisen hat Marco einen Fingerknochen des Heiligen Odilo erworben, des Schutzpatrons der Seelen im Fegefeuer. Obwohl Marco erst seit zwei Jahren bei den Gelehrten Magiern studiert hat, ist er in der Lage, Amulette und Chartae herzustellen, die ihn bei seiner Berufung unterstützen.
+> Marco kam nach Bologna, nachdem er mehrere Jahre lang mit Stefano korrespondiert hatte. Durch ihre Korrespondenz erkannte Marco, dass Stefano über Wissen um das Übernatürliche verfügte. Marco suchte ihn auf, weil er, solange er sich erinnern kann, von einer Kreatur belästigt wird, die behauptet, ein Engel zu sein. Die Kreatur ermahnt Marco, die Geister der kürzlich Verstorbenen auf ihrem Weg ins Jenseits zu unterstützen. Marco ist nicht sicher, ob diese Kreatur ein Engel ist, doch sie scheint ihn zu guten Taten anzuspornen. Der Engel hat Marco auch ermutigt, mehr über das Fegefeuer zu erfahren. Auf seinen Reisen hat Marco einen Fingerknochen des Heiligen Odilo erworben, des Schutzpatrons der Seelen im Fegefeuer. Obwohl Marco erst seit zwei Jahren bei den Gelehrten Magiern studiert hat, ist er in der Lage, Amulette und Chartae herzustellen, die ihn bei seiner Berufung unterstützen.
 
 ## Alternative Traditionen
 
-Es besteht kein Erfordernis, dass die Mathematici ihren Sitz in Bologna haben, und jede der Universitätsstädte – wie Oxford, Cambridge, Paris, Montpellier oder Salamanca – ist gleichermaßen geeignet. Siehe das Universitätskapitel von Kunst & Gelehrsamkeit für eine Beschreibung der Universitäten im Mythischen Europa. Mit wenig Aufwand können die Magier an jedem dieser Orte angesiedelt werden. Darüber hinaus kann die Magie dieses Kapitels für andere magische Traditionen verwendet werden.
+Es besteht kein Erfordernis, dass die Mathematici ihren Sitz in Bologna haben, und jede der Universitätsstädte – wie Oxford, Cambridge, Paris, Montpellier oder Salamanca – ist gleichermaßen geeignet. Siehe das Universitätskapitel von Art & Academe für eine Beschreibung der Universitäten im Mythischen Europa. Mit wenig Aufwand können die Magier an jedem dieser Orte angesiedelt werden. Darüber hinaus kann die Magie dieses Kapitels für andere magische Traditionen verwendet werden.
 
 ### Mythische Alchemisten
 
@@ -5355,7 +5363,7 @@ Mythische Alchemisten nutzen ihre Magie, um mächtige magische Tränke herzustel
 
 #### Geschichte und Kultur
 
-Die im alten Ägypten entwickelte okkulte Wissenschaft der Alchemie wird seit Jahrtausenden praktiziert. Die alten Griechen und Römer waren mit ihren Geheimnissen wohl vertraut, doch mit dem Untergang des Römischen Reiches ging das Wissen um die Alchemie dem Westen beinahe verloren und überlebte nur in Fragmenten. Die Alchemisten des Mythischen Europas haben kürzlich neue Einsichten in diese Kunst gewonnen. Im Jahr 1144 übersetzte Robert von Chester Morienus Romanus' Liber de Compositione Alchemiae ins Lateinische und machte es damit zum ersten dem Westen zugänglichen arabischen Alchemie-Werk. Um 1220 sind viele weitere Abhandlungen über Alchemie im Mythischen Europa verfügbar – sowohl aus dem Arabischen übersetzte griechische und römische Klassiker als auch von arabischen Praktikern verfasste alchemistische Texte. Für eine ausführliche Darstellung siehe das Kapitel Experimentelle Philosophie in Kunst & Gelehrsamkeit.
+Die im alten Ägypten entwickelte okkulte Wissenschaft der Alchemie wird seit Jahrtausenden praktiziert. Die alten Griechen und Römer waren mit ihren Geheimnissen wohl vertraut, doch mit dem Untergang des Römischen Reiches ging das Wissen um die Alchemie dem Westen beinahe verloren und überlebte nur in Fragmenten. Die Alchemisten des Mythischen Europas haben kürzlich neue Einsichten in diese Kunst gewonnen. Im Jahr 1144 übersetzte Robert von Chester Morienus Romanus' Liber de Compositione Alchemiae ins Lateinische und machte es damit zum ersten dem Westen zugänglichen arabischen Alchemie-Werk. Um 1220 sind viele weitere Abhandlungen über Alchemie im Mythischen Europa verfügbar – sowohl aus dem Arabischen übersetzte griechische und römische Klassiker als auch von arabischen Praktikern verfasste alchemistische Texte. Für eine ausführliche Darstellung siehe das Kapitel Experimentelle Philosophie in Art & Academe.
 
 Obwohl alchemistische Texte der gebildeten Bevölkerung des Mythischen Europas zugänglich sind, äußern Alchemisten und alchemistische Autoren beständig die Sorge, ihre Geheimnisse vor der breiten Bevölkerung, vor den Unwissenden und vor den Unverständigen zu bewahren, aus Furcht vor dem Schaden, den sie anrichten könnten. Natürlich erkennen manche Alchemisten auch an, dass eine weite Verbreitung der Geheimnisse der Alchemie die Macht jedes einzelnen Praktizierenden vermindern würde. Ungeachtet des Grundes sind die meisten Mythischen Alchemisten äußerst zurückhaltend, ihre Kräfte anderen zu offenbaren. Sie schreiben in Chiffren und sprechen in Gleichnissen, um sicherzustellen, dass nur jene das Wissen erlangen, die seiner würdig sind.
 
@@ -5363,13 +5371,11 @@ Viele Mythische Alchemisten erlangen ihr Wissen von einem einzelnen Lehrer, doch
 
 #### Magie
 
-Mythische Alchemisten können keine Zauberformeln wirken, sondern stellen stattdessen Pulver, Tränke oder Pastillen her. Ein Mythischer Alchemist ersetzt seinen Philosophiae-Wert durch Artes Liberales bei der Berechnung seiner Laborsumme. Alle alchemistischen Erzeugnisse müssen die Regeln für Arkanes Experimentieren verwenden, wie unter Verzauberte Gegenstände durch Experimentieren, ArM5, [Seite 107–109](<Ars Magica Definitive Edition Basisregeln.md#gestaltwandler>), beschrieben. Der Mythische Alchemist addiert stets einen einfachen Würfel zu seiner Alchemistischen Laborsumme und würfelt einen Stresswurf auf der Tabelle Außergewöhnlicher Ergebnisse (ArM5, [Seite 109](<Ars Magica Definitive Edition Basisregeln.md#tabelle-außergewöhnlicher-ergebnisse>)). Der Mythische Alchemist darf sich entscheiden, ein außergewöhnliches Risiko einzugehen und die Konsequenzen zu tragen.
+Mythische Alchemisten können keine Zauberformeln wirken, sondern stellen stattdessen Pulver, Tränke oder Pastillen her. Ein Mythischer Alchemist verwendet bei der Berechnung seiner Laborsumme seinen Philosophiae-Wert anstelle von Artes Liberales. Alle alchemistischen Erzeugnisse müssen die Regeln für Arkanes Experimentieren verwenden, wie unter Verzauberte Gegenstände durch Experimentieren, ArM5, [Seite 107–109](<Ars Magica Definitive Edition Basisregeln.md#gestaltwandler>), beschrieben. Der Mythische Alchemist addiert stets einen einfachen Würfel zu seiner Alchemistischen Laborsumme und würfelt einen Stresswurf auf der Tabelle Außergewöhnlicher Ergebnisse (ArM5, [Seite 109](<Ars Magica Definitive Edition Basisregeln.md#tabelle-außergewöhnlicher-ergebnisse>)). Der Mythische Alchemist darf sich entscheiden, ein außergewöhnliches Risiko einzugehen und die Konsequenzen zu tragen.
 
 Alchemisten können Pulver herstellen, die derselben Mechanik wie Chartae folgen, außer dass es keine astrologische Komponente gibt. Wie Chartae halten alchemistische Pulver nur eine begrenzte Zeit und sind nach dem Ablauf ihrer ursprünglichen Ladung nutzlos.
 
-Alchemisten können auch Tränke herstellen. Tränke verwenden dieselbe grundlegende Spielmechanik wie Amulette, mit einigen Ausnahmen. Die Tränke eines Alchemisten erfordern kein astronomisches Wissen und dürfen von jedem verwendet werden; allerdings muss der Alchemist 1 Bauer Vis für je 5 Stufen des Basiseffekts des Tranks aufwenden. Für jede Ladung, die ein Amulett hätte, stellt der Alchemist eine weitere Dosis
-
-des Tranks her, die ebenfalls einen zusätzlichen Bauer Vis erfordert. Ein Alchemist kann sich entscheiden, Vis zu sparen, indem er die zusätzlichen Dosen nicht herstellt. Succurro-Magicam-Zauberformeln dürfen nicht verwendet werden, um die Anzahl der Dosen eines Tranks zu erhöhen.
+Alchemisten können auch Tränke herstellen. Tränke verwenden dieselbe grundlegende Spielmechanik wie Amulette, mit einigen Ausnahmen. Die Tränke eines Alchemisten erfordern kein astronomisches Wissen und dürfen von jedem verwendet werden; allerdings muss der Alchemist 1 Bauer Vis für je 5 Stufen des Basiseffekts des Tranks aufwenden. Für jede Ladung, die ein Amulett hätte, stellt der Alchemist eine weitere Dosis des Tranks her, die ebenfalls einen zusätzlichen Bauer Vis erfordert. Ein Alchemist kann sich entscheiden, Vis zu sparen, indem er die zusätzlichen Dosen nicht herstellt. Succurro-Magicam-Zauberformeln dürfen nicht verwendet werden, um die Anzahl der Dosen eines Tranks zu erhöhen.
 
 Mythische Alchemisten verwenden leicht andere Zielgrößen als Gelehrte Magier. Sie können die Blutlinien-Zielgröße nicht verwenden. Wenn der Alchemist die Gruppen-Zielgröße verwendet, stellt er eine Pastille her. Pastillen sind kleine Klumpen aus gehärteter Paste, die entzündet werden müssen, um ihre Wirkung zu entfalten. Der Rauch, den sie erzeugen, trägt die Magie. Sie verlieren in offenen oder windigen Bereichen schnell ihre Wirksamkeit. Das Ziel muss nicht atmen können; es genügt, dass es vom Rauch der Pastille umgeben ist.
 
@@ -5401,23 +5407,23 @@ Weise Leute sind in der Lage, Magie in weitgehend derselben Weise zu praktiziere
 
 Weise Leute haben Entsprechungen für Chartae und Amulette; allerdings sind die von ihnen hergestellten magischen Geräte kleine Zauber, die aus Kräuterbündeln, Tierteilen, Knotenknüpfungen, kleinen Holzschnitzereien oder anderen Objekten bestehen können. Diese Geräte enthalten oft den Namen des Ziels irgendwo im Zauber.
 
-Die Weisen Leute ersetzen die Fertigkeit Handwerk: Zauber durch Artes Liberales in ihrer Laborsumme bei der Herstellung ihrer Geräte. Die übrige Mechanik bleibt gleich, außer dass die Weisen Leute keine Horoskope für die Empfänger ihrer Magie erstellen müssen. Weise Leute dürfen dieselben Regeln wie Magi für Laborassistenz verwenden, außer dass ihre Assistenten mindestens eine erlernte magische Technik und Form besitzen müssen und der Handwerk-Zauber-Wert des Assistenten anstelle der Magietheorie herangezogen wird, um den zur Laborsumme des Zauberers addierten Betrag zu bestimmen (ArM5, [Seite 103](<Ars Magica Definitive Edition Basisregeln.md#hilfe-im-laboratorium>)).
+Die Weisen Leute verwenden bei der Herstellung ihrer Geräte in ihrer Laborsumme die Fertigkeit Handwerk: Zauber anstelle von Artes Liberales. Die übrige Mechanik bleibt gleich, außer dass die Weisen Leute keine Horoskope für die Empfänger ihrer Magie erstellen müssen. Weise Leute dürfen dieselben Regeln wie Magi für Laborassistenz verwenden, außer dass ihre Assistenten mindestens eine erlernte magische Technik und Form besitzen müssen und der Handwerk-Zauber-Wert des Assistenten anstelle der Magietheorie herangezogen wird, um den zur Laborsumme des Zauberers addierten Betrag zu bestimmen (ArM5, [Seite 103](<Ars Magica Definitive Edition Basisregeln.md#hilfe-im-laboratorium>)).
 
->#### Kleine Hermetische Tugend: Schnelle Aufgeladene Artefakte
+> ### Kleine Hermetische Tugend: Schnelle Aufgeladene Artefakte
 >
->Der Magus ist in der Lage, Aufgeladene Artefakte für den einmaligen Gebrauch herzustellen. Die Stufe des Effekts des Aufgeladenen Artefakts muss kleiner oder gleich der Laborsumme des Magus sein. Der Magus muss eine Stunde pro Magnitude des Effekts des Gegenstands aufwenden. Am Ende dieses Zeitraums erstellt der Magus ein Aufgeladenes Artefakt mit einer einzelnen Ladung. Alle sonstigen Einschränkungen für die Erstellung von Aufgeladenen Artefakten müssen eingehalten werden.
+> Der Magus ist in der Lage, Aufgeladene Artefakte für den einmaligen Gebrauch herzustellen. Die Stufe des Effekts des Aufgeladenen Artefakts muss kleiner oder gleich der Laborsumme des Magus sein. Der Magus muss eine Stunde pro Magnitude des Effekts des Gegenstands aufwenden. Am Ende dieses Zeitraums erstellt der Magus ein Aufgeladenes Artefakt mit einer einzelnen Ladung. Alle sonstigen Einschränkungen für die Erstellung von Aufgeladenen Artefakten müssen eingehalten werden.
 
 #### Charaktere
 
 Weise Leute beginnen ihre magische Ausbildung oft erst in ihrer Jugend. Die Lehrzeit der Weisen Leute dauert im Allgemeinen drei bis fünf Jahre, kann aber länger dauern, wenn ein Kind früh im Leben eine Begabung zeigt und von einem Lehrer entdeckt wird. Für jedes Ausbildungsjahr darf der Spieler 16 Erfahrungspunkte in Fertigkeiten oder Künsten und 8 Stufen an Zauberformeln ausgeben.
 
-Obwohl die Weisen Leute nach denselben grundlegenden Regeln wie oben beschrieben erstellt werden, besitzen sie selten dieselben Fertigkeiten wie die Mathematici. Neben ihren Künsten widmen Weise Leute ihre Zeit häufig dem Erlernen von Handwerk: Zauber, Chirurgie, Feenkunde, Menschenkenntnis, Kräuterwissen und Magiekunde. Weise Leute besitzen gewöhnlich den Sozialen Status Weise Frau/Weiser Mann. Neben den erforderlichen und bevorzugten Tugenden sind folgende Tugenden und Fehler geeignet: Sanfte Gabe, Feenblut, Zweites Gesicht, Student der Feensphäre, Feenfreund und Visionen. Für weitere geeignete Tugenden und Fehler siehe Sphären der Macht: Feenwelt.
+Obwohl die Weisen Leute nach denselben grundlegenden Regeln wie oben beschrieben erstellt werden, besitzen sie selten dieselben Fertigkeiten wie die Mathematici. Neben ihren Künsten widmen Weise Leute ihre Zeit häufig dem Erlernen von Handwerk: Zauber, Chirurgie, Feenkunde, Menschenkenntnis, Kräuterwissen und Magiekunde. Weise Leute besitzen gewöhnlich den Sozialen Status Weise Frau / Weiser Mann. Neben den erforderlichen und bevorzugten Tugenden sind folgende Tugenden und Fehler geeignet: Sanfte Gabe, Feenblut, Zweites Gesicht, Student der Feensphäre, Feenfreund und Visionen. Für weitere geeignete Tugenden und Fehler siehe Sphären der Macht: Feenwelt.
 
 ## Integration der Magie der Gelehrten Magier
 
 Die Magie der Gelehrten Magier ist die Quelle eines potenziellen Durchbruchs für den Magus, dem es gelingt, sie mit hermetischer Magie zu integrieren.
 
-### Schnelle Aufgeladene Artefakte für den einmaligen Gebrauch
+### Aufgeladene Artefakte für den einmaligen Gebrauch
 
 **Empfohlene Durchbruchpunkte:** 40
 
@@ -5425,11 +5431,11 @@ Hermetischer Magie fehlt derzeit die Fähigkeit, schnelle, verhältnismäßig m�
 
 Neben den Texten der Mathematici ist der hermetische Forscher möglicherweise in der Lage, Texte aus altgriechischen oder ägyptischen Quellen zu beschaffen. Diese Texte beginnen langsam, ins Mythische Europa zu gelangen. Sobald ein Forscher diese Quellen entdeckt, kann er in die islamischen Länder reisen und dort zusätzliche Texte und Formulare für Einsichten finden. Ebenso kann der Forscher einheimische Praktizierende der Gelehrten-Magier-Magie entdecken.
 
-#### Integrationsergebnisse
+#### Integrationseffekte
 
 Während des Integrationsprozesses stellt der Magus Aufgeladene Artefakte her. Ungeachtet der Laborsumme des Magus enthält jedes Aufgeladene Artefakt nur eine einzelne Ladung. Der Magus kann bis zum Erreichen eines Durchbruchs nur ein Artefakt pro Quartal herstellen.
 
-#### Folgen der Integration
+#### Konsequenzen der Integration
 
 Die wichtigste Folge der Integration dieses Effekts besteht darin, die Anzahl der für Nicht-Magi verfügbaren magischen Geräte erheblich zu steigern. Mit diesem Durchbruch sind Magi in der Lage, Geräte herzustellen, die auf Situationen zugeschnitten sind, die ihre Grogs voraussichtlich antreffen werden. Grogs werden voraussichtlich von Geräten profitieren, die ihnen im Kampf helfen, etwa Fernkampfwaffen mit Perdo-Corpus-, Creo-Ignem- oder anderen Kampfeffekten. Andere Verwendungsmöglichkeiten umfassen Verteidigungsgeräte mit Rego-Terram-, Rego-Herbam- oder Muto-Corpus-Effekten.
 
@@ -5539,29 +5545,29 @@ Nachtwandler nutzen diese Fertigkeit, um ihre Feinde im Wachzustand aufzuspüren
 
 Einige Nachtwandler brechen Flüche mithilfe chthonischer Kräfte, wie im Ergänzungsband Sphären der Macht: Das Infernale beschrieben.
 
->#### Mit einer Glückshaube geboren
+> ### Mit einer Glückshaube geboren
 >
->In den meisten Traditionen werden potenzielle Nachtwandler mit einer Glückshaube geboren. Das heißt, die meisten Nachtwandler werden mit einer Membranhaube über dem Kopf geboren. Diese muss aufbewahrt werden und wird dem Nachtwandler von seinen Eltern übergeben. In einigen Traditionen verliert ein Nachtwandler, der seine Glückshaube verliert, seine Kräfte, bis er sie wiedererlangt. Diese Schwäche kann als Großer Geschichte-Fehler gewählt werden. In Gegenden, in denen Nachtwandler verbreitet sind, erzählen die Eltern ihrem Kind gewöhnlich auch das Wenige, was sie über die Nachtschlachten wissen, wenn sie ihm die Glückshaube übergeben. Das Wissen über die Nachtwandler ist eine (Organisations-)Kunde, doch Charaktere, die noch nicht zu Fruchtbarkeitsschlachten einberufen wurden, haben selten einen Wert höher als 1.
+> In den meisten Traditionen werden potenzielle Nachtwandler mit einer Glückshaube geboren. Das heißt, die meisten Nachtwandler werden mit einer Membranhaube über dem Kopf geboren. Diese muss aufbewahrt werden und wird dem Nachtwandler von seinen Eltern übergeben. In einigen Traditionen verliert ein Nachtwandler, der seine Glückshaube verliert, seine Kräfte, bis er sie wiedererlangt. Diese Schwäche kann als Großer Geschichte-Fehler gewählt werden. In Gegenden, in denen Nachtwandler verbreitet sind, erzählen die Eltern ihrem Kind gewöhnlich auch das Wenige, was sie über die Nachtschlachten wissen, wenn sie ihm die Glückshaube übergeben. Das Wissen über die Nachtwandler ist eine (Organisations-)Kunde, doch Charaktere, die noch nicht zu Fruchtbarkeitsschlachten einberufen wurden, haben selten einen Wert höher als 1.
 >
->Eine Glückshaube zu besitzen, ob durch Geburt oder Kauf, gewährt jede der unten aufgeführten Eigenschaften, die jeweils als Tugend erworben wird. Auf Glückshauben basierende Tugenden finden sich häufig unter Nachtwandlern, sind aber für die Mitgliedschaft in keiner Nachtwandler-Tradition erforderlich.
+> Eine Glückshaube zu besitzen, ob durch Geburt oder Kauf, gewährt jede der unten aufgeführten Eigenschaften, die jeweils als Tugend erworben wird. Auf Glückshauben basierende Tugenden finden sich häufig unter Nachtwandlern, sind aber für die Mitgliedschaft in keiner Nachtwandler-Tradition erforderlich.
 >
->**Immunität gegen Ertrinken** (Groß, ArM5, [Seite 43](<Ars Magica Definitive Edition Basisregeln.md#große-immunität>)). Der Charakter ist immun gegen Ertrinken, kann jedoch nicht unter Wasser atmen. Er treibt einfach bewusstlos zum nächsten Ufer, falls er andernfalls ertrinken würde.
+> **Immunität gegen Ertrinken** (Groß, ArM5, [Seite 43](<Ars Magica Definitive Edition Basisregeln.md#große-immunität>)). Der Charakter ist immun gegen Ertrinken, kann jedoch nicht unter Wasser atmen. Er treibt einfach bewusstlos zum nächsten Ufer, falls er andernfalls ertrinken würde.
 >
->**Glück** (Klein, ArM5, [Seite 45](<Ars Magica Definitive Edition Basisregeln.md#glück>))
+> **Glück** (Klein, ArM5, [Seite 45](<Ars Magica Definitive Edition Basisregeln.md#glück>))
 >
->**Selbstbewusst** (Klein, ArM5, [Seite 48](<Ars Magica Definitive Edition Basisregeln.md#selbstbewusst>)) 
+> **Selbstbewusst** (Klein, ArM5, [Seite 48](<Ars Magica Definitive Edition Basisregeln.md#selbstbewusst>))
 >
->**Willensstark** (Klein, ArM5, [Seite 49](<Ars Magica Definitive Edition Basisregeln.md#willensstark>))
+> **Willensstark** (Klein, ArM5, [Seite 49](<Ars Magica Definitive Edition Basisregeln.md#willensstark>))
 >
->Mit einer Glückshaube geboren zu werden, unabhängig davon, ob sie aufbewahrt wurde, gewährt häufig eine der folgenden Tugenden:
+> Mit einer Glückshaube geboren zu werden, unabhängig davon, ob sie aufbewahrt wurde, gewährt häufig eine der folgenden Tugenden:
 >
->**Wünschelrutengehen** (Klein, ArM5, [Seite 41](<Ars Magica Definitive Edition Basisregeln.md#wünschelrutengehen>)) Zweites Gesicht (Klein, ArM5, [Seite 48](<Ars Magica Definitive Edition Basisregeln.md#zweites-gesicht>))
+> **Wünschelrutengehen** (Klein, ArM5, [Seite 41](<Ars Magica Definitive Edition Basisregeln.md#wünschelrutengehen>)) Zweites Gesicht (Klein, ArM5, [Seite 48](<Ars Magica Definitive Edition Basisregeln.md#zweites-gesicht>))
 >
->**Wettergespür** (Klein). Der Charakter hat ein intuitives Verständnis des Wetters, das in seiner Wirkung identisch mit dem Zauber Seemanns Vorgeschmack auf den Morgen ist (ArM5, [Seite 127](<Ars Magica Definitive Edition Basisregeln.md#des-seemanns-vorgeschmack-auf-den-morgigen-tag>)). Der Charakter muss sich lediglich konzentrieren, um diese Fähigkeit einzusetzen: sie erfordert keinen Wurf.
+> **Wettergespür** (Klein). Der Charakter hat ein intuitives Verständnis des Wetters, das in seiner Wirkung identisch mit dem Zauber Seemanns Vorgeschmack auf den Morgen ist (ArM5, [Seite 127](<Ars Magica Definitive Edition Basisregeln.md#des-seemanns-vorgeschmack-auf-den-morgigen-tag>)). Der Charakter muss sich lediglich konzentrieren, um diese Fähigkeit einzusetzen: sie erfordert keinen Wurf.
 
 ### Fehler, die Nachtwandler häufig besitzen
 
-Die folgenden Fehler sind unter Nachtwandlern verbreitet, aber für keine Tradition erforderlich: Zwang (den Kampf im Wachleben auszutragen), Dunkles Geheimnis (lebt in einer Gemeinschaft, die Nachtwandler als Infernalisten verfolgt), Schützling, Diabolische Vergangenheit (es ist in den meisten Traditionen möglich für Nachtwandler, die Seiten zu wechseln, aber schwierig), Pflichtverbunden (Nachtschlachten), Feinde (örtliche infernale Hexe), Höherer Zweck (das Böse bekämpfen), Nachtaktiv, Treueeid (gegenüber dem übernatürlichen Schutzherrn der Gruppe), Von übernatürlichen Wesen geplagt (Dämonen, die Rache für ihre Niederlagen suchen, oder Tote, die Ruhe suchen), Übernatürliche Plage (wie zuvor).
+Die folgenden Fehler sind unter Nachtwandlern verbreitet, aber für keine Tradition erforderlich: Zwang (den Kampf im Wachleben auszutragen), Dunkles Geheimnis (lebt in einer Gemeinschaft, die Nachtwandler als Infernalisten verfolgt), Schützling, Diabolische Vergangenheit (es ist in den meisten Traditionen möglich für Nachtwandler, die Seiten zu wechseln, aber schwierig), Pflichtgebunden (Nachtschlachten), Feinde (örtliche infernale Hexe), Höheres Ziel (das Böse bekämpfen), Nachtmensch, Treueeid (gegenüber dem übernatürlichen Schutzherrn der Gruppe), Von übernatürlichen Wesen geplagt (Dämonen, die Rache für ihre Niederlagen suchen, oder Tote, die Ruhe suchen), Übernatürliche Plage (wie zuvor).
 
 ## Kräfte im Detail
 
@@ -5569,12 +5575,11 @@ Die magische Kraft, die diese Heckentraditionen definiert und Ekstasis oder „U
 
 ### Ekstasis
 
-Das Spektrum der Handlungen, die Charaktere ausführen können, während ihre Geister umherstreifen, variiert zwischen den Traditionen, die sich an verschiedenen Orten
-entwickelt haben. Der folgende Abschnitt umfasst jene Fähigkeiten, die in allen Gruppen mit der Nachtwandler-Tugend zu finden sind.
+Das Spektrum der Handlungen, die Charaktere ausführen können, während ihre Geister umherstreifen, variiert zwischen den Traditionen, die sich an verschiedenen Orten entwickelt haben. Der folgende Abschnitt umfasst jene Fähigkeiten, die in allen Gruppen mit der Nachtwandler-Tugend zu finden sind.
 
 #### Vorbereitung zum Umherstreifen
 
-Ein Charakter kann seinen Geist zum Umherstreifen veranlassen, wenn der Charakter bewusstlos ist oder sich in einem veränderten Geisteszustand befindet. Charaktere streifen gewöhnlich im Schlaf umher, doch auch schwere Krankheit kann Umherstreifen ermöglichen. Religiöse Mystiker suchen die Erfahrung des Umherstreifens durch Askese, Selbstkasteiung, Schlafentzug und Fasten, und Spielercharaktere, die daran denken, können dieses Verhalten nachahmen. Hermetische Magi können Varianten von Ruf zum Schlummer wirken, um sich selbst oder andere bewusstlos zu machen, beispielsweise (ArM5, [Seite 151](<Ars Magica Definitive Edition Basisregeln.md#der-ruf-des-schlummers>)).
+Ein Charakter kann seinen Geist zum Umherstreifen veranlassen, wenn der Charakter bewusstlos ist oder sich in einem veränderten Geisteszustand befindet. Charaktere streifen gewöhnlich im Schlaf umher, doch auch schwere Krankheit kann Umherstreifen ermöglichen. Religiöse Mystiker suchen die Erfahrung des Umherstreifens durch Askese, Selbstkasteiung, Schlafentzug und Fasten, und Spielercharaktere, die daran denken, können dieses Verhalten nachahmen. Hermetische Magi können Varianten von *Der Ruf des Schlummers* wirken, um sich selbst oder andere bewusstlos zu machen, beispielsweise (ArM5, [Seite 151](<Ars Magica Definitive Edition Basisregeln.md#der-ruf-des-schlummers>)).
 
 Charaktere können sich auch mithilfe von Drogen bewusstlos machen. Jede Tradition verwendet leicht unterschiedliche Zubereitungen. Viele Nachtwandler benutzen eine Salbe, die beunruhigend jener ähnelt, die Dämonen infernalen Hexen zur Verfügung stellen, damit sie am Sabbat teilnehmen können. Ungeachtet der genauen Methode benötigt ein Charakter, der Drogen verwendet, (10 − Konzentration) Minuten, um Bewusstlosigkeit zu erreichen, mit einer Mindestzeit von einer Minute. Charaktere, die der Nachtwandler mit seiner Droge vergiftet, können der Bewusstlosigkeit mit einem Ausdauer-Wurf gegen einen Schwierigkeitsgrad von 6 widerstehen.
 
@@ -5608,9 +5613,7 @@ Ebenso wie der Geist eines Ritters unwillkürlich ein geisterhaftes Pferd zum Re
 
 Geisterreisen sind objektiv betrachtet fast augenblicklich, werden aber in traumhaftem Tempo erlebt. Ein Charakter kann sich daran erinnern, eine Stunde auf Straßen gereist zu sein, geflogen zu sein oder auf dem Rücken eines Hasen durch Unterholz gelaufen zu sein. Der Charakter kann sich an Gespräche mit seinen Reisebegleitern erinnern. Dieses Erleben einer verlängerten Dauer ändert nichts an der Schnelligkeit der Reise: Es ist möglich, nach nur wenigen Minuten auf der anderen Seite Europas aufzutauchen.
 
-Ein Charakter, der eine Geisterreise versucht, muss einen Ausdauer + Athletik-Wurf ablegen, mit dem Ergebnis wie in der Tabelle angegeben. Ein Charakter kann die übliche Ausrüstung eines Mitglieds seiner Nachtwandler-Tradition ohne Abzug tragen. Das Tragen jedes weiteren Gegenstands erhöht den Schwierigkeitsgrad des Wurfs um +3 pro
-
-Gegenstand. Der Charakter kann keine Gegenstände tragen, die schwerer sind, als der Charakter in physischer Form tragen könnte. Mitgenommene Gegenstände werden wie die Ausrüstung des Charakters phantastisch und werden unsichtbar, wenn der Charakter es wird.
+Ein Charakter, der eine Geisterreise versucht, muss einen Ausdauer + Athletik-Wurf ablegen, mit dem Ergebnis wie in der Tabelle angegeben. Ein Charakter kann die übliche Ausrüstung eines Mitglieds seiner Nachtwandler-Tradition ohne Abzug tragen. Das Tragen jedes weiteren Gegenstands erhöht den Schwierigkeitsgrad des Wurfs um +3 pro Gegenstand. Der Charakter kann keine Gegenstände tragen, die schwerer sind, als der Charakter in physischer Form tragen könnte. Mitgenommene Gegenstände werden wie die Ausrüstung des Charakters phantastisch und werden unsichtbar, wenn der Charakter es wird.
 
 | ERGEBNIS | ORT                                                                                                                       |
 |----------|---------------------------------------------------------------------------------------------------------------------------|
@@ -5629,23 +5632,23 @@ Die folgenden Versuche der Geisterreise gelingen automatisch:
 - Reisen zur Wahren Liebe des Charakters oder einen anderen zu dessen Wahrer Liebe führen.
 - Einer bekannten Route mit konventioneller Geschwindigkeit folgen. Ein Nachtwandler, der in phantastischer Form durch sein Dorf schlendert, muss beispielsweise nicht würfeln.
 
->#### Kampfwerte für Tier-Phantastika
+> ### Kampfwerte für Tier-Phantastika
 >
->Um das Tier-Phantastikum eines Charakters zu entwerfen, nutze das folgende System.
+> Um das Tier-Phantastikum eines Charakters zu entwerfen, nutze das folgende System.
 >
->Grundwerte: Finde die Werte für die Tierart im Anhang Buch der weltlichen Bestien in *Sphären der Macht: Magie*, oder verwende die Regeln in *Häuser des Hermes: Mysterienkultee*, um das weltliche Tier zu entwerfen. Die Werte für die fünf häufigsten für den Kampf verwendeten Gestalten finden sich in einem Kasten.
+> Grundwerte: Finde die Werte für die Tierart im Anhang Buch der weltlichen Bestien in *Sphären der Macht: Magie*, oder verwende die Regeln in *Häuser des Hermes: Mysterienkulte*, um das weltliche Tier zu entwerfen. Die Werte für die fünf häufigsten für den Kampf verwendeten Gestalten finden sich in einem Kasten.
 >
->Eigenschaften: Der Charakter hat in beiden Formen denselben Intelligenzwert. Für alle anderen Eigenschaften gilt: Haben sowohl die Art als auch der Charakter einen negativen Wert, verwende den niedrigeren. Haben sowohl die Art als auch der Charakter einen positiven Wert, verwende den höheren. Haben der Charakter und die Art einen positiven und einen negativen Wert, addiere die beiden Werte.
+> Eigenschaften: Der Charakter hat in beiden Formen denselben Intelligenzwert. Für alle anderen Eigenschaften gilt: Haben sowohl die Art als auch der Charakter einen negativen Wert, verwende den niedrigeren. Haben sowohl die Art als auch der Charakter einen positiven Wert, verwende den höheren. Haben der Charakter und die Art einen positiven und einen negativen Wert, addiere die beiden Werte.
 >
->Größe: Hat der Charakter eine Tugend oder einen Fehler, der die Größe beeinflusst, ändert sich dadurch die Größe der Tierform.
+> Größe: Hat der Charakter eine Tugend oder einen Fehler, der die Größe beeinflusst, ändert sich dadurch die Größe der Tierform.
 >
->Tugenden und Fehler: Wende alle Tugenden und Fehler, die mit dem menschlichen Körper des Charakters zusammenhängen, auf die Tierform an. Zum Beispiel Fehlendes Auge.
+> Tugenden und Fehler: Wende alle Tugenden und Fehler, die mit dem menschlichen Körper des Charakters zusammenhängen, auf die Tierform an. Zum Beispiel Fehlendes Auge.
 >
->Fertigkeiten: Verwende die Allgemeinen Fertigkeiten der Art. Menschliche Fertigkeiten können in Tierform nicht genutzt werden, außer solchen, die zum Wissen oder Verstehen dienen. Der Charakter kann mit Tieren ähnlicher Gestalt und Ernährungsweise kommunizieren.
+> Fertigkeiten: Verwende die Allgemeinen Fertigkeiten der Art. Menschliche Fertigkeiten können in Tierform nicht genutzt werden, außer solchen, die zum Wissen oder Verstehen dienen. Der Charakter kann mit Tieren ähnlicher Gestalt und Ernährungsweise kommunizieren.
 >
->Erfahrung: Charaktere, die längere Zeit in Tierform verbringen, dürfen Erfahrungspunkte für die Fertigkeiten der Tierform ausgeben. Dies erfordert gewöhnlich die Tugend Vielseitiges Phantastikum.
+> Erfahrung: Charaktere, die längere Zeit in Tierform verbringen, dürfen Erfahrungspunkte für die Fertigkeiten der Tierform ausgeben. Dies erfordert gewöhnlich die Tugend Vielseitiges Phantastikum.
 >
->Kampf: Die Kampfwerte müssen nun an den Raufen-Wert des Charakters angepasst werden.
+> Kampf: Die Kampfwerte müssen nun an den Raufen-Wert des Charakters angepasst werden.
 
 #### Kommunikation durch Umherstreifen
 
@@ -5679,19 +5682,19 @@ Alle Charaktere mit der Nachtwandler-Tugend nehmen an Fruchtbarkeitsschlachten t
 
 Die Nachtschlachten variieren leicht zwischen den Regionen. An einigen Orten kämpfen die Nachtwandler als gedrillt Infanterieeinheiten, während anderswo die Angehörigen jeder Seite in einem chaotischen Nahkampf aufeinandertreffen. Anhänger einiger Traditionen behalten ihre Tierform während der Schlacht, und ebenso reitet eine kleine Anzahl kampftaugliche Reittiere wie Pferde.
 
->#### Ergänzungsband-Konventsmodifikatoren
+> ### Modifikatoren aus dem Quellenband *Covenants*
 >
->Sagas, die den Ergänzungsband *Konvente* verwenden, können die Auswirkungen von Fruchtbarkeitsschlachten simulieren, indem sie das entsprechende Ergebnis auf der Einkommensmodifikationstabelle auf Seite 57 jenes Buches auswählen. Diese Auswahl ersetzt den Stresswürfelwurf.
+> Sagas, die den Quellenband *Covenants* verwenden, können die Auswirkungen von Fruchtbarkeitsschlachten simulieren, indem sie das entsprechende Ergebnis auf der Einkommensmodifikationstabelle auf Seite 57 jenes Buches auswählen. Diese Auswahl ersetzt den Stresswürfelwurf.
 >
->| SCHLACHTERGEBNIS                                                       | Ergebnis    |
->|------------------------------------------------------------------------|-------------|
->| Bevorzugte Seite vernichtend geschlagen und über das Land gejagt.      | Einbruch    |
->| Bevorzugte Seite in die Flucht geschlagen.                             | Schrumpfung |
->| Bevorzugte Seite zum geordneten Rückzug gezwungen.                     | Stagnation  |
->| Bevorzugte Seite gewinnt das Feld.                                     | Status Quo  |
->| Bevorzugte Seite schlägt ihre Feinde in die Flucht.                    | Wachstum    |
->| Bevorzugte Seite jagt den geschlagenen Feind durch die Nacht.          | Expansion   |
->| Bevorzugte Seite stellt den gesamten Feind und vernichtet ihn.         | Aufschwung  |
+> | SCHLACHTERGEBNIS                                                       | Ergebnis    |
+> |------------------------------------------------------------------------|-------------|
+> | Bevorzugte Seite vernichtend geschlagen und über das Land gejagt.      | Einbruch    |
+> | Bevorzugte Seite in die Flucht geschlagen.                             | Schrumpfung |
+> | Bevorzugte Seite zum geordneten Rückzug gezwungen.                     | Stagnation  |
+> | Bevorzugte Seite gewinnt das Feld.                                     | Status Quo  |
+> | Bevorzugte Seite schlägt ihre Feinde in die Flucht.                    | Wachstum    |
+> | Bevorzugte Seite jagt den geschlagenen Feind durch die Nacht.          | Expansion   |
+> | Bevorzugte Seite stellt den gesamten Feind und vernichtet ihn.         | Aufschwung  |
 
 
 Ist ein Spielercharakter Teil einer Miliz, die als disziplinierte Einheit kämpft, würfelt der Spieler für die Gruppe. Ist der Spielercharakter besonders formidabel, kann er die Vorhut bilden. Ein Charakter ist nur dann der Anführer der Gruppe, wenn er durch ein Geschichtenereignis deren Anführer geworden ist.
@@ -5700,7 +5703,7 @@ Kämpfen die beiden Seiten als Einzelkämpfer, muss der Charakter auf dem Schlac
 
 *In einer bestimmten Schlacht benutzt beispielsweise ein Charakter mit einem menschlichen Phantastikum ein Bündel eines heiligen Krauts als Knüppel, um einen Feind zu verprügeln. Der Nachtwandler riskiert dabei, seinerseits geschlagen zu werden. Einige Nachtwandler kämpfen in Tierform, und jene Diener des Bösen, die keine infernalen Hexen sind, mögen ungewöhnliche Waffen führen. Die Kämpfe dauern an, bis eine Seite das Feld räumt. Wunden, die in den Nachtschlachten erlitten werden, erscheinen auf den schlafenden Körpern der Nachtwandler. Wer gründlich verprügelt wurde, fühlt sich möglicherweise tagelang müde und wund und ist mit blauen Flecken übersät.*
 
-### Tod in Nachtschlachten
+#### Tod in Nachtschlachten
 
 Der Anteil der Nachtwandler, die in Nachtschlachten fallen, variiert zwischen den Traditionen. Es ist selten, dass ein Benandante in den Nachtschlachten stirbt, während bei der Tradition direkt südlich von ihnen, den Mazzeri, praktisch alle im Kampf fallen. Als Ausgleichsfaktor neigen die Mazzeri dazu, erst im fortgeschrittenen Alter und bei schlechter Gesundheit im Kampf zu fallen. Traditionen balancieren häufig die Tödlichkeit mit der Dienstdauer aus, weshalb einige Mitglieder der extrem gefährlichen Taltós-Tradition mit fünfzehn Jahren in den Ruhestand treten und die Hunde Gottes ihre Kräfte an andere weitergeben, wenn sie ihre beste Zeit hinter sich haben.
 
@@ -5718,7 +5721,7 @@ Werte für die Toten können auf zwei Arten schnell erstellt werden. Die Werte j
 
 Die Toten, denen Nachtwandler begegnen, haben einige ungewöhnliche Merkmale, die verwendet werden können, um sie unverwechselbar zu machen. Sie werden oft als von unstillbarem Durst getrieben beschrieben. Deshalb verderben sie Wein und greifen in einigen Fällen Menschen an. Manche, wie die deutschen Nachzehrer, sind die Geister von Menschen, die mit Glückshauben geboren wurden. Diese haben einen höheren Machtwert und zeigen eine größere Beharrlichkeit und Zerstörungskraft als andere Tote.
 
-Die Diener des Infernalen können in drei Klassen betrachtet werden. Die Nachtwandler, die dem Bösen dienen und von den Benandanti Malandanti genannt werden, werden entweder nach diesen Regeln oder nach den Regeln in Sphären der Macht: Das Infernale entworfen. Die niederen Dämonen, denen Nachtwandler begegnen, stammen tendenziell aus den schwächsten Klassen, wie den Versuchern, und sind die Diener eines menschlichen Hauptmanns der Malandanti, der ein Mitglied einer der mächtigeren in Sphären der Macht: Das Infernale beschriebenen Infernalistengruppen sein kann. In jenen Regionen, in denen der Hauptmann der bösen Mächte besonders mächtig ist, ist auch der Hauptmann der Mächte des Guten entsprechend mächtig; er sollte über Kräfte verfügen, die nach den Regeln für jene entworfen sind, denen das Göttliche beisteht, wie in [Sphären der Macht: Das Göttliche](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#kapitel-drei-von-gott-gesegnet>) beschrieben. Kein Nachtwandler hat je behauptet, dass eine Schlacht durch den Kampf zwischen den beiden Hauptleuten entschieden wurde: Spielercharaktere sollten in jeder Nachtschlacht eine bedeutende Rolle spielen.
+Die Diener des Infernalen können in drei Klassen betrachtet werden. Die Nachtwandler, die dem Bösen dienen und von den Benandanti Malandanti genannt werden, werden entweder nach diesen Regeln oder nach den Regeln in Sphären der Macht: Das Infernale entworfen. Die niederen Dämonen, denen Nachtwandler begegnen, stammen tendenziell aus den schwächsten Klassen, wie den Versuchern, und sind die Diener eines menschlichen Hauptmanns der Malandanti, der ein Mitglied einer der mächtigeren in Sphären der Macht: Das Infernale beschriebenen Infernalistengruppen sein kann. In jenen Regionen, in denen der Hauptmann der bösen Mächte besonders mächtig ist, ist auch der Hauptmann der Mächte des Guten entsprechend mächtig; er sollte über Kräfte verfügen, die nach den Regeln für jene entworfen sind, denen das Göttliche beisteht, wie in [Sphären der Macht: Das Göttliche](<Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md#kapitel-drei-von-gott-gesegnet-1>) beschrieben. Kein Nachtwandler hat je behauptet, dass eine Schlacht durch den Kampf zwischen den beiden Hauptleuten entschieden wurde: Spielercharaktere sollten in jeder Nachtschlacht eine bedeutende Rolle spielen.
 
 In einigen Regionen befehligen Dämonen die Heerscharen des Feindes. Ein Charakter, der einen dämonischen Hauptmann besiegen kann, kann gewöhnlich dessen Heer in die Flucht schlagen und den Mächten des Guten einen überwältigenden Sieg bescheren. Den dämonischen Hauptmann zu finden ist gewöhnlich leicht, da die meisten einen großen, dunklen Wimpel führen. Dies erlaubt ihren Untergebenen zu wissen, wo ihr Anführer ist, was das Entsenden von Boten erleichtert, verrät aber seine Position an heldenhafte Nachtwandler.
 
@@ -5736,25 +5739,25 @@ Nachtwandler treffen sich selten im Wachleben, und da die Schlachten traumartig 
 
 Nachtwandler erkennen manchmal auch die infernalen Hexen wieder, gegen die sie gekämpft haben, wenn sie ihnen im Wachleben begegnen. Der Schwierigkeitsgrad beträgt (18 − Reputation). Einige infernale Hexen können während der Nachtschlachten die Gestalt unschuldiger Personen annehmen, weshalb die meisten Nachtwandler übernatürliche Aufspürmethoden vorziehen.
 
->#### ABENTEUERIDEE: Die falsch Beschuldigte retten
+> ### Abenteueridee: Die falsch Beschuldigte retten
 >
->Es gibt eine Volkssage, die eine Strategie des Infernalen beschreibt.
+> Es gibt eine Volkssage, die eine Strategie des Infernalen beschreibt.
 >
->Ein Nachtwandler schlitzte das Gesicht einer infernalen Hexe während einer Fruchtbarkeitsschlacht auf und erkannte sie als eine Frau aus seinem Dorf. Beim Erwachen versammelte er seine Nachbarn und brach in ihr Haus ein. Die Menge fand die Frau schlafend vor, mit einem Schnitt im Gesicht, genau wie der Nachtwandler es beschrieben hatte. Ihr Versuch, die Frau zu lynchen, wurde vom örtlichen Priester gestoppt. Er zwang einen in ihrem Haus verborgenen Dämonen, sichtbar zu werden und seine Taten zu erklären. Der Dämon zog eine dünne Schicht vom Gesicht der Frau ab, entfernte den Schnitt und gab zu, dass einer seiner Anhänger das Aussehen der frommen Frau angenommen hatte.
+> Ein Nachtwandler schlitzte das Gesicht einer infernalen Hexe während einer Fruchtbarkeitsschlacht auf und erkannte sie als eine Frau aus seinem Dorf. Beim Erwachen versammelte er seine Nachbarn und brach in ihr Haus ein. Die Menge fand die Frau schlafend vor, mit einem Schnitt im Gesicht, genau wie der Nachtwandler es beschrieben hatte. Ihr Versuch, die Frau zu lynchen, wurde vom örtlichen Priester gestoppt. Er zwang einen in ihrem Haus verborgenen Dämonen, sichtbar zu werden und seine Taten zu erklären. Der Dämon zog eine dünne Schicht vom Gesicht der Frau ab, entfernte den Schnitt und gab zu, dass einer seiner Anhänger das Aussehen der frommen Frau angenommen hatte.
 >
->Spielercharaktere könnten den Dämonen anstelle des Priesters entdecken und versuchen, die unschuldige Frau zu retten. Unvorsichtige Spielercharaktere könnten durch ähnliche Täuschungen hereingelegt werden, die noch aufwendiger sein können. Wenn die Frau beispielsweise eine Dienerin des Dämons war, endet diese Geschichte damit, dass sie glücklich und sicher ist und der Nachtwandler in seiner Gemeinschaft diskreditiert wird.
+> Spielercharaktere könnten den Dämonen anstelle des Priesters entdecken und versuchen, die unschuldige Frau zu retten. Unvorsichtige Spielercharaktere könnten durch ähnliche Täuschungen hereingelegt werden, die noch aufwendiger sein können. Wenn die Frau beispielsweise eine Dienerin des Dämons war, endet diese Geschichte damit, dass sie glücklich und sicher ist und der Nachtwandler in seiner Gemeinschaft diskreditiert wird.
 
->#### Woher kommen die Hauptleute?
+> ### Woher kommen die Hauptleute?
 >
->In einigen Gebieten sind die Hauptleute auf jeder Seite der Fruchtbarkeitsschlachten übernatürliche Kreaturen, doch für die Spieler ist es interessanter, wenn ihre eigene Seite von einem Menschen in die Schlacht geführt werden kann — eine Rolle, die der Spielercharakter anstreben kann. Der menschliche Hauptmann wird vom übernatürlichen Schutzherrn des Heeres ausgewählt, und zwar nach Loyalität zur Sache und Geschick im Kampf. Charaktere, die Hauptleute werden möchten, müssen den vom Schutzherrn geschätzten Idealen gerecht werden und Fertigkeiten wie Führung, Zweites Gesicht und die für die Miliz des Charakters geeignete Kampffertigkeit entwickeln. Hauptleute werden von übernatürlichen Schutzherren mit Fähigkeiten und Gegenständen ausgestattet, die über die durchschnittlicher Nachtwandler hinausgehen.
+> In einigen Gebieten sind die Hauptleute auf jeder Seite der Fruchtbarkeitsschlachten übernatürliche Kreaturen, doch für die Spieler ist es interessanter, wenn ihre eigene Seite von einem Menschen in die Schlacht geführt werden kann — eine Rolle, die der Spielercharakter anstreben kann. Der menschliche Hauptmann wird vom übernatürlichen Schutzherrn des Heeres ausgewählt, und zwar nach Loyalität zur Sache und Geschick im Kampf. Charaktere, die Hauptleute werden möchten, müssen den vom Schutzherrn geschätzten Idealen gerecht werden und Fertigkeiten wie Führung, Zweites Gesicht und die für die Miliz des Charakters geeignete Kampffertigkeit entwickeln. Hauptleute werden von übernatürlichen Schutzherren mit Fähigkeiten und Gegenständen ausgestattet, die über die durchschnittlicher Nachtwandler hinausgehen.
 >
->#### In die Schlachten eingreifen
+> ### In die Schlachten eingreifen
 >
->Magi, die eine Nachtschlacht beobachten, können eingreifen. Beide Seiten befinden sich in körperlicher Form und können auf normalem Wege von Magie betroffen werden. Ist der Hauptmann der bösen Mächte ein Dämon, bleiben die Zauber, die üblicherweise diese Klasse von Wesen schädigen, wirksam. Magi, die regelmäßig in die Nachtschlachten eingreifen, können den Fehler Von übernatürlichen Wesen geplagt entwickeln, da der Schutzherr des bösen Heeres versucht, die neuen Verbündeten der Nachtwandler zu vernichten.
+> Magi, die eine Nachtschlacht beobachten, können eingreifen. Beide Seiten befinden sich in körperlicher Form und können auf normalem Wege von Magie betroffen werden. Ist der Hauptmann der bösen Mächte ein Dämon, bleiben die Zauber, die üblicherweise diese Klasse von Wesen schädigen, wirksam. Magi, die regelmäßig in die Nachtschlachten eingreifen, können den Fehler Von übernatürlichen Wesen geplagt entwickeln, da der Schutzherr des bösen Heeres versucht, die neuen Verbündeten der Nachtwandler zu vernichten.
 >
->#### Saga-Überlegungen
+> ### Saga-Überlegungen
 >
->Spieler, die regelmäßig Fruchtbarkeitsschlachten ausspielen müssen, empfinden diese möglicherweise als lästig. In Spieltruppen, die so empfinden, sollte die Häufigkeit der Fruchtbarkeitsschlachten und womöglich ihre potenzielle Tödlichkeit verringert werden. Die Spieltruppe kann auch einfach annehmen, dass der Charakter die Schlachten bei den meisten Gelegenheiten ohne nennenswerte Folgen weiterkämpft, und nur Geschichten spielen, wenn etwas Außergewöhnliches passiert. Gelegentlich können Handlungsaufhänger eingestreut werden, die mit Beobachtungen aus einer ansonsten ereignislosen Schlacht zusammenhängen.
+> Spieler, die regelmäßig Fruchtbarkeitsschlachten ausspielen müssen, empfinden diese möglicherweise als lästig. In Spieltruppen, die so empfinden, sollte die Häufigkeit der Fruchtbarkeitsschlachten und womöglich ihre potenzielle Tödlichkeit verringert werden. Die Spieltruppe kann auch einfach annehmen, dass der Charakter die Schlachten bei den meisten Gelegenheiten ohne nennenswerte Folgen weiterkämpft, und nur Geschichten spielen, wenn etwas Außergewöhnliches passiert. Gelegentlich können Handlungsaufhänger eingestreut werden, die mit Beobachtungen aus einer ansonsten ereignislosen Schlacht zusammenhängen.
 
 #### Heimkehr
 
@@ -5766,7 +5769,7 @@ In anderen Regionen stellen manche Menschen in den Nächten, in denen infernale 
 
 Viele der Lykanthropen-Traditionen bedrängen Schafe oder Rinder, um sich geistig zu stärken. Dieses Vieh stirbt nicht, nachdem seine Geister gekostet wurden, doch viele verlieren ihre Kraft, sodass sie nicht mehr als Pflug- oder Zuchttiere taugen. Andere Traditionen jagen stattdessen Hirsche, um die Auswirkungen auf ihre Gemeinschaft zu verringern. In einigen seltenen Fällen werden Tiere stärker, nachdem sie geistig verzehrt wurden.
 
-## Prozessionen
+### Prozessionen
 
 Die meisten Nachtwandler-Milizen nehmen an drei Arten von Prozessionen teil: dem Zug der Toten, der Inspektion der Grenzen der Gemeinschaft und Feierlichkeiten.
 
@@ -5788,15 +5791,15 @@ Kein Wurf ist für Fragen erforderlich, die der Nachtwandler allein durch Beobac
 
 Die obigen Schwierigkeitsgrade sollten modifiziert werden, wenn der Geist passende Persönlichkeitseigenschaften besitzt. Jeder Nachtwandler darf in einer gegebenen Nacht eine Frage an einen bestimmten Geist stellen.
 
->#### Andere Prozessionen der Toten
+> ### Andere Prozessionen der Toten
 >
->Im Mythischen Europa gibt es Geister, die jeder Sphäre zugeordnet sind. Mit Ausnahme göttlicher Geister finden sich Prozessionen jeder Sphäre. Es gibt Menschen, die den Nachtwandlern ähneln und an den Prozessionen der Feen- und Infernalgeister teilnehmen, und die in diesem Kapitel beschriebenen magischen Nachtwandler behalten diese Gruppen sorgfältig im Auge und versammeln sich manchmal, um gegen sie zu kämpfen, wenn sie ihre vorgeschriebene Route verlassen.
+> Im Mythischen Europa gibt es Geister, die jeder Sphäre zugeordnet sind. Mit Ausnahme göttlicher Geister finden sich Prozessionen jeder Sphäre. Es gibt Menschen, die den Nachtwandlern ähneln und an den Prozessionen der Feen- und Infernalgeister teilnehmen, und die in diesem Kapitel beschriebenen magischen Nachtwandler behalten diese Gruppen sorgfältig im Auge und versammeln sich manchmal, um gegen sie zu kämpfen, wenn sie ihre vorgeschriebene Route verlassen.
 >
->Die Feenprozessionen haben verschiedene Funktionen und Anführer, doch die den Nachtwandlern am besten bekannten werden von Feen angeführt, die sich Diana, Perchte, Frau Holle, Ricella oder Heriodas nennen. Die vielen Feen, die diese Rolle einnehmen, sammeln die Toten und führen sie jedes Jahr in heidnische Unterwelten. Ihre Schützlinge werden nicht gut im Zaum gehalten und richten manchmal Schaden an, weil sie von einem ausgelassenen Verlangen getrieben werden, die letzten Freuden der lebenden Welt zu kosten.
+> Die Feenprozessionen haben verschiedene Funktionen und Anführer, doch die den Nachtwandlern am besten bekannten werden von Feen angeführt, die sich Diana, Perchte, Frau Holle, Ricella oder Heriodas nennen. Die vielen Feen, die diese Rolle einnehmen, sammeln die Toten und führen sie jedes Jahr in heidnische Unterwelten. Ihre Schützlinge werden nicht gut im Zaum gehalten und richten manchmal Schaden an, weil sie von einem ausgelassenen Verlangen getrieben werden, die letzten Freuden der lebenden Welt zu kosten.
 >
->Frau Holle ist auch dafür bekannt, ungezogene Kinder zu stehlen und für immer fortzutragen. Bei einigen wenigen Gelegenheiten wurde eine Feenprozession von den Nachtwandlern unterbrochen und in die Flucht geschlagen, um ein Kind zu retten. Im Allgemeinen meiden sich die Prozessionen gegenseitig.
+> Frau Holle ist auch dafür bekannt, ungezogene Kinder zu stehlen und für immer fortzutragen. Bei einigen wenigen Gelegenheiten wurde eine Feenprozession von den Nachtwandlern unterbrochen und in die Flucht geschlagen, um ein Kind zu retten. Im Allgemeinen meiden sich die Prozessionen gegenseitig.
 >
->Es gibt viele infernale Prozessionen. Manche entstehen spontan, wenn viele Menschen im selben Gebiet auf tragische Weise sterben. Pest und Krieg beispielsweise können umherziehende Horden von Geistern hervorbringen. Andere Prozessionen sind nicht spontan: Sie sind Strafen für verdorbene Seelen. Die bekannteste davon wird vom Dämonen Herlichinus angeführt, der ein Narrengewand trägt. Entkommt einer seiner Schützlinge, schickt der Narrenbeste einen Diener aus, um ihn zurückzukratzen. Die Nachtwandler versuchen zu verhindern, dass allzu großer Schaden entsteht, während der Dämon den fliehenden Schatten sucht, indem sie ihm helfen, die Welt zu verlassen, oder indem sie ihn einfangen und zur Prozession zurückbringen.
+> Es gibt viele infernale Prozessionen. Manche entstehen spontan, wenn viele Menschen im selben Gebiet auf tragische Weise sterben. Pest und Krieg beispielsweise können umherziehende Horden von Geistern hervorbringen. Andere Prozessionen sind nicht spontan: Sie sind Strafen für verdorbene Seelen. Die bekannteste davon wird vom Dämonen Herlichinus angeführt, der ein Narrengewand trägt. Entkommt einer seiner Schützlinge, schickt der Narrenbeste einen Diener aus, um ihn zurückzukratzen. Die Nachtwandler versuchen zu verhindern, dass allzu großer Schaden entsteht, während der Dämon den fliehenden Schatten sucht, indem sie ihm helfen, die Welt zu verlassen, oder indem sie ihn einfangen und zur Prozession zurückbringen.
 
 #### Grenzbegehungen
 
@@ -5822,13 +5825,13 @@ Spieler werden ermutigt, die unten aufgeführten Gruppen als Material für die G
 
 Die Benandanti („gute Wandler") finden sich in Norditalien und dienen als Vorbild für ähnliche Gruppen in ganz Europa. In vielen Milizen werden Schlachten von Männern geführt und Prozessionen von Frauen vollzogen, doch Benandanti beiderlei Geschlechts können an beiden Aktivitäten teilnehmen.
 
->#### Fenchel
+> ### Fenchel
 >
->Fenchel ist ein zutiefst magisches Kraut. Er kann als Insektenschutzmittel verwendet werden, und er vertreibt die winzigen Dämonen, die für Krankheiten verantwortlich sind. Manche Leute legen Fenchel über ihre Türen und Fenster oder in ihre Schlüssellöcher, um Hexen aus ihren Häusern fernzuhalten. Dies ist besonders in der Mittsommernacht verbreitet.
+> Fenchel ist ein zutiefst magisches Kraut. Er kann als Insektenschutzmittel verwendet werden, und er vertreibt die winzigen Dämonen, die für Krankheiten verantwortlich sind. Manche Leute legen Fenchel über ihre Türen und Fenster oder in ihre Schlüssellöcher, um Hexen aus ihren Häusern fernzuhalten. Dies ist besonders in der Mittsommernacht verbreitet.
 >
->Als Prometheus den Göttern das Feuer stahl und es den Menschen gab, verbarg er es in einem Fenchelstängel. Der Feuerraub, so vermuten einige Magi, könnte die Beziehung zwischen den Sphären der Magie und der Feen dauerhaft verändert haben, oder zwischen Feen und Menschen.
+> Als Prometheus den Göttern das Feuer stahl und es den Menschen gab, verbarg er es in einem Fenchelstängel. Der Feuerraub, so vermuten einige Magi, könnte die Beziehung zwischen den Sphären der Magie und der Feen dauerhaft verändert haben, oder zwischen Feen und Menschen.
 
-#### Wie man ein Benandante oder eine Benandanta wird 
+#### Wie man ein Benandante oder eine Benandanta wird
 
 Ein potenzieller Nachtwandler wird gewöhnlich zu seinen Pflichten gerufen. Eine Gestalt erscheint dem jugendlichen Rekruten und bittet ihn zu dienen. Einige Rekruten brechen sofort zu ihrer ersten Schlacht oder Prozession auf, von ihrem Anwerber mitgezogen. Andere müssen auf die geeignete Jahreszeit warten, um an ihrer ersten Zeremonie teilzunehmen. In beiden Fällen ist der Charakter nun in der Lage, in Geistform zu reisen. Charaktere erhalten kurze Unterweisung im Umherstreifen während nächtlicher Besuche ihres Anwerbers vor der ersten Zeremonie, auf dem Weg zur ersten Zeremonie oder auf dem Heimweg von der ersten Zeremonie.
 
@@ -5854,57 +5857,17 @@ Nach den Nachtfesten der Benandanti kann die Herrin die verzehrten Tiere zum Leb
 
 Einiges ist über die Herrin bekannt. Sie ist schön und kann sowohl jung als auch alt erscheinen. Ihre Haut fühlt sich manchmal haarig an. Sie kann sich frei mit jedem Tier unterhalten, außer mit Eseln. Sie sagt, dies liege daran, dass ein Esel den Messias getragen habe und sie daher mit Seinem Kreuz gezeichnet seien, was bedeute, dass sie nicht ihre Untertanen sind.
 
->#### ABENTEUERIDEE: Aristeas
+> ### Abenteueridee: Aristeas
 >
->Die Befürchtungen der Herrin des Spiels, ihre Truppen an eine ihrer Feen-Gegenspielerinnen zu verlieren, werden wahr, als ein Nachtwandler-Spielercharakter von einem mächtigen, im Umherstreifen bewanderten Magier angesprochen wird, der den Charakter bittet, die Herrin zugunsten der Verehrung Apollons aufzugeben. Der Charakter behauptet, der antike griechische Dichter Aristeas zu sein. Charaktere, die über ihn recherchieren, können leicht Erwähnungen bei Plinius und Herodot finden, die besagen, er habe die Fähigkeit besessen, seinen Körper in Rabengestalt zu verlassen, und er habe Visionen von Katastrophen gehabt. Es heißt auch, er sei mindestens zweimal von den Toten auferstanden, und er behauptet, dass er, falls die Charaktere ihn töten, es einfach erneut tun werde.
+> Die Befürchtungen der Herrin des Spiels, ihre Truppen an eine ihrer Feen-Gegenspielerinnen zu verlieren, werden wahr, als ein Nachtwandler-Spielercharakter von einem mächtigen, im Umherstreifen bewanderten Magier angesprochen wird, der den Charakter bittet, die Herrin zugunsten der Verehrung Apollons aufzugeben. Der Charakter behauptet, der antike griechische Dichter Aristeas zu sein. Charaktere, die über ihn recherchieren, können leicht Erwähnungen bei Plinius und Herodot finden, die besagen, er habe die Fähigkeit besessen, seinen Körper in Rabengestalt zu verlassen, und er habe Visionen von Katastrophen gehabt. Es heißt auch, er sei mindestens zweimal von den Toten auferstanden, und er behauptet, dass er, falls die Charaktere ihn töten, es einfach erneut tun werde.
 >
->Aristeas bietet den Charakteren einige der Geheimnisse der Version von Feenmagie seines Meisters im Tausch gegen ihre Loyalität an. Aristeas ist selbst keine Fee: Er behauptet, in jüngster Zeit in phantastischer Form als einer der Raben verblieben zu sein, die den Gott Apollon in Arkadien begleiten.
+> Aristeas bietet den Charakteren einige der Geheimnisse der Version von Feenmagie seines Meisters im Tausch gegen ihre Loyalität an. Aristeas ist selbst keine Fee: Er behauptet, in jüngster Zeit in phantastischer Form als einer der Raben verblieben zu sein, die den Gott Apollon in Arkadien begleiten.
 >
->Wenn die Nachricht die Herrin erreicht, ruft sie die Miliz des Spielercharakters zusammen, um Aristeas abzuwehren. Doch zuerst sendet sie diese treuen Diener zu einem Ort der Macht aus der Zeit vor der Titanomachie — dem Krieg der Titanen und griechischen Götter —, um magische Waffen zu finden.
+> Wenn die Nachricht die Herrin erreicht, ruft sie die Miliz des Spielercharakters zusammen, um Aristeas abzuwehren. Doch zuerst sendet sie diese treuen Diener zu einem Ort der Macht aus der Zeit vor der Titanomachie — dem Krieg der Titanen und griechischen Götter —, um magische Waffen zu finden.
 >
->Die Herrin hat erkannt, dass Aristeas dadurch von den Toten aufersteht, dass er nie vollständig ins Leben zurückkehrt. Er bleibt lediglich ein körperliches Phantastikum. Wie die meisten Phantastika hätte Aristeas verblassen müssen, als das Fleisch von seinen Knochen verrottete. Er besitzt jedoch einen geistigen Anker, der es ihm erlaubt, immer wieder aus dem heidnischen Jenseits, in das sein Geist beim Tod entflieht, in die Welt zurückzukehren. Wenn die alten Griechen keinen Leichnam zu begraben hatten und fürchteten, der Geist des Körpers könnte ihre Gemeinschaft belästigen, begruben sie stattdessen einen Stein — einen Kolossos —, der als Arkane Verbindung zum Geist fungierte und ihn in seinem Grab verankerte. Aristeas nutzt seinen Kolossos als Mittel, den Weg zurück in die weltliche Welt zu finden.
+> Die Herrin hat erkannt, dass Aristeas dadurch von den Toten aufersteht, dass er nie vollständig ins Leben zurückkehrt. Er bleibt lediglich ein körperliches Phantastikum. Wie die meisten Phantastika hätte Aristeas verblassen müssen, als das Fleisch von seinen Knochen verrottete. Er besitzt jedoch einen geistigen Anker, der es ihm erlaubt, immer wieder aus dem heidnischen Jenseits, in das sein Geist beim Tod entflieht, in die Welt zurückzukehren. Wenn die alten Griechen keinen Leichnam zu begraben hatten und fürchteten, der Geist des Körpers könnte ihre Gemeinschaft belästigen, begruben sie stattdessen einen Stein — einen Kolossos —, der als Arkane Verbindung zum Geist fungierte und ihn in seinem Grab verankerte. Aristeas nutzt seinen Kolossos als Mittel, den Weg zurück in die weltliche Welt zu finden.
 >
->Der Kolossos des Aristeas wird bei Plinius erwähnt: Es war eine Statue, die zu Ehren und zum Gedenken an den Dichter Aristeas geschnitzt wurde. Sie zeigt Aristeas mit einem Raben, der aus seinem Mund hervortritt. Diese Statue wurde an einem der Machtorte des Gottes Apollon verborgen und wird von einigen seiner monströsen Diener aus alter Zeit bewacht. Daher werden die Charaktere die im Auftrag der Herrin gesammelten Waffen der Titanen brauchen, um den Kolossos zu finden und zu zerstören.
-
->#### Arno, ein Benandante-Gefährte
->
->Eigenschaften: Int +1, Wah 0, Prä 0, Kom 0, Stä +2, Aus +1, Ges +1, Sck +1
->
->Größe: 0 
->
->Alter: 21 (21)
->
->Selbstvertrauenswert: 1 (3)
->
->Tugenden und Fehler: Handwerker; Nachtwandler; Gespür für Heiliges und Unheiliges, Zäh; Dunkles Geheimnis (lebt in einer Gemeinschaft, die Benandanti verfolgt); Enge Familienbande, Höherer Zweck
->
->Persönlichkeitseigenschaften: Fromm +2, Praktisch +1 
->
->Kampf:
->
->Knüppel und Schild: Init +1\*, Ang +9, Vert +10, Sch +5
->
->\*Beinhaltet Behinderung, die von phantastischer Rüstung herrührt, die Arno in Schlachten im Wachzustand nicht benutzt.
->
->Absorption: +8
->
->Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
->
->Wundabzüge: -1 (1-5), -2 (6-10), -3 (11-15), Lähmend (16-20), Tot (21+)
->
->Fertigkeiten: Aufmerksamkeit 2 (Schlachtfeld), Athletik 1 (Laufen), Feilschen 1 (Haushaltswaren), Raufen 1 (übernatürliche Feinde), Zechen 1 (samstags), Handwerk: Schmied 5 (Landwirtschaftsgeräte), Menschenkenntnis 2 (Feste), Gebietskunde Heimatdorf 3 (übernatürliche Gefahren), Zweites Gesicht\* 3 (Geister), Gespür für Heiliges und Unheiliges 3 (infernale Hexen), Einzelwaffe 5 (Knüppel), Italienisch 5 (einfache Leute)
->
->\* Aufgrund der Nachtwandler-Tugend; nur für das Phantastikum verfügbar.
->
->Ausrüstung: Arno benutzt in Nachtschlachten einen Fenchelknüppel, trägt eine lederne Schuppenweste und führt einen Rundschild.
->
->Behinderung: -1 (3)
->
->Erscheinungsbild: Arno ist ein junger Schmied, und es ist offensichtlich an seinem Körperbau, dass er schwere Handarbeit verrichtet. Er hält Haar und Bart aus Sicherheitsgründen kurz. Seine Augen sind braun und sein Haar ist schwarz: noch schwärzer, wenn er an der Esse seines Onkels gearbeitet hat.
->
->Arno lässt sich leicht als Malandante, einen bösen Nachtwandler, umgestalten. Um seine Belohnung für den Dienst am Bösen darzustellen, ersetze die Tugend Gespür für Heiliges und Unheiliges durch die Tugend Venussegen, und verteile die für die entsprechende Fertigkeit ausgegebenen Punkte auf Charme 2 (Frauen) und Täuschung 2 (Frauen). Die Malandanti in Arnos Region benutzen Hirsestängel als Speere, ändere also die Spezialisierung seiner Einzelwaffe-Fertigkeit zu Speer. Seine neuen Kampfwerte lauten *Kurzer Speer und Schild*: Init +2\*, Ang +9, Vert +9, Sch +7, wobei seine Initiative durch phantastische Rüstung reduziert ist, die er im Wachzustand nicht verwenden würde.
->
->Um Arno als schwachen Geist zu verwenden, gib ihm einfach einen Machtwert von 10 für begrenzte Magieresistenz und berechne ihm einen Machtpunkt jedes Mal, wenn er von immateriell zu fest wechselt. In beiden Formen kann Arnos Speer Charaktere verletzen, die sich in körperlicher Form befinden.
+> Der Kolossos des Aristeas wird bei Plinius erwähnt: Es war eine Statue, die zu Ehren und zum Gedenken an den Dichter Aristeas geschnitzt wurde. Sie zeigt Aristeas mit einem Raben, der aus seinem Mund hervortritt. Diese Statue wurde an einem der Machtorte des Gottes Apollon verborgen und wird von einigen seiner monströsen Diener aus alter Zeit bewacht. Daher werden die Charaktere die im Auftrag der Herrin gesammelten Waffen der Titanen brauchen, um den Kolossos zu finden und zu zerstören.
 
 ### Die Hunde Gottes
 
@@ -5927,68 +5890,6 @@ Hunde Gottes streifen in Wolfsform umher. Sie werden von infernalen Wächtern ko
 Einige Hunde Gottes haben die Fähigkeit, in phantastischer Wolfsform zu kämpfen, wenn sie nicht reisen oder die Hölle überfallen. Diese benötigen die Tugend Vielseitiges Phantastikum. Hunde Gottes bedrängen die Geister von Schafen, fressen die Lebenskraft von Rindern oder jagen Wild, um sich geistig zu stärken. Ihre festlichen Prozessionen sind Jagden.
 
 Hunde Gottes haben kein heiliges Kraut und finden sich vornehmlich in Gebieten mit deutschsprachigen Siedlern, was allerdings auch Gebiete mit deutschen Minderheiten umfasst, wie Polen.
-
->#### Rothiger, ein Hund-Gottes-Gefährte
->
->Eigenschaften: Int 0, Wah +1, Prä 0, Kom 0, Stä +1, Aus +1, Ges 0, Sck +2
->
->Größe: 0
->
->Alter: 21 (21)
->
->Selbstvertrauenswert: 1 (3)
->
->Tugenden und Fehler: Wanderer (wandernder Landarbeiter); Nachtwandler; Intuition, Vielseitiges Phantastikum; Dunkles Geheimnis (er ist ein Werwolf, der seinen Drang, Tiere zu töten, nicht kontrollieren kann); Zwang (Klein: er liebt es, Dinge in Wolfsform zu töten, was ihn zwingt, häufig weiterzuziehen, um nicht entdeckt zu werden), Höherer Zweck (hat seine Nachtwandler-Rolle aktiv gesucht).
->
->Persönlichkeitseigenschaften: Loyalität (Rudel) +3, Genießt die Jagd +3
->
->Kampf:
->
->Raufen: Init +2, Ang +5, Vert +6, Sch +3
->
->Absorption: +1
->
->Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
->
->Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Lähmend (16-20), Tot (21+)
->
->Fertigkeiten: Athletik 2 (Laufen), Aufmerksamkeit 1 (Tiere), Feilschen 1 (Kost und Logis), Raufen 3 (Messer), Zechen 2 (Erntefeste), Menschenkenntnis 1 (Landarbeiter), Deutsch 5 (Bauern), Täuschung 3 (Spuren verwischen), Jagen 1 (Kleinwild), Rudelkunde 2 (Geschichte), Beruf: Arbeiter 1 (Schlachten), Zweites Gesicht\* 2 (Dämonen), Überleben 1 (Siedlungsränder), Schwimmen 2 (Eiswasser).
->
->\* Aufgrund der Nachtwandler-Tugend, und nur für das Phantastikum verfügbar.
->
->Ausrüstung: Rothiger trägt Kleidung aus Leder und Wolle. Er führt ein Jagdmesser, das er im Kampf in menschlicher Form benutzt.
->
->Behinderung: 0 (0)
->
->Erscheinungsbild: Ein fitter junger Mann mit roten Haaren und Sommersprossen. Rothiger hat trotz seines Alters die Schlaksigkeit der Pubertät nicht ganz überwunden, aber seine Reaktionen sind überraschend schnell.
->
->#### Rothiger in Wolfsform
->
->Eigenschaften: Int 0, Wah 1, Prä -2, Kom 0, Stä 0, Aus +3, Ges +2, Sck +2
->
->Größe: -1
->
->Selbstvertrauenswert: 1 (3)
->
->Tugenden und Fehler: Verbesserte Eigenschaften (x2), Wildheit (wenn hungrig), Ausdauernd, Spitze Ohren, Zwang (Töten), Berüchtigt
->
->Eigenschaften: Aggressiv, Zäh, Scharfer Geruchssinn, Rudeltier/Rudelführer, Verfolgungsjäger, Spitze Ohren, Dickes Fell, Stimmgewaltig
->
->Kampf:
->
->Zähne: Init +2, Ang +14, Vert +12, Sch +2
->
->Absorption: +4
->
->Erschöpfungsstufen: OK, 0/0, -1/-1, -3, -5, Bewusstlos
->
->Wundabzüge: -1 (1-4), -3 (5-8), -5 (9-12), Lähmend (13-16)
->
->Fertigkeiten: Athletik 5 (Langstreckenlauf), Aufmerksamkeit 3 (Geruch), Raufen 8\* (Zähne), Jagen 5 (Fährte erschnüffeln), Überleben 3 (Winter)
->
->\* Spieler, die aufgrund der angeborenen Fertigkeit einer Tierform Fertigkeiten jenseits des normalen menschlichen Maximums für ein bestimmtes Alter anstreben, sollten dies mit ihren Spieltruppen aushandeln.
->
->Rothiger kann ohne statistische Änderungen als bösartiger Werwolf verwendet werden.
 
 ### Kresniki und Kudlaki
 
@@ -6018,17 +5919,17 @@ Die Mazzeri sind eine korsische Tradition von Nachtwandlern. Manche kämpfen geg
 
 Es sei darauf hingewiesen, dass der Mazzeru nicht wählen kann, wen oder ob er tötet. Jene Mazzeri, die dies akzeptieren und sich dafür entscheiden, verstörende Träume zu haben, ohne dass dies ihr Wachleben beeinträchtigt, erhalten keinen Fehler. Einige Mazzeri fühlen sich in gewisser Weise für die von ihnen vorhergesehenen Tode verantwortlich und versuchen, sie zu verhindern. Diese Mazzeri haben einen Geschichte-Fehler und können mit etwas Vorsicht jene retten, die sie in ihren Träumen gejagt haben.
 
->#### Weißdorn
+> ### Weißdorn
 >
->Weißdorn vertreibt Vampire aus vielen Gründen. Ovid berichtet, dass er verwendet wurde, um einen jungen Prinzen als durch die altrömische Göttin Carna vor Vampiren geschützt zu kennzeichnen. Die Dornenkrone, die Jesus auf die Stirn gesetzt wurde, war aus Weißdorn, und so ist er ein Symbol Seines Opfers und Seiner Majestät. Dornen können verwendet werden, um die Körper der Toten zu stechen, damit sie weniger fähig sind, zu fühlen oder zu wandeln. Weißdorne werden auch als Hecken verwendet, um Grenzen zu markieren und zu befestigen.
+> Weißdorn vertreibt Vampire aus vielen Gründen. Ovid berichtet, dass er verwendet wurde, um einen jungen Prinzen als durch die altrömische Göttin Carna vor Vampiren geschützt zu kennzeichnen. Die Dornenkrone, die Jesus auf die Stirn gesetzt wurde, war aus Weißdorn, und so ist er ein Symbol Seines Opfers und Seiner Majestät. Dornen können verwendet werden, um die Körper der Toten zu stechen, damit sie weniger fähig sind, zu fühlen oder zu wandeln. Weißdorne werden auch als Hecken verwendet, um Grenzen zu markieren und zu befestigen.
 
->#### Asphodelos
+> ### Asphodelos
 >
->Einige Mazzeri benutzen Bündel von Asphodelos als Waffen während phantastischer Schlachten. Asphodelos ist stark mit den Toten verbunden. Die Griechen glaubten, dass die meisten Geister im Hades in den Asphodeloswiesen weilten. Er ist auch Persephone heilig, der Königin der Unterwelt. Die Römer pflanzten Asphodelos in der Nähe von Friedhöfen, da er als Speise der Toten galt.
+> Einige Mazzeri benutzen Bündel von Asphodelos als Waffen während phantastischer Schlachten. Asphodelos ist stark mit den Toten verbunden. Die Griechen glaubten, dass die meisten Geister im Hades in den Asphodeloswiesen weilten. Er ist auch Persephone heilig, der Königin der Unterwelt. Die Römer pflanzten Asphodelos in der Nähe von Friedhöfen, da er als Speise der Toten galt.
 
 ### Taltós
 
-Die hier beschriebenen Taltós sind ungarische Nachtwandler. Taltós werden kurz in Häuser des Hermes: Gemeinschaften auf [Seite 169](<Ars Magica 5e - Häuser des Hermes - Societates.md#die-pharmakopoianer>) erwähnt und als regionale Variante der Pharmakopeier vorgeschlagen. Diese Verwechslung entsteht, weil der Begriff Taltós sich auf eine soziale Rolle bezieht — den wandernden Magier. Ebenso wie es möglich ist, drei Hexen mit völlig verschiedenen Kräften zu haben, werden im Mythischen Europa Charaktere, die den Lebensstil eines Taltós führen, als Taltós bezeichnet.
+Die hier beschriebenen Taltós sind ungarische Nachtwandler. Taltós werden kurz in Häuser des Hermes: Societates auf [Seite 169](<Ars Magica 5e - Häuser des Hermes - Societates.md#die-pharmakopoianer>) erwähnt und als regionale Variante der Pharmakopeier vorgeschlagen. Diese Verwechslung entsteht, weil der Begriff Taltós sich auf eine soziale Rolle bezieht — den wandernden Magier. Ebenso wie es möglich ist, drei Hexen mit völlig verschiedenen Kräften zu haben, werden im Mythischen Europa Charaktere, die den Lebensstil eines Taltós führen, als Taltós bezeichnet.
 
 Streng genommen war ein Taltós ein magyarischer Schamane mit dem vollen Spektrum der seiner Tradition eigenen Kräfte. Diese sind im Mythischen Europa unbekannt. Ungarn wurde vor Jahrhunderten christianisiert, und zwischen dem Druck der Kirche, dem Wettbewerb um Lehrlinge mit Haus Tremere und der Verlagerung der Axis Magica durch Haus Criamon ist die Tradition so weit geschwunden, dass moderne, unBegabte Taltós jeweils nur einen Teil der Macht ihrer Ahnen besitzen.
 
@@ -6050,17 +5951,17 @@ Taltós stärken sich geistig, indem sie am Tag nach dem Umherstreifen enorme Me
 
 Taltós, die ihre Rolle ihr ganzes Leben lang beibehalten, eignen sich am besten als Spielercharaktere, doch viele Taltós dienen nur für kurze Zeit. Manche verlieren all ihre Fähigkeiten im Alter von fünfzehn Jahren. Andere verlieren einen Teil ihrer Kräfte, während einige sie behalten, aber aufhören, sich öffentlich als Taltós zu bezeichnen.
 
->#### Werte und Fertigkeiten für Flammengestalt
+> ### Werte und Fertigkeiten für Flammengestalt
 >
->Ein Charakter in Gestalt einer Flammen- oder Feuerkugel hat eine Form, die einem Elementar mit einem Machtwert von 10 oberflächlich ähnelt. Der Charakter hat nicht die magische Natur eines Elementars und besitzt keinen Machtwert, ist aber physisch von den Eigenschaften eines solchen Elementars. Dies ergibt Eigenschaften von Klu 0, Wah -8, Kom -8, Prä 0, Stä +4, Aus +2, Ges +4,
+> Ein Charakter in Gestalt einer Flammen- oder Feuerkugel hat eine Form, die einem Elementar mit einem Machtwert von 10 oberflächlich ähnelt. Der Charakter hat nicht die magische Natur eines Elementars und besitzt keinen Machtwert, ist aber physisch von den Eigenschaften eines solchen Elementars. Dies ergibt Eigenschaften von Klu 0, Wah -8, Kom -8, Prä 0, Stä +4, Aus +2, Ges +4,
 >
->Die menschliche Intelligenz des Charakters ersetzt den Klugheitswert. Für alle anderen Eigenschaften gilt: Haben sowohl die Elementarform als auch die menschliche Form einen negativen Wert, verwende den niedrigeren. Haben beide einen positiven Wert, verwende den höheren. Haben die menschliche und die Elementarform einen positiven und einen negativen Wert, addiere die beiden Werte.
+> Die menschliche Intelligenz des Charakters ersetzt den Klugheitswert. Für alle anderen Eigenschaften gilt: Haben sowohl die Elementarform als auch die menschliche Form einen negativen Wert, verwende den niedrigeren. Haben beide einen positiven Wert, verwende den höheren. Haben die menschliche und die Elementarform einen positiven und einen negativen Wert, addiere die beiden Werte.
 >
->Der Charakter kann jede Fertigkeit seiner menschlichen Form nutzen, die eine Feuerkugel physisch einsetzen kann. Dazu gehört die Fähigkeit, Wärme und die Position von Gegenständen anhand ihrer Temperaturunterschiede zu spüren. In Flammenform kann der Charakter das Zweite Gesicht nutzen, um Freunde und Feinde in phantastischer Form zu finden. Der gewaltige Wahrnehmungsabzug, den Taltós in Feuerform erleiden, verhindert, dass sie als wirksame Anführer von Gruppen dienen. Fertigkeiten, die auf dem Verstand und der Erfahrung des Charakters beruhen, bleiben verfügbar. Der Charakter kann die Fertigkeit Raufen zum Kämpfen nutzen und richtet +5 Feuerschaden an.
+> Der Charakter kann jede Fertigkeit seiner menschlichen Form nutzen, die eine Feuerkugel physisch einsetzen kann. Dazu gehört die Fähigkeit, Wärme und die Position von Gegenständen anhand ihrer Temperaturunterschiede zu spüren. In Flammenform kann der Charakter das Zweite Gesicht nutzen, um Freunde und Feinde in phantastischer Form zu finden. Der gewaltige Wahrnehmungsabzug, den Taltós in Feuerform erleiden, verhindert, dass sie als wirksame Anführer von Gruppen dienen. Fertigkeiten, die auf dem Verstand und der Erfahrung des Charakters beruhen, bleiben verfügbar. Der Charakter kann die Fertigkeit Raufen zum Kämpfen nutzen und richtet +5 Feuerschaden an.
 >
->Die Wundstufen ändern sich nicht zwischen den Formen, obwohl die Feuerform gegen weltliches Feuer und hölzerne Waffen unverwundbar ist. Charaktere, die einen Taltós in Elementarform ohne Waffen angreifen, beispielsweise andere Taltós mit Hörnern oder Zähnen, erleiden +5 Brandschaden pro Angriff (Penetration 0). Wird der Charakter vollständig gelöscht, stirbt er.
+> Die Wundstufen ändern sich nicht zwischen den Formen, obwohl die Feuerform gegen weltliches Feuer und hölzerne Waffen unverwundbar ist. Charaktere, die einen Taltós in Elementarform ohne Waffen angreifen, beispielsweise andere Taltós mit Hörnern oder Zähnen, erleiden +5 Brandschaden pro Angriff (Penetration 0). Wird der Charakter vollständig gelöscht, stirbt er.
 >
->Einige Taltós berichten von einem Gefühl ständigen, nagenden Hungers in menschlicher Form, doch die Feuerform macht dies weit schlimmer (Persönlichkeitseigenschaft: Hungrig +3).
+> Einige Taltós berichten von einem Gefühl ständigen, nagenden Hungers in menschlicher Form, doch die Feuerform macht dies weit schlimmer (Persönlichkeitseigenschaft: Hungrig +3).
 
 ## Mythische Gefährten
 
@@ -6072,7 +5973,7 @@ Spieler werden jedoch ermutigt, eigene Traditionen zu erschaffen, entweder indem
 
 Angehörige der Nachtwandler-Traditionen haben sich oft in den Dienst des Ordens gestellt. Die schwächeren Spielarten von Nachtwandlern, die das Zweite Gesicht nutzen und Geister verletzen können, werden als Wachen geschätzt. Jene, die schnell und unsichtbar reisen können, werden von kriegerischen Häusern als Kundschafter geschätzt. Jene, die an einem entfernten Ort materielle Form annehmen und mit gestohlenen Gegenständen zurückkehren können, eignen sich hervorragend als Spione und Saboteure.
 
-Obwohl Begabte Nachtwandler theoretisch als Begabte Gefährten in den Orden aufgenommen werden könnten (siehe Häuser des Hermes: Gemeinschaften, [Seite 107](<Ars Magica 5e - Häuser des Hermes - Societates.md#begabte-gefährten>)), wäre es schwierig, Abstammungslinien zu bilden. Nachtwandlertum wird nicht gelehrt: Es ist etwas, das der Nachtwandler einfach weiß, sobald er seiner Tradition beitritt. Zudem scheint es einen Mechanismus zu geben, der diejenigen, die berufen sind, als Nachtwandler zu dienen und als Wächter ihrer Gemeinschaft zu wirken, von den Begabten trennt, deren übernatürlicher Makel sie an der Integration in die Gesellschaft hindert.
+Obwohl Begabte Nachtwandler theoretisch als Begabte Gefährten in den Orden aufgenommen werden könnten (siehe Häuser des Hermes: Societates, [Seite 107](<Ars Magica 5e - Häuser des Hermes - Societates.md#begabte-gefährten>)), wäre es schwierig, Abstammungslinien zu bilden. Nachtwandlertum wird nicht gelehrt: Es ist etwas, das der Nachtwandler einfach weiß, sobald er seiner Tradition beitritt. Zudem scheint es einen Mechanismus zu geben, der diejenigen, die berufen sind, als Nachtwandler zu dienen und als Wächter ihrer Gemeinschaft zu wirken, von den Begabten trennt, deren übernatürlicher Makel sie an der Integration in die Gesellschaft hindert.
 
 Es gibt eine interessante, wenn auch teilweise Ausnahme von diesem Problem. Die Hunde Gottes, die vom Orden des Hermes wenig verstanden werden, besitzen die Fähigkeit, ihre Fähigkeit zum Umherstreifen an jeden Beliebigen weiterzugeben, mithilfe des in ihrem Abschnitt beschriebenen Toast-Rituals. Der Hund verliert die Kraft, nachdem sein Nachfolger den Toast erhalten hat, doch wenn die Charaktere ein Rudel davon überzeugen könnten, dass sie geschicktere Wächter wären als andere Kandidaten, wäre es möglich, dass ein Konvent von Magi als Hunde eingesetzt werden könnte und ihre Tugend an ein einzelnes Mitglied jeder nachfolgenden Generation weitergeben könnte.
 
@@ -6100,6 +6001,68 @@ Dies ist ein Kleiner Durchbruch für einen Forscher, der die Station des Durchga
 
 Frühe Praktiker dieses Mysteriums werden rasch die Ähnlichkeit zum Certamen bemerken und diese Information möglicherweise an ihre Hausgefährten auf dem Pfad des Rückwärtsgehens weitergeben. Diese kämpferischen Magi könnten versuchen, ein certamen-basiertes Nachtwandlertum zu entwickeln, wie im vorherigen Abschnitt dargelegt.
 
+> ### Rothiger, ein Hund-Gottes-Gefährte
+>
+> Eigenschaften: Int 0, Wah +1, Prä 0, Kom 0, Stä +1, Aus +1, Ges 0, Sck +2
+>
+> Größe: 0
+>
+> Alter: 21 (21)
+>
+> Selbstvertrauenswert: 1 (3)
+>
+> Tugenden und Fehler: Wanderer (wandernder Landarbeiter); Nachtwandler; Intuition, Vielseitiges Phantastikum; Dunkles Geheimnis (er ist ein Werwolf, der seinen Drang, Tiere zu töten, nicht kontrollieren kann); Zwang (Klein: er liebt es, Dinge in Wolfsform zu töten, was ihn zwingt, häufig weiterzuziehen, um nicht entdeckt zu werden), Höheres Ziel (hat seine Nachtwandler-Rolle aktiv gesucht).
+>
+> Persönlichkeitseigenschaften: Loyalität (Rudel) +3, Genießt die Jagd +3
+>
+> Kampf:
+>
+> Raufen: Init +2, Ang +5, Vert +6, Sch +3
+>
+> Absorption: +1
+>
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
+>
+> Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
+>
+> Fertigkeiten: Athletik 2 (Laufen), Aufmerksamkeit 1 (Tiere), Feilschen 1 (Kost und Logis), Raufen 3 (Messer), Zechen 2 (Erntefeste), Menschenkenntnis 1 (Landarbeiter), Deutsch 5 (Bauern), Täuschung 3 (Spuren verwischen), Jagen 1 (Kleinwild), Rudelkunde 2 (Geschichte), Beruf: Arbeiter 1 (Schlachten), Zweites Gesicht\* 2 (Dämonen), Überleben 1 (Siedlungsränder), Schwimmen 2 (Eiswasser).
+>
+> \* Aufgrund der Nachtwandler-Tugend, und nur für das Phantastikum verfügbar.
+>
+> Ausrüstung: Rothiger trägt Kleidung aus Leder und Wolle. Er führt ein Jagdmesser, das er im Kampf in menschlicher Form benutzt.
+>
+> Behinderung: 0 (0)
+>
+> Erscheinungsbild: Ein fitter junger Mann mit roten Haaren und Sommersprossen. Rothiger hat trotz seines Alters die Schlaksigkeit der Pubertät nicht ganz überwunden, aber seine Reaktionen sind überraschend schnell.
+
+> ### Rothiger in Wolfsform
+>
+> Eigenschaften: Int 0, Wah 1, Prä -2, Kom 0, Stä 0, Aus +3, Ges +2, Sck +2
+>
+> Größe: -1
+>
+> Selbstvertrauenswert: 1 (3)
+>
+> Tugenden und Fehler: Verbesserte Eigenschaften (x2), Wildheit (wenn hungrig), Ausdauernd, Scharfe Ohren, Zwang (Töten), Berüchtigt
+>
+> Eigenschaften: Aggressiv, Widerstandsfähig, Feiner Geruchssinn, Rudeltier/Rudelführer, Verfolgungsjäger, Scharfe Ohren, Dickes Fell, Stimmgewaltig
+>
+> Kampf:
+>
+> Zähne: Init +2, Ang +14, Vert +12, Sch +2
+>
+> Absorption: +4
+>
+> Erschöpfungsstufen: OK, 0/0, -1/-1, -3, -5, Bewusstlos
+>
+> Wundabzüge: -1 (1-4), -3 (5-8), -5 (9-12), Kampfunfähig (13-16)
+>
+> Fertigkeiten: Athletik 5 (Langstreckenlauf), Aufmerksamkeit 3 (Geruch), Raufen 8\* (Zähne), Jagen 5 (Fährte erschnüffeln), Überleben 3 (Winter)
+>
+> \* Spieler, die aufgrund der angeborenen Fertigkeit einer Tierform Fertigkeiten jenseits des normalen menschlichen Maximums für ein bestimmtes Alter anstreben, sollten dies mit ihren Spieltruppen aushandeln.
+>
+> Rothiger kann ohne statistische Änderungen als bösartiger Werwolf verwendet werden.
+
 ## Abenteuerideen
 
 Einzelne Nachtwandler sind schwächer als hermetische Magi und müssen darauf achten, Situationen so zu manipulieren, dass ihre Kräfte ihnen einen Vorteil verschaffen.
@@ -6111,6 +6074,46 @@ Milizen von Nachtwandlern sind mächtig genug, um junge Magi direkt zu bedrohen,
 Haus Tremere ist sich des militärischen Potenzials von Nachtwandlern bewusst und setzte während des Schismakriegs einige von ihnen mit gutem Erfolg ein. Ihr Problem besteht darin, dass Nachtwandlertum nicht erlernt werden kann: Das Haus kann also nicht einfach eine Armee ausbilden, die durch Wände gehen kann. Es muss Bündnisse mit bereits bestehenden Gruppen eingehen, und diese sind zaghaft, weil die übernatürlichen Schutzherren der Nachtwandler-Gruppen Magi meiden.
 
 Sollte ein kriegerisches Haus je Kenntnis von der Übertragbarkeit des Fluchs der Hunde Gottes erlangen, könnte es die Mitgliedschaft eines Nachtwandler-Rudels manipulieren. Diskret eingesetzt könnte sich dies als Vorteil von entscheidender militärischer Bedeutung erweisen.
+
+> ### Arno, ein Benandante-Gefährte
+>
+> Eigenschaften: Int +1, Wah 0, Prä 0, Kom 0, Stä +2, Aus +1, Ges +1, Sck +1
+>
+> Größe: 0
+>
+> Alter: 21 (21)
+>
+> Selbstvertrauenswert: 1 (3)
+>
+> Tugenden und Fehler: Handwerker; Nachtwandler; Gespür für Heiliges und Unheiliges, Zäh; Dunkles Geheimnis (lebt in einer Gemeinschaft, die Benandanti verfolgt); Enge Familienbande, Höheres Ziel
+>
+> Persönlichkeitseigenschaften: Fromm +2, Praktisch +1
+>
+> Kampf:
+>
+> Knüppel und Schild: Init +1\*, Ang +9, Vert +10, Sch +5
+>
+> \*Beinhaltet Behinderung, die von phantastischer Rüstung herrührt, die Arno in Schlachten im Wachzustand nicht benutzt.
+>
+> Absorption: +8
+>
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
+>
+> Wundabzüge: -1 (1-5), -2 (6-10), -3 (11-15), Kampfunfähig (16-20), Tot (21+)
+>
+> Fertigkeiten: Aufmerksamkeit 2 (Schlachtfeld), Athletik 1 (Laufen), Feilschen 1 (Haushaltswaren), Raufen 1 (übernatürliche Feinde), Zechen 1 (samstags), Handwerk: Schmied 5 (Landwirtschaftsgeräte), Menschenkenntnis 2 (Feste), Gebietskunde Heimatdorf 3 (übernatürliche Gefahren), Zweites Gesicht\* 3 (Geister), Gespür für Heiliges und Unheiliges 3 (infernale Hexen), Einzelwaffe 5 (Knüppel), Italienisch 5 (einfache Leute)
+>
+> \* Aufgrund der Nachtwandler-Tugend; nur für das Phantastikum verfügbar.
+>
+> Ausrüstung: Arno benutzt in Nachtschlachten einen Fenchelknüppel, trägt eine lederne Schuppenweste und führt einen Rundschild.
+>
+> Behinderung: -1 (3)
+>
+> Erscheinungsbild: Arno ist ein junger Schmied, und es ist offensichtlich an seinem Körperbau, dass er schwere Handarbeit verrichtet. Er hält Haar und Bart aus Sicherheitsgründen kurz. Seine Augen sind braun und sein Haar ist schwarz: noch schwärzer, wenn er an der Esse seines Onkels gearbeitet hat.
+>
+> Arno lässt sich leicht als Malandante, einen bösen Nachtwandler, umgestalten. Um seine Belohnung für den Dienst am Bösen darzustellen, ersetze die Tugend Gespür für Heiliges und Unheiliges durch die Tugend Venussegen, und verteile die für die entsprechende Fertigkeit ausgegebenen Punkte auf Charme 2 (Frauen) und Täuschung 2 (Frauen). Die Malandanti in Arnos Region benutzen Hirsestängel als Speere, ändere also die Spezialisierung seiner Einzelwaffe-Fertigkeit zu Speer. Seine neuen Kampfwerte lauten *Kurzer Speer und Schild*: Init +2\*, Ang +9, Vert +9, Sch +7, wobei seine Initiative durch phantastische Rüstung reduziert ist, die er im Wachzustand nicht verwenden würde.
+>
+> Um Arno als schwachen Geist zu verwenden, gib ihm einfach einen Machtwert von 10 für begrenzte Magieresistenz und berechne ihm einen Machtpunkt jedes Mal, wenn er von immateriell zu fest wechselt. In beiden Formen kann Arnos Speer Charaktere verletzen, die sich in körperlicher Form befinden.
 
 #### Als Verbündete
 
@@ -6142,50 +6145,50 @@ Vitkir-Charaktere werden wie Magi entworfen, mit nur wenigen Ausnahmen. Das hei�
 
 Vitkir-Charaktere dürfen bis zu zehn Fehler wählen, um zehn Tugenden auszugleichen, und in diesem Kapitel werden mehrere neue Tugenden und Fehler vorgestellt, die nur Begabte Charaktere wählen können. Diese Übernatürlichen Tugenden und Fehler entsprechen Hermetischen Tugenden und Fehlern, beziehen sich aber speziell auf Runen und Vitkar-Runenmagie. Außerdem können viele Hermetische Tugenden und Fehler als Übernatürliche Tugenden und Fehler gewählt werden, die statt der hermetischen die Runenmagie des Charakters betreffen. Alle Vitkir-Charaktere müssen die Sozialer-Status-Tugend Vitki wählen, und ein Vitki, der von einem anderen Vitki unterrichtet wurde, erhält eine kostenlose Kleine Vitkar-Tugend, die der Spezialisierung seines Meisters entspricht, gewöhnlich entweder Begabung in Handwerk: Runen, Begabung in Runenmagie oder Begabung in (Rune).
 
->#### Der Orden Odins
+> ### Der Orden Odins
 >
->Der Ausdruck „Orden Odins" wird von Magi verwendet, um ihre Vorstellung einer organisierten Gruppe skandinavischer Zauberer zu beschreiben, die dem Orden des Hermes feindlich gegenübersteht. Er wird von den Vitkir im Allgemeinen nicht verwendet. Er stammt aus der Zeit des Krieges gegen Damhan-Allaidh, als große Furcht und Ungewissheit über diese Zauberer und ihre wachsende Macht auf den Britischen Inseln herrschte. (Für eine ausführlichere Geschichte der angelsächsischen Runenzauberer siehe Alte Magie, Seiten 133–136.)
+> Der Ausdruck „Orden Odins" wird von Magi verwendet, um ihre Vorstellung einer organisierten Gruppe skandinavischer Zauberer zu beschreiben, die dem Orden des Hermes feindlich gegenübersteht. Er wird von den Vitkir im Allgemeinen nicht verwendet. Er stammt aus der Zeit des Krieges gegen Damhan-Allaidh, als große Furcht und Ungewissheit über diese Zauberer und ihre wachsende Macht auf den Britischen Inseln herrschte. (Für eine ausführlichere Geschichte der angelsächsischen Runenzauberer siehe Ancient Magic, Seiten 133–136.)
 >
->Seitdem haben Magi so gut wie nichts mehr über sie gehört; ob sie noch eine Bedrohung für den Orden des Hermes darstellen oder nicht, ist eine Frage, die ein Tribunal in ein Stimmengewirr aus Für und Wider verwandeln kann. Es gilt allgemein als anerkannt, dass der Orden des Hermes noch immer mit ihnen im Krieg ist, sollte einer von ihnen wieder auftauchen, und da der Eid besagt „die Feinde des Ordens sind meine Feinde", wird argumentiert, dass Magi eine rechtliche Verpflichtung haben, sie zu bekämpfen. Ob das bedeutet, dass ein Vitki auf der Stelle getötet werden muss, hängt wohl vom Urteil des Magus ab, der ihm begegnet.
+> Seitdem haben Magi so gut wie nichts mehr über sie gehört; ob sie noch eine Bedrohung für den Orden des Hermes darstellen oder nicht, ist eine Frage, die ein Tribunal in ein Stimmengewirr aus Für und Wider verwandeln kann. Es gilt allgemein als anerkannt, dass der Orden des Hermes noch immer mit ihnen im Krieg ist, sollte einer von ihnen wieder auftauchen, und da der Eid besagt „die Feinde des Ordens sind meine Feinde", wird argumentiert, dass Magi eine rechtliche Verpflichtung haben, sie zu bekämpfen. Ob das bedeutet, dass ein Vitki auf der Stelle getötet werden muss, hängt wohl vom Urteil des Magus ab, der ihm begegnet.
 >
->Sollte es tatsächlich ein sich sammelndes Heer von Runenzauberern geben, das beabsichtigt, aus den eisigen Ödlanden des Nordens ins Herz des Ordens des Hermes zu schlagen, so wissen die relativ isolierten, hier beschriebenen Vitkir wahrscheinlich ebenso wenig davon wie die Magi, die sie angeblich zu vernichten suchen.
+> Sollte es tatsächlich ein sich sammelndes Heer von Runenzauberern geben, das beabsichtigt, aus den eisigen Ödlanden des Nordens ins Herz des Ordens des Hermes zu schlagen, so wissen die relativ isolierten, hier beschriebenen Vitkir wahrscheinlich ebenso wenig davon wie die Magi, die sie angeblich zu vernichten suchen.
 
->#### Weibliche Vitkir
+> ### Weibliche Vitkir
 >
->Die Vitkir sind in den Geschichten und Berichten stets Männer, doch dies liegt wahrscheinlich an den Rollen, die Männer und Frauen in der nordischen Kultur typischerweise einnehmen, und nicht daran, dass Frauen die Runenmagie nicht erlernen können. Es gibt viele Erzählungen von Frauen, die während der Wikingerzeit andere Arten von Magie praktizierten, insbesondere als mystische Seherinnen und Prophetinnen. Es ist unwahrscheinlich, dass Vitkir-Meister in früheren Jahren Mädchen als Lehrlinge genommen hätten, doch da die Vitkir seltener werden, sind sie möglicherweise bereitwilliger, alle Kinder mit der Gabe zu unterrichten, die gefunden werden können.
+> Die Vitkir sind in den Geschichten und Berichten stets Männer, doch dies liegt wahrscheinlich an den Rollen, die Männer und Frauen in der nordischen Kultur typischerweise einnehmen, und nicht daran, dass Frauen die Runenmagie nicht erlernen können. Es gibt viele Erzählungen von Frauen, die während der Wikingerzeit andere Arten von Magie praktizierten, insbesondere als mystische Seherinnen und Prophetinnen. Es ist unwahrscheinlich, dass Vitkir-Meister in früheren Jahren Mädchen als Lehrlinge genommen hätten, doch da die Vitkir seltener werden, sind sie möglicherweise bereitwilliger, alle Kinder mit der Gabe zu unterrichten, die gefunden werden können.
 >
->Wikingerfrauen besaßen auch eine Form der Magie namens Seiðr. Dies war eine Art Hexerei, die das gemeine Volk für böse und unrein hielt, und sie mieden jene, die sie praktizierten. Während die Magie der Runen als ein Geschenk an die Männer von Odin galt, wurde Seiðr den Frauen zuerst von einer Riesin namens Gullveig gelehrt, von der es hieß, sie sei so böse gewesen, dass sie die Gier unter den Göttern einführte. Für Charakterideen und Regeln zur Erschaffung eines Charakters mit dieser Art von Kraft siehe die verschiedenen Formen verdorbener Magie und infernaler Heckentraditionen in Sphären der Macht: Das Infernale.
+> Wikingerfrauen besaßen auch eine Form der Magie namens Seiðr. Dies war eine Art Hexerei, die das gemeine Volk für böse und unrein hielt, und sie mieden jene, die sie praktizierten. Während die Magie der Runen als ein Geschenk an die Männer von Odin galt, wurde Seiðr den Frauen zuerst von einer Riesin namens Gullveig gelehrt, von der es hieß, sie sei so böse gewesen, dass sie die Gier unter den Göttern einführte. Für Charakterideen und Regeln zur Erschaffung eines Charakters mit dieser Art von Kraft siehe die verschiedenen Formen verdorbener Magie und infernaler Heckentraditionen in Sphären der Macht: Das Infernale.
 
->#### Vitkar-Tugenden
+> ### Vitkar-Tugenden
 >
->**Groß, Übernatürlich**<br>
->Sanfte Gabe <br>
->Großer Runenfokus\* <br>
->Mythisches Blut <br>
->Nebenerkenntnis\*<br>
+> **Groß, Übernatürlich**<br>
+> Sanfte Gabe <br>
+> Großer Runenfokus\* <br>
+> Mythisches Blut <br>
+> Nebenerkenntnis\*<br>
 >
->**KLEIN, ÜBERNATÜRLICH**<br>
->Affinität zu (Rune) <br>
->Zyklische Magie (positiv) <br>
->Gewandte Rune\* <br>
->Schneller Zauberer\* <br>
->Freies Studium <br>
->Unauffällig für Tiere <br>
->Erfinderisches Genie<br>
->Lebensstärkung <br>
->Gemeisterte Rune\*<br>
->Kleiner Runenfokus\* <br>
->Namenlose Runen\* <br>
->Persönliche Vis-Quelle <br>
->Begabung in (Rune) <br>
->Geheime Runen\* <br>
->Nebeneffekt <br>
->Besondere Umstände<br>
+> **KLEIN, ÜBERNATÜRLICH**<br>
+> Affinität zu (Rune) <br>
+> Zyklische Magie (positiv) <br>
+> Gewandte Rune\* <br>
+> Schneller Zauberer\* <br>
+> Freies Studium <br>
+> Unauffällig für Tiere <br>
+> Erfinderisches Genie<br>
+> Lebensstärkung <br>
+> Gemeisterte Rune\*<br>
+> Kleiner Runenfokus\* <br>
+> Namenlose Runen\* <br>
+> Persönliche Vis-Quelle <br>
+> Begabung in (Rune) <br>
+> Geheime Runen\* <br>
+> Nebeneffekt <br>
+> Besondere Umstände<br>
 >
->**Frei, Sozialer Status**<br>
->Vitki\*
+> **Frei, Sozialer Status**<br>
+> Vitki\*
 >
->\* Neue oder überarbeitete Tugenden
+> \* Neue oder überarbeitete Tugenden
 
 ### Neue oder überarbeitete Tugenden
 
@@ -6216,27 +6219,27 @@ Klein, Übernatürlich
 
 Der Vitki hat einen magischen Fokus mit einer einzelnen Rune, die in einer bestimmten Art der Runenmagie verwendet wird (siehe den Kasten Vitkar-Magiefoki). Immer wenn der Vitki einen Runenzauber mit einem Effekt wirkt, der zum Fokus und der gewählten Rune passt, und diese Rune in das dem Fokus zugeordnete Material einritzt, darf der Wert des Vitkis in der für die Formel verwendeten Rune verdoppelt werden.
 
->#### Vitkar-Magiefoki
+> ### Vitkar-Magiefoki
 >
->Ein Vitkar-Magiefokus ist mit Zaubern verbunden, die einen bestimmten Zweck erfüllen, wie Heilen, Kriegführen oder Wissenssuche, und er ist an ein bestimmtes Material gebunden, in das die Runen geritzt werden müssen, wie Knochen, Metall oder Stein. Wenn der Zauber dem Zweck des Vitkis entspricht und das passende Material für die Inschrift verwendet wird, darf er seinen Wert in der im Zauber verwendeten Rune verdoppeln. Bei einem Großen Fokus kann jede Rune mit einem dem Magiefokus entsprechenden Effekt verwendet werden. Ein Kleiner Fokus ist an eine einzelne Rune gebunden, die beim Erwerb der Tugend gewählt wird, und die Zauber des Vitkis müssen diese Rune entweder als Zielrune oder als Effektrune verwenden, damit der Fokus greift. Wie ein hermetischer Magiefokus kann ein Vitki bei der Charaktererschaffung nur einen einzigen Vitkar-Magiefokus wählen.
+> Ein Vitkar-Magiefokus ist mit Zaubern verbunden, die einen bestimmten Zweck erfüllen, wie Heilen, Kriegführen oder Wissenssuche, und er ist an ein bestimmtes Material gebunden, in das die Runen geritzt werden müssen, wie Knochen, Metall oder Stein. Wenn der Zauber dem Zweck des Vitkis entspricht und das passende Material für die Inschrift verwendet wird, darf er seinen Wert in der im Zauber verwendeten Rune verdoppeln. Bei einem Großen Fokus kann jede Rune mit einem dem Magiefokus entsprechenden Effekt verwendet werden. Ein Kleiner Fokus ist an eine einzelne Rune gebunden, die beim Erwerb der Tugend gewählt wird, und die Zauber des Vitkis müssen diese Rune entweder als Zielrune oder als Effektrune verwenden, damit der Fokus greift. Wie ein hermetischer Magiefokus kann ein Vitki bei der Charaktererschaffung nur einen einzigen Vitkar-Magiefokus wählen.
 >
->Hier sind einige Beispiele für Magiefoki, entnommen dem mittelalterlichen Gedicht *Sigrdrífumál*, in dem die Walküre Sigrdrífa dem Helden Sigurðr die sieben verschiedenen Anwendungen der Runenmagie lehrt.
+> Hier sind einige Beispiele für Magiefoki, entnommen dem mittelalterlichen Gedicht *Sigrdrífumál*, in dem die Walküre Sigrdrífa dem Helden Sigurðr die sieben verschiedenen Anwendungen der Runenmagie lehrt.
 >
->**Siegrunen (Sigrúnar):** Diese Runen dienen dazu, den Erfolg des Vitkis in der Schlacht zu sichern, und werden in metallene Waffen und Rüstungen geritzt, gewöhnlich in die Klingen von Schwertern oder langen Messern. Runen, die häufig mit dieser Art von Magie verbunden sind, umfassen Tiwaz (T), Othila (O) und Ehwaz (E).
+> **Siegrunen (Sigrúnar):** Diese Runen dienen dazu, den Erfolg des Vitkis in der Schlacht zu sichern, und werden in metallene Waffen und Rüstungen geritzt, gewöhnlich in die Klingen von Schwertern oder langen Messern. Runen, die häufig mit dieser Art von Magie verbunden sind, umfassen Tiwaz (T), Othila (O) und Ehwaz (E).
 >
->**Bierrunen (Ölúnar):** Diese Runen müssen in Horn oder gehärtetes Leder geritzt werden, etwa ein Trinkhorn, oder in die eigenen Fingernägel des Vitkis. Sie verleihen gewöhnlich Glück und schützen den Vitki vor Gift oder anderen verborgenen Gefahrenformen; ein Kleiner Fokus könnte mit Algiz (Z), Naudiz (N) oder Perth (P) verbunden sein.
+> **Bierrunen (Ölúnar):** Diese Runen müssen in Horn oder gehärtetes Leder geritzt werden, etwa ein Trinkhorn, oder in die eigenen Fingernägel des Vitkis. Sie verleihen gewöhnlich Glück und schützen den Vitki vor Gift oder anderen verborgenen Gefahrenformen; ein Kleiner Fokus könnte mit Algiz (Z), Naudiz (N) oder Perth (P) verbunden sein.
 >
->**Fruchtbarkeitsrunen (Bjargrúnar):** Diese Runen helfen, den Wohlstand und die Prosperität des Vitkis und seiner Familie zu sichern, und werden in Münzen geritzt, die sie tragen, oder in Schmuck, den sie anlegen. Häufige Runen für diese Art von Magie umfassen Fehu (F), Ingwaz (Ng) und Jera (J).
+> **Fruchtbarkeitsrunen (Bjargrúnar):** Diese Runen helfen, den Wohlstand und die Prosperität des Vitkis und seiner Familie zu sichern, und werden in Münzen geritzt, die sie tragen, oder in Schmuck, den sie anlegen. Häufige Runen für diese Art von Magie umfassen Fehu (F), Ingwaz (Ng) und Jera (J).
 >
->**Meerrunen (Brimrúnar):** Diese Runen werden traditionell auf ein Schiff geschrieben, in einen Karren geritzt oder in ein Segel gewebt: Jedes Objekt, das größer ist als ein Mensch, kommt in Frage. Sie erlauben dem Vitki, Reisen und Reisebedingungen mit seinen Runen zu beeinflussen. Für einen Kleinen Fokus könnten die Runen Laguz (L), Raido (R) oder Hagalaz (H) geeignet sein.
+> **Meerrunen (Brimrúnar):** Diese Runen werden traditionell auf ein Schiff geschrieben, in einen Karren geritzt oder in ein Segel gewebt: Jedes Objekt, das größer ist als ein Mensch, kommt in Frage. Sie erlauben dem Vitki, Reisen und Reisebedingungen mit seinen Runen zu beeinflussen. Für einen Kleinen Fokus könnten die Runen Laguz (L), Raido (R) oder Hagalaz (H) geeignet sein.
 >
->**Heilrunen (Limrúnar):** Diese Runen beschleunigen die Genesung von Schmerz und Verletzung, heilen Wunden und lindern Kummer. Sie müssen in Knochen geritzt werden, seien es menschliche oder tierische. Runen, die häufig für einen Kleinen Fokus gewählt werden, umfassen Berkanan (B), Dagaz (D) oder Wunjo (W).
+> **Heilrunen (Limrúnar):** Diese Runen beschleunigen die Genesung von Schmerz und Verletzung, heilen Wunden und lindern Kummer. Sie müssen in Knochen geritzt werden, seien es menschliche oder tierische. Runen, die häufig für einen Kleinen Fokus gewählt werden, umfassen Berkanan (B), Dagaz (D) oder Wunjo (W).
 >
->**Redrunen (Málrúnar)**: Diese Runen müssen in Holz geritzt werden: einen Stab, einen Baum, eine Truhe oder vielleicht einen Tisch. Sie verleihen Beredsamkeit und inspirieren andere und werden verwendet, um die Beziehungen des Vitkis zu seinen Mitvitkir oder seinen Gefährten zu verbessern. Für einen Kleinen Fokus könnten die Runen Ansuz (A), Gebo (G) oder Mannaz (M) in Frage kommen.
+> **Redrunen (Málrúnar):** Diese Runen müssen in Holz geritzt werden: einen Stab, einen Baum, eine Truhe oder vielleicht einen Tisch. Sie verleihen Beredsamkeit und inspirieren andere und werden verwendet, um die Beziehungen des Vitkis zu seinen Mitvitkir oder seinen Gefährten zu verbessern. Für einen Kleinen Fokus könnten die Runen Ansuz (A), Gebo (G) oder Mannaz (M) in Frage kommen.
 >
->**Weisheitsrunen (Hugrúnar):** Weisheitsrunen werden in Stein geritzt und dienen dazu, dem Vitki zu helfen, Weisheit zu erlangen, indem er verborgene Eigenschaften seiner Umgebung erspürt. Der Kleine Runenfokus eines Vitkis könnte mit Ihwaz (Y), Sowilo (S) oder Kauno (K) verbunden sein.
+> **Weisheitsrunen (Hugrúnar):** Weisheitsrunen werden in Stein geritzt und dienen dazu, dem Vitki zu helfen, Weisheit zu erlangen, indem er verborgene Eigenschaften seiner Umgebung erspürt. Der Kleine Runenfokus eines Vitkis könnte mit Ihwaz (Y), Sowilo (S) oder Kauno (K) verbunden sein.
 >
->**Kraftrunen (Meginrúnar):** Kraftrunen sind mit der Magie der Wildnis und mit dunklen, übernatürlichen Mächten verbunden. Sigrdrífa lehrte Sigurðr diese Art der Runenmagie nicht, doch das Sigrdrífumál beschreibt sie als Runen, die die Götter auf unmögliche Dinge einschreiben, wie Met, Feuer, das Herz oder den Himmel. Kraftrunen könnten auf Fleisch geschrieben werden, denn es heißt, nur den Göttern sei es gestattet, Runen auf einen lebenden Körper einzuschreiben. Natürlich können Vitkir mit diesem Fokus dieses Gebot ignorieren, oder sie ritzen Kraftrunen stattdessen auf die Toten. Für einen Kleinen Fokus könnten Uruz (U), Thurisaz (Th) oder Isa (I) geeignet sein.
+> **Kraftrunen (Meginrúnar):** Kraftrunen sind mit der Magie der Wildnis und mit dunklen, übernatürlichen Mächten verbunden. Sigrdrífa lehrte Sigurðr diese Art der Runenmagie nicht, doch das Sigrdrífumál beschreibt sie als Runen, die die Götter auf unmögliche Dinge einschreiben, wie Met, Feuer, das Herz oder den Himmel. Kraftrunen könnten auf Fleisch geschrieben werden, denn es heißt, nur den Göttern sei es gestattet, Runen auf einen lebenden Körper einzuschreiben. Natürlich können Vitkir mit diesem Fokus dieses Gebot ignorieren, oder sie ritzen Kraftrunen stattdessen auf die Toten. Für einen Kleinen Fokus könnten Uruz (U), Thurisaz (Þ) oder Isa (I) geeignet sein.
 
 **Namenlose Runen**<br>
 Klein, Übernatürlich
@@ -6266,43 +6269,43 @@ Alle Vitkir müssen dies als ihre Sozialer-Status-Tugend wählen, und sie ist nu
 
 Vitkir haben auch diese neuen oder überarbeiteten Fehler:
 
->#### Vitkar-Fehler
+> ### Vitkar-Fehler
 >
->**Groß, Übernatürlich**<br>
->Auffällige Gabe <br>
->Großer Magischer Mangel\* <br>
->Magiesucht <br>
->Nátt-thel-anfällig\* <br>
->Schmerzhafte Magie-Einschränkung
+> **Groß, Übernatürlich**<br>
+> Auffällige Gabe <br>
+> Großes Magisches Defizit\* <br>
+> Magiesucht <br>
+> Nátt-thel-anfällig\* <br>
+> Schmerzhafte Magie <br>
+> Einschränkung
 >
->**KLEIN, ÜBERNATÜRLICH**
+> **KLEIN, ÜBERNATÜRLICH**
 >
->Nachlässiger Zauberer <br>
->Zyklische Magie (negativ) <br>
->Schädliche Umstände <br>
->Desorientierungsmagie <br>
->Kleiner Magischer Mangel\* <br>
->Abstoßend für Tiere <br>
->Kurzlebige Runen\* <br>
->Langsamer Zauberer <br>
->Anfälligkeit für Göttliche Kraft <br>
->Anfälligkeit für Feenkraft <br>
->Anfälligkeit für Infernale Kraft <br>
->Verzerrte Magie <br>
->Sonderbare Magie
+> Nachlässiger Zauberer <br>
+> Zyklische Magie (negativ) <br>
+> Abträgliche Umstände <br>
+> Desorientierende Magie <br>
+> Kleines Magisches Defizit\* <br>
+> Abstoßend für Tiere <br>
+> Kurzlebige Runen\* <br>
+> Langsamer Zauberer <br>
+> Anfälligkeit für Göttliche Macht <br>
+> Anfälligkeit für Feenmacht <br>
+> Anfälligkeit für Infernale Macht <br>
+> Verzerrte Magie <br>
+> Sonderbare Magie
 >
->\* Neue oder überarbeitete Fehler
+> \* Neue oder überarbeitete Fehler
 
-**Großer Magischer Mangel**<br>
+**Großes Magisches Defizit**<br>
 Groß, Übernatürlich
 
-Der Vitki hat einen magischen Mangel bei allen Runen eines einzelnen Aett. Immer wenn eines seiner Runenskripte eine dieser
-Runen enthält, wird seine Zaubersumme halbiert. Alternativ kann der Vitki einen schweren Mangel bei drei Runen haben, sodass er diese Runen in keinem seiner Zauber verwenden kann.
+Der Vitki hat ein magisches Defizit bei allen Runen eines einzelnen Aett. Immer wenn eines seiner Runenskripte eine dieser Runen enthält, wird seine Zaubersumme halbiert. Alternativ kann der Vitki ein schweres Defizit bei drei Runen haben, sodass er diese Runen in keinem seiner Zauber verwenden kann.
 
-**Kleiner Magischer Mangel**<br>
+**Kleines Magisches Defizit**<br>
 Klein, Übernatürlich
 
-Der Vitki hat einen Mangel bei drei der Runen. Immer wenn eines seiner Runenskripte diese Runen enthält, wird seine Zaubersumme halbiert. Alternativ kann der Vitki einen schweren Mangel bei einer einzelnen Rune haben, sodass er sie in keinem seiner Zauber verwenden kann.
+Der Vitki hat ein Defizit bei drei der Runen. Immer wenn eines seiner Runenskripte diese Runen enthält, wird seine Zaubersumme halbiert. Alternativ kann der Vitki ein schweres Defizit bei einer einzelnen Rune haben, sodass er sie in keinem seiner Zauber verwenden kann.
 
 **Nátt-thel-anfällig**<br>
 Groß, Übernatürlich
@@ -6327,17 +6330,17 @@ Diese neuen Fertigkeiten stehen ebenfalls zur Verfügung:
 
 #### Handwerk: Runen
 
-Der Vitki kann das Runenalphabet in viele verschiedene Materialien ritzen oder einschreiben, und diese Fertigkeit beschreibt, mit welcher Geschicklichkeit er dies tut. Sie kann verwendet werden, um zu bestimmen, wie lange die Runen halten, und beeinflusst auch die Geschicklichkeit, mit der der Vitki die Runen in einem Runenskript verbergen kann. **Spezialisierungen**: Ritzen oder Einschreiben in ein bestimmtes Material, Runen verbergen.
+Der Vitki kann das Runenalphabet in viele verschiedene Materialien ritzen oder einschreiben, und diese Fertigkeit beschreibt, mit welcher Geschicklichkeit er dies tut. Sie kann verwendet werden, um zu bestimmen, wie lange die Runen halten, und beeinflusst auch die Geschicklichkeit, mit der der Vitki die Runen in einem Runenskript verbergen kann. **Spezialisierungen:** Ritzen oder Einschreiben in ein bestimmtes Material, Runen verbergen.
 
 #### Runenmagie
 
-Dies ist das Wissen darüber, was die Magie der Vitkir ist und wie sie funktioniert. Es befasst sich mit den technischen Details jeder Rune, wie sie verwendet werden kann und wie man ein Runenskript formuliert. Jeder kann Runenmagie erlernen, wenn er Zugang zu einem Lehrer hat, doch sie ist für jene, die die Gabe nicht besitzen, von sehr geringem Nutzen. (Falls die Spieler Alte Magie besitzen, sind diese und die auf Seite 140 jenes Buches beschriebene Fertigkeit Runenmagie grundsätzlich gleich und können gegeneinander ausgetauscht werden.) **Spezialisierungen**: Eine einzelne Rune, Skripte lehren, die Runen erschließen, verborgene Runen lesen. (Arkan)
+Dies ist das Wissen darüber, was die Magie der Vitkir ist und wie sie funktioniert. Es befasst sich mit den technischen Details jeder Rune, wie sie verwendet werden kann und wie man ein Runenskript formuliert. Jeder kann Runenmagie erlernen, wenn er Zugang zu einem Lehrer hat, doch sie ist für jene, die die Gabe nicht besitzen, von sehr geringem Nutzen. (Falls die Spieler Ancient Magic besitzen, sind diese und die auf Seite 140 jenes Buches beschriebene Fertigkeit Runenmagie grundsätzlich gleich und können gegeneinander ausgetauscht werden.) **Spezialisierungen:** Eine einzelne Rune, Skripte lehren, die Runen erschließen, verborgene Runen lesen. (Arkan)
 
->#### Die Runengedichte
+> ### Die Runengedichte
 >
->Charaktere, die daran interessiert sind, die Magie der Vitkir zu erlernen, können eine Studienquelle in Form eines „Runengedichts" aufspüren — eines der seltenen und wertvollen Werke, die von den Vitkir verfasst wurden, um ihren Gefolgsleuten die Grundlagen des Runenritzens und ihrer Magie zu lehren. Diese Texte benennen jede Rune und geben eine kurze Beschreibung in Versform. Die Verse sind typischerweise vier Zeilen lang, ein Vers für jede Rune, und beschreiben die mystischen Eigenschaften der Rune durch Bildsprache. Zum Beispiel: „Reichtum / Quelle der Zwietracht unter Verwandten / und Feuer des Meeres / und Pfad der Schlange" oder „Hagel / kaltes Korn / und Schauer von Graupel / und Plage der Schlangen." Es gibt drei Texte, die sich weit genug von den Vitkir verbreitet haben, um im Mythischen Europa gefunden werden zu können: das Isländische Runengedicht und das Norwegische Runengedicht, die beide das Jüngere Futhark-Alphabet verwenden (siehe Die Runen, Modifizierte Runen, später in diesem Kapitel), und das Angelsächsische Runengedicht, das den Futhorc verwendet und von christlichen Mönchen ins Lateinische übersetzt wurde, allerdings mit vielen Überarbeitungen des Textes.
+> Charaktere, die daran interessiert sind, die Magie der Vitkir zu erlernen, können eine Studienquelle in Form eines „Runengedichts" aufspüren — eines der seltenen und wertvollen Werke, die von den Vitkir verfasst wurden, um ihren Gefolgsleuten die Grundlagen des Runenritzens und ihrer Magie zu lehren. Diese Texte benennen jede Rune und geben eine kurze Beschreibung in Versform. Die Verse sind typischerweise vier Zeilen lang, ein Vers für jede Rune, und beschreiben die mystischen Eigenschaften der Rune durch Bildsprache. Zum Beispiel: „Reichtum / Quelle der Zwietracht unter Verwandten / und Feuer des Meeres / und Pfad der Schlange" oder „Hagel / kaltes Korn / und Schauer von Graupel / und Plage der Schlangen." Es gibt drei Texte, die sich weit genug von den Vitkir verbreitet haben, um im Mythischen Europa gefunden werden zu können: das Isländische Runengedicht und das Norwegische Runengedicht, die beide das Jüngere Futhark-Alphabet verwenden (siehe Die Runen, Modifizierte Runen, später in diesem Kapitel), und das Angelsächsische Runengedicht, das den Futhorc verwendet und von christlichen Mönchen ins Lateinische übersetzt wurde, allerdings mit vielen Überarbeitungen des Textes.
 
-## Nátt-thel
+### Nátt-thel
 
 
 
@@ -6367,19 +6370,19 @@ Der Dauerwurf bestimmt die Basiseinheit für das Nátt-thel, und diese wird mit 
 
 In dem Moment, in dem er erkennt, dass er die Kontrolle verloren hat, kann der Vitki einen Teil seiner Kraft in einen oder mehrere seiner aktiven Runenzauber projizieren, um sicherzustellen, dass deren Effekte während der Zeit ohne seine Magie bestehen bleiben. Dies verlängert die Dauer des Nátt-thel, garantiert aber, dass zumindest ein Teil seiner Magie erhalten bleibt. Der Vitki erhält dafür einen zusätzlichen Verzerrungspunkt pro Effekt, den er schützen möchte. Zu beachten ist, dass diese zusätzlichen Verzerrungspunkte den Verzerrungswert des Charakters erhöhen könnten, was die Ergebnisse des Nátt-thel-Dauerwurfs beeinflusst, und dass sie auch zur Gesamtzahl der erhaltenen Verzerrungspunkte beitragen, was den Multiplikator erhöht und sicherstellt, dass das Nátt-thel noch länger dauert.
 
->#### Odins Opfer
+> ### Odins Opfer
 >
->Es heißt, dass Odin die Runen ursprünglich durch ein besonderes Ritual erlernte, bei dem er an seinem Hals an einem Eschenbaum aufgehängt und mit einem Speer in die Seite gestochen wurde. Nach neun Tagen dieser Folter hatte Odin eine Vision, in der er die Runen sah und ihre Macht verstand. Viele Vitkir glauben, dass eine Person, die diese Prüfung besteht, die Runen erschließen kann, genau wie ein Lehrling es mit seinem Meister tut. Sie sagen auch, dass das Ritual dem Suchenden die Gabe verleiht, falls er sie noch nicht besitzt.
+> Es heißt, dass Odin die Runen ursprünglich durch ein besonderes Ritual erlernte, bei dem er an seinem Hals an einem Eschenbaum aufgehängt und mit einem Speer in die Seite gestochen wurde. Nach neun Tagen dieser Folter hatte Odin eine Vision, in der er die Runen sah und ihre Macht verstand. Viele Vitkir glauben, dass eine Person, die diese Prüfung besteht, die Runen erschließen kann, genau wie ein Lehrling es mit seinem Meister tut. Sie sagen auch, dass das Ritual dem Suchenden die Gabe verleiht, falls er sie noch nicht besitzt.
 >
->Ein Charakter, der Odins Opfer auf sich nehmen will, muss ein Mittel finden, neun Tage ohne Nahrung, Wasser oder Luft zu überleben. Seine Seite muss mit dem Speer durchbohrt werden (wobei er eine Mittelschwere Wunde erleidet), und er muss neun Tage lang am Baum hängen bleiben, ohne bewegt, weiter verletzt oder von übernatürlichen Kräften beeinflusst zu werden. Am Ende des Rituals muss er einen Intelligenz + Konzentration-Stresswurf ablegen, dem er den Aurabonus oder -abzug für Magie hinzufügt. Erreicht er eine Summe von 24 oder mehr, erhält er die Gabe, oder erschließt seine Werte in allen Vitkar-Runen, falls er die Gabe bereits besitzt, oder erhält eine weitere Große Tugend, falls ihm die Runen bereits erschlossen wurden. (Dies beendet nicht das Nátt-thel eines Vitkirs und stellt seine Gabe nicht wieder her, könnte ihm aber eine neue Übernatürliche Fertigkeit geben, die er nutzen kann.) Ein Charakter kann dieses Ritual nur einmal in seinem Leben durchführen.
+> Ein Charakter, der Odins Opfer auf sich nehmen will, muss ein Mittel finden, neun Tage ohne Nahrung, Wasser oder Luft zu überleben. Seine Seite muss mit dem Speer durchbohrt werden (wobei er eine Mittelschwere Wunde erleidet), und er muss neun Tage lang am Baum hängen bleiben, ohne bewegt, weiter verletzt oder von übernatürlichen Kräften beeinflusst zu werden. Am Ende des Rituals muss er einen Intelligenz + Konzentration-Stresswurf ablegen, dem er den Aurabonus oder -abzug für Magie hinzufügt. Erreicht er eine Summe von 24 oder mehr, erhält er die Gabe, oder erschließt seine Werte in allen Vitkar-Runen, falls er die Gabe bereits besitzt, oder erhält eine weitere Große Tugend, falls ihm die Runen bereits erschlossen wurden. (Dies beendet nicht das Nátt-thel eines Vitkirs und stellt seine Gabe nicht wieder her, könnte ihm aber eine neue Übernatürliche Fertigkeit geben, die er nutzen kann.) Ein Charakter kann dieses Ritual nur einmal in seinem Leben durchführen.
 >
->Es heißt, dass die Götter in alten Zeiten wussten, wie man einen Trank aus rohem Vis, Met, Kräutern, Blut und anderen exotischeren Zutaten braute, der es einer Person ermöglichte, die Prüfung zu überstehen, indem er sie für neun Tage in einen komatösen Zustand versetzte, während dessen sie tot zu sein schien. Gelingt es einem Charakter, das Rezept zu entdecken, wird er während des Rituals seltsame Visionen erleben und muss keine Wund- oder Erschöpfungsabzüge auf seinen Konzentrationswurf anwenden. Wenn er aus der Bewusstlosigkeit erwacht, muss er alle seine Erschöpfungsstufen wie bei Langzeit-Erschöpfung zurückgewinnen. Die Stärke des Tranks verleiht ihm außerdem einen Bonus von +1 auf seine Konzentration für jeden Bauern Vis, der zum Brauen verwendet wurde. Sobald das Ritual abgeschlossen ist, muss er jedoch auch einen Patzerwürfel pro Bauern werfen, als hätte er einen Wurf verpatzt, und jede 0 steht für dauerhafte körperliche oder geistige Fehler.
+> Es heißt, dass die Götter in alten Zeiten wussten, wie man einen Trank aus rohem Vis, Met, Kräutern, Blut und anderen exotischeren Zutaten braute, der es einer Person ermöglichte, die Prüfung zu überstehen, indem er sie für neun Tage in einen komatösen Zustand versetzte, während dessen sie tot zu sein schien. Gelingt es einem Charakter, das Rezept zu entdecken, wird er während des Rituals seltsame Visionen erleben und muss keine Wund- oder Erschöpfungsabzüge auf seinen Konzentrationswurf anwenden. Wenn er aus der Bewusstlosigkeit erwacht, muss er alle seine Erschöpfungsstufen wie bei Langzeit-Erschöpfung zurückgewinnen. Die Stärke des Tranks verleiht ihm außerdem einen Bonus von +1 auf seine Konzentration für jeden Bauern Vis, der zum Brauen verwendet wurde. Sobald das Ritual abgeschlossen ist, muss er jedoch auch einen Patzerwürfel pro Bauern werfen, als hätte er einen Wurf verpatzt, und jede 0 steht für dauerhafte körperliche oder geistige Fehler.
 >
->Solche Tränke sind nicht leicht zu brauen, und den Legenden zufolge erfordern sie gewöhnlich, einen der Götter oder die Alfar (etwa „die Elfen") aufzusuchen, um mystische Einsicht in die geeigneten Zutaten für eine bestimmte Person zu erlangen. Traditionell hat dieser Rat stets seinen Preis. Zutaten könnten mythische Konzepte umfassen wie den Atem eines Fisches, Stoppeln vom Bart einer Frau, das Versprechen eines Lügners oder die Ohren eines Vogels. Oft muss der Trank von einem Bluteid begleitet werden, einem feierlichen Gelübde, den Göttern zu dienen, wie immer sie es befehlen. Ein solcher Eid ist sehr gefährlich, denn die Befehle der Götter bewegen sich gewöhnlich auf der Ebene nahezu selbstmörderischer heldenhafter Questen.
+> Solche Tränke sind nicht leicht zu brauen, und den Legenden zufolge erfordern sie gewöhnlich, einen der Götter oder die Alfar (etwa „die Elfen") aufzusuchen, um mystische Einsicht in die geeigneten Zutaten für eine bestimmte Person zu erlangen. Traditionell hat dieser Rat stets seinen Preis. Zutaten könnten mythische Konzepte umfassen wie den Atem eines Fisches, Stoppeln vom Bart einer Frau, das Versprechen eines Lügners oder die Ohren eines Vogels. Oft muss der Trank von einem Bluteid begleitet werden, einem feierlichen Gelübde, den Göttern zu dienen, wie immer sie es befehlen. Ein solcher Eid ist sehr gefährlich, denn die Befehle der Götter bewegen sich gewöhnlich auf der Ebene nahezu selbstmörderischer heldenhafter Questen.
 
 ### Erlernen der Vitkar-Magie
 
-Ein Vitki kann seine Kräfte einem Laering (altnordisch „Lehrling") beibringen, sofern der Schüler die Gabe besitzt. Er muss ein Quartal damit verbringen, seinen Schüler zu unterrichten, was dem neuen Vitki einen Wert von 0 in allen Runen gibt (beschrieben unter Die Runen). Dies wird „Erschließung der Runen" genannt, analog zur „Erschließung der Künste" bei hermetischen Magi. Hat der Schüler bereits Übernatürliche Tugenden oder Fertigkeiten, beträgt die Erschließungssumme des Vitkis Intelligenz + Runenmagie + niedrigste Rune + Aura. Hat der Meister in einer Rune bei der Erschließung einen Wert von weniger als 2, erhält der Laering einen Kleinen Magischen Mangel als Fehler für diese Rune. Die Runen können auch dann erschlossen werden, wenn sich der Meister im Nátt-thel befindet oder seine Gabe durch Nátt-thel verloren hat, doch in diesem Fall erhält der Laering auch den Fehler Nátt-thel-anfällig. Nach etwa fünf Jahren Unterricht bei demselben Lehrer erlangt ein Laering typischerweise eine Kleine Tugend, die der Spezialisierung seines Meisters entspricht, gewöhnlich Begabung in einer Rune oder Begabung in einer Fertigkeit. Übernatürliche Tugenden, die nur auf Vitkar-Magie anwendbar sind, manifestieren sich vermutlich, nachdem die Gabe erschlossen wurde.
+Ein Vitki kann seine Kräfte einem Laering (altnordisch „Lehrling") beibringen, sofern der Schüler die Gabe besitzt. Er muss ein Quartal damit verbringen, seinen Schüler zu unterrichten, was dem neuen Vitki einen Wert von 0 in allen Runen gibt (beschrieben unter Die Runen). Dies wird „Erschließung der Runen" genannt, analog zur „Erschließung der Künste" bei hermetischen Magi. Hat der Schüler bereits Übernatürliche Tugenden oder Fertigkeiten, beträgt die Erschließungssumme des Vitkis Intelligenz + Runenmagie + niedrigste Rune + Aura. Hat der Meister in einer Rune bei der Erschließung einen Wert von weniger als 2, erhält der Laering ein Kleines Magisches Defizit als Fehler für diese Rune. Die Runen können auch dann erschlossen werden, wenn sich der Meister im Nátt-thel befindet oder seine Gabe durch Nátt-thel verloren hat, doch in diesem Fall erhält der Laering auch den Fehler Nátt-thel-anfällig. Nach etwa fünf Jahren Unterricht bei demselben Lehrer erlangt ein Laering typischerweise eine Kleine Tugend, die der Spezialisierung seines Meisters entspricht, gewöhnlich Begabung in einer Rune oder Begabung in einer Fertigkeit. Übernatürliche Tugenden, die nur auf Vitkar-Magie anwendbar sind, manifestieren sich vermutlich, nachdem die Gabe erschlossen wurde.
 
 Vitkir können ihre Runen auf dieselbe Weise studieren, wie Magi hermetische Magie erlernen: durch Bücher (sofern sie die entsprechenden Akademischen Fertigkeiten erlernen), Unterweisung, Abenteuer oder Exposition. Vitkir können auch aus rohem Vis studieren, auf dieselbe Weise wie Magi, wobei Vitkir jedoch jede Art von Vis verwenden dürfen; sie brauchen kein Vis einer bestimmten Technik oder Form. Der Vitki braut das Vis zu einem Trank, der Met, etwas vom eigenen Blut des Vitkis und andere der zu studierenden Rune angemessene Zutaten enthält. Wird dieser getrunken, fällt der Vitki in einen tiefen, tranceähnlichen Zustand, während dessen er sich seiner Umgebung bewusst ist, aber keine Handlungen vornehmen kann. Dies dauert im Allgemeinen etwa zehn Tage, während der Vitki Visionen erlebt, die mit der Rune zusammenhängen. Den Rest des Quartals verbringt er damit, über diese Offenbarungen nachzudenken und aus der Erfahrung zu lernen.
 
@@ -6452,63 +6455,63 @@ Runen können manchmal andere magische Effekte nachbilden, die zur Beschreibung 
 
 Die Runen werden oft in drei Gruppen zu je acht Buchstaben geordnet, die *Aettir* genannt werden, und werden üblicherweise in drei Zeilen geschrieben, eine Aett pro Reihe (siehe nebenstehenden Kasten). Das gesamte Runenalphabet wird oft als *Futhark* bezeichnet, nach den ersten sechs Buchstaben: F, U, TH, A, R und K. Der leichteren Handhabung dieses Kapitels wegen werden die Runen im Folgenden jedoch in alphabetischer Reihenfolge von A (Ansuz) bis Z (Algiz) dargestellt, und es ist vermutlich am einfachsten, sie auch auf dem Charakterbogen so zu notieren.
 
->#### Varianten des Runenwirkens
+> ### Varianten des Runenwirkens
 >
->| VARIANTE           | MODIFIKATOR |
->|--------------------|-------------|
->| Versteckter Name   | -2          |
->| Kein Name          | -5          |
->| Versteckte Beschr. | -5          |
->| Keine Beschreibung | -10         |
->| Zusätzlicher Aufwand | + 1       |
->| Hervorhebung       | + 1         |
->| Vis (Makt)         | +2/Bauer*   |
->|                    |             |
+> | VARIANTE           | MODIFIKATOR |
+> |--------------------|-------------|
+> | Versteckter Name   | -2          |
+> | Kein Name          | -5          |
+> | Versteckte Beschr. | -5          |
+> | Keine Beschreibung | -10         |
+> | Zusätzlicher Aufwand | + 1       |
+> | Hervorhebung       | + 1         |
+> | Vis (Makt)         | +2/Bauer*   |
+> |                    |             |
 >
->\* wie für den Effekt angemessen
+> \* wie für den Effekt angemessen
 
->#### Das Ältere Futhark
+> ### Das Ältere Futhark
 >
->Die drei Aettir des Älteren Futhark sind nach drei Göttern benannt, die jeweils mit dem ersten Buchstaben ihrer Aett verbunden sind. Freya war eine nordische Göttin der Liebe und Ehe, Heimdall war der Gott, der beauftragt war, die Regenbogenbrücke zu bewachen, die von der Erde nach Asgard führt, und Tyr war der Gott der Gerechtigkeit und des Kampfes.
+> Die drei Aettir des Älteren Futhark sind nach drei Göttern benannt, die jeweils mit dem ersten Buchstaben ihrer Aett verbunden sind. Freya war eine nordische Göttin der Liebe und Ehe, Heimdall war der Gott, der beauftragt war, die Regenbogenbrücke zu bewachen, die von der Erde nach Asgard führt, und Tyr war der Gott der Gerechtigkeit und des Kampfes.
 >
->#### Freyas Aett
+> #### Freyas Aett
 >
->| Buchstabe | Rune | Name     | Bedeutung    | Effekte                          |
->| --------- | ---- | -------- | ------------ | -------------------------------- |
->| F         | ᚠ    | Fehu     | „Reichtum"   | Reichtum, domestizierte Tiere    |
->| U         | ᚢ    | Uruz     | „Auerochse"  | Ausdauer, die Wildnis            |
->| Þ         | ᚦ    | Thurisaz | „Riese"      | Bosheit, Gestaltwandlung         |
->| A         | ᚨ    | Ansuz    | „Mund"       | Kommunikation, Lehre             |
->| R         | ᚱ    | Raido    | „Reiten"     | Reisen, Wissen                   |
->| K         | ᚲ    | Kauno    | „Schmerz"    | Feuer, Geschwüre                 |
->| G         | ᚷ    | Gebo     | „Gabe"       | Schuld, Opfer                    |
->| W         | ᚹ    | Wunjo    | „Freude"     | Gefühl, Rausch                   |
+> | Buchstabe | Rune | Name     | Bedeutung    | Effekte                          |
+> | --------- | ---- | -------- | ------------ | -------------------------------- |
+> | F         | ᚠ    | Fehu     | „Reichtum"   | Reichtum, domestizierte Tiere    |
+> | U         | ᚢ    | Uruz     | „Auerochse"  | Ausdauer, die Wildnis            |
+> | Þ         | ᚦ    | Thurisaz | „Riese"      | Bosheit, Gestaltwandlung         |
+> | A         | ᚨ    | Ansuz    | „Mund"       | Kommunikation, Lehre             |
+> | R         | ᚱ    | Raido    | „Reiten"     | Reisen, Wissen                   |
+> | K         | ᚲ    | Kauno    | „Schmerz"    | Feuer, Geschwüre                 |
+> | G         | ᚷ    | Gebo     | „Gabe"       | Schuld, Opfer                    |
+> | W         | ᚹ    | Wunjo    | „Freude"     | Gefühl, Rausch                   |
 >
->#### Heimdalls Aett
+> #### Heimdalls Aett
 >
->| Buchstabe | Rune | Name    | Bedeutung | Effekte              |
->| --------- | ---- | ------- | --------- | -------------------- |
->| H         | ᚺ    | Hagalaz | „Hagel"   | Wetter, Krankheit    |
->| N         | ᚾ    | Naudiz  | „Not"     | Schwierigkeiten, Leid |
->| I         | ᛁ    | Isa     | „Eis"     | Kälte, Stillstand    |
->| J         | ᛃ    | Jera    | „Jahr"    | Ernte, Fülle         |
->| Y         | ᛇ    | Ihwaz   | „Eibe"    | Geduld, die Toten    |
->| P         | ᛈ    | Perth   | „Becher"  | Zufall, Geheimnisse  |
->| Z         | ᛉ    | Algiz   | „Elch"    | Schutz, die Jagd     |
->| S         | ᛋ    | Sowilo  | „Sonne"   | Triumph, Tugend      |
+> | Buchstabe | Rune | Name    | Bedeutung | Effekte              |
+> | --------- | ---- | ------- | --------- | -------------------- |
+> | H         | ᚺ    | Hagalaz | „Hagel"   | Wetter, Krankheit    |
+> | N         | ᚾ    | Naudiz  | „Not"     | Schwierigkeiten, Leid |
+> | I         | ᛁ    | Isa     | „Eis"     | Kälte, Stillstand    |
+> | J         | ᛃ    | Jera    | „Jahr"    | Ernte, Fülle         |
+> | Y         | ᛇ    | Ihwaz   | „Eibe"    | Geduld, die Toten    |
+> | P         | ᛈ    | Perth   | „Becher"  | Zufall, Geheimnisse  |
+> | Z         | ᛉ    | Algiz   | „Elch"    | Schutz, die Jagd     |
+> | S         | ᛋ    | Sowilo  | „Sonne"   | Triumph, Tugend      |
 >
->#### Tyrs Aett
+> #### Tyrs Aett
 >
->| Buchstabe | Rune | Name     | Bedeutung   | Effekte              |
->| --------- | ---- | -------- | ----------- | -------------------- |
->| T         | ᛏ    | Tiwaz    | „Tyr"       | Gerechtigkeit, Kampf |
->| B         | ᛒ    | Berkanan | „Birke"     | Gesundheit, Jugend   |
->| E         | ᛖ    | Ehwaz    | „Pferd"     | Geschwindigkeit, Beziehungen |
->| M         | ᛗ    | Mannaz   | „Mensch"    | Zusammenarbeit, Pflicht |
->| L         | ᛚ    | Laguz    | „Wasser"    | Ozean, Schiffe       |
->| Ng        | ᛜ    | Ingwaz   | „Herr"      | Familie, Sicherheit  |
->| D         | ᛞ    | Dagaz    | „Tag"       | Zeit, Wachstum       |
->| O         | ᛟ    | Othila   | „Erbe"      | Ländereien, Besitz   |
+> | Buchstabe | Rune | Name     | Bedeutung   | Effekte              |
+> | --------- | ---- | -------- | ----------- | -------------------- |
+> | T         | ᛏ    | Tiwaz    | „Tyr"       | Gerechtigkeit, Kampf |
+> | B         | ᛒ    | Berkanan | „Birke"     | Gesundheit, Jugend   |
+> | E         | ᛖ    | Ehwaz    | „Pferd"     | Geschwindigkeit, Beziehungen |
+> | M         | ᛗ    | Mannaz   | „Mensch"    | Zusammenarbeit, Pflicht |
+> | L         | ᛚ    | Laguz    | „Wasser"    | Ozean, Schiffe       |
+> | Ng        | ᛜ    | Ingwaz   | „Herr"      | Familie, Sicherheit  |
+> | D         | ᛞ    | Dagaz    | „Tag"       | Zeit, Wachstum       |
+> | O         | ᛟ    | Othila   | „Erbe"      | Ländereien, Besitz   |
 
 ### A, Ansuz, „Mund"
 
@@ -6518,19 +6521,19 @@ Diese Rune hat viele Bedeutungen, darunter „Mund" als Quelle der Sprache und a
 
 Wenn sie zur Beschreibung eines Ziels verwendet wird, bezieht sich Ansuz am häufigsten auf Bilder, insbesondere Geräusche. Für die Zwecke der Penetration ist diese Anwendung ein Imaginem-Effekt. Ansuz kann auch den Geist durch Sprache beeinflussen, ein Aspekt von Mentem, und in seltenen Fällen kann sie direkt auf den menschlichen Mund als Corpus-Effekt abzielen. Gelegentlich wird sie auch mit Vim in Verbindung gebracht, um intelligente übernatürliche Wesen zu beeinflussen, die die Fähigkeit zur Sprache besitzen.
 
->#### Ansuz-Leitlinien
+> ### Ansuz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf alle Fertigkeitswürfe, die mit Kommunikation zusammenhängen.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf alle Fertigkeitswürfe, die mit Kommunikation zusammenhängen.
 >
->Allgemein: Das Ziel erlangt die Fähigkeit, akustische Illusionen zu erkennen, die kleiner oder gleich der Stufe dieses Effekts sind, wobei es sie mit dem Gehör wahrnimmt, ähnlich wie Personen mit Zweitem Gesicht sie visuell wahrnehmen.
+> Allgemein: Das Ziel erlangt die Fähigkeit, akustische Illusionen zu erkennen, die kleiner oder gleich der Stufe dieses Effekts sind, wobei es sie mit dem Gehör wahrnimmt, ähnlich wie Personen mit Zweitem Gesicht sie visuell wahrnehmen.
 >
->Stufe 10: Verleihe einem Ziel die Fähigkeit zu sprechen. Ist das Ziel nicht intelligent, kann es nur wiederholen, was im Effekt festgelegt ist.
+> Stufe 10: Verleihe einem Ziel die Fähigkeit zu sprechen. Ist das Ziel nicht intelligent, kann es nur wiederholen, was im Effekt festgelegt ist.
 >
->Stufe 20: Das Ziel erlangt die Fähigkeit, die Form zu erkennen, die mit der Macht einer Kreatur verbunden ist, die sich innerhalb von etwa zehn Schritten befindet. Dies verrät dem Vitki, welche Runen er verwenden kann, um sie als Ziel zu wählen.
+> Stufe 20: Das Ziel erlangt die Fähigkeit, die Form zu erkennen, die mit der Macht einer Kreatur verbunden ist, die sich innerhalb von etwa zehn Schritten befindet. Dies verrät dem Vitki, welche Runen er verwenden kann, um sie als Ziel zu wählen.
 >
->Stufe 25: Das Ziel erlangt die Fähigkeit, intuitiv die oberflächlichen Gedanken anderer innerhalb eines Bereichs von zehn Schritten zu verstehen, was es ermöglicht, fremde Sprachen zu verstehen.
+> Stufe 25: Das Ziel erlangt die Fähigkeit, intuitiv die oberflächlichen Gedanken anderer innerhalb eines Bereichs von zehn Schritten zu verstehen, was es ermöglicht, fremde Sprachen zu verstehen.
 >
->Stufe 30: Erhöhe oder senke die Kommunikation eines Ziels um einen Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
+> Stufe 30: Erhöhe oder senke die Kommunikation eines Ziels um einen Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
 
 #### Beispiel-Runenzauber für Ansuz
 
@@ -6552,31 +6555,31 @@ Die Birke ist ein Baum der Fruchtbarkeit; ihre Zweige sind kahl und bringen wede
 
 Die Berkanan-Rune ist mit Heilung verbunden, ebenso mit Jugend. Wenn sie als Ziel verwendet wird, ist sie gewöhnlich Herbam, kann aber auch Kinder (Corpus) und junge Tiere (Animal) betreffen.
 
->#### Berkanan-Leitlinien
+> ### Berkanan-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug auf Genesungswürfe in Höhe von (der Magnitude des Effekts × 3). Dies schließt körperliche Verletzungen ein, aber nicht Krankheiten durch Seuchen oder Gifte.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug auf Genesungswürfe in Höhe von (der Magnitude des Effekts × 3). Dies schließt körperliche Verletzungen ein, aber nicht Krankheiten durch Seuchen oder Gifte.
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug auf alle Fertigkeitswürfe, die im verletzten Zustand durchgeführt werden.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug auf alle Fertigkeitswürfe, die im verletzten Zustand durchgeführt werden.
 >
->Stufe 15: Das Ziel wird für die Dauer weder zeugen noch schwanger werden. Stelle sicher, dass das Ziel für die Dauer zeugungsfähig oder fruchtbar ist.
+> Stufe 15: Das Ziel wird für die Dauer weder zeugen noch schwanger werden. Stelle sicher, dass das Ziel für die Dauer zeugungsfähig oder fruchtbar ist.
 >
->Stufe 20: Heile eine der Leichten Wunden des Ziels oder ein Äquivalent, oder reduziere eine der Wunden des Ziels um eine Schwerestufe (etwa von einer Schweren Wunde zu einer Mittelschweren Wunde).
+> Stufe 20: Heile eine der Leichten Wunden des Ziels oder ein Äquivalent, oder reduziere eine der Wunden des Ziels um eine Schwerestufe (etwa von einer Schweren Wunde zu einer Mittelschweren Wunde).
 >
->Stufe 20: Verhindere, dass alle Leichten Wunden eines Ziels für die Dauer natürlich heilen.
+> Stufe 20: Verhindere, dass alle Leichten Wunden eines Ziels für die Dauer natürlich heilen.
 >
->Stufe 25: Heile die Mittelschwere Wunde deines Ziels, oder reduziere eine Wunde um zwei Schwerestufen.
+> Stufe 25: Heile die Mittelschwere Wunde deines Ziels, oder reduziere eine Wunde um zwei Schwerestufen.
 >
->Stufe 25: Verhindere, dass alle Leichten oder Mittelschweren Wunden eines Ziels für die Dauer natürlich heilen.
+> Stufe 25: Verhindere, dass alle Leichten oder Mittelschweren Wunden eines Ziels für die Dauer natürlich heilen.
 >
->Stufe 30: Heile eine Schwere Wunde des Ziels, oder reduziere eine der Wunden des Ziels um drei Schwerestufen.
+> Stufe 30: Heile eine Schwere Wunde des Ziels, oder reduziere eine der Wunden des Ziels um drei Schwerestufen.
 >
->Stufe 30: Verhindere, dass alle Leichten, Mittelschweren oder Schweren Wunden eines Ziels für die Dauer natürlich heilen.
+> Stufe 30: Verhindere, dass alle Leichten, Mittelschweren oder Schweren Wunden eines Ziels für die Dauer natürlich heilen.
 >
->Stufe 35: Heile eine Lähmende Wunde des Ziels.
+> Stufe 35: Heile eine Lähmende Wunde des Ziels.
 >
->Stufe 35: Verhindere, dass irgendeine Wunde des Ziels für die Dauer des Zaubers natürlich heilt.
+> Stufe 35: Verhindere, dass irgendeine Wunde des Ziels für die Dauer des Zaubers natürlich heilt.
 >
->Stufe 40: Heile alle Wunden des Ziels.
+> Stufe 40: Heile alle Wunden des Ziels.
 
 #### Beispiel-Runenzauber für Berkanan
 
@@ -6598,17 +6601,17 @@ Dagaz bedeutet „Tag", im Sinne der Zeitspanne, die die Sonne braucht, um von H
 
 Als Ziel würde Dagaz entweder als Teil von Imaginem oder Ignem betrachtet, da sie speziell das Tageslicht und bewegte Bilder beeinflusst, die mit dem Vergehen der Zeit zusammenhängen, wird aber selten auf diese Weise verwendet.
 
->#### Dagaz-Leitlinien
+> ### Dagaz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die eine regelmäßige, ganztägige Aktivität betreffen.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die eine regelmäßige, ganztägige Aktivität betreffen.
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug auf Alterungswürfe in Höhe der Magnitude des Effekts, sofern die Rune das gesamte Jahr über besteht.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug auf Alterungswürfe in Höhe der Magnitude des Effekts, sofern die Rune das gesamte Jahr über besteht.
 >
->Stufe 20: Lass ein Ziel mit dem Lauf der Sonne auf die doppelte Normalgröße wachsen. Stufe 20: Schrumpfe ein Ziel mit dem Lauf der Sonne auf die halbe Normalgröße.
+> Stufe 20: Lass ein Ziel mit dem Lauf der Sonne auf die doppelte Normalgröße wachsen. Stufe 20: Schrumpfe ein Ziel mit dem Lauf der Sonne auf die halbe Normalgröße.
 >
->Stufe 30: Lass ein Ziel an einem einzigen Tag zur vollen Reife heranwachsen.
+> Stufe 30: Lass ein Ziel an einem einzigen Tag zur vollen Reife heranwachsen.
 >
->Stufe 30: Altere das Ziel um fünf Jahre, sofern das Ziel die Reife bereits erreicht hat.
+> Stufe 30: Altere das Ziel um fünf Jahre, sofern das Ziel die Reife bereits erreicht hat.
 
 #### Beispiel-Runenzauber für Dagaz
 
@@ -6628,19 +6631,19 @@ Diese Runen stellen sicher, dass jede Person, die den Boden oder den Verschlusss
 
 Diese Rune steht für das Pferd – ein Tier, das für seine Ausdauer, Geschwindigkeit und Stärke bekannt ist. Sie steht für überlegene Beweglichkeit im Kampf sowie für die enge Beziehung zwischen Pferd und Reiter. Wenn sie als Ziel verwendet wird, ist sie mit Animal verbunden, insbesondere wenn es um Pferde oder andere Tiere geht, die im Kampf eingesetzt werden.
 
->#### Ehwaz-Leitlinien
+> ### Ehwaz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf alle Würfe, die beritten durchgeführt werden, einschließlich Initiative-, Angriffs- und Verteidigungswürfe.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf alle Würfe, die beritten durchgeführt werden, einschließlich Initiative-, Angriffs- und Verteidigungswürfe.
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf Fertigkeitswürfe, die Schnelligkeit betreffen (nicht einschließlich Initiative oder Verteidigung).
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf Fertigkeitswürfe, die Schnelligkeit betreffen (nicht einschließlich Initiative oder Verteidigung).
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf alle Würfe, die Vertrauen und Loyalität zwischen zwei Personen betreffen, wodurch eine Bindung entsteht, die der zwischen Pferd und Reiter ähnelt. Dies ähnelt den Effekten der Tugend Wahrer Freund.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf alle Würfe, die Vertrauen und Loyalität zwischen zwei Personen betreffen, wodurch eine Bindung entsteht, die der zwischen Pferd und Reiter ähnelt. Dies ähnelt den Effekten der Tugend Wahrer Freund.
 >
->Stufe 20: Zähme das Ziel, mache es loyaler und empfänglicher für die Bedürfnisse des Vitkis.
+> Stufe 20: Zähme das Ziel, mache es loyaler und empfänglicher für die Bedürfnisse des Vitkis.
 >
->Stufe 30: Rufe ein Reittier herbei, das den Anweisungen des Vitkis gehorcht und ihn als Reiter akzeptiert.
+> Stufe 30: Rufe ein Reittier herbei, das den Anweisungen des Vitkis gehorcht und ihn als Reiter akzeptiert.
 >
->Stufe 30: Erhöhe oder senke die Schnelligkeit eines Ziels um einen Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
+> Stufe 30: Erhöhe oder senke die Schnelligkeit eines Ziels um einen Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
 
 #### Beispiel-Runenzauber für Ehwaz
 
@@ -6662,15 +6665,15 @@ Fehu ist die Rune des Reichtums, dargestellt durch Glück und Wohlstand. Im Gege
 
 Wenn sie als Ziel verwendet wird, ist Fehu gewöhnlich entweder mit Animal oder Terram verbunden, abhängig von der Art des Reichtums, der von der Rune betroffen ist. Sie kann Tiere im Allgemeinen beeinflussen, aber nur solche, die domestiziert und daher als Eigentum betrachtet werden.
 
->#### Fehu-Leitlinien
+> ### Fehu-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die das Erlangen von Reichtum unterstützen: Arbeiten, Glücksspiel, Investieren oder Schatzsuche.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die das Erlangen von Reichtum unterstützen: Arbeiten, Glücksspiel, Investieren oder Schatzsuche.
 >
->Stufe 20: Das Ziel erlangt die Fähigkeit, Edelmetall zu erspüren, das sich innerhalb von etwa zehn Schritten befindet.
+> Stufe 20: Das Ziel erlangt die Fähigkeit, Edelmetall zu erspüren, das sich innerhalb von etwa zehn Schritten befindet.
 >
->Stufe 25: Das Ziel erlangt die Fähigkeit, domestizierte Tiere innerhalb von etwa zehn Schritten zu erspüren.
+> Stufe 25: Das Ziel erlangt die Fähigkeit, domestizierte Tiere innerhalb von etwa zehn Schritten zu erspüren.
 >
->Stufe 35: Rufe Reichtum herbei, üblicherweise in Form von Edelmetall oder einem domestizierten Tier.
+> Stufe 35: Rufe Reichtum herbei, üblicherweise in Form von Edelmetall oder einem domestizierten Tier.
 
 #### Beispiel-Runenzauber für Fehu
 
@@ -6696,17 +6699,17 @@ Das Annehmen eines Geschenks verpflichtet den Empfänger in der nordischen Gesel
 
 Gebo ist mit keiner bestimmten Form verbunden, sondern mit jedem physischen Gegenstand, der als Geschenk gegeben wird. Sie kann auch jemanden zum Ziel haben, der dem Vitki etwas schuldet, durch das Pflichtgefühl, das durch die Großzügigkeit des Vitki entsteht. In diesem Fall kann sie als Mentem-Effekt betrachtet werden.
 
->#### Gebo-Leitlinien
+> ### Gebo-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle Fertigkeitswürfe, um andere zu beeinflussen, einschließlich des Aufbaus neuer Beziehungen, Brautwerbung, Verzaubern anderer und Verhandlung.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle Fertigkeitswürfe, um andere zu beeinflussen, einschließlich des Aufbaus neuer Beziehungen, Brautwerbung, Verzaubern anderer und Verhandlung.
 >
->Stufe 30: Verleihe dem Ziel ein Gefühl der Ehrerbietung und Verpflichtung gegenüber dem Vitki.
+> Stufe 30: Verleihe dem Ziel ein Gefühl der Ehrerbietung und Verpflichtung gegenüber dem Vitki.
 >
->Stufe 35: Zwinge das Ziel, einem einfachen Befehl zu gehorchen.
+> Stufe 35: Zwinge das Ziel, einem einfachen Befehl zu gehorchen.
 >
->Stufe 40: Zwinge das Ziel, einem komplexen Befehl zu gehorchen.
+> Stufe 40: Zwinge das Ziel, einem komplexen Befehl zu gehorchen.
 >
->Stufe 50: Beherrsche den Geist und die Gefühle des Ziels vollständig.
+> Stufe 50: Beherrsche den Geist und die Gefühle des Ziels vollständig.
 
 #### Beispiel-Runenzauber für Gebo
 
@@ -6728,17 +6731,17 @@ Hagalaz steht für die grausamste Seite der Natur, von plötzlichen Stürmen bis
 
 Wenn sie als Ziel verwendet wird, gehört Hagalaz fast immer zu Auram oder bestimmten Aspekten von Aquam (Kälte, Regen und Hagel). Sie kann auch andere Arten von Fernkampfwaffen betreffen, darunter Terram (Steine) und Herbam (Pfeile).
 
->#### Hagalaz-Leitlinien
+> ### Hagalaz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Schaden.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Schaden.
 >
->Allgemein: Lass Hagel oder andere gefährliche Phänomene auf ein Ziel niederprasseln, wobei Schaden in Höhe eines Stresswürfels + (die Stufe des Effekts − 15) verursacht wird.
+> Allgemein: Lass Hagel oder andere gefährliche Phänomene auf ein Ziel niederprasseln, wobei Schaden in Höhe eines Stresswürfels + (die Stufe des Effekts − 15) verursacht wird.
 >
->Stufe 15: Rufe schwere Wetterphänomene herbei, wie Gewitter oder Hagelstürme.
+> Stufe 15: Rufe schwere Wetterphänomene herbei, wie Gewitter oder Hagelstürme.
 >
->Stufe 20: Lass Wetterphänomene stärker oder schwächer werden.
+> Stufe 20: Lass Wetterphänomene stärker oder schwächer werden.
 >
->Stufe 25: Rufe ein sehr schweres Wetterphänomen herbei, zum Beispiel einen Tornado oder Schneesturm.
+> Stufe 25: Rufe ein sehr schweres Wetterphänomen herbei, zum Beispiel einen Tornado oder Schneesturm.
 
 #### Beispiel-Runenzauber für Hagalaz
 
@@ -6758,17 +6761,17 @@ Nach dem Einritzen dieses Skripts sammelt sich ein furchtbares Gewitter im Umfel
 
 Isa bedeutet Eis, und sie symbolisiert die verborgenen Gefahren, die Eis darstellt, wie Ausrutschen oder Einbrechen. Sie verkörpert Kälte und auch kalte Gefühle. Als Ziel ist Isa mit tatsächlichem Eis (Aquam) verbunden, oder mit Ignem wenn sie die Temperatur beeinflusst, oder mit Mentem wenn sie die kalten und unerbittlichen Gefühle einer Person betrifft.
 
->#### Isa-Leitlinien
+> ### Isa-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die mit Eis oder Kälte zusammenhängen: Erfrierung, Winterreise oder Ausrutschen.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die mit Eis oder Kälte zusammenhängen: Erfrierung, Winterreise oder Ausrutschen.
 >
->Allgemein: Kühle ein Ziel ab und verursache Schaden in Höhe von (die Stufe des Effekts − 20), wobei es möglicherweise komplett eingefroren wird.
+> Allgemein: Kühle ein Ziel ab und verursache Schaden in Höhe von (die Stufe des Effekts − 20), wobei es möglicherweise komplett eingefroren wird.
 >
->Stufe 10: Lass Wasser gefrieren. Wird der Zauber auf ein Ziel gewirkt, wird es kalt beim Anfassen, und lebende Wesen verlieren eine Erschöpfungsstufe. Lass Eis schmelzen.
+> Stufe 10: Lass Wasser gefrieren. Wird der Zauber auf ein Ziel gewirkt, wird es kalt beim Anfassen, und lebende Wesen verlieren eine Erschöpfungsstufe. Lass Eis schmelzen.
 >
->Stufe 15: Lass ein Ziel für die Dauer niedergeschlagen und teilnahmslos werden und lösche andere starke Emotionen aus.
+> Stufe 15: Lass ein Ziel für die Dauer niedergeschlagen und teilnahmslos werden und lösche andere starke Emotionen aus.
 >
->Stufe 20: Halte ein Ziel vollkommen bewegungslos. Stufe 25: Lass die Oberfläche eines Ziels vollständig mit Eis überziehen.
+> Stufe 20: Halte ein Ziel vollkommen bewegungslos. Stufe 25: Lass die Oberfläche eines Ziels vollständig mit Eis überziehen.
 
 #### Beispiel-Runenzauber für Isa
 
@@ -6788,15 +6791,15 @@ Dieser Zauber erschafft eine rutschige Eisfläche auf dem Boden rund um die Rune
 
 Jera bezeichnet die Ernte, und obwohl dies Herbst impliziert, kann es auch die Gaben der Natur das ganze Jahr über meinen. Die Ernte ist auch das Endergebnis harter Arbeit eines ganzen Jahres, und so hat die Rune auch Konnotationen von Wohlstand und Überfluss. Als Ziel ist Jera fast immer mit der Form Herbam verbunden, kann aber auch eine Tierernte beeinflussen und kann die Gesundheit und das allgemeine Wohlbefinden von Menschen über Corpus betreffen.
 
->#### Jera-Leitlinien
+> ### Jera-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf ganzjährige Aktivitäten, sofern die Rune das gesamte Jahr über besteht, wobei der Bonus am Jahresende erhalten wird. Zum Beispiel: Ernte, Studium, Unterricht, Handwerksarbeit (aber nicht Altern, was von Dagaz abgedeckt wird).
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf ganzjährige Aktivitäten, sofern die Rune das gesamte Jahr über besteht, wobei der Bonus am Jahresende erhalten wird. Zum Beispiel: Ernte, Studium, Unterricht, Handwerksarbeit (aber nicht Altern, was von Dagaz abgedeckt wird).
 >
->Allgemein: Das Ziel ist immun gegen übernatürliche Krankheiten bis zur Stufe dieses Effekts.
+> Allgemein: Das Ziel ist immun gegen übernatürliche Krankheiten bis zur Stufe dieses Effekts.
 >
->Stufe 5: Stelle sicher, dass das Ziel für die Dauer gesund und kräftig bleibt, immun gegen natürliche Fäulnis und Krankheit.
+> Stufe 5: Stelle sicher, dass das Ziel für die Dauer gesund und kräftig bleibt, immun gegen natürliche Fäulnis und Krankheit.
 >
->Stufe 15: Rufe Nahrung und Getränke herbei.
+> Stufe 15: Rufe Nahrung und Getränke herbei.
 
 #### Beispiel-Runenzauber für Jera
 
@@ -6818,39 +6821,39 @@ Im angelsächsischen Runengedicht wird Kauno als eine weithin sichtbare Fackel b
 
 Als Ziel beeinflusst Kauno jede Art von Feuer sowie Hitze und Temperatur. Sie wird bei der Beurteilung der Penetration fast immer mit Ignem in Verbindung gebracht, obwohl Effekte, die Geschwüre und Schmerz verursachen, gewöhnlich Corpus oder Animal sind.
 
->#### Kauno-Leitlinien
+> ### Kauno-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle Fertigkeitswürfe, die mit Krankheit und Siechtum zusammenhängen, wie das Diagnostizieren oder Heilen anderer.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle Fertigkeitswürfe, die mit Krankheit und Siechtum zusammenhängen, wie das Diagnostizieren oder Heilen anderer.
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug auf alle Fertigkeitswürfe, die im kranken Zustand durchgeführt werden.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug auf alle Fertigkeitswürfe, die im kranken Zustand durchgeführt werden.
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug auf Genesungswürfe wegen Krankheit und Seuche in Höhe von (der Magnitude dieses Effekts × 3). Dies schließt keine Genesungswürfe für körperliche Verletzungen ein.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug auf Genesungswürfe wegen Krankheit und Seuche in Höhe von (der Magnitude dieses Effekts × 3). Dies schließt keine Genesungswürfe für körperliche Verletzungen ein.
 >
->Stufe 10: Entzünde ein extrem leicht entzündliches Ziel oder mache es warm beim Anfassen. Dies verursacht +5 Schaden am Ziel oder an allem, was es berührt, pro Runde, wobei die Schadenssumme nach dem Wurf durch 5 geteilt wird.
+> Stufe 10: Entzünde ein extrem leicht entzündliches Ziel oder mache es warm beim Anfassen. Dies verursacht +5 Schaden am Ziel oder an allem, was es berührt, pro Runde, wobei die Schadenssumme nach dem Wurf durch 5 geteilt wird.
 >
->Stufe 15: Entzünde ein sehr leicht entzündliches Ziel oder mache es heiß beim Anfassen. Dies verursacht +5 Schaden am Ziel oder an allem, was es berührt, pro Runde, wobei die Schadenssumme nach dem Wurf durch 2 geteilt wird.
+> Stufe 15: Entzünde ein sehr leicht entzündliches Ziel oder mache es heiß beim Anfassen. Dies verursacht +5 Schaden am Ziel oder an allem, was es berührt, pro Runde, wobei die Schadenssumme nach dem Wurf durch 2 geteilt wird.
 >
->Stufe 20: Entzünde ein entzündliches Ziel oder mache es heiß genug, um Wasser zum Kochen zu bringen. Dies verursacht +5 Schaden am Ziel oder an allem, was es berührt, pro Runde.
+> Stufe 20: Entzünde ein entzündliches Ziel oder mache es heiß genug, um Wasser zum Kochen zu bringen. Dies verursacht +5 Schaden am Ziel oder an allem, was es berührt, pro Runde.
 >
->Stufe 20: Lass das Ziel unter schmerzhaften Geschwüren leiden, die für die Dauer anhalten. Diese sind ablenkend und unangenehm für das Ziel, haben aber keine weitere Wirkung. Stufe 25: Entzünde ein leicht entzündliches Ziel oder mache es heiß genug, um zu glühen. Dies verursacht +10 Schaden am Ziel oder an allem, was es berührt, pro Runde.
+> Stufe 20: Lass das Ziel unter schmerzhaften Geschwüren leiden, die für die Dauer anhalten. Diese sind ablenkend und unangenehm für das Ziel, haben aber keine weitere Wirkung. Stufe 25: Entzünde ein leicht entzündliches Ziel oder mache es heiß genug, um zu glühen. Dies verursacht +10 Schaden am Ziel oder an allem, was es berührt, pro Runde.
 >
->Stufe 25: Das Ziel wird mit einer leichten Krankheit infiziert, die für die Dauer nicht natürlich heilen wird.
+> Stufe 25: Das Ziel wird mit einer leichten Krankheit infiziert, die für die Dauer nicht natürlich heilen wird.
 >
->Stufe 30: Entzünde ein kaum entzündliches Ziel oder mache es heiß genug, um Blei zu schmelzen. Es verursacht +15 Schaden am Ziel oder an allem, was es berührt, pro Runde.
+> Stufe 30: Entzünde ein kaum entzündliches Ziel oder mache es heiß genug, um Blei zu schmelzen. Es verursacht +15 Schaden am Ziel oder an allem, was es berührt, pro Runde.
 >
->Stufe 30: Das Ziel wird mit einer ernsthaften Krankheit infiziert, die für die Dauer nicht natürlich heilen wird.
+> Stufe 30: Das Ziel wird mit einer ernsthaften Krankheit infiziert, die für die Dauer nicht natürlich heilen wird.
 >
->Stufe 35: Entzünde ein Ziel oder mache es unnatürlich heiß. Dies verursacht +20 Schaden am Ziel oder an allem, was es berührt, pro Runde.
+> Stufe 35: Entzünde ein Ziel oder mache es unnatürlich heiß. Dies verursacht +20 Schaden am Ziel oder an allem, was es berührt, pro Runde.
 >
->Stufe 35: Das Ziel wird mit einer schweren Krankheit infiziert, die für die Dauer nicht natürlich heilen wird.
+> Stufe 35: Das Ziel wird mit einer schweren Krankheit infiziert, die für die Dauer nicht natürlich heilen wird.
 >
->Stufe 40: Entzünde ein Ziel oder mache es unnatürlich heiß. Dies verursacht +25 Schaden am Ziel oder an allem, was es berührt, pro Runde.
+> Stufe 40: Entzünde ein Ziel oder mache es unnatürlich heiß. Dies verursacht +25 Schaden am Ziel oder an allem, was es berührt, pro Runde.
 >
->Stufe 40: Das Ziel wird mit einer kritischen Krankheit infiziert, die für die Dauer nicht natürlich heilen wird.
+> Stufe 40: Das Ziel wird mit einer kritischen Krankheit infiziert, die für die Dauer nicht natürlich heilen wird.
 >
->Stufe 45: Entzünde ein Ziel oder mache es unnatürlich heiß. Dies verursacht +30 Schaden am Ziel oder an allem, was es berührt, pro Runde.
+> Stufe 45: Entzünde ein Ziel oder mache es unnatürlich heiß. Dies verursacht +30 Schaden am Ziel oder an allem, was es berührt, pro Runde.
 >
->Stufe 45: Das Ziel wird mit einer tödlichen Krankheit infiziert, die für die Dauer nicht natürlich heilen wird.
+> Stufe 45: Das Ziel wird mit einer tödlichen Krankheit infiziert, die für die Dauer nicht natürlich heilen wird.
 
 #### Beispiel-Runenzauber für Kauno
 
@@ -6864,27 +6867,27 @@ Kauno (Mannaz) 30, Methode II
 
 Die Zielperson wird von einer ernsthaften Krankheit befallen, dem Äquivalent einer Mittelschweren Wunde. Solange dieser Zauber andauert, kann sich das Ziel jedoch nicht natürlich erholen; sein Zustand kann nur gleich bleiben oder sich verschlechtern, da die Krankheit ständig von den Runen aufrechterhalten wird.
 
-#### L, Laguz, „Wasser"
+### L, Laguz, „Wasser"
 
 
 
 Diese Rune steht für Wasser, insbesondere das des Ozeans. Im Ozean liegen großer Reichtum und große Macht, und viele verborgene Gefahren, die von der Oberfläche aus nicht zu sehen sind. Als Ziel ist sie fast immer mit Aquam verbunden, kann aber auch Dinge betreffen, die nur unter Wasser zu finden sind, wie im Wasser lebende Tiere und Meerespflanzen.
 
->#### Laguz-Leitlinien
+> ### Laguz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die unter Wasser getaucht oder auf dem Wasser treibend durchgeführt werden.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die unter Wasser getaucht oder auf dem Wasser treibend durchgeführt werden.
 >
->Stufe 5: Das Ziel erlangt die Fähigkeit, unter Wasser klar zu sehen.
+> Stufe 5: Das Ziel erlangt die Fähigkeit, unter Wasser klar zu sehen.
 >
->Stufe 10: Rufe Wasser herbei, genug um eine Fläche von etwa zehn Schritten Durchmesser und zehn Schritten Tiefe zu füllen.
+> Stufe 10: Rufe Wasser herbei, genug um eine Fläche von etwa zehn Schritten Durchmesser und zehn Schritten Tiefe zu füllen.
 >
->Stufe 20: Das Ziel erlangt die Fähigkeit, die Richtung des nächsten großen Gewässers zu spüren oder ob sich Wasser innerhalb von etwa zehn Schritten befindet.
+> Stufe 20: Das Ziel erlangt die Fähigkeit, die Richtung des nächsten großen Gewässers zu spüren oder ob sich Wasser innerhalb von etwa zehn Schritten befindet.
 >
->Stufe 20: Das Ziel erlangt die Fähigkeit, unter Wasser zu atmen.
+> Stufe 20: Das Ziel erlangt die Fähigkeit, unter Wasser zu atmen.
 >
->Stufe 25: Beschleunige eine Seereise, wobei das Zielschiff oder der Zielschwimmer mit der doppelten normalen Geschwindigkeit durch das Wasser fährt.
+> Stufe 25: Beschleunige eine Seereise, wobei das Zielschiff oder der Zielschwimmer mit der doppelten normalen Geschwindigkeit durch das Wasser fährt.
 >
->Stufe 30: Lass Wellen ein großes Ziel umwerfen oder ein kleines Ziel unter Wasser ziehen.
+> Stufe 30: Lass Wellen ein großes Ziel umwerfen oder ein kleines Ziel unter Wasser ziehen.
 
 #### Beispiel-Runenzauber für Laguz
 
@@ -6904,17 +6907,17 @@ Die Runen werden in ein Stück Holz geritzt, das am Bug eines Schiffes befestigt
 
 Mannaz bedeutet Menschheit und deutet auf Einheit und Zusammenarbeit unter allen Menschen hin. Wenn sie als Ziel verwendet wird, beeinflusst sie entweder den Geist oder den Körper, aber am häufigsten den Körper, und ist daher gewöhnlich eher mit Corpus als mit Mentem verbunden. Sie wird am häufigsten verwendet, um eine Person als Ziel einer anderen Rune zu beeinflussen.
 
->#### Mannaz-Leitlinien
+> ### Mannaz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die Geschicklichkeit betreffen (aber nicht Angriffswürfe).
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die Geschicklichkeit betreffen (aber nicht Angriffswürfe).
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die die Zusammenarbeit mit anderen betreffen, wie das Kämpfen in einer Gruppe oder die Zusammenarbeit an einem Projekt in einer Werkstatt.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die die Zusammenarbeit mit anderen betreffen, wie das Kämpfen in einer Gruppe oder die Zusammenarbeit an einem Projekt in einer Werkstatt.
 >
->Stufe 20: Wecke Gefühle der Zusammenarbeit.
+> Stufe 20: Wecke Gefühle der Zusammenarbeit.
 >
->Lass eine Gruppe funktionieren wie eine ausgebildete Gruppe.
+> Lass eine Gruppe funktionieren wie eine ausgebildete Gruppe.
 >
->Stufe 30: Erhöhe oder senke die Geschicklichkeit eines Ziels um einen Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
+> Stufe 30: Erhöhe oder senke die Geschicklichkeit eines Ziels um einen Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
 
 #### Beispiel-Runenzauber für Mannaz
 
@@ -6934,18 +6937,18 @@ Alle Personen, die innerhalb von zehn Schritten von den Runen kämpfen, funktion
 
 Naudiz ist eine sehr negative Rune, die Leid, Schwierigkeiten und Widrigkeiten bedeutet, und oft auf einen Fingernagel geritzt wird, um große Not anzuzeigen. Sie kann verwendet werden, um Dinge zum Ziel zu nehmen, die verzweifelt, sterbend oder verzagt sind, und ist daher gewöhnlich mit Mentem oder Corpus verbunden.
 
->#### Naudiz-Leitlinien
+> ### Naudiz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts, wenn es in großer Not ist, wie bei einer schlimmen Verwundung oder in einem verzweifelten Gefühlszustand.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts, wenn es in großer Not ist, wie bei einer schlimmen Verwundung oder in einem verzweifelten Gefühlszustand.
 >
->Allgemein: Das Ziel erleidet einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle Fertigkeitswürfe, die es einmal versucht und bei denen es gescheitert ist.
+> Allgemein: Das Ziel erleidet einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle Fertigkeitswürfe, die es einmal versucht und bei denen es gescheitert ist.
 >
->Allgemein: Verzögere die Auflösung eines anderen übernatürlichen Effekts, der nicht höher als die Stufe dieses Effekts ist, wobei der Effekt aufgeschoben wird, solange diese Rune besteht, und gewirkt wird, wenn dieser Zauber gebrochen wird. Dieser Zauber muss die Runen für den gehaltenen Effekt sowie Naudiz enthalten. Um zum Beispiel einen Ansuz-Effekt der Stufe 20 zu verzögern, muss der Runenzauber Naudiz (Ansuz) 20 oder weniger sein.
+> Allgemein: Verzögere die Auflösung eines anderen übernatürlichen Effekts, der nicht höher als die Stufe dieses Effekts ist, wobei der Effekt aufgeschoben wird, solange diese Rune besteht, und gewirkt wird, wenn dieser Zauber gebrochen wird. Dieser Zauber muss die Runen für den gehaltenen Effekt sowie Naudiz enthalten. Um zum Beispiel einen Ansuz-Effekt der Stufe 20 zu verzögern, muss der Runenzauber Naudiz (Ansuz) 20 oder weniger sein.
 >
->Allgemein: Binde einen aktiven Runenzauber der Stufe kleiner oder gleich diesem, so dass die Dauer so lange anhält wie die in diesem Zauber verwendeten Runen. Der Zauber muss die Runen für den gebundenen Effekt sowie Naudiz enthalten. Um zum Beispiel einen Fehu (Ansuz)-Effekt der
+> Allgemein: Binde einen aktiven Runenzauber der Stufe kleiner oder gleich diesem, so dass die Dauer so lange anhält wie die in diesem Zauber verwendeten Runen. Der Zauber muss die Runen für den gebundenen Effekt sowie Naudiz enthalten. Um zum Beispiel einen Fehu (Ansuz)-Effekt der
 Stufe 15 zu binden, muss der Runenzauber Naudiz (Fehu, Ansuz) 15 oder höher sein.
 >
->Stufe 20: Lass ein Ziel eine tiefe Verzweiflung empfinden, die es ihm für die Dauer des Zaubers unmöglich macht, Selbstvertrauenspunkte einzusetzen.
+> Stufe 20: Lass ein Ziel eine tiefe Verzweiflung empfinden, die es ihm für die Dauer des Zaubers unmöglich macht, Selbstvertrauenspunkte einzusetzen.
 
 #### Beispiel-Runenzauber für Naudiz
 
@@ -6965,15 +6968,15 @@ Alle, die in dem Zielbauwerk leben, beginnen tiefe Verzweiflung und Selbsthass z
 
 Ingwaz ist mit Frieden, Familie und einem sicheren Heim verbunden. Als Ziel kann sie ein Gebäude, eine Behausung oder ein Bauwerk betreffen und ist daher oft an Herbam und Terram gebunden. Sie kann auch alle betreffen, die in einem bestimmten Haus leben, was es möglich macht, sie durch das Ritzen von Runen an der Außenseite zum Ziel zu nehmen, oder Mitglieder der Familie oder des Haushalts des Zaubernden. Dies ist gewöhnlich ein Corpus-Effekt.
 
->#### Ingwaz-Leitlinien
+> ### Ingwaz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die seine Familie, seinen Haushalt oder sein Heim betreffen.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Fertigkeitswürfe, die seine Familie, seinen Haushalt oder sein Heim betreffen.
 >
->Stufe 20: Das Ziel erlangt ein instinktives Gespür dafür, wo sich seine Familienmitglieder befinden, einschließlich Entfernung und Richtung sowie ihres gegenwärtigen Gefühlszustands.
+> Stufe 20: Das Ziel erlangt ein instinktives Gespür dafür, wo sich seine Familienmitglieder befinden, einschließlich Entfernung und Richtung sowie ihres gegenwärtigen Gefühlszustands.
 >
->Stufe 20: Das Ziel gebärt mühelos und das Kind ist gesund, sofern die Rune während der gesamten Schwangerschaft von ihr getragen wird.
+> Stufe 20: Das Ziel gebärt mühelos und das Kind ist gesund, sofern die Rune während der gesamten Schwangerschaft von ihr getragen wird.
 >
->Stufe 35: Rufe eine Zielperson herbei und transportiere sie zum Zaubernden.
+> Stufe 35: Rufe eine Zielperson herbei und transportiere sie zum Zaubernden.
 
 #### Beispiel-Runenzauber für Ingwaz
 
@@ -6993,13 +6996,13 @@ Indem er eine Arkane Verbindung in den Runenzauber einarbeitet, transportiert de
 
 Die Othila-Rune bedeutet Eigentum, aber bestimmte materielle Güter im Gegensatz zu Fehu, die allgemeinen Reichtum darstellt. Es sind Dinge, die von Generation zu Generation weitergegeben werden können, wie Ländereien oder Besitztümer, und daher wird die Rune am häufigsten als Ziel verwendet, das mit Terram verbunden ist.
 
->#### Othila-Leitlinien
+> ### Othila-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle Würfe, die ein bestimmtes Werkzeug oder Familienerbstück betreffen, wie das Führen des Schwerts seines Vaters oder das Verteidigen seiner Ländereien. Dies schließt Initiative-, Angriffs- und Verteidigungswürfe ein.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle Würfe, die ein bestimmtes Werkzeug oder Familienerbstück betreffen, wie das Führen des Schwerts seines Vaters oder das Verteidigen seiner Ländereien. Dies schließt Initiative-, Angriffs- und Verteidigungswürfe ein.
 >
->Stufe 15: Mache einen Gegenstand wirksamer für seinen vorgesehenen Zweck. Mache zum Beispiel ein Schwert leicht und scharf oder einen Pflug, der die Erde schneller bearbeitet. Der Gegenstand funktioniert, als wäre er von außergewöhnlicher Qualität, und reduziert die Anzahl potenzieller Patzerwürfel bei der Verwendung um zwei.
+> Stufe 15: Mache einen Gegenstand wirksamer für seinen vorgesehenen Zweck. Mache zum Beispiel ein Schwert leicht und scharf oder einen Pflug, der die Erde schneller bearbeitet. Der Gegenstand funktioniert, als wäre er von außergewöhnlicher Qualität, und reduziert die Anzahl potenzieller Patzerwürfel bei der Verwendung um zwei.
 >
->Stufe 20: Rufe ein Ziel zum Zaubernden herbei; es muss ein nichtlebendiger Gegenstand sein, der kleiner als eine Person ist, wie ein Schwert oder eine Truhe.
+> Stufe 20: Rufe ein Ziel zum Zaubernden herbei; es muss ein nichtlebendiger Gegenstand sein, der kleiner als eine Person ist, wie ein Schwert oder eine Truhe.
 
 #### Beispiel-Runenzauber für Othila
 
@@ -7021,19 +7024,19 @@ Perth ist eine geheimnisvolle und seltsame Rune mit vielen verschiedenen Deutung
 
 Häufig wird Perth verwendet, um die übernatürlichen Sphären zu beeinflussen, insbesondere die Magie. Sie ist daher am stärksten mit Vim verbunden. Sie kann Vis zum Ziel nehmen und auch andere Zauber und übernatürliche Effekte. Sie beeinflusst keine übernatürlichen Wesen und Kreaturen mit Macht (diese fallen unter Ansuz, wenn sie intelligent sind, oder Uruz, wenn sie es nicht sind), kann aber ihre Kräfte beeinflussen.
 
->#### Perth-Leitlinien
+> ### Perth-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Würfe, die reinen Zufall betreffen, wie beim Würfelspiel. Dies beeinflusst auch Ereignisse, die von einem Element des Zufalls bestimmt werden, wie das Schießen eines Pfeils ins Dunkle oder die Frage, ob eine Frau schwanger wird.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Würfe, die reinen Zufall betreffen, wie beim Würfelspiel. Dies beeinflusst auch Ereignisse, die von einem Element des Zufalls bestimmt werden, wie das Schießen eines Pfeils ins Dunkle oder die Frage, ob eine Frau schwanger wird.
 >
->Allgemein: Wann immer das Ziel einen Wurf auf einen möglichen Patzer ablegt, wird die Anzahl der potenziellen Patzerwürfel um die Magnitude dieses Effekts reduziert oder erhöht.
+> Allgemein: Wann immer das Ziel einen Wurf auf einen möglichen Patzer ablegt, wird die Anzahl der potenziellen Patzerwürfel um die Magnitude dieses Effekts reduziert oder erhöht.
 >
->Allgemein: Alle übernatürlichen Effekte, die auf das Ziel gewirkt wurden und kleiner oder gleich der halben Stufe dieses Effekts sind, werden aufgelöst.
+> Allgemein: Alle übernatürlichen Effekte, die auf das Ziel gewirkt wurden und kleiner oder gleich der halben Stufe dieses Effekts sind, werden aufgelöst.
 >
->Stufe 10: Das Ziel kann Magie- oder Feenauren innerhalb von etwa zehn Schritten spüren und ihre Stärke bestimmen.
+> Stufe 10: Das Ziel kann Magie- oder Feenauren innerhalb von etwa zehn Schritten spüren und ihre Stärke bestimmen.
 >
->Stufe 20: Das Ziel erlangt die Fähigkeit, Vis innerhalb von etwa zehn Schritten zu spüren und zu identifizieren.
+> Stufe 20: Das Ziel erlangt die Fähigkeit, Vis innerhalb von etwa zehn Schritten zu spüren und zu identifizieren.
 >
->Stufe 25: Das Ziel kann den Zaubernden einer aktiven Magie in der Umgebung erkennen oder einen allgemeinen Eindruck der Effekte gewinnen, ähnlich wie beim Lesen der eingeritzten Beschreibung eines Runenzaubers.
+> Stufe 25: Das Ziel kann den Zaubernden einer aktiven Magie in der Umgebung erkennen oder einen allgemeinen Eindruck der Effekte gewinnen, ähnlich wie beim Lesen der eingeritzten Beschreibung eines Runenzaubers.
 
 #### Beispiel-Runenzauber für Perth
 
@@ -7051,27 +7054,25 @@ Solange die Rune besteht, kann der Vitki Vis spüren, wenn er sich innerhalb von
 
 
 
-Diese Rune wird allgemein als „Reiten" gedeutet, im Sinne der Tätigkeit des Ausreitens zu Pferde oder auf einem Wagen. Das Wort *Raido* könnte mit dem altnordischen Wort *reid* verwandt sein, das entweder Streitwagen oder Donner bedeutet, und so könnte es Thor herbeirufen, den nordischen Gott des Donners,
-
-der in einem großen Streitwagen fuhr. Sie symbolisiert eine Reise und alle Formen des Reisens. Sie vermittelt auch die Idee der Vorbereitung auf Krieg oder raues Wetter und ist daher mit den Prinzipien von Planung, Überlegung und Strategie verbunden.
+Diese Rune wird allgemein als „Reiten" gedeutet, im Sinne der Tätigkeit des Ausreitens zu Pferde oder auf einem Wagen. Das Wort *Raido* könnte mit dem altnordischen Wort *reid* verwandt sein, das entweder Streitwagen oder Donner bedeutet, und so könnte es Thor herbeirufen, den nordischen Gott des Donners, der in einem großen Streitwagen fuhr. Sie symbolisiert eine Reise und alle Formen des Reisens. Sie vermittelt auch die Idee der Vorbereitung auf Krieg oder raues Wetter und ist daher mit den Prinzipien von Planung, Überlegung und Strategie verbunden.
 
 Als Ziel wirkt Raido auf einen Wagen, ein Schiff oder ein Rad, ebenso wie auf das Geschirr und die Zaumzeuge von Tieren, die einen Wagen oder Streitwagen ziehen. Die Tiere selbst sind gewöhnlich entweder mit Ehwaz verbunden, wenn es Pferde sind, oder mit Fehu für andere domestizierte Tiere.
 
->#### Raido-Leitlinien
+> ### Raido-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle Fertigkeitswürfe, die während des Reisens abgelegt werden, wie Gebietskunde, Menschenkenntnis, Reiten oder Charme. Dies schließt berittenen Kampf nicht ein.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle Fertigkeitswürfe, die während des Reisens abgelegt werden, wie Gebietskunde, Menschenkenntnis, Reiten oder Charme. Dies schließt berittenen Kampf nicht ein.
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle natürlichen Fertigkeitswürfe, die mit Ausdauer zusammenhängen (aber nicht Absorption oder Runenzaubern).
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf alle natürlichen Fertigkeitswürfe, die mit Ausdauer zusammenhängen (aber nicht Absorption oder Runenzaubern).
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf seine Initiative.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf seine Initiative.
 >
->Stufe 15: Repariere ein Geschirr oder Rad. Stufe 20: Heile ein lahmes Tier, wobei eine Leichte Wunde für die Dauer geheilt wird. Das Ziel erlangt die Fähigkeit zu spüren, in welche Richtung es reist.
+> Stufe 15: Repariere ein Geschirr oder Rad. Stufe 20: Heile ein lahmes Tier, wobei eine Leichte Wunde für die Dauer geheilt wird. Das Ziel erlangt die Fähigkeit zu spüren, in welche Richtung es reist.
 >
->Stufe 30: Beschleunige eine Reise, wobei sich das Ziel mit doppelter normaler Geschwindigkeit laufend und gehend fortbewegen kann.
+> Stufe 30: Beschleunige eine Reise, wobei sich das Ziel mit doppelter normaler Geschwindigkeit laufend und gehend fortbewegen kann.
 >
->Stufe 30: Erhöhe oder senke die Ausdauer eines Ziels um 1 Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
+> Stufe 30: Erhöhe oder senke die Ausdauer eines Ziels um 1 Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
 >
->Stufe 35: Rufe ein Ziel zum Zaubernden herbei; es muss ein nichtlebendiger Gegenstand sein, der größer als der Zaubernde ist, wie ein Boot oder Wagen.
+> Stufe 35: Rufe ein Ziel zum Zaubernden herbei; es muss ein nichtlebendiger Gegenstand sein, der größer als der Zaubernde ist, wie ein Boot oder Wagen.
 
 #### Beispiel-Runenzauber für Raido
 
@@ -7091,23 +7092,23 @@ Mit diesem Runenzauber, der üblicherweise direkt auf den Sattel oder die Decke 
 
 Sowilo wird mit Licht und der Sonne in Verbindung gebracht und wird als Wohltat für Seefahrer und Segen für Reisende beschrieben. Sie hat auch Obertöne des Guten, das über das Böse siegt, so wie Licht über Dunkelheit triumphiert. Als Ziel beeinflusst Sowilo Licht und ist daher Teil der Form Ignem. Sie kann auch das Göttliche und Wesen mit Göttlicher Macht als Teilbereich von Vim zum Ziel nehmen.
 
->#### Sowilo-Leitlinien
+> ### Sowilo-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf natürliche Fertigkeitswürfe, die mit Wahrnehmung zusammenhängen.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf natürliche Fertigkeitswürfe, die mit Wahrnehmung zusammenhängen.
 >
->Allgemein: Das Ziel kann Illusionen der Stufe dieses Effekts oder niedriger durchschauen, als hätte es das Zweite Gesicht, einschließlich des Durchschauens von Regiones.
+> Allgemein: Das Ziel kann Illusionen der Stufe dieses Effekts oder niedriger durchschauen, als hätte es das Zweite Gesicht, einschließlich des Durchschauens von Regiones.
 >
->Stufe 10: Das Ziel erlangt die Fähigkeit, in der Dunkelheit zu sehen, als wäre es Tageslicht.
+> Stufe 10: Das Ziel erlangt die Fähigkeit, in der Dunkelheit zu sehen, als wäre es Tageslicht.
 >
->Das Ziel kann Göttliche oder Infernale Auren innerhalb von etwa zehn Schritten spüren und ihre Stärke bestimmen.
+> Das Ziel kann Göttliche oder Infernale Auren innerhalb von etwa zehn Schritten spüren und ihre Stärke bestimmen.
 >
->Stufe 20: Lösche alles Licht innerhalb von etwa zehn Schritten um das Ziel aus. Mache ein Ziel unsichtbar.
+> Stufe 20: Lösche alles Licht innerhalb von etwa zehn Schritten um das Ziel aus. Mache ein Ziel unsichtbar.
 >
->Stufe 25: Das Ziel wird widerstandsfähiger gegen Kälte und ist immun gegen die schädlichen Auswirkungen von Erfrierungen.
+> Stufe 25: Das Ziel wird widerstandsfähiger gegen Kälte und ist immun gegen die schädlichen Auswirkungen von Erfrierungen.
 >
->Stufe 25: Lass blendend helles Sonnenlicht auf das Ziel oder vom Ziel aus scheinen.
+> Stufe 25: Lass blendend helles Sonnenlicht auf das Ziel oder vom Ziel aus scheinen.
 >
->Stufe 30: Erhöhe oder senke die Wahrnehmung eines Ziels um 1 Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
+> Stufe 30: Erhöhe oder senke die Wahrnehmung eines Ziels um 1 Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
 
 #### Beispiel-Runenzauber für Sowilo
 
@@ -7127,19 +7128,19 @@ Solange die Rune besteht, scheint helles Sonnenlicht vom Ziel aus. Wer direkt in
 
 Tyr ist der nordische Gott der Wahrheit und des Kampfes, Schenker des Sieges und Beschützer der anderen Götter. Er ist seinen Gefährten treu und dafür bekannt, seine Hand dem Fenriswolf geopfert zu haben, damit dieser gebunden werden konnte. Seine Rune ist mit Männern verbunden, die für das Wohl ihrer Gefährten kämpfen und die Wahrheit suchen. Als Ziel ist sie hauptsächlich mit Mentem und Gerechtigkeit verbunden, indem sie die Gedanken und tieferen Beweggründe einer Person beeinflusst.
 
->#### Tiwaz-Leitlinien
+> ### Tiwaz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Persönlichkeitswürfe, die positive Emotionen wie Loyalität oder Tapferkeit betreffen.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf Persönlichkeitswürfe, die positive Emotionen wie Loyalität oder Tapferkeit betreffen.
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf seine Angriffs- oder Verteidigungswerte.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf seine Angriffs- oder Verteidigungswerte.
 >
->Allgemein: Das Ziel kann seinen Selbstvertrauenswert um 1 erhöhen, solange sein Selbstvertrauenswert nicht höher ist als (die Magnitude dieses Effekts − 3).
+> Allgemein: Das Ziel kann seinen Selbstvertrauenswert um 1 erhöhen, solange sein Selbstvertrauenswert nicht höher ist als (die Magnitude dieses Effekts − 3).
 >
->Stufe 15: Das Ziel erlangt die Fähigkeit, die Richtung der nächsten Person zu spüren. Stufe 20: Das Ziel erlangt ein intuitives Verständnis der Gedanken und Beweggründe der Personen innerhalb von etwa zehn Schritten, was es ihm erleichtert, Freundschaften zu schließen oder die soziale Struktur einer Gemeinschaft zu durchschauen.
+> Stufe 15: Das Ziel erlangt die Fähigkeit, die Richtung der nächsten Person zu spüren. Stufe 20: Das Ziel erlangt ein intuitives Verständnis der Gedanken und Beweggründe der Personen innerhalb von etwa zehn Schritten, was es ihm erleichtert, Freundschaften zu schließen oder die soziale Struktur einer Gemeinschaft zu durchschauen.
 >
->Stufe 30: Das Ziel erlangt die Fähigkeit zu erkennen, ob Personen innerhalb von zehn Schritten glauben, die Wahrheit zu sagen, oder ob sie lügen.
+> Stufe 30: Das Ziel erlangt die Fähigkeit zu erkennen, ob Personen innerhalb von zehn Schritten glauben, die Wahrheit zu sagen, oder ob sie lügen.
 >
->Stufe 45: Das Ziel kann die Gedanken und Emotionen der Personen innerhalb von etwa zehn Schritten vollständig verstehen und ihre Handlungen und Reaktionen genau vorhersagen.
+> Stufe 45: Das Ziel kann die Gedanken und Emotionen der Personen innerhalb von etwa zehn Schritten vollständig verstehen und ihre Handlungen und Reaktionen genau vorhersagen.
 
 #### Beispiel-Runenzauber für Tiwaz
 
@@ -7161,23 +7162,23 @@ Thurisaz wird auf viele verschiedene Weisen gedeutet, gewöhnlich mit einer nega
 
 Wenn sie als Ziel verwendet wird, kann Thurisaz übernatürliche Kreaturen als eine Art Vim-Magie beeinflussen, wobei dies am häufigsten infernale Wesen sind. Sie kann auch dornige Büsche und Gestrüpp als Teil von Herbam zum Ziel nehmen, oder alles Hölzerne, das sticht oder schneidet.
 
->#### Thurisaz-Leitlinien
+> ### Thurisaz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf Persönlichkeitswürfe, die mit negativen Leidenschaften wie Lust oder Zorn zusammenhängen.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf Persönlichkeitswürfe, die mit negativen Leidenschaften wie Lust oder Zorn zusammenhängen.
 >
->Allgemein: Der Machtwert des Ziels wird um (die Stufe dieses Effekts − 10) reduziert.
+> Allgemein: Der Machtwert des Ziels wird um (die Stufe dieses Effekts − 10) reduziert.
 >
->Stufe 15: Lass dorniges Gestrüpp in einem Bereich von etwa zehn Schritten Durchmesser wachsen.
+> Stufe 15: Lass dorniges Gestrüpp in einem Bereich von etwa zehn Schritten Durchmesser wachsen.
 >
->Stufe 15: Zerstöre Pflanzen in einem Bereich von zehn Schritten Durchmesser.
+> Stufe 15: Zerstöre Pflanzen in einem Bereich von zehn Schritten Durchmesser.
 >
->Stufe 20: Verwandle ein lebendes Ziel in ein anderes Lebewesen von ungefähr der gleichen Größe.
+> Stufe 20: Verwandle ein lebendes Ziel in ein anderes Lebewesen von ungefähr der gleichen Größe.
 >
->Stufe 20: Verwandle ein nichtlebendes Ziel in ein anderes nichtlebendes Ding von ungefähr der gleichen Größe.
+> Stufe 20: Verwandle ein nichtlebendes Ziel in ein anderes nichtlebendes Ding von ungefähr der gleichen Größe.
 >
->Stufe 30: Verwandle ein lebendes Ziel in ein nichtlebendes Ding von ungefähr der gleichen Größe.
+> Stufe 30: Verwandle ein lebendes Ziel in ein nichtlebendes Ding von ungefähr der gleichen Größe.
 >
->Stufe 30: Verwandle ein nichtlebendes Ziel in ein Lebewesen von ungefähr der gleichen Größe.
+> Stufe 30: Verwandle ein nichtlebendes Ziel in ein Lebewesen von ungefähr der gleichen Größe.
 
 #### Beispiel-Runenzauber für Thurisaz
 
@@ -7199,25 +7200,25 @@ Diese Rune steht für den Auerochsen, eine große und mächtige Rinderrasse, die
 
 Uruz ist somit ein Symbol für Stärke und Ausdauer sowie für Männlichkeit und Maskulinität. Es gibt auch eine implizierte Parallele zwischen seiner Verteidigung gegen den Jäger und einem Mann, der sein Heim verteidigt, und in der großen Leistung des Jägers, das mächtige Tier zu bezwingen. Wenn sie als Ziel verwendet wird, beeinflusst Uruz die Form Animal, insbesondere wilde oder magische Tiere. Wegen ihrer Verbindung zur Wildnis ist Uruz auch mit Regen und wildem Wetter verbunden, gelegentlich als „Nieselregen" übersetzt, und kann daher auch Teil von Auram sein.
 
->#### Uruz-Leitlinien
+> ### Uruz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf natürliche Fertigkeitswürfe, die Stärke betreffen (aber nicht Schaden).
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf natürliche Fertigkeitswürfe, die Stärke betreffen (aber nicht Schaden).
 >
->Allgemein: Die Behinderung des Ziels wird um die Magnitude dieses Effekts erhöht oder verringert.
+> Allgemein: Die Behinderung des Ziels wird um die Magnitude dieses Effekts erhöht oder verringert.
 >
->Allgemein: Das Ziel ist immun gegen Effekte, die den Geist betreffen und die unter der Stufe dieses Effekts liegen.
+> Allgemein: Das Ziel ist immun gegen Effekte, die den Geist betreffen und die unter der Stufe dieses Effekts liegen.
 >
->Stufe 30: Erhöhe oder senke die Stärke eines Ziels um einen Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
+> Stufe 30: Erhöhe oder senke die Stärke eines Ziels um einen Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
 >
->Stufe 30: Rufe ein wildes Tier herbei, das bis zu Größe −4 hat.
+> Stufe 30: Rufe ein wildes Tier herbei, das bis zu Größe −4 hat.
 >
->Stufe 35: Rufe ein wildes Tier herbei, das bis zu Größe −1 hat.
+> Stufe 35: Rufe ein wildes Tier herbei, das bis zu Größe −1 hat.
 >
->Stufe 40: Rufe ein wildes Tier herbei, das bis zu Größe +2 hat.
+> Stufe 40: Rufe ein wildes Tier herbei, das bis zu Größe +2 hat.
 >
->Stufe 45: Rufe ein wildes Tier herbei, das bis zu Größe +5 hat.
+> Stufe 45: Rufe ein wildes Tier herbei, das bis zu Größe +5 hat.
 >
->Stufe 50: Rufe ein wildes Tier herbei, das bis zu Größe +8 hat.
+> Stufe 50: Rufe ein wildes Tier herbei, das bis zu Größe +8 hat.
 
 #### Beispiel-Runenzauber für Uruz
 
@@ -7237,19 +7238,17 @@ Der Runenzauber ruft einen Auerochsen herbei – das wilde Tier, nach dem die Ru
 
 Diese Rune bedeutet Behagen, Glückseligkeit und Freude. Dies kann eine Art Rausch sein oder einfach das Fehlen von Leid, und sie hat auch Konnotationen von Ruhm und Erfolg im Kampf. Diejenigen, die gemeinsam auf ein Ziel hinarbeiten, stehen ebenfalls unter dem Einfluss von Wunjo. Wunjo ist mit Mentem verbunden und zielt nur auf die Emotionen von Menschen und intelligenten Wesen.
 
->#### Wunjo-Leitlinien
+> ### Wunjo-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf alle natürlichen Fertigkeitswürfe, die Präsenz betreffen, wie das Erzählen einer Geschichte, das Bezaubern eines Begleiters oder das Führen einer Gruppe.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude des Effekts auf alle natürlichen Fertigkeitswürfe, die Präsenz betreffen, wie das Erzählen einer Geschichte, das Bezaubern eines Begleiters oder das Führen einer Gruppe.
 >
->Allgemein: Reduziere die Erschöpfungs- oder Wundabzüge des Ziels um (die Magnitude dieses Effekts × 3).
+> Allgemein: Reduziere die Erschöpfungs- oder Wundabzüge des Ziels um (die Magnitude dieses Effekts × 3).
 >
->Stufe 20: Lass das Ziel eine mächtige Emotion empfinden.
+> Stufe 20: Lass das Ziel eine mächtige Emotion empfinden.
 >
->Stufe 30: Das Ziel kann alle Erschöpfungs- oder Wundabzüge ignorieren.
+> Stufe 30: Das Ziel kann alle Erschöpfungs- oder Wundabzüge ignorieren.
 >
->Stufe 30: Erhöhe oder senke die Präsenz eines Ziels um 1 Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser
-Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über
-oder unter dem Durchschnittswert.
+> Stufe 30: Erhöhe oder senke die Präsenz eines Ziels um 1 Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
 
 #### Beispiel-Runenzauber für Wunjo
 
@@ -7269,27 +7268,27 @@ Der Vitki zeichnet die Wunjo-Rune auf einen Krieger, der weder Schmerz noch Ersc
 
 Ihwaz bezieht sich auf die Eibe, deren Holz zur Herstellung von Langbögen verwendet wird und die wegen der traditionellen Praxis, sie auf Friedhöfen zu pflanzen, auch mit Tod und Hexerei verbunden ist. Wenn sie als Ziel verwendet wird, kann sie jede Art von Baum oder Bogen beeinflussen und sollte als Herbam-Effekt behandelt werden. Die Rune kann auch die Geister der Toten als Mentem-Effekt zum Ziel nehmen, oder eine Grabstätte als Terram.
 
->#### Ihwaz-Leitlinien
+> ### Ihwaz-Leitlinien
 >
->Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf natürliche Fertigkeitswürfe, die mit Intelligenz zusammenhängen, wie das Erinnern von Wissen oder das Überlisten eines Gegners.
+> Allgemein: Das Ziel erhält einen Bonus oder Abzug in Höhe der Magnitude dieses Effekts auf natürliche Fertigkeitswürfe, die mit Intelligenz zusammenhängen, wie das Erinnern von Wissen oder das Überlisten eines Gegners.
 >
->Allgemein: Das Ziel kann die Anwesenheit übernatürlicher Wesen mit einem Machtwert kleiner oder gleich der Stufe dieses Effekts spüren.
+> Allgemein: Das Ziel kann die Anwesenheit übernatürlicher Wesen mit einem Machtwert kleiner oder gleich der Stufe dieses Effekts spüren.
 >
->Allgemein: Rufe ein übernatürliches Wesen mit einem Machtwert kleiner oder gleich (der Stufe dieses Effekts − 10) herbei.
+> Allgemein: Rufe ein übernatürliches Wesen mit einem Machtwert kleiner oder gleich (der Stufe dieses Effekts − 10) herbei.
 >
->Stufe 15: Das Ziel erlangt die Fähigkeit, die Eigenschaften von Pflanzen innerhalb von etwa zehn Schritten zu spüren.
+> Stufe 15: Das Ziel erlangt die Fähigkeit, die Eigenschaften von Pflanzen innerhalb von etwa zehn Schritten zu spüren.
 >
->Stufe 20: Das Ziel kann tote Körper innerhalb von etwa zehn Schritten spüren.
+> Stufe 20: Das Ziel kann tote Körper innerhalb von etwa zehn Schritten spüren.
 >
->Stufe 25: Belebe einen Leichnam oder Kadaver, solange er nicht durch geweihten Boden geschützt ist.
+> Stufe 25: Belebe einen Leichnam oder Kadaver, solange er nicht durch geweihten Boden geschützt ist.
 >
->Stufe 30: Erhöhe oder senke die Intelligenz eines Ziels um 1 Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
+> Stufe 30: Erhöhe oder senke die Intelligenz eines Ziels um 1 Punkt, bis maximal zum Durchschnittswert für ein Wesen dieser Art. Jede zusätzliche Magnitude erhöht die Punktzahl oder die Obergrenze, jedoch niemals mehr als 5 über oder unter dem Durchschnittswert.
 >
->Stufe 35: Das Ziel kann mit den Toten sprechen, sofern es sich innerhalb von zehn Schritten des Leichnams oder Grabs befindet und dieses nicht durch geweihten Boden geschützt ist.
+> Stufe 35: Das Ziel kann mit den Toten sprechen, sofern es sich innerhalb von zehn Schritten des Leichnams oder Grabs befindet und dieses nicht durch geweihten Boden geschützt ist.
 >
->Stufe 35: Rufe einen Leichnam oder Kadaver herbei, solange er nicht durch geweihten Boden geschützt ist.
+> Stufe 35: Rufe einen Leichnam oder Kadaver herbei, solange er nicht durch geweihten Boden geschützt ist.
 >
->Stufe 35: Rufe einen Baum herbei.
+> Stufe 35: Rufe einen Baum herbei.
 
 #### Beispiel-Runenzauber für Ihwaz
 
@@ -7311,13 +7310,13 @@ Diese Rune hat viele Bedeutungen, die alle eine Art von Schutz meinen. Sie wird 
 
 Algiz bezieht sich fast nie direkt auf ein Ziel, obwohl sie wegen ihrer Symbolik verwendet werden kann, um einen Elch, eine Hand oder Gras zu beeinflussen, und daher je nach Angemessenheit mit Animal, Corpus oder Herbam verbunden ist.
 
->#### Algiz-Leitlinien
+> ### Algiz-Leitlinien
 >
->Allgemein: Die Absorption des Ziels wird um die Magnitude des Effekts erhöht oder verringert.
+> Allgemein: Die Absorption des Ziels wird um die Magnitude des Effekts erhöht oder verringert.
 >
->Allgemein: Alle übernatürlichen Ziele mit einer Macht kleiner oder gleich der Stufe dieses Effekts, die mit der sekundären Rune des Zaubers verbunden sind, werden vom Ziel ferngehalten.
+> Allgemein: Alle übernatürlichen Ziele mit einer Macht kleiner oder gleich der Stufe dieses Effekts, die mit der sekundären Rune des Zaubers verbunden sind, werden vom Ziel ferngehalten.
 >
->Stufe 10: Alle Dinge, die der sekundären Rune dieses Zaubers entsprechen, werden vom Ziel ferngehalten.
+> Stufe 10: Alle Dinge, die der sekundären Rune dieses Zaubers entsprechen, werden vom Ziel ferngehalten.
 
 #### Beispiel-Runenzauber für Algiz
 
@@ -7341,135 +7340,135 @@ Dasselbe Magiesystem, das in diesem Kapitel beschrieben wird, kann verwendet wer
 
 ### Hermetische Integration
 
-Für Magi, die die Fähigkeiten ihrer Magie erweitern wollen, können die Vitkir und ihre Runen untersucht und als Großer Durchbruch in hermetische Tugenden umgewandelt werden. Die vorgeschlagene Mechanik zur Beschreibung dieser Entdeckung findet sich in *Alte Magie*, Seiten 138–140. Im Wesentlichen erhält der Magus eine neue Runendauer und ein neues Inschriftenziel, die ähnlich wie Ring und Kreis funktionieren, aber keine Penetration erfordern. Außerdem können Magi, die Odins Opfer (oben beschrieben) vollziehen, nach Ermessen des Spielleiters eine automatische Entdeckung für die Entwicklung der Hermetischen Runenmagie erhalten.
+Für Magi, die die Fähigkeiten ihrer Magie erweitern wollen, können die Vitkir und ihre Runen untersucht und als Großer Durchbruch in hermetische Tugenden umgewandelt werden. Die vorgeschlagene Mechanik zur Beschreibung dieser Entdeckung findet sich in *Ancient Magic*, Seiten 138–140. Im Wesentlichen erhält der Magus eine neue Runendauer und ein neues Inschriftenziel, die ähnlich wie Ring und Kreis funktionieren, aber keine Penetration erfordern. Außerdem können Magi, die Odins Opfer (oben beschrieben) vollziehen, nach Ermessen des Spielleiters eine automatische Entdeckung für die Entwicklung der Hermetischen Runenmagie erhalten.
 
 Beachte, dass der Orden des Hermes allgemein als im Krieg befindlich mit dem Orden Odins betrachtet wird – wie viele Magi die Vitkir nennen – und dies seit dem neunten Jahrhundert. Dies könnte es für Magi schwierig machen, die von einem lebenden Vitki lernen möchten. Vielleicht könnten sie ihn überzeugen, dem Orden des Hermes beizutreten und den Eid zu schwören, was ihm als Mitglied des Hauses Ex Miscellanea ein gewisses Maß an Sicherheit bieten würde, aber es mag dennoch jene im Orden des Hermes geben, die den Vitki allein wegen seiner Abstammung jagen werden, und er mag gezwungen sein, seine Magie geheim zu halten.
 
->#### Der Angelsächsische Futhorc
+> ### Der Angelsächsische Futhorc
 >
->In England erweiterten die Runenmagier ihr Alphabet. Gelehrte sind sich einig, dass es die ersten 28 Runen umfasste, und die letzten fünf waren je nach Epoche und Region möglicherweise ebenfalls enthalten. Magi sind sicher, dass im 13. Jahrhundert keine dieser Vitkir auf den Britischen Inseln verblieben sind, da sie alle im Krieg gegen Damhan-Alladh vor Jahrhunderten vernichtet wurden, obwohl Beweise für ihre Magie noch vorhanden sein könnten.
+> In England erweiterten die Runenmagier ihr Alphabet. Gelehrte sind sich einig, dass es die ersten 28 Runen umfasste, und die letzten fünf waren je nach Epoche und Region möglicherweise ebenfalls enthalten. Magi sind sicher, dass im 13. Jahrhundert keine dieser Vitkir auf den Britischen Inseln verblieben sind, da sie alle im Krieg gegen Damhan-Alladh vor Jahrhunderten vernichtet wurden, obwohl Beweise für ihre Magie noch vorhanden sein könnten.
 >
->| Buchstabe | Rune | Name    | Bedeutung       | Älterer Futhark |
->| --------- | ---- | ------- | --------------- | --------------- |
->| F         | ᚠ    | Feoh    | „Reichtum"      | Fehu            |
->| U         | ᚢ    | Ur      | „Auerochse"     | Uruz            |
->| Þ         | ᚦ    | Thorn   | „Dorn"          | Thurisaz        |
->| R         | ᚱ    | Rad     | „Reiten"        | Raido           |
->| C         | ᚳ    | Cen     |  „Fackel"         | Kauno           |
->| Gy        | ᚷ    | Gyfu    | „Gabe"          | Gebo            |
->| W         | ᚹ    | Wynn    | „Freude"        | Wunjo           |
->| H         | ᚻ    | Haegl   | „Hagel"         | Hagalaz         |
->| N         | ᚾ    | Nyd     | „Not"           | Naudiz          |
->| I         | ᛁ    | Is      |  „Eis"           | Isa             |
->| J         | ᛄ    | Ger     |  „Jahr"          | Jera            |
->| Y         | ᛇ    | Eoh     | „Eibe"          | Ihwaz           |
->| P         | ᛈ    | Peordh  | „Becher"        | Perth           |
->| X         | ᛉ    | Eolhx   | „Elch"          | Algiz           |
->| S         | ᛋ    | Sigel   | „Sonne"         | Sowilo          |
->| T         | ᛏ    | Tir     | „Stern"         | Tiwaz           |
->| B         | ᛒ    | Beorc   | „Birke"         | Berkanan         |
->| E         | ᛖ    | Eh      | „Pferd"         | Ehwaz           |
->| M         | ᛗ    | Mann    | „Mensch"        | Mannaz          |
->| L         | ᛚ    | Lagu    |  „Wasser"        | Laguz           |
->| Ng        | ᛝ    | Ing     | „Held"          | Ingwaz          |
->| D         | ᛞ    | Daeg    | „Tag"           | Dagaz           |
->| Oe        | ᛟ    | Ethel   | „Heimat"        | Othila          |
->| A         | ᚪ    | Ac      | „Eiche"         | —               |
->| Ae        | ᚫ    | Aesc    | „Esche"         | —               |
->| Yr        | ᚣ    | Yr      | „Bogen"         | —               |
->| Ea        | ᛠ    | Ear     | „Grab"          | —               |
->| G         | ᚸ    | Gar     | „Speer"         | —               |
->| K         | ᛣ    | Calc    | „Kreide"        | —               |
->| Q         | ᛢ    | Cweorth | „Feuerquirl"    | —               |
->| St        | ᛥ    | Stan    | „Stein"         | —               |
->| Or        | ᛡ    | Ior     | „Wasserungeheuer" | —             |
+> | Buchstabe | Rune | Name    | Bedeutung       | Älterer Futhark |
+> | --------- | ---- | ------- | --------------- | --------------- |
+> | F         | ᚠ    | Feoh    | „Reichtum"      | Fehu            |
+> | U         | ᚢ    | Ur      | „Auerochse"     | Uruz            |
+> | Þ         | ᚦ    | Thorn   | „Dorn"          | Thurisaz        |
+> | R         | ᚱ    | Rad     | „Reiten"        | Raido           |
+> | C         | ᚳ    | Cen     |  „Fackel"         | Kauno           |
+> | Gy        | ᚷ    | Gyfu    | „Gabe"          | Gebo            |
+> | W         | ᚹ    | Wynn    | „Freude"        | Wunjo           |
+> | H         | ᚻ    | Haegl   | „Hagel"         | Hagalaz         |
+> | N         | ᚾ    | Nyd     | „Not"           | Naudiz          |
+> | I         | ᛁ    | Is      |  „Eis"           | Isa             |
+> | J         | ᛄ    | Ger     |  „Jahr"          | Jera            |
+> | Y         | ᛇ    | Eoh     | „Eibe"          | Ihwaz           |
+> | P         | ᛈ    | Peordh  | „Becher"        | Perth           |
+> | X         | ᛉ    | Eolhx   | „Elch"          | Algiz           |
+> | S         | ᛋ    | Sigel   | „Sonne"         | Sowilo          |
+> | T         | ᛏ    | Tir     | „Stern"         | Tiwaz           |
+> | B         | ᛒ    | Beorc   | „Birke"         | Berkanan         |
+> | E         | ᛖ    | Eh      | „Pferd"         | Ehwaz           |
+> | M         | ᛗ    | Mann    | „Mensch"        | Mannaz          |
+> | L         | ᛚ    | Lagu    |  „Wasser"        | Laguz           |
+> | Ng        | ᛝ    | Ing     | „Held"          | Ingwaz          |
+> | D         | ᛞ    | Daeg    | „Tag"           | Dagaz           |
+> | Oe        | ᛟ    | Ethel   | „Heimat"        | Othila          |
+> | A         | ᚪ    | Ac      | „Eiche"         | —               |
+> | Ae        | ᚫ    | Aesc    | „Esche"         | —               |
+> | Yr        | ᚣ    | Yr      | „Bogen"         | —               |
+> | Ea        | ᛠ    | Ear     | „Grab"          | —               |
+> | G         | ᚸ    | Gar     | „Speer"         | —               |
+> | K         | ᛣ    | Calc    | „Kreide"        | —               |
+> | Q         | ᛢ    | Cweorth | „Feuerquirl"    | —               |
+> | St        | ᛥ    | Stan    | „Stein"         | —               |
+> | Or        | ᛡ    | Ior     | „Wasserungeheuer" | —             |
 
->#### Das Jüngere Futhark
+> ### Das Jüngere Futhark
 >
->In Dänemark und Deutschland begann sich das Futhark im Laufe der Zeit weiterzuentwickeln, sowohl bei der Kommunikation als auch beim Zaubern. Viele der Namen und Bedeutungen der Runen änderten sich, als die Sprache verdichtet wurde, und die Runenmeister einigten sich schließlich auf einen Satz von 16 Runen statt der ursprünglichen 24. Statt drei Aettir aus je acht Runen hatte die erste Aett in diesem System nur sechs Runen und die anderen beiden hatten fünf. Es fehlen Gebo, Wunjo, Perth, Algiz, Ehwaz, Ingwaz, Dagaz und Othila. Diese Variante wurde als das Jüngere Futhark bekannt.
+> In Dänemark und Deutschland begann sich das Futhark im Laufe der Zeit weiterzuentwickeln, sowohl bei der Kommunikation als auch beim Zaubern. Viele der Namen und Bedeutungen der Runen änderten sich, als die Sprache verdichtet wurde, und die Runenmeister einigten sich schließlich auf einen Satz von 16 Runen statt der ursprünglichen 24. Statt drei Aettir aus je acht Runen hatte die erste Aett in diesem System nur sechs Runen und die anderen beiden hatten fünf. Es fehlen Gebo, Wunjo, Perth, Algiz, Ehwaz, Ingwaz, Dagaz und Othila. Diese Variante wurde als das Jüngere Futhark bekannt.
 >
->| Buchstabe | Rune | Name    | Bedeutung     | Älterer Futhark |
->| --------- | ---- | ------- | ------------- | --------------- |
->| F         | ᚠ    | Fe      | „Reichtum"    | Fehu            |
->| U         | ᚢ    | Ur      | „Nieselregen" | Uruz            |
->| Þ         | ᚦ    | Thurs   | „Riese"       | Thurisaz        |
->| A         | ᚬ    | Ass     | „Gott"        | Ansuz           |
->| R         | ᚱ    | Reidh   | „Ritt"        | Raido           |
->| K         | ᚴ    | Kaun    | „Geschwür"    | Kauno           |
->| H         | ᚼ    | Hagall  | „Hagel"       | Hagalaz         |
->| N         | ᚾ    | Naudhr  | „Not"         | Naudiz          |
->| I         | ᛁ    | Iss     |  „Eis"         | Isa             |
->| A         | ᛅ    | Ar      | „Jahr"        | Jera            |
->| S         | ᛋ    | Sol     | „Sonne"       | Sowilo          |
->| T         | ᛏ    | Tyr     | „Tyr"         | Tiwaz           |
->| B         | ᛒ    | Bjarkan | „Birke"       | Berkanan         |
->| M         | ᛘ    | Madhr   | „Mensch"      | Mannaz          |
->| L         | ᛚ    | Logr    |  „Wasser"      | Laguz           |
->| Y         | ᛦ    | Yr      | „Eibe"        | Ihwaz           |
+> | Buchstabe | Rune | Name    | Bedeutung     | Älterer Futhark |
+> | --------- | ---- | ------- | ------------- | --------------- |
+> | F         | ᚠ    | Fe      | „Reichtum"    | Fehu            |
+> | U         | ᚢ    | Ur      | „Nieselregen" | Uruz            |
+> | Þ         | ᚦ    | Thurs   | „Riese"       | Thurisaz        |
+> | A         | ᚬ    | Ass     | „Gott"        | Ansuz           |
+> | R         | ᚱ    | Reidh   | „Ritt"        | Raido           |
+> | K         | ᚴ    | Kaun    | „Geschwür"    | Kauno           |
+> | H         | ᚼ    | Hagall  | „Hagel"       | Hagalaz         |
+> | N         | ᚾ    | Naudhr  | „Not"         | Naudiz          |
+> | I         | ᛁ    | Iss     |  „Eis"         | Isa             |
+> | A         | ᛅ    | Ar      | „Jahr"        | Jera            |
+> | S         | ᛋ    | Sol     | „Sonne"       | Sowilo          |
+> | T         | ᛏ    | Tyr     | „Tyr"         | Tiwaz           |
+> | B         | ᛒ    | Bjarkan | „Birke"       | Berkanan         |
+> | M         | ᛘ    | Madhr   | „Mensch"      | Mannaz          |
+> | L         | ᛚ    | Logr    |  „Wasser"      | Laguz           |
+> | Y         | ᛦ    | Yr      | „Eibe"        | Ihwaz           |
 
 
->#### Eirik Svennson, Krieger-Vitki
+> ### Eirik Svennson, Krieger-Vitki
 >
->Eigenschaften: Int +2, Wah 0, Prä -1, Kom -1, Stä +2, Aus +2, Ges 0, Sck 0
+> Eigenschaften: Int +2, Wah 0, Prä -1, Kom -1, Stä +2, Aus +2, Ges 0, Sck 0
 >
->Größe: 0
+> Größe: 0
 >
->Alter: 29
+> Alter: 29
 >
->Selbstvertrauenswert: 1 (3)
+> Selbstvertrauenswert: 1 (3)
 >
->Tugenden und Fehler: Die Gabe, Vitki, Großer Runenfokus (Sigrunar), Schneller Zauberer, Begabung in Othila (kostenlos), Nátt-thel-anfällig, Anfälligkeit für Göttliche Kraft
+> Tugenden und Fehler: Die Gabe, Vitki, Großer Runenfokus (Sigrunar), Schneller Zauberer, Begabung in Othila (kostenlos), Nátt-thel-anfällig, Anfälligkeit für Göttliche Macht
 >
->Persönlichkeitseigenschaften: Tapfer +3, Stur +2, Loyal (gegenüber anderen Vitkir) +1
+> Persönlichkeitseigenschaften: Tapfer +3, Stur +2, Loyal (gegenüber anderen Vitkir) +1
 >
->Kampf:
+> Kampf:
 >
->Langschwert: Init +2, Ang +10, Vert +7, Sch +8
+> Langschwert: Init +2, Ang +10, Vert +7, Sch +8
 >
->Langschwert (wenn verzaubert): Init +7, Ang +15, Vert +12, Sch +8
+> Langschwert (wenn verzaubert): Init +7, Ang +15, Vert +12, Sch +8
 >
->Absorption: +6 (+11 wenn verzaubert)
+> Absorption: +6 (+11 wenn verzaubert)
 >
->Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
+> Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
 >
->Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
+> Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20), Tot (21+)
 >
->Fertigkeiten: Raufen 2 (Ausweichen), Zechen 1 (mit Soldaten), Handwerk: Runen 2 (in Metall), Führung 2 (im Kampf), Nordisch 5 (Soldatenslang), Altnordisch 3 (Runen schreiben), Runenmagie 5 (Tiwaz), Einzelwaffe 5 (Langschwert)
+> Fertigkeiten: Raufen 2 (Ausweichen), Zechen 1 (mit Soldaten), Handwerk: Runen 2 (in Metall), Führung 2 (im Kampf), Nordisch 5 (Soldatenslang), Altnordisch 3 (Runen schreiben), Runenmagie 5 (Tiwaz), Einzelwaffe 5 (Langschwert)
 >
->Künste: A 0, B 6, D 5, E 0, F 0, G 0, H 0, I 0, J 0, K 0, L 0, M 8, N 0, Ng 0, O 9+2, P 0, R 0, S 0, T 10, Þ 0, U 5, W 4, Y 0, Z 10
+> Künste: A 0, B 6, D 5, E 0, F 0, G 0, H 0, I 0, J 0, K 0, L 0, M 8, N 0, Ng 0, O 9+2, P 0, R 0, S 0, T 10, Þ 0, U 5, W 4, Y 0, Z 10
 >
->Ausrüstung: Teilweise Lederschuppenrüstung, Langschwert
+> Ausrüstung: Teilweise Lederschuppenrüstung, Langschwert
 >
->Behinderung: 0 (4)
+> Behinderung: 0 (4)
 >
->Bekannte Skripte:
+> Bekannte Skripte:
 >
->*Ich, Eirik Svennson, binde diese Wunde.* (B 15/+8)
+> *Ich, Eirik Svennson, binde diese Wunde.* (B 15/+8)
 >
->Berkanan 15, Methode I Das Ziel erhält einen Bonus von +9 auf Genesungswürfe bei Kampfverletzungen, solange die Rune für die gesamte Genesungszeit intakt bleibt.
+> Berkanan 15, Methode I Das Ziel erhält einen Bonus von +9 auf Genesungswürfe bei Kampfverletzungen, solange die Rune für die gesamte Genesungszeit intakt bleibt.
 >
->*Ich, Eirik Svennson, werde heute gut arbeiten.* (D 15/+6) Dagaz 15, Methode I Das Ziel erhält einen Bonus von +3 auf jede ganztägig ausgeführte Aktivität.
+> *Ich, Eirik Svennson, werde heute gut arbeiten.* (D 15/+6) Dagaz 15, Methode I Das Ziel erhält einen Bonus von +3 auf jede ganztägig ausgeführte Aktivität.
 >
->*Eirik Svennson führt Menschen zu Großem.* (M 20/+18)
+> *Eirik Svennson führt Menschen zu Großem.* (M 20/+18)
 >
->*Ich, Eirik Svennson, stärke das Schwert meiner Ahnen.* (O 25/+24) Othila 25, Methode I Das Ziel erhält einen Bonus von +5 auf Initiative-, Angriffs- und Verteidigungswürfe mit einem bestimmten Schwert. Eirik ritzt die Runen typischerweise auf das Schwert, das er von seinem Vater geerbt hat, so dass der Effekt nur so lange andauert, wie er es führt (da er das Ziel des Zaubers ist, muss das Schwert für die Dauer „Teil von ihm" sein).
+> *Ich, Eirik Svennson, stärke das Schwert meiner Ahnen.* (O 25/+24) Othila 25, Methode I Das Ziel erhält einen Bonus von +5 auf Initiative-, Angriffs- und Verteidigungswürfe mit einem bestimmten Schwert. Eirik ritzt die Runen typischerweise auf das Schwert, das er von seinem Vater geerbt hat, so dass der Effekt nur so lange andauert, wie er es führt (da er das Ziel des Zaubers ist, muss das Schwert für die Dauer „Teil von ihm" sein).
 >
->*Ich, Eirik Svennson, rufe Tyrs Macht an.* (T 25/+22) Tiwaz 25, Methode I Das Ziel erhält einen Bonus von +5 auf Angriffswürfe. Eirik ritzt die Runen typischerweise auf das Schwert eines anderen Kriegers, so dass der Effekt nur so lange andauert, wie er es führt.
+> *Ich, Eirik Svennson, rufe Tyrs Macht an.* (T 25/+22) Tiwaz 25, Methode I Das Ziel erhält einen Bonus von +5 auf Angriffswürfe. Eirik ritzt die Runen typischerweise auf das Schwert eines anderen Kriegers, so dass der Effekt nur so lange andauert, wie er es führt.
 >
->*Ich, Eirik Svennson, rufe Tyrs Gerissenheit an.* (T 25/+22) *Tiwaz 25, Methode I* Das Ziel erhält einen Bonus von +5 auf Verteidigungswürfe. Eirik ritzt die Runen typischerweise auf das Schwert eines anderen Kriegers, so dass der Effekt nur so lange andauert, wie er es führt.
+> *Ich, Eirik Svennson, rufe Tyrs Gerissenheit an.* (T 25/+22) *Tiwaz 25, Methode I* Das Ziel erhält einen Bonus von +5 auf Verteidigungswürfe. Eirik ritzt die Runen typischerweise auf das Schwert eines anderen Kriegers, so dass der Effekt nur so lange andauert, wie er es führt.
 >
->*Ich, Eirik Svennson, nenne meinen Helm alu.* (Z 25/+22)
->Algiz 25, Methode I Das Ziel erhält einen Bonus von +5 auf die Absorption. Eirik ritzt die Runen typischerweise auf seinen Helm, so dass der Effekt nur so lange andauert, wie er ihn trägt.
+> *Ich, Eirik Svennson, nenne meinen Helm alu.* (Z 25/+22)
+> Algiz 25, Methode I Das Ziel erhält einen Bonus von +5 auf die Absorption. Eirik ritzt die Runen typischerweise auf seinen Helm, so dass der Effekt nur so lange andauert, wie er ihn trägt.
 >
->*Eirik Svennson schützt vor den Tieren der Wildnis.* (Z 10/+7)
+> *Eirik Svennson schützt vor den Tieren der Wildnis.* (Z 10/+7)
 >
->Erscheinungsbild: Eirik ist ein großer, schlaksiger, glattrasierter Norweger mit dunklem Haar, der eine Lederschuppenrüstung und einen Helm trägt. Er hält ein Langschwert, das auf der gesamten Klinge mit Runen versehen ist.
+> Erscheinungsbild: Eirik ist ein großer, schlaksiger, glattrasierter Norweger mit dunklem Haar, der eine Lederschuppenrüstung und einen Helm trägt. Er hält ein Langschwert, das auf der gesamten Klinge mit Runen versehen ist.
 >
->Eirik ist ein Vitki im Dienst des Königs von Norwegen und untersteht speziell seinem Onkel Sven Svennson, einem mächtigen Herzog. Wie viele Vitkir in diesem Teil Skandinaviens ist Eirik ein Mitglied der politischen Gruppe, die als Birkebeine (die Birkebeiner) bekannt ist und die in den letzten vierzig Jahren des gerade erst beendeten Bürgerkriegs die Könige des Nordens unterstützt hat. Unter seinem Kommando steht eine Einheit aus Soldaten und Baumeistern, die sein Onkel unter seine Befehlsgewalt gestellt hat, deren Anführer er selbst ausgebildet hat und die lange genug mit ihm gearbeitet haben, um sich an seine Gabe zu gewöhnen. Das hindert nicht am ständigen leisen Murren in den unteren Rängen, aber bisher konnte dies unter Kontrolle gehalten werden und die Veteranen gewöhnen sich allmählich an ihn. Seine Gruppe ist am Stadtrand der zukünftigen Hauptstadt Trondheim stationiert, um deren Verteidigungsanlagen wieder aufzubauen und Unruhen zu bewachen. Sein Onkel erwartet, dass er ein großer Anführer und Soldat wird, obwohl er noch ein wenig zu naiv ist, um die privilegierte Stellung zu schätzen, die er derzeit in der nordischen Gesellschaft einnimmt.
+> Eirik ist ein Vitki im Dienst des Königs von Norwegen und untersteht speziell seinem Onkel Sven Svennson, einem mächtigen Herzog. Wie viele Vitkir in diesem Teil Skandinaviens ist Eirik ein Mitglied der politischen Gruppe, die als Birkebeine (die Birkebeiner) bekannt ist und die in den letzten vierzig Jahren des gerade erst beendeten Bürgerkriegs die Könige des Nordens unterstützt hat. Unter seinem Kommando steht eine Einheit aus Soldaten und Baumeistern, die sein Onkel unter seine Befehlsgewalt gestellt hat, deren Anführer er selbst ausgebildet hat und die lange genug mit ihm gearbeitet haben, um sich an seine Gabe zu gewöhnen. Das hindert nicht am ständigen leisen Murren in den unteren Rängen, aber bisher konnte dies unter Kontrolle gehalten werden und die Veteranen gewöhnen sich allmählich an ihn. Seine Gruppe ist am Stadtrand der zukünftigen Hauptstadt Trondheim stationiert, um deren Verteidigungsanlagen wieder aufzubauen und Unruhen zu bewachen. Sein Onkel erwartet, dass er ein großer Anführer und Soldat wird, obwohl er noch ein wenig zu naiv ist, um die privilegierte Stellung zu schätzen, die er derzeit in der nordischen Gesellschaft einnimmt.
 
 # Kapitel Acht: Bibliographie
 
-## Quellen zu Volkshexen
+### Quellen zu Volkshexen
 
 Flint, V. The rise of magic in early medieval Europe. Oxford: Clarendon, 1991.
 
@@ -7477,7 +7476,7 @@ Kors, A.C. and E. Peters (eds). Witchcraft in Europe, 400-1700: a documentary hi
 
 Russel, J.B. A history of witchcraft, sorcerers, heretics, and pagans. London: Thames and Hudson, 1980.
 
-## Quellen zu Gruagachan
+### Quellen zu Gruagachan
 
 Foster, Sally. Picts, Gaels and Scots. London: B.T. Batsford Ltd., 1996.
 
@@ -7487,7 +7486,7 @@ Robertson, Roderick. Lion of the North: The Loch Leglean Tribunal, Renton, WA: W
 
 Wagner, Paul. Pictish Warrior AD 297-841. Oxford: Osprey Publishing, 2002.
 
-## Quellen zu Gelehrten Magiern
+### Quellen zu Gelehrten Magiern
 
 Ankarloo, Bengt and Stuart Clark (eds). Witchcraft and Magic in Europe: The Middle Ages. Philadelphia: University of Pennsylvania Press, 2002.
 
@@ -7497,7 +7496,7 @@ Kieckhefer, Richard. Magic in the Middle Ages. Cambridge: Cambridge University P
 
 Skemer, Don. Binding Words: Textual Amulets in the Middle Ages. University Park, PA: Pennsylvania State University Press, 2006.
 
-## Quellen zu Nachtwandlern
+### Quellen zu Nachtwandlern
 
 Ginzburg, Carlo. Ecstasies: Deciphering the Witches' Sabbath. Chicago: University of Chicago Press, 1991.
 
@@ -7507,6 +7506,6 @@ Lecoteux, Claude. Witches, Werewolves and Fairies: Shapeshifters and Astral Doub
 
 Summers, Montague. *The Werewolf in Lore and Legend*. New York: Dover Publications, 2003.
 
-## ANMERKUNG ZU DEN QUELLEN UND HERANGEHENSWEISEN BEI NACHTWANDLERN
+#### Anmerkung zu den Quellen und Herangehensweisen bei Nachtwandlern
 
 Nachtwandler sind in klassischen griechischen Werken ausführlich dokumentiert sowie in Werken, die nach dem Spielzeitraum verfasst wurden. Während des Spielzeitraums werden sie in mehreren Quellen erwähnt, jedoch nicht detailliert genug beschrieben, um daraus vollständige, authentische regionale Varianten zu entwickeln. Spieltruppen werden ermutigt, die Elemente der verschiedenen hier vorgestellten Nachtwandlergruppen frei zu kombinieren, um eine einzigartige Gruppe zu erschaffen, die zur Region passt, in der ihr Konvent liegt. Die hier beschriebenen Gruppen wurden im 13. Jahrhundert in der Regel nicht im Detail dokumentiert, sind aber aufgenommen worden, damit Spieler einzelne Elemente auswählen und in selbst entworfene fiktive Traditionen einbauen können.

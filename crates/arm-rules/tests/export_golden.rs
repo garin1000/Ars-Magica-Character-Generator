@@ -281,7 +281,7 @@ fn golden_magus() -> Entity {
     // One hand-written year and two the engine resolved, so the fixture covers the
     // free-text entry, the widened one carrying its die and total, and both states a
     // Crisis can be in: demanded and unrolled (1229), and resolved against the
-    // Crisis Table (1230, ArMDE:16621-16632).
+    // Crisis Table (1230, ArMDE:16698-16709).
     e.aging_log = vec![
         AgingLogEntry {
             year: Some(1220),
@@ -332,7 +332,7 @@ fn a_fully_populated_magus_matches_the_golden_document() {
 /// separator the rest of the document uses. Rendering only the primary would hide
 /// that Visions is a Supernatural Flaw as well as a Story one.
 ///
-/// Source: ArMDE:6985-6986
+/// Source: ArMDE:7056-7057
 /// (*Minor, Story, Supernatural*).
 #[test]
 fn the_type_cell_lists_every_category_the_descriptor_names() {
@@ -420,14 +420,14 @@ fn a_non_supernatural_entrys_text_cell_gets_no_realm_line() {
 /// Row 55 (`docs/open-todos.md`; D74.4) — `write_virtues_flaws` renders the
 /// GRANTED table through the exact same [`item_rows`] helper as the bought
 /// one, so the realm line already appeared here before row 55 — just the
-/// WRONG realm. Faerie Doctor (ArMDE:2668-2704, buyable standalone: "A
+/// WRONG realm. Faerie Doctor (ArMDE:2736-2772, buyable standalone: "A
 /// character can be a faerie doctor without being a Mythic Companion") grants
 /// Dowsing for free; Dowsing has no `realm_association` of its own and Faerie
 /// Doctor's OWN category is `mythic_companion`, not `supernatural`, so
 /// (unlike a Strong-Faerie-Blood fixture) the bought row contributes no
 /// "Realm:" text of its own — only the granted Dowsing row's resolution is
 /// under test here. `virtue.faerie_doctor`'s `grants_selection` effect now
-/// states `realm: "faerie"` (ArMDE:2641), stamped onto the granted Dowsing by
+/// states `realm: "faerie"` (ArMDE:2709), stamped onto the granted Dowsing by
 /// `effective::vf_granted_selections`, so it resolves Faerie instead of
 /// falling through the plain chain to Magic.
 #[test]
@@ -449,7 +449,7 @@ fn a_granted_supernatural_entrys_realm_rides_the_granted_table_text_cell() {
         .expect("synthetic_labels resolves every chrome key and every id is real");
     assert!(
         rendered.contains("Realm: Faerie"),
-        "ArMDE:2641 — the granted Dowsing must show Faerie, not the Magic fallback; \
+        "ArMDE:2709 — the granted Dowsing must show Faerie, not the Magic fallback; \
          got:\n{rendered}"
     );
 }

@@ -94,18 +94,18 @@ fn raw_entry(id: &str) -> Value {
 // ---------------------------------------------------------------------------
 
 /// F-200 (`tmp/x9c-verdicts.md`): the range previously shipped as
-/// `[4536, 4538]` stopped after the entry's first body paragraph, cutting off
-/// its own remaining body
-/// (ArMDE:4540-4542: "add the lowest applicable Art score twice", "only one
+/// `[4536, 4538]` (pre-P8-3; `[4607, 4609]` post-resync) stopped after the
+/// entry's first body paragraph, cutting off its own remaining body
+/// (ArMDE:4611-4613: "add the lowest applicable Art score twice", "only one
 /// Magical Focus") and its own sidebar `> #### Sample Minor Magical Foci`
-/// (ArMDE:4544-4557, confirmed to belong to THIS entry, not the next
-/// heading's — Muqta' at :4559 is unrelated Social Status content — the same
+/// (ArMDE:4615-4628, confirmed to belong to THIS entry, not the next
+/// heading's — Muqta' at :4630 is unrelated Social Status content — the same
 /// read that puts `virtue.minor_magical_focus` in Guard B's own
 /// `OWN_BLOCKQUOTED_SIDEBARS` allowlist). D77.2 ("an entry's range is its
 /// heading plus its body") therefore extends the range to the sidebar's own
 /// end, exactly as `virtue.major_magical_focus` already does for its sidebar
-/// (ArMDE:4399-4422). RULES.md already cites `ArMDE:4536-4542` for this entry
-/// (its V/F table and the MagicalFocus row), so the JSON range disagrees with
+/// (ArMDE:4470-4493). RULES.md cites `ArMDE:4607-4613` for this entry (its
+/// V/F table and the MagicalFocus row), so the JSON range disagrees with
 /// RULES.md too.
 #[test]
 fn minor_magical_focus_range_reaches_its_own_sidebar() {
@@ -115,8 +115,8 @@ fn minor_magical_focus_range_reaches_its_own_sidebar() {
         .expect("source.lines is an array");
     assert_eq!(
         lines,
-        &[Value::from(4536), Value::from(4557)],
-        "virtue.minor_magical_focus must cite ArMDE:4536-4557 (its own body plus its own \
+        &[Value::from(4607), Value::from(4628)],
+        "virtue.minor_magical_focus must cite ArMDE:4607-4628 (its own body plus its own \
          \"Sample Minor Magical Foci\" sidebar), not the shipped {lines:?} — F-200"
     );
 }
@@ -127,7 +127,7 @@ fn minor_magical_focus_range_reaches_its_own_sidebar() {
 
 /// Pin (expected GREEN already — `effective/warping.rs::warping_grant_points_in`
 /// already ignores the stored `score` and derives it from the point total):
-/// `flaw.warped_by_magic` grants 5 Warping Points (ArMDE:7019-7021), which the
+/// `flaw.warped_by_magic` grants 5 Warping Points (ArMDE:7090-7092), which the
 /// advancement curve (5/15/30/50/75) inverts to Warping Score 1. Surfaced via
 /// `derived::derived_totals`, the DTO the frontend actually reads.
 #[test]
@@ -137,7 +137,7 @@ fn warped_by_magic_shows_warping_score_one_from_its_five_points() {
     assert_eq!(
         warping_score(&e, &rs),
         1,
-        "ArMDE:7019-7021: Warped by Magic's 5 Warping Points must derive Warping Score 1"
+        "ArMDE:7090-7092: Warped by Magic's 5 Warping Points must derive Warping Score 1"
     );
     let totals = derived_totals(&e, &rs);
     assert_eq!(
@@ -176,10 +176,10 @@ fn warped_by_magic_effect_no_longer_carries_a_stored_score() {
 // Item 4 — F-240: virtue.rabbi requires Educated (Hebrew), undeclared.
 // ---------------------------------------------------------------------------
 
-/// F-240 (`tmp/x9c-verdicts.md`): ArMDE:4832 "must take the Educated
+/// F-240 (`tmp/x9c-verdicts.md`): ArMDE:4903 "must take the Educated
 /// (Hebrew) Virtue", exactly the same sentence shape already encoded as a
-/// `has virtue.educated_hebrew` prerequisite on `virtue.shamash` (ArMDE:4944)
-/// and `virtue.sofer` (ArMDE:4996) — mirrors
+/// `has virtue.educated_hebrew` prerequisite on `virtue.shamash` (ArMDE:5015)
+/// and `virtue.sofer` (ArMDE:5067) — mirrors
 /// `x5_prerequisites.rs::shamash_requires_educated_hebrew`.
 #[test]
 fn rabbi_requires_educated_hebrew() {
@@ -189,7 +189,7 @@ fn rabbi_requires_educated_hebrew() {
     let without_result = validate(&without, &rs);
     assert!(
         issue_codes(&without_result).contains(&"prereq_not_met"),
-        "ArMDE:4832 'must take the Educated (Hebrew) Virtue' — Rabbi without it must be \
+        "ArMDE:4903 'must take the Educated (Hebrew) Virtue' — Rabbi without it must be \
          refused, got: {:?}",
         issue_codes(&without_result)
     );
@@ -211,7 +211,7 @@ fn rabbi_requires_educated_hebrew() {
 // ---------------------------------------------------------------------------
 
 /// D78.1: `flaw.companion_animal` ("Minor, Social Status, animals only",
-/// ArMDE:5806) gets the same gate D75/F-556 put on `virtue.domestic_animal` —
+/// ArMDE:5877) gets the same gate D75/F-556 put on `virtue.domestic_animal` —
 /// a `Prereq::CharacterType` naming an animal character type no profile has,
 /// so no human character type can ever satisfy it. Mirrors
 /// `rc_review_c_fixes.rs::f556_domestic_animal_is_refused_for_a_human_character_type`.
@@ -236,7 +236,7 @@ fn companion_animal_is_refused_for_a_human_character_type() {
 // Item 6 — D78.2: flaw.pagan_minor, a Minor twin of flaw.pagan.
 // ---------------------------------------------------------------------------
 
-/// D78.2: ArMDE:6571 "*Major or Minor, Personality*" — one entry, one
+/// D78.2: ArMDE:6642 "*Major or Minor, Personality*" — one entry, one
 /// passage, two magnitudes, the same shape `virtue.potent_magic_major`/
 /// `_minor` already encode for their own shared passage. `flaw.pagan` keeps
 /// its existing bare id for Major (no rename — the False Power precedent, see
@@ -249,7 +249,7 @@ fn pagan_minor_exists_and_is_a_minor_personality_flaw() {
     assert_eq!(
         new.magnitude,
         Magnitude::Minor,
-        "D78.2: flaw.pagan_minor is the Minor twin of flaw.pagan (ArMDE:6571 \"Major or Minor\")"
+        "D78.2: flaw.pagan_minor is the Minor twin of flaw.pagan (ArMDE:6642 \"Major or Minor\")"
     );
     assert_eq!(
         new.categories,
@@ -310,7 +310,7 @@ fn pagan_minor_cites_the_same_passage_as_pagan() {
     assert_eq!(
         pagan_minor["source"], pagan["source"],
         "flaw.pagan_minor must cite the SAME source (file, lines, anchor) as flaw.pagan — \
-         ArMDE:6570-6573, the \"Pagan\" heading, is the only passage either magnitude has"
+         ArMDE:6641-6644, the \"Pagan\" heading, is the only passage either magnitude has"
     );
 }
 
@@ -355,14 +355,18 @@ fn pagan_minor_en_de_name_and_summary_match_pagan_verbatim() {
 // ---------------------------------------------------------------------------
 
 /// D78.3/D25: a short "known source errata" note in `crates/arm-rules/RULES.md`
-/// listing the four index omissions (`virtue.lupus_the_wolf` ArMDE:4336,
-/// `virtue.minor_enchantments` :4533, `virtue.turb_trained` :5180,
-/// `flaw.true_love_minor` :6872/:6877), the three index disagreements
-/// (`flaw.bound_to_role_role` :5736 vs :5392, `flaw.broken_vessel` :5754 vs
-/// :5393, `flaw.weak_personality` :7077 vs :5518 — D25's original finding)
-/// and the stray Folk Magic entry in the Flaw index (ArMDE:5545 vs the Virtue
-/// heading ArMDE:3907) — each with both citations and the side taken (D25: the
-/// descriptor always wins; the index is never a data source).
+/// listing the four index omissions (`virtue.lupus_the_wolf` ArMDE:4407,
+/// `virtue.minor_enchantments` :4604, `virtue.turb_trained` :5251,
+/// `flaw.true_love_minor` :6943/:6948), the three index disagreements
+/// (`flaw.bound_to_role_role` :5807 vs :5607, `flaw.broken_vessel` :5825 vs
+/// :5608, `flaw.weak_personality` :7148 vs :5568 — D25's original finding)
+/// and the stray Folk Magic entry in the Flaw index (ArMDE:3218 vs the Virtue
+/// heading ArMDE:3978) — each with both citations and the side taken (D25: the
+/// descriptor always wins; the index is never a data source). P8-3 (2026-10-09):
+/// the resync's own text diff shows upstream **fixed** the stray Flaw-index
+/// duplicate `[Folk Magic](#folk-magic)` line — the old file had it twice
+/// (ArMDE-old 3150 and 5545), the new file only once (ArMDE:3218), so both of
+/// the old citations now correctly resolve to the same single survivor.
 #[test]
 fn rules_md_carries_the_known_source_errata_note() {
     assert!(
@@ -371,18 +375,18 @@ fn rules_md_carries_the_known_source_errata_note() {
     );
 
     let entries_with_both_citations = [
-        ("Lupus (the Wolf)", "4336"),
-        ("Minor Enchantments", "4533"),
-        ("Turb Trained", "5180"),
-        ("True Love", "6872"),
-        ("Bound to (Role) Role", "5736"),
-        ("Bound to (Role) Role", "5392"),
-        ("Broken Vessel", "5754"),
-        ("Broken Vessel", "5393"),
-        ("Weak Personality", "7077"),
-        ("Weak Personality", "5518"),
-        ("Folk Magic", "5545"),
-        ("Folk Magic", "3907"),
+        ("Lupus (the Wolf)", "4407"),
+        ("Minor Enchantments", "4604"),
+        ("Turb Trained", "5251"),
+        ("True Love", "6943"),
+        ("Bound to (Role) Role", "5807"),
+        ("Bound to (Role) Role", "5607"),
+        ("Broken Vessel", "5825"),
+        ("Broken Vessel", "5608"),
+        ("Weak Personality", "7148"),
+        ("Weak Personality", "5568"),
+        ("Folk Magic", "3218"),
+        ("Folk Magic", "3978"),
     ];
     let missing: Vec<&str> = entries_with_both_citations
         .iter()

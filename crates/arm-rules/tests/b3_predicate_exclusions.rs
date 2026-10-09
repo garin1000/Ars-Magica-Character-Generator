@@ -55,7 +55,7 @@ fn has_code(issues: &[ValidationIssue], code: &str) -> bool {
 
 // --- (a) D33/Q-138: ParameterDef::exclude_if -------------------------------
 //
-// `flaw.flawed_powers`'s own shape (ArMDE:6146-6148, already verified in
+// `flaw.flawed_powers`'s own shape (ArMDE:6217-6219, already verified in
 // D33): a parameter naming an imported Major Hermetic Flaw, refusing any
 // candidate for which `ItemPredicate::Trained` holds. `flaw.deficient_technique`
 // (categories: hermetic, trained: true) is the excluded candidate;
@@ -147,7 +147,7 @@ fn ruleset_load_rejects_exclude_if_on_a_non_item_domain() {
 
 // --- (b) D23/F-466: PointItem::excluded_if_holds ----------------------------
 //
-// `flaw.university_dean`'s own shape (Q-137, ArMDE:6923-6926, already
+// `flaw.university_dean`'s own shape (Q-137, ArMDE:6994-6997, already
 // verified in D23): illegal alongside ANY other effective Flaw carrying
 // `Effect::GrantsReputation`, bought or GRANTED (closing the F-466
 // reachability trap `validate_incompatibilities` is deliberately

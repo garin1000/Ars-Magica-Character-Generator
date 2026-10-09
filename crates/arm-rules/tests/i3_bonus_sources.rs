@@ -10,15 +10,15 @@
 //! disagree with the number on the badge.
 //!
 //! Rules exercised (verbatim):
-//! - ArMDE:4818-4820 (Puissant Art): "You add 3 to the value of one Art whenever
+//! - ArMDE:4889-4891 (Puissant Art): "You add 3 to the value of one Art whenever
 //!   you use it."
-//! - ArMDE:3731-3737 (Elemental Magic): "if you assign 10 experience points to
+//! - ArMDE:3802-3808 (Elemental Magic): "if you assign 10 experience points to
 //!   each of Aquam, Auram, and Terram, and 21 experience points to Ignem, then you
 //!   should assign 15 bonus experience points to Ignem (5 from each of Aquam,
 //!   Auram, and Terram), and 21 bonus experience points to each of Aquam, Auram,
 //!   and Terram (11 from Ignem, and 5 each from the other two Forms)."
-//! - ArMDE:4814-4816 (Puissant Ability): "add 2 to its value whenever you use it."
-//! - ArMDE:4888-4890 (Second Sight): "Choosing this Virtue confers the Ability
+//! - ArMDE:4885-4887 (Puissant Ability): "add 2 to its value whenever you use it."
+//! - ArMDE:4959-4961 (Second Sight): "Choosing this Virtue confers the Ability
 //!   Second Sight 1".
 
 use arm_rules::ruleset::{Ruleset, RulesetSources};
@@ -83,7 +83,7 @@ fn sorted(mut sources: Vec<ScoreSource>) -> Vec<ScoreSource> {
     sources
 }
 
-/// The elemental magus of the ArMDE:3735 worked example shape, at whole scores:
+/// The elemental magus of the ArMDE:3806 worked example shape, at whole scores:
 /// Aquam/Auram/Ignem 6 (21 table-XP each), Terram 4 (10 table-XP), with Puissant
 /// (Ignem) on top.
 ///
@@ -124,8 +124,8 @@ fn puissant_ignem_and_elemental_magic_are_listed_as_two_sources() {
             source("virtue.puissant_art", 3),
             source("virtue.elemental_magic", 3),
         ])),
-        "Ignem's +6 must name Puissant Art (+3, ArMDE:4820) and Elemental Magic \
-         (+3, ArMDE:3735) separately"
+        "Ignem's +6 must name Puissant Art (+3, ArMDE:4891) and Elemental Magic \
+         (+3, ArMDE:3806) separately"
     );
     assert_eq!(
         art_sources_of(&e, &rs, "art.terram"),
@@ -178,8 +178,8 @@ fn second_sight_companion() -> Entity {
     )
 }
 
-/// Unbought Second Sight: the granted floor (1, ArMDE:4890) and Puissant Ability
-/// (+2, ArMDE:4816) both raise the effective score above the bought 0, so both are
+/// Unbought Second Sight: the granted floor (1, ArMDE:4961) and Puissant Ability
+/// (+2, ArMDE:4887) both raise the effective score above the bought 0, so both are
 /// named, and together they make the badge's 3.
 #[test]
 fn granted_floor_and_puissant_ability_are_both_named_when_unbought() {

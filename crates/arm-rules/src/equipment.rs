@@ -14,7 +14,7 @@
 //!   minimum-Strength requirement, a Load, and (missiles only) a Range.
 //! - [`Shield`] — shields are their own table because a shield's modifiers **add
 //!   to** the wielded weapon's line
-//!   (ArMDE:16656); 5i pairs a wielded
+//!   (ArMDE:16733); 5i pairs a wielded
 //!   weapon with a wielded shield and sums them.
 //! - [`Armor`] — the Armor table, split into one row per material *and coverage*
 //!   (partial / full), each with a Protection (Soak) bonus and a Load.
@@ -106,7 +106,7 @@ pub struct Weapon {
     /// shield: a two-handed weapon receives **no** shield Init/Attack/Defense
     /// modifiers (the shield still counts toward Load). The nine Great-Weapon
     /// melee weapons and both bows are two-handed. `#[serde(default)]` + skip-when-
-    /// false for canonical, noise-free JSON. Source: ArMDE:7494 (Great Weapon — "Fighting with a weapon which
+    /// false for canonical, noise-free JSON. Source: ArMDE:7566 (Great Weapon — "Fighting with a weapon which
     /// requires two hands to use"), :17008-17013 (the missile table's asterisked
     /// bow rows and its footnote, ":17013 * Requires two free hands to load and
     /// fire." — the Sling shares the asterisk but stays a thrown weapon).
@@ -121,7 +121,7 @@ pub struct Weapon {
     /// exists for "can this be wielded at all," a different question). Default
     /// false; only the three body attacks set it. This reproduces the Knight's
     /// own printed template (five rows, no mounted Fist row,
-    /// ArMDE:1467-1472), not a rule the Mounted Combat passage itself states —
+    /// ArMDE:1535-1540), not a rule the Mounted Combat passage itself states —
     /// see the `RULES.md` note under Mounted Combat (Norbert's D66 ruling).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub body_attack: bool,
@@ -135,7 +135,7 @@ pub struct Weapon {
 ///
 /// A shield is modeled separately from weapons because a shield's modifiers **add
 /// to** the wielded weapon's combat line
-/// (ArMDE:16656): 5i combines the
+/// (ArMDE:16733): 5i combines the
 /// wielded weapon and shield rows. Shields carry their own minimum-Strength
 /// requirement, checked independently of the weapon's.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -151,7 +151,7 @@ pub struct Shield {
     /// The shield's contribution to Encumbrance Load.
     pub load: u8,
     /// The minimum Strength score needed to use the shield (met separately from
-    /// the weapon's requirement, ArMDE:16997).
+    /// the weapon's requirement, ArMDE:17074).
     pub min_strength: i8,
     /// Provenance into the Markdown rules source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -285,7 +285,7 @@ mod tests {
     }
 
     /// `two_handed` defaults to false and is skipped when false; a two-handed
-    /// weapon (Great Weapon / bow) serializes it. Source: ArMDE:7494, :17008-17013.
+    /// weapon (Great Weapon / bow) serializes it. Source: ArMDE:7566, :17085-17090.
     #[test]
     fn two_handed_defaults_false_and_skips_when_false() {
         let json = r#"{

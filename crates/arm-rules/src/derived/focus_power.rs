@@ -13,23 +13,23 @@ use super::*;
 pub struct FocusPowerLine {
     /// The power's free-text name / scope, as entered.
     pub name: String,
-    /// The maximum level of effect the character bought (`ArMDE:3899`).
+    /// The maximum level of effect the character bought (`ArMDE:3970`).
     pub max_level: u16,
-    /// The Penetration bought from the same pool (`ArMDE:3899`).
+    /// The Penetration bought from the same pool (`ArMDE:3970`).
     pub penetration: u16,
-    /// The maximum magnitude of the effect (`ArMDE:9097`).
+    /// The maximum magnitude of the effect (`ArMDE:9169`).
     pub magnitude: u16,
-    /// Initiative = Quickness − the maximum magnitude (`ArMDE:3899`).
+    /// Initiative = Quickness − the maximum magnitude (`ArMDE:3970`).
     pub initiative: i32,
     /// Fatigue levels spent to activate the power, or `None` above level 75 where
-    /// the rulebook states no cost (`ArMDE:3901`).
+    /// the rulebook states no cost (`ArMDE:3972`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fatigue_levels: Option<u8>,
 }
 
 /// A level's magnitude: "Spells also have a magnitude, which is equal to the level
-/// divided by five, rounded up" (`ArMDE:9097`). The only sourced level→magnitude
-/// rule in the book, and what `ArMDE:3899`'s "maximum magnitude of the effect"
+/// divided by five, rounded up" (`ArMDE:9169`). The only sourced level→magnitude
+/// rule in the book, and what `ArMDE:3970`'s "maximum magnitude of the effect"
 /// resolves to.
 fn magnitude_of(level: u16) -> u16 {
     level.div_ceil(5)
@@ -38,7 +38,7 @@ fn magnitude_of(level: u16) -> u16 {
 /// The Fatigue levels activating an effect of this level costs: "It costs one
 /// Fatigue level to activate this power for an effect of level 25 or lower, two
 /// Fatigue levels to activate it if the effect has a level of 26 to 50, and three
-/// for 51 to 75" (`ArMDE:3901`).
+/// for 51 to 75" (`ArMDE:3972`).
 ///
 /// `None` above 75: the table stops there and the book says nothing about higher
 /// effects, so the honest answer is "unstated", never a fourth band invented by
@@ -55,7 +55,7 @@ fn fatigue_levels_for(level: u16) -> Option<u8> {
 /// One Focus Power read-out line per entered focus power, in entry order.
 ///
 /// Initiative is "the character's Quickness – the maximum magnitude of the effect"
-/// (`ArMDE:3899`), against the same aging-adjusted Quickness every other play stat
+/// (`ArMDE:3970`), against the same aging-adjusted Quickness every other play stat
 /// uses.
 pub fn focus_power_lines(entity: &Entity, ruleset: &Ruleset) -> Vec<FocusPowerLine> {
     let quickness = characteristic(entity, ruleset, Characteristic::Qik);

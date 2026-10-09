@@ -6,9 +6,9 @@
   import Spinner from './Spinner.svelte';
 
   const rules = $derived(store.ruleset?.ruleset.characteristic_rules ?? null);
-  // The cost table is the printed point-buy table and stops at ±3 (`ArMDE:2346-2354`),
+  // The cost table is the printed point-buy table and stops at ±3 (`ArMDE:2414-2422`),
   // which is also the buyable range: Great/Poor (Characteristic) do NOT widen it.
-  // `ArMDE:3989` has the Virtue perform the raise itself — "You may raise any
+  // `ArMDE:4060` has the Virtue perform the raise itself — "You may raise any
   // Characteristic that already has a score of at least +3 by one point" — so +4
   // and +5 arrive as a granted bonus on the effective score, exactly like Giant
   // Blood's free +1, and are never bought. The book prints no cost for them.

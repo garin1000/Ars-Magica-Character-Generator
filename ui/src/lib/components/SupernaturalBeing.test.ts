@@ -195,7 +195,7 @@ describe('SupernaturalBeing power list', () => {
     expect(has(body, 'power-remove-1')).toBe(true);
   });
 
-  // The budget bar charges for Penetration as well as level (ArMDE:4019,
+  // The budget bar charges for Penetration as well as level (ArMDE:4090,
   // and the engine's `powers_used`), so the row must offer a control for it —
   // otherwise the player is billed for a value nothing on screen can set.
   it('reads a power row Penetration back from the entity, defaulting to 0', () => {
@@ -226,7 +226,7 @@ describe('SupernaturalBeing power list', () => {
     expect(text).toContain('50');
   });
 
-  // Focus Power's 25 points are a SECOND currency (ArMDE:3899) — 2 per level of
+  // Focus Power's 25 points are a SECOND currency (ArMDE:3970) — 2 per level of
   // effect, 1 per Penetration — so the panel draws its own list and its own bar,
   // and neither reads the other's numbers.
   it('renders a focus-power row per entry with its own max-level and Penetration inputs', () => {
@@ -291,7 +291,7 @@ describe('SupernaturalBeing power list', () => {
   });
 
   // Magnitude, Initiative and the Fatigue cost are all engine-derived
-  // (ArMDE:3899, ArMDE:3901, ArMDE:9097) and only displayed here.
+  // (ArMDE:3970, ArMDE:3972, ArMDE:9169) and only displayed here.
   it('shows the engine-derived magnitude, Initiative and Fatigue cost per focus power', () => {
     store.entity.focus_powers = [{ name: 'Wolves', max_level: 10, penetration: 5 }];
     store.derived = {

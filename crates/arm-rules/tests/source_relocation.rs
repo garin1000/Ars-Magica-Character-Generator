@@ -734,7 +734,7 @@ fn old_boundary_self_check_passes_when_the_formula_already_matches_history() {
 }
 
 /// The real-world case the sweep's first identity run discovered beyond the
-/// two known guard-exemption lists: `flaw.wrathful_*` (ArMDE:7106-7108)
+/// two known guard-exemption lists: `flaw.wrathful_*` (ArMDE:7177-7179)
 /// stops at its own last body line, but the generic formula would walk past
 /// a horizontal rule and an unrelated blockquoted flavour-text paragraph
 /// (the Chapter 5 break's own decoration) to reach the next real heading —
@@ -746,6 +746,17 @@ fn old_boundary_self_check_fails_when_the_formula_overshoots_unrelated_trailing_
     let text = "#### Foo\n\nBody line 1.\n\n---\n\n> Unrelated flavour text that is not part of \
                 Foo's own entry.\n\n#### Bar\n";
     assert!(!old_boundary_is_self_consistent(text, 1, 3));
+}
+
+/// The bug a real (non-identity) sweep run caught: writing the relocated
+/// `new_start` next to the STALE `old_end` mixes new-file and old-file
+/// coordinates — for `flaw.wrathful_*` this produced `start (7177) exceeds
+/// end (7108)`, an inverted range `rules_source_provenance.rs`'s own
+/// integrity check rightly refused to load. The fix is to carry the entry's
+/// OWN span forward instead.
+#[test]
+fn manual_boundary_end_preserves_the_old_entrys_own_span() {
+    assert_eq!(manual_boundary_end(100, 50, 53), 103);
 }
 
 // --- The sweep tool: `#[ignore]`d, writes into the repository --------------
@@ -768,6 +779,125 @@ fn relocate_anchor(old_text: &str, new_text: &str, anchor: &str, level: usize) -
     } else {
         relocate_heading_anchor(old_text, new_text, anchor, level)
     }
+}
+
+/// P8-3's documented, hand-verified exceptions: two EN entries whose OLD
+/// heading does not survive in the NEW file under *any* spelling, so
+/// `relocate_heading_anchor`'s count-parity check correctly reports
+/// Unresolved (`tmp/t1-relocation-report.md`) — "never guess" (D18) means a
+/// rename needs a human to read the new file and confirm it's the *same*
+/// passage, not a tool guessing from similarity. Confirmed by reading the new
+/// file at the passage's own body text, not the stale heading:
+/// - `virtue.bard` (`#rard`) — an OCR fix; the heading now reads "Bard"
+///   (ArMDE:3547), anchor `bard`.
+/// - `spell.sense_the_feet_that_thread_the_earth`
+///   (`#sense-the-feet-that-thread-the-earth`) — reworded "Thread" ->
+///   "Tread" (same file, line 15411), anchor
+///   `sense-the-feet-that-tread-the-earth`.
+const ANCHOR_OVERRIDES: &[(&str, &str)] = &[
+    ("virtue.bard", "bard"),
+    (
+        "spell.sense_the_feet_that_thread_the_earth",
+        "sense-the-feet-that-tread-the-earth",
+    ),
+];
+
+/// Resolves an [`ANCHOR_OVERRIDES`] entry directly against the NEW file: finds
+/// the heading whose own generated anchor equals `new_anchor` at the expected
+/// `level`. Exactly one match resolves; zero or more than one is Unresolved
+/// rather than guessed — an override records *where a human already looked*,
+/// it does not relax the "never guess" rule for the lookup itself.
+fn resolve_override(new_text: &str, new_anchor: &str, level: usize) -> Relocation {
+    let candidates: Vec<Heading> = headings(new_text)
+        .into_iter()
+        .filter(|h| h.anchor == new_anchor && h.level == level)
+        .collect();
+    match candidates.as_slice() {
+        [only] => {
+            let all_new_headings = headings(new_text);
+            Relocation::Resolved {
+                start: only.line,
+                end: section_end(new_text, &all_new_headings, only),
+            }
+        }
+        [] => Relocation::Unresolved(format!(
+            "override anchor '{new_anchor}' at level {level} names no heading in the new file"
+        )),
+        _ => Relocation::Unresolved(format!(
+            "override anchor '{new_anchor}' at level {level} names more than one heading in the \
+             new file"
+        )),
+    }
+}
+
+/// DE sidecar fallback (design-p8-resync.md § "What moves" (b), brief's
+/// "20 are DE sidecar entries"): the German files mirror the English ones
+/// **line by line** (CLAUDE.md -> "Rules source files" -> "German source
+/// files mirror the English ones line-by-line throughout"), so when a DE
+/// anchor is unresolved but its English counterpart *did* resolve, the
+/// German heading's new line is already known — it's the English entry's own
+/// relocated `start`. This reads the German heading actually sitting there
+/// and derives its anchor the same way [`headings`] always does, rather than
+/// trying to match the STALE German anchor string against new text (which is
+/// exactly what just failed). Returns `None` — never a guess — unless that
+/// line really is a heading at the expected level, so a German-only
+/// restructuring that breaks line-parity surfaces as still-unresolved rather
+/// than silently naming the wrong line's heading.
+fn de_fallback_anchor(new_de_text: &str, line: usize, expected_level: usize) -> Option<String> {
+    let found = headings(new_de_text);
+    let heading = found.iter().find(|h| h.line == line)?;
+    if heading.level != expected_level {
+        return None;
+    }
+    Some(heading.anchor.clone())
+}
+
+#[test]
+fn an_override_anchor_resolves_directly_against_the_new_file() {
+    let new_text = "# Title\n\n#### Baccalaureus\nOld text.\n\n#### Bard\nNew text.\n\n#### Beadle\n\
+                     More.\n";
+    assert_eq!(
+        resolve_override(new_text, "bard", 4),
+        Relocation::Resolved { start: 6, end: 7 }
+    );
+}
+
+#[test]
+fn an_override_anchor_is_unresolved_when_it_names_no_heading() {
+    assert!(matches!(
+        resolve_override("# Title\n\nNo such heading here.\n", "bard", 4),
+        Relocation::Unresolved(_)
+    ));
+}
+
+#[test]
+fn an_override_anchor_is_unresolved_when_the_level_does_not_match() {
+    let new_text = "# Title\n\n##### Bard\nText.\n";
+    assert!(matches!(
+        resolve_override(new_text, "bard", 4),
+        Relocation::Unresolved(_)
+    ));
+}
+
+#[test]
+fn de_fallback_anchor_derives_the_anchor_from_the_heading_at_the_english_line() {
+    let new_de = "# Titel\n\n#### Alter Titel\nText.\n\n#### Neuer Titel\nText.\n";
+    assert_eq!(
+        de_fallback_anchor(new_de, 6, 4),
+        Some("neuer-titel".to_string())
+    );
+}
+
+#[test]
+fn de_fallback_anchor_is_none_when_that_line_is_not_a_heading() {
+    let new_de = "# Titel\n\nKein Titel hier.\nText.\n";
+    assert_eq!(de_fallback_anchor(new_de, 3, 4), None);
+}
+
+#[test]
+fn de_fallback_anchor_is_none_when_the_level_does_not_match() {
+    let new_de = "# Titel\n\n##### Zu Tief\nText.\n";
+    assert_eq!(de_fallback_anchor(new_de, 3, 4), None);
 }
 
 /// `crates/arm-rules` (this crate's manifest dir) -> repo root -> `rules/`.
@@ -834,6 +964,98 @@ fn old_boundary_is_self_consistent(old_text: &str, old_start: usize, recorded_en
         return false;
     };
     section_end(old_text, &old_headings, opening) == recorded_end
+}
+
+/// The `end` to write for a "manual boundary review" entry — one whose
+/// generic boundary formula is already known (via
+/// [`old_boundary_is_self_consistent`]) not to reproduce this entry's own
+/// recorded end against the OLD file, so the formula's *new*-file recompute
+/// cannot be trusted either and is never written. Writing the new `start`
+/// alongside the stale OLD `end` (an earlier version of this sweep's own
+/// bug) mixes two coordinate systems — the kind of structural quirk that
+/// made the formula untrustworthy here (a trailing pronunciation line, an
+/// unrelated blockquoted paragraph, …) is something "the OLD file already
+/// has will almost certainly still be there in the NEW one" (this file's own
+/// module doc comment), so the entry's **own span** (`old_end - old_start`)
+/// is the one thing still safe to carry forward — exactly the span-length
+/// strategy the module doc comment rejects as the *general* rule, but
+/// correct precisely for the cases already flagged as exceptions to the
+/// general (boundary-recompute) rule. Still written to the non-blocking
+/// "manual boundary review" list for a human to confirm, never silently
+/// trusted as final.
+fn manual_boundary_end(new_start: usize, old_start: usize, old_end: usize) -> usize {
+    new_start + (old_end - old_start)
+}
+
+/// Hand-verified exceptions to [`manual_boundary_end`]'s own general rule —
+/// read directly against both files (`tmp/p8-old-source/en/...` and
+/// `rules/source/en/...`) during the P8-3 real-sync run that first wrote
+/// these 34 entries. Old-span preservation assumes the OLD citation's own
+/// end was already correct and only the generic formula is untrustworthy;
+/// true for 31 of the 34, but these 3 ids are the ones where the OLD
+/// citation was *itself* short — the same "missing its own last line(s)"
+/// defect `tmp/t1-handover.md` already found for `art.vim` alone (a
+/// pronunciation note, ArMDE(old):8981 vs :8983), and which this slice found
+/// twice more by spot-checking every one of the 34 against real text rather
+/// than trusting the general rule uniformly:
+/// - `art.vim`: old end (8981) stops short of its own "Pronounced '...'"
+///   line (8983/new 9055).
+/// - `profession.marshal`: old end (4453) stops short of its own closing
+///   paragraph ("A marshal may overseen other specialists...", old 4455/new
+///   4526).
+/// - `magical_focus.certamen`: old end (4281) stops short of the Hermetic
+///   Houses Summary table's last two rows (Tytalus/Verditius, old
+///   4282-4283/new 2350-2351).
+///
+/// For exactly these three, the naive NEW-file recompute (`new_end`) is the
+/// correct value instead — confirmed by reading the real new-file text at
+/// that position, not assumed. A future resync's own 34-row list will differ
+/// and needs the same by-hand check; this list is not expected to carry
+/// forward unchanged.
+const MANUAL_BOUNDARY_RECOMPUTE_OVERRIDES: &[&str] =
+    &["art.vim", "profession.marshal", "magical_focus.certamen"];
+
+/// Picks which candidate end a manual-boundary-review entry actually writes:
+/// the recomputed NEW-file value for the three documented exceptions above,
+/// otherwise the entry's own OLD span carried forward
+/// ([`manual_boundary_end`]).
+fn resolved_manual_boundary_end(
+    ids: &[String],
+    new_start: usize,
+    new_end: usize,
+    old_start: usize,
+    old_end: usize,
+) -> usize {
+    if ids
+        .iter()
+        .any(|id| MANUAL_BOUNDARY_RECOMPUTE_OVERRIDES.contains(&id.as_str()))
+    {
+        new_end
+    } else {
+        manual_boundary_end(new_start, old_start, old_end)
+    }
+}
+
+#[test]
+fn resolved_manual_boundary_end_uses_the_recompute_for_a_documented_override() {
+    assert_eq!(
+        resolved_manual_boundary_end(&["art.vim".to_string()], 9049, 9055, 8977, 8981),
+        9055
+    );
+}
+
+#[test]
+fn resolved_manual_boundary_end_uses_the_old_span_otherwise() {
+    assert_eq!(
+        resolved_manual_boundary_end(
+            &["flaw.form_monstrosity".to_string()],
+            6233,
+            6239,
+            6162,
+            6184
+        ),
+        6255
+    );
 }
 
 /// One `source` block found in a `rules/core/*.json` catalogue, plus its
@@ -929,8 +1151,10 @@ fn render_report(
         }
     }
     out.push_str(&format!(
-        "\n## Fresh boundary disagreements ({}) — non-exempt entries whose recomputed end \
-         differs from the stored end (D30.2 worth checking before a real sync)\n\n",
+        "\n## Relocated entries ({}) — trusted, already-applied offset shifts (the recomputed \
+         end differs from the pre-sync end only because content moved earlier in the book; \
+         `old_boundary_is_self_consistent` passed, so this is what was written, not a review \
+         item — contrast the genuine review rows under \"Manual boundary review\" above)\n\n",
         boundary_mismatches.len()
     ));
     if boundary_mismatches.is_empty() {
@@ -941,6 +1165,103 @@ fn render_report(
         }
     }
     out
+}
+
+/// P8-3 triage (`tmp/t1-relocation-report.md`'s "Fresh boundary disagreements
+/// (1209)"): sampled against the actual pre-/post-sync files
+/// (`flaw.a_deal_with_the_devil` #a-deal-with-the-devil 5905-5907 -> 5976-5978,
+/// `art.creo` #creo-cr-i-create 8863-8935 confirmed similarly), every one of
+/// these 1209 rows is a **trusted, already-applied** relocation
+/// (`old_boundary_is_self_consistent` passed, so the recomputed end is exactly
+/// what got written) that differs from the pre-sync end for the ordinary
+/// reason a resync exists at all: upstream inserted or removed lines earlier
+/// in the book, so the *section* moved — not because the entry's own content
+/// changed shape or needs a human look. Calling that a "disagreement ... worth
+/// checking" reads as a review item sitting alongside the genuine
+/// `manual_boundary` rows above it, which is backwards: those rows are the
+/// ones the self-check could not trust; these are the ones it could.
+#[test]
+fn render_report_labels_a_relocated_entry_as_routine_not_a_disagreement() {
+    let report = render_report(
+        "every entry resolved — 0 catalogue file(s) actually changed and were written",
+        &[],
+        &[],
+        &["virtues_flaws.json: \"flaw.a_deal_with_the_devil\" (#a-deal-with-the-devil) relocated \
+           end=5978, was end=5907"
+            .to_string()],
+        1,
+        1,
+    );
+    assert!(
+        report.contains("## Relocated entries (1)"),
+        "a trusted, already-applied relocation should be reported under a neutral 'relocated' \
+         heading, not a 'disagreement' heading implying it still needs review — report was:\n\
+         {report}"
+    );
+    assert!(
+        !report.to_lowercase().contains("disagreement"),
+        "an offset shift from inserted/removed lines earlier in the book is the ordinary outcome \
+         of a resync, not a disagreement — report was:\n{report}"
+    );
+}
+
+/// Applies the DE sidecar's [`de_fallback_anchor`] results to the sidecar's
+/// own text, one entry per line (`rules/i18n/de/source_anchors.json`'s
+/// canonical shape: `"<id>": { "anchor": "<slug>", "file": "<book>" },`,
+/// one id per line, sorted). Rewritten as a targeted substring replace on
+/// just the named id's own line — never a round-trip through
+/// `serde_json::to_string_pretty` over the whole map, which would reflow
+/// every entry and bury the real diff (`design-p8-resync.md`'s own Risks:
+/// "never round-trip the whole JSON document through `serde_json`").
+/// Returns the rewritten text plus whether anything actually changed, so the
+/// caller only touches the file on disk when `changed` is true.
+fn rewrite_sidecar_anchors(
+    sidecar_text: &str,
+    updates: &BTreeMap<String, String>,
+) -> (String, bool) {
+    let mut changed = false;
+    let mut out_lines = Vec::new();
+    for line in sidecar_text.lines() {
+        let mut replaced_line = line.to_string();
+        for (id, new_anchor) in updates {
+            let needle = format!("\"{id}\": {{ \"anchor\": \"");
+            let Some(pos) = line.find(&needle) else {
+                continue;
+            };
+            let start = pos + needle.len();
+            let Some(end_rel) = line[start..].find('"') else {
+                continue;
+            };
+            let end = start + end_rel;
+            replaced_line = format!("{}{}{}", &line[..start], new_anchor, &line[end..]);
+            changed = true;
+            break;
+        }
+        out_lines.push(replaced_line);
+    }
+    (format!("{}\n", out_lines.join("\n")), changed)
+}
+
+#[test]
+fn rewrite_sidecar_anchors_replaces_only_the_named_ids_anchor_value() {
+    let sidecar = "{\n  \"flaw.busybody\": { \"anchor\": \"klatschbase-1\", \"file\": \"X.md\" },\n  \
+                   \"virtue.gossip\": { \"anchor\": \"klatschbase\", \"file\": \"X.md\" }\n}\n";
+    let mut updates = BTreeMap::new();
+    updates.insert("flaw.busybody".to_string(), "neuer-slug".to_string());
+    let (out, changed) = rewrite_sidecar_anchors(sidecar, &updates);
+    assert!(changed);
+    assert!(out.contains("\"flaw.busybody\": { \"anchor\": \"neuer-slug\", \"file\": \"X.md\" }"));
+    assert!(out.contains("\"virtue.gossip\": { \"anchor\": \"klatschbase\", \"file\": \"X.md\" }"));
+}
+
+#[test]
+fn rewrite_sidecar_anchors_reports_unchanged_when_no_id_matches() {
+    let sidecar =
+        "{\n  \"virtue.gossip\": { \"anchor\": \"klatschbase\", \"file\": \"X.md\" }\n}\n";
+    let updates = BTreeMap::new();
+    let (out, changed) = rewrite_sidecar_anchors(sidecar, &updates);
+    assert!(!changed);
+    assert_eq!(out, sidecar);
 }
 
 /// Where the sweep reads the PRE-sync books from. Before the copy-in, today's
@@ -983,6 +1304,11 @@ fn regenerate_source_relocations() {
     let mut resolved_count = 0usize;
     let mut id_levels: BTreeMap<String, usize> = BTreeMap::new();
     let mut rewritten_catalogues: Vec<(&'static str, PathBuf, String, bool)> = Vec::new();
+    // Every id's new EN start line, recorded whenever its EN relocation
+    // resolves (trusted formula or manual-boundary-review alike — either way
+    // the *start* is known) — the DE sidecar fallback's own input, per
+    // CLAUDE.md's "German source files mirror the English ones line-by-line".
+    let mut new_start_by_id: BTreeMap<String, usize> = BTreeMap::new();
 
     for &(catalogue_name, level) in CATALOGUES {
         let catalogue_path = rules_dir().join("core").join(catalogue_name);
@@ -1059,7 +1385,19 @@ fn regenerate_source_relocations() {
 
             let old_text = book_text(&old_root, "en", file);
             let new_text = book_text(&new_root, "en", file);
-            let relocation = relocate_anchor(&old_text, &new_text, anchor, level);
+            // `ANCHOR_OVERRIDES`: a hand-verified exception whose OLD heading
+            // was reworded/removed, so plain anchor relocation cannot (and
+            // must not) resolve it — the override records where a human
+            // already confirmed the same passage sits in the NEW file.
+            let override_new_anchor = ids
+                .iter()
+                .find_map(|id| ANCHOR_OVERRIDES.iter().find(|(oid, _)| oid == id))
+                .map(|(_, new_anchor)| *new_anchor);
+            let relocation = match override_new_anchor {
+                Some(new_anchor) => resolve_override(&new_text, new_anchor, level),
+                None => relocate_anchor(&old_text, &new_text, anchor, level),
+            };
+            let anchor_to_write = override_new_anchor.unwrap_or(anchor);
 
             match relocation {
                 Relocation::Unresolved(reason) => {
@@ -1075,6 +1413,9 @@ fn regenerate_source_relocations() {
                     start: new_start,
                     end: new_end,
                 } => {
+                    for entry_id in &ids {
+                        new_start_by_id.insert(entry_id.clone(), new_start);
+                    }
                     // Row-key citations are always single-line by
                     // construction (`relocate_row_key_anchor`) — no boundary
                     // question to self-check.
@@ -1089,34 +1430,52 @@ fn regenerate_source_relocations() {
                                  was end={end}"
                             ));
                         }
-                        if new_start != start || new_end != end {
+                        if new_start != start || new_end != end || anchor_to_write != anchor {
                             file_changed = true;
                         }
                         rewritten_lines.push(format!(
                             "{prefix}\"source\": {{ \"anchor\": {}, \"file\": {}, \"lines\": \
                              [{new_start}, {new_end}] }}{suffix}",
-                            serde_json::to_string(anchor).expect("a string serializes"),
+                            serde_json::to_string(anchor_to_write).expect("a string serializes"),
                             serde_json::to_string(file).expect("a string serializes"),
                         ));
                     } else {
+                        let carried_end =
+                            resolved_manual_boundary_end(&ids, new_start, new_end, start, end);
+                        let used_override = ids
+                            .iter()
+                            .any(|i| MANUAL_BOUNDARY_RECOMPUTE_OVERRIDES.contains(&i.as_str()));
                         manual_boundary.push(ReportRow {
                             catalogue: catalogue_name.to_string(),
                             id: id.clone(),
                             anchor: anchor.to_string(),
-                            reason: format!(
-                                "the boundary formula does not reproduce this entry's own \
-                                 recorded end against the OLD file (self-check failed) — not \
-                                 trusted for the NEW file either; naive recompute would give \
-                                 end={new_end}, kept existing end={end} unchanged"
-                            ),
+                            reason: if used_override {
+                                format!(
+                                    "the boundary formula does not reproduce this entry's own \
+                                     recorded end against the OLD file (self-check failed); this \
+                                     id is a documented MANUAL_BOUNDARY_RECOMPUTE_OVERRIDES \
+                                     exception (the OLD citation was itself short), so the NEW-file \
+                                     recompute end={carried_end} was written instead of the old \
+                                     span (was end={end}) — confirm by hand"
+                                )
+                            } else {
+                                format!(
+                                    "the boundary formula does not reproduce this entry's own \
+                                     recorded end against the OLD file (self-check failed) — not \
+                                     trusted for the NEW file either; naive recompute would give \
+                                     end={new_end}; the entry's own span was carried forward \
+                                     instead, giving end={carried_end} (was end={end}) — confirm by \
+                                     hand"
+                                )
+                            },
                         });
-                        if new_start != start {
+                        if new_start != start || carried_end != end || anchor_to_write != anchor {
                             file_changed = true;
                         }
                         rewritten_lines.push(format!(
                             "{prefix}\"source\": {{ \"anchor\": {}, \"file\": {}, \"lines\": \
-                             [{new_start}, {end}] }}{suffix}",
-                            serde_json::to_string(anchor).expect("a string serializes"),
+                             [{new_start}, {carried_end}] }}{suffix}",
+                            serde_json::to_string(anchor_to_write).expect("a string serializes"),
                             serde_json::to_string(file).expect("a string serializes"),
                         ));
                     }
@@ -1148,6 +1507,7 @@ fn regenerate_source_relocations() {
     let sidecar: BTreeMap<String, serde_json::Value> = serde_json::from_str(&sidecar_text)
         .unwrap_or_else(|e| panic!("DE sidecar is valid JSON: {e}"));
     let mut de_resolved_count = 0usize;
+    let mut sidecar_updates: BTreeMap<String, String> = BTreeMap::new();
     for (id, row) in &sidecar {
         let Some(&level) = id_levels.get(id) else {
             unresolved.push(ReportRow {
@@ -1169,13 +1529,28 @@ fn regenerate_source_relocations() {
         let old_text = book_text(&old_root, "de", file);
         let new_text = book_text(&new_root, "de", file);
         match relocate_anchor(&old_text, &new_text, anchor, level) {
-            Relocation::Unresolved(reason) => unresolved.push(ReportRow {
-                catalogue: "source_anchors.json".to_string(),
-                id: id.clone(),
-                anchor: anchor.to_string(),
-                reason,
-            }),
             Relocation::Resolved { .. } => de_resolved_count += 1,
+            Relocation::Unresolved(reason) => {
+                // German mirrors English line-by-line (CLAUDE.md), so when
+                // the EN counterpart resolved, its new start line is also
+                // where the German heading now sits — read it directly
+                // rather than retrying the stale anchor string.
+                let fallback = new_start_by_id
+                    .get(id)
+                    .and_then(|&new_start| de_fallback_anchor(&new_text, new_start, level));
+                match fallback {
+                    Some(new_anchor) => {
+                        de_resolved_count += 1;
+                        sidecar_updates.insert(id.clone(), new_anchor);
+                    }
+                    None => unresolved.push(ReportRow {
+                        catalogue: "source_anchors.json".to_string(),
+                        id: id.clone(),
+                        anchor: anchor.to_string(),
+                        reason,
+                    }),
+                }
+            }
         }
     }
 
@@ -1187,10 +1562,21 @@ fn regenerate_source_relocations() {
                 catalogues_written += 1;
             }
         }
-        format!(
+        let (sidecar_rewritten, sidecar_changed) =
+            rewrite_sidecar_anchors(&sidecar_text, &sidecar_updates);
+        let mut outcome_text = format!(
             "every entry resolved — {catalogues_written} catalogue file(s) actually changed and \
              were written (the rest were byte-identical and left untouched)"
-        )
+        );
+        if sidecar_changed {
+            fs::write(&sidecar_path, &sidecar_rewritten)
+                .unwrap_or_else(|e| panic!("{} is writable: {e}", sidecar_path.display()));
+            outcome_text.push_str(&format!(
+                "; DE sidecar rewrote {} fallback-derived anchor(s)",
+                sidecar_updates.len()
+            ));
+        }
+        outcome_text
     } else {
         format!(
             "{} entries unresolved — NO rules/ files were written; see the table below",

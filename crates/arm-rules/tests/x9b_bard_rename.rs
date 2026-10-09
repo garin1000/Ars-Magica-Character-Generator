@@ -1,12 +1,12 @@
 //! X9b (`docs/vf-audit/corrections.md` F-16, `docs/vf-audit/phase-2-plan.md`
-//! row X9b) — `virtue.rard` is a scanno: ArMDE:3476 prints the heading
-//! `#### Rard`, but the book's own index (`ArMDE:24289`, `| Bard (Virtue) |
+//! row X9b) — `virtue.rard` is a scanno: ArMDE:3547 prints the heading
+//! `#### Rard`, but the book's own index (`ArMDE:24372`, `| Bard (Virtue) |
 //! [71](#bard) |`) and `rules/source/de/translation-tables/tugenden-fehler.md:243`
 //! (`| Bard | Barde | ... |`) both read "Bard". The English `name` is wrong
 //! and so is the **id**: `virtue.rard` must become `virtue.bard`.
 //!
 //! `source.anchor` does **NOT** change — it stays `"rard"` because the
-//! *heading itself* is still spelled `#### Rard` (confirmed: ArMDE:3476), and
+//! *heading itself* is still spelled `#### Rard` (confirmed: ArMDE:3547), and
 //! Guard A (`rules_source_provenance.rs`) compares the anchor against the
 //! heading, not the corrected name. Name and id track the truth; the anchor
 //! tracks the book. The German heading has no scanno (`Ars Magica Definitive
@@ -20,6 +20,16 @@
 //! fold body) has not landed. No `rules/*.json` edit and no migration fold
 //! happen in this slice — seeing these tests fail for the right reason is the
 //! point.
+//!
+//! **Addendum (P8-3, 2026-10-09):** the paragraph above ("`source.anchor`
+//! does NOT change... the heading itself is still spelled `#### Rard`") was
+//! true against the pre-resync book and is kept as the historical record of
+//! why the anchor was deliberately left alone at the time — but the re-sync
+//! landed exactly the OCR fix the book's own index already implied: the
+//! heading now reads `#### Bard` (confirmed: ArMDE:3547). The anchor changes WITH it,
+//! per `source_relocation.rs`'s documented `ANCHOR_OVERRIDES` —
+//! `virtue_bard_keeps_the_rard_anchor_because_the_heading_still_misspells_it`
+//! (below) is renamed and its assertions updated accordingly.
 //!
 //! Every place a V/F id can appear on [`Entity`] is covered: the bought
 //! `selections` list, the three resolved-pick maps (`house_choices`,
@@ -155,8 +165,8 @@ fn virtue_bard_exists_with_correct_en_and_de_names() {
     assert_eq!(
         en.display_name(&new_id),
         Some("Bard"),
-        "the English name is the scanno \"Rard\" today (ArMDE:3476); the book's \
-         own index (ArMDE:24289) reads \"Bard\""
+        "the English name is the scanno \"Rard\" today (ArMDE:3547); the book's \
+         own index (ArMDE:24372) reads \"Bard\""
     );
 
     let de = LocalizedRuleset::new(shipped_ruleset(), DE_VF).expect("DE i18n loads");
@@ -168,8 +178,17 @@ fn virtue_bard_exists_with_correct_en_and_de_names() {
     );
 }
 
+/// P8-3 (2026-10-09): upstream's re-sync fixed the OCR scanno this test's own
+/// name documents — the heading now reads `#### Bard` (ArMDE:3547),
+/// confirmed by reading the new file directly, not assumed. The anchor
+/// therefore changes WITH the heading this time (Guard A still compares the
+/// anchor against the heading, not the corrected name — that rule is
+/// unchanged; what changed is that the heading itself is no longer
+/// misspelled, so "rard" would no longer resolve at all). This is exactly
+/// the documented `ANCHOR_OVERRIDES` case in
+/// `crates/arm-rules/tests/source_relocation.rs`.
 #[test]
-fn virtue_bard_keeps_the_rard_anchor_because_the_heading_still_misspells_it() {
+fn virtue_bard_now_matches_the_bard_anchor_because_upstream_fixed_the_heading() {
     let rs = shipped_ruleset();
     let item = rs
         .item(&Id::new("virtue.bard"))
@@ -180,15 +199,14 @@ fn virtue_bard_keeps_the_rard_anchor_because_the_heading_still_misspells_it() {
         .expect("virtue.bard must still carry a source reference");
 
     assert_eq!(
-        source.anchor, "rard",
-        "source.anchor must stay \"rard\": the heading is still '#### Rard' \
-         (ArMDE:3476), and Guard A compares the anchor against the heading, not \
-         the corrected name — do NOT change the anchor"
+        source.anchor, "bard",
+        "source.anchor must now read \"bard\": the P8-3 re-sync fixed the heading's own OCR \
+         scanno to '#### Bard', so the anchor the heading generates changed with it"
     );
     assert_eq!(
         source.lines,
-        LineRange::new(3476, 3478),
-        "the cited range is unaffected by the id/name rename"
+        LineRange::new(3547, 3549),
+        "the cited range moved with the resync, to the entry's new position"
     );
     assert_eq!(
         source.file, "Ars Magica - Definitive Edition (Core Rules).md",

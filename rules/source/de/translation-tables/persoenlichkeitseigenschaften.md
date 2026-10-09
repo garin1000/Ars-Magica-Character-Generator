@@ -1,36 +1,23 @@
 # Ars Magica Definitive Edition – Persönlichkeitseigenschaften / Personality Traits
 
-**Teil der deutschen Übersetzungstabellen** | Quellen: Ars Magica – Definitive Edition (Core Rules) · ArsMagica_DE_Gesamt_work.md
+**Teil der deutschen Übersetzungstabellen** | Quellen: Ars Magica – Definitive Edition (Core Rules) · deutsche Basisregeln (`german-reviewed/Ars Magica Definitive Edition Basisregeln.md`)
 
 **Legende:**
 - (Lat.) = Lateinischer Begriff, wird unübersetzt beibehalten
-- ⭐ = Pflichtmäßig zu wählen (Grogs / Krieger-Grogs)
-- (K) = Hauptsächlich bei Kreaturen, Tieren oder Geistern verwendet
+- (K) = bei Kreaturen, Tieren oder Geistern belegt; „Beleg:" nennt den Statblock in den Basisregeln (Kapitel 13: Bestiarium)
 
 ---
 
-## Mechanischer Kontext / Mechanics
+## Grundbegriffe / Core Terms
 
-Persönlichkeitseigenschaften sind kurze Beschreibungen wichtiger Charakterzüge. Sie sind positiv oder negativ und bewegen sich normalerweise zwischen **+3 und −3**. Grogs benötigen für *Tapfer* und *Loyal* je einen Wert; für Magi und Gefährten sind sie in erster Linie Rollenspielhilfen. Für Grogs können Persönlichkeitswürfe mit einem Stresswürfel gewürfelt werden.
+> **Nur Begriffe.** Wertebereich, Pflichteigenschaften für Grogs und die Schwierigkeitstabelle für Persönlichkeitswürfe stehen in den Basisregeln, Abschnitte *Persönlichkeitseigenschaften*, *Persönlichkeitswürfe* und *Persönlichkeitseigenschaften ändern* (Kapitel 3: Charaktere). Die früher hier geführte Schwierigkeitstabelle und die Regelnotizen sind entfernt (Sachprüfung 2026-10-03, `lektorat/tabellen-sachpruefung-reputation-qualitaeten-konvent.md`).
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Personality Trait | Persönlichkeitseigenschaft | Kurze Charakterbeschreibung mit Wert |
-| Personality Trait roll | Persönlichkeitswurf | Stresswurf + Eigenschaftswert gegen Schwierigkeitsgrad |
-| Minor Personality Flaw | Kleiner Persönlichkeits-Fehler | Sollte Persönlichkeitswert ±3 widerspiegeln |
-| Major Personality Flaw | Großer Persönlichkeits-Fehler | Sollte Persönlichkeitswert ±6 widerspiegeln |
-
----
-
-## Schwierigkeitstabelle für Persönlichkeitswürfe
-
-| SG | Tapfer (Brave) | Loyal | Allgemein |
-|---|---|---|---|
-| 0  | Nicht wirklich beängstigend. Einem bellenden Hund die Stirn bieten. | Loyalität und Eigeninteresse decken sich. Magi warnen, dass ein Feind den Konvent angreifen will. | Durchschnittliche Personen würden dies immer tun. |
-| 3  | Kaum beängstigend. Einem zornigen, aber unbewaffneten Bauern gegenübertreten. | Wenig Loyalität erforderlich. Magi nicht beim durchreisenden Bischof denunzieren. | Durchschnittliche Personen würden dies meistens tun; Personen mit dieser Eigenschaft immer. |
-| 6  | Beängstigend. Einem augenscheinlich gleichstarken Feind die Stirn bieten. | Durchschnittliche Loyalität. Zum Konvent stehen, wenn er bedroht wird. | Durchschnittliche Personen tun dies etwa in der Hälfte der Fälle. |
-| 9  | Sehr beängstigend. Einem deutlich überlegenen Feind die Stirn bieten. | Loyal. Einem großen Bestechungsangebot widerstehen. | Durchschnittliche Personen tun dies meistens nicht; selbst ausgeprägte Eigenschaft scheitert oft. |
-| 12 | Extrem beängstigend. Einem Drachen die Stirn bieten. | Sehr loyal. Unter Folter dem Konvent treu bleiben. | Durchschnittliche Personen scheitern fast immer; selbst ausgeprägte Eigenschaft selten erfolgreich. |
+| Personality Trait | Persönlichkeitseigenschaft | |
+| Personality Trait roll | Persönlichkeitswurf | |
+| Minor Personality Flaw | Kleiner Persönlichkeits-Fehler | |
+| Major Personality Flaw | Großer Persönlichkeits-Fehler | |
 
 ---
 
@@ -47,11 +34,11 @@ Persönlichkeitseigenschaften sind kurze Beschreibungen wichtiger Charakterzüge
 | Avaricious | Habgierig | Siehe auch: Fehler → Habgierig |
 | Barbarous | Barbarisch | |
 | Belligerent | Streitlustig | |
-| Brave | Tapfer | ⭐ Pflichtmäßig für Krieger-Grogs |
+| Brave | Tapfer | |
 | Calculating | Berechnend | |
 | Calm | Ruhig | Vgl. Quiet = schweigsam |
 | Careful | Bedächtig | Vgl. Thoughtful = nachdenklich/bedacht |
-| Cave | Höhle | (K) Elementarer Wesenszug von Höhlengeistern |
+| Cave | Höhle | (K) Beleg: Erd-Elementar |
 | Cheeky | Frech | |
 | Cheerful | Fröhlich | |
 | Compassionate | Mitfühlend | Siehe auch: Fehler → Mitfühlend |
@@ -66,13 +53,13 @@ Persönlichkeitseigenschaften sind kurze Beschreibungen wichtiger Charakterzüge
 | Diplomatic | Diplomatisch | |
 | Disciplined | Diszipliniert | |
 | Driven | Getrieben | Siehe auch: Fehler → Getrieben |
-| Echo | Echo | (K) Elementarer Wesenszug von Echogeistern |
+| Echo | Echo | (K) Beleg: Zwergenstimme (Echogeist) |
 | Enthusiastic | Begeistert | |
 | Envious | Neidisch | Siehe auch: Fehler → Neidisch |
 | Fair | Gerecht | Vgl. Just; beide → Gerecht (Kontext entscheidet) |
 | Fickle | Launisch | |
-| Fierce | Wild | (K) Häufig bei Raubtieren |
-| Forest Fire | Waldbrand | (K) Elementarer Wesenszug von Feuerwesen |
+| Fierce | Wild | (K) Beleg: Falke, Löwe |
+| Forest Fire | Waldbrand | (K) Beleg: Feuer-Elementar |
 | Forgiving | Vergebend | |
 | Friendly | Freundlich | |
 | Garrulous | Geschwätzig | |
@@ -80,16 +67,16 @@ Persönlichkeitseigenschaften sind kurze Beschreibungen wichtiger Charakterzüge
 | Gregarious | Gesellig | Synonym zu Sociable und Convivial |
 | Grim | Grimmig | |
 | Hates Being Interrupted | Hasst Unterbrechungen | |
-| Hatred of Humans | Hass auf Menschen | (K) Typisch bei domestizierten Tieren mit Trauma |
-| Hatred of Owner | Hass auf den Besitzer | (K) |
-| Hatred of Self | Selbsthass | |
-| Healthy (Stamina) | Gesund (Ausdauer) | (K) Verknüpfte Eigenschaft bei Tieren |
+| Hatred of Humans | Hass auf Menschen | (K) Beleg: Zweiköpfiger Hund (infernal) |
+| Hatred of Owner | Hass auf den Besitzer | (K) Beleg: Zweiköpfiger Hund (infernal) |
+| Hatred of Self | Selbsthass | (K) Beleg: Zweiköpfiger Hund (infernal) |
+| Healthy (Stamina) | Gesund (Ausdauer) | (K) Beleg: Der Hirsch der Tugend |
 | Helpful | Hilfsbereit | |
 | Honest | Ehrlich | |
 | Honorable | Ehrenhaft | |
 | Hostile | Feindselig | |
-| Hungry | Hungrig | (K) Typisch bei Raubtieren |
-| Ibis | Ibis | (K) Elementarer Wesenszug von Ibisgeistern |
+| Hungry | Hungrig | (K) Beleg: Baal-Peor (Dämon) |
+| Ibis | Ibis | (K) Beleg: Caladrius (magischer Vogel) |
 | Immutable | Unveränderlich | |
 | Impious | Gottlos | |
 | Implacable | Unnachgiebig | |
@@ -102,9 +89,9 @@ Persönlichkeitseigenschaften sind kurze Beschreibungen wichtiger Charakterzüge
 | Leader | Anführer | |
 | Lethargic | Träge | Vgl. Slothful (Synonym) |
 | Love of God | Gottesliebe | |
-| Loves Forest | Liebt den Wald | (K) |
-| Loyal | Loyal | ⭐ Pflichtmäßig für alle Grogs |
-| Magnificent Appearance (Presence) | Prächtige Erscheinung (Präsenz) | (K) Verknüpfte Eigenschaft bei Prachtgeschöpfen |
+| Loves Forest | Liebt den Wald | (K) Beleg: Großer Ljeschi |
+| Loyal | Loyal | |
+| Magnificent Appearance (Presence) | Prächtige Erscheinung (Präsenz) | (K) Beleg: Caladrius |
 | Merciful | Gnädig | |
 | Mercurial | Sprunghaft | Schnell wechselnde Stimmungen |
 | Mischievous | Schelmisch | |
@@ -126,28 +113,28 @@ Persönlichkeitseigenschaften sind kurze Beschreibungen wichtiger Charakterzüge
 | Relentless | Unerbittlich | |
 | Reliable | Verlässlich | |
 | Remorseless | Erbarmungslos | |
-| Resentment of Being Controlled | Groll gegenüber Kontrolle | (K) Typisch bei gebundenen Wesen |
+| Resentment of Being Controlled | Groll gegenüber Kontrolle | (K) Beleg: Bomburkhan (Dämon) |
 | Respectful | Respektvoll | |
 | Retiring | Zurückhaltend | |
-| River | Fluss | (K) Elementarer Wesenszug von Flussgeistern |
+| River | Fluss | (K) Beleg: Wasser-Elementar |
 | Scholarly | Gelehrt | |
 | Selfish | Selbstsüchtig | |
 | Shame | Scham | Negative Eigenschaft |
-| Skittish | Scheu | (K) Typisch bei Fluchttieren |
+| Skittish | Scheu | (K) Beleg: Pferd, Renner |
 | Slothful | Träge | Vgl. Lethargic (Synonym) |
-| Slumbering | Schlummernd | (K) Typisch bei schlafenden Wesen / Wintergeistern |
+| Slumbering | Schlummernd | (K) Beleg: Adranus, der Geist des Ätna |
 | Sociable | Gesellig | Synonym zu Convivial und Gregarious |
 | Spontaneous | Spontan | |
-| Stag | Hirsch | (K) Elementarer Wesenszug von Hirschwesen |
+| Stag | Hirsch | (K) Beleg: Der Hirsch der Tugend |
 | Status-seeking | Statussuchend | |
 | Stern | Streng | |
-| Storm | Sturm | (K) Elementarer Wesenszug von Sturmwesen |
+| Storm | Sturm | (K) Beleg: Luft-Elementar |
 | Studious | Studierfreudig | |
-| Territorial | Territorial | (K) Typisch bei Raubtieren |
+| Territorial | Territorial | (K) Beleg: Scitalis |
 | Thoughtful | Bedacht | Vgl. Careful = bedächtig (handlungsorientiert) |
-| Timid | Furchtsam | Siehe auch: Fehler → Furchtsam |
+| Timid | Furchtsam | Siehe auch: Tier-Qualität → Furchtsam (`tiere-kreaturen.md`); kein Fehler |
 | Trusting | Vertrauensvoll | |
-| Untamable / Untameable | Unbändig | (K) |
+| Untameable | Unbändig | (K) Beleg: Der Buran von Yenghissar (Dämon). Schlüssel korrigiert: die Schreibung „Untamable“ ist im Original nicht belegt |
 | Vain | Eitel | |
 | Vengeful | Rachsüchtig | |
 | Vigilant | Wachsam | Synonym zu Watchful |
@@ -157,4 +144,4 @@ Persönlichkeitseigenschaften sind kurze Beschreibungen wichtiger Charakterzüge
 
 ---
 
-*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024; GitHub: OriginalMadman/Ars-Magica-Open-License) · Deutsche Übersetzung (ArsMagica_DE_Gesamt_work.md)*
+*Quellen: Ars Magica Definitive Edition Core Rules (`original-english/reviewed/Ars Magica - Definitive Edition (Core Rules).md`, Submodul aus `garin1000/Ars-Magica-Open-License`) · Deutsche Übersetzung (`german-reviewed/Ars Magica Definitive Edition Basisregeln.md`)*

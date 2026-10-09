@@ -149,7 +149,7 @@ describe('CharacteristicPicker point-buy budget and spinners', () => {
 
   it('keeps the spinner at +3 under Great Characteristic and shows the point as a badge', () => {
     // Great (Characteristic) grants the point rather than unlocking a purchase
-    // (ArMDE:3989), so the engine reports an unchanged +3 cap and a +4 effective
+    // (ArMDE:4060), so the engine reports an unchanged +3 cap and a +4 effective
     // score. The spinner must therefore stay capped at the bought +3, with the
     // fourth point surfacing in the effective badge — exactly how Giant Blood's
     // free +1 already renders.

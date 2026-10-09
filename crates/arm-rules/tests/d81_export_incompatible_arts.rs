@@ -3,7 +3,7 @@
 //! (`form_1, form_2, technique_1, technique_2`):
 //! `Incompatible Arts (Ignem, Aquam, Creo, Perdo)`. That reads equally as
 //! CrAq + PeIg, so the sheet cannot say which two combinations are barred —
-//! the Flaw's entire content (ArMDE:6290-6292).
+//! the Flaw's entire content (ArMDE:6361-6363).
 //!
 //! The in-app picker already pairs them through
 //! `PointItem::unordered_param_groups`, Technique before Form

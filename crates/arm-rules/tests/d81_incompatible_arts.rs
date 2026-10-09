@@ -1,5 +1,5 @@
 //! D81.8/D81.15 (`docs/vf-audit/decisions.md`): Incompatible Arts records its
-//! two Technique+Form combinations (ArMDE:6290-6292) as four selects per copy
+//! two Technique+Form combinations (ArMDE:6361-6363) as four selects per copy
 //! — `technique_1`, `form_1`, `technique_2`, `form_2` — canonicalized as an
 //! unordered pair of pairs (`PointItem::unordered_param_groups`) for
 //! duplicate detection, flagged `unusable` in both grids
@@ -9,7 +9,7 @@
 //! `tmp/incompat-handover.md` for the Phase 1 design this implements. Every
 //! test below runs against the REAL shipped ruleset.
 //!
-//! Verbatim (ArMDE:6290-6292): "For some reason you are completely unable to
+//! Verbatim (ArMDE:6361-6363): "For some reason you are completely unable to
 //! use two combinations of Techniques and Forms. For example, you may be
 //! unable to use Intellego Herbam and Intellego Animal. You may not use these
 //! Arts together even if one or both are requisites. This Flaw may be taken
@@ -207,7 +207,7 @@ fn the_same_pair_with_combinations_swapped_is_refused() {
 
 #[test]
 fn the_flagged_combinations_are_unusable_in_the_casting_and_lab_grids() {
-    // The rulebook's own example pair (ArMDE:6291): Intellego+Herbam and
+    // The rulebook's own example pair (ArMDE:6362): Intellego+Herbam and
     // Intellego+Animal.
     let ruleset = full_ruleset();
     let mut e = magus();
@@ -267,7 +267,7 @@ fn a_spell_using_a_flagged_combination_only_through_a_requisite_is_flagged() {
     // Primary Rego+Animal (NOT itself a declared combination) with an
     // Intellego Technique requisite. Folding the requisite Technique onto the
     // primary Form reconstructs Intellego+Animal — one of the two declared
-    // combinations below — so ArMDE:6292's "even if one or both are
+    // combinations below — so ArMDE:6363's "even if one or both are
     // requisites" must flag this spell even though its own primary pair is
     // clean.
     let ruleset = ruleset_with_only_spell(
@@ -351,7 +351,7 @@ fn a_spell_using_a_barred_combination_only_through_a_requisite_is_a_creation_tim
     let result = validate(&e, &ruleset);
     assert!(
         has_spell_uses_incompatible_arts_error(&result.issues, "spell.test_requisite_hit"),
-        "D81.15: 'even if one or both are requisites' (ArMDE:6292) — a spell \
+        "D81.15: 'even if one or both are requisites' (ArMDE:6363) — a spell \
          reaching a barred combination only through a requisite must still be \
          a creation-time error, not merely a quiet grid marker: {:?}",
         result.issues
@@ -499,7 +499,7 @@ fn has_param_groups_not_distinct(issues: &[ValidationIssue], item: &str) -> bool
 #[test]
 fn one_copy_naming_the_same_combination_in_both_groups_is_an_error() {
     // D81.16: "One Incompatible Arts copy naming the same combination twice is
-    // an ERROR: its 'two combinations' (ArMDE:6292) must differ." Both groups
+    // an ERROR: its 'two combinations' (ArMDE:6363) must differ." Both groups
     // resolve to the SAME (Technique, Form) pair.
     let ruleset = full_ruleset();
     let mut e = magus();
@@ -558,7 +558,7 @@ fn an_incomplete_copy_is_not_flagged_as_repeating_itself() {
 
 // --- 8b. Two copies may not share ANY combination (D83.1, amends D81.8) -----
 //
-// ArMDE:6292: "This Flaw may be taken repeatedly with different combinations".
+// ArMDE:6363: "This Flaw may be taken repeatedly with different combinations".
 // D81.8 was built as "a copy may not repeat another's WHOLE pair", so a second
 // copy sharing just ONE combination with the first passed (try-out finding 21).
 // The data feature `unordered_param_groups` now means: two copies of the item
@@ -617,7 +617,7 @@ fn a_second_copy_sharing_a_combination_in_the_other_position_is_an_error() {
     assert_eq!(
         shared.len(),
         1,
-        "ArMDE:6292 'different combinations': a second copy repeating Creo+Ignem \
+        "ArMDE:6363 'different combinations': a second copy repeating Creo+Ignem \
          in the other position must be refused once: {:?}",
         result.issues
     );

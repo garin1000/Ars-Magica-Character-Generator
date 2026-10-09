@@ -11,7 +11,7 @@ use super::*;
 /// Pure selection fold, independent of the type profile: true if any of the
 /// entity's present bought selections, or non-warping grants
 /// ([`entity_grants_base`]), carries [`Effect::ConfersHermeticTraining`] — e.g.
-/// the Abandoned Apprentice Flaw (ArMDE:5641-5650), "you have most of the
+/// the Abandoned Apprentice Flaw (ArMDE:5712-5721), "you have most of the
 /// skills and knowledge of a fully trained magus, but you were never able to
 /// complete your training". See [`is_hermetically_trained`] for the fact every
 /// "trained" production site should actually call.

@@ -12,7 +12,7 @@
   //
   // "AGING TOTAL: Stress die (no botch) + age/10 (round up) / - Living Conditions
   // modifier / - Longevity Ritual modifier"
-  // Source: ArMDE:16567-16569
+  // Source: ArMDE:16644-16646
   //
   // The app NEVER rolls: the engine carries no `rand` dependency, so the player
   // rolls at the table and types the result. A stress die explodes, so the input
@@ -54,7 +54,7 @@
   }
 
   // Every term of the total as the engine reported it, each already signed. The
-  // two modifiers are SUBTRACTED (`ArMDE:16571`: "a high Longevity Ritual modifier and
+  // two modifiers are SUBTRACTED (`ArMDE:16648`: "a high Longevity Ritual modifier and
   // a high Living Conditions modifier both indicate longer life"), so their stored
   // sign is flipped for display; the Virtue/Flaw modifier is ADDED with its own.
   const parts = $derived(
@@ -70,7 +70,7 @@
   );
 
   // The awards the table leaves to the player. A `named` row places its own points
-  // (`ArMDE:16607` "1 Aging Point in Str and Sta"), so only the other two kinds are
+  // (`ArMDE:16684` "1 Aging Point in Str and Sta"), so only the other two kinds are
   // distributed here.
   const openAwards = $derived(
     (preview?.outcome.awards ?? []).filter((award) => award.target.kind !== 'named'),
@@ -79,7 +79,7 @@
   // points may be spread over several Characteristics, and reaching the next level
   // of Decrepitude costs five of them. Forcing them all into one target would force
   // Characteristic drops the player may legally avoid.
-  // Source: ArMDE:16602, :16611, :16615
+  // Source: ArMDE:16679, :16688, :16692
   const owed = $derived(openAwards.reduce((sum, award) => sum + (award.points ?? 0), 0));
   // `points` is null only when the next Decrepitude level lies beyond the
   // advancement table. Reported as unpriceable, never silently costed at zero — and
@@ -127,7 +127,7 @@
     return store.t(`aging-note-${note.kind}`);
   }
 
-  // The Crisis sub-flow (ArMDE:16619-16638) is `AgingCrisisPanel.svelte`
+  // The Crisis sub-flow (ArMDE:16696-16715) is `AgingCrisisPanel.svelte`
   // (V27, full-audit round) — self-sufficient off the store, so nothing about
   // it lives here beyond the `{#if preview.outcome.crisis}` mount gate below.
 </script>
@@ -175,7 +175,7 @@
         <!-- "treats all rolls of 10 or more as rolls of 9 until he reaches the age
              of 35 … he is at no risk of actually aging before any other
              characters." The clamp is on the TOTAL, and this says it bit THIS roll.
-             Source: ArMDE:16575 -->
+             Source: ArMDE:16652 -->
         <p class="hint" data-testid="aging-die-capped">
           {store.t('aging-die-capped', {
             uncapped: String(preview.total.uncapped_total),
@@ -186,7 +186,7 @@
 
       <div class="aging-outcome" role="status" data-testid="aging-outcome">
         <!-- "Otherwise, the character's apparent age increases by one year."
-             Source: ArMDE:16577 -->
+             Source: ArMDE:16654 -->
         <p>
           {store.t(
             preview.outcome.apparent_age_increases
@@ -227,10 +227,10 @@
 
       {#if preview.outcome.crisis}
         <!-- "Increase the character's Decrepitude first, and then roll on the
-             Crisis Table." (`ArMDE:16619`) The panel sits AFTER the distribution for
+             Crisis Table." (`ArMDE:16696`) The panel sits AFTER the distribution for
              that reason: the points placed above are the increase that comes
              first, and they are a term of the total read below.
-             Source: ArMDE:16619-16638 -->
+             Source: ArMDE:16696-16715 -->
         <AgingCrisisPanel />
       {/if}
 
@@ -255,7 +255,7 @@
 
     {#if store.agingNotes.length > 0}
       <!-- What the year just applied had to TELL the player, as opposed to what it
-           wrote. A spent Longevity Ritual (`ArMDE:16573`) is the only one today, and it
+           wrote. A spent Longevity Ritual (`ArMDE:16650`) is the only one today, and it
            exists precisely because the engine leaves the ritual entry alone — so
            this is the sole place the player can hear about it. -->
       <ul class="aging-notes" role="status" data-testid="aging-notes">

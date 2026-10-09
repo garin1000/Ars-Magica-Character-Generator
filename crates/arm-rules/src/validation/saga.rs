@@ -34,8 +34,8 @@ use crate::types::{CreationPhase, Entity};
 ///
 /// A rules value, not a preference: *"That domination persists until the present
 /// day, 1220."*
-/// Source: ArMDE:597
-/// (corroborated at `ArMDE:364` — *"much like the Europe of 1220"* — and `ArMDE:440`).
+/// Source: ArMDE:665
+/// (corroborated at `ArMDE:432` — *"much like the Europe of 1220"* — and `ArMDE:508`).
 pub const DEFAULT_SAGA_YEAR: i32 = 1220;
 
 /// An age derived from a saga year and a birth year, with whatever the pair

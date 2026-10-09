@@ -104,7 +104,7 @@ export class AbilityWorkflow {
 
   /**
    * Set (or clear) the banked XP at `index` — the "Z" of the book's own
-   * "X (Z)" notation (ArMDE:1177), XP already acquired toward the NEXT score.
+   * "X (Z)" notation (ArMDE:1245), XP already acquired toward the NEXT score.
    * Unlike an Art, an Ability row's existence is already owned by
    * {@link add}/{@link removeAt} (it is never upserted by score alone), so
    * this never creates or deletes a row — only ever writes the field on one

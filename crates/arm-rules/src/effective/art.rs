@@ -61,7 +61,7 @@ pub(crate) fn sum_of(sources: &[ScoreSource]) -> i32 {
 /// not parameterized, so the target is matched by id alone. Two virtues boosting
 /// the same Art stack.
 ///
-/// Source: ArMDE:4818-4820 (Puissant
+/// Source: ArMDE:4889-4891 (Puissant
 /// Art, +3; may be taken twice, for two different Arts).
 pub fn art_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
     sum_of(&flat_art_bonus_sources(entity, ruleset, art))
@@ -109,7 +109,7 @@ fn bought_art_score(entity: &Entity, art: &Id) -> u8 {
 ///
 /// `pub(crate)`: `effective/spell.rs::spell_level_cap` (X11b) reuses this same
 /// set to except a Form requisite from the cap's fold when both it and the
-/// spell's primary Form are elemental (ArMDE:3737) — the same exception
+/// spell's primary Form are elemental (ArMDE:3808) — the same exception
 /// `derived/casting.rs::fold_requisite` applies to the Casting Total, via its
 /// own independent fold (`derived.rs::InPlayMods::elemental_forms`, D4's
 /// in-play-conditions territory). The two folds are allowed to walk the same
@@ -142,7 +142,7 @@ fn elemental_magic_marker(entity: &Entity, ruleset: &Ruleset) -> Option<(Id, BTr
 /// assigned XP), so leftover XP between score thresholds is not represented — see
 /// RULES.md.
 ///
-/// Source: ArMDE:3731-3737 (21 XP → 11
+/// Source: ArMDE:3802-3808 (21 XP → 11
 /// bonus each: `ceil(21/2)`, so rounding is **up**).
 fn elemental_form_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
     let Some(forms) = elemental_magic_forms(entity, ruleset) else {
@@ -162,7 +162,7 @@ fn elemental_form_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
         let other_xp = table
             .xp_for_score(bought_art_score(entity, other))
             .unwrap_or(0);
-        // Half, rounded up (ArMDE:3731 worked example: 21 → 11).
+        // Half, rounded up (ArMDE:3802 worked example: 21 → 11).
         bonus_xp += other_xp.div_ceil(2);
     }
     let boosted = table.score_for_xp(own_xp + bonus_xp);
@@ -172,11 +172,11 @@ fn elemental_form_bonus(entity: &Entity, ruleset: &Ruleset, art: &Id) -> i32 {
 /// Every Art the entity holds a Deficiency in — the Art named by each
 /// [`Effect::DeficientArt`] selection's parameter.
 ///
-/// A Deficiency halves every total the Art is added to (`ArMDE:5911` Deficient
-/// Form, `ArMDE:5915` Deficient Technique), which reaches **two** layers: the
+/// A Deficiency halves every total the Art is added to (`ArMDE:5982` Deficient
+/// Form, `ArMDE:5986` Deficient Technique), which reaches **two** layers: the
 /// in-play Lab/Casting totals (`derived.rs::in_play_mods`, which seeds
 /// `InPlayMods::deficient_arts` from here) and the creation-time per-spell level
-/// cap (`effective/spell.rs::spell_level_cap`), since `ArMDE:2465` declares that
+/// cap (`effective/spell.rs::spell_level_cap`), since `ArMDE:2533` declares that
 /// cap to be a Lab Total. This is the one fold both read, so the two can never
 /// disagree about which Arts are deficient.
 ///
@@ -205,7 +205,7 @@ pub(crate) fn deficient_arts(entity: &Entity, ruleset: &Ruleset) -> BTreeSet<Id>
 }
 
 /// Whether a `(technique, form, requisites)` combination is halved by a
-/// Deficient Art — either primary Art, or (ArMDE:12311, closing sentence: "any
+/// Deficient Art — either primary Art, or (ArMDE:12383, closing sentence: "any
 /// Deficiencies you have with an Art apply when you use that Art as a
 /// requisite") any of `requisites`, regardless of whether that requisite
 /// numerically binds in `derived::casting::fold_requisite`. Empty
@@ -263,8 +263,8 @@ pub fn art_bonuses(entity: &Entity, ruleset: &Ruleset) -> Vec<ArtBonus> {
 }
 
 /// Each item that moves `art`'s effective score off its bought score: every flat
-/// art bonus (Puissant Art, ArMDE:4818-4820) and the Elemental Magic marker's
-/// XP-space boost (ArMDE:3731-3737). Sums to `effective - bought` by
+/// art bonus (Puissant Art, ArMDE:4889-4891) and the Elemental Magic marker's
+/// XP-space boost (ArMDE:3802-3808). Sums to `effective - bought` by
 /// construction, since [`effective_art_score`] adds exactly these two terms.
 fn art_score_sources(entity: &Entity, ruleset: &Ruleset, art: &Id) -> Vec<ScoreSource> {
     let mut sources = flat_art_bonus_sources(entity, ruleset, art);

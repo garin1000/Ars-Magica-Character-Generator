@@ -5,11 +5,11 @@
 //! reads that marker (D79). The other eight D1 carriers stay flat and
 //! condition-free.
 //!
-//! ArMDE:4742: "The maga's magic is particularly attuned to a narrow field,
+//! ArMDE:4813: "The maga's magic is particularly attuned to a narrow field,
 //! much as in a Magical Focus. [...] a maga may have more than one area of
 //! Potent Magic, although only one Potent Magic Virtue applies to any single
-//! activity." ArMDE:4744: "Potent Magic provides the maga with a bonus in her
-//! field of magic". ArMDE:4746/:4748: Minor grants "+3 bonus to Lab Totals and
+//! activity." ArMDE:4815: "Potent Magic provides the maga with a bonus in her
+//! field of magic". ArMDE:4817/:4748: Minor grants "+3 bonus to Lab Totals and
 //! Casting Score", Major "+6".
 //!
 //! Every test here goes through the EXISTING public surface (`validate`'s
@@ -153,7 +153,7 @@ fn an_unmarked_spell_does_not_get_major_potent_magic_in_its_cap() {
     assert_eq!(
         validated_cap(&e, &ruleset),
         PLAIN_CAP,
-        "answer 3 / ArMDE:4744: Potent Magic's bonus is 'in her field of magic' only, so an \
+        "answer 3 / ArMDE:4815: Potent Magic's bonus is 'in her field of magic' only, so an \
          unmarked spell's cap must not include its +6"
     );
 }
@@ -191,7 +191,7 @@ fn a_marked_spell_gets_major_potent_magic_in_its_cap() {
     assert_eq!(
         validated_cap(&e, &ruleset),
         PLAIN_CAP + 6,
-        "ArMDE:4748: a spell marked within the Potent field gets Major Potent Magic's +6"
+        "ArMDE:4819: a spell marked within the Potent field gets Major Potent Magic's +6"
     );
 }
 
@@ -202,13 +202,13 @@ fn a_marked_spell_gets_minor_potent_magic_in_its_cap() {
     assert_eq!(
         validated_cap(&e, &ruleset),
         PLAIN_CAP + 3,
-        "ArMDE:4746: a spell marked within the Potent field gets Minor Potent Magic's +3"
+        "ArMDE:4817: a spell marked within the Potent field gets Minor Potent Magic's +3"
     );
 }
 
 #[test]
 fn only_one_potent_magic_virtue_applies_to_a_marked_spell() {
-    // ArMDE:4742: "only one Potent Magic Virtue applies to any single
+    // ArMDE:4813: "only one Potent Magic Virtue applies to any single
     // activity" — the larger applies (+6), never the sum (+9). Same MAX the
     // in-play totals already take (D79).
     let ruleset = ruleset();
@@ -267,7 +267,7 @@ fn a_spell_marked_both_gets_the_focus_doubling_and_the_potent_bonus() {
     assert_eq!(
         validated_cap(&e, &ruleset),
         PLAIN_CAP + FOCUS_DOUBLING + 6,
-        "ArMDE:4742 ('compatible with a Magical Focus'): both markers stack — 30 + 12 + 6"
+        "ArMDE:4813 ('compatible with a Magical Focus'): both markers stack — 30 + 12 + 6"
     );
 }
 

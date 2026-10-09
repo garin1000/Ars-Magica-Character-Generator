@@ -54,7 +54,7 @@ export class ArtWorkflow {
 
   /**
    * Set (or clear) an Art's banked XP — the "Z" of the book's own "X (Z)"
-   * notation (ArMDE:1179), XP already acquired toward the NEXT score. Upserted
+   * notation (ArMDE:1247), XP already acquired toward the NEXT score. Upserted
    * like {@link adjust}: a bare row (score 0) is created to hold banked XP
    * alone, and the row is dropped only once score AND banked_xp are both back
    * to 0 — never on banked_xp alone, for the same data-loss reason `adjust`

@@ -29,7 +29,7 @@ use crate::types::{AbilityParameterValue, AbilityScore, ArtScore};
 /// Characteristics set: an untouched step is not yet under-spent, so a fresh
 /// character is not nagged. Out-of-range scores are always flagged.
 ///
-/// Source: ArMDE:2340-2354 (the cost
+/// Source: ArMDE:2408-2422 (the cost
 /// table and the seven starting points), :4105 (the +3 base cap).
 /// The numbers themselves are data in `rules/core/characteristics.json` (see
 /// RULES.md).
@@ -60,7 +60,7 @@ pub(crate) fn validate_characteristics(
     }
     // A Characteristic left at 0 has no map entry, yet a free delta on it can
     // still break a cap on the actual score (Sidhe Blood under Uninspirational,
-    // ArMDE:6921), so the unbought ones are checked at a bought 0 too.
+    // ArMDE:6992), so the unbought ones are checked at a bought 0 too.
     for characteristic in Characteristic::ALL {
         if !entity.characteristics.contains_key(&characteristic) {
             validate_characteristic_within_cap_and_floor(
@@ -207,10 +207,10 @@ fn validate_characteristic_point_spend(
 /// about, so it is not exempt. Do not "align" this with B1 by reverting to
 /// `entity.selections`; that reopens D2. The precondition's own **target**
 /// score stays bought-only regardless (below): "already has a score of at
-/// least +3" (ArMDE:3989) describes the Characteristic's bought state, not how
+/// least +3" (ArMDE:4060) describes the Characteristic's bought state, not how
 /// the Virtue granting the raise was itself acquired.
 ///
-/// Source: ArMDE:3987-3989 (Great,
+/// Source: ArMDE:4058-4060 (Great,
 /// "already … at least +3"), :6598-6600 (Poor, "already −3 or lower").
 pub(crate) fn validate_characteristic_delta_preconditions(
     entity: &Entity,
@@ -355,8 +355,8 @@ pub(crate) fn validate_abilities(
 
 /// Data-driven: any held item carrying [`Effect::ForbidsAbilitySpecialties`]
 /// forbids a non-empty `specialty` on every Ability row — shipped only on
-/// `flaw.unspecialized` (ArMDE:6943-6946), "The character does not have any
-/// specialties for any of her Abilities." (ArMDE:6945), but the engine
+/// `flaw.unspecialized` (ArMDE:7014-7017), "The character does not have any
+/// specialties for any of her Abilities." (ArMDE:7016), but the engine
 /// hardcodes no id: a house rule or a future book's item carrying the same
 /// effect is caught with zero code changes. Nothing previously consulted this
 /// rule at all — the specialty bonus
@@ -591,7 +591,7 @@ fn ability_instance_arg(entity: &Entity, ruleset: &Ruleset, entry: &AbilityScore
 /// table's top score warns too, under its own code (`banked_xp_at_top_score`,
 /// I2): the figure can never be spent, but "the next level needs only 0" would
 /// be false. Both name the Ability with its instance (`parameter`), so the
-/// message can say WHICH Craft. Source: ArMDE:1177-1179.
+/// message can say WHICH Craft. Source: ArMDE:1245-1247.
 fn validate_ability_banked_xp(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -625,12 +625,12 @@ fn validate_ability_banked_xp(
     ));
 }
 
-/// Age → max-Ability-score cap (ArMDE:2366-2374).
+/// Age → max-Ability-score cap (ArMDE:2434-2442).
 ///
 /// **D29: one resolution point.** `crate::effective::ability_age_cap` folds the
-/// age band with EVERY V/F override — the Affinity +2 (ArMDE:3374), Foreign
-/// Upbringing's locality-dependent halving (ArMDE:6160), and a full waiver
-/// (Mentored by Demons, ArMDE:4498, F-194) — so this validator only compares
+/// age band with EVERY V/F override — the Affinity +2 (ArMDE:3445), Foreign
+/// Upbringing's locality-dependent halving (ArMDE:6231), and a full waiver
+/// (Mentored by Demons, ArMDE:4569, F-194) — so this validator only compares
 /// the entry's score against that one number. It used to re-derive the
 /// Affinity override beside the resolution point instead of through it, which
 /// is exactly the "two consumers disagree" shape D29 forbids: Savantism's
@@ -754,7 +754,7 @@ pub(crate) fn validate_arts(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
 /// Art counterpart of [`validate_ability_banked_xp`] — same rule, the Art
 /// advancement table, and the Art's own codes (I2: one code per subject, so
 /// each message names `$ability` or `$art`, never a guess between the two).
-/// Source: ArMDE:1177-1179.
+/// Source: ArMDE:1245-1247.
 fn validate_art_banked_xp(ruleset: &Ruleset, entry: &ArtScore, issues: &mut Vec<ValidationIssue>) {
     let Some(finding) = banked_xp_finding(&ruleset.art_advancement, entry.score, entry.banked_xp)
     else {
@@ -786,7 +786,7 @@ fn validate_art_banked_xp(ruleset: &Ruleset, entry: &ArtScore, issues: &mut Vec<
 /// a granting Virtue (an `ability_score_grant` floor) or fit within the Gift's
 /// free slot (one for a Gifted non-magus, none for a magus). Uncovered instances
 /// beyond the free allowance emit `supernatural_ability_requires_virtue`
-/// (deterministic by sorted id). Source: ArMDE:2874.
+/// (deterministic by sorted id). Source: ArMDE:2942.
 pub(crate) fn validate_supernatural_abilities(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -834,7 +834,7 @@ pub(crate) fn validate_supernatural_abilities(
 
 /// Validates Personality Traits: `|value|` never exceeds 6, and at most one trait
 /// per selected Major Personality Flaw may exceed ±3 (a Major Personality Flaw is
-/// represented by a single ±6 trait; others stay ±3). Source: ArMDE:2500-2503.
+/// represented by a single ±6 trait; others stay ±3). Source: ArMDE:2568-2571.
 pub(crate) fn validate_personality_traits(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -843,8 +843,8 @@ pub(crate) fn validate_personality_traits(
     // The personality category slug is referenced directly here, deliberately.
     // Unlike caps.rs — whose per-category caps are driven by profile data that
     // *happens* to name categories, so no slug is baked in — this is a universal
-    // core rule keyed specifically to the Personality Flaw category (ArMDE:2500-2503,
-    // :2820): each Major Personality Flaw permits exactly one ±6 trait. Categories
+    // core rule keyed specifically to the Personality Flaw category (ArMDE:2568-2571,
+    // :2888): each Major Personality Flaw permits exactly one ±6 trait. Categories
     // are free-form data slugs with no registry or per-item metadata that marks
     // "this is the personality category", and the rule is not per-profile, so there
     // is no non-speculative data field to drive it from — adding a dedicated
@@ -871,7 +871,7 @@ pub(crate) fn validate_personality_traits(
         entity.personality_traits.iter().collect();
     traits.sort_by(|a, b| a.name.cmp(&b.name));
     // D69/X7b-e row 42: Weak Personality tightens the universal ±3 range to
-    // ±1 (ArMDE:7076-7079) while it is held (bought or granted). The
+    // ±1 (ArMDE:7147-7150) while it is held (bought or granted). The
     // Major-Personality-Flaw ±6 budget exception is skipped entirely once any
     // selection carries a tightened range — the tightened range REPLACES the
     // whole scheme rather than composing with it; no shipped entry needs
@@ -907,7 +907,7 @@ pub(crate) fn validate_personality_traits(
 
 /// Validates that every selection carrying
 /// [`Effect::RequiresPersonalityTraitPair`] (Fickle Nature, "Select a
-/// Personality Trait at +4, and its opposite at +4", ArMDE:6122-6124) is
+/// Personality Trait at +4, and its opposite at +4", ArMDE:6193-6195) is
 /// backed by at least two distinct [`crate::types::PersonalityTrait`] entries
 /// at exactly the required value. The "opposite" pairing itself is a table
 /// judgement over free text and is not verified — only the count.
@@ -963,14 +963,14 @@ fn personality_out_of_range(trait_: &crate::types::PersonalityTrait, max: i8) ->
 /// matching concrete-kind slot first, falling back to a wildcard slot. A grant's
 /// score is exact by default — the Reputation's score must equal it — unless the
 /// grant states `max_score`, in which case the score must lie in
-/// `[score, max_score]` (Outsider alone, ArMDE:6554).
+/// `[score, max_score]` (Outsider alone, ArMDE:6625).
 ///
 /// A Reputation whose kind matches no remaining grant (concrete or wildcard) at
 /// all emits `reputation_not_granted`, exactly as before this ruling. One whose
 /// kind DOES match a remaining grant, but at the wrong score, emits the more
 /// specific `reputation_score_out_of_range` instead — a different finding,
 /// because the player did pick a legal audience, just not a legal level.
-/// Source: ArMDE:2514.
+/// Source: ArMDE:2582.
 pub(crate) fn validate_reputations(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -1133,7 +1133,7 @@ mod locality_cap_tests {
     }
 }
 
-/// Row 47 / V/F-audit F-524: `flaw.unspecialized` (ArMDE:6943-6946) forbids the
+/// Row 47 / V/F-audit F-524: `flaw.unspecialized` (ArMDE:7014-7017) forbids the
 /// specialty *state*, and nothing previously enforced it.
 #[cfg(test)]
 mod unspecialized_flaw_tests {

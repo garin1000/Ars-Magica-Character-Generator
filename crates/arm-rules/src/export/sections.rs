@@ -7,7 +7,7 @@
 use super::*;
 use crate::spell::Spell;
 
-/// X10b: the book's own "X (Z)" notation (ArMDE:1177/:1179) for a bought
+/// X10b: the book's own "X (Z)" notation (ArMDE:1245/:1179) for a bought
 /// score with banked XP toward the next one — omitted at `banked_xp == 0` so
 /// every export written before X10b stays byte-identical.
 fn score_cell(score: i32, banked_xp: u32) -> String {
@@ -239,7 +239,7 @@ impl<'a> Doc<'a> {
                 .unwrap_or_default()
                 .to_string();
                 // D42/D70/D74: every Supernatural entry is associated with one of
-                // the four Realms (ArMDE:2960); the association is resolved, never
+                // the four Realms (ArMDE:3028); the association is resolved, never
                 // stored, so it has no cell of its own — it rides the existing
                 // text column instead, and only for a qualifying selection, so an
                 // entity holding no Supernatural entry renders byte-identical to
@@ -557,7 +557,7 @@ impl<'a> Doc<'a> {
     /// A spell's Arts and level as the one short cell the rulebook and the app both
     /// use: the engine's code ([`LocalizedRuleset::spell_code`], requisites included)
     /// and the resolved level a space apart, as the book prints it — "Cr(Re)Ig 30"
-    /// (ArMDE:19301). An unresolved General level takes the localized General marker
+    /// (ArMDE:19378). An unresolved General level takes the localized General marker
     /// in the level's place.
     ///
     /// A spell the player marked within a Magical Focus or within a Potent Magic

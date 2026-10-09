@@ -1354,7 +1354,7 @@ mod tests {
     }
 
     /// Aging and a free Virtue delta combine: the delta is part of the actual score,
-    /// which is both the drop threshold and what drops (ruling F-A, ArMDE:16579).
+    /// which is both the drop threshold and what drops (ruling F-A, ArMDE:16656).
     #[test]
     fn the_effective_column_combines_an_aging_drop_with_a_virtue_delta() {
         let mut e = magus();
@@ -2218,7 +2218,7 @@ mod tests {
 
     /// The sheet names a spell's Arts and level the way the rulebook and the app do:
     /// one short code, Technique and Form abbreviations followed by the level a
-    /// space apart (`CrIg 20`, as in "Cr(Re)Ig 30", ArMDE:19301), not three separate
+    /// space apart (`CrIg 20`, as in "Cr(Re)Ig 30", ArMDE:19378), not three separate
     /// columns of spelled-out Art names.
     #[test]
     fn spells_list_their_art_code_and_mastery() {
@@ -2357,8 +2357,8 @@ mod tests {
     }
 
     /// With a shield equipped, a one-handed weapon prints twice: the with-shield row
-    /// first, named `<weapon> <joiner> <shield>`, then the bare row (ArMDE:16656;
-    /// ordering ArMDE:1467-1472). The joiner is a localized label, never hardcoded.
+    /// first, named `<weapon> <joiner> <shield>`, then the bare row (ArMDE:16733;
+    /// ordering ArMDE:1535-1540). The joiner is a localized label, never hardcoded.
     #[test]
     fn combat_with_a_shield_emits_with_shield_then_bare_rows() {
         let mut e = fully_populated_magus();
@@ -2718,9 +2718,9 @@ mod tests {
     }
 
     /// The being's own powers print their Penetration, because the levels spent
-    /// on it come out of the same budget as the level itself (ArMDE:4019). Without the column the exported
+    /// on it come out of the same budget as the level itself (ArMDE:4090). Without the column the exported
     /// sheet cannot be reconciled with the budget the app charged: the book's own
-    /// two-Greater-Power example (`ArMDE:4021`) would read as 80 levels of powers
+    /// two-Greater-Power example (`ArMDE:4092`) would read as 80 levels of powers
     /// against a budget of 100.
     #[test]
     fn a_powers_table_prints_the_penetration_bought_from_the_same_budget() {
@@ -2755,9 +2755,9 @@ mod tests {
 
     /// A Focus Power gets its own table, because the number in its level column is
     /// a different quantity from an ordinary power's: a *ceiling* on what may be
-    /// created ("the maximum level of effect", `ArMDE:3899`), bought at 2 points a
+    /// created ("the maximum level of effect", `ArMDE:3970`), bought at 2 points a
     /// level out of a separate pool. The derived figures the book gives for it ride
-    /// along — Initiative (`ArMDE:3899`) and the Fatigue cost (`ArMDE:3901`) — and
+    /// along — Initiative (`ArMDE:3970`) and the Fatigue cost (`ArMDE:3972`) — and
     /// every header is a localized label, never a slug.
     #[test]
     fn focus_powers_print_their_own_table_with_initiative_and_fatigue() {
@@ -2793,7 +2793,7 @@ mod tests {
         );
     }
 
-    /// Above level 75 the rulebook states no Fatigue cost (`ArMDE:3901`), so the
+    /// Above level 75 the rulebook states no Fatigue cost (`ArMDE:3972`), so the
     /// cell says so through a localized label rather than inventing a fourth band.
     #[test]
     fn a_focus_power_past_the_fatigue_table_prints_the_unstated_label() {
@@ -2920,7 +2920,7 @@ mod tests {
     }
 
     /// The Living Conditions are a stored choice and a standing term of every aging
-    /// total (ArMDE:16567-16569, :16581-16594), so the sheet has to carry
+    /// total (ArMDE:16644-16646, :16658-16671), so the sheet has to carry
     /// them — a sheet that dropped them would read as data loss. They are catalogue
     /// ids, so they print through the rules i18n and never as the slug. Each logged
     /// year prints the stress die and the total it produced alongside its free text,
@@ -2974,7 +2974,7 @@ mod tests {
     ///
     /// The row prints through the rules i18n keyed by its id, the severity through
     /// `crisis-severity-<slug>`, and both dice and both totals stand beside each
-    /// other so a reader can check the arithmetic of `ArMDE:16621` off the sheet.
+    /// other so a reader can check the arithmetic of `ArMDE:16698` off the sheet.
     #[test]
     fn a_logged_crisis_prints_its_row_its_severity_and_the_die_that_found_it() {
         let mut e = fully_populated_magus();

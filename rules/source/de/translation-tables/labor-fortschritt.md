@@ -10,6 +10,8 @@
 
 ## Laborterminologie / Laboratory Terms
 
+> **Nur Begriffe.** Laborsummen, Verzauberungsregeln, Form- und Materialboni, Experimentieren und Vertrautenbindung stehen in den Basisregeln, Kapitel 8: Das Laboratorium – u. a. Abschnitte *Vis-Gewinnung*, *Verzauberungen* (mit *Arten von Artefakten*, *Form und Material*, *Vorbereitung zur Verzauberung*, *Effekte einbetten*, *Talismanabstimmung*), *Langlebigkeitsrituale*, *Labortexte*, *Vertraute* (mit *Die drei Kordeln*), *Arkanes Experimentieren* (mit *Außergewöhnliche Ergebnisse*, *Tabelle außergewöhnlicher Ergebnisse*), *Der Durchbruch*, *Tabelle der Form- und Materialboni* und *Laboratoriums-Tugenden und -Fehler*.
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Laboratory | Laboratorium / Labor | |
@@ -20,7 +22,7 @@
 | Invested Device | Bereitetes Artefakt | |
 | Lesser Enchanted Device | Schlichtes Artefakt | |
 | Charged Item | Aufgeladenes Artefakt | |
-| Single-Use Charged Items | Aufgeladene Artefakte für den einmaligen Gebrauch | HM:RE-Integrationsprojekt; hieß im Original vor der Errata „Single Cast Charged Items". Nicht mit der Tugend *Quick Charged Items* → „Schnelle Aufgeladene Artefakte" verwechseln |
+| Single-Use Charged Items | Aufgeladene Artefakte für den einmaligen Gebrauch | HZ:ÜA-Integrationsprojekt; hieß im Original vor der Errata „Single Cast Charged Items". Nicht mit der Tugend *Quick Charged Items* → „Schnelle Aufgeladene Artefakte" verwechseln |
 | Instilling Effects | Effekte einbetten | |
 | Preparation for Enchantment | Vorbereitung zur Verzauberung | |
 | Longevity Ritual | Langlebigkeitsritual | |
@@ -29,40 +31,45 @@
 | Extraordinary Results Chart | Tabelle außergewöhnlicher Ergebnisse | |
 | Breakthrough | Durchbruch | |
 | Shape and Material Bonus | Form- und Materialbonus | |
-| Gruagach Shape Bonuses | Gruagach-Formboni | HM:RE Kap. IV. Nicht „Gestaltboni": „Gestalt" ist dort als Gruagach-Kunst belegt (Gestaltzauber, Gestalt geben/nehmen) |
+| Gruagach Shape Bonuses | Gruagach-Formboni | HZ:ÜA Kap. IV. Nicht „Gestaltboni": „Gestalt" ist dort als Gruagach-Kunst belegt (Gestaltzauber, Gestalt geben/nehmen) |
 | Vis Extraction | Vis-Gewinnung | |
 | Talisman Attunement | Talismanabstimmung | |
 | Familiar Bond | Vertrautenbindung | |
 | Golden Cord | Goldene Kordel | |
 | Silver Cord | Silberne Kordel | |
 | Bronze Cord | Bronzene Kordel | |
+| Deformed (Laboratory Flaw) | Verformt | Laborfehler: Teil der Struktur abgesunken/verzerrt (ArMDE:11808). **Kein** Charakterfehler – dafür *Disfigured* = Entstellt |
 
 ---
 
 ## Fortschritt und Erfahrung / Advancement and Experience
+
+> **Nur Begriffe.** Erfahrungspunkte je Quelle, Quellenqualitäten und Buchregeln stehen in den Basisregeln, Kapitel 10: Langzeitereignisse, Abschnitte *Erfahrung und Fortschritt*, *Fortschritt* (mit *Exposition*, *Abenteuer*, *Übung*, *Ausbildung*, *Andacht*, *Unterricht*, *Bücher*, *Vis*) und *Bücher* (mit *Summae*, *Tractatus*).
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Experience Points | Erfahrungspunkte | |
 | Advancement | Fortschritt | |
 | Seasonal Activity | Quartalsaktivität | |
-| Exposure | Exposition | 2 EP pro Quartal durch Tätigkeit |
+| Exposure | Exposition | Als Erfahrungsquelle |
 | Adventure | Abenteuer | Als Erfahrungsquelle |
 | Practice | Übung | Als Erfahrungsquelle |
 | Training | Ausbildung | Als Erfahrungsquelle |
 | Teaching | Unterricht | Als Erfahrungsquelle |
 | Study (from Vis) | Studium (aus Vis) | Als Erfahrungsquelle |
 | Source Quality | Quellenqualität | Qualität einer Erfahrungsquelle |
-| Summa | Summae (Lat., f.) | Lehrbuch; f., 1. Dekl.: Sg. Summa, Pl. Summae |
+| Summa | Summa (Lat., f.; Pl. Summae) | Lehrbuch; 1. Deklination |
 | Tractatus | Tractatus (Lat., m.) | Abhandlung; m., 4. Dekl.: Sg. = Pl. Tractatus |
 | Quality | Qualität | Wert eines Buches |
 | Level | Stufe | Höchste erreichbare Stufe durch ein Buch |
 | Resonant Materials | Resonante Materialien | |
-| Worship | Andacht | Erfahrungsquelle für Dominium-Charaktere |
+| Worship | Andacht | Als Erfahrungsquelle (Quartalsaktivität; Basisregeln, Abschnitt *Andacht*) |
 
 ---
 
 ## Langzeitereignisse / Long-Term Events
+
+> **Nur Begriffe.** Alterung, Verzerrung und Zwielicht: siehe [alterung-twilight.md](alterung-twilight.md). Einweihungssumme, Zielstufen und Skriptelemente stehen in den Basisregeln, Abschnitt *Mysterieneinweihung* mit *Das Einweihungsskript* und *Beispielhafte Elemente eines Einweihungsskripts* (Kapitel 10: Langzeitereignisse).
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
@@ -74,14 +81,14 @@
 | Crisis | Krise | Bei Alterung |
 | Mystery Initiation | Mysterieneinweihung | |
 | Initiation Script | Einweihungsskript | |
-| Initiation Total | Einweihungssumme | Präsenz + (Haus-)Kunde + Skriptbonus |
-| Initiation Target Level | Einweihungs-Zielstufe | Abhängig von Tugendart (Klein/Groß) und ob Mystagoge die Tugend kennt |
-| Script bonus | Skriptbonus | Bonus eines Einweihungsskripts auf die Einweihungssumme |
+| Initiation Total | Einweihungssumme | |
+| Initiation Target Level | Einweihungs-Zielstufe | |
+| Script bonus | Skriptbonus | Bonus eines Einweihungsskripts |
 | Mystagogue | Mystagoge | Leiter einer Mysterieneinweihung |
 | Initiate (noun) | Einzuweihender / Eingeweihter | Empfänger einer Mysterieneinweihung |
-| Initiation Ordeal | Einweihungsprüfung | Erhalt eines Fehlers / Verlust einer Tugend als Preis der Einweihung |
-| Initiation Quest | Einweihungsqueste | Langwierige Reise mit Herausforderungen als Einweihungspreis |
-| Initiation Sacrifice | Einweihungsopfer | Opfer von Zeit, Reichtum, Wissen oder Macht |
+| Initiation Ordeal | Einweihungsprüfung | Skriptelement |
+| Initiation Quest | Einweihungsqueste | Skriptelement |
+| Initiation Sacrifice | Einweihungsopfer | Skriptelement |
 | Exoteric (Mystery) | Exoterisch (Mysterium) | Äußeres (Haus-)Mysterium; Gegensatz zu esoterisch/innerem Mysterium |
 | Warping | Verzerrung | |
 | Warping Points | Verzerrungspunkte | |

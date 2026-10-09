@@ -12,7 +12,7 @@
   // "Abilities ... for grogs and companions they are acquired in two blocks: early
   // childhood, and later life. For magi, there are two more periods to consider:
   // apprenticeship, and life as a magus after that."
-  // Source: ArMDE:2364
+  // Source: ArMDE:2432
 
   // A ruleset shipping no life-stage rules cannot fund Abilities that way, so the
   // whole panel is absent rather than offered as a dead control.
@@ -65,7 +65,7 @@
   const budget = $derived(store.effective?.life_stage ?? null);
   // A magus standing at its Gauntlet has lived no year as a magus, and BOTH the lab
   // seasons and the levels of spells are priced per year — three charged seasons a
-  // year (`ArMDE:2482`), 30 fungible points a year (`ArMDE:2471`) — so with no years each
+  // year (`ArMDE:2550`), 30 fungible points a year (`ArMDE:2539`) — so with no years each
   // ceiling is 0 and every value either field could take is already an error. The
   // fields go read-only rather than staying open to be typed into: the state cannot
   // be entered by hand, and the note below says why it is closed.

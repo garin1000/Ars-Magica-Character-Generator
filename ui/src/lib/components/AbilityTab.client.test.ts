@@ -382,7 +382,7 @@ describe('AbilityTab parameter picker combo box (CV7)', () => {
 });
 
 // Try-out finding 24 (R7, decided by Norbert): a Virtue-granted Ability with no
-// bought entry (Second Sight 1 from the Second Sight Virtue, ArMDE:4890) renders
+// bought entry (Second Sight 1 from the Second Sight Virtue, ArMDE:4961) renders
 // as the unbought row with a greyed "+". Pressing "+" on that row must buy it in
 // one action, one step above the free floor (the engine shows max(bought, floor),
 // so a bought 1 under a floor of 1 would change nothing). A `client` test because

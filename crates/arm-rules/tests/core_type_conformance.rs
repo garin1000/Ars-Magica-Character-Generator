@@ -149,7 +149,7 @@ fn every_shipped_profile_buys_abilities_after_virtues_flaws() {
 /// pointed at an Ability not yet bought must be held on the **Abilities** step, not
 /// on the Virtues & Flaws step where the Virtue is taken. Puissant Ability is
 /// "choose one Ability" with no requirement that a score exists
-/// (ArMDE:4814-4816), and Abilities are
+/// (ArMDE:4885-4887), and Abilities are
 /// bought later — filing it on `virtues_flaws` deadlocked the guided wizard, because
 /// that step gates on its own findings and could offer no fix.
 #[test]
@@ -199,7 +199,7 @@ fn puissant_ability_on_an_unbought_ability_holds_the_abilities_step_not_virtues_
 /// 'Loyal' is a particularly important Trait, as it reflects the grog's attachment to
 /// the covenant, while 'Brave' is just as important for warrior grogs. A third Trait
 /// should be something distinctive about that grog."
-/// (ArMDE:1073-1075; the character-sheet
+/// (ArMDE:1141-1143; the character-sheet
 /// listing at :1165 names Personality Traits unconditionally.)
 ///
 /// So the type whose traits the rules treat as mechanically load-bearing was the one
@@ -241,7 +241,7 @@ fn grog_full_build_validates() {
         (Characteristic::Qik, 1),
     ]);
     grog.selections = vec![
-        // B2/D41 (ArMDE:2816): every character must take one Social Status —
+        // B2/D41 (ArMDE:2884): every character must take one Social Status —
         // free, so the balance above is untouched.
         sel("virtue.craftsman"),
         sel("virtue.tough"),
@@ -273,7 +273,7 @@ fn companion_full_build_validates() {
         (Characteristic::Pre, 1),
     ]);
     comp.selections = vec![
-        // B2/D41 (ArMDE:2816): every character must take one Social Status —
+        // B2/D41 (ArMDE:2884): every character must take one Social Status —
         // free, so the balance above is untouched.
         sel("virtue.wanderer"),
         sel("virtue.tough"),
@@ -304,7 +304,7 @@ fn mythic_companion_full_build_validates() {
     let mut myth = base("mythic_companion");
     myth.mythic_type = Some(Id::new("mythic_type.nephilim"));
     myth.characteristics = BTreeMap::from([(Characteristic::Int, 2), (Characteristic::Sta, 1)]);
-    // B2/D41 (ArMDE:2816): every character must take one Social Status — free,
+    // B2/D41 (ArMDE:2884): every character must take one Social Status — free,
     // so the balance is untouched.
     myth.selections = vec![
         sel("virtue.arcane_lore"),
@@ -320,8 +320,8 @@ fn mythic_companion_full_build_validates() {
 /// the same allowance: **10 Flaw points and 20 budgeted Virtue points**, plus the
 /// uncharged free Minor Virtue its grants supply. A type's compulsory package
 /// changes how that allowance is *spent*, never how large it is. Settled and
-/// closed in `docs/vf-audit/decisions.md` D32 (`ArMDE:2638`,
-/// `RoP:I:4912`); the shipped data once granted Devil Child and Spirit Votary a
+/// closed in `docs/vf-audit/decisions.md` D32 (`ArMDE:2706`,
+/// `RoP:I:4968`); the shipped data once granted Devil Child and Spirit Votary a
 /// budget bonus, which this test exists to keep out.
 ///
 /// Both halves of the budget are pinned, because a ceiling alone does not say a

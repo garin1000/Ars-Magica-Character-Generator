@@ -22,7 +22,7 @@
 //!   `needed`. Still a warning: the banked figure is charged against the pool
 //!   (`effective/xp.rs::build_spends`) and can never buy anything.
 //!
-//! Source of the "X (Z)" notation the field records: ArMDE:1177-1179.
+//! Source of the "X (Z)" notation the field records: ArMDE:1245-1247.
 
 use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::*;

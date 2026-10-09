@@ -195,7 +195,7 @@ fn the_aging_commands_preview_apply_and_revert_one_year() {
 
 /// The two entity-rewriting commands: a Sample Childhood applies its rows
 /// through the cached ruleset ("Athletic Childhood: Athletics 2, Brawl 2,
-/// Native Language 5, Swim 2", ArMDE:2384), and unlinking a removed Virtue's
+/// Native Language 5, Swim 2", ArMDE:2452), and unlinking a removed Virtue's
 /// parameter leaves its last value behind as free text.
 #[test]
 fn the_entity_rewriting_commands_answer_from_the_cached_ruleset() {

@@ -27,7 +27,7 @@ const AGING_PREVIEW_DEBOUNCE_MS = 150;
  *
  * The distribution rides along because it is one form with the die: "Gain
  * sufficient Aging Points (in any Characteristic**s**)"
- * (ArMDE:16602, :16611) is plural, so the player may spread the points,
+ * (ArMDE:16679, :16688) is plural, so the player may spread the points,
  * and the map is only meaningful against the award the current die produced.
  */
 export interface AgingDraft {
@@ -38,7 +38,7 @@ export interface AgingDraft {
   /** Characteristic -> Aging Points placed there. Zeroes are absent. */
   distribution: Partial<Record<Characteristic, number>>;
   /**
-   * The **Simple Die** thrown at the Crisis Table (ArMDE:16621), for a
+   * The **Simple Die** thrown at the Crisis Table (ArMDE:16698), for a
    * year the aging row sent there; `null` while the field is blank, which the
    * engine records as a Crisis owed and unrolled rather than refusing.
    *
@@ -107,7 +107,7 @@ export class AgingWorkflow {
 
   /**
    * What the year just applied had to TELL the player, as opposed to what it
-   * wrote — today only the Longevity Ritual a Crisis spends (`ArMDE:16573`), which the
+   * wrote — today only the Longevity Ritual a Crisis spends (`ArMDE:16650`), which the
    * entity cannot show because it deliberately keeps the stored choice.
    *
    * Cleared whenever the draft is, and by the next apply or revert: a note about
@@ -155,7 +155,7 @@ export class AgingWorkflow {
    * Record the stress die the player rolled, or clear it with `null`.
    *
    * "AGING TOTAL: Stress die (no botch) + age/10 (round up) …"
-   * Source: ArMDE:16567
+   * Source: ArMDE:16644
    *
    * A stress die explodes, so the value has a floor of 0 and no ceiling; it is
    * clamped only to what the command's `i32` can carry.
@@ -171,7 +171,7 @@ export class AgingWorkflow {
    * Place (or, with 0, un-place) Aging Points in one Characteristic.
    *
    * "If an Aging Point 'in any Characteristic' is gained, the player may choose
-   * the Characteristic." Source: ArMDE:16615 — and `ArMDE:16602`/`ArMDE:16611`
+   * the Characteristic." Source: ArMDE:16692 — and `ArMDE:16679`/`ArMDE:16688`
    * say "in any Characteristic**s**", plural, so this is a map and not a single
    * pick.
    */
@@ -185,7 +185,7 @@ export class AgingWorkflow {
     }
     this.draft = { ...this.draft, distribution };
     // Placing the points moves the CRISIS TOTAL, because those points ARE the
-    // Decrepitude increase `ArMDE:16619` puts first — so the reading is asked for
+    // Decrepitude increase `ArMDE:16696` puts first — so the reading is asked for
     // again rather than left standing at a number the year will not write.
     this.#schedulePreview();
   }
@@ -195,7 +195,7 @@ export class AgingWorkflow {
    * `null`.
    *
    * "CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score"
-   * Source: ArMDE:16621
+   * Source: ArMDE:16698
    */
   setCrisisDie(die: number | null): void {
     this.rejections = [];

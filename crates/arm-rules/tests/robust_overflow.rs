@@ -177,7 +177,7 @@ fn f3_a_die_at_i32_min_clamps_the_aging_total_without_panicking() {
     let ruleset = full_ruleset();
     let mut e = entity("companion");
     e.age = Some(60);
-    // +2 is SUBTRACTED from the total (ArMDE:16571), so i32::MIN - 2 underflows.
+    // +2 is SUBTRACTED from the total (ArMDE:16648), so i32::MIN - 2 underflows.
     e.living_conditions = [Id::new("living_condition.wealthy_or_healthy_location")]
         .into_iter()
         .collect();

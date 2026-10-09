@@ -725,7 +725,7 @@ fn german_anchors_sit_on_the_same_line_as_their_english_counterparts() {
 /// reading of it.
 #[test]
 fn the_heading_slug_matches_the_sources_own_generated_links() {
-    // `[Anchored to the (Land)](#anchored-to-the-land)`, ArMDE:5568 — brackets
+    // `[Anchored to the (Land)](#anchored-to-the-land)`, ArMDE:5639 — brackets
     // and parentheses are dropped, not transliterated.
     assert_eq!(
         slugify_heading("Anchored to the (Land)"),
@@ -976,7 +976,7 @@ fn an_aging_roll_row_carries_an_id_and_resolves_its_three_segment_anchor() {
               "effect": { "type": "any_characteristic", "points": 1 },
               "source": { "anchor": "aging/aging-roll/10-12",
                           "file": "Ars Magica - Definitive Edition (Core Rules).md",
-                          "lines": [16601, 16601] } }
+                          "lines": [16678, 16678] } }
         ] }"#,
     )
     .expect("the fixture is valid JSON");
@@ -1521,7 +1521,7 @@ const SUBDIVIDED_ITEMS: &[(&str, &str)] = &[(
 ///
 /// Guard A pins the *start* of a range to the item's own `####`. Nothing pinned
 /// the *end*, and that is a distinct defect: B19's F-540 had `flaw.wrathful_*`
-/// citing ArMDE:7106-7119, a correct start and an extent that swallowed the
+/// citing ArMDE:7177-7190, a correct start and an extent that swallowed the
 /// `# Chapter 5: Abilities` heading at :7114 plus three paragraphs belonging to
 /// another chapter. Every existing guard stayed green, because the range does
 /// land on non-blank lines and does contain its own heading.
@@ -1539,7 +1539,7 @@ const SUBDIVIDED_ITEMS: &[(&str, &str)] = &[(
 /// passage it flagged:
 ///
 /// - a **blockquoted** heading (`> #### Environmental Temperatures`,
-///   ArMDE:7041) is *usually* a printed sidebar belonging to the section it
+///   ArMDE:7112) is *usually* a printed sidebar belonging to the section it
 ///   sits in — Warped Senses' own text says "see sidebar" — so a range that
 ///   reaches it is right to, and [`OWN_BLOCKQUOTED_SIDEBARS`] names every
 ///   entry confirmed to be this shape (fifteen, as of D77.1). But a
@@ -1552,8 +1552,8 @@ const SUBDIVIDED_ITEMS: &[(&str, &str)] = &[(
 ///   [`OWN_BLOCKQUOTED_SIDEBARS`] gets a blockquoted heading as a boundary
 ///   like any other;
 /// - a **deeper** heading is a sub-section of the item, not the next item:
-///   `mythic_type.faerie_doctor` opens on `### Faerie Doctors` (ArMDE:2668) and
-///   its `#### Faerie Doctors as Mythic Companions` at ArMDE:2676 is part of it.
+///   `mythic_type.faerie_doctor` opens on `### Faerie Doctors` (ArMDE:2736) and
+///   its `#### Faerie Doctors as Mythic Companions` at ArMDE:2744 is part of it.
 ///
 /// So the boundary is the next heading at the same level or shallower that is
 /// not a deeper sub-heading, and — unless the entry owns the sidebar — not a
@@ -1914,8 +1914,8 @@ fn anchor_opening(
 /// established by opening the citations:
 ///
 /// - `magic_total_halving` — "halve"/"half" ("must halve their Lab Total",
-///   ArMDE:5964; "Halve your Lab Total", ArMDE:7062; "You halve the normal
-///   Penetration Total", ArMDE:7066). Deliberately *not* widened to "divide":
+///   ArMDE:6035; "Halve your Lab Total", ArMDE:7133; "You halve the normal
+///   Penetration Total", ArMDE:7137). Deliberately *not* widened to "divide":
 ///   that would silently
 ///   absorb Weak Spontaneous Magic's ÷5, whose exemption is worth having
 ///   written down, and would stop discriminating a halving from any other
@@ -1930,27 +1930,27 @@ fn anchor_opening(
 ///   "average", so it would match unrelated prose and make the family vacuous.
 /// - `grants_reputation` — "Reputation" is a rulebook proper noun and this is
 ///   the catalogue's largest family. Every entry states it with that one word
-///   ("a bad Reputation at 4", ArMDE:5677; "an Academic Reputation of 1",
-///   ArMDE:3472; "a Local Reputation of 1", ArMDE:3478), so one phrase suffices
+///   ("a bad Reputation at 4", ArMDE:5748; "an Academic Reputation of 1",
+///   ArMDE:3543; "a Local Reputation of 1", ArMDE:3549), so one phrase suffices
 ///   and anything broader would only add slack.
 /// - `combat_mod` — the `CombatStat` names plus the book's own collective noun.
-///   ArMDE:16656 fixes the taxonomy ("Characters have five combat scores:
+///   ArMDE:16733 fixes the taxonomy ("Characters have five combat scores:
 ///   Initiative, Attack, Defense, Damage, and Soak"), and the encodings split
-///   between naming a total ("Attack rolls", ArMDE:6436; "+9 to your Initiative
-///   Total", ArMDE:4313) and naming the group ("Dodge and other combat rolls",
-///   ArMDE:6262; "-1 on other combat scores", ArMDE:6332). So "combat" is
+///   between naming a total ("Attack rolls", ArMDE:6507; "+9 to your Initiative
+///   Total", ArMDE:4384) and naming the group ("Dodge and other combat rolls",
+///   ArMDE:6333; "-1 on other combat scores", ArMDE:6403). So "combat" is
 ///   load-bearing rather than slack: without it three correctly-encoded items
 ///   would be false positives. "defend" is listed beside "defense" because
-///   ArMDE:6608 uses the verb ("rolls to attack and defend").
+///   ArMDE:6679 uses the verb ("rolls to attack and defend").
 ///
 ///   Two deliberate exclusions. **"damage"**, though a `CombatStat`, is left
 ///   out: no entry encodes that target today, and the word is ordinary English
-///   throughout these books ("legs are severely damaged", ArMDE:6262), so it
+///   throughout these books ("legs are severely damaged", ArMDE:6333), so it
 ///   would let a passage pass for a reason unrelated to the mechanic. The day a
 ///   `damage` encoding lands it will flag, and whoever adds it should read the
 ///   passage and widen this list deliberately — which is the review moment the
 ///   guard exists to force. **"soak"** is excluded because Soak is *not* in this
-///   family: ArMDE:16656 groups it with the combat scores, but the engine models
+///   family: ArMDE:16733 groups it with the combat scores, but the engine models
 ///   it as its own `Effect::SoakMod`, and `virtue.berserk` shows the correct
 ///   shape by carrying `combat_mod` attack/defense *and* a separate `soak_mod`
 ///   off the same passage. Admitting "soak" here would let a Soak-only passage
@@ -1958,11 +1958,11 @@ fn anchor_opening(
 /// - `health_mod` — the health system's mechanical nouns, one per `HealthTrack`
 ///   axis: "fatigue" (the FatiguePenalty / FatigueRoll / CastingFatigue tracks),
 ///   "wound" (WoundPenalty), and "recover" (Recovery, stated as "rolls to
-///   recover from wounds", ArMDE:6188 and ArMDE:4836). All three are sharp
+///   recover from wounds", ArMDE:6259 and ArMDE:4907). All three are sharp
 ///   mechanical terms here rather than loose prose. This family flagged nothing
 ///   on its first run — every entry states its own mechanic — so its liveness
 ///   was proved by mutation instead: repointing `flaw.obese`'s citation at an
-///   unrelated passage (the Gabai social-status Flaw, ArMDE:6198-6201) makes the
+///   unrelated passage (the Gabai social-status Flaw, ArMDE:6269-6272) makes the
 ///   guard fail. The mutation was reverted immediately.
 const GUARDED_EFFECT_PHRASES: &[(&str, &[&str])] = &[
     ("lab_total_mod", &["lab total"]),
@@ -1992,7 +1992,7 @@ const PARAPHRASE_EXEMPTIONS: &[(&str, &str, &str)] = &[
         "flaw.poor_formulaic_magic",
         "casting_total_mod",
         "ArMDE:6612 says \"Subtract 5 from every roll that you make to cast Formulaic \
-         spells. This does not apply to Ritual spells.\"; ArMDE:9103 defines FORMULAIC \
+         spells. This does not apply to Ritual spells.\"; ArMDE:9175 defines FORMULAIC \
          CASTING TOTAL = Casting Score + Die Roll, so the roll the passage penalizes IS \
          the Formulaic Casting Total, and the excluded Rituals are exactly what the \
          effect's \"formulaic\" scope excludes. A wording difference, not a mechanic \
@@ -2014,11 +2014,11 @@ const PARAPHRASE_EXEMPTIONS: &[(&str, &str, &str)] = &[
     (
         "flaw.palsied_hands",
         "combat_mod",
-        "ArMDE:6580 states the mechanic in terms of the totals' shared *input* instead of their \
+        "ArMDE:6651 states the mechanic in terms of the totals' shared *input* instead of their \
          names: \"All rolls involving holding or wielding an object are made at -2, including \
          weapon skills.\" The book's own formulas are what resolve that to this family: \
-         ArMDE:16660 gives ATTACK TOTAL = Dexterity + Combat Ability + Weapon Attack Modifier + \
-         Stress Die and ArMDE:16662 gives DEFENSE TOTAL = Quickness + Combat Ability + Weapon \
+         ArMDE:16737 gives ATTACK TOTAL = Dexterity + Combat Ability + Weapon Attack Modifier + \
+         Stress Die and ArMDE:16739 gives DEFENSE TOTAL = Quickness + Combat Ability + Weapon \
          Defense Modifier + Stress Die. The weapon skill (Combat Ability) is a term of both and \
          of no other combat total, so a flat -2 on it is -2 Attack and -2 Defense and nothing \
          else — which is exactly the pair encoded, and is why Initiative (which takes no Combat \
@@ -2027,18 +2027,18 @@ const PARAPHRASE_EXEMPTIONS: &[(&str, &str, &str)] = &[
     (
         "virtue.magister_in_medicina",
         "grants_reputation",
-        "ArMDE:4397 states the mechanic by *delegation* rather than by wording: \"This Virtue \
-         offers the same benefits as Doctor in (Faculty).\" The referent, ArMDE:3687, says \"He \
+        "ArMDE:4468 states the mechanic by *delegation* rather than by wording: \"This Virtue \
+         offers the same benefits as Doctor in (Faculty).\" The referent, ArMDE:3758, says \"He \
          also begins the game with an Academic Reputation of 3\" — and the two entries' effects \
          are identical (academic/3 plus 300 restricted academic XP), so the delegation is \
          honoured in full rather than approximated. The citation is deliberately NOT repointed \
-         at ArMDE:3683-3698: `source` records where the item is *defined*, and this Virtue is \
+         at ArMDE:3754-3769: `source` records where the item is *defined*, and this Virtue is \
          defined at :4395. A wording difference, not a mechanic difference.",
     ),
     (
         "virtue.bee_king",
         "aging_mod",
-        "ArMDE:3488 states the mechanic in plain English instead of the system's noun: \
+        "ArMDE:3559 states the mechanic in plain English instead of the system's noun: \
          \"Bee Kings do not appear to age after reaching maturity\". That sentence IS \
          `AgingEffect::NoApparentAging` (\"the apparent age never advances\"), and it is \
          the passage `types.rs::AgingEffect::NoApparentAging` already cites. The entry \
@@ -2068,8 +2068,8 @@ const PARAPHRASE_EXEMPTIONS: &[(&str, &str, &str)] = &[
 ///
 /// **Empty is the goal state, and it is the current one.** The two rows this list
 /// was created for — `flaw.weak_magic_resistance` (halving a Magic Resistance
-/// `ArMDE:7070` never halves) and `flaw.susceptibility_to_divine_power` (filed
-/// under Magic Resistance though `ArMDE:6817` never mentions it) — were fixed
+/// `ArMDE:7141` never halves) and `flaw.susceptibility_to_divine_power` (filed
+/// under Magic Resistance though `ArMDE:6888` never mentions it) — were fixed
 /// rather than kept: both are now encoded against the mechanic their own passage
 /// states, and `known_misencodings_still_fail_the_guard` is what forced their
 /// removal from here. Keep the list (and its test) for the next parked defect; do

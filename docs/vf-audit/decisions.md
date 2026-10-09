@@ -828,6 +828,27 @@ presumption of correctness.
 
 ---
 
+## D86 — P8-6: D31 retires, D7.1 returns (2026-10-09)
+
+The P8 re-sync brought in a current German rulebook, so D31 retires as it said it
+would. D7.1's rule is back in force: for a NAME, the German rulebook heading wins.
+The table wins only where the heading is defective (it collides with another
+entry's heading, or is absent). None of the 36 checked entries had a defective
+heading.
+
+26 names in `rules/i18n/de/virtues_flaws.json` now follow the current heading:
+- 13 where table and heading already agreed;
+- 9 where D31/D71 had preferred the table;
+- 4 new cases.
+
+D71's `FORCED_COVERAGE_DESPITE_TAG` retires too. Its three `SdM:M` rows are
+other-book rows (rule 4).
+
+`de_vf_names.rs` still compares names against the tables, not the headings. Its
+`RULED_EXCEPTIONS` list is down from 18 to 14 entries.
+
+---
+
 ## D85 — P8 re-sync: the seven design questions (Norbert, 2026-10-08)
 
 Answers to `design-p8-resync.md` § QUESTIONS.

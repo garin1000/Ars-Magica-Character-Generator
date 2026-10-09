@@ -142,7 +142,7 @@ pub enum AgingApplication {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         crisis: Option<Box<CrisisPreview>>,
         /// What the year changed that the character itself cannot show — today,
-        /// only the Longevity Ritual a Crisis spends (`ArMDE:16573`). Empty for almost
+        /// only the Longevity Ritual a Crisis spends (`ArMDE:16650`). Empty for almost
         /// every year, and each variant is rendered through Fluent by the caller.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         notes: Vec<AgingNote>,
@@ -181,7 +181,7 @@ pub enum AgingReversion {
 /// # The Crisis rides here, and there is no second command
 ///
 /// A Crisis is not a second question about a second thing: it exists only because
-/// this year's row demanded one (`ArMDE:16602`, `ArMDE:16611`), and its total counts the
+/// this year's row demanded one (`ArMDE:16679`, `ArMDE:16688`), and its total counts the
 /// Decrepitude this very year raised. A command of its own would let the frontend
 /// pair a CRISIS TOTAL with an aging outcome that no longer calls for one, which is
 /// exactly the pairing `crisis_preview` was composed to take out of a caller's
@@ -190,7 +190,7 @@ pub enum AgingReversion {
 /// # Why it resolves the year rather than reading the character
 ///
 /// > **Crisis:** Increase the character's Decrepitude first, and then roll on the
-/// > Crisis Table. (`ArMDE:16619`)
+/// > Crisis Table. (`ArMDE:16696`)
 ///
 /// The Aging Points the row awards ARE that increase, so a Crisis read off the
 /// character *standing in front of you* is one Decrepitude short of the one the
@@ -202,9 +202,9 @@ pub enum AgingReversion {
 /// A year the engine would refuse — an unplaced distribution, a year already
 /// recorded — yields no crisis reading, while the AGING TOTAL and the outcome still
 /// stand. The player has to be told a Crisis follows and what to place *before* he
-/// can place it, which is the order `ArMDE:16619` itself asks for.
+/// can place it, which is the order `ArMDE:16696` itself asks for.
 ///
-/// Source: ArMDE:16567-16615, :16619.
+/// Source: ArMDE:16644-16692, :16696.
 pub fn aging_preview_loaded(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -230,14 +230,14 @@ pub fn aging_preview_loaded(
 }
 
 /// The Crisis one previewed year would produce, read off the character the year
-/// would make rather than the one it started from (`ArMDE:16619`).
+/// would make rather than the one it started from (`ArMDE:16696`).
 ///
 /// The whole of it is [`resolve_year`] run for its reading alone: the entity it
 /// returns is dropped, so this stays as read-only as the preview it serves while
 /// remaining, by construction, the same answer the Apply will give. A refusal is
 /// simply no reading — the calculator's own findings already say why.
 ///
-/// Source: ArMDE:16619.
+/// Source: ArMDE:16696.
 fn previewed_crisis(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -266,12 +266,12 @@ fn previewed_crisis(
 /// the shape the frontend receives.
 ///
 /// `crisis_die` is the **Simple Die** the player threw at the Crisis Table
-/// (`ArMDE:16621`), or `None` for a Crisis nobody has rolled yet — a legitimate state,
+/// (`ArMDE:16698`), or `None` for a Crisis nobody has rolled yet — a legitimate state,
 /// because the aging roll happened whether or not the second die was thrown. A die
 /// given for a year the table sent to no Crisis is simply unused: whether a Crisis
-/// happened is `ArMDE:16602`/`ArMDE:16611`'s call, never the player's.
+/// happened is `ArMDE:16679`/`ArMDE:16688`'s call, never the player's.
 ///
-/// Source: ArMDE:16567-16621.
+/// Source: ArMDE:16644-16698.
 pub fn aging_apply_loaded(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -306,7 +306,7 @@ pub fn aging_apply_loaded(
 /// hand-written free-text entry carries none and is out of reach here by
 /// construction (the ordinary log editor removes it instead).
 ///
-/// Source: ArMDE:16577-16617.
+/// Source: ArMDE:16654-16694.
 pub fn aging_revert_loaded(entity: &Entity, ruleset: &Ruleset, age: u32) -> AgingReversion {
     match revert_year(entity, ruleset, age) {
         Ok(entity) => AgingReversion::Reverted {
@@ -564,7 +564,7 @@ pub fn load_ruleset_from_dir(rules_dir: &Path, lang: &str) -> Result<LocalizedRu
         // ready-made packages, leaving the childhood blocks to be divided by hand —
         // which the rules explicitly allow ("you can spend the 45 experience points
         // for yourself, as well",
-        // ArMDE:2382).
+        // ArMDE:2450).
         childhoods: (!childhoods_json.is_empty()).then_some(childhoods_json.as_str()),
         // And likewise: an empty aging file means the ruleset ships no aging
         // tables, which stands the aging subsystem down rather than letting the

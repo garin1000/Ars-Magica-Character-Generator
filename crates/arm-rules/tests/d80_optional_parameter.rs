@@ -1,7 +1,7 @@
 //! D80 (`docs/vf-audit/decisions.md`) point 3 — Fida'i/Lasiq's "cover social
 //! status" is the ONE exception to D70's "every new parameter is required":
 //! it applies only while the character is away from home on a mission
-//! (ArMDE:4235), which the engine cannot know, so the choice is recorded when
+//! (ArMDE:4306), which the engine cannot know, so the choice is recorded when
 //! made and never forced. No existing mechanism expresses "never required,
 //! unconditionally" — `ParameterDef::required_if` only relaxes requiredness
 //! CONDITIONALLY on another parameter in the SAME item, and D70 §3 already

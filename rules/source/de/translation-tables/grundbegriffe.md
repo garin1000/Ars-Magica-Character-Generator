@@ -70,6 +70,7 @@
 | The Infernal | – | – | – | – | Das Infernale | |
 | The Infernal Realm | – | – | – | – | Die Höllensphäre | Übernatürliche Sphäre der Hölle |
 | Lab Text | – | – | – | – | Labortext | Aufzeichnung von Laborarbeit |
+| Literatus | – | – | – | – | Literatus | Lateinischer Begriff, nicht übersetzen (RoP:M) |
 | Longevity Ritual | – | – | – | – | Langlebigkeitsritual | Ritual zur Verlängerung des Lebens |
 | Low Crime / Minor Crime | – | – | – | – | Niederes Vergehen | Verstoß gegen den Peripheren Kodex |
 | Magic (Realm) | – | – | – | – | Magie (Sphäre) | Übernatürliche Sphäre der Magie |
@@ -91,6 +92,8 @@
 | Peripheral Code | – | – | – | – | Peripherer Kodex | Zusätze und Präzedenzfälle zum Kodex |
 | Praeco | Praeco | Praeco | Praecones | Praecones | Praeco | Vorsitzender Magus eines Tribunals |
 | Pretenses | – | – | – | – | Täuschungen | Besondere Fähigkeiten von Feenwesen; nicht mit Fertigkeit „Guile" (Täuschung) verwechseln |
+| Pretense multiplier | – | – | – | – | Täuschungsmultiplikator | SdM:F; Mechanik zur Berechnung der Täuschungspunkte (stand früher in `tugenden-fehler.md`) |
+| Pretence Cost | – | – | – | – | Täuschungskosten | SdM:F; Kosten für Feenentwicklung durch Wandel (stand früher in `tugenden-fehler.md`) |
 | Primus / Prima | Primus | Prima | Primi | Primae | Primus / Prima | Vorsitzender eines Hauses |
 | Quaesitor | Quaesitor | Quaesitrix | Quaesitores | Quaesitrices | Quaesitor | Hüter des Kodex, Richter des Ordens |
 | Raw Vis | – | – | – | – | Rohes Vis | Vis in physischer Form |
@@ -124,8 +127,8 @@
 | Troupe | – | – | – | – | Spieltruppe | Gruppe aller Spieler und Spielleiter |
 | Troupe-Style Roleplaying | – | – | – | – | Spieltruppen-Rollenspiel | |
 | Turb | – | Turba | – | Turbae | Turba | Einheit Grogs |
-| Twilight (Wizard's Twilight) | – | – | – | – | Das Zwielicht | Magischer Zusammenbruch eines Magus |
-| Twilight Comprehension | - | - | - | - | Zwielichtverständnis, Zwielicht verstehen | |
+| Twilight (Wizard's Twilight) | – | – | – | – | Das Zwielicht | Magischer Zusammenbruch eines Magus. Überschrift/Register: „Das Zwielicht des Zauberers“ (s. `alterung-twilight.md`) |
+| Twilight Comprehension | - | - | - | - | Zwielichtverständnis | (RoP:M) |
 | Twilight Void | - | - | - | - | Zwielichtleere | (RoP:M) |
 | Vituperation | – | – | – | – | Vituperation (f.) | Infernales Äquivalent zum Zwielicht; lateinischer Begriff beibehalten (RoP:I) |
 | unGifted | – | – | – | – | unBegabt | Adjektiv für Mensch ohne die Gabe |
@@ -159,7 +162,6 @@
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Graze | Kratzer | Minimaler Schaden |
 | Light Wound | Leichte Wunde | |
 | Medium Wound | Mittelschwere Wunde | |
 | Heavy Wound | Schwere Wunde | |
@@ -218,15 +220,34 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Realms of Power: The Infernal | Sphären der Macht: Das Infernale | Abk. EN **RoP:I**, DE **SdM:I** |
 | Houses of Hermes: Mystery Cults | Häuser des Hermes: Mysterienkulte | Supplementband; Abk. EN **HoH:MC**, DE **HdH:MK** |
 | Houses of Hermes: Societates | Häuser des Hermes: Societates | Supplementband; Abk. EN **HoH:S**, DE **HdH:S**; lat. „Gemeinschaften" |
-| The Mysteries Revised Edition | Die Mysterien (Überarbeitete Ausgabe) | Supplementband; Abk. EN **TMRE**, DE **DM:ÜA** |
-| Art & Academe | Kunst & Gelehrsamkeit | Supplementband; Abk. EN **A&A**, DE **K&G** |
-| City & Guild | Stadt & Gilde | Supplementband; Abk. EN **C&G**, DE **S&G** |
-| Lords of Men | Herrscher der Menschen | Supplementband; Abk. EN **LoM**, DE **HdM** |
-| The Church | Die Kirche | Supplementband; Abk. EN **TC**, DE **DK** |
-| The Lion and the Lily: The Normandy Tribunal | Der Löwe und die Lilie: Das Normannische Tribunal | Supplementband; Abk. EN **L&L**, DE **L&L** |
-| Mythic Locations | Mythische Orte | Supplementband; Abk. EN **ML**, DE **MO** |
-| Transforming Mythic Europe | Gestalten des Mythischen Europas | Supplementband; Abk. EN **TME**, DE **GdME** |
 | Hedge Magic Revised Edition | Heckenzauber (Überarbeitete Ausgabe) | Supplementband; Abk. EN **HM:RE**, DE **HZ:ÜA** |
+| Guardians of the Forests: The Rhine Tribunal | Wächter des Waldes: Das Rhein-Tribunal | Supplementband; Abk. EN **GotF**, DE **WdW** |
+
+> **Nicht übersetzte Bücher behalten den englischen Titel und das englische Kürzel** (Festlegung 2026-10-04), bis sie übersetzt sind – im Fließtext kursiv, z. B. *Art & Academe*. Ein deutscher Titel wird erst mit der Übersetzung festgelegt. Frühere Arbeitstitel stehen nur zur Information in der Anmerkung und werden **nicht** verwendet.
+
+| Englisch (EN) | im deutschen Text | Anmerkung |
+|---|---|---|
+| The Mysteries Revised Edition | *The Mysteries Revised Edition* | Abk. **TMRE**; früherer Arbeitstitel „Die Mysterien (Überarbeitete Ausgabe)“, DM:ÜA |
+| Art & Academe | *Art & Academe* | Abk. **A&A**; früherer Arbeitstitel „Kunst & Gelehrsamkeit“ |
+| City & Guild | *City & Guild* | Abk. **C&G**; früherer Arbeitstitel „Stadt & Gilde“ |
+| Lords of Men | *Lords of Men* | Abk. **LoM** |
+| The Church | *The Church* | Abk. **TC** |
+| The Lion and the Lily: The Normandy Tribunal | *The Lion and the Lily* | Abk. **L&L** |
+| Mythic Locations | *Mythic Locations* | Abk. **ML** |
+| Transforming Mythic Europe | *Transforming Mythic Europe* | Abk. **TME** |
+| Covenants | *Covenants* | |
+| Ancient Magic | *Ancient Magic* | früherer Arbeitstitel „Alte Magie“ |
+| Apprentices | *Apprentices* | |
+| Grogs | *Grogs* | |
+| Legends of Hermes | *Legends of Hermes* | |
+| Dies Irae | *Dies Irae* | |
+| Lands of the Nile | *Lands of the Nile* | früherer Arbeitstitel „Länder des Nils“ |
+| The Sundered Eagle | *The Sundered Eagle* | |
+| Against the Dark | *Against the Dark* | |
+| Faith & Flame | *Faith & Flame* | |
+| The Cradle and the Crescent | *The Cradle and the Crescent* | früherer Arbeitstitel „Die Wiege und der Halbmond“ |
+| Between Sand & Sea | *Between Sand & Sea* | früherer Arbeitstitel „Zwischen Sand und Meer“ |
+| Rival Magic | *Rival Magic* | |
 
 ### Buchbestandteile / Book Structure
 
@@ -234,7 +255,7 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 |---|---|---|
 | Timeline | Zeitleiste | **nicht** „Zeittafel" – HdH:WL und WdW führten je eine Variante. Auch als Anhangtitel: „Anhang: Zeitleiste" (HdH:WL), „Anhang B: Zeitleiste" (WdW) |
 
-### The Mysteries Revised Edition (TMRE) / Die Mysterien (Überarbeitete Ausgabe) (DM:ÜA)
+### The Mysteries Revised Edition (TMRE)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
@@ -267,7 +288,7 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Bear Elder | Bärenältester | Ratsfunktion: politische Entscheidungen |
 | Horse Elder | Pferdeältester | Ratsfunktion: Nachrichten aus dem Haus |
 | Seat of the Bear/Wolf/Swan/Horse/Stag/Eagle/Fox | Sitz des Bären/Wolfs/Schwans/Pferdes/Hirsches/Adlers/Fuchses | Sieben Ratssitze des Bjornaer-Rats |
-| Dream Magic | Traummagie | Tugend; Verweis auf DM:ÜA |
+| Dream Magic | Traummagie | Tugend; Verweis auf TMRE |
 | Awakening | Erweckung | Tugend; Verweis auf Merinita-Naturmysterien |
 | ancestor site | Ahnenstätte | Ort mit Kraft der Ahnen |
 | ancestor spirit | Ahnengeist | Geist eines Tierahnen |
@@ -328,9 +349,10 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Prone to Chance | Risikofreudig | Kleiner Prüfungsfehler; Magus muss stets experimentieren |
 | Averse to Risk | Risikoscheu | Kleiner Prüfungsfehler; Magus darf nie experimentieren |
 | Vulcanalia | Vulcanalia | Römisches Fest am 23. August; Eigenname |
-| Hobbled | Verkrüppelt | Kleiner Allgemeiner Fehler; beide Beine schwer geschädigt |
+| Hobbled | Humpelnd | Kleiner Allgemeiner Fehler; wie Grundregelwerk-Überschrift (ArMDE:6331). Freigabe 2026-10-03: vorher „Verkrüppelt“, kollidierte mit *Crippled* |
+| Crippled | Verkrüppelt | Großer Allgemeiner Fehler (ArMDE:5948); nicht mit *Hobbled* = Humpelnd verwechseln |
 | Confraternity Member | Bruderschaftsmitglied | Kleiner Geschichte-Fehler |
-| Primogeniture Lineage | Primogenitur-Abstammungslinie | Kleiner Hermetischer Fehler. **Im Grundregelwerk heißt der Fehler „Erstgeburts-Abstammung" (ArMDE:6634)**, und diese Form wird im Generator ausgeliefert. |
+| Primogeniture Lineage | Primogenitur-Abstammungslinie | Kleiner Hermetischer Fehler. **Im Grundregelwerk heißt der Fehler „Erstgeburts-Abstammung" (ArMDE:6705)**, und diese Form wird im Generator ausgeliefert. |
 | Covet Device | Gegenstandsgier | Persönlichkeitszug; zwanghafte Bindung an abgestimmten Gegenstand |
 | Craft Automata | Automatenkunst | Große Hermetische Tugend / Fertigkeit |
 
@@ -347,7 +369,7 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Perpetuity | Beständigkeit | Mysterientugend |
 | Independent Study | Eigenständiges Studium | Kleine Allgemeine Tugend |
 | Alluring to (Beings) | Anziehend für (Wesen) | Kleine Allgemeine Tugend |
-| Vulnerable Magic | Anfällige Magie | Großer Hermetischer Fehler (ArMDE:7005) |
+| Vulnerable Magic | Anfällige Magie | Großer Hermetischer Fehler (ArMDE:7076) |
 | Binding the Gift | Bindung der Gabe | Kleines Hausmysterium; Feenvertrauter |
 | Wayfarers | Weltengänger | Merinita-Gesellschaft; Arkadien-Experten |
 | Keepers of the Thousand Tales | Hüter der Tausend Geschichten | Merinita-Gesellschaft |
@@ -400,8 +422,8 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Argument Strength | Argumentstärke | Debattenregeln |
 | deep cover disguise | Deckidentität | Langfristige vollständige Tarnidentität in einer Gemeinschaft |
 | Magi Aegroti / Magus Aegrotus | Magi Aegroti / Magus Aegrotus | Lat. Eigenname für Lepra-Magi |
-| Theurgic Spirit Familiar | Theurgischer Geistervertrauter | Mysterientugend; Verweis auf DM:ÜA |
-| Student of Magic Realm | Student der Magiesphäre | Mysterientugend; Verweis auf DM:ÜA |
+| Theurgic Spirit Familiar | Theurgischer Geistervertrauter | Mysterientugend; Verweis auf TMRE |
+| Student of Magic Realm | Student der Magiesphäre | Mysterientugend; Verweis auf TMRE |
 | Office of the Seclusion of the Leper | Officium der Aussonderung der Leprakranken | Historischer kirchlicher Ritus |
 
 #### Haus Ex Miscellanea / House Ex Miscellanea
@@ -412,7 +434,7 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Council of Four | Rat der Vier | Regierungsgremium des Hauses |
 | Warding (Ability) | Schutzkreismagie | Beschleunigte Fertigkeit der Columbae |
 | Ring/Circle Magic | Ring/Kreis-Magie | Kleine Hermetische Tugend (Columbae) |
-| Vulnerable to Folk Tradition | Anfällig für Volksüberlieferungen | Kleiner Hermetischer Fehler (ArMDE:7011) |
+| Vulnerable to Folk Tradition | Anfällig für Volksüberlieferungen | Kleiner Hermetischer Fehler (ArMDE:7082) |
 | Control Fertility | Fruchtbarkeit beherrschen | Übernatürliche Fertigkeit |
 | Hermetic Haruspexes | Hermetische Haruspexe | Ex-Misc.-Tradition; Sg. Haruspex |
 | Karaites / Karaite Magic | Karäer / Karäische Magie | Ex-Misc.-Tradition |
@@ -488,11 +510,11 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Guardians of the Forests: The Rhine Tribunal | Wächter des Waldes: Das Rhein-Tribunal | Supplementband; Abk. EN **GotF**, DE **WdW** |
-| Seelie Court | Lichthof | GotF Kap. 8 – wohlwollende Feenherrscher; schottisch-irischer Ursprungsbegriff ohne feste dt. Entsprechung |
-| Unseelie Court | Dunkler Hof | GotF Kap. 8 – feindliche Feenherrscher; adjektivisch auch „unseliger Hof" |
-| Rowan Gild | Ebereschenreisgilde | GotF – historische Gilde im Rheintribunal; „Rowan" = Eberesche (Sorbus aucuparia), nicht Eibe |
+| Seelie Court | Lichthof | WdW Kap. 8 – wohlwollende Feenherrscher; schottisch-irischer Ursprungsbegriff ohne feste dt. Entsprechung |
+| Unseelie Court | Dunkler Hof | WdW Kap. 8 – feindliche Feenherrscher; adjektivisch auch „unseliger Hof" |
+| Rowan Gild | Ebereschenreisgilde | WdW – historische Gilde im Rheintribunal; „Rowan" = Eberesche (Sorbus aucuparia), nicht Eibe |
 
-### Hedge Magic Revised (HM:RE)
+### Heckenzauber (Überarbeitete Ausgabe) / Hedge Magic Revised (HZ:ÜA, EN HM:RE)
 
 #### Heckentraditionen / Hedge Traditions
 
@@ -546,12 +568,12 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Geas | Geas | Eigenname; übernatürliche Verpflichtung/Verbot |
-| Give | Geben | Gruagach-Technik |
-| Take | Nehmen | Gruagach-Technik |
-| Blessings | Segen | Gruagach-Form (positive Zauber) |
-| Curses | Flüche | Gruagach-Form (negative Zauber) |
-| Shape | Gestalt | Gruagach-Form (Verwandlung) |
-| Vision | Vision | Gruagach-Form (Wahrnehmung) |
+| Give | Geben | Gruagach-Technik; Abk. **Gb** (EN Gv) |
+| Take | Nehmen | Gruagach-Technik; Abk. **Ne** (EN Ta) |
+| Blessings | Segen | Gruagach-Form (positive Zauber); Abk. **Se** (EN Bl) |
+| Curses | Flüche | Gruagach-Form (negative Zauber); Abk. **Fl** (EN Cu) |
+| Shape | Gestalt | Gruagach-Form (Verwandlung); Abk. **Ge** (EN Sh) |
+| Vision | Vision | Gruagach-Form (Wahrnehmung); Abk. **Vi** (EN Vs) |
 | Conversation (Range) | Gespräch | Gruagach-Reichweite |
 | Limit (Duration) | Grenze | Gruagach-Dauer (Bedingung) |
 | Pictish | Piktisch | Gruagach-Fertigkeit; entspricht Heckenzauber-Theorie |
@@ -571,12 +593,12 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Fortunam | Fortunam | Gelehrte-Magier-Form (Lat.); Glück/Schicksal |
-| Magicam | Magicam | Gelehrte-Magier-Form (Lat.); Magie |
-| Salutem | Salutem | Gelehrte-Magier-Form (Lat.); Gesundheit/Heil |
-| Tueor | Tueor | Gelehrte-Magier-Technik (Lat.); „Ich schütze" |
-| Succurro | Succurro | Gelehrte-Magier-Technik (Lat.); „Ich helfe" |
-| Vulnero | Vulnero | Gelehrte-Magier-Technik (Lat.); „Ich verletze" |
+| Fortunam | Fortunam | Gelehrte-Magier-Form (Lat.); Glück/Schicksal; Abk. **Fa** (wie EN) |
+| Magicam | Magicam | Gelehrte-Magier-Form (Lat.); Magie; Abk. **Ma** (wie EN) |
+| Salutem | Salutem | Gelehrte-Magier-Form (Lat.); Gesundheit/Heil; Abk. **Sa** (wie EN) |
+| Tueor | Tueor | Gelehrte-Magier-Technik (Lat.); „Ich schütze"; Abk. **Tu** (wie EN) |
+| Succurro | Succurro | Gelehrte-Magier-Technik (Lat.); „Ich helfe"; Abk. **Su** (wie EN) |
+| Vulnero | Vulnero | Gelehrte-Magier-Technik (Lat.); „Ich verletze"; Abk. **Vu** (wie EN) |
 | Chartae | Chartae | Schriftliche Zauberformel der Gelehrten Magier (Lat.) |
 | Reagent | Reagenz | Materielle Komponente für Gelehrte-Magier-Zauber |
 | Charm (Learned Magician) | Zauberformel | Eigenständiger Zauber-Typ; lat. carmen/carmina |
@@ -601,7 +623,7 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Magic Defenses | Magische Abwehr | Passive Magieresistenz von Heckenzauberern |
 | Magical Defense Bonus | Magischer Abwehrbonus | Zahlenwert der Magischen Abwehr |
 | Accelerated Expiry | Beschleunigte Verfalldauer | Magische Abwehr: verkürzt Zauberdauer |
-| Alacritous Fortune | Flinke Fügung | Magische Abwehr: Abwehrbonus auf die Verteidigungssumme gegen gezielte Zauber (HM:RE-Errata; das Lemma stand vormals als „Akacritous" im Original) |
+| Alacritous Fortune | Flinke Fügung | Magische Abwehr: Abwehrbonus auf die Verteidigungssumme gegen gezielte Zauber (HZ:ÜA-Errata; das Lemma stand vormals als „Akacritous" im Original) |
 | Confounding Magics | Verwirrende Magie | Magische Abwehr: erschwert feindliche Zauber |
 | Immovable Object | Unbewegliches Hindernis | Magische Abwehr: widersetzt sich magischer Bewegung |
 | Magical Fortitude | Magische Widerstandskraft | Magische Abwehr: widersteht körperlicher Magie |
@@ -648,6 +670,7 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Vitkar Magic | Vitkar-Magie | Magiesystem der Vitkir |
 | Laering | Laering | Altnordisch; Lehrling eines Vitki |
 | Aett / Aettir | Aett / Aettir | Altnordisch; Runengruppen |
+| Thorn / Thurisaz / Thurs (Rune ᚦ) | Thorn / Thurisaz / Thurs | Runenname bleibt; Abk. **Þ** (lateinischer Buchstabe Thorn) statt EN „Th“ |
 | Makt | Makt | Altnordisch; Vis-Bezeichnung der Vitkir |
 | Seidhr | Seidhr | Altnordisch; Frauenmagie |
 | Rune Magic (Ability) | Runenmagie | Arkane Fertigkeit der Vitkir |
@@ -690,6 +713,8 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Lab Mastery | Labormeisterschaft | Meisterschaftsfähigkeit: Meisterschaftswert zur Laborsumme (Kult des Merkur) |
 | Learn from Mistakes | Aus Fehlern lernen | Meisterschaftsfähigkeit: EP bei Patzer/knappem Scheitern (Kult des Merkur) |
 | Stalwart Casting | Standhaftes Zaubern | Meisterschaftsfähigkeit: weniger Erschöpfung (Kult des Merkur) |
+| Adaptive Casting | Adaptives Zaubern | Meisterschaftsfähigkeit (HdH:WL); stand früher fälschlich als Tugend in `tugenden-fehler.md` |
+| Potent Spell | Potenter Zauber | Zaubertyp (HdH:MK, Mysterien); **keine Tugend** – die Tugend heißt *Potent Magic* = Potente Magie |
 | Boosted Casting | Verstärktes Zaubern | Meisterschaftsfähigkeit: R/D/T per Vis erhöhen (Mutantes) |
 | Harnessed Casting | Gezügeltes Zaubern | Meisterschaftsfähigkeit: Zauber jederzeit beenden (Mutantes) |
 | Mercere's Portals | Merceres Portale | Magische Transportportale des Hauses Mercere |

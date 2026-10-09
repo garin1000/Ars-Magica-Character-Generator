@@ -1,8 +1,12 @@
-//! X8d (`tmp/x8d-handover.md`; D31, D71) — the German V/F names below were
-//! either corrected to match `rules/source/de/translation-tables/tugenden-fehler.md`
-//! (the "adopt" set), reverted to the pre-correction table name because D31
-//! withdrew the table-vs-stale-rulebook conviction (the "revert" set), or
-//! resolved by D71's three held items (the `SdM:M` rows and Gender Shift).
+//! X8d (`tmp/x8d-handover.md`; D31, D71) set these German V/F names to match
+//! D31's table-wins regime. P8-6 (D86, `docs/vf-audit/decisions.md`) retires
+//! D31: a current German rulebook landed in the P8 re-sync, so D7.1 applies
+//! again and the rulebook heading wins a NAME dispute unless the heading is
+//! itself defective. Every value below was re-derived from the current
+//! `rules/source/de/Ars Magica Definitive Edition Basisregeln.md` heading at
+//! the entry's own source line (`tmp/p8-6-names.md` has the full per-entry
+//! evidence); see `crates/arm-rules/tests/de_vf_names.rs` for the mechanical
+//! guard this fixture complements.
 //!
 //! Table-driven against the REAL shipped `rules/i18n/de/virtues_flaws.json` so
 //! the fixture proves the shipped data actually changed, not a synthetic
@@ -60,35 +64,8 @@ fn localized_de() -> LocalizedRuleset {
 
 /// (id, expected `name`, expected `name_unfilled`)
 const EXPECTED: &[(&str, &str, Option<&str>)] = &[
-    // -- Adopt the table name (D31) --
+    // -- Unaffected by D31/D71/D86: adopted the table name all along --
     ("virtue.fabric_ripper", "Stoffzerreißer", None),
-    ("virtue.leather_ripper", "Lederzerreißer", None),
-    (
-        "flaw.susceptibility_to_divine_power",
-        "Anfälligkeit für Göttliche Kraft",
-        None,
-    ),
-    (
-        "flaw.susceptibility_to_faerie_power",
-        "Anfälligkeit für Feenkraft",
-        None,
-    ),
-    (
-        "flaw.susceptibility_to_infernal_power",
-        "Anfälligkeit für Infernale Kraft",
-        None,
-    ),
-    (
-        "flaw.imagined_folk_tradition_vulnerability",
-        "Eingebildete Volksmagie-Verwundbarkeit",
-        None,
-    ),
-    ("flaw.tainted_offspring", "Befleckter Nachkomme", None),
-    ("flaw.stigmatic_catalyst", "Stigmatischer Katalysator", None),
-    ("virtue.independent_study", "Eigenständiges Studium", None),
-    ("virtue.lone_redcap", "Einzelgänger-Rotkappe", None),
-    ("flaw.feral_scent", "Wildgeruch", None),
-    ("flaw.apostate", "Abtrünniger", None),
     (
         "flaw.gender_nonconforming_major",
         "Geschlechtsnonkonform [Groß]",
@@ -99,51 +76,93 @@ const EXPECTED: &[(&str, &str, Option<&str>)] = &[
         "Geschlechtsnonkonform [Klein]",
         None,
     ),
-    // -- Revert to the pre-correction table name (D31) --
+    ("virtue.lone_redcap", "Einzelgänger-Rotkappe", None),
+    // -- D86: the current rulebook heading wins over the table name D31 had
+    //    adopted (tugenden-fehler.md/grundbegriffe.md pending their own
+    //    re-sync) --
+    ("virtue.leather_ripper", "Lederreißer", None),
+    (
+        "flaw.susceptibility_to_divine_power",
+        "Anfälligkeit für Göttliche Macht",
+        None,
+    ),
+    (
+        "flaw.susceptibility_to_faerie_power",
+        "Anfälligkeit für Feenmacht",
+        None,
+    ),
+    (
+        "flaw.susceptibility_to_infernal_power",
+        "Anfälligkeit für Infernale Macht",
+        None,
+    ),
+    (
+        "flaw.imagined_folk_tradition_vulnerability",
+        "Eingebildete Volksüberlieferungsanfälligkeit",
+        None,
+    ),
+    ("flaw.tainted_offspring", "Befleckter Nachwuchs", None),
+    ("flaw.stigmatic_catalyst", "Stigma-Katalysator", None),
+    ("virtue.independent_study", "Unabhängiges Studium", None),
+    ("flaw.feral_scent", "Wilder Geruch", None),
+    ("flaw.apostate", "Apostat", None),
+    ("flaw.depressed", "Schwermütig", None),
+    ("virtue.gossip", "Gut unterrichtet", None),
+    (
+        "virtue.indescribable_face",
+        "Unbeschreibliches Gesicht",
+        None,
+    ),
+    ("virtue.templar_office_holder", "Templer-Amtsträger", None),
+    ("virtue.templar_prestige", "Templer-Ansehen", None),
+    // -- D86: D31's revert undone — the re-synced rulebook heading and the
+    //    re-synced table now agree, so these seven adopt that (shared) name --
     (
         "flaw.deteriorating_power",
-        "Schwindende Kraft ({power})",
-        Some("Schwindende Kraft"),
+        "Schwindende Macht ({power})",
+        Some("Schwindende Macht"),
     ),
-    ("flaw.disorientating_magic", "Desorientierungsmagie", None),
-    ("flaw.enfeebled", "Entkräftet", None),
+    ("flaw.disorientating_magic", "Desorientierende Magie", None),
+    ("flaw.enfeebled", "Geschwächt", None),
     (
         "flaw.environmental_magic_condition",
-        "Magische Umgebungsbedingung",
+        "Magische Umweltbedingung",
         None,
     ),
     (
         "flaw.environmental_sensitivity",
-        "Umgebungsempfindlichkeit",
+        "Umweltempfindlichkeit",
         None,
     ),
     (
         "flaw.vulnerable_magic",
-        "Verwundbare Magie ({condition})",
-        Some("Verwundbare Magie"),
+        "Anfällige Magie ({condition})",
+        Some("Anfällige Magie"),
     ),
     (
         "flaw.vulnerable_to_folk_tradition",
-        "Anfällig für Volkszauber",
+        "Anfällig für Volksüberlieferungen",
         None,
     ),
-    // -- D71's three held `SdM:M` rows (rule 4 applied despite the "Keep" list) --
-    ("virtue.homing_instinct", "Ortsgespür", None),
-    ("virtue.magical_warder", "Magischer Wächter", None),
+    // -- D86: D71's `FORCED_COVERAGE_DESPITE_TAG` retired — these `SdM:M`- and
+    //    `SdM:I`-tagged rows are no longer forced into the table dispute, so
+    //    the rulebook heading now ships uncontested --
+    ("virtue.homing_instinct", "Heimfindungsinstinkt", None),
+    ("virtue.magical_warder", "Magischer Hüter", None),
     (
         "virtue.unaffected_by_the_gift",
-        "Unempfindlich gegenüber der Gabe",
+        "Unbeeindruckt von der Gabe",
         None,
     ),
-    // -- D71's third held item --
-    ("virtue.gender_shift", "Geschlechtswandel", None),
-    // -- Untouched: table row is a table error (D71 item 2); stays distinct
-    //    from flaw.crippled's "Verkrüppelt" --
+    ("virtue.gender_shift", "Geschlechtswechsel", None),
+    // -- Untouched: table row is a table error (D71 item 2, still valid under
+    //    D86 — the current rulebook heading agrees); stays distinct from
+    //    flaw.crippled's "Verkrüppelt" --
     ("flaw.hobbled", "Humpelnd", None),
 ];
 
 #[test]
-fn german_vf_names_match_d31_and_d71() {
+fn german_vf_names_match_d86() {
     let ruleset = localized_de();
     for (id, expected_name, expected_unfilled) in EXPECTED {
         let id = Id::new(*id);
@@ -152,13 +171,13 @@ fn german_vf_names_match_d31_and_d71() {
             .unwrap_or_else(|| panic!("{id} must carry a German name"));
         assert_eq!(
             got_name, *expected_name,
-            "{id}'s German `name` must match D31/D71"
+            "{id}'s German `name` must match D86"
         );
 
         let got_unfilled = ruleset.entry(&id).and_then(|e| e.name_unfilled.as_deref());
         assert_eq!(
             got_unfilled, *expected_unfilled,
-            "{id}'s German `name_unfilled` must match D31/D71"
+            "{id}'s German `name_unfilled` must match D86"
         );
     }
 }

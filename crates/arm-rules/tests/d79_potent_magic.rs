@@ -3,8 +3,8 @@
 //! landed (Rust side; the Svelte UI port is a separate step, see
 //! `tmp/d79-handover.md`).
 //!
-//! Potent Magic's +3/+6 (ArMDE:4744-4748) applies only "in her field of
-//! magic ... much as in a Magical Focus" (ArMDE:4740-4742) — a free-text theme
+//! Potent Magic's +3/+6 (ArMDE:4815-4819) applies only "in her field of
+//! magic ... much as in a Magical Focus" (ArMDE:4811-4813) — a free-text theme
 //! the Arts cannot decide membership of, exactly like X10c's Magical Focus
 //! marker and independent of it (a character's Potent Magic field and Magical
 //! Focus descriptor need not be the same text). Before this slice:
@@ -23,7 +23,7 @@
 //! re-gated on Potent Magic rather than Magical Focus
 //! (`derived.rs::in_play_lab_total_mod_within_potent_field`,
 //! `InPlayMods::has_potent_magic`/`casting_mods_within_potent_field`). Both
-//! folds are MAX, not sum, across carriers — see the ArMDE:4742 note below.
+//! folds are MAX, not sum, across carriers — see the ArMDE:4813 note below.
 //! `SpellSelection::within_potent_field` is wired into
 //! `derived/casting.rs::spell_casting_total` via `formulaic_casting_score`'s
 //! new `potent: bool` parameter, independently of `within_focus`, so a spell
@@ -33,7 +33,7 @@
 //! on `has_potent_magic` rather than `has_focus` — independently non-null, as
 //! the grid-gate tests below pin.
 //!
-//! ArMDE:4742 also states the bound this file's `*_only_one_potent_magic_virtue_applies*`
+//! ArMDE:4813 also states the bound this file's `*_only_one_potent_magic_virtue_applies*`
 //! tests pin: "a maga may have more than one area of Potent Magic, although
 //! only one Potent Magic Virtue applies to any single activity" — two Potent
 //! Magic Virtues must not stack additively on one spell/cell.
@@ -147,7 +147,7 @@ fn casting_total_base_no_longer_includes_potent_magic_bonus() {
     // Potent Magic Major, no Focus: today's `casting_mod_for` fold is unscoped
     // by field, so the base (unmarked) Creo/Ignem cell already carries +6 —
     // wrong, since the maga is not (by this cell's own accounting) casting
-    // within her field. ArMDE:4744: "Potent Magic provides the maga with a
+    // within her field. ArMDE:4815: "Potent Magic provides the maga with a
     // bonus in her field of magic" — not outside it.
     let ruleset = full_ruleset();
     let mut e = magus_with_arts();
@@ -288,13 +288,13 @@ fn casting_total_marked_both_gets_focus_doubling_and_the_potent_bonus_together()
     );
 }
 
-// --- ArMDE:4742 — "only one Potent Magic Virtue applies to any single
+// --- ArMDE:4813 — "only one Potent Magic Virtue applies to any single
 // activity": two Potent Magic Virtues must not stack additively -------------
 
 #[test]
 fn casting_total_only_one_potent_magic_virtue_applies_two_majors() {
     // Two Major Potent Magic Virtues over different fields (legal:
-    // `max_total: 255`, ArMDE:4742 "a maga may have more than one area of
+    // `max_total: 255`, ArMDE:4813 "a maga may have more than one area of
     // Potent Magic"). A marked spell must gain +6 once, never +12.
     let ruleset = full_ruleset();
     let mut e = magus_with_arts();

@@ -8,7 +8,7 @@
 //! correct, rules-derived figure and is RED against today's engine unless
 //! its own comment says otherwise.
 //!
-//! Source: ArMDE:12309-12313 (`### Requisites`, the base min rule),
+//! Source: ArMDE:12381-12385 (`### Requisites`, the base min rule),
 //! :12311 (several requisites / Deficient Art as a requisite), :4403
 //! (Major Magical Focus — "the lowest applicable score may be one of the
 //! requisites"), :3737 (Elemental Magic — primary elemental Form wins over
@@ -104,7 +104,7 @@ fn casting(e: &Entity, ruleset: &Ruleset, spell_id: &str, within_focus: bool) ->
         .unwrap_or_else(|| panic!("{spell_id} must be in the catalogue"))
 }
 
-// --- Base min rule: ArMDE:12309 ---------------------------------------------
+// --- Base min rule: ArMDE:12381 ---------------------------------------------
 //
 // "You must use the lesser of your score in the requisite and your score in
 // the spell's main Technique or Form — Technique if the requisite is a
@@ -131,7 +131,7 @@ fn technique_requisite_lower_than_the_technique_reduces_the_total() {
             false
         ),
         13,
-        "ArMDE:12309: a lower Technique requisite must replace the main Technique score"
+        "ArMDE:12381: a lower Technique requisite must replace the main Technique score"
     );
 }
 
@@ -150,7 +150,7 @@ fn form_requisite_lower_than_the_form_reduces_the_total() {
     assert_eq!(
         casting(&e, &ruleset, "spell.rain_of_stones", false),
         12,
-        "ArMDE:12309: a lower Form requisite must replace the main Form score"
+        "ArMDE:12381: a lower Form requisite must replace the main Form score"
     );
 }
 
@@ -173,11 +173,11 @@ fn requisite_higher_than_both_primary_arts_leaves_the_total_unchanged() {
     assert_eq!(
         casting(&e, &ruleset, "spell.the_crystal_dart", false),
         13,
-        "ArMDE:12309: a higher requisite must never raise or otherwise change the total"
+        "ArMDE:12381: a higher requisite must never raise or otherwise change the total"
     );
 }
 
-// --- Several requisites: ArMDE:12311 ----------------------------------------
+// --- Several requisites: ArMDE:12383 ----------------------------------------
 
 #[test]
 fn two_form_requisites_in_the_same_category_use_the_lowest_of_the_group() {
@@ -203,7 +203,7 @@ fn two_form_requisites_in_the_same_category_use_the_lowest_of_the_group() {
     assert_eq!(
         casting(&e, &ruleset, "spell.test_two_form_requisites", false),
         14,
-        "ArMDE:12311: two requisites in the same class must fold to the lowest of the group"
+        "ArMDE:12383: two requisites in the same class must fold to the lowest of the group"
     );
 }
 
@@ -225,11 +225,11 @@ fn requisites_for_both_technique_and_form_are_folded_independently() {
     assert_eq!(
         casting(&e, &ruleset, "spell.fog_of_confusion", false),
         5,
-        "ArMDE:12311: a Technique requisite and a Form requisite fold independently"
+        "ArMDE:12383: a Technique requisite and a Form requisite fold independently"
     );
 }
 
-// --- Deficient Art as a requisite: ArMDE:12311 (closing sentence) -----------
+// --- Deficient Art as a requisite: ArMDE:12383 (closing sentence) -----------
 
 #[test]
 fn deficient_art_on_a_requisite_only_art_still_halves_the_total() {
@@ -238,7 +238,7 @@ fn deficient_art_on_a_requisite_only_art_still_halves_the_total() {
     // Pe/Te, requisite art.rego. Pe 10, Te 10, Re 15 (HIGHER than Pe, so the
     // min-rule alone would leave the total unaffected: 10 + 10 = 20) — but
     // Rego is Deficient (flaw.deficient_technique), and using a Deficient Art
-    // as a requisite still halves the whole total (ArMDE:5911/:5915's halving
+    // as a requisite still halves the whole total (ArMDE:5982/:5915's halving
     // reaches a requisite Art, not only a primary one): halve(20) = 10.
     // Today's `InPlayMods::deficient` only looks at the spell's own primary
     // Technique/Form, never its requisites, so today's engine reaches 20
@@ -262,11 +262,11 @@ fn deficient_art_on_a_requisite_only_art_still_halves_the_total() {
             false
         ),
         10,
-        "ArMDE:12311: a Deficient requisite Art halves the total even when it does not numerically bind"
+        "ArMDE:12383: a Deficient requisite Art halves the total even when it does not numerically bind"
     );
 }
 
-// --- Magical Focus doubling may pick a requisite: ArMDE:4403 ---------------
+// --- Magical Focus doubling may pick a requisite: ArMDE:4474 ---------------
 
 #[test]
 fn magical_focus_doubling_uses_the_folded_lowest_score_including_a_requisite() {
@@ -296,11 +296,11 @@ fn magical_focus_doubling_uses_the_folded_lowest_score_including_a_requisite() {
             true
         ),
         16,
-        "ArMDE:4403: the within-focus double must use the folded (requisite-aware) lowest score"
+        "ArMDE:4474: the within-focus double must use the folded (requisite-aware) lowest score"
     );
 }
 
-// --- Elemental Magic exception: ArMDE:3737 ----------------------------------
+// --- Elemental Magic exception: ArMDE:3808 ----------------------------------
 
 #[test]
 fn elemental_magic_uses_the_primary_form_even_when_an_elemental_requisite_is_lower() {
@@ -333,11 +333,11 @@ fn elemental_magic_uses_the_primary_form_even_when_an_elemental_requisite_is_low
     assert_eq!(
         casting(&e, &ruleset, "spell.rain_of_stones", false),
         20,
-        "ArMDE:3737: Elemental Magic must use the primary elemental Form, never a lower elemental requisite"
+        "ArMDE:3808: Elemental Magic must use the primary elemental Form, never a lower elemental requisite"
     );
 }
 
-// --- Puissant Art is compared bonus-inclusive: ArMDE:4820 -------------------
+// --- Puissant Art is compared bonus-inclusive: ArMDE:4891 -------------------
 
 #[test]
 fn puissant_art_bonus_is_included_before_comparing_against_the_requisite() {
@@ -368,6 +368,6 @@ fn puissant_art_bonus_is_included_before_comparing_against_the_requisite() {
             false
         ),
         16,
-        "ArMDE:4820: the requisite comparison must use the Puissant-inclusive primary score"
+        "ArMDE:4891: the requisite comparison must use the Puissant-inclusive primary score"
     );
 }

@@ -156,7 +156,7 @@ describe('MagicPossessions aura bound (round 3, Task 3)', () => {
 
 // Slice 3 (#28). This tab was the magus's editor home for a Longevity Ritual only
 // because the editor had no aging tab: the ritual's bonus is a term of the AGING
-// TOTAL (ArMDE:16567-16569), not a
+// TOTAL (ArMDE:16644-16646), not a
 // possession. With a real Aging tab the panel moves into `AgingPanel`, and it must
 // leave here — two on-screen homes for one ritual is the trap the special case was
 // invented to dodge in the first place.

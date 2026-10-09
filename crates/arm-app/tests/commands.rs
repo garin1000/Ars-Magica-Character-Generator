@@ -107,7 +107,7 @@ fn load_ruleset_yields_houses_with_localized_names() {
 /// has to ask for, and that its name is localized in both languages — never a
 /// package count, which is data.
 ///
-/// Source: ArMDE:2388 (Traveling
+/// Source: ArMDE:2456 (Traveling
 /// Childhood), and its German name at
 /// `Ars Magica Definitive Edition Basisregeln.md:2388`.
 #[test]
@@ -241,7 +241,7 @@ fn load_ruleset_yields_the_shipped_aging_tables() {
         .aging()
         .expect("the shipped ruleset ships aging rules");
     // "Characters begin aging in the Winter after they turn 35"
-    // (ArMDE:16565).
+    // (ArMDE:16642).
     assert_eq!(aging.start_age, 35);
     assert!(
         !aging.living_conditions.is_empty(),
@@ -259,12 +259,12 @@ fn load_ruleset_yields_the_shipped_aging_tables() {
 /// character.
 ///
 /// Aging is last because the rulebook puts it there. The creation summary
-/// (ArMDE:2205-2222) runs steps 1..11
+/// (ArMDE:2273-2290) runs steps 1..11
 /// and never mentions aging at all; aging enters only in the next section,
-/// "Starting Character Age", whose `ArMDE:2232` places the rolls "before the game
+/// "Starting Character Age", whose `ArMDE:2300` places the rolls "before the game
 /// begins" — the last thing done to a built character, not one of the steps that
 /// build it. Mechanically the total needs the finished character too: it reads
-/// the final age, the final Characteristics (aging points reduce them, `ArMDE:16579`)
+/// the final age, the final Characteristics (aging points reduce them, `ArMDE:16656`)
 /// and the Longevity Ritual bonus, so any earlier slot would total up a
 /// half-built character. The wizard appends its implicit `review` step after the
 /// declared list, so declaring `aging` last makes the rail end
@@ -1751,7 +1751,7 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
 
 #[test]
 fn effective_scores_surface_aged_characteristic_and_drop_count() {
-    // ArMDE:16613 worked example: Communication +2 with 3 aging points
+    // ArMDE:16690 worked example: Communication +2 with 3 aging points
     // drops once → effective +1. The summary must report the aged effective value
     // and the drop count, and omit unchanged Characteristics.
     use arm_rules::Characteristic;
@@ -1780,8 +1780,8 @@ fn effective_scores_surface_aged_characteristic_and_drop_count() {
 }
 
 /// "a character over the age of 35 must make aging rolls … before the game begins"
-/// (ArMDE:2232), and aging starts "the Winter after they turn 35"
-/// (`ArMDE:16565`) — so a character of 40 owes one roll a year from 36 through 40, five
+/// (ArMDE:2300), and aging starts "the Winter after they turn 35"
+/// (`ArMDE:16642`) — so a character of 40 owes one roll a year from 36 through 40, five
 /// in all. The whole read-out is a pure function of the character and the rules:
 /// the die is the player's and never reaches the entity, which is why the
 /// die-independent half rides on the always-recomputed payload.
@@ -1798,7 +1798,7 @@ fn effective_scores_report_the_aging_rolls_a_character_of_forty_owes() {
 
     assert_eq!(
         aging.begins_after_age, 35,
-        "the book's own number (ArMDE:16565)"
+        "the book's own number (ArMDE:16642)"
     );
     assert_eq!(
         aging.first_roll_age, 36,
@@ -1815,9 +1815,9 @@ fn effective_scores_report_the_aging_rolls_a_character_of_forty_owes() {
         aging.schedule
     );
 
-    // "age/10 (round up)" (`ArMDE:16567`) at the ACTUAL age (`ArMDE:16577`).
+    // "age/10 (round up)" (`ArMDE:16644`) at the ACTUAL age (`ArMDE:16654`).
     assert_eq!(aging.age_modifier, 4);
-    // No ritual, so no bonus and no `ArMDE:16575` clamp standing over this character.
+    // No ritual, so no bonus and no `ArMDE:16652` clamp standing over this character.
     assert_eq!(aging.longevity_modifier, 0);
     assert!(!aging.longevity_clamp_active);
     // The whole non-die half, so the UI adds only the number the player typed — and
@@ -1832,9 +1832,9 @@ fn effective_scores_report_the_aging_rolls_a_character_of_forty_owes() {
 }
 
 /// A character of 40 rolling a 10: `10 + ⌈40/10⌉ = 14`, which the shipped table
-/// answers with "1 Aging Point in Qik" (ArMDE:16603). One less on the die
+/// answers with "1 Aging Point in Qik" (ArMDE:16680). One less on the die
 /// lands on 13 — "Gain sufficient Aging Points … to reach the next level in
-/// Decrepitude, and Crisis" (`ArMDE:16602`) — so the preview must say a Crisis follows.
+/// Decrepitude, and Crisis" (`ArMDE:16679`) — so the preview must say a Crisis follows.
 ///
 /// The die is the player's, typed in and never stored, which is why this is a
 /// command rather than a field of the character.
@@ -1886,10 +1886,10 @@ fn aging_preview_totals_the_typed_die_and_names_the_outcome() {
         panic!("the shipped ruleset carries aging rules");
     };
     assert_eq!(total.total, 13);
-    assert!(outcome.crisis, "13 is the first Crisis row (ArMDE:16602)");
+    assert!(outcome.crisis, "13 is the first Crisis row (ArMDE:16679)");
 }
 
-/// A mistyped die has to be recoverable — a magus of 60 owes 25 rolls (`ArMDE:2232`) —
+/// A mistyped die has to be recoverable — a magus of 60 owes 25 rolls (`ArMDE:2300`) —
 /// so applying a year and reverting it must leave the character it started from,
 /// byte for byte, not merely something equivalent.
 #[test]
@@ -1951,7 +1951,7 @@ fn an_applied_aging_year_reverts_to_the_character_it_started_from() {
 /// character standing in front of you answers.
 ///
 /// > **Crisis:** Increase the character's Decrepitude first, and then roll on the
-/// > Crisis Table. (`ArMDE:16619`)
+/// > Crisis Table. (`ArMDE:16696`)
 ///
 /// The five Aging Points row 13 awards ARE that increase, so the CRISIS TOTAL adds
 /// the Decrepitude the year itself raised. Read off the character before the year
@@ -1986,7 +1986,7 @@ fn aging_preview_reads_the_crisis_off_the_year_it_would_apply() {
         panic!("the shipped ruleset carries aging rules");
     };
     assert_eq!(total.total, 13);
-    assert!(outcome.crisis, "13 is the first Crisis row (ArMDE:16602)");
+    assert!(outcome.crisis, "13 is the first Crisis row (ArMDE:16679)");
     let previewed = crisis.expect("a Crisis with a die rolled reads whole");
     assert_eq!(
         previewed.total.decrepitude_score, 1,
@@ -2043,9 +2043,9 @@ fn aging_preview_reads_the_crisis_off_the_year_it_would_apply() {
 ///
 /// A companion of 40 rolling a 9 totals `9 + ⌈40/10⌉ = 13`, which is "Gain
 /// sufficient Aging Points (in any Characteristics) to reach the next level in
-/// Decrepitude, and Crisis" (`ArMDE:16602`) — five points from nothing. The Crisis is
-/// then read off the character those five points already made (`ArMDE:16619`), so a
-/// Simple Die of 10 totals `10 + 4 + 1 = 15`: the minor illness of `ArMDE:16628`,
+/// Decrepitude, and Crisis" (`ArMDE:16679`) — five points from nothing. The Crisis is
+/// then read off the character those five points already made (`ArMDE:16696`), so a
+/// Simple Die of 10 totals `10 + 4 + 1 = 15`: the minor illness of `ArMDE:16705`,
 /// survivable on a Stamina stress roll against an Ease Factor of 3 or a CrCo20.
 ///
 /// Until the die crossed this edge every Crisis the shipped app recorded was owed
@@ -2059,7 +2059,7 @@ fn an_applied_crisis_year_comes_back_with_the_crisis_and_the_ritual_it_spent() {
     entity.aging_log.clear();
     entity.living_conditions.clear();
     // A ritual with no bonus leaves the AGING TOTAL alone, so the year still lands
-    // on 13 — and it is still a ritual the Crisis spends (`ArMDE:16573`).
+    // on 13 — and it is still a ritual the Crisis spends (`ArMDE:16650`).
     entity.longevity_ritual = Some(LongevityRitual {
         source: arm_rules::LongevitySource::External,
         bonus: Some(0),
@@ -2078,17 +2078,17 @@ fn an_applied_crisis_year_comes_back_with_the_crisis_and_the_ritual_it_spent() {
         panic!("a year the character owes and has not rolled applies");
     };
     assert_eq!(total.total, 13);
-    assert!(outcome.crisis, "13 is the first Crisis row (ArMDE:16602)");
+    assert!(outcome.crisis, "13 is the first Crisis row (ArMDE:16679)");
 
     let crisis = crisis.expect("a Crisis with a die rolled comes back resolved");
     assert_eq!(
         crisis.total.die, 10,
-        "the player's Simple Die (ArMDE:16621)"
+        "the player's Simple Die (ArMDE:16698)"
     );
     assert_eq!(crisis.total.age_modifier, 4);
     assert_eq!(
         crisis.total.decrepitude_score, 1,
-        "the five points this very year awarded, counted first (ArMDE:16619)"
+        "the five points this very year awarded, counted first (ArMDE:16696)"
     );
     assert_eq!(crisis.total.total, 15);
     assert_eq!(crisis.row, Id::new("crisis.minor_illness"));
@@ -2108,11 +2108,11 @@ fn an_applied_crisis_year_comes_back_with_the_crisis_and_the_ritual_it_spent() {
     assert_eq!(
         survival.allowances.len(),
         1,
-        "one doctor only (ArMDE:16634)"
+        "one doctor only (ArMDE:16711)"
     );
 
     // "its power is spent, and the focal ritual must be performed again"
-    // (`ArMDE:16573`) — reported, because the entity keeps the stored choice.
+    // (`ArMDE:16650`) — reported, because the entity keeps the stored choice.
     assert_eq!(notes, vec![AgingNote::LongevityRitualSpent]);
 
     // A year with no Crisis die is still written, with the Crisis owed and
@@ -2232,7 +2232,7 @@ fn load_entity_without_a_loaded_ruleset_is_not_loaded_error() {
 
 #[test]
 fn effective_scores_surface_a_reputation_grants_max_score() {
-    // Outsider (D11/Q5): "a bad Reputation of level 1 to 3" (ArMDE:6554) is the
+    // Outsider (D11/Q5): "a bad Reputation of level 1 to 3" (ArMDE:6625) is the
     // one grant in the whole catalogue that states a range, so the UI needs the
     // upper bound to let the player pick within it.
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
@@ -2290,7 +2290,7 @@ fn effective_scores_surface_confidence_and_supernatural_slots() {
 
     // Infamous surfaces a wildcard reputation slot naming the Flaw that opened
     // it. F-450 (D11/Q5): the passage states no audience ("a level 4 bad
-    // Reputation", ArMDE:6312), so the shipped `kind: "local"` was a hardcoded
+    // Reputation", ArMDE:6383), so the shipped `kind: "local"` was a hardcoded
     // invention — its twin `virtue.famous` already ships the wildcard for the
     // same shape.
     companion
@@ -2333,8 +2333,8 @@ fn effective_scores_surface_confidence_and_supernatural_slots() {
 /// The Abilities view has to show a magus which Hermetic minimums it still owes, so
 /// the checklist crosses the boundary with the effective scores rather than being
 /// re-derived in JS from the rules file. Against the **real shipped ruleset**: the
-/// three minimums of ArMDE:2437 plus the four recommendations of
-/// `ArMDE:2451-2461`, seven rows.
+/// three minimums of ArMDE:2505 plus the four recommendations of
+/// `ArMDE:2519-2529`, seven rows.
 ///
 /// The same payload carries `xp_general_pool` — the pool the solve funds from, which
 /// `xp_general_used` (a max-flow value) cannot be divided by.
@@ -2359,7 +2359,7 @@ fn effective_scores_surface_the_magus_minimum_ability_checklist() {
     );
 
     // Buying Magic Theory 1 flips exactly one row. Magic Theory, not Parma Magica:
-    // Parma 1 is demanded by BOTH lists (`ArMDE:2437` and `ArMDE:2459`), so buying it correctly
+    // Parma 1 is demanded by BOTH lists (`ArMDE:2505` and `ArMDE:2527`), so buying it correctly
     // flips two, while the recommended Magic Theory threshold is 3 — which makes this
     // the only clean single-flip probe.
     magus.ability_scores = vec![arm_rules::AbilityScore::new(
@@ -2384,7 +2384,7 @@ fn effective_scores_surface_the_magus_minimum_ability_checklist() {
     assert_eq!(scores.xp_general_bonus, 0);
 
     // Skilled Parens raises that pool by 60 — "an additional 60 experience points …
-    // during apprenticeship" (ArMDE:4966). The bar shows the typed 240 as the
+    // during apprenticeship" (ArMDE:5037). The bar shows the typed 240 as the
     // editable total, so the bonus has to reach it as a figure of its own; without it
     // the pool and the field it is entered in differ with nothing to explain the gap.
     magus.selections = vec![arm_rules::Selection::new(Id::new("virtue.skilled_parens"))];
@@ -2458,8 +2458,8 @@ fn effective_scores_surface_the_total_xp_supply_for_the_overall_chip() {
         arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
     );
     magus.xp_pool = 240;
-    // Educated: a 50-point restricted pool (ArMDE:3711-3713). Mastered Spells: a
-    // 50-point Spell-Mastery pool (ArMDE:4471-4474), which `restricted_xp_pools`
+    // Educated: a 50-point restricted pool (ArMDE:3782-3784). Mastered Spells: a
+    // 50-point Spell-Mastery pool (ArMDE:4542-4545), which `restricted_xp_pools`
     // never lists — so the total cannot be summed from the other fields.
     magus.selections = vec![
         arm_rules::Selection::new(Id::new("virtue.educated")),
@@ -2484,7 +2484,7 @@ fn effective_scores_surface_the_total_xp_supply_for_the_overall_chip() {
 ///
 /// Uses the rulebook's own worked example so the assertion is anchored to the
 /// source, not to whatever the code happens to return:
-/// ArMDE:2358 — Int +3 (6), Per +1 (1),
+/// ArMDE:2426 — Int +3 (6), Per +1 (1),
 /// Pre -3 (-6), Com -1 (-1), Sta 0 (0), Qik +2 (3), Str +2 (3), Dex +1 (1) => 7.
 #[test]
 fn effective_scores_surface_the_characteristic_points_used() {
@@ -2556,8 +2556,8 @@ fn effective_scores_surface_the_spell_levels_bonus_separately() {
 /// them into an unexplained total.
 ///
 /// They are additive, not a second budget: the profile's 120 are apprenticeship's
-/// (`ArMDE:2435`), while these are the player's chosen slice of the fungible "30 points
-/// per year" (`ArMDE:2471`).
+/// (`ArMDE:2503`), while these are the player's chosen slice of the fungible "30 points
+/// per year" (`ArMDE:2539`).
 #[test]
 fn effective_scores_surface_the_post_gauntlet_spell_levels_separately() {
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
@@ -2636,7 +2636,7 @@ fn ability_rows(entity: &Entity) -> Vec<(&str, Option<&str>, u8)> {
 /// Applying a shipped package through the command path writes its entries as
 /// ordinary bought Ability rows, the native-language one under the language the
 /// plan names — "Athletic Childhood: Athletics 2, Brawl 2, Native Language 5,
-/// Swim 2" (ArMDE:2384).
+/// Swim 2" (ArMDE:2452).
 #[test]
 fn apply_childhood_package_writes_the_package_rows() {
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
@@ -2673,7 +2673,7 @@ fn apply_childhood_package_writes_the_package_rows() {
 /// A slot the player never answered is reported as an ordinary
 /// `ValidationIssue`, carrying the Ability, its parameter key, and the slot the
 /// UI highlights — Traveling asks for two Area Lores plus a second language
-/// (ArMDE:2388), and only two of the three arrive here.
+/// (ArMDE:2456), and only two of the three arrive here.
 #[test]
 fn apply_childhood_package_rejects_an_unfilled_slot() {
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
@@ -2836,7 +2836,7 @@ fn dynamic_virtue_cap_codes() -> Vec<String> {
 fn devil_child_resolves_infernal_might_and_power_budget_end_to_end() {
     // Building a Devil Child mythic companion against the shipped rules must yield
     // a nonzero effective Infernal Might and power-levels budget: the type requires
-    // Demonic Blood (Infernal Might 5 + 30 power levels, RoP:I:4120-4122) and
+    // Demonic Blood (Infernal Might 5 + 30 power levels, RoP:I:4180-4182) and
     // grants a choice of Demonic Might (+2) or Demonic Powers (+20 levels).
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
     let mut entity = Entity::new(
@@ -2866,7 +2866,7 @@ fn devil_child_resolves_infernal_might_and_power_budget_end_to_end() {
 
 /// The Focus Power pool crosses IPC as its own pair of numbers, because the
 /// panel draws its own bar for it: 25 points per copy of the Virtue
-/// (`ArMDE:3899`), spent 2 per level of effect and 1 per point of Penetration.
+/// (`ArMDE:3970`), spent 2 per level of effect and 1 per point of Penetration.
 /// A character without the Virtue reports 0/0 and is otherwise untouched.
 #[test]
 fn effective_scores_carry_the_focus_power_pool() {
@@ -2928,7 +2928,7 @@ fn a_granted_demonic_might_counts_toward_its_own_half_of_virtues_ratio() {
     // points of a 6-point Virtue total — exactly half, so bought copies alone are
     // clean. Devil Child's free Demonic Might makes it 4 of 7, which is over half.
     // Whether this warns is therefore exactly the question of whether a *granted*
-    // copy counts (ArMDE:3665, :3673).
+    // copy counts (ArMDE:3736, :3744).
     let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
 
     let bought_only = devil_child(3, true);
@@ -3875,11 +3875,11 @@ fn every_aging_field_is_mirrored_in_the_frontend_types() {
         age_modifier: 4,
         living_conditions_modifier: -3,
         longevity_modifier: 5,
-        // Faerie Blood's -1 (`ArMDE:3801`): the term the book's three-line formula does
+        // Faerie Blood's -1 (`ArMDE:3872`): the term the book's three-line formula does
         // not name, which the read-out must still surface for its own arithmetic to
         // add up (guided-creation-review-2026-08 #22).
         trait_modifier: -1,
-        // Populated on purpose: `true` is the standing `ArMDE:16575` predicate, and the
+        // Populated on purpose: `true` is the standing `ArMDE:16652` predicate, and the
         // field is the one thing that tells it apart from the per-roll cap flag.
         longevity_clamp_active: true,
         // 4 - (-3) - 5 + (-1): the terms above, as the engine sums them.

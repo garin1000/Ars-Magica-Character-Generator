@@ -3,8 +3,8 @@
 //! the grant of the type that defines it — "should only be granted by selecting
 //! the appropriate mythic companion type, not selectable by just anyone".
 //!
-//! Rulebook: ArMDE:2846 "You must take the Free Virtue defining which type of
-//! Mythic Companion you are"; ArMDE:2637 "All Mythic Companions take a Free
+//! Rulebook: ArMDE:2914 "You must take the Free Virtue defining which type of
+//! Mythic Companion you are"; ArMDE:2705 "All Mythic Companions take a Free
 //! Virtue which specifies their status."
 //!
 //! Run against the shipped ruleset. The status Virtues are found through the
@@ -52,7 +52,7 @@ fn character(type_id: &str, selections: Vec<Selection>) -> Entity {
 }
 
 /// The status Virtues, read off the data: every item in the `mythic_companion`
-/// category (the book's "Mythic Companion, Free" index heading, ArMDE:3329).
+/// category (the book's "Mythic Companion, Free" index heading, ArMDE:3400).
 fn status_virtues(rs: &Ruleset) -> Vec<Id> {
     let ids: Vec<Id> = rs
         .items()

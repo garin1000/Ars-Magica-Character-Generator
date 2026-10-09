@@ -102,7 +102,7 @@ const SIGN_CHARS: &[char] = &['-', '+', '\u{2013}', '\u{2212}', '\u{2014}'];
 
 /// The sign characters that can plausibly open a *subtraction formula* whose
 /// right operand is a named quantity rather than a literal digit — F-469's
-/// "10 – Size" (`flaw.magical_being_companion`, ArMDE:6390). Deliberately
+/// "10 – Size" (`flaw.magical_being_companion`, ArMDE:6461). Deliberately
 /// **not** the ASCII hyphen: page and level ranges ("page 103-105") pair a
 /// digit with a bare hyphen constantly, and admitting it here would turn
 /// every such citation into a false positive. The rulebook's own
@@ -125,11 +125,11 @@ const FORMULA_DASH_CHARS: &[char] = &['\u{2013}', '\u{2212}'];
 ///
 /// # Two shapes a plain "sign immediately left of a digit" check missed (S2)
 ///
-/// - **Sign, space, digit** — F-464: `flaw.no_hands` (ArMDE:6498) writes
+/// - **Sign, space, digit** — F-464: `flaw.no_hands` (ArMDE:6569) writes
 ///   "take a – 5 penalty", with a literal space between the EN DASH and the
 ///   digit. Verified byte-by-byte with `od -c`.
 /// - **Digit, (space,) dash, non-digit** — F-469: `flaw.magical_being_companion`
-///   (ArMDE:6390) writes "Magic Might score of 10 – Size" — a subtraction
+///   (ArMDE:6461) writes "Magic Might score of 10 – Size" — a subtraction
 ///   formula whose right operand is a name, so no digit ever follows the
 ///   dash. Restricted to [`FORMULA_DASH_CHARS`] for the reason its doc
 ///   comment gives.
@@ -242,9 +242,9 @@ const MECHANICAL_PHRASES: &[&str] = &[
     "may not be greater than",
     // F-537 (S2): this needle was "darf nicht größer sein als", assuming
     // English word order. German puts the verb clause-finally instead —
-    // `flaw.uninspirational` (ArMDE:6921) writes "darf nicht größer als 0
+    // `flaw.uninspirational` (ArMDE:6992) writes "darf nicht größer als 0
     // sein" — so the literal matched nothing the book writes. Fixed to the
-    // word order the book actually uses; verified against ArMDE:6921 and one
+    // word order the book actually uses; verified against ArMDE:6992 and one
     // other hit.
     "darf nicht größer als",
     "no more than",
@@ -255,7 +255,7 @@ const MECHANICAL_PHRASES: &[&str] = &[
     // Formulas.
     "equal to",
     "entspricht",
-    // X2f (2026-09-30): `flaw.form_monstrosity` (ArMDE:6164) states "which
+    // X2f (2026-09-30): `flaw.form_monstrosity` (ArMDE:6235) states "which
     // corresponds to a magical Form" — the same equivalence idiom as "equal
     // to"/"entspricht", just a different English verb for it.
     "corresponds to",
@@ -560,9 +560,9 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "permission",
     },
     // "nehmen" added (X2e, 2026-09-30): `flaw.ability_block`'s "Du darfst
-    // diesen Fehler nur einmal nehmen" (ArMDE:5651-5654) and
+    // diesen Fehler nur einmal nehmen" (ArMDE:5722-5725) and
     // `flaw.difficult_underlings`'s "Du darfst diesen Geschichte-Fehler nur
-    // nehmen, wenn..." (ArMDE:5976-5979) both close the same modal-verb
+    // nehmen, wenn..." (ArMDE:6047-6050) both close the same modal-verb
     // permission idiom with "nehmen" ("take this Flaw"), a verb this list did
     // not yet carry.
     S2Idiom {
@@ -603,7 +603,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
     },
     // The recurring tail of the German "you must be X to take this
     // Virtue/Flaw" idiom — verified against three real passages
-    // (ArMDE:6148, :6250, :6885 and their DE mirrors) that phrase the lead-in
+    // (ArMDE:6219, :6321, :6956 and their DE mirrors) that phrase the lead-in
     // three different ways ("musst … sein", "muss … besitzen", "muss …
     // sein") but always close "um dies-<en|e> <Fehler|Tugend> zu
     // <wählen|nehmen>". Anchoring on the stable tail rather than the varying
@@ -644,7 +644,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::En,
         family: "incompatibility",
     },
-    // X2e (2026-09-30): `flaw.ceremonial_spontaneous_magic` (ArMDE:5781-5784)
+    // X2e (2026-09-30): `flaw.ceremonial_spontaneous_magic` (ArMDE:5852-5855)
     // widens this gap from 40 to 70 — its DE mirror's "Dieser Fehler ist
     // nicht mit Schwieriger Spontaner Magie oder Schwacher Spontaner Magie
     // vereinbar" puts 64 characters between "ist nicht" and "vereinbar" (the
@@ -681,7 +681,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "item transfer",
     },
     // --- Family 6b (Creation-rules substitution) ---------------------------
-    // X2a (2026-09-29): `virtue.guest_of_house_criamon` (ArMDE:4037-4040) states
+    // X2a (2026-09-29): `virtue.guest_of_house_criamon` (ArMDE:4108-4111) states
     // a real creation-time permission — being created under a different House's
     // rules while remaining politically Criamon — with no established idiom to
     // catch it. Verified against that one real hit.
@@ -728,7 +728,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "multiplier in words",
     },
     // D79.2 (2026-10-01): `virtue.relic`/`virtue.powerful_relic`'s composed
-    // Relics clause (ArMDE:17623) states the bearer's Magic Resistance as a
+    // Relics clause (ArMDE:17700) states the bearer's Magic Resistance as a
     // tenfold multiplier of the relic's True Faith score. German renders
     // "ten times" as the nominalized adjective "Zehnfachen" ("Magieresistenz
     // in Höhe des Zehnfachen ihres Wahrer-Glaube-Wertes"), not as
@@ -750,7 +750,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::En,
         family: "\"more\" without \"or\"",
     },
-    // X2e (2026-09-30): `flaw.blackmail`'s German mirror (ArMDE:5707-5710)
+    // X2e (2026-09-30): `flaw.blackmail`'s German mirror (ArMDE:5778-5781)
     // states the same "more" without "or" idiom as its own EN entry's
     // "possibly more" — "möglicherweise mehr, wenn du den Druck
     // aufrechterhältst" — with no DE counterpart on this family until now.
@@ -904,7 +904,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "named rulebook term",
     },
     // X2e (2026-09-30): `flaw.companion_animal`'s German mirror
-    // (ArMDE:5805-5808) states the same named-rulebook-term idiom as the EN
+    // (ArMDE:5876-5879) states the same named-rulebook-term idiom as the EN
     // "an additional personality trait of" above — "eine zusätzliche
     // Persönlichkeitseigenschaft" — with no DE counterpart until now.
     S2Idiom {
@@ -919,21 +919,21 @@ const S2_IDIOMS: &[S2Idiom] = &[
     // phrasing. Each pattern was verified against the one real passage that
     // motivated it.
     S2Idiom {
-        // virtue.common_sense (ArMDE:3597-3600): "common sense (the
+        // virtue.common_sense (ArMDE:3668-3671): "common sense (the
         // storyguide) alerts you to the error" — D50's own worked example.
         pattern: r"\balerts you to the error",
         language: Language::En,
         family: "storyguide arbitration",
     },
     S2Idiom {
-        // virtue.common_sense (ArMDE:3597-3600, DE): "macht dich der gesunde
+        // virtue.common_sense (ArMDE:3668-3671, DE): "macht dich der gesunde
         // Menschenverstand (der Spielleiter) auf den Fehler aufmerksam".
         pattern: r"\bauf den fehler aufmerksam",
         language: Language::De,
         family: "storyguide arbitration",
     },
     S2Idiom {
-        // virtue.devil_child (ArMDE:3671-3674): "can only be taken for a
+        // virtue.devil_child (ArMDE:3742-3745): "can only be taken for a
         // Mythic Companion" — an eligibility idiom the existing "may only be
         // taken by" phrasing does not cover.
         pattern: r"\bcan only be taken for",
@@ -941,21 +941,21 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "eligibility",
     },
     S2Idiom {
-        // virtue.devil_child (ArMDE:3671-3674, DE): "kann nur für einen
+        // virtue.devil_child (ArMDE:3742-3745, DE): "kann nur für einen
         // Mythischen Gefährten genommen werden".
         pattern: r"\bkann nur für\b[^.]{0,40}?\bgenommen werden",
         language: Language::De,
         family: "eligibility",
     },
     S2Idiom {
-        // virtue.feather_messenger (ArMDE:3869-3872): "a character who can
+        // virtue.feather_messenger (ArMDE:3940-3943): "a character who can
         // take the form of a bird".
         pattern: r"\btake the form of",
         language: Language::En,
         family: "capability",
     },
     S2Idiom {
-        // virtue.feather_messenger (ArMDE:3869-3872, DE): "der die Form eines
+        // virtue.feather_messenger (ArMDE:3940-3943, DE): "der die Form eines
         // Vogels annehmen kann" — German's verb-final clause puts the modal
         // after the object, so the capability idiom is anchored on the verb
         // pair itself rather than "in der Lage"/"Fähigkeit".
@@ -964,21 +964,21 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "capability",
     },
     S2Idiom {
-        // virtue.gender_shift (ArMDE:3951-3954): "Pregnant characters may not
+        // virtue.gender_shift (ArMDE:4022-4025): "Pregnant characters may not
         // use this ability."
         pattern: r"\bmay not use\b",
         language: Language::En,
         family: "prohibition",
     },
     S2Idiom {
-        // virtue.gentle_gift (ArMDE:3955-3958): "You do not suffer the usual
+        // virtue.gentle_gift (ArMDE:4026-4029): "You do not suffer the usual
         // penalties".
         pattern: r"\bdo not suffer\b",
         language: Language::En,
         family: "prohibition/absolutes",
     },
     S2Idiom {
-        // virtue.gentle_gift (ArMDE:3955-3958, DE): "Du leidest nicht unter
+        // virtue.gentle_gift (ArMDE:4026-4029, DE): "Du leidest nicht unter
         // den üblichen Abzügen" — negation on a plain verb, not a modal, so
         // DE_MODAL_NICHT (which requires a modal verb before the gap) does
         // not reach it.
@@ -987,7 +987,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "prohibition/absolutes",
     },
     S2Idiom {
-        // virtue.gorgiastic (ArMDE:3979-3982, DE): "kann ohne die Hilfe von
+        // virtue.gorgiastic (ArMDE:4050-4053, DE): "kann ohne die Hilfe von
         // Criamon-Magi oder einen magischen Durchbruch 4 nicht überschreiten"
         // — the same modal-then-"nicht" shape DE_MODAL_NICHT already
         // expresses, but the real gap here (66 characters) exceeds its
@@ -1002,7 +1002,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "ceiling (exceed)",
     },
     S2Idiom {
-        // virtue.greater_immunity (ArMDE:4009-4016, DE): "Du darfst keine
+        // virtue.greater_immunity (ArMDE:4080-4087, DE): "Du darfst keine
         // Immunität gegen Altern nehmen" — German can negate a modal
         // permission with "keine" rather than "nicht"; DE_MODAL_NICHT's
         // literal "nicht" cannot see this shape at any gap width. A new,
@@ -1013,14 +1013,14 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "prohibition via keine",
     },
     S2Idiom {
-        // virtue.greater_purifying_touch (ArMDE:4027-4030): "You can only
+        // virtue.greater_purifying_touch (ArMDE:4098-4101): "You can only
         // choose a disease, not other types of injury or misfortune."
         pattern: r"\bcan only\b",
         language: Language::En,
         family: "capability/restriction limiter",
     },
     S2Idiom {
-        // virtue.greater_purifying_touch (ArMDE:4027-4030, DE): "Du kannst
+        // virtue.greater_purifying_touch (ArMDE:4098-4101, DE): "Du kannst
         // nur eine Krankheit wählen" — the existing DE permission idiom binds
         // only darf/darfst/dürfen, not kannst.
         pattern: r"\bkannst nur\b[^.]{0,40}?\bwählen\b",
@@ -1028,7 +1028,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "permission",
     },
     S2Idiom {
-        // virtue.guest_of_house_criamon (ArMDE:4037-4040, DE): "können jedoch
+        // virtue.guest_of_house_criamon (ArMDE:4108-4111, DE): "können jedoch
         // nach den Regeln für jedes andere Haus erschaffen werden" — the DE
         // mirror of the existing EN "may be created using the rules" idiom
         // (family 6b), which does not itself match the German word order.
@@ -1037,14 +1037,14 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "creation-rules substitution",
     },
     S2Idiom {
-        // virtue.guild_apprentice (ArMDE:4041-4044): "The character is not
+        // virtue.guild_apprentice (ArMDE:4112-4115): "The character is not
         // able to benefit from either the Poor Flaw or the Wealthy Virtue".
         pattern: r"\bis not able to\b",
         language: Language::En,
         family: "prohibition",
     },
     S2Idiom {
-        // virtue.guild_apprentice (ArMDE:4041-4044, DE): "Der Charakter kann
+        // virtue.guild_apprentice (ArMDE:4112-4115, DE): "Der Charakter kann
         // weder vom Fehler Arm noch von der Tugend Wohlhabend profitieren" —
         // German's "neither...nor" negation, distinct in shape from both
         // DE_MODAL_NICHT and the "keine" family above.
@@ -1053,7 +1053,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "prohibition",
     },
     S2Idiom {
-        // virtue.harnessed_magic (ArMDE:4053-4058, DE): "Du kannst jeden
+        // virtue.harnessed_magic (ArMDE:4124-4129, DE): "Du kannst jeden
         // deiner Zauber einfach durch Konzentration aufheben" — a positive
         // modal capability the existing noun-based "in der Lage"/"Fähigkeit"
         // idioms do not reach.
@@ -1062,7 +1062,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "capability",
     },
     S2Idiom {
-        // virtue.emir (ArMDE:3745): "This is the same as the Knight Virtue"
+        // virtue.emir (ArMDE:3816): "This is the same as the Knight Virtue"
         // — a cross-reference the player must act on to get another entry's
         // (Knight's) benefits.
         pattern: r"\bis the same as the\b[^.]{0,40}?\bvirtue\b",
@@ -1074,28 +1074,28 @@ const S2_IDIOMS: &[S2Idiom] = &[
     // rules this screen did not yet recognize under their real phrasing. Each
     // pattern was verified against the one real passage that motivated it.
     S2Idiom {
-        // virtue.immune_to_disease (ArMDE:4095-4098): "the lesser demons that
+        // virtue.immune_to_disease (ArMDE:4166-4169): "the lesser demons that
         // cause most diseases refuse to harm him".
         pattern: r"\brefuse to harm\b",
         language: Language::En,
         family: "capability/immunity",
     },
     S2Idiom {
-        // virtue.immune_to_disease (ArMDE:4095-4098, DE): "die niederen
+        // virtue.immune_to_disease (ArMDE:4166-4169, DE): "die niederen
         // Dämonen ... weigern sich, ihm Schaden zuzufügen".
         pattern: r"\bweigern sich\b[^.]{0,40}?\bzuzufügen\b",
         language: Language::De,
         family: "capability/immunity",
     },
     S2Idiom {
-        // virtue.immunity_to_cold (ArMDE:4099-4102): "Normal cold does not
+        // virtue.immunity_to_cold (ArMDE:4170-4173): "Normal cold does not
         // harm you".
         pattern: r"\bdoes not harm\b",
         language: Language::En,
         family: "capability/immunity",
     },
     S2Idiom {
-        // virtue.immunity_to_cold (ArMDE:4099-4102, DE): "Normale Kälte
+        // virtue.immunity_to_cold (ArMDE:4170-4173, DE): "Normale Kälte
         // schadet dir nicht" — negation on a plain verb, not a modal, so
         // DE_MODAL_NICHT (which requires a modal verb before the gap) does
         // not reach it; narrower-bound than DE_MODAL_NICHT since "schadet"
@@ -1105,7 +1105,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "capability/immunity",
     },
     S2Idiom {
-        // virtue.infernal_heirloom (ArMDE:4127-4132): "an effect once per day
+        // virtue.infernal_heirloom (ArMDE:4198-4203): "an effect once per day
         // that is equivalent to a Hermetic spell of level 25" — the formula
         // family's existing "equal to"/"entspricht" pair does not cover this
         // synonym.
@@ -1114,7 +1114,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "formula",
     },
     S2Idiom {
-        // virtue.just_an_instant (ArMDE:4169-4172): "does not need to make
+        // virtue.just_an_instant (ArMDE:4240-4243): "does not need to make
         // Awareness checks" — a roll exemption the existing "does not
         // suffer"/"do not suffer" idiom does not reach.
         pattern: r"\bdoes not need to\b",
@@ -1122,7 +1122,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "exemption",
     },
     S2Idiom {
-        // virtue.just_an_instant (ArMDE:4169-4172, DE): "muss keine
+        // virtue.just_an_instant (ArMDE:4240-4243, DE): "muss keine
         // Wahrnehmungswürfe ablegen" — an obligation negated with "keine"
         // bound to a later verb, distinct from the modal+keine prohibition
         // family (whose verb set is darf/darfst/dürfen/kann/kannst/können,
@@ -1132,7 +1132,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "exemption",
     },
     S2Idiom {
-        // virtue.knows_people (ArMDE:4199-4206): "a character with this
+        // virtue.knows_people (ArMDE:4270-4277): "a character with this
         // Virtue may ask for a bait" — a real, invokable ability the existing
         // permission family's "may take"/"may learn"/"may purchase" trio does
         // not cover.
@@ -1141,7 +1141,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "permission",
     },
     S2Idiom {
-        // virtue.landed_noble (ArMDE:4219-4228): "you may not impose the
+        // virtue.landed_noble (ArMDE:4290-4299): "you may not impose the
         // death penalty" — the existing "may not take"/"may not have"
         // prohibition idioms do not cover this verb.
         pattern: r"\bmay not impose\b",
@@ -1149,21 +1149,21 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "prohibition",
     },
     S2Idiom {
-        // virtue.lesser_immunity (ArMDE:4275-4278): "You are immune to some
+        // virtue.lesser_immunity (ArMDE:4346-4349): "You are immune to some
         // hazard".
         pattern: r"\bimmune to\b",
         language: Language::En,
         family: "capability/immunity",
     },
     S2Idiom {
-        // virtue.lesser_immunity (ArMDE:4275-4278, DE): "Du bist immun gegen
+        // virtue.lesser_immunity (ArMDE:4346-4349, DE): "Du bist immun gegen
         // eine Gefahr".
         pattern: r"\bimmun gegen\b",
         language: Language::De,
         family: "capability/immunity",
     },
     S2Idiom {
-        // virtue.life_linked_spontaneous_magic (ArMDE:4299-4306): "you must
+        // virtue.life_linked_spontaneous_magic (ArMDE:4370-4377): "you must
         // expend one additional Fatigue level per five points" — the German
         // mirror already trips the screen via a hyphenated "Stufe-10-Effekt"
         // (has_signed_number's hyphen-before-digit case), so no DE pattern is
@@ -1173,35 +1173,35 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "named rulebook term",
     },
     S2Idiom {
-        // virtue.magical_memory (ArMDE:4355-4358): "You need not keep
+        // virtue.magical_memory (ArMDE:4426-4429): "You need not keep
         // laboratory texts".
         pattern: r"\bneed not\b",
         language: Language::En,
         family: "exemption",
     },
     S2Idiom {
-        // virtue.magical_memory (ArMDE:4355-4358, DE): "Du brauchst keine
+        // virtue.magical_memory (ArMDE:4426-4429, DE): "Du brauchst keine
         // Labortexte ... aufzubewahren".
         pattern: r"\bbrauchst keine\b",
         language: Language::De,
         family: "exemption",
     },
     S2Idiom {
-        // virtue.male_guild_sponsor (ArMDE:4439-4442): "his field of work,
+        // virtue.male_guild_sponsor (ArMDE:4510-4513): "his field of work,
         // which is otherwise restricted to men".
         pattern: r"\brestricted to\b",
         language: Language::En,
         family: "eligibility",
     },
     S2Idiom {
-        // virtue.male_guild_sponsor (ArMDE:4439-4442, DE): "sein
+        // virtue.male_guild_sponsor (ArMDE:4510-4513, DE): "sein
         // Arbeitsbereich ... der andernfalls Männern vorbehalten ist".
         pattern: r"\bvorbehalten\b",
         language: Language::De,
         family: "eligibility",
     },
     S2Idiom {
-        // flaw.vendetta (ArMDE:6955-6958, DE): "Dieser Fehler ist im
+        // flaw.vendetta (ArMDE:7026-7029, DE): "Dieser Fehler ist im
         // Allgemeinen auf Magi des Hauses Verditius beschränkt" — the German
         // rendering of the same "restricted to" eligibility idiom.
         pattern: r"\bbeschränkt\b",
@@ -1213,7 +1213,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
     // rules this screen did not yet recognize under their real phrasing. Each
     // pattern was verified against the one real passage that motivated it.
     S2Idiom {
-        // virtue.muqta_muq_ta (ArMDE:4559-4562): "All rules for the Landed
+        // virtue.muqta_muq_ta (ArMDE:4630-4633): "All rules for the Landed
         // Noble Virtue apply" — a cross-reference to another entry's rules,
         // in different words than Emir's own "is the same as the ... Virtue".
         pattern: r"\brules for the\b[^.]{0,40}?\bapply\b",
@@ -1221,7 +1221,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "cross-reference",
     },
     S2Idiom {
-        // virtue.muqta_muq_ta (ArMDE:4559-4562, DE): "Es gelten alle Regeln
+        // virtue.muqta_muq_ta (ArMDE:4630-4633, DE): "Es gelten alle Regeln
         // für die Tugend Landadliger" — German's verb-first word order for
         // the same cross-reference.
         pattern: r"\bes gelten\b[^.]{0,40}?\bregeln für\b",
@@ -1229,7 +1229,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "cross-reference",
     },
     S2Idiom {
-        // virtue.muse (ArMDE:4563-4566, DE): "kann ... verdoppeln" — the
+        // virtue.muse (ArMDE:4634-4637, DE): "kann ... verdoppeln" — the
         // infinitive of the existing "doppelt" stem, which only covers the
         // participle ("verdoppelt"); "verdoppeln" shares no suffix with it.
         pattern: r"\bverdoppeln\b",
@@ -1237,7 +1237,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "multiplier in words",
     },
     S2Idiom {
-        // virtue.mystical_choreography (ArMDE:4567-4572): "five minutes per
+        // virtue.mystical_choreography (ArMDE:4638-4643): "five minutes per
         // magnitude", "one minute per magnitude" — a rate scaled by
         // magnitude, distinct from the existing "magnitudes" (plural) stem.
         pattern: r"\bper magnitude\b",
@@ -1245,14 +1245,14 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "magnitude/level stem",
     },
     S2Idiom {
-        // virtue.mystical_choreography (ArMDE:4567-4572, DE): "fünf Minuten
+        // virtue.mystical_choreography (ArMDE:4638-4643, DE): "fünf Minuten
         // pro Magnitude", "eine Minute pro Magnitude".
         pattern: r"\bpro magnitude\b",
         language: Language::De,
         family: "magnitude/level stem",
     },
     S2Idiom {
-        // virtue.nephilim (ArMDE:4594-4597): "You receive the Strong Angelic
+        // virtue.nephilim (ArMDE:4665-4668): "You receive the Strong Angelic
         // Heritage Virtue free" — a real, zero-cost grant, unlike anything
         // the existing "add"/"grants_*" idioms name.
         pattern: r"\breceive the\b[^.]{0,60}?\bfree\b",
@@ -1260,14 +1260,14 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "grant",
     },
     S2Idiom {
-        // virtue.nephilim (ArMDE:4594-4597, DE): "Du erhältst die Tugend
+        // virtue.nephilim (ArMDE:4665-4668, DE): "Du erhältst die Tugend
         // Starkes Engelserbe kostenlos".
         pattern: r"\berhältst die\b[^.]{0,60}?\bkostenlos\b",
         language: Language::De,
         family: "grant",
     },
     S2Idiom {
-        // virtue.perfect_eye_for_commodity (ArMDE:4628-4631, DE): "(3 ×
+        // virtue.perfect_eye_for_commodity (ArMDE:4699-4702, DE): "(3 ×
         // Wohlstandsmultiplikator)" — German compounds glue the stem onto
         // the preceding noun with no word boundary, which the existing
         // `\bmultiplikator` (left-anchored) cannot cross.
@@ -1276,22 +1276,22 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "multiplier stem",
     },
     S2Idiom {
-        // virtue.personal_vis_source (ArMDE:4728-4731): "about one tenth as
+        // virtue.personal_vis_source (ArMDE:4799-4802): "about one tenth as
         // much as" — D50's own hedged-fraction worked example.
         pattern: r"\bone tenth\b",
         language: Language::En,
         family: "formula",
     },
     S2Idiom {
-        // virtue.personal_vis_source (ArMDE:4728-4731, DE): "etwa ein
+        // virtue.personal_vis_source (ArMDE:4799-4802, DE): "etwa ein
         // Zehntel dessen".
         pattern: r"\bein zehntel\b",
         language: Language::De,
         family: "formula",
     },
     S2Idiom {
-        // virtue.rabbi (ArMDE:4828-4833), also virtue.mazdean_priest
-        // (ArMDE:4480-4487) and virtue.mamluk (ArMDE:4443-4448): "This
+        // virtue.rabbi (ArMDE:4899-4904), also virtue.mazdean_priest
+        // (ArMDE:4551-4558) and virtue.mamluk (ArMDE:4514-4519): "This
         // Virtue is only available to male characters" — a sex-eligibility
         // restriction (D5/F-123) in a shape none of the existing eligibility
         // idioms ("may only be taken by", "only characters with") covers.
@@ -1309,7 +1309,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "eligibility",
     },
     S2Idiom {
-        // virtue.rat_up_a_drainpipe (ArMDE:4838-4841): "a substantial
+        // virtue.rat_up_a_drainpipe (ArMDE:4909-4912): "a substantial
         // advantage in opposed Athletics rolls" — F-241's hedged,
         // storyguide-adjudicated modifier (D50), unsigned and unquantified.
         pattern: r"\bsubstantial advantage\b",
@@ -1317,14 +1317,14 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "hedged bonus",
     },
     S2Idiom {
-        // virtue.rat_up_a_drainpipe (ArMDE:4838-4841, DE): "einen
+        // virtue.rat_up_a_drainpipe (ArMDE:4909-4912, DE): "einen
         // erheblichen Vorteil bei gegnerischen Athletik-Würfen".
         pattern: r"\berheblichen vorteil\b",
         language: Language::De,
         family: "hedged bonus",
     },
     S2Idiom {
-        // virtue.see_in_darkness (ArMDE:4896-4899): "your eyesight is not
+        // virtue.see_in_darkness (ArMDE:4967-4970): "your eyesight is not
         // more acute than ordinary people's" — the limiting clause on an
         // otherwise-bare capability; this file's own header already
         // documents "You can see" as too bare to add safely, so the limiter
@@ -1334,7 +1334,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "capability limiter",
     },
     S2Idiom {
-        // virtue.see_in_darkness (ArMDE:4896-4899, DE): "Dein Sehvermögen
+        // virtue.see_in_darkness (ArMDE:4967-4970, DE): "Dein Sehvermögen
         // nicht schärfer als das normaler Menschen" — negation on a plain
         // predicate adjective, not a modal verb, so DE_MODAL_NICHT does not
         // reach it.
@@ -1343,8 +1343,8 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "capability limiter",
     },
     S2Idiom {
-        // virtue.puissant_ability (ArMDE:4814-4816, DE): "addierst 2 zu
-        // ihrem Wert"; virtue.puissant_art (ArMDE:4818-4820, DE): "addierst
+        // virtue.puissant_ability (ArMDE:4885-4887, DE): "addierst 2 zu
+        // ihrem Wert"; virtue.puissant_art (ArMDE:4889-4891, DE): "addierst
         // 3 zum Wert einer Kunst" — the second-person conjugation of the
         // existing "addiere" stem, which covers the imperative form only.
         pattern: r"\baddierst\b",
@@ -1357,18 +1357,18 @@ const S2_IDIOMS: &[S2Idiom] = &[
     // hit via `every_s2_idiom_has_a_real_hit_in_its_own_language`, and the
     // whole suite re-run afterward per D19 obligation 3.
     S2Idiom {
-        // virtue.sense_holiness_and_unholiness (ArMDE:4928, DE): "kann Deine
+        // virtue.sense_holiness_and_unholiness (ArMDE:4999, DE): "kann Deine
         // Sensibilität Dich überwältigen" — a positive (non-negated) modal
         // capability-with-consequence, the mirror shape of DE_MODAL_NICHT
         // but without "nicht". Also verified against a second real hit,
-        // ArMDE:7721 (the Sense Holiness and Unholiness Ability's own text):
+        // ArMDE:7793 (the Sense Holiness and Unholiness Ability's own text):
         // "kann dein Gespür dich überwältigen".
         pattern: r"\bkann\b[^.]{0,40}?\büberwältigen\b",
         language: Language::De,
         family: "overwhelm capability",
     },
     S2Idiom {
-        // virtue.wanderer (ArMDE:5223-5226): "The Wealthy Major Virtue and
+        // virtue.wanderer (ArMDE:5294-5297): "The Wealthy Major Virtue and
         // Poor Major Flaw affect you normally" — states that the two
         // background-wealth V/F apply unmodified rather than being
         // suppressed by this Virtue's own background, which is itself the
@@ -1403,14 +1403,14 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "wealthy/poor unaffected",
     },
     S2Idiom {
-        // virtue.tethered_magic (ArMDE:5143): "all of your spells and the
+        // virtue.tethered_magic (ArMDE:5214): "all of your spells and the
         // effects of any magic items you activate are Arcane Connections to
         // you" — the rule is the Arcane Connection itself, a real and severe
         // side effect, not flavour. Narrowly scoped to this exact
         // construction rather than the far more common "Arcane Connection to"
         // (33 hits catalogue-wide): checked, "are Arcane Connections? to
         // you" has exactly two real hits, this entry and flaw.fettered_magic
-        // (ArMDE:6114-6117, "You cannot take this with the Virtue Tethered
+        // (ArMDE:6185-6188, "You cannot take this with the Virtue Tethered
         // Magic, as the Virtue already includes this effect") — see the
         // newly-swept-entries note this slice files for that second hit.
         pattern: r"\bare arcane connections? to you\b",
@@ -1418,7 +1418,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "arcane connection side effect",
     },
     S2Idiom {
-        // virtue.voice_of_the_land (ArMDE:5221): "the character is not
+        // virtue.voice_of_the_land (ArMDE:5292): "the character is not
         // normally perceived as either a threat or a prey object by these
         // creatures" — a real, if qualitative, in-fiction consequence
         // (creatures do not treat the character as game or a predator),
@@ -1428,7 +1428,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "capability limiter",
     },
     // --- Family 16 (Arcane Connection duration) ------------------------------
-    // X2e (2026-09-30): flaw.bound_casting_tools (ArMDE:5723-5726) states a
+    // X2e (2026-09-30): flaw.bound_casting_tools (ArMDE:5794-5797) states a
     // real mechanical fact — its casting tools become lasting Arcane
     // Connections, where a regular one only lasts weeks — using neither
     // family "arcane connection side effect" above's "are Arcane
@@ -1448,7 +1448,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
     },
     // --- Family 17 (X2f Phase 2 additions, 2026-09-30) -----------------------
     S2Idiom {
-        // flaw.fluctuating_fortune (ArMDE:6150-6153): "followed by the Poor
+        // flaw.fluctuating_fortune (ArMDE:6221-6224): "followed by the Poor
         // Flaw the next... followed by a year in which he has to work three"
         // — a concrete, unmodelled toggling mechanic the screen's existing
         // idioms do not recognize.
@@ -1457,7 +1457,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "toggling condition",
     },
     S2Idiom {
-        // flaw.fluctuating_fortune (ArMDE:6150-6153, DE): "gefolgt von einem
+        // flaw.fluctuating_fortune (ArMDE:6221-6224, DE): "gefolgt von einem
         // Jahr mit dem Fehler Arm" / "gefolgt von einem Jahr, in dem er drei
         // arbeiten muss".
         pattern: r"\bgefolgt von einem jahr",
@@ -1465,7 +1465,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "toggling condition",
     },
     S2Idiom {
-        // flaw.greater_malediction/flaw.lesser_malediction (ArMDE:6210-6213,
+        // flaw.greater_malediction/flaw.lesser_malediction (ArMDE:6281-6284,
         // 6342-6345): "The effects of the curse should be comparable to
         // those of other Major Flaws" / "...should be about as bad as other
         // Minor General Flaws" — a real, storyguide-actionable severity
@@ -1486,7 +1486,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "curse severity",
     },
     S2Idiom {
-        // flaw.judged_unfairly (ArMDE:6326-6329, DE): "dieser Fehler ist mit
+        // flaw.judged_unfairly (ArMDE:6397-6400, DE): "dieser Fehler ist mit
         // jeder Tugend unvereinbar" — the same incompatibility idiom as
         // `\bist unvereinbar mit`/`\bist nicht ... vereinbar` above, but in
         // the word order "ist mit X unvereinbar" (verb-final unvereinbar),
@@ -1499,7 +1499,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
     // X2g (tmp/x2g-verdicts.md): screen misses this slice's own newly-swept
     // entries tripped, each verified against a real hit below.
     S2Idiom {
-        // flaw.oath_of_fealty (ArMDE:6512-6515): "Magi are forbidden from
+        // flaw.oath_of_fealty (ArMDE:6583-6586): "Magi are forbidden from
         // taking Oaths of Fealty by the Hermetic Code" — a hard eligibility
         // rule, the same shape as the existing "unmöglich"/"is impossible"
         // pair but a different verb.
@@ -1508,7 +1508,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "prohibition",
     },
     S2Idiom {
-        // flaw.oath_of_fealty (ArMDE:6512-6515, DE): "Magi ist es durch den
+        // flaw.oath_of_fealty (ArMDE:6583-6586, DE): "Magi ist es durch den
         // Hermetischen Kodex verboten, Treueeide zu leisten" — the German
         // mirror of "forbidden", a standalone word like "unmöglich" rather
         // than a bounded-gap idiom.
@@ -1517,18 +1517,18 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "prohibition",
     },
     S2Idiom {
-        // flaw.prohibition (ArMDE:6638-6641): "must obey the restrictions of
+        // flaw.prohibition (ArMDE:6709-6712): "must obey the restrictions of
         // your prohibition or be penalized by the curse". Scoped to the
         // fuller phrase rather than the bare "must obey": that verb alone
         // also hits virtue.apprentice's unrelated "you must obey the
-        // dictates ... of your master" (ArMDE:3418-3421), pure
+        // dictates ... of your master" (ArMDE:3489-3492), pure
         // master/apprentice colour with no computed rule to display.
         pattern: r"\brestrictions of your prohibition\b",
         language: Language::En,
         family: "obligation",
     },
     S2Idiom {
-        // flaw.prohibition (ArMDE:6638-6641, DE): "musst die Einschränkungen
+        // flaw.prohibition (ArMDE:6709-6712, DE): "musst die Einschränkungen
         // deines Verbots befolgen" — "befolgen" ("to obey/comply with") is
         // the German mirror of "must obey", standalone like "aufwenden"
         // below rather than a bounded-gap modal pattern.
@@ -1537,7 +1537,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "obligation",
     },
     S2Idiom {
-        // flaw.regular (ArMDE:6675-6678): "The character must spend one of
+        // flaw.regular (ArMDE:6746-6749): "The character must spend one of
         // his free seasons on the seasonal activity of worship" — a
         // compulsory-expenditure obligation, the same family as "must obey".
         pattern: r"\bmust spend\b",
@@ -1545,7 +1545,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "obligation",
     },
     S2Idiom {
-        // flaw.regular (ArMDE:6675-6678, DE): "Der Charakter muss eines
+        // flaw.regular (ArMDE:6746-6749, DE): "Der Charakter muss eines
         // seiner freien Quartale für die Quartalsaktivität Andacht
         // aufwenden" — "aufwenden" ("to expend") is the German mirror,
         // standalone rather than bounded to "muss" since the real gap (63
@@ -1556,18 +1556,18 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "obligation",
     },
     S2Idiom {
-        // flaw.restricted_power (ArMDE:6687-6690): "The character must
+        // flaw.restricted_power (ArMDE:6758-6761): "The character must
         // perform some special ceremony to activate it". Scoped to the
         // fuller phrase rather than the bare "must perform": that verb alone
         // also hits flaw.vow's unrelated "you must perform some kind of
-        // atonement" (ArMDE:6989-6992), pure Story-Flaw colour with no
+        // atonement" (ArMDE:7060-7063), pure Story-Flaw colour with no
         // computed rule to display.
         pattern: r"\bspecial ceremony\b",
         language: Language::En,
         family: "obligation",
     },
     S2Idiom {
-        // flaw.restricted_power (ArMDE:6687-6690, DE): "Der Charakter muss
+        // flaw.restricted_power (ArMDE:6758-6761, DE): "Der Charakter muss
         // eine besondere Zeremonie durchführen, um sie zu aktivieren" — a
         // modal-then-verb obligation with a 25-character gap, well inside
         // DE_MODAL_NICHT's own 40-character bound but that pattern only
@@ -1578,7 +1578,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "obligation",
     },
     S2Idiom {
-        // flaw.restriction (ArMDE:6691-6694, DE): "Du kannst unter
+        // flaw.restriction (ArMDE:6762-6765, DE): "Du kannst unter
         // bestimmten, seltenen Bedingungen überhaupt keine Zauber wirken" —
         // the English mirror ("cannot") already matches the existing
         // "prohibition/absolutes" family's bare `\bcannot`, but the German
@@ -1590,7 +1590,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         language: Language::De,
         family: "prohibition",
     },
-    // --- X2h (tmp/x2h-verdicts.md, ArMDE:6709-7109) ---------------------
+    // --- X2h (tmp/x2h-verdicts.md, ArMDE:6780-7180) ---------------------
     // Phase 2 reclassified 21 entries in this range to `uncomputed_rule`;
     // `every_uncomputed_rule_entry_states_its_rule_in_every_locale` then
     // requires the shipped description to trip the screen in BOTH locales.
@@ -1598,7 +1598,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
     // (D19 obligation 3) before being added, not merely against the shipped
     // description text.
     S2Idiom {
-        // flaw.slow_caster (ArMDE:6755-6758): "Your Formulaic spells take
+        // flaw.slow_caster (ArMDE:6826-6829): "Your Formulaic spells take
         // two rounds to cast" — a real timing penalty (double the normal
         // one-round cast), spelled as a word rather than a digit.
         pattern: r"\btwo rounds\b",
@@ -1606,7 +1606,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "cap",
     },
     S2Idiom {
-        // flaw.slow_caster (ArMDE:6755-6758, DE): "Deine Formulaischen
+        // flaw.slow_caster (ArMDE:6826-6829, DE): "Deine Formulaischen
         // Zauber benötigen zwei Runden zum Wirken" — same word-spelled
         // timing penalty.
         pattern: r"\bzwei runden\b",
@@ -1614,7 +1614,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "cap",
     },
     S2Idiom {
-        // flaw.stuck_in_your_ways (ArMDE:6791-6794): "this character uses
+        // flaw.stuck_in_your_ways (ArMDE:6862-6865): "this character uses
         // the lower of that Ability score and his current Covenant Lore
         // Ability" — a real roll-substitution rule with no signed number.
         pattern: r"\bthe lower of\b",
@@ -1622,7 +1622,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "formula",
     },
     S2Idiom {
-        // flaw.stuck_in_your_ways (ArMDE:6791-6794, DE): "verwendet dieser
+        // flaw.stuck_in_your_ways (ArMDE:6862-6865, DE): "verwendet dieser
         // Charakter den niedrigeren Wert aus seiner Fertigkeit..." — the
         // same roll-substitution rule.
         pattern: r"\bniedrigeren wert\b",
@@ -1630,7 +1630,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "formula",
     },
     S2Idiom {
-        // flaw.susceptibility_to_warping (ArMDE:6831-6838): "the character
+        // flaw.susceptibility_to_warping (ArMDE:6902-6909): "the character
         // gains one additional Warping Point" / "he gains four additional
         // Warping Points" — the extra-Warping-Point rule is spelled with
         // word numbers ("one"/"four"), not digits, so it carries no signed
@@ -1640,7 +1640,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "formula",
     },
     S2Idiom {
-        // flaw.susceptibility_to_warping (ArMDE:6831-6838, DE): "erhält der
+        // flaw.susceptibility_to_warping (ArMDE:6902-6909, DE): "erhält der
         // Charakter einen zusätzlichen Verzerrungspunkt" — same word-spelled
         // rule.
         pattern: r"\bzusätzlichen verzerrungspunkt\b",
@@ -1648,7 +1648,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "formula",
     },
     S2Idiom {
-        // flaw.unruly_air (ArMDE:6939-6942): "others with Magic Resistance
+        // flaw.unruly_air (ArMDE:7010-7013): "others with Magic Resistance
         // are not influenced by him" — a real, absolute exemption (D8
         // capability), phrased differently from the existing "not affected
         // by"/"nicht betroffen" pair.
@@ -1657,7 +1657,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "capability",
     },
     S2Idiom {
-        // flaw.unruly_air (ArMDE:6939-6942, DE): "andere mit Magieresistenz
+        // flaw.unruly_air (ArMDE:7010-7013, DE): "andere mit Magieresistenz
         // nicht von ihm beeinflusst werden" — same exemption; "nicht" and
         // "beeinflusst" sit 12 characters apart ("von ihm "), inside a
         // bounded gap rather than contiguous.
@@ -1666,17 +1666,17 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "capability",
     },
     S2Idiom {
-        // flaw.visions (ArMDE:6985-6988): "The visions come purely at the
+        // flaw.visions (ArMDE:7056-7059): "The visions come purely at the
         // storyguide's discretion" — D8/story: the rule that visions are
         // entirely GM-adjudicated, not a signed number or phrase idiom
         // already in the base list. Scoped to the fuller "purely at..."
         // phrase rather than the bare "storyguide's discretion": that
         // shorter form also hits flaw.demonic_familiar's "At the
         // storyguide's discretion, this Flaw may be taken to represent
-        // other sorts of demons" (ArMDE:5930) and flaw.favors' "at the
-        // storyguide's discretion" (ArMDE:6100) and
+        // other sorts of demons" (ArMDE:6001) and flaw.favors' "at the
+        // storyguide's discretion" (ArMDE:6171) and
         // virtue.latent_magic_ability's "At the storyguide's discretion,
-        // this quality might appear" (ArMDE:4239) — three unrelated,
+        // this quality might appear" (ArMDE:4310) — three unrelated,
         // already-settled narrative entries (X2b: latent_magic_ability
         // "stays narrative, no rule stated") whose own discretion clause is
         // pure reflavoring permission, not a rule this entry drops.
@@ -1685,7 +1685,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "capability",
     },
     S2Idiom {
-        // flaw.visions (ArMDE:6985-6988, DE): "Die Visionen kommen
+        // flaw.visions (ArMDE:7056-7059, DE): "Die Visionen kommen
         // ausschließlich nach dem Ermessen des Spielleiters" — same
         // GM-discretion rule, same narrowing reason as the EN row above (the
         // bare "Ermessen des Spielleiters" also hits the German mirrors of
@@ -1695,7 +1695,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "capability",
     },
     S2Idiom {
-        // flaw.vow_major/flaw.vow_minor (ArMDE:6989-6992): "A Vow that is a
+        // flaw.vow_major/flaw.vow_minor (ArMDE:7060-7063): "A Vow that is a
         // Major Flaw must be a vow to do something, rather than refrain from
         // something" — OQ-09's real creation-time constraint on which kind
         // of vow qualifies as Major. Distinct from the "must perform some
@@ -1707,7 +1707,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "obligation",
     },
     S2Idiom {
-        // flaw.vow_major/flaw.vow_minor (ArMDE:6989-6992, DE): "muss ein
+        // flaw.vow_major/flaw.vow_minor (ArMDE:7060-7063, DE): "muss ein
         // Gelübde sein, etwas zu tun, anstatt etwas zu unterlassen" — same
         // Major-vow constraint.
         pattern: r"\banstatt etwas zu unterlassen\b",
@@ -1715,7 +1715,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "obligation",
     },
     S2Idiom {
-        // flaw.warped_magic (ArMDE:7023-7026): "with increasing intensity
+        // flaw.warped_magic (ArMDE:7094-7097): "with increasing intensity
         // according to the level of the spell" — a real scaling rule (side
         // effect severity tracks spell level) stated in words.
         pattern: r"\baccording to the level of the spell\b",
@@ -1723,7 +1723,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "formula",
     },
     S2Idiom {
-        // flaw.warped_magic (ArMDE:7023-7026, DE): "mit zunehmender
+        // flaw.warped_magic (ArMDE:7094-7097, DE): "mit zunehmender
         // Intensität entsprechend der Stufe des Zaubers" — same scaling
         // rule.
         pattern: r"\bzunehmender intensität\b",
@@ -1731,7 +1731,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "formula",
     },
     S2Idiom {
-        // flaw.short_lived_magic (ArMDE:6729-6732): "Diameter, Concentration,
+        // flaw.short_lived_magic (ArMDE:6800-6803): "Diameter, Concentration,
         // Ring, and Momentary spells are not affected" — an absolute
         // exemption from the duration-reduction rule, phrased without "by"
         // (an object), so it does not trip the existing "not affected by"
@@ -1741,7 +1741,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "capability",
     },
     S2Idiom {
-        // flaw.slow_power (ArMDE:6759-6762): "not more than once for a
+        // flaw.slow_power (ArMDE:6830-6833): "not more than once for a
         // single power" — the repeatability cap, spelled "not more than"
         // rather than the base list's "no more than".
         pattern: r"\bnot more than\b",
@@ -1749,7 +1749,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "cap",
     },
     S2Idiom {
-        // flaw.unstructured_caster (ArMDE:6947-6950): "you may not learn
+        // flaw.unstructured_caster (ArMDE:7018-7021): "you may not learn
         // Ritual spells at all" — a real, absolute restriction distinct from
         // the base list's "may not take"/"may not be" phrasing.
         pattern: r"\bmay not learn\b",
@@ -1757,9 +1757,9 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "prohibition",
     },
     S2Idiom {
-        // flaw.short_ranged_magic (ArMDE:6737-6740, DE): "Halbiere deine
+        // flaw.short_ranged_magic (ArMDE:6808-6811, DE): "Halbiere deine
         // Zaubersummen..." / "Halbiere deine Laborsumme..."; flaw.weak_magic
-        // (ArMDE:7064-7067, DE): "Du halbierst die normale
+        // (ArMDE:7135-7138, DE): "Du halbierst die normale
         // Penetrationssumme..." — the imperative ("du") and 2nd-person
         // ("du ... -st") conjugations of "halve", neither of which the
         // existing `\bhalbiert` (3rd person/past participle) idiom matches.
@@ -1771,7 +1771,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "formula",
     },
     S2Idiom {
-        // flaw.sheltered_upbringing (ArMDE:6721-6724, DE): "Du darfst
+        // flaw.sheltered_upbringing (ArMDE:6792-6795, DE): "Du darfst
         // Feilschen, Charme, Etikette, Menschenkenntnis, Täuschung, Intrige
         // oder Führung nicht als Anfangsfertigkeiten nehmen" — the English
         // mirror already matches the base list's "may not take", but the
@@ -1784,7 +1784,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "prohibition",
     },
     S2Idiom {
-        // flaw.spontaneous_casting_tools (ArMDE:6779-6782, DE): "Dieser
+        // flaw.spontaneous_casting_tools (ArMDE:6850-6853, DE): "Dieser
         // Fehler kann nur von Verditius-Magi gewählt werden" — the English
         // mirror already matches the base list's "can only", but the German
         // uses "kann nur von ... gewählt werden", which neither the existing
@@ -1795,7 +1795,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "prohibition",
     },
     S2Idiom {
-        // flaw.usurer (ArMDE:6951-6954): "You receive the equivalent of
+        // flaw.usurer (ArMDE:7022-7025): "You receive the equivalent of
         // approximately ten pounds of silver each year from interest
         // payments" — F-544's dropped clause, an amount spelled in words
         // rather than digits.
@@ -1804,7 +1804,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "formula",
     },
     S2Idiom {
-        // flaw.usurer (ArMDE:6951-6954, DE): "Du erhältst jährlich das
+        // flaw.usurer (ArMDE:7022-7025, DE): "Du erhältst jährlich das
         // Äquivalent von ungefähr zehn Pfund Silber" — same word-spelled
         // amount.
         pattern: r"\bzehn pfund silber\b",
@@ -1812,7 +1812,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "formula",
     },
     S2Idiom {
-        // flaw.warped_by_magic (ArMDE:7019-7022): "His encounters allow you
+        // flaw.warped_by_magic (ArMDE:7090-7093): "His encounters allow you
         // to spend experience points on Magic Lore during character
         // creation" — F-544's dropped clause, a creation-time XP grant.
         pattern: r"\bexperience points on magic lore\b",
@@ -1820,14 +1820,14 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "formula",
     },
     S2Idiom {
-        // flaw.warped_by_magic (ArMDE:7019-7022, DE): "erlauben es dir, ...
+        // flaw.warped_by_magic (ArMDE:7090-7093, DE): "erlauben es dir, ...
         // Erfahrungspunkte auf Magiekunde auszugeben" — same XP grant.
         pattern: r"\berfahrungspunkte auf magiekunde\b",
         language: Language::De,
         family: "formula",
     },
     S2Idiom {
-        // flaw.tragic_life (ArMDE:6855-6870, DE): "...dass ihr Schöpfer
+        // flaw.tragic_life (ArMDE:6926-6941, DE): "...dass ihr Schöpfer
         // normalerweise keine alternative Situation herbeiführen kann..." —
         // the English mirror already matches the base list's bare
         // `\bcannot`, but the German subordinate clause puts the modal verb
@@ -1849,7 +1849,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         // dropping a sidebar that was actually Templar Administrator's own
         // background text) re-exposed this entry's real rule, previously
         // masked by the Knights Templar paragraph's unrelated "restricted to"
-        // hit. ArMDE:5101: "If it is used for a nonsinful purpose, the
+        // hit. ArMDE:5172: "If it is used for a nonsinful purpose, the
         // treasure destroys itself" — the GM-judgement/open-ended-magnitude
         // shape `uncomputed_rule` exists for (no number, no roll, just a
         // guaranteed-but-unspecified consequence), the same family as
@@ -1859,7 +1859,7 @@ const S2_IDIOMS: &[S2Idiom] = &[
         family: "absolutes",
     },
     S2Idiom {
-        // virtue.tainted_treasure (ArMDE:5101, DE): "zerstört der Schatz sich
+        // virtue.tainted_treasure (ArMDE:5172, DE): "zerstört der Schatz sich
         // selbst" — same idiom, German word order puts the subject between
         // the verb and "sich selbst", so this is a bounded gap (never
         // crossing a sentence) rather than a contiguous phrase, mirroring
@@ -2004,18 +2004,24 @@ fn every_uncomputed_rule_entry_states_its_rule_in_every_locale() {
 /// `(file, first line, last line)`, inclusive, against `rules/source/en/`.
 const SWEPT_BLOCKS: &[(&str, i64, i64)] = &[(
     // S4 (`docs/vf-audit/phase-2-plan.md`, Phase 1S): the whole Virtues
-    // and Flaws catalogue, `## Virtues` (ArMDE:3360) through the end of
-    // `#### Wrathful` (ArMDE:7106-7109), stopping at the closing
-    // dash-and-pull-quote block (ArMDE:7110-7113) before
-    // `# Chapter 5: Abilities` (ArMDE:7114) — never the chapter itself,
+    // and Flaws catalogue, `## Virtues` (ArMDE:3431) through the end of
+    // `#### Wrathful` (ArMDE:7177-7180), stopping at the closing
+    // dash-and-pull-quote block (ArMDE:7181-7184) before
+    // `# Chapter 5: Abilities` (ArMDE:7185) — never the chapter itself,
     // which is exactly the false-offender trap
-    // corrections.md § 2.1a documents (ArMDE:7118's "Ease Factor" would
+    // corrections.md § 2.1a documents (ArMDE:7189's "Ease Factor" would
     // otherwise flag two unrelated `narrative` Flaws). Verified against
     // the source file: the Virtues and Flaws blocks are contiguous,
-    // `## Flaws` (ArMDE:5639) landing directly after the Virtues
-    // section's own trailing `## List of Flaws` TOC (ArMDE:5283-5638),
+    // `## Flaws` (ArMDE:5710) landing directly after the Virtues
+    // section's own trailing `## List of Flaws` TOC (ArMDE:5354-5709),
     // so one range covers both — and every shipped entry's
-    // `source.lines` (checked: min 3362, max 7109) lies inside it.
+    // `source.lines` (checked: min 3433, max 7180) lies inside it.
+    // (P8-3, 2026-10-09: the whole book re-synced upstream; every line number
+    // in this comment shifted by +71 — the ranges below this point are kept
+    // at their ORIGINAL pre-sync values as the dated historical record of
+    // when each sub-sweep actually happened, per the project's own citation
+    // convention for dated records; a stray P8-4 sweep pass briefly relocated
+    // them too and this restores the original historical numbers.)
     //
     // Two blocks, swept incrementally and merged here once contiguous:
     // the Flaws half (originally ArMDE:5639-7113) 2026-09-15, re-swept
@@ -2031,8 +2037,8 @@ const SWEPT_BLOCKS: &[(&str, i64, i64)] = &[(
     // `every_vf_entry_lies_inside_a_swept_block` is what proves the merge
     // covers the whole catalogue rather than claiming it.
     "Ars Magica - Definitive Edition (Core Rules).md",
-    3360,
-    7113,
+    3431,
+    7184,
 )];
 
 /// Entries whose cited passage trips the mechanical-token screen but, on
@@ -2055,7 +2061,7 @@ const SWEPT_BLOCKS: &[(&str, i64, i64)] = &[(
 const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     (
         "flaw.overconfident_major",
-        "ArMDE:6562-6565 uses the word \"botch\" as a bare verb in a roleplaying instruction — \
+        "ArMDE:6633-6636 uses the word \"botch\" as a bare verb in a roleplaying instruction — \
          \"If you actually botch, you come up with some rationalization as to what 'really' \
          happened\" — and states nothing about botch *dice*. The botch it names happens for \
          reasons entirely outside this Flaw; the Flaw only says how the character reacts to one. \
@@ -2069,7 +2075,7 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     ),
     (
         "flaw.overconfident_minor",
-        "The Minor half of the same entry, citing the same passage (ArMDE:6562-6565). Same \
+        "The Minor half of the same entry, citing the same passage (ArMDE:6633-6636). Same \
          reading as flaw.overconfident_major.",
     ),
     // flaw.horrifying_appearance_snake_legs: OVERTURNED (X2f) — this reading
@@ -2084,7 +2090,7 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     // See tmp/x2f-verdicts.md.
     (
         "flaw.lecherous_major",
-        "ArMDE:6334-6337's \"you need not be any good at seduction; skill here merely changes \
+        "ArMDE:6405-6408's \"you need not be any good at seduction; skill here merely changes \
          the kinds of problems you encounter\" states no restriction, cap, or roll — a bare \
          disclaimer that no skill gates this Flaw, the same non-mechanical \"need not\" shape \
          (family 1/3-adjacent) as flaw.slothful/flaw.tzadik_nistar. Moved from \
@@ -2093,10 +2099,10 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     ),
     (
         "flaw.lecherous_minor",
-        "The Minor half of the same entry, citing the same passage (ArMDE:6334-6337). Same \
+        "The Minor half of the same entry, citing the same passage (ArMDE:6405-6408). Same \
          reading as flaw.lecherous_major.",
     ),
-    // "flaw.primogeniture_lineage" (ArMDE:6634-6637) is REMOVED here (X2g,
+    // "flaw.primogeniture_lineage" (ArMDE:6705-6708) is REMOVED here (X2g,
     // tmp/x2g-verdicts.md, D67): this row's own reading ("the one genuinely
     // mechanical clause... is already computed via `prerequisites`") was an
     // argument for reclassifying to `creation_effect`, not for staying
@@ -2104,7 +2110,7 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     // row here to still cite a `narrative` entry, and this one no longer is.
     // See `primogeniture_lineage_reclassifies_to_creation_effect`
     // (`x2_reclassification.rs`) for the pinned target classification.
-    // "flaw.true_love_major"/"flaw.true_love_minor" (ArMDE:6871-6878) are
+    // "flaw.true_love_major"/"flaw.true_love_minor" (ArMDE:6942-6949) are
     // REMOVED here (X2h, tmp/x2h-verdicts.md, D67): this row's own reading
     // ("nothing is dropped, because there is no third thing for the text to
     // say") was an argument for reclassifying to `creation_effect`, not for
@@ -2129,7 +2135,7 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     // flaw.busybody: OVERTURNED (X2e) — this reading pre-dates D50. Re-read
     // against D50's actual test ("would a player/storyguide get it wrong
     // without knowing it"), not the narrower "is it computed" question this
-    // row asked: ArMDE:5763-5764's "magi probably don't have much knowledge
+    // row asked: ArMDE:5834-5835's "magi probably don't have much knowledge
     // of what's going on among the lower-class members of their covenant
     // unless they choose to apply this Flaw specifically to such people at
     // character creation" is a real creation-time scope choice — the same
@@ -2180,10 +2186,10 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
          is the same \"can't bear X\" temperament idiom as flaw.compassionate_major, not a \
          restricted capability.",
     ),
-    // "flaw.tragic_life" (ArMDE:6855-6870) is REMOVED here (X2h,
+    // "flaw.tragic_life" (ArMDE:6926-6941) is REMOVED here (X2h,
     // tmp/x2h-verdicts.md, OQ-6): this row's own reading addressed only the
     // "cannot" token ("describes a limit on the demon's narrative planning"),
-    // which still holds, but it missed ArMDE:6859's separate, real
+    // which still holds, but it missed ArMDE:6930's separate, real
     // creation-time instruction — "The predisposition toward sin at the
     // character's pivotal moment should be represented with a sinful
     // Personality Trait" — the same D50/OQ-6 shape that already overturned
@@ -2192,10 +2198,10 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     // `tragic_life_states_its_sinful_personality_trait_instruction`
     // (`x2_reclassification.rs`).
     // --- S4 additions (docs/vf-audit/phase-2-plan.md, Phase 1S): SWEPT_BLOCKS
-    // widened to the whole catalogue, newly sweeping ArMDE:3951-5638.
+    // widened to the whole catalogue, newly sweeping ArMDE:4022-5709.
     // virtue.ghostly_warder: OQ-6 re-test (X2a) overturns this row rather than
     // confirming it — the "300 experience points" reading above still holds
-    // (NPC stats, not a PC rule), but ArMDE:3963-3966 also states "can leave
+    // (NPC stats, not a PC rule), but ArMDE:4034-4037 also states "can leave
     // your presence once per day for up to half an hour", a real
     // storyguide-enforced limit on the Virtue's utility that the original
     // reading did not address. Reclassifies to uncomputed_rule (D50); see
@@ -2203,20 +2209,20 @@ const NO_RULE_DESPITE_TOKEN: &[(&str, &str)] = &[
     // rule, so `no_swept_entry_drops_an_uncomputed_mechanical_clause` should
     // bite it directly rather than stay silenced.
     // virtue.indescribable_face: OQ-6 re-test (X2b) overturns this row — the
-    // "no roll, bonus, or cap" reading missed that ArMDE:4109's "A player who
+    // "no roll, bonus, or cap" reading missed that ArMDE:4180's "A player who
     // selects this Virtue for his character needs to select which form of the
     // Virtue his character has" is a real, mandatory creation-time choice
     // (D50: a player who does not know it will not make it), even though
     // neither form's behavior is itself computed. Reclassifies to
     // uncomputed_rule; see tmp/x2b-verdicts.md.
     // virtue.magical_warder: OQ-6 re-test (X2b) overturns this row too, on the
-    // same clause X2a already reversed for its own cited sibling: ArMDE:4381
+    // same clause X2a already reversed for its own cited sibling: ArMDE:4452
     // "leave your presence for up to half a day" is the identical
     // storyguide-enforced utility limit that flipped virtue.ghostly_warder.
     // Reclassifies to uncomputed_rule; see tmp/x2b-verdicts.md.
     // virtue.paid_rights: OQ-6 re-test (X2c) overturns this row — the "cannot
     // pay a fine to" readings still hold (in-fiction social premise), but
-    // ArMDE:4606-4615's own permission grant ("only available to female
+    // ArMDE:4677-4686's own permission grant ("only available to female
     // characters, and is compatible with any Social Status that is normally
     // restricted to men") is the same real, separately-uncomputed eligibility/
     // compatibility shape X2b already reclassified for
@@ -2305,7 +2311,7 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // flaw.lecherous_major, flaw.lecherous_minor: OVERTURNED (X2f) — this was
     // a placeholder row from the X2b Phase 2 fix-round ("filed here per that
     // row's classification precondition rather than resolved"), never a
-    // confirmed drop. ArMDE:6334-6337's "you need not be any good at
+    // confirmed drop. ArMDE:6405-6408's "you need not be any good at
     // seduction; skill here merely changes the kinds of problems you
     // encounter" states no restriction, cap, or roll — it is the same
     // non-mechanical "need not" shape as flaw.slothful/flaw.tzadik_nistar's
@@ -2313,24 +2319,24 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // NO_RULE_DESPITE_TOKEN; see tmp/x2f-verdicts.md.
     // flaw.magical_being_companion: resolved (X2g, `tmp/x2g-verdicts.md`) —
     // reclassifies narrative -> uncomputed_rule, full three-paragraph passage
-    // (ArMDE:6386-6391, including the "10 – Size" Magic Might formula) as
+    // (ArMDE:6457-6462, including the "10 – Size" Magic Might formula) as
     // description in both locales, a Phase 2 data change not yet landed.
     // flaw.master_of_none: resolved (X2g) — reclassifies narrative ->
-    // uncomputed_rule, full passage (ArMDE:6418-6421, the lost-XP rule) as
+    // uncomputed_rule, full passage (ArMDE:6489-6492, the lost-XP rule) as
     // description in both locales.
     // flaw.monastic_vows_hermetic: resolved (X2g) — reclassifies narrative ->
     // uncomputed_rule (D67: the existing `prerequisites: hermetically_trained`
     // already computes something, but the "cannot own vis"/"cannot marry"
     // clauses are a real, separately uncomputed rule), full passage
-    // (ArMDE:6450-6453) as description in both locales.
+    // (ArMDE:6521-6524) as description in both locales.
     // flaw.motion_sickness: resolved (X2g) — reclassifies narrative ->
-    // uncomputed_rule, full passage (ArMDE:6468-6471, the double-fatigue/
+    // uncomputed_rule, full passage (ArMDE:6539-6542, the double-fatigue/
     // two-level-floor formula) as description in both locales.
     // flaw.necessary_condition: resolved (X2g) — reclassifies narrative ->
     // uncomputed_rule (same D67 shape as monastic_vows_hermetic above), full
-    // passage (ArMDE:6476-6479) as description in both locales.
+    // passage (ArMDE:6547-6550) as description in both locales.
     // flaw.no_hands: resolved (X2g) — reclassifies narrative ->
-    // uncomputed_rule, full passage (ArMDE:6496-6499, the "– 5" Casting Score
+    // uncomputed_rule, full passage (ArMDE:6567-6570, the "– 5" Casting Score
     // penalty — note the source's own EN DASH + space + digit spacing, which
     // the verbatim checker's digit-adjacent normalization does not touch) as
     // description in both locales.
@@ -2350,7 +2356,7 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // uncomputed_rule (same D67 shape as monastic_vows_hermetic/
     // necessary_condition above: the existing `prerequisites` computes
     // something, but the conditional-restriction-plus-enchanted-item clause is
-    // a real, separately uncomputed rule), full passage (ArMDE:6691-6694) as
+    // a real, separately uncomputed rule), full passage (ArMDE:6762-6765) as
     // description in both locales.
     // flaw.sheltered_upbringing, flaw.stockade_parma_magica,
     // flaw.study_requirement, flaw.suppressed_gift, flaw.tainted_with_evil,
@@ -2362,7 +2368,7 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // --- X2b Phase 2 fix-round additions (2026-09-29): new S2 idioms written
     // to satisfy X2b's own entries' verbatim descriptions newly sweep these
     // six entries elsewhere in the catalogue, all still `narrative`, all
-    // outside X2b's own range (ArMDE:4067-4442) — filed here per that row's
+    // outside X2b's own range (ArMDE:4138-4513) — filed here per that row's
     // classification precondition rather than resolved, exactly as any other
     // PMC row awaiting its own slice. (flaw.lecherous_major/_minor:
     // OVERTURNED and moved to NO_RULE_DESPITE_TOKEN — see X2f above.)
@@ -2391,7 +2397,7 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // data_integrity.rs::PENDING_D67_CLASSIFICATION, which carried the D67 half
     // of these three rows.
     // --- S4 additions (docs/vf-audit/phase-2-plan.md, Phase 1S): SWEPT_BLOCKS
-    // widened to the whole catalogue, newly sweeping ArMDE:3951-5638.
+    // widened to the whole catalogue, newly sweeping ArMDE:4022-5709.
     // virtue.gorgiastic, virtue.gossip, virtue.greater_benediction,
     // virtue.greater_immunity, virtue.guardian_angel, virtue.harnessed_magic:
     // resolved (X2a) — all six reclassify narrative -> uncomputed_rule, see
@@ -2433,7 +2439,7 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // data_integrity.rs::PENDING_D46_CLASSIFICATION too, see
     // tmp/x2a-verdicts.md.
     // virtue.hermetic_magus: resolved (X2b) — reclassifies to creation_effect
-    // per D46's own ruling (ArMDE:4067-4070, computed via the magus profile's
+    // per D46's own ruling (ArMDE:4138-4141, computed via the magus profile's
     // required_traits); removed from data_integrity.rs::PENDING_D46_CLASSIFICATION
     // too, see tmp/x2b-verdicts.md.
     // --- X2a fix-round additions (2026-09-29): the new "capability"/
@@ -2446,13 +2452,13 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
     // a concurrent slice landed `prerequisites: all(order_member,
     // house.verditius)` for this entry since this row was filed, so the
     // eligibility clause it names ("can only be taken by Verditius magi") is
-    // now computed — but ArMDE:6779-6782's casting-tools requirement ("must
+    // now computed — but ArMDE:6850-6853's casting-tools requirement ("must
     // use casting tools to cast spontaneous spells") is a real, separately
     // uncomputed rule that survives it (D67), so the entry still reclassifies
     // narrative -> uncomputed_rule, just not for the reason this row
     // originally gave.
     // virtue.lesser_purifying_touch: resolved (X2b) — reclassifies to
-    // uncomputed_rule (ArMDE:4287-4290, "You can only choose an illness, not an
+    // uncomputed_rule (ArMDE:4358-4361, "You can only choose an illness, not an
     // injury or other misfortune" is a real restriction the summary does not
     // carry), see tmp/x2b-verdicts.md.
     // --- X2d fix-round additions (2026-09-30): the new "wealthy/poor
@@ -2513,7 +2519,7 @@ const PENDING_MECHANICAL_CLASSIFICATION: &[(&str, &str)] = &[
 const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
     (
         "virtue.hermetic_magus",
-        "X2b (tmp/x2b-verdicts.md), D46's own named case: the whole passage in ArMDE:4067-4070 \
+        "X2b (tmp/x2b-verdicts.md), D46's own named case: the whole passage in ArMDE:4138-4141 \
          (\"All magi must take this as their Social Status, and only magi may take it\") is \
          computed by the magus character-type profile's `required_traits` naming this entry, not \
          by any effect/description of the entry's own; classification moved narrative -> \
@@ -2522,7 +2528,7 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
     ),
     (
         "virtue.covenfolk",
-        "X2a (tmp/x2a-verdicts.md): the only mechanical clause in ArMDE:3609-3612 — \"You may not \
+        "X2a (tmp/x2a-verdicts.md): the only mechanical clause in ArMDE:3680-3683 — \"You may not \
          take the Wealthy Major Virtue or the Poor Major Flaw\" — is the entry's own \
          `incompatible_with` (Wealthy, Poor); the rest of the passage is pure social-status \
          flavor, so classification moved narrative -> creation_effect (D67) and no separate \
@@ -2551,7 +2557,7 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
     ),
     (
         "flaw.pagan_minor",
-        "D78.2: the Minor twin of flaw.pagan, citing the SAME passage (ArMDE:6570-6573) and \
+        "D78.2: the Minor twin of flaw.pagan, citing the SAME passage (ArMDE:6641-6644) and \
          carrying the identical ability_authorization effect — same reading as flaw.pagan above.",
     ),
     (
@@ -2608,7 +2614,7 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          ability_authorization (X1/D43); \"may not have The Gift\" is already \
          incompatible_with:[virtue.the_gift]; \"you may have some Supernatural Abilities\" \
          names no specific Ability and is gated per-Ability by validate_supernatural_abilities \
-         regardless (ArMDE:2315).",
+         regardless (ArMDE:2383).",
     ),
     (
         "virtue.fidai",
@@ -2683,7 +2689,7 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
     // virtue.town_magistrate: moved to PENDING_DROPPED_CLAUSE (X2d) — the
     // Ability-3 prerequisite (F-322) is correctly out of this screen's reach
     // (a `prereq`-kind finding), but D62 (seasons are not modelled, so a
-    // seasonal-commitment clause becomes text) applies to ArMDE:5151's "occupies
+    // seasonal-commitment clause becomes text) applies to ArMDE:5222's "occupies
     // the character for two seasons each year, but he is free for the
     // remaining two seasons" — a real clause this certification did not
     // account for. See tmp/x2d-verdicts.md.
@@ -2705,7 +2711,7 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
     ),
     // virtue.university_grammar_teacher: moved to PENDING_DROPPED_CLAUSE
     // (X2d) — this certification correctly reads "should have a score in
-    // Teaching" as soft, but misses ArMDE:5197's own separate, hard
+    // Teaching" as soft, but misses ArMDE:5268's own separate, hard
     // obligation: "They must teach two seasons out of the year." See
     // tmp/x2d-verdicts.md.
     (
@@ -2820,7 +2826,7 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
     (
         "flaw.primogeniture_lineage",
         "X2g (tmp/x2g-verdicts.md), D67: moved here from NO_RULE_DESPITE_TOKEN now that the \
-         entry reclassifies narrative -> creation_effect (ArMDE:6634-6637). The one genuinely \
+         entry reclassifies narrative -> creation_effect (ArMDE:6705-6708). The one genuinely \
          mechanical clause, \"This Flaw can only be taken by magi of House Verditius\", is fully \
          computed via `prerequisites: all(order_member, house.verditius)`; the newly-tripped \
          phrase (\"at least three places removed\") sits in the fictional-succession premise the \
@@ -2925,7 +2931,7 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          Houses-phase granted_selections machinery.",
     ),
     // --- S4 additions (docs/vf-audit/phase-2-plan.md, Phase 1S): SWEPT_BLOCKS
-    // widened to the whole catalogue, newly sweeping ArMDE:3951-5638.
+    // widened to the whole catalogue, newly sweeping ArMDE:4022-5709.
     (
         "virtue.giant_blood",
         "all three signed numbers (Size +2, Strength +1, Stamina +1) match three effects \
@@ -2971,7 +2977,7 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
     // (`docs/vf-audit/corrections.md`) is a live finding this row did not
     // account for: the Initiative formula (Quickness - twice power magnitude),
     // the Fatigue-cost scaling by level, and the one-for-one Penetration
-    // purchase (ArMDE:4279-4286) reach the player nowhere. This departs from
+    // purchase (ArMDE:4350-4357) reach the player nowhere. This departs from
     // X2a's "no action" call on the identically-shaped virtue.greater_power
     // (same gap, same live F-96 finding, apparently not read this closely) —
     // flagged here for the record, not fixed (out of this slice's range). See
@@ -2981,17 +2987,17 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
         "the operative bonus (+9 Initiative) is computed via combat_mod; the stress-die-plus-\
          Quickness trigger roll is table-time GM adjudication, the same shape botch dice are.",
     ),
-    // virtue.linguist: moved to PENDING_DROPPED_CLAUSE (X2b) — F-150: ArMDE:4315's
+    // virtue.linguist: moved to PENDING_DROPPED_CLAUSE (X2b) — F-150: ArMDE:4386's
     // "All Advancement Totals for any Language are increased by a quarter" is a
     // distinct in-play XP-gain-rate rule from "any experience points you put
-    // into any language at character generation" (ArMDE:4316-4317), which is the
+    // into any language at character generation" (ArMDE:4387-4388), which is the
     // one `group_affinity_cost` actually implements (its own doc comment: "XP
     // put into any language 'counts as' num/den of itself"). The Advancement
     // Totals half reaches the player nowhere. See tmp/x2b-verdicts.md.
     // virtue.lone_redcap: moved to PENDING_DROPPED_CLAUSE (X2b) — F-151's `desc`
     // half: the two-seasons-of-service obligation ("or... declared Orbus"), the
     // Poor/Wealthy season-count interactions, and the mundane-Social-Status
-    // compatibility note (ArMDE:4319-4326) reach the player nowhere; the base
+    // compatibility note (ArMDE:4390-4397) reach the player nowhere; the base
     // numbers this row cites (Reputation, 300 XP, Well-Traveled) genuinely are
     // computed. F-151's `rep` half (the Reputation's polarity) is a possible
     // numeric-correctness defect, not a description gap — X7's concern, not
@@ -3001,7 +3007,7 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
     // requisites"), the lab-activity restriction ("cannot be focused on
     // laboratory activities, although a focus does apply to laboratory
     // activities"), and the breadth rule ("smaller than a single Art, but may be
-    // spread over several Arts") reach the player nowhere (ArMDE:4399-4422); only
+    // spread over several Arts") reach the player nowhere (ArMDE:4470-4493); only
     // the doubling itself is computed. See tmp/x2b-verdicts.md.
     (
         "virtue.mastered_spells",
@@ -3033,7 +3039,7 @@ const COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE: &[(&str, &str)] = &[
          ability_score_grant.",
     ),
     // virtue.sense_holiness_and_unholiness: OVERTURNED (X2d) — this
-    // certification missed ArMDE:4928's "your sensitivity may overwhelm you"
+    // certification missed ArMDE:4999's "your sensitivity may overwhelm you"
     // in a strong divine/infernal aura, D50's own worked example (Q-66). D67
     // applies: reclassifies to uncomputed_rule despite the ability_score_grant
     // effect staying. See tmp/x2d-verdicts.md.
@@ -3131,7 +3137,7 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // Lore-1 cap orphan is real and still unaddressed; removing the row lets
     // `no_swept_entry_drops_an_uncomputed_mechanical_clause` bite it directly
     // (classification stays creation_effect; D5 obliges the cap into
-    // description, full passage ArMDE:6392-6395).
+    // description, full passage ArMDE:6463-6466).
     // virtue.almogavar: resolved (X2a) — its F-340/X4 incompatible_with orphan
     // stays unencoded (a separate slice's job), but X2a's own obligation is a
     // description covering some clause of the passage, so this row shrinks;
@@ -3141,34 +3147,34 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
         "virtue.mendicant_friar",
         "orphan: \"You may not take the Wealthy Virtue or Poor Flaw\" carries no \
          incompatible_with — F-340's family, a separate slice (X4), not this row's \
-         ability_authorization fix, ArMDE:4488-4495",
+         ability_authorization fix, ArMDE:4559-4566",
     ),
     (
         "virtue.perfectus",
         "orphan: \"may not take Wealthy\" carries no incompatible_with (F-340's family, X4), and \
          the conditional \"may... take Purity or Transcendence Abilities\" (only with True \
          Faith) is a second, unencoded permission distinct from the plain Academic one this row \
-         adds — a separate finding, ArMDE:4632-4634",
+         adds — a separate finding, ArMDE:4703-4705",
     ),
     (
         "virtue.priest",
         "orphan: \"If you are a parish priest, you cannot take the Poor Flaw\" is a conditional \
          prohibition the engine has no \"is a parish priest\" fact to gate on — distinct from \
          the F-340 blanket Wealthy/Poor exclusion family; the Academic-Ability permission itself \
-         is computed via ability_authorization, ArMDE:4800",
+         is computed via ability_authorization, ArMDE:4871",
     ),
     // virtue.turb_trained: resolved — the Wealthy/Poor exclusion landed
     // (X4, `incompatible_with`), and the single-dead-language grant now
     // carries a player-chosen `language` parameter bound to
     // `ability.dead_language` via `AbilityRef::Scoped` (X6b,
-    // design-x6-parameters.md e5, ArMDE:5179-5182). Both clauses this row
+    // design-x6-parameters.md e5, ArMDE:5250-5253). Both clauses this row
     // recorded are computed; removed.
     // flaw.baneful_circumstances resolved (X7c, Phase 2, D46/D67): reclassified
     // `uncomputed_rule` with the full passage in `description` in both
     // locales, so it no longer trips this creation_effect/in_play_effect-
     // scoped screen — see tmp/x7c-verdicts.md.
     // flaw.bound_to_role_role: resolved (X2e) — the deprivation-check-as-food
-    // clause and "may only be taken by grogs" (F-375, ArMDE:5735-5748) reach
+    // clause and "may only be taken by grogs" (F-375, ArMDE:5806-5819) reach
     // neither locale; only the Unaging half is computed. Removing the row is
     // enough — `no_swept_entry_drops_an_uncomputed_mechanical_clause` bites
     // it directly (classification stays in_play_effect). See
@@ -3196,7 +3202,7 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // COMPUTED_ENTRY_COVERS_WHOLE_PASSAGE below. See tmp/x2f-verdicts.md.
     // flaw.imagined_folk_tradition_vulnerability: NOT added here (X2f) — its
     // real D3-inexpressible cap ("a score of 1 (but no more)" on Faerie Lore,
-    // ArMDE:6280-6283, flagged by tmp/rules-md-audit-2026-09-30.md item 5, same
+    // ArMDE:6351-6354, flagged by tmp/rules-md-audit-2026-09-30.md item 5, same
     // shape as flaw.magical_fascination above) is invisible to THIS list's own
     // validity check: the entry's shipped summary is the passage's own first
     // sentence, "...has other game mechanical effects as well" / "...hat...
@@ -3215,23 +3221,23 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // orphans are real and still unaddressed; removing the row lets
     // `no_swept_entry_drops_an_uncomputed_mechanical_clause` bite it directly
     // (classification stays in_play_effect; D5 obliges the full passage,
-    // ArMDE:6454-6467, into description in both locales).
+    // ArMDE:6525-6538, into description in both locales).
     // flaw.obese: resolved (X2g) — the non-Fatigue "-1 to rolls that involve
     // moving quickly or gracefully" orphan is real and still unaddressed;
     // removing the row lets the guard bite it directly (classification stays
-    // in_play_effect; full passage ArMDE:6516-6519 owed as description).
+    // in_play_effect; full passage ArMDE:6587-6590 owed as description).
     // flaw.outlaw: resolved (X2g) — despite the Martial-Abilities
     // ability_authorization and Reputation both already being computed, the
     // displayed text (summary only, no description) states neither figure in
     // any locale; removing the row lets the guard bite it directly
-    // (classification stays creation_effect; full passage ArMDE:6542-6545
+    // (classification stays creation_effect; full passage ArMDE:6613-6616
     // owed as description).
     // flaw.outlaw_leader: resolved (X2g) — same shape as flaw.outlaw: the
     // Reputation, ability_authorization, and the `is_grog` Nor-prerequisite
     // (X5, "Grogs may not take this Flaw") are all now computed, but no
     // locale displays any of it; removing the row lets the guard bite it
     // directly (classification stays creation_effect; full passage
-    // ArMDE:6546-6549 owed as description).
+    // ArMDE:6617-6620 owed as description).
     // flaw.savantism: resolved (X2g) as a full reclassification, not just a
     // description fix — see X2G_RECLASSIFY_WITH_DESCRIPTION in
     // x2_reclassification.rs (D67: the halved starting XP, halved future
@@ -3243,7 +3249,7 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // flaw.the_constant_expression: resolved (X2e) — the permanent lost
     // Fatigue level, the Concentration roll to suppress (Ease Factor 3 +
     // Warping), the extra botch dice on Ceremonial/Ritual casting, and the
-    // free -3 lab Safety Flaw (F-392, ArMDE:5821-5838) all reach neither
+    // free -3 lab Safety Flaw (F-392, ArMDE:5892-5909) all reach neither
     // locale; only a bare "circumstantial" marker is computed. D58 governs:
     // the surfaced-modifier family stays computed as-is (a doubling/marker
     // still cannot be computed where the engine does not know the base) —
@@ -3281,16 +3287,16 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     // flaw.painful_magic: resolved (X2g) — the "do not suffer any physical
     // damage from pain" clarifying clause is real and still unaddressed;
     // removing the row lets the guard bite it directly (classification stays
-    // in_play_effect; full passage ArMDE:6574-6577 owed as description).
+    // in_play_effect; full passage ArMDE:6645-6648 owed as description).
     (
         "virtue.simple_student",
         "eligibility: \"Female characters can only take this Virtue if they are studying to be \
-         physicians at Salerno\", ArMDE:4958-4963 — `creation_effect` (a \
+         physicians at Salerno\", ArMDE:5029-5034 — `creation_effect` (a \
          scaled_restricted_ability_xp effect computes the XP clause), but this gender/location \
          restriction is not computed and reaches the player nowhere",
     ),
     // --- S4 additions (docs/vf-audit/phase-2-plan.md, Phase 1S): SWEPT_BLOCKS
-    // widened to the whole catalogue, newly sweeping ArMDE:3951-5638.
+    // widened to the whole catalogue, newly sweeping ArMDE:4022-5709.
     // virtue.inventive_genius resolved (X7c, Phase 2, D46/D67): reclassified
     // `uncomputed_rule` with the full passage in `description` in both
     // locales — see tmp/x7c-verdicts.md.
@@ -3315,7 +3321,7 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     (
         "virtue.magic_sensitivity",
         "orphan: \"subtract your Magic Sensitivity score from your Magic Resistance\" has no \
-         effect — only the Ability grant is computed, ArMDE:4351-4354",
+         effect — only the Ability grant is computed, ArMDE:4422-4425",
     ),
     (
         "virtue.magister_in_artibus",
@@ -3323,7 +3329,7 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
          age-and-Ability-score eligibility floor (25-Int years, Latin/Artes Liberales 5) and the \
          two-seasons teaching obligation have no prerequisite/effect, and \"only available to \
          male characters\" (F-170) reaches the player nowhere either — only the Reputation and \
-         the XP grant are computed, ArMDE:4385-4394",
+         the XP grant are computed, ArMDE:4456-4465",
     ),
     // virtue.greater_power, virtue.jurist, virtue.knight, virtue.lesser_power,
     // virtue.linguist, virtue.lone_redcap, virtue.major_magical_focus: resolved
@@ -3360,24 +3366,24 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
         "orphan: the Wizard's Vigil auto-knowledge and the Mastery-score stacking still have no \
          effect — only a bare \"mercurian\" marker is computed. The required companion Flaw \
          (Ceremonial Spontaneous Magic, \"also have\") is resolved (X5a/D51 row 1): a \
-         `prerequisites` gate, not a grant, ArMDE:4514-4523",
+         `prerequisites` gate, not a grant, ArMDE:4585-4594",
     ),
     (
         "virtue.potent_magic_major",
         "orphan: the whole Potent-Spells subsystem (Potency Score from Casting Items, capped \
          by Magic Theory) has no effect — only the flat +6 Lab/Casting bonus is computed, \
-         ArMDE:4740-4781",
+         ArMDE:4811-4852",
     ),
     (
         "virtue.potent_magic_minor",
         "orphan: the same Potent-Spells subsystem as virtue.potent_magic_major — only the flat \
-         +3 Lab/Casting bonus is computed, ArMDE:4740-4781",
+         +3 Lab/Casting bonus is computed, ArMDE:4811-4852",
     ),
     (
         "virtue.redcap",
         "orphan: the per-year item-growth rate, the free Well-Traveled grant (no \
          grants_selection), and the free Longevity Ritual when aging starts all have no effect \
-         — only the starting +50 item-level budget is computed, ArMDE:4842-4851",
+         — only the starting +50 item-level budget is computed, ArMDE:4913-4922",
     ),
     (
         "virtue.ritual_power",
@@ -3389,13 +3395,13 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
         "orphan (X2d corrected this reading — the Academic-Abilities claim is stale: X1 already \
          added it): the Wealthy/Poor choice note and the Abbess-only/not-ordained women's \
          restriction have no effect at all — only the two Reputations and the Academic \
-         authorization are computed, ArMDE:4910-4921",
+         authorization are computed, ArMDE:4981-4992",
     ),
     (
         "virtue.strong_angelic_heritage",
         "orphan: the age-scaled Divine Might formula (age / 20), the vis-on-death yield, and \
          Warping immunity are not visibly keyed to age or otherwise computed beyond a flat \
-         might_grant score of 0, ArMDE:5022-5031",
+         might_grant score of 0, ArMDE:5093-5102",
     ),
     // virtue.strong_faerie_blood resolved (X7c, Phase 2, D46/D67): reclassified
     // `uncomputed_rule` with the full passage in `description` in both
@@ -3418,14 +3424,14 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
     (
         "virtue.brother_sergeant",
         "orphan: \"This Virtue is only available to male characters\" reaches the player \
-         nowhere — the Martial Abilities authorization is genuinely computed, ArMDE:3537-3540",
+         nowhere — the Martial Abilities authorization is genuinely computed, ArMDE:3608-3611",
     ),
     (
         "virtue.trained_assassin",
         "orphan: \"This Virtue is only available to characters with one of the Social Status \
          Virtues of the Nizaris\" (an eligibility restriction on another Virtue, not a \
          sex-eligibility one) reaches the player nowhere — the 50 XP grant is genuinely \
-         computed, ArMDE:5153-5156",
+         computed, ArMDE:5224-5227",
     ),
     // --- X2d fix-round (2026-09-30): the new "wealthy/poor unaffected" idiom
     // (added to close virtue.wanderer's own screen miss) newly sweeps these
@@ -3435,25 +3441,25 @@ const PENDING_DROPPED_CLAUSE: &[(&str, &str)] = &[
         "virtue.clerk",
         "orphan: \"The Wealthy Virtue and Poor Flaw affect you normally\" reaches the player \
          nowhere — the Academic Abilities authorization is genuinely computed, \
-         ArMDE:3571-3574",
+         ArMDE:3642-3645",
     ),
     (
         "virtue.failed_apprentice",
         "orphan: \"The Wealthy Virtue and Poor Flaw affect you normally\" reaches the player \
          nowhere — the Academic/Arcane/Martial Abilities authorization is genuinely computed, \
-         ArMDE:3843-3846",
+         ArMDE:3914-3917",
     ),
     (
         "virtue.priest",
         "orphan: \"the Wealthy Virtue and Poor Flaw affect you normally\" reaches the player \
          nowhere — the Academic Abilities authorization is genuinely computed, \
-         ArMDE:4796-4805",
+         ArMDE:4867-4876",
     ),
     (
         "virtue.troubadour",
         "orphan: \"The Wealthy Virtue and Poor Flaw affect you normally\" reaches the player \
          nowhere — the Academic Abilities authorization is genuinely computed, \
-         ArMDE:5157-5164",
+         ArMDE:5228-5235",
     ),
 ];
 
@@ -3908,7 +3914,7 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
 
     // --- The phrase screen -------------------------------------------------
     //
-    // Caps and floors. Source: ArMDE:3577 (Command Animals), :6925 (University
+    // Caps and floors. Source: ArMDE:3648 (Command Animals), :6925 (University
     // Dean), :5733 (Bound to (Realm)), :6981 (Viaticarus).
     assert!(states_a_mechanical_rule(
         "the character may command up to 12 human-sized animals"
@@ -3935,7 +3941,7 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
         "it would be no more than an interesting feature"
     ));
 
-    // Target numbers. Source: ArMDE:3777 (Exotic Casting), :6785 (Stigmatic
+    // Target numbers. Source: ArMDE:3848 (Exotic Casting), :6785 (Stigmatic
     // Catalyst).
     assert!(states_a_mechanical_rule(
         "is made against an Ease Factor of 15"
@@ -3944,7 +3950,7 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
         "würfeln gegen einen Schwierigkeitsgrad von 6"
     ));
 
-    // Formulas. Source: ArMDE:3781 (Extractor of (Form) Vis), :3919 (Folk
+    // Formulas. Source: ArMDE:3852 (Extractor of (Form) Vis), :3919 (Folk
     // Magic), :3757 (Enduring Magic).
     assert!(states_a_mechanical_rule(
         "a number of pawns of Vis equal to a tenth of his Creo Vim Lab Total"
@@ -3960,7 +3966,7 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
     ));
 
     // Rounding, which changes the answer and so is as mechanical as a modifier.
-    // Source: ArMDE:3781; the four English spellings and two German ones are all
+    // Source: ArMDE:3852; the four English spellings and two German ones are all
     // in the books.
     assert!(states_a_mechanical_rule("Lab Total (round up)"));
     assert!(states_a_mechanical_rule("half the total, rounded down"));
@@ -3969,7 +3975,7 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
     ));
     assert!(states_a_mechanical_rule("die Hälfte des Werts, abgerundet"));
 
-    // Dice named by kind. Source: ArMDE:3757 (Enduring Magic), :6078 (The
+    // Dice named by kind. Source: ArMDE:3828 (Enduring Magic), :6078 (The
     // Falling Evil).
     assert!(states_a_mechanical_rule(
         "the storyguide secretly rolls a simple die"
@@ -3985,7 +3991,7 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
     ));
 
     // Absolutes — a rule stated as a prohibition carries no number at all.
-    // Source: ArMDE:3641 (Death Prophecy). The German clause is the *earlier*
+    // Source: ArMDE:3712 (Death Prophecy). The German clause is the *earlier*
     // sentence of the same passage on purpose: German negation is discontinuous
     // ("kannst aber nicht an Wunden oder Alter sterben"), so the fixed literal
     // "nicht sterben" cannot match it, and the spelling the list can carry is
@@ -4001,7 +4007,7 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
         "bis diese Bedingung erfüllt ist, wirst du nicht sterben"
     ));
 
-    // A step counted in magnitudes. Source: ArMDE:3893 (Flexible Formulaic
+    // A step counted in magnitudes. Source: ArMDE:3964 (Flexible Formulaic
     // Magic).
     assert!(states_a_mechanical_rule(
         "raise or lower the casting level of the spell by one magnitude"
@@ -4031,8 +4037,8 @@ fn the_mechanical_token_detector_reads_real_clauses_and_ignores_near_misses() {
 
     // A phrase must begin at a word boundary. Without that, "or more" reads
     // itself out of "f|or more| details" and flags every entry that points at a
-    // supplement — which is how virtue.factor at ArMDE:3795 and virtue.fidai at
-    // ArMDE:3881 first appeared in the sweep. A substring crossing a word boundary
+    // supplement — which is how virtue.factor at ArMDE:3866 and virtue.fidai at
+    // ArMDE:3952 first appeared in the sweep. A substring crossing a word boundary
     // is a defect in the screen, not an idiom to argue down in a
     // `NO_RULE_DESPITE_TOKEN` row.
     assert!(!states_a_mechanical_rule(

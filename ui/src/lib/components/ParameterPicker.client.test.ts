@@ -181,7 +181,7 @@ describe('ParameterPicker number domain bounded input (D35)', () => {
 
 // C5b (D9 part 3, `docs/vf-audit/design-c0-parameter-model.md` § 8, § 10): the
 // multi-select control for a `multi_ref` parameter — `flaw.corrupted_spells_probe`
-// stands in for Corrupted Spells (ArMDE:5859-5864), since no shipped entry uses
+// stands in for Corrupted Spells (ArMDE:5930-5935), since no shipped entry uses
 // `multi_ref` yet (C5c). A `client` test, because selecting/deselecting a
 // checkbox and observing the resulting write and the live `store.dirty` flag are
 // both actions/reactive reads SSR cannot exercise (see this file's own header

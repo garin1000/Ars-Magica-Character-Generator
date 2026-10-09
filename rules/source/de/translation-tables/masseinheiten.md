@@ -27,38 +27,38 @@ Damit derselbe Ort in jedem Buch denselben Wert erhält:
 
 | Objekt | Original | **Deutsch (real)** | Fundstelle |
 |---|---|---|---|
-| Brocken (Höhe) | 3750 ft | **1141 m** | WdW:R |
-| Mont Radhošť (Höhe) | 3700 ft | **1129 m** | WdW:R |
-| Mont Sainte-Odile / Hohenburg (Höhe) | 2500 ft | **763 m** | WdW:R |
-| Drachenfels (Höhe) | 1000 ft | **321 m** | WdW:R |
-| Königsstuhl auf Rügen (Höhe) | 380 ft | **118 m** | WdW:R |
-| Harz (Länge) | fifty-mile stretch | **ca. 110 km** | WdW:R |
-| Schwarzwald (Länge × Breite) | 100 mi × 40 mi | **160 km × bis 60 km** | WdW:R |
-| Thüringer Wald (Länge × Breite) | 100 mi × 30 mi | **150 km × 10–35 km** | WdW:R |
-| Westerwald (Länge) | more than fifty miles | **ca. 60 km** | WdW:R |
-| Rügen (Ausdehnung) | 20 miles across | **ca. 52 km** | WdW:R |
-| Mittelrheintal Bingen–Koblenz | about twenty miles | **65 km** | WdW:R |
-| Mainz → Bingen | some twenty miles | **ca. 30 km** | WdW:R |
-| Kaub → Oberwesel | two miles | **ca. 5 km** | WdW:R |
-| Fulda → Hersfeld | forty miles | **ca. 50 km** | WdW:R |
+| Brocken (Höhe) | 3750 ft | **1141 m** | WdW |
+| Mont Radhošť (Höhe) | 3700 ft | **1129 m** | WdW |
+| Mont Sainte-Odile / Hohenburg (Höhe) | 2500 ft | **763 m** | WdW |
+| Drachenfels (Höhe) | 1000 ft | **321 m** | WdW |
+| Königsstuhl auf Rügen (Höhe) | 380 ft | **118 m** | WdW |
+| Harz (Länge) | fifty-mile stretch | **ca. 110 km** | WdW |
+| Schwarzwald (Länge × Breite) | 100 mi × 40 mi | **160 km × bis 60 km** | WdW |
+| Thüringer Wald (Länge × Breite) | 100 mi × 30 mi | **150 km × 10–35 km** | WdW |
+| Westerwald (Länge) | more than fifty miles | **ca. 60 km** | WdW |
+| Rügen (Ausdehnung) | 20 miles across | **ca. 52 km** | WdW |
+| Mittelrheintal Bingen–Koblenz | about twenty miles | **65 km** | WdW |
+| Mainz → Bingen | some twenty miles | **ca. 30 km** | WdW |
+| Kaub → Oberwesel | two miles | **ca. 5 km** | WdW |
+| Fulda → Hersfeld | forty miles | **ca. 50 km** | WdW |
 | Brienzersee (Länge × Breite) | 9 mi × 1,5 mi | **14 km × 2,8 km** | SdM:M |
-| Rhein (Gesamtlänge) | more than 700 mi | **mehr als 1200 km** | WdW:R |
-| Rhein Konstanz → Basel | nearly 100 mi | **rund 140 km** (Hochrhein) | WdW:R |
-| Rhein Basel → Mainz | further 200 mi | **300 km** | WdW:R |
-| Deutschland (Ausdehnung) | 500 mi in either direction | **etwa 800 km** | WdW:R |
-| Donau ab Quelle bis Bayern | 200 mi from its source | **rund 200 km** (Quelle → Ulm) | WdW:R |
-| Speyer → Burg Trifels | twenty miles | **40 km** | WdW:R |
-| Mühlhausen → Thann | a dozen or so miles | **rund 20 km** | WdW:R |
-| Metz → Toul (Mosel aufwärts) | forty miles | **75 km** (Flusslauf) | WdW:R |
-| Toul → Andresina (Grand) | two dozen miles | **36 km** (deckt sich mit Umrechnung) | WdW:R |
-| Köln: Mauerhalbkreis / Rheinfront | radius 2 mi / four-mile stretch | **2 km Radius / knapp 4 km** | WdW:R |
-| Ems-Mündung → Drenthe | a couple of dozen miles | **rund 60 km** | WdW:R |
-| Paderborn → Höxter | twenty miles | **40 km** | WdW:R |
-| Brocken → Hexentanzplatz | a dozen miles | **rund 30 km** | WdW:R |
-| Odenwald (Länge) | fifty-mile | **70 km** (Westerwald 60 km) | WdW:R |
-| Hiddensee („Hedinsey", Länge) | 10-mile-long | **rund 17 km** | WdW:R |
-| Prag → Sedlec | a couple of dozen miles | **rund 60 km** | WdW:R |
-| Lahn: Rhein → Limburg | some two dozen miles | **rund 55 km** (Flusslauf) | WdW:R |
+| Rhein (Gesamtlänge) | more than 700 mi | **mehr als 1200 km** | WdW |
+| Rhein Konstanz → Basel | nearly 100 mi | **rund 140 km** (Hochrhein) | WdW |
+| Rhein Basel → Mainz | further 200 mi | **300 km** | WdW |
+| Deutschland (Ausdehnung) | 500 mi in either direction | **etwa 800 km** | WdW |
+| Donau ab Quelle bis Bayern | 200 mi from its source | **rund 200 km** (Quelle → Ulm) | WdW |
+| Speyer → Burg Trifels | twenty miles | **40 km** | WdW |
+| Mühlhausen → Thann | a dozen or so miles | **rund 20 km** | WdW |
+| Metz → Toul (Mosel aufwärts) | forty miles | **75 km** (Flusslauf) | WdW |
+| Toul → Andresina (Grand) | two dozen miles | **36 km** (deckt sich mit Umrechnung) | WdW |
+| Köln: Mauerhalbkreis / Rheinfront | radius 2 mi / four-mile stretch | **2 km Radius / knapp 4 km** | WdW |
+| Ems-Mündung → Drenthe | a couple of dozen miles | **rund 60 km** | WdW |
+| Paderborn → Höxter | twenty miles | **40 km** | WdW |
+| Brocken → Hexentanzplatz | a dozen miles | **rund 30 km** | WdW |
+| Odenwald (Länge) | fifty-mile | **70 km** (Westerwald 60 km) | WdW |
+| Hiddensee („Hedinsey", Länge) | 10-mile-long | **rund 17 km** | WdW |
+| Prag → Sedlec | a couple of dozen miles | **rund 60 km** | WdW |
+| Lahn: Rhein → Limburg | some two dozen miles | **rund 55 km** (Flusslauf) | WdW |
 
 Die Liste ist bei jedem neuen geografischen Maß zu ergänzen.
 
@@ -213,7 +213,7 @@ Belegte Fälle:
 | HdH:WL, Magvillus bei Potenza | around nine miles | 13,5 km | **etwa vierzehn Kilometer** |
 | SdM:M, Goliath von Gath | nine and a half feet tall | 2,85 m | **etwa 3 Meter** |
 
-Nach dieser Regel bereinigt (2026-08-31): HdH:MK „acht Kilometer" (five miles) · WdW:R „etwa 23 Kilometer" (some 15 miles, 2×), „4,5 Kilometer langen Weg", „fünf Meter aus dem Wasser" (around fifteen feet) · ArM5 „gut zehn Kilometer zu Fuß" (seven miles), „4,5 Metern … nicht von 18 Metern" · SdM:D „etwa 2,5 Meter groß" (some eight feet).
+Nach dieser Regel bereinigt (2026-08-31): HdH:MK „acht Kilometer" (five miles) · WdW „etwa 23 Kilometer" (some 15 miles, 2×), „4,5 Kilometer langen Weg", „fünf Meter aus dem Wasser" (around fifteen feet) · ArM5 „gut zehn Kilometer zu Fuß" (seven miles), „4,5 Metern … nicht von 18 Metern" · SdM:D „etwa 2,5 Meter groß" (some eight feet).
 
 Damit ist der Korpus frei von ausgeschriebenen Halben-Komposita; Prüfung: `grep -nE '(einhalb|anderthalb)\w* *(Kilo|Meter|Zenti|Tonne)'`.
 
@@ -252,7 +252,7 @@ Die Faktoren sind je Einheit auf Lesbarkeit und Realitätsnähe optimiert, nicht
 
 *Historie:*
 - *2026-08-31: Ausnahme „Fließtext vs. Regeltext" ergänzt (keine ausgeschriebenen Halben; bei gerundeter Quelle keine Dezimalstelle) — nach zwei Korrekturen des Autors vor der Übernahme nach `german-reviewed/`.*
-- *2026-08-31: Alle geografischen Angaben auf Realwerte umgestellt (16 weitere Stellen in WdW:R); Kandidaten- und Offen-Liste aufgelöst, Basisregeln für Fluss- vs. Luftlinie dokumentiert.*
+- *2026-08-31: Alle geografischen Angaben auf Realwerte umgestellt (16 weitere Stellen in WdW); Kandidaten- und Offen-Liste aufgelöst, Basisregeln für Fluss- vs. Luftlinie dokumentiert.*
 - *2026-08-31: Abschnitt „Einheitenwahl" ergänzt (keine führenden Nullen; Intervalle in der kleineren Einheit; Machtwert-Maße als „X cm je Punkt"). 18 Werte in fünf Büchern angepasst.*
 - *2026-08-30: Größentabelle in allen vier Kopien auf die gerundete Leiter umgestellt; in SdM:Magie zusätzlich die Riesenstufen +8 bis +20 korrigiert (standen auf Realfaktor-Umrechnung statt Tonnen-Anker).*
 - *2026-08-30: Konvention auf den gesamten Korpus angewendet — 96 Zahlenstellen in zehn Büchern (Meilenwerte auf ×1,5 umgestellt, Werteliste-Einträge auf reale Werte gesetzt).*

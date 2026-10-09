@@ -10,10 +10,12 @@
 
 ## Techniken / Techniques
 
-| Englisch (EN) | Lateinisch | Deutsch (DE) | Bedeutung |
+*→ Beschreibungen: Basisregeln, Abschnitt *Die Hermetischen Künste*, Unterabschnitte *Techniken* und *Formen* (Kapitel 7: Hermetische Magie).*
+
+| Englisch (EN) | Lateinisch | Deutsch (DE) | Wörtlich |
 |---|---|---|---|
 | Creo (Cr) | Creo | Creo (Cr) | Ich erschaffe |
-| Intellego (In) | Intellego | Intellego (In) | Ich verstehe / Wahrnehmung |
+| Intellego (In) | Intellego | Intellego (In) | Ich erkenne |
 | Muto (Mu) | Muto | Muto (Mu) | Ich verändere |
 | Perdo (Pe) | Perdo | Perdo (Pe) | Ich zerstöre |
 | Rego (Re) | Rego | Rego (Re) | Ich beherrsche |
@@ -24,24 +26,26 @@
 
 ## Formen / Forms
 
-| Englisch (EN) | Lateinisch (Kasus im Spiel) | Deutsch (DE) | Bedeutung |
+| Englisch (EN) | Lateinisch (Kasus im Spiel) | Deutsch (DE) | Wörtlich |
 |---|---|---|---|
-| Animal (An) | Animal (n., Nom./Akk. Sg.) | Animal (An) | Tiere |
+| Animal (An) | Animal (n., Nom./Akk. Sg.) | Animal (An) | Tier |
 | Aquam (Aq) | Aquam (f., Akk. Sg.) | Aquam (Aq) | Wasser |
-| Auram (Au) | Auram (f., Akk. Sg.) | Auram (Au) | Luft und Wetter |
-| Corpus (Co) | Corpus (n., Nom./Akk. Sg.) | Corpus (Co) | Menschlicher Körper |
-| Herbam (He) | Herbam (f., Akk. Sg.) | Herbam (He) | Pflanzen |
+| Auram (Au) | Auram (f., Akk. Sg.) | Auram (Au) | Luft |
+| Corpus (Co) | Corpus (n., Nom./Akk. Sg.) | Corpus (Co) | Körper |
+| Herbam (He) | Herbam (f., Akk. Sg.) | Herbam (He) | Pflanze |
 | Ignem (Ig) | Ignem (m., Akk. Sg.) | Ignem (Ig) | Feuer |
-| Imaginem (Im) | Imaginem (f., Akk. Sg.) | Imaginem (Im) | Erscheinungen / Sinne |
-| Mentem (Me) | Mentem (f., Akk. Sg.) | Mentem (Me) | Geist / Verstand |
-| Terram (Te) | Terram (f., Akk. Sg.) | Terram (Te) | Erde und Gestein |
-| Vim (Vi) | Vim (f., Akk. Sg. von Vis) | Vim (Vi) | Magische Urkraft |
+| Imaginem (Im) | Imaginem (f., Akk. Sg.) | Imaginem (Im) | Erscheinung |
+| Mentem (Me) | Mentem (f., Akk. Sg.) | Mentem (Me) | Geist |
+| Terram (Te) | Terram (f., Akk. Sg.) | Terram (Te) | Erde |
+| Vim (Vi) | Vim (f., Akk. Sg. von Vis) | Vim (Vi) | Kraft |
 
 *Die Formen werden im Spiel im Akkusativ Singular verwendet und als solche nicht weiter dekliniert.*
 
 ---
 
 ## Kampfbegriffe / Combat Terms
+
+*→ Weitere Kampfbegriffe: [kampf.md](kampf.md). Regeln: Basisregeln, Abschnitt *Kampfwerte* (Kapitel 11: Hindernisse); Schnellzaubern und Kraftloses Zaubern: Abschnitte *Schnellzaubern* und *Kraftloses Zaubern* (Kapitel 7: Hermetische Magie).*
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
@@ -51,7 +55,6 @@
 | Soak Total | Absorptionssumme | |
 | Initiative Total | Initiativewert | |
 | Attack Advantage | Angriffsvorteil | |
-| Combat Load | Kampflast | |
 | Exertion | Anstrengung | |
 | Fast Casting | Schnellzaubern | |
 | Forceless Casting | Kraftloses Zaubern | |
@@ -62,61 +65,63 @@
 
 ## Zauberreichweite, -dauer, -ziel / Range, Duration, Target
 
+> **Nur Begriffe.** Magnitudenstufen und Wirkungsweise der Reichweiten, Dauern und Ziele stehen in den Basisregeln, Abschnitt *Reichweiten, Dauern, Ziele* mit *Reichweiten*, *Dauern* und *Ziel* (Kapitel 9: Zauber); die Merinita-Parameter im Abschnitt *Merinita – Feenmagie* (Kapitel 7: Hermetische Magie); die atlantischen Parameter in SdM:M, Tugend *Atlantische Magie*. Die früher hier geführten Beschreibungen waren teilweise falsch (Moon, Year; Sachprüfung 2026-10-03) und sind entfernt.
+
 ### Reichweite / Range
 
-| Englisch (EN) | Deutsch (DE) | Magnitude-Bonus | Anmerkung |
-|---|---|---|---|
-| Personal | Persönlich | +0 | Nur der Zaubernde selbst |
-| Touch | Berührung | +1 | Alles, was der Magus berührt |
-| Eye | Auge | +1 | Augenkontakt erforderlich |
-| Voice | Stimme | +2 | Reichweite der Stimme |
-| Road | Straße | +2 | Merinita-Feenmagie: Ziel auf derselben Straße |
-| Sight | Sicht | +3 | Alles, was der Magus sehen kann |
-| Arcane Connection | Arkane Verbindung | +4 | Entfernung irrelevant |
-| Water-way | Wasserweg | +3 | SdM:M; Atlantische Magie; Ziel auf demselben Gewässer; wie Sicht |
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Personal | Persönlich | |
+| Touch | Berührung | Reichweite; vgl. Sinnes-Ziel *Touch* = Tastsinn |
+| Eye | Auge | |
+| Voice | Stimme | |
+| Road | Straße | Merinita-Feenmagie |
+| Sight | Sicht | Reichweite; vgl. Sinnes-Ziel *Vision* = Sehsinn |
+| Arcane Connection | Arkane Verbindung | |
+| Water-way | Wasserweg | SdM:M; Atlantische Magie |
 
 ### Dauer / Duration
 
-| Englisch (EN) | Deutsch (DE) | Magnitude-Bonus | Anmerkung |
-|---|---|---|---|
-| Momentary | Momentan | +0 | Nur ein Augenblick |
-| Concentration | Konzentration | +1 | Solange der Magus sich konzentriert |
-| Diameter | Durchmesser | +1 | Ca. 2 Minuten |
-| Sun | Sonne | +2 | Bis Sonnenauf- oder -untergang |
-| Ring | Ring | +2 | Solange das Ziel im Ring bleibt |
-| Moon | Mond | +3 | Bis Neu- oder Vollmond |
-| Fire | Feuer | +3 | Merinita-Feenmagie: bis das Feuer erlischt |
-| Year | Jahr | +4 | Bis zum Jahrestag des Zauberns |
-| Year + 1 | Jahr + 1 | +4 | Merinita-Feenmagie: bis zum selben Tag im nächsten Jahr |
-| Until (Condition) | Bis (Bedingung) | Ritual / +4 | Bis eine Bedingung erfüllt ist |
-| Bargain | Handel | x+3 | Merinita-Feenmagie: bis ein Handel gebrochen wird |
-| Storm | Sturm | +1 | SdM:M; Atlantische Magie; bis Sturm endet; Form muss Aq oder Au sein; wie Konzentration |
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Momentary | Momentan | |
+| Concentration | Konzentration | |
+| Diameter | Durchmesser | |
+| Sun | Sonne | |
+| Ring | Ring | |
+| Moon | Mond | |
+| Fire | Feuer | Merinita-Feenmagie |
+| Year | Jahr | |
+| Year + 1 | Jahr + 1 | Merinita-Feenmagie |
+| Until (Condition) | Bis (Bedingung) | Merinita-Feenmagie |
+| Bargain | Handel | Merinita-Feenmagie |
+| Storm | Sturm | SdM:M; Atlantische Magie |
 
 ### Zielgröße / Target
 
-| Englisch (EN) | Deutsch (DE) | Magnitude-Bonus | Anmerkung |
-|---|---|---|---|
-| Individual | Individuum | +0 | Ein einzelnes Ziel |
-| Circle | Kreis | +0 | Alles innerhalb eines gezogenen Kreises |
-| Part | Teil | +1 | Ein Teil eines Individuums |
-| Group | Gruppe | +2 | Eine Gruppe ähnlicher Objekte |
-| Room | Raum | +2 | Alles in einem Raum |
-| Structure | Bauwerk | +3 | Ein Gebäude, eine Brücke o. ä. |
-| Bloodline | Blutlinie | +3 | Merinita-Feenmagie: alle Abkömmlinge einer Person |
-| Body-of-water | Gewässer | +3 | SdM:M; Atlantische Magie; ein ganzes Gewässer (See, Fluss, Meer); wie Bauwerk |
-| Boundary | Grenze | +4 | Alles innerhalb einer definierten Grenze |
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Individual | Individuum | |
+| Circle | Kreis | |
+| Part | Teil | |
+| Group | Gruppe | |
+| Room | Raum | |
+| Structure | Bauwerk | |
+| Bloodline | Blutlinie | Merinita-Feenmagie |
+| Body-of-water | Gewässer | SdM:M; Atlantische Magie |
+| Boundary | Grenze | |
 
 ### Sinnes-Ziele / Sense Targets
 
-Ziele für magische Sinneszauber (Intellego). Ein Zauber verleiht jeweils einen Sinn.
+*→ Regeln: Basisregeln, Abschnitt *Magische Sinne* (Kapitel 9: Zauber).* Ziele für magische Sinneszauber (Intellego).
 
-| Englisch (EN) | Deutsch (DE) | Magnitude-Bonus | Anmerkung |
-|---|---|---|---|
-| Taste | Geschmack | +0 | Stufe wie Individuum |
-| Touch | Tastsinn | +1 | Stufe wie Teil. **Nicht** „Berührung" – das ist die Reichweite *Touch* |
-| Smell | Geruch | +2 | Stufe wie Gruppe |
-| Hearing | Gehör | +3 | Stufe wie Bauwerk |
-| Vision | Sehsinn | +4 | Stufe wie Grenze, aber ohne Ritualzwang; als einziges Ziel dieser Stufe auch für Formular- und Spontanzauber zulässig. **Nicht** „Sicht" – das ist die Reichweite *Sight*; ~~Sichtfeld~~, ~~Vision~~ (Letzteres kollidiert mit dem Fehler *Visions* = „Visionen") |
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Taste | Geschmack | |
+| Touch | Tastsinn | **Nicht** „Berührung" – das ist die Reichweite *Touch* |
+| Smell | Geruch | |
+| Hearing | Gehör | |
+| Vision | Sehsinn | **Nicht** „Sicht" – das ist die Reichweite *Sight*; ~~Sichtfeld~~, ~~Vision~~ (Letzteres kollidiert mit dem Fehler *Visions* = „Visionen") |
 
 Das Original vermeidet die Verwechslung von Reichweite und Ziel, indem es den Sehsinn als Ziel *Vision* statt *Sight* führt; die deutsche Fassung leistet dasselbe über die Endung „-sinn". Bei *Touch* unterscheidet das Original nicht – die deutsche Fassung ist dort genauer.
 
@@ -128,14 +133,14 @@ Das Original vermeidet die Verwechslung von Reichweite und Ziel, indem es den Se
 
 ## Geisteszustände / Mental States (HdH:S)
 
-Zielzustände für Rego-Mentem-Zauber (Basisstufe 4, ArM5 S. 151). Ein Geisteszustand bestimmt sich über das Verhältnis des Ziels zu seiner Umgebung; die Basisregeln nennen nur „wach", „schlafend" und „verwirrt", HdH:S ergänzt die folgenden.
+*→ Regeln: HdH:S, Abschnitt *Bewusstseinszustände* (engl. „States of Consciousness“).* Zielzustände für Rego-Mentem-Zauber; die Basisregeln nennen nur „wach", „schlafend" und „verwirrt", HdH:S ergänzt die folgenden.
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Animalist | Animalistisch | Umgebung wird durch Sinnesapparat und Zeitgefühl eines Tieres wahrgenommen; ggf. Animal-Requisit |
 | Anaesthetic | Anästhetisch | Der eigene Körper wird nicht wahrgenommen, die Umgebung schon – Gegenstück zu *Selbstgewahr* |
 | Daydreaming | Tagträumerisch | Einem **Gedanken** zugewandt, Umgebung ausgeschlossen |
-| Dreaming | Träumend | Der Traumwelt zugewandt statt der Wachwelt (DM:ÜA) |
+| Dreaming | Träumend | Der Traumwelt zugewandt statt der Wachwelt (TMRE) |
 | Self-aware | Selbstgewahr | Den eigenen **Reaktionen und Empfindungen** zugewandt statt der Umgebung; auch unwillkürlich (Schmerz). **Nicht** „Selbstbewusst" – so heißt die Tugend *Self-Confident*; ~~Introspektiv~~ (überschneidet sich mit *Tagträumerisch* und unterstellt willentliche Innenschau) |
 | Somnambulistic | Schlafwandlerisch | Wahrnehmung der Wirklichkeit durch Träume gefiltert |
 | Unconscious | Bewusstlos | Oberbegriff; weder seiner selbst noch der Umgebung gewahr (schlafend, komatös, ohnmächtig) |
@@ -144,10 +149,12 @@ Zielzustände für Rego-Mentem-Zauber (Basisstufe 4, ArM5 S. 151). Ein Geisteszu
 
 ## Magnitudenberechnung / Magnitudes
 
+*→ Regeln: Basisregeln, Abschnitte *Stufen*, *Magnituden*, *Stufenleitlinien* und *Requisiten* (Kapitel 9: Zauber).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Magnitude | Magnitude | Einheit für Zauberstärke (5 Stufen = 1 Magnitude) |
-| Level | Stufe | Zauber-/Spruchstufe |
+| Magnitude | Magnitude | Einheit der Zauberstärke |
+| Level | Stufe | Zauberstufe |
 | Guideline | Leitlinie | Grundlage für Zaubereffekte |
 | Spell Guidelines | Zauberleitlinien | Auch als Abschnittsüberschrift. ~~Spruchleitlinien~~ – „Spruch" ist im Korpus kein Terminus; 2026-09-10 vereinheitlicht |
 | Base Effect | Basiseffekt | |

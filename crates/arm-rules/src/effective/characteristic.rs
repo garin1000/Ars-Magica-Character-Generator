@@ -21,9 +21,9 @@ pub struct CharacteristicBonus {
 /// cap (the top row of the printed point-buy table, +3), lowered by the
 /// lowest [`Effect::CharacteristicMax`] any effective (bought or granted)
 /// selection carries for this Characteristic — Uninspirational's Presence/
-/// Communication cap of 0 (D69/X7b-e, ArMDE:6919-6922).
+/// Communication cap of 0 (D69/X7b-e, ArMDE:6990-6993).
 ///
-/// That limit binds the character's *actual* score (ArMDE:6921 "His Presence
+/// That limit binds the character's *actual* score (ArMDE:6992 "His Presence
 /// and Communication may not be greater than 0"), so it is turned into a limit
 /// on the bought score by subtracting the free delta from
 /// [`characteristic_score_bonus`]: Sidhe Faerie Blood's +1 Presence lowers it
@@ -38,7 +38,7 @@ pub struct CharacteristicBonus {
 /// +4, so there is no cost a cap-shift reading could charge upward — only a
 /// `CharacteristicMax` narrows it, and only downward (`.min`).
 ///
-/// Source: ArMDE:2346-2354 (the table),
+/// Source: ArMDE:2414-2422 (the table),
 /// :4105 (the +3 cap on the bought score), :3987-3989 (Great grants the point),
 /// :6919-6922 (Uninspirational lowers it).
 pub fn characteristic_cap(
@@ -87,7 +87,7 @@ fn lowest_actual_score_limit(
 /// [`characteristic_cap`] — Poor (Characteristic) lowers the score itself rather
 /// than opening headroom to sell into.
 ///
-/// Source: ArMDE:2346-2354 (the table),
+/// Source: ArMDE:2414-2422 (the table),
 /// :6598-6600 (Poor lowers the score).
 pub fn characteristic_floor(ruleset: &Ruleset, _characteristic: Characteristic) -> i32 {
     ruleset
@@ -135,7 +135,7 @@ pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> i32 
 /// The character's derived Size: base 0 plus every [`Effect::SizeDelta`]
 /// (Large +1, Giant Blood +2, Small Frame -1, Dwarf -2), summed across
 /// selections. Size is not a bought Characteristic — it has no cost and no buy
-/// cap. Source: ArMDE:3975-3978,
+/// cap. Source: ArMDE:4046-4049,
 /// :4229-4231, :5996-5998, :6767-6769.
 pub fn size(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0;
@@ -191,13 +191,13 @@ fn capped_characteristic_delta_contribution(
 /// score. Two shapes contribute, and both are free:
 ///
 /// - [`Effect::CharacteristicScoreDelta`] names a *fixed* Characteristic — Giant
-///   Blood +1 Str/Sta (`ArMDE:3977`), Dwarf -1 (`ArMDE:5996-5998`).
+///   Blood +1 Str/Sta (`ArMDE:4048`), Dwarf -1 (`ArMDE:6067-6069`).
 /// - [`Effect::CharacteristicScoreDeltaParam`] names the one the selection
-///   targets — Great (Characteristic) +1 (`ArMDE:3989`), Poor -1
-///   (`ArMDE:6600`).
+///   targets — Great (Characteristic) +1 (`ArMDE:4060`), Poor -1
+///   (`ArMDE:6671`).
 ///
 /// **No ceiling is applied to an `AboveBase` delta, deliberately.**
-/// `ArMDE:3977` says Giant Blood's bonus "may raise your scores in those
+/// `ArMDE:4048` says Giant Blood's bonus "may raise your scores in those
 /// Characteristics as high as +6", so a clamp at +5 would be wrong; Great's
 /// own "to no more than +5" falls out of its `max_per_target: 2` over a
 /// bought score capped at +3. This is [`CharacteristicDeltaCap::AboveBase`]
@@ -206,7 +206,7 @@ fn capped_characteristic_delta_contribution(
 ///
 /// **A `WithinBase` delta is clamped to the base cap/floor instead.** Magical
 /// Blood's Magic Human clause reads "may increase one of his Characteristics
-/// by 1, but not above +3" (ArMDE:4367) — the OPPOSITE shape from Great
+/// by 1, but not above +3" (ArMDE:4438) — the OPPOSITE shape from Great
 /// Characteristic: no "must already be at the cap" precondition
 /// (`validate_characteristic_delta_preconditions` skips `WithinBase` deltas
 /// entirely), but the contribution itself must never push the bought score
@@ -281,7 +281,7 @@ pub fn characteristic_score_bonus(
 
 /// The effective score of `characteristic`: the bought score (±3) plus any free
 /// delta from [`characteristic_score_bonus`]. Great (Characteristic) taken twice
-/// reaches +5; Giant Blood stacked on top reaches the +6 `ArMDE:3977` allows.
+/// reaches +5; Giant Blood stacked on top reaches the +6 `ArMDE:4048` allows.
 pub fn effective_characteristic_score(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -333,7 +333,7 @@ pub fn effective_characteristics(
 
 /// Aging-drop counts per Characteristic (from [`aging_drops`]), only the non-zero
 /// entries (canonical order), for the effective-score tooltip breakdown. Empty for
-/// a character whose Virtues exempt him from Characteristic aging (`ArMDE:5189`).
+/// a character whose Virtues exempt him from Characteristic aging (`ArMDE:5260`).
 pub fn characteristic_aging_drops(
     entity: &Entity,
     ruleset: &Ruleset,

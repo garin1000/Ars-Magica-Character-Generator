@@ -6,7 +6,7 @@
 //! e5e3126). These tests run against the REAL shipped ruleset
 //! (`rules/core/*.json`), not a hand-authored fixture, because B2 owes no new
 //! type — only data (the `social_status` cap row on every profile, D41; the
-//! `virtue.male_guild_sponsor` prerequisite, ArMDE:4439-4442) and a small
+//! `virtue.male_guild_sponsor` prerequisite, ArMDE:4510-4513) and a small
 //! wiring change (naming the paired entries on the ceiling warning).
 //!
 //! Every test here MUST fail today, for the reason its own doc comment
@@ -63,7 +63,7 @@ fn has_code(issues: &[ValidationIssue], code: &str) -> bool {
 
 // --- D41's floor: every profile must take one Social Status -----------------
 //
-// ArMDE:2816: "All characters must take one Social Status..." — a profile-wide
+// ArMDE:2884: "All characters must take one Social Status..." — a profile-wide
 // floor, not a per-item prereq. `CategoryCap.min`/`min_hard` is the landed B1
 // mechanism (`validation/caps.rs::push_category_cap_issues`); this is its
 // first data user. Fails today because NO shipped profile's
@@ -71,7 +71,7 @@ fn has_code(issues: &[ValidationIssue], code: &str) -> bool {
 // is wired, but nothing feeds it.
 
 /// All four character types permit `social_status` in their catalogue
-/// (`permitted_categories`), so ArMDE:2816's "All characters" floor applies
+/// (`permitted_categories`), so ArMDE:2884's "All characters" floor applies
 /// uniformly across companion, grog, magus, and mythic companion alike
 /// (mythic companions are companions — `is_companion: true` in the shipped
 /// profile — so any reading of "characters" that includes companions admits
@@ -90,7 +90,7 @@ fn every_profile_requires_at_least_one_social_status_selection() {
         assert!(
             !floor_errors.is_empty(),
             "'{type_id}' with zero Social Status selections must raise a hard \
-             floor error (D41/ArMDE:2816; B2 data not yet landed) — issues: {:?}",
+             floor error (D41/ArMDE:2884; B2 data not yet landed) — issues: {:?}",
             result.issues
         );
     }
@@ -117,7 +117,7 @@ fn one_social_status_selection_clears_the_floor() {
     );
 }
 
-/// ArMDE:2816 says "Virtues **or** Flaws" — `flaw.outlaw` is a real,
+/// ArMDE:2884 says "Virtues **or** Flaws" — `flaw.outlaw` is a real,
 /// unrestricted `social_status`-category FLAW (`rules/core/virtues_flaws.json`).
 /// A character represented ONLY by such a Flaw (an outlaw/criminal concept
 /// with no separate Virtue-based status) must ALSO clear the floor: the cap
@@ -135,7 +135,7 @@ fn a_flaw_based_social_status_alone_also_clears_the_floor() {
         .collect();
     assert!(
         floor_errors.is_empty(),
-        "a Flaw-based Social Status alone must clear the D41 floor (ArMDE:2816 \
+        "a Flaw-based Social Status alone must clear the D41 floor (ArMDE:2884 \
          says 'Virtues or Flaws') — issues: {:?}",
         result.issues
     );
@@ -192,7 +192,7 @@ fn a_second_social_status_selection_raises_exactly_one_warning_naming_both_entri
     );
 }
 
-/// ArMDE:2816 says "Virtues **or** Flaws" (the reason `both_kinds` exists at
+/// ArMDE:2884 says "Virtues **or** Flaws" (the reason `both_kinds` exists at
 /// all — see `a_flaw_based_social_status_alone_also_clears_the_floor` above).
 /// The pairing D41's ceiling warns about is not Virtue-only either: a Virtue
 /// Social Status (`virtue.gentleman`) plus a Flaw one (`flaw.outlaw`) must
@@ -235,11 +235,11 @@ fn a_second_social_status_selection_warns_even_when_the_two_are_different_kinds(
     );
 }
 
-// --- ArMDE:4441: Male Guild Sponsor needs a SEPARATE guild Social Status ---
+// --- ArMDE:4512: Male Guild Sponsor needs a SEPARATE guild Social Status ---
 //
 // "The character must select a separate guild Social Status Virtue as well
 // as this free Virtue to represent her status in the guild system"
-// (ArMDE:4439-4442). `virtue.male_guild_sponsor` itself carries
+// (ArMDE:4510-4513). `virtue.male_guild_sponsor` itself carries
 // `"categories": ["social_status"]` (`rules/core/virtues_flaws.json:5198`) —
 // this is exactly the self-referential trap the design note's § 1 flags
 // ("HasCategory alone cannot distinguish 'holds one' from 'holds a second,
@@ -248,7 +248,7 @@ fn a_second_social_status_selection_warns_even_when_the_two_are_different_kinds(
 // surfaces.
 
 /// The carrier ALONE, with no other Social Status held, must fail
-/// `prereq_not_met` — ArMDE:4441 requires a SEPARATE guild status. Fails
+/// `prereq_not_met` — ArMDE:4512 requires a SEPARATE guild status. Fails
 /// today because `virtue.male_guild_sponsor` carries no `prerequisites` field
 /// at all yet.
 #[test]
@@ -259,7 +259,7 @@ fn male_guild_sponsor_alone_fails_prereq_not_met() {
     assert!(
         has_code(&result.issues, ValidationIssue::CODE_PREREQ_NOT_MET),
         "virtue.male_guild_sponsor with no OTHER Social Status held must fail \
-         prereq_not_met (ArMDE:4441; B2 data not yet landed) — issues: {:?}",
+         prereq_not_met (ArMDE:4512; B2 data not yet landed) — issues: {:?}",
         result.issues
     );
 }

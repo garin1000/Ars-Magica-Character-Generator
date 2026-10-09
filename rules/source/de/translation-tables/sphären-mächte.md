@@ -1,133 +1,94 @@
 # Ars Magica Definitive Edition – Sphären, Auren und übernatürliche Mächte
 
-**Teil der deutschen Übersetzungstabellen** | Quellen: Ars Magica – Definitive Edition (Core Rules) · ArsMagica_DE_Gesamt_work.md
+**Teil der deutschen Übersetzungstabellen** | Quellen: Ars Magica – Definitive Edition (Core Rules) · Sphären der Macht: Magie (SdM:M), Das Infernale (SdM:I), Das Göttliche (SdM:G), Feenwelt (SdM:F) · deutsche Übersetzungen unter `german-wip/` (Basisregeln und die vier SdM-Bände)
 
 **Legende:**
 - (Lat.) = Lateinischer Begriff, wird unübersetzt beibehalten
-- (M) = Magus/Maga-spezifisch
 - (K) = Kreaturen-spezifisch
+
+> **Nur Begriffe.** Formeln, Tabellenwerte, Kosten, Stufen und Wirkungsbeschreibungen stehen im jeweiligen Quellbuch an der genannten Stelle. Die früher hier geführten Regelangaben (Sphärenwechselwirkung, Penetrationsformeln, Aurastärken, EP-Werte, Machtkosten u. a.) waren teilweise falsch (Sachprüfung 2026-10-03, `lektorat/tabellen-sachpruefung-regeltabellen.md`) und sind entfernt.
 
 ---
 
 ## Mechanischer Kontext / Mechanics
 
+*→ Regeln: Basisregeln, Kapitel 12: Die Sphären (Abschnitte *Die Natur der Sphären*, *Auren der Sphären*, *Wechselwirkungen zwischen den Sphären*, *Kreaturen einer Sphäre*, *Magieresistenz und Penetration*, *Regiones*) und Kapitel 13: Bestiarium (Abschnitte *Macht der Kreatur*, *Kräfte der Kreatur*).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Realm | Sphäre / Herrschaftssphäre | Übergeordneter Begriff für die vier Mächte |
+| Realm | Sphäre / Herrschaftssphäre | Oberbegriff für die vier übernatürlichen Mächte |
 | Realm of Power | Herrschaftssphäre | Formeller Begriff; Pl.: Herrschaftssphären |
 | Magic | Magie / Magiesphäre | Eine der vier Sphären |
 | Faerie | Fee / Feensphäre | Eine der vier Sphären |
 | Divine | Das Göttliche / Göttliche Sphäre | Eine der vier Sphären |
 | Infernal | Das Infernale / Höllensphäre | Eine der vier Sphären |
-| Mundane | Das Weltliche | Nicht-übernatürlich; ohne Sphärenzuordnung |
-| Aura | Aura | Sphärische Einfluss­zone; Stärke 1–10 |
-| Aura rating / strength | Aurastärke | Numerischer Wert 1–10 |
-| Aura modifier | Auramodifikator | Modifikator auf übernatürliche Handlungen |
-| Dominion | Dominium | Göttliche Aura; auch um Kirchengebäude |
-| Regio | Regio | (Lat.) Verschachtelte Auraebene; f. |
+| Mundane | Das Weltliche | ohne Sphärenzuordnung (Basisregeln, Abschnitt *Das Weltliche*) |
+| Aura | Aura | Einflussbereich einer Sphäre |
+| Aura rating / strength | Aurastärke | |
+| Aura modifier | Auramodifikator | |
+| Dominion | Dominium | Göttliche Aura |
+| Regio | Regio | (Lat.) f. |
 | Regiones | Regiones | (Lat.) Plural von Regio |
-| Belonging to a realm | Einer Sphäre angehören | Engste Sphärenbindung |
-| Affiliated / aligned to a realm | Einer Sphäre zugeordnet sein | Losere Sphärenbindung |
-| Might Score | Machtwert | Kreatur; Grundwert für Resistenz und Penetration |
-| Might Pool | Machtvorrat | Verfügbare Machtpunkte; lädt sich täglich auf |
-| Might Points | Machtpunkte | Werden für Kräfte ausgegeben |
+| Belonging to a realm | Einer Sphäre angehören | |
+| Affiliated / aligned to a realm | Einer Sphäre zugeordnet sein | |
+| Might Score | Machtwert | (K) |
+| Might Pool | Machtvorrat | (K) |
+| Might Points | Machtpunkte | (K) |
 | Divine Might | Göttliche Macht | (K) |
 | Faerie Might | Feenmacht | (K) |
 | Magic Might | Magische Macht | (K) |
 | Infernal Might | Infernale Macht | (K) |
 | Supernatural Power / creature power | Kraft / Kreaturenkraft | (K) Übernatürliche Fähigkeit einer Kreatur |
-| Initiative modifier (of a power) | Initiativemodifikator (der Kraft) | (K) Bestimmt Reihenfolge im Kampf |
-| Might cost | Machtkosten | (K) Vom Machtvorrat abgezogene Punkte |
-| Magic Resistance | Magieresistenz | Widerstand gegen alle Formen mystischer Kraft |
-| Penetration | Penetration | Fähigkeit, Magieresistenz zu überwinden |
-| Penetration Total | Penetrationssumme | Zaubersumme + Penetrationsbonus − Zauberstufe (M) |
-| Penetration Bonus | Penetrationsbonus | Fertigkeit Penetration + eventuelle Boni |
+| Initiative modifier (of a power) | Initiativemodifikator (der Kraft) | (K) |
+| Might cost | Machtkosten | (K) |
+| Magic Resistance | Magieresistenz | |
+| Penetration | Penetration | |
+| Penetration Total | Penetrationssumme | Basisregeln, Abschnitt *Penetrationssumme* |
+| Penetration Bonus | Penetrationsbonus | |
 | Penetration (Ability) | Penetration (Fertigkeit) | Arkane Fertigkeit |
-| Vitality | Vitalität | Energie der Feen, gewonnen durch menschliche Geschichten |
-| Tainted vis | Verdorbenes Vis | Vis aus nicht-magischer Aura |
+| Vitality | Vitalität | Feenbegriff (SdM:F, Kapitel Eins, *Vitalität: Energie zum Handeln und Verändern*) |
 
 ---
 
 ## Die vier Sphären / The Four Realms
 
-| Englisch (EN) | Deutsch (DE) | Wesen / Charakter |
+*→ Beschreibung: Basisregeln, Kapitel 12, Abschnitte *Die Magiesphäre*, *Die Höllensphäre*, *Die Feensphäre*, *Die Göttliche Sphäre*, *Das Weltliche*.*
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Magic realm | Magiesphäre | „Die Welt, wie sie sein könnte" – vollkommenere Versionen des Bestehenden |
-| Faerie realm | Feensphäre | Entstammt menschlichen Geschichten; benötigt menschliche Beteiligung |
-| Divine realm | Göttliche Sphäre | Manifestation der göttlichen Macht; Dominion umgibt Kirchengebäude |
-| Infernal realm | Höllensphäre | Verkörperung von Bösem und Verfall; moralische Korruption |
-| Mundane (no aura) | Weltlich (keine Aura) | Kein Sphäreneinfluss |
+| Magic realm | Magiesphäre | |
+| Faerie realm | Feensphäre | |
+| Divine realm | Göttliche Sphäre | |
+| Infernal realm | Höllensphäre | |
+| Mundane (no aura) | Weltlich (keine Aura) | |
+
+*Die Tabelle der Sphärenwechselwirkung (Auramodifikatoren und Patzerwürfel) steht in den Basisregeln, Kapitel 12, Abschnitt *Wechselwirkungen zwischen den Sphären*, Unterabschnitt *Tabelle zur Sphärenwechselwirkung*; typische Aurastärken und ihre Schwankungen in den Abschnitten *Magische Auren*, *Infernale Auren*, *Feenauren* und *Göttliche Auren*.*
 
 ---
 
-## Sphärenwechselwirkungstabelle / Realm Interaction
+## Kraft-Eintrag-Format / Power Format
 
-*Aurawert wird als Modifikator (+ oder −) auf übernatürliche Aktivitäten der jeweiligen Sphäre angewandt.*
-
-| Aura | Magische Kraft | Göttliche Kraft | Feenkraft | Infernale Kraft |
-|---|---|---|---|---|
-| Magie | + Aura | kein Effekt | + (½ Aura) | − Aura |
-| Göttlich | − (3 × Aura) | + Aura | − (4 × Aura) | − (5 × Aura) |
-| Fee | + (½ Aura) | kein Effekt | + Aura | − Aura |
-| Infernal | − Aura | kein Effekt | − (2 × Aura) | + Aura |
-
-**Patzerwürfel durch Fremd-Aura:** Für jeden Punkt Aurastärke ein zusätzlicher Patzerwürfel beim Einsatz übernatürlicher Kräfte in einer fremden Sphäre (Originaler Aurawert, nicht multipliziert).
-
-**Betroffene Bereiche:**
-- Zaubern: Auramodifikator auf Zauberwert
-- Laborarbeiten: Auramodifikator auf Laborsumme
-- Übernatürliche Fertigkeiten (z. B. Zweites Gesicht): Auramodifikator auf Wurf
-- Magieresistenz: Auramodifikator auf Resistenzwert
-- Penetration: Modifikation über den Zauberwert (kein doppelter Abzug für Magi); direkt auf Penetration bei Kreaturenkräften
-
----
-
-## Machtwert, Machtvorrat und Kräfte / Might, Pool and Powers
-
-### Formeln
-
-| Bezeichnung | Formel |
-|---|---|
-| Magieresistenz der Kreatur | Machtwert + Auramodifikator |
-| Penetration der Kreaturenkraft | Machtwert − (5 × Machtpunktkosten der Kraft) + Penetrationsbonus |
-| Effektive Stufe einer Kreaturenkraft (zum Auflösen) | Machtwert der Kreatur |
-| Penetrationssumme (hermetisch) | Zaubersumme + Penetrationsbonus − Zauberstufe |
-| Penetration (Charakter mit übernatürlicher Fertigkeit) | Effektwurf − Schwierigkeitsgrad + Penetrationsbonus + Auramodifikator |
-
-### Kraft-Eintrag-Format
+*→ Regeln (Penetration, Auflösen, Erholung des Machtvorrats): Basisregeln, Kapitel 13, Abschnitte *Macht der Kreatur* und *Kräfte der Kreatur*.*
 
 `Kraftname, X Punkte, Init Y, Form: Beschreibung.`
 
-- **X Punkte** = Machtkosten (Abzug vom Machtvorrat)
-- **Init Y** = Initiativemodifikator (bestimmt Reihenfolge im Kampf)
-- **Form** = Hermetische Form, die Magieresistenz gegen diese Kraft bietet
-
-### Machtvorrat-Erholung
-
-Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Machtwert 25 → knapp 1 Punkt/Stunde), sofern nicht anders angegeben.
+- **X Punkte** = Machtkosten (EN *X points*)
+- **Init Y** = Initiativemodifikator (EN *Init Y*)
+- **Form** = hermetische Form, die Magieresistenz gegen die Kraft bietet
 
 ---
 
 ## Vis nach Sphäre / Vis by Realm
 
-| Vis-Typ | Englisch (EN) | Deutsch (DE) | Hinweis |
-|---|---|---|---|
-| Magic vis | Magic vis | Magisches Vis | Standard; in Magieauren gefunden |
-| Faerie vis | Faerie vis | Feenvis | Für Magi meist ungefährlich; gelegentlich ungewöhnliche Nebeneffekte |
-| Divine vis | Divine vis | Göttliches Vis | Vielen Magi unheimlich; kirchenpolitisch heikel |
-| Infernal vis | Infernal vis | Infernales Vis | Zu meiden; verdreht Projekte; +2× Patzerwürfel; Experimentier-Tabellenwurf nötig |
-| Tainted vis | Tainted vis | Verdorbenes Vis | Oberbegriff für Nicht-Magie-Vis |
+*→ Regeln: Basisregeln, Kapitel 12, Abschnitt *Verdorbenes Vis*.*
 
----
-
-## Auren der vier Sphären / Aura Characteristics
-
-| Sphäre | Typische Stärke | Besonderheiten |
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Magie | 1–5 (Konvente); 6+ sehr selten | Keine zyklischen Schwankungen; unabhängig von Umgebung |
-| Fee | 1–10 | Schwankt je nach Übereinstimmung der Umgebung mit der Feennatur (z. B. Sommer/Winter) |
-| Göttlich (Dominion) | Ubiquitär in besiedelten Gebieten | Stärker an Sonn- und Feiertagen; schwächer nachts |
-| Infernal | Selten; variabel | Stärker nachts; schwächer bei Tageslicht und heiligen Tagen; am Karsamstag besonders stark |
+| Magic vis | Magisches Vis | |
+| Faerie vis | Feenvis | |
+| Divine vis | Göttliches Vis | |
+| Infernal vis | Infernales Vis | Arten in SdM:I → *Vis infesta*, *Vis sordida*, *Vis prava* (unten) |
+| Tainted vis | Verdorbenes Vis | Vis aus einer nicht-magischen Aura, das von dieser Aura verdorben sein **kann** |
 
 ---
 
@@ -135,100 +96,127 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 
 ### Allgemeine Begriffe
 
+*→ Regeln: SdM:M, Kapitel Vier, Abschnitte *Magische Charaktererschaffung* (Unterabschnitte *Konzept*, *Jahreszeit*, *Machtwert*), *Fortschritt* und *Essenzielle Eigenschaften*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Magic character | Magischer Charakter | Charakter mit Machtwert der Magiesphäre |
-| True form | Wahre Gestalt | Grundlegende Erscheinung des Charakters ohne magische Veränderungen |
-| Season (magic character) | Jahreszeit (magischer Charakter) | Erfahrungsstufe: Frühling (120 EP), Sommer (360), Herbst (720), Winter (1200) |
-| Spring character | Frühlings-Charakter | Unerfahren; 120 EP |
-| Summer character | Sommer-Charakter | Jungerwachsen; 360 EP |
-| Autumn character | Herbst-Charakter | Erfahren; 720 EP |
-| Winter character | Winter-Charakter | Uralt; 1200 EP |
-| Character guide | Charakterleitfaden | Kurzsteckbrief für NSC mit Mindestanforderungen |
-| Advancement Total | Fortschrittssumme | EP-Summe abzüglich Machtwert |
-| Essential Trait | Essenzielle Eigenschaft | Unveränderlicher Persönlichkeits- oder Charakterzug; mit * markiert |
-| Essential Personality Trait | Essenzielle Persönlichkeitseigenschaft | Unveränderlicher Persönlichkeitszug; magisch nicht beeinflussbar |
-| Character Trait | Charakterzug | Essenzielle Eigenschaft, die eine Eigenschaft (Characteristic) modifiziert |
-| Magical Air | Magische Ausstrahlung | Beunruhigende übernatürliche Präsenz; wie die Gabe für Nicht-Begabte |
+| Magic character | Magischer Charakter | Charakter mit Magischer Macht |
+| True form | Wahre Gestalt | |
+| Season (magic character) | Jahreszeit (magischer Charakter) | Erfahrungsstufe eines magischen Charakters (Unterabschnitt *Jahreszeit*). Nicht „Quartal“ – das ist die Spielzeiteinheit |
+| Spring character | Frühlings-Charakter | |
+| Summer character | Sommer-Charakter | |
+| Autumn character | Herbst-Charakter | |
+| Winter character | Winter-Charakter | |
+| Character guide | Charakterleitfaden | Kasten-Format für Beispielwesen (z. B. *Charakterleitfaden: Ein Magischer Jagdhund*) |
+| Advancement Total | Fortschrittssumme | Allgemeiner Begriff der Charaktersteigerung; bei magischen Charakteren mit Abzug des Machtwerts (SdM:M, *Fortschritt*) |
+| Essential Trait | Essenzielle Eigenschaft | Persönlichkeitseigenschaft eines Wesens mit Magischer Macht. Die frühere Zeile „Essential Personality Trait“ ist entfernt – den Begriff gibt es im Original nicht |
+| Character Trait | Charakterzug | Essenzielle Eigenschaft, die sich auf eine Eigenschaft (Characteristic) bezieht |
+| Magical Air | Magische Ausstrahlung | Fehler (Basisregeln, Kapitel 4); Dublette zu `grundbegriffe.md` |
 
 ### Transformation
 
+*→ Regeln: SdM:M, Kapitel Vier, Abschnitt *Fortschritt*, Unterabschnitt *Transformation*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Transformation | Transformation | Permanente magische Verbesserung eines magischen Charakters |
-| Transformational study source | Transformations-Studienquelle | Vis oder anderes Material als Lernquelle für Transformation |
+| Transformation | Transformation | |
+| Transformational study source | Transformations-Studienquelle | |
 
 ### Gewöhnung / Acclimation
 
+*→ Regeln: SdM:M, Kapitel Vier, Abschnitt *Fortschritt*, Unterabschnitt *Gewöhnung* (mit Kasten *Vis-Konsum*).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Acclimation | Gewöhnung | Verlust magischer Qualitäten durch fehlenden Kontakt zur Magiesphäre |
-| Vis Consumption (chart) | Vis-Konsum (Tabelle) | Stresswurf beim jährlichen Vis-Konsum gegen Gewöhnung |
+| Acclimation | Gewöhnung | |
+| Vis Consumption (chart) | Vis-Konsum (Tabelle) | |
 
 ### Auren und Verankerungen / Auras and Tethers
 
+*→ Regeln: SdM:M, Kapitel Zwei: Magieauren (Abschnitte *Verankerungen*, *Natürliche Verankerungen*, *Übernatürliche Verankerungen*, *Auraschwankungsregeln*, *Symptome der Auraschwankung*, *Ausgerichtete Auren*).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Tether | Verankerung | Physisches Phänomen, das eine Magieaura an einen Ort bindet |
-| Natural Tether | Natürliche Verankerung | Geologisches/klimatisches Merkmal als Auraanker (Höhle, Wald, Eis, Vulkan, Wasser, Wind) |
-| Preternatural Tether | Übernatürliche Verankerung | Magisches Monument oder Residuum als Auraanker |
-| Magic Monument | Magisches Monument | Übernatürliche Verankerung durch ein magisches Bauwerk |
-| Magic Residues | Magische Rückstände | Übernatürliche Verankerung durch vergangene magische Aktivität |
-| Aura Variation | Auraschwankung | Zeitliche Veränderung einer Magieaura |
-| Symptoms of Aura Variation | Symptome der Auraschwankung | Sichtbare Zeichen einer Auraveränderung |
-| Aligned Aura | Ausgerichtete Aura | Aura, die auf bestimmte Emotionen oder Künste spezialisiert ist |
+| Tether | Verankerung | Gegenstand oder Umstand, der eine Magieaura an einen Ort bindet |
+| Natural Tether | Natürliche Verankerung | |
+| Preternatural Tether | Übernatürliche Verankerung | |
+| Magic Monument | Magisches Monument | Art der Übernatürlichen Verankerung |
+| Magic Residues | Magische Rückstände | Art der Übernatürlichen Verankerung |
+| Aura Variation | Auraschwankung | |
+| Symptoms of Aura Variation | Symptome der Auraschwankung | |
+| Aligned Aura | Ausgerichtete Aura | |
 
 ### Magische Sphäre / Magic Realm
 
+*→ Regeln: SdM:M, Kapitel Drei: Die Magische Sphäre (Abschnitte *Regeln der Sphäre*, *Grenzen und Vestigia*, *Die Zwielichtleere*, *Magie der Magischen Sphäre*).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| The Magic Realm | Die Magische Sphäre | Die übernatürliche Welt der Magie jenseits der mundänen Welt |
-| Vestige | Vestigium (n.), Pl. Vestigia | Vollkommene, alle fünf Sinne umfassende Trugerscheinung in der Magischen Sphäre, einer Form zugeordnet und mit einem Ding der mundanen Welt verbunden; für Reisende als Wegmarke nutzbar, durchschreitbar wie Schlamm oder Wasser. Lateinisch beibehalten wie *Insulae* und *Tempora* im selben Abschnitt. **Nicht** „Relikt" (Überrest, `grundbegriffe.md`) und **nicht** „Reliquie" (heiliger Gegenstand, `tugenden-fehler.md`). Komposita mit Bindestrich: Maus-/Baum-/Drachen-Vestigium, Ziel-/Ausgangs-Vestigium, Vestigium-Stufe, Vestigium-Reisesumme |
-| Boundary | Grenze | Übergangszone zwischen Bereichen der Magischen Sphäre |
-| Twilight Void | Zwielichtleere | Teil der Magischen Sphäre; keine Gewöhnung; mächtige Wesen leben dort |
-| Magic Realm Magic | Magie der Magischen Sphäre | Besondere Regeln für Magie innerhalb der Magischen Sphäre |
+| The Magic Realm | Die Magische Sphäre | |
+| Vestige | Vestigium (n.), Pl. Vestigia | Lateinisch beibehalten wie *Insulae* und *Tempora* im selben Abschnitt. **Nicht** „Relikt" (Überrest, `grundbegriffe.md`) und **nicht** „Reliquie" (heiliger Gegenstand, `tugenden-fehler.md`). Komposita mit Bindestrich: Maus-/Baum-/Drachen-Vestigium, Ziel-/Ausgangs-Vestigium, Vestigium-Stufe, Vestigium-Reisesumme |
+| Boundary | Grenze | Begriff der Magischen Sphäre (Abschnitt *Grenzen und Vestigia*) |
+| Twilight Void | Zwielichtleere | Teil der Magischen Sphäre |
+| Magic Realm Magic | Magie der Magischen Sphäre | |
 
 ### Kreaturentypen / Creature Types
 
+*→ Beschreibung: SdM:M, Kapitel Fünf: Magische Tiere, Kapitel Sechs: Magische Menschen (Abschnitte *Magische Riesen*, *Geistverehrer*, *Magische Verwandte*, *Verwandelte Menschen*), Kapitel Sieben: Magische Geister, Kapitel Acht: Magische Dinge.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Beast of Virtue | Tugendtier | Perfektes Exemplar seiner Art; magisches Tier |
-| Herbs of Virtue | Tugendkräuter | Magische Kräuter mit übernatürlichen Eigenschaften |
-| Objects of Virtue | Tugendobjekte | Magische Gegenstände natürlichen Ursprungs |
-| Awakened Tree | Erwachter Baum | Baum, der durch Magie belebt wurde |
-| Awakened Item | Erwachter Gegenstand | Gegenstand, der durch Magie belebt wurde |
-| Elemental | Elementar | Wesen aus reinem Element (Erde, Wasser, Luft, Feuer) |
-| Kelpie | Kelpie | Magisches Wassergestaltwandler-Wesen |
-| Dragon | Drache | Mächtiges magisches Reptil |
-| Dragon-kind | Drachenvolk | Oberbegriff für drachenartige Wesen |
-| Transformed Animal | Verwandeltes Tier | Tier, das durch Verzerrung magisch verändert wurde |
-| Giant | Riese | Magischer Mensch mit übernatürlicher Größe |
-| Spirit Votary | Geistverehrer | Sterblicher mit ritueller Beziehung zu einem Geist |
-| Atlantean | Atlantier | Magischer Mensch mit Ursprung in einer versunkenen Kultur |
-| Flame Dancer | Flammentänzer | Magischer Mensch mit Feuerverbindung |
-| Forgotten God | Vergessener Gott | Magischer Mensch göttlichen Ursprungs |
-| Loamwalker | Lehmwanderer | Magischer Mensch mit Erdverbindung |
-| Lost Child | Verlorenes Kind | Magischer Mensch, der als Kind in die Magiesphäre entführt wurde |
-| Men of the Lake | Seemenschen | Magische Menschen mit Wasserverbindung |
-| Orphan Born | Waisengeborener | Magischer Mensch ohne bekannte Herkunft |
-| People of the Clouds | Wolkenvolk | Magische Menschen mit Luftverbindung |
-| Stoneskinned | Steinhäutiger | Magischer Mensch mit Steinverbindung |
-| Warder of Mystery | Hüter des Geheimnisses | Magischer Mensch als Wächter übernatürlicher Orte |
-| Revenant | Wiedergänger | Untotes magisches Wesen; Wiederbelebter Leichnam |
-| Drowned Man | Ertrunkener | Magischer verwandelter Mensch nach Ertrinken |
-| Living Ghost | Lebender Geist | Geistähnliches Wesen, das noch lebt |
-| Daimon | Daimon | Mächtiger unsterblicher Geist; manifestiert sich als Aspekte |
-| Aspect (of a Daimon) | Aspekt (eines Daimons) | Einzelne Manifestation eines Daimons |
-| Airy Spirit | Luftgeist | Körperloser Geist |
-| Flora / Fauna | Flora / Fauna | Pflanzen- oder Tiergeist |
-| Imagines | Imagines | Geister der Sinneswahrnehmung (Lat., Pl.) |
-| Eidolon | Eidolon | Geist der Emotionen (Gr., Pl.: Eidola) |
-| Genius Loci | Genius Loci | Ortsgeist (Lat., Pl.: Genii Loci) |
-| Lugra | Lugra | Geister der Mühsal |
-| Theoi | Theoi | Benannte Geister; göttliche Gestalten (Gr.) |
-| Astra Planeta | Astra Planeta | Planetengeister (Lat./Gr.) |
-| Leti | Leti | Todesgeister (Lat.) |
-| Primal Spirit | Urgeist | Ältester und mächtigster Geisttyp |
+| Beast of Virtue | Tugendtier | Magisches Tier (Kap. 5) |
+| Herbs of Virtue | Tugendkräuter | Magisches Ding (Kap. 8) |
+| Objects of Virtue | Tugendobjekte | Magisches Ding (Kap. 8) |
+| Awakened Tree | Erwachter Baum | Kap. 8 |
+| Awakened Item | Erwachter Gegenstand | Kap. 8 |
+| Elemental | Elementar | Kap. 8 |
+| Kelpie | Kelpie | Kap. 8 |
+| Dragon | Drache | Kap. 5 |
+| Dragon-kind | Drachenvolk | Kap. 5 |
+| Transformed Animal | Verwandeltes Tier | Kap. 5 |
+| Giant | Riese | Kap. 6 |
+| Spirit Votary | Geistverehrer | Kap. 6 |
+| Atlantean | Atlantier | Magische Verwandte (Magic Kin), Kap. 6 |
+| Flame Dancer | Flammentänzer | Magische Verwandte, Kap. 6 |
+| Forgotten God | Vergessener Gott | Magische Verwandte, Kap. 6; „Gott“ im Sinne früherer Verehrung, nicht der Göttlichen Sphäre |
+| Loamwalker | Lehmwanderer | Magische Verwandte, Kap. 6 |
+| Lost Child | Verlorenes Kind | Magische Verwandte, Kap. 6 |
+| Men of the Lake | Seemenschen | Magische Verwandte, Kap. 6 |
+| Orphan Born | Waisengeborener | Magische Verwandte, Kap. 6 |
+| People of the Clouds | Wolkenvolk | Magische Verwandte, Kap. 6 |
+| Stoneskinned | Steinhäutiger | Magische Verwandte, Kap. 6 |
+| Warder of Mystery | Hüter des Geheimnisses | Magische Verwandte, Kap. 6 (Pl. im Original meist *Warders of Mystery*) |
+| Revenant | Wiedergänger | Verwandelter Mensch, Kap. 6 |
+| Drowned Man | Ertrunkener | Verwandelter Mensch, Kap. 6 (Pl. *Drowned Men*) |
+| Living Ghost | Lebender Geist | Kap. 6 |
+| Daimon | Daimon | Kap. 7 |
+| Aspect (of a Daimon) | Aspekt (eines Daimons) | Kap. 7 |
+| Airy Spirit | Luftgeist | Kap. 7 |
+| Florae / Fauni | Florae / Fauni (Sg. Flora / Faunus) | Luftgeister, Kap. 7; Überschrift im Original „Florae and Fauni“ |
+| Imagines | Imagines | (Lat., Pl.) Luftgeister, Kap. 7 |
+| Eidolon | Eidolon | (Gr., Pl.: Eidola) Luftgeist, Kap. 7; im Original Pl. „Eidolons“ |
+| Genius Loci | Genius Loci | (Lat., Pl.: Genii Loci) Kap. 7 |
+| Lugra | Lugra | Luftgeister, Kap. 7 |
+| Theoi | Theoi | (Gr.) Benannte Geister, Kap. 7 |
+| Astra Planeta | Astra Planeta | Benannte Geister, Kap. 7 |
+| Leti | Leti | Benannte Geister, Kap. 7 |
+| Primal Spirit | Urgeist | Kap. 7 |
+
+### Steine der Tugend / Stones of Virtue (SdM:M)
+
+*→ Beschreibung und Boni: SdM:M, Kapitel Acht, Abschnitte *Tugendobjekte* und *Geformte Steine*, Kasten *Form- und Materialboni für Tugendobjekte*.*
+
+Die Liste der Form- und Materialboni für Tugendobjekte übersetzt **nur das, was das Original übersetzt**: lateinische und gälische Lapidariennamen bleiben stehen, volkssprachliche werden eingedeutscht.
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Clach Crubain | Clach Crubain | gälisch, bleibt |
+| Bufonites | Bufonites | lat., Krötenstein. Bleibt lateinisch wie im Original; der Fließtext führt „Krötenstein" als Glosse. **Nicht** „Bufonit" – die `-it`-Endung ist der modernen Mineralogie vorbehalten. **Nicht** „Borax" – kollidiert mit dem Natriumborat |
+| Ovum Anguinum | Ovum Anguinum | lat., bleibt |
+| Cornu Ammonis | Cornu Ammonis | lat., bleibt |
+| Glossopetrae | Glossopetrae | lat., bleibt |
+| Thunderbolt | Donnerkeil | im Original volkssprachlich, daher eingedeutscht |
+| Fairy Loaves | Feenbrote | im Original volkssprachlich, daher eingedeutscht |
 
 ---
 
@@ -236,109 +224,127 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 
 ### Infernale Auren / Infernal Auras
 
+*→ Regeln: SdM:I, Kapitel 1, Abschnitt *Infernale Auren* (Unterabschnitte *Die Entstehung einer infernalen Aura*, *Angelaufene Auren*, *Korrumpierte Auren*); infernaler Einfluss: Kapitel 2, Abschnitt *Infernaler Einfluss*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Tarnished aura | Angelaufene Aura | Aura mit Resonanz für bestimmtes sündhaftes Verhalten |
-| Corrupted aura | Korrumpierte Aura | Vollständig vom Infernalen verdorbene Aura |
-| Debauched aura | Ausschweifende Aura | Korrumpierte Aura; fördert Sünden der Selbstsucht und Trägheit |
-| Malevolent aura | Bösartige Aura | Korrumpierte Aura; fördert Sünden der Perversion und des Übermaßes |
-| Perfidious aura | Hinterhältige Aura | Korrumpierte Aura; fördert Sünden arglistiger Täuschung |
-| Corruption roll | Korrumpierungswurf | Wurf zur Entstehung/Verstärkung infernaler Auren |
-| Corruption rite | Korrumpierungsritus | Diabolisten-Ritual zur Auren-Korrumpierung |
-| Tarnishing | Anlaufen | Vorgang des Anlaufens einer Aura durch infernalen Einfluss |
-| Tarnish Trait | Anlauf-Eigenschaft | Persönlichkeitseigenschaft einer angelaufenen Aura |
-| Personal influence | Persönlicher Einfluss | Infernale Beeinflussungsmethode über ein Quartal |
-| Ceremonial influence | Zeremonieller Einfluss | Infernale Beeinflussungsmethode per Zeremonie |
+| Tarnished aura | Getrübte Aura | |
+| Corrupted aura | Korrumpierte Aura | |
+| Debauched aura | Ausschweifende Aura | Art der korrumpierten Aura |
+| Malevolent aura | Bösartige Aura | Art der korrumpierten Aura |
+| Perfidious aura | Hinterhältige Aura | Art der korrumpierten Aura |
+| Corruption roll | Korrumpierungswurf | |
+| Corruption rite | Korrumpierungsritus | |
+| Tarnish / Tarnishing | Trübung / Trüben (trüben) | Freigabe 2026-10-04; Bild: angelaufenes Silber. Nicht „Anlauf“ (kein Substantiv in dieser Bedeutung), nicht „Makel“, nicht „Befleckung“ (*Tainted* = Befleckt) |
+| Tarnish Trait | Trübungseigenschaft | Abschnitt *Trübung* in SdM:I, Kapitel 2 |
+| Personal influence | Persönlicher Einfluss | Form des infernalen Einflusses |
+| Ceremonial influence | Zeremonieller Einfluss | Form des infernalen Einflusses |
 
 ### Dämonenhierarchie und Theologie / Demon Hierarchy and Theology
+
+*→ SdM:I, Kapitel 3: Der Teufel und der Ursprung der Dämonen (u. a. Kasten *Die Kurfürsten der Hölle*).*
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Archdemon | Erzdämon | Oberhaupt einer Dämonenordnung |
-| Electors of Hell | Kurfürsten der Hölle | Rat der neun Erzdämonen |
-| Maskim | Maskim | Hebr. Eigenname; die neun Erzdämonen |
-| Sammael / Poison Angel | Sammael / Giftengel | Jüdische Personifizierung des Bösen |
-| Yezer ra | Jezer Ra | Hebr.; böse Neigung im Menschen |
+| Electors of Hell | Kurfürsten der Hölle | |
+| Maskim | Maskim | Eigenname, bleibt; im Original „known to the rabbis as the Maskim“ |
+| Sammael / Poison Angel | Sammael / Giftengel | |
+| Yezer ra | Jezer Ra | Hebr. |
 
 ### Infernale Regelmechanik / Infernal Mechanics
 
+*→ Regeln: SdM:I, Kapitel 4, Abschnitt *Dämonische Eigenschaften* (*Dämonische Reputationen*); Kapitel 9, Abschnitt *Infernalisten* (*Hierarchie*); Kapitel 8: Verderbte Tiere.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Hierarchy score | Hierarchiewert | Höchster infernaler Reputationswert eines Dämons; Infernalisten haben ebenfalls einen. Als **Statblock-Feld** nur bei Infernalisten und dämonenblütigen Charakteren (EN `Hierarchy Score:`); Dämonen-Statblöcke führen das Feld als `Hierarchie:` (EN `Hierarchy:`) – siehe `formatting-rules/charakter-kreaturen-beschreibung.md` §4.6 |
-| Infernal Reputation | Infernale Reputation | Reputationen von Dämonen innerhalb der Hierarchie |
-| Corrupt Beast | Verdorbene Bestie | Kreaturentyp; infernal korrumpiertes Tier |
+| Hierarchy score | Hierarchiewert | Als **Statblock-Feld** nur bei Infernalisten und dämonenblütigen Charakteren (EN `Hierarchy Score:`); Dämonen-Statblöcke führen das Feld als `Hierarchie:` (EN `Hierarchy:`) – siehe `formatting-rules/charakter-kreaturen-beschreibung.md` §4.6 |
+| Infernal Reputation | Infernale Reputation | |
+| Corrupt Beast / Corrupted Beast | Verderbtes Tier | Pl. Verderbte Tiere; wie Basisregeln (Freigabe 2026-10-04). Nicht „Verdorbene Bestie“ – „verdorben“ ist *Depraved* |
 
 → Infernale Kräfte und Wesen: ausgelagert nach [infernale-kraefte.md](infernale-kraefte.md)
 
 ### Infernale Tugenden und Fehler / Infernal Virtues and Flaws
 
+*→ Regeln: SdM:I, Kapitel 9, Abschnitt *Befleckte Tugenden und Fehler*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Infernal Blessing | Infernaler Segen | Groß/Klein, Übernatürlich, Befleckt; 60/120 Stufen unheiliger Effekte |
-| Hermetic Sorcery | Hermetische Hexerei | Groß, Hermetisch, Befleckt; Goetische Kunst-EP fließen halb in Rego |
-| No Tradition | Ohne Tradition | Klein, Allgemein; Infernalist ohne zugehörige Tradition |
-| Tainted Offspring | Befleckter Nachkomme | Groß, Geschichte, Befleckt; Kind von mächtigem Dämon vorgesehen |
-| Tainted Treasure | Verfluchter Schatz | Klein, Allgemein, Befleckt; in Basisregeln bestätigt |
+| Infernal Blessing | Infernaler Segen | Tugend |
+| Hermetic Sorcery | Hermetische Hexerei | Tugend |
+| No Tradition | Ohne Tradition | Fehler |
+| Tainted Offspring | Befleckter Nachkomme | Fehler |
+| Tainted Treasure | Verfluchter Schatz | Tugend |
 
 ### Maleficia – Begriffe und Parameter / Maleficia Terms
 
+*→ Regeln: SdM:I, Kapitel 10: Die Maleficia (Kasten *Infernale Reichweiten, Dauern und Ziele*); Fehler: Kapitel 9, Abschnitt *Befleckte Tugenden und Fehler*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Maleficium / Maleficia | Maleficium / Maleficia | Lat. Eigenname; infernale Zauber (Methode + Kraft) |
-| Crossroads (Range) | Kreuzung (Reichweite) | Infernale Reichweite; wie Stimme |
-| Cursed (condition) (Duration) | Verflucht (Bedingung) (Dauer) | Bedingte infernale Dauer; wie Sonne + zweite Dauer |
-| Forsaken (Duration) | Verstoßen (Dauer) | Permanente infernale Dauer; wie Jahr |
-| Passion (Target) | Leidenschaft (Ziel) | Infernales Ziel über Leidenschaften; wie Gruppe |
-| Infernal curse | Infernaler Fluch | Verfluchungs-Maleficia mit Dauer Verstoßen |
-| False Power | Falsche Macht | Fehler; vom Infernalen korrumpierte übernatürliche Kraft |
-| Vengeful Powers | Rachsüchtige Mächte | Fehler; böse Folgen bei tugendhafter Nutzung infernaler Kräfte |
-| Corrupted Abilities | Verderbte Fertigkeiten | Fehler; durch infernalen Einfluss verdorben |
+| Maleficium / Maleficia | Maleficium / Maleficia | (Lat.) infernale Zauber |
+| Crossroads (Range) | Kreuzung (Reichweite) | Infernale Reichweite |
+| Cursed (condition) (Duration) | Verflucht (Bedingung) (Dauer) | Infernale Dauer |
+| Forsaken (Duration) | Verstoßen (Dauer) | Infernale Dauer |
+| Passion (Target) | Leidenschaft (Ziel) | Infernales Ziel |
+| Infernal curse | Infernaler Fluch | |
+| False Power | Falsche Macht | Fehler |
+| Vengeful Powers | Rachsüchtige Mächte | Fehler; betrifft **nicht-infernale** Kräfte |
+| Corrupted Abilities | Verderbte Fertigkeiten | Fehler |
 
 ### Ars Goetia – Begriffe / Goetic Arts Terms
 
+*→ Regeln: SdM:I, Kapitel 11: Ars Goetia (Abschnitte *Die goetischen Künste*, *Mythischer Gefährte: Der Beschwörer*).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Scouring | Geisternetz | Ungerichtete Herbeirufung; „Netz auswerfen" nach beliebigem Geist |
-| Scouring Total | Geisternetzsumme | Würfelsumme für Geisternetz |
-| Ablation Total | Abtragungssumme | Würfelsumme für Abtragung |
-| Ablation Points | Abtragungspunkte | Punkte aus dem Abtragungsprozess |
-| Ablation Target Level | Abtragung-Zielstufe | Schwierigkeitsgrad der Abtragung |
-| Commanding Total | Befehligungssumme | Würfelsumme für Befehligung |
-| Capability (Ablation use) | Eigenschaften | Abtragungspunkte für Charaktereigenschaften ausgeben |
-| Summoner (Virtue) | Beschwörer | Freie Spezialtugend des Mythischen Gefährten |
-| thaumaturgist | Thaumaturg | Alternative Selbstbezeichnung goetischer Praktiker |
-| ghostly warder | Geisterhafter Hüter | Geisterhafter Begleiter eines Beschwörers |
-| Outcast | Ausgestoßener | Fehler |
-| Diabolic Past | Diabolische Vergangenheit | Fehler |
+| Scouring | Geisternetz | |
+| Scouring Total | Geisternetzsumme | |
+| Ablation Total | Abtragungssumme | |
+| Ablation Points | Abtragungspunkte | |
+| Ablation Target Level | Abtragung-Zielstufe | |
+| Commanding Total | Befehligungssumme | |
+| Capability (Ablation use) | Eigenschaften | Verwendung von Abtragungspunkten |
+| Summoner (Virtue) | Beschwörer | Freie Spezialtugend des Mythischen Gefährten *Der Beschwörer* |
+| thaumaturgist | Thaumaturg | Selbstbezeichnung goetischer Praktiker |
+| ghostly warder | Geisterhafter Hüter | Tugend der Basisregeln (*Geisterhafter Hüter*); in SdM:I nur erwähnt |
+| Outcast | Ausgestoßener | Fehler der Basisregeln; in SdM:I nur erwähnt |
+| Diabolic Past | Diabolische Vergangenheit | Fehler der Basisregeln |
 
 ### Schwarze Magie / Black Magic
 
+*→ Regeln: SdM:I, Kapitel 12: Schwarze Magie (Abschnitte *Apotropäische Zauber*, *Chthonische Magie* mit Kasten *Form- und Materialboni*, *Goetische Magie*); Inkubi und Sukkubae: Kapitel 5, Kasten *Inkubi und Sukkubae*; Hand des Ruhms: Kapitel 5, Kasten *Die Hand des Ruhms*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Apotropaic Mastery | Apotropäische Meisterschaft | Zaubermeisterschafts-Fähigkeit; Bonus bei Anti-Dämon-Zaubern |
-| Goetic Mastery | Goetische Meisterschaft | Zaubermeisterschafts-Fähigkeit; Bonus bei Geister-Zaubern |
-| Nigromancy | Nigromantie | Synonym für schwarze Magie |
-| Cinquefoil | Fünfblatt | Form/Material-Bonus; +3 Dämonen vertreiben |
-| Phylactery | Phylakterium | Form/Material-Bonus; +5 Träger schützen |
-| Hand of Glory | Hand des Ruhms | Infernaler Gegenstand; Diebeshilfe |
-| Hag Ride | Nachtmahr | Inkubi/Sukkubae-Kraft |
-| Harness the Wind | Den Wind zähmen | Inkubi/Sukkubae-Kraft; Flug |
-| Mutable Gender | Wandelbares Geschlecht | Inkubi/Sukkubae-Kraft; Geschlechtswechsel |
+| Apotropaic Mastery | Apotropäische Meisterschaft | Spezialfertigkeit der Zaubermeisterschaft |
+| Goetic Mastery | Goetische Meisterschaft | Spezialfertigkeit der Zaubermeisterschaft |
+| Nigromancy | Nigromantie | im Original Synonym für schwarze Magie |
+| Cinquefoil | Fünfblatt | Form- und Materialbonus |
+| Phylactery | Phylakterium | Form- und Materialbonus |
+| Hand of Glory | Hand des Ruhms | |
+| Hag Ride | Nachtmahr | Kraft der Inkubi und Sukkubae |
+| Harness the Wind | Den Wind zähmen | Kraft der Inkubi und Sukkubae |
+| Mutable Gender | Wandelbares Geschlecht | Kraft der Inkubi und Sukkubae |
 
 ### Infernale Regiones / Infernal Regiones
 
+*→ SdM:I, Kapitel 1, Abschnitt *Infernale Regiones*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Tartaran regio | Tartarische Regio | Spiegelt die Qualen der Hölle wider |
-| Abyssal regio | Abgrundregio | Stellt Gottesferne dar |
+| Tartaran regio | Tartarische Regio | |
+| Abyssal regio | Abgrundregio | |
 
 ### Infernales Vis / Infernal Vis
 
+*→ SdM:I, Kapitel 1, Abschnitt *Infernales Vis*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Vis infesta | Vis infesta | Lat. Eigenname; „unsicheres Vis"; mildeste Form infernalen Vis |
-| Vis sordida | Vis sordida | Lat. Eigenname; „schmutziges Vis"; mittlere Form infernalen Vis |
-| Vis prava | Vis prava | Lat. Eigenname; „böses Vis"; gefährlichste Form infernalen Vis |
+| Vis infesta | Vis infesta | (Lat.) „unsicheres Vis“; Art des infernalen Vis |
+| Vis sordida | Vis sordida | (Lat.) „schmutziges Vis“; Art des infernalen Vis |
+| Vis prava | Vis prava | (Lat.) „böses Vis“; Art des infernalen Vis |
 
 ---
 
@@ -346,119 +352,121 @@ Lädt sich im Laufe eines Tages gleichmäßig auf den Machtwert auf (z. B. Macht
 
 ### Göttliche Auren und Regiones / Divine Auras and Regiones
 
+*→ Regeln: SdM:G, Kapitel Zwei, Abschnitte *Göttliche Auren im Spiel* (*Das Dominium*, *Empyreische Auren*) und *Göttliche Regiones* (*Irdische Regiones*, *Celestische Regiones*); Glaubenspunkte und Wahrer Glaube: Kapitel Drei, Abschnitt *Wahrer Glaube*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Empyreal (adj.) | empyreisch | Göttliche Aura, die nicht aus Anbetung stammt, sondern aus Reliquien, Wundern oder göttlichen Kreaturen |
+| Empyreal (adj.) | empyreisch | Göttliche Aura, die nicht aus Anbetung stammt |
 | Celestial (adj.) | celestisch | Kosmologisch-göttlich; bezogen auf Himmelssphären und göttliche Regiones; nicht verwechseln mit „himmlisch" (rein religiös) |
 | Terrestrial (adj.) | irdisch | Bezogen auf irdische göttliche Regiones |
-| Dominion rite | Dominiumritus | Ritual zur Erschaffung einer Dominiumaura; Kommunikation + Theologie/Dominiumkunde + Stresswurf vs. SG 6 |
-| Celestial Disorientation | Celestische Desorientierung | Zustand beim Betreten celestischer Regiones; Ausdauer + Dominiumkunde vs. SG = Regiostärke × 3 |
-| Pole Lords | Polherrscher | Göttliche Wesen, die über celestische Bewegungen wachen; bewohnen celestische Regiones |
-| Faith Point | Glaubenspunkt | Wie Selbstvertrauenspunkte einsetzbar; gewonnen durch Sakramente, Pilgerreisen usw. |
-| True Faith Score | Wahrer-Glauben-Wert | Wert des Wahren Glaubens; bestimmt max. Glaubenspunkte pro Einsatz und Magieresistenz (× 10) |
+| Dominion rite | Dominiumritus | Unterabschnitt *EINE DOMINIUMAURA ERSCHAFFEN* |
+| Celestial Disorientation | Celestische Desorientierung | Unterabschnitt *INNERHALB CELESTISCHER REGIONES* |
+| Pole Lords | Polherrscher | im Original nur erwähnt (ihre Heiligtümer sind celestische Regiones) |
+| Faith Point | Glaubenspunkt | |
+| True Faith Score | Wahrer-Glauben-Wert | |
 
 ### Göttliche Spielmechanik / Divine Game Mechanics
 
+*→ Regeln: SdM:G, Kapitel Drei: Von Gott Gesegnet (Abschnitte *Heiliger Einfluss* mit *Temperungen*, *Reliquien*, *Wundersame Wirkungen*, *Göttliche Verzerrung*, *Der Göttliche Aufstieg*, *Heilige Magie*).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Holy Method | Heilige Methode | Übernatürliche Methode des göttlichen Zauberns |
-| Holy Power | Heilige Kraft | Übernatürliche Kraft des göttlichen Zauberns |
-| Temper | Temperung | Göttliche Eigenschaft einer Dominiumaura; tugendhafte Persönlichkeitseigenschaft |
-| Tempering (an aura) | Temperieren (einer Aura) | Einer Aura eine tugendhafte Persönlichkeitseigenschaft verleihen |
-| tempered (aura) | temperiert(e Aura) | Aura mit aktiver Temperung |
-| tragedy of hubris | Tragödie der Hybris | Fehlschlag bei heiliger Wirkung; Analogon zur Verzerrung |
-| holy connection | heilige Verbindung | Pendant zur Arkanen Verbindung für heilige Wirkungen |
-| holy tradition | heilige Tradition | Gruppe Gleichgesinnter mit gemeinsamen Bevorzugten Fertigkeiten |
-| Divine Ascent | Göttlicher Aufstieg | Göttliches Äquivalent zum Zwielicht; religionsneutral |
-| brandea | Brandea | Lat.; Behältnisse/Hüllen von Reliquien, die selbst Heiligkeit aufnehmen |
-| Divine Warping | Göttliche Verzerrung | Verzerrung durch göttliche Quellen |
-| Divine Gloom | Göttliche Düsternis | Form des Göttlichen Aufstiegs; Verlust weltlichen Wissens |
-| Divine Form | Göttliche Gestalt | Form des Göttlichen Aufstiegs; engelhaftes Erscheinungsbild |
-| Divine Unity | Göttliche Einheit | Form des Göttlichen Aufstiegs; Verkörperung einer Tugend |
-| Miraculous Abilities | Wundersame Fertigkeiten | Oberbegriff für Heilige Kräfte als Übernatürliche Fertigkeiten |
-| Holy Societates | Heilige Societates | Traditionen, die Heilige Magie als Bevorzugte Fertigkeit lehren |
+| Holy Method | Heilige Methode | |
+| Holy Power | Heilige Kraft | |
+| Temper | Temperung | Tugendhafte Eigenschaft einer Dominiumaura (Abschnitt *Temperungen*) |
+| Tempering (an aura) | Temperieren (einer Aura) | |
+| tempered (aura) | temperiert(e Aura) | |
+| tragedy of hubris | Tragödie der Hybris | Folge eines misslungenen Wunders (Abschnitt *Wundersame Wirkungen*) |
+| holy connection | heilige Verbindung | |
+| holy tradition | heilige Tradition | |
+| Divine Ascent | Göttlicher Aufstieg | |
+| brandea | Brandea | (Lat.) Behältnisse und Hüllen von Reliquien (Abschnitt *Reliquien*) |
+| Divine Warping | Göttliche Verzerrung | |
+| Divine Gloom | Göttliche Düsternis | Form des Göttlichen Aufstiegs |
+| Divine Form | Göttliche Gestalt | Form des Göttlichen Aufstiegs |
+| Divine Unity | Göttliche Einheit | Form des Göttlichen Aufstiegs |
+| Miraculous Abilities | Wundersame Fertigkeiten | |
+| Holy Societates | Heilige Societates | |
 
 ### Theologische Tugenden / Theological Virtues
 
-Die drei Kräfte, die ein Charakter mit steigendem Wahrer-Glauben-Wert erhält (SdM:G, Kap. 1).
+*→ Regeln: SdM:G, Kapitel Drei, Abschnitt *Wahrer Glaube*, Unterabschnitt *Das Licht verkörpern*.*
+
+Die drei Kräfte, die ein Charakter mit steigendem Wahrer-Glauben-Wert erhält (SdM:G, Kap. 3).
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Devotion (theological virtue) | Hingabe | Wahrer Glaube 2. **Nicht** mit *Devotion (Duration)* → „Andacht" verwechseln |
-| Hope | Hoffnung | Wahrer Glaube 3 |
-| Charity | Nächstenliebe | Wahrer Glaube 5 |
+| Devotion (theological virtue) | Hingabe | **Nicht** mit *Devotion (Duration)* → „Andacht" verwechseln |
+| Hope | Hoffnung | |
+| Charity | Nächstenliebe | |
 
 Das Original benennt die erste Tugend ausdrücklich um: „the theological virtue ‚Devotion' is normally ‚Faith', but the name has been changed to avoid confusion". Der Grund trägt im Deutschen genauso – der Dreiklang heißt Glaube–Hoffnung–Liebe, und „Glaube" kollidiert hier sowohl mit *True Faith* → „Wahrer Glaube" als auch mit dem Heiligen Ziel *Faith (Target)* → „Glaube". Deshalb **Hingabe**, das Wort, mit dem das Buch *devotion* als Gemeinwort ohnehin schon übersetzt („Hingabe an den Teufel", „Heilige Hingabe").
 
-### Steine der Tugend / Stones of Virtue (SdM:M)
+### Heilige Reichweiten, Dauern und Ziele / Holy R/D/T
 
-Die Liste der Form- und Materialboni für Tugendobjekte übersetzt **nur das, was das Original übersetzt**: lateinische und gälische Lapidariennamen bleiben stehen, volkssprachliche werden eingedeutscht.
+*→ Stufenäquivalente und Regeln: SdM:G, Kapitel Drei, Abschnitt *Heilige Magie*, Unterabschnitt *Vorteile*; *Worn*: Kapitel Sechs, Abschnitt *Amulette fertigen*.*
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Clach Crubain | Clach Crubain | gälisch, bleibt |
-| Bufonites | Bufonites | lat., Krötenstein. Bleibt lateinisch wie im Original; der Fließtext führt „Krötenstein" als Glosse. **Nicht** „Bufonit" – die `-it`-Endung ist der modernen Mineralogie vorbehalten, der Krötenstein ist keine Mineralart, sondern (wie die Glossopetrae) ein versteinerter Zahn. **Nicht** „Borax" – kollidiert mit dem Natriumborat |
-| Ovum Anguinum | Ovum Anguinum | lat., bleibt |
-| Cornu Ammonis | Cornu Ammonis | lat., bleibt |
-| Glossopetrae | Glossopetrae | lat., bleibt |
-| Thunderbolt | Donnerkeil | im Original volkssprachlich, daher eingedeutscht |
-| Fairy Loaves | Feenbrote | im Original volkssprachlich, daher eingedeutscht |
-
-### Heilige Reichweiten, Dauern und Ziele / Holy R/D/T
-
-| Englisch (EN) | Deutsch (DE) | Äquivalent | Anmerkung |
-|---|---|---|---|
-| Presence (Range) | Präsenz | Stimme | Heilige Reichweite |
-| Communion (Range) | Kommunion | Arkane Verbindung | Heilige Reichweite |
-| Recitation (Duration) | Rezitation | Konzentration | Heilige Dauer |
-| Office (Duration) | Offizium | Durchmesser | Heilige Dauer |
-| Devotion (Duration) | Andacht | Sonne | Heilige Dauer; **nicht** die theologische Tugend *Devotion* → „Hingabe" |
-| Sabbath (Duration) | Sabbat | Sonne | Heilige Dauer |
-| 40 (Duration) | 40 | Mond | Heilige Dauer |
-| Fast (Duration) | Fasten | Mond | Heilige Dauer |
-| Grace (Duration) | Gnade | Jahr | Heilige Dauer |
-| Sin (Target) | Sünde | Individuum | Heiliges Ziel |
-| Faith (Target) | Glaube | Gruppe | Heiliges Ziel |
-| Dominion (Target) | Dominium | Grenze | Heiliges Ziel |
+| Presence (Range) | Präsenz | Heilige Reichweite |
+| Communion (Range) | Kommunion | Heilige Reichweite |
+| Recitation (Duration) | Rezitation | Heilige Dauer |
+| Office (Duration) | Offizium | Heilige Dauer |
+| Devotion (Duration) | Andacht | Heilige Dauer; **nicht** die theologische Tugend *Devotion* → „Hingabe" |
+| Sabbath (Duration) | Sabbat | Heilige Dauer |
+| 40 (Duration) | 40 | Heilige Dauer |
+| Fast (Duration) | Fasten | Heilige Dauer |
+| Grace (Duration) | Gnade | Heilige Dauer |
+| Sin (Target) | Sünde | Heiliges Ziel |
+| Faith (Target) | Glaube | Heiliges Ziel |
+| Dominion (Target) | Dominium | Heiliges Ziel |
 
 ### Heilige und Heiligenkategorien / Saints
 
+*→ Regeln: SdM:G, Kapitel Vier, Abschnitt *Heilige* (Unterabschnitt *Heilige gestalten*); Gottesurteil: Kapitel Vier, Kasten *Gottesurteil*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Patron Saint | Schutzpatron | Persönlicher Heiliger eines Charakters |
-| Greater Saint | Großer Heiliger | Göttliche Macht 75 |
-| Area Saint | Gebietsheiliger | Göttliche Macht 50 |
-| Local Saint | Lokaler Heiliger | Göttliche Macht 25 |
-| Trial by Ordeal | Gottesurteil | Gerichtliche Prüfung durch göttliches Eingreifen |
+| Patron Saint | Schutzpatron | |
+| Greater Saint | Großer Heiliger | Heiligenkategorie |
+| Area Saint | Gebietsheiliger | Heiligenkategorie |
+| Local Saint | Lokaler Heiliger | Heiligenkategorie |
+| Trial by Ordeal | Gottesurteil | |
 
 ### Ars Notoria / Ars Notoria
 
+*→ Regeln: SdM:G, Kapitel Vier, Abschnitt *Ars Notoria* (Unterabschnitt *Die Ringe Salomons*).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Recitation Score | Rezitationswert | Int + Ars Notoria + Modifikator |
-| Recitation Total | Rezitationssumme | Rezitationswert + Stresswurf |
-| Ring (of Solomon) | Ring (Salomons) | Stufe der Ars-Notoria-Weisheit (1–7) |
-| notae | notae | Lat.; Einzelformeln der Ars Notoria |
+| Recitation Score | Rezitationswert | |
+| Recitation Total | Rezitationssumme | |
+| Ring (of Solomon) | Ring (Salomons) | |
+| notae | notae | (Lat.) Einzelformeln der Ars Notoria |
 | Oration | Oration | Gebete der Ars Notoria |
 
 ### Traditionen und Eigennamen / Traditions
 
+*→ SdM:G, Kapitel Vier, Abschnitt *Charaktere*, Unterabschnitt *Traditionen*; Kreis des Einzigartigen Cherubs: Kapitel Sechs, Abschnitt *Charaktere*, Unterabschnitt *Fertigkeiten*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Cantores / Cantor | Cantores / Cantor | Lat.; christliche Musikertradition |
+| Cantores / Cantor | Cantores / Cantor | (Lat.) Heilige Tradition |
 | Neriusians | Nerianer | Anhänger des Priorats des Hl. Nerius |
-| The Neriusian Portal | Das Nerianische Portal | CrVi65; Ritualzauber, erzeugt irdische Regio |
-| Circle of the Unique Cherub | Kreis des Einzigartigen Cherubs | Kleine Kabbalistengruppe |
+| The Neriusian Portal | Das Nerianische Portal | Zauber der Nerianer |
+| Circle of the Unique Cherub | Kreis des Einzigartigen Cherubs | Kabbalistengruppe |
 
 ### Jüdische Mystik / Jewish Mysticism
 
+*→ Regeln: SdM:G, Kapitel Sechs: Mythisches Judentum, Abschnitt *Jüdische Mystik* (Unterabschnitte *Gematria* mit *SHINNUI SHEM*, *Golems*, *Merkavah und die Mysterien des Thronwagens*); *Worn*: Abschnitt *Charaktere*, Unterabschnitt *Fertigkeiten* (*AMULETTE FERTIGEN*).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Shinnui Shem | Shinnui Shem | Namensänderung für Alterungsbonus |
-| Awaken Golem Total | Golem-Erweckungssumme | Würfelsumme für Golem-Belebung |
-| Empower Golem Total | Golem-Ermächtigungssumme | Würfelsumme für Golem-Stärkung |
+| Shinnui Shem | Shinnui Shem | Änderung des Wahren Namens |
+| Awaken Golem Total | Golem-Erweckungssumme | |
+| Empower Golem Total | Golem-Ermächtigungssumme | |
 | Chariot Mysteries | Mysterien des Thronwagens | Merkavah-Praxis |
-| Worn (Duration) | Getragen (Dauer) | Heilige Dauer; äquivalent zu Sonne; für Amulette |
+| Worn (Duration) | Getragen (Dauer) | Heilige Dauer für Amulette |
 
 ---
 
@@ -466,88 +474,97 @@ Die Liste der Form- und Materialboni für Tugendobjekte übersetzt **nur das, wa
 
 ### Allgemeine Feenbegriffe / General Faerie Terms
 
+*→ Fundstellen: SdM:F, Kapitel Eins: Natur der Feen; Kapitel Zwei: Die Feensphäre; Kapitel Fünf: Berührungen der Feenwelt (Abschnitte *Sympathischer Einfluss*, *Sympathiemagie*, *Wechselbälger*, *Tugenden und Fehler*).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Fable Point | Fabelpunkt | Spielmechanik: Punkte, die in der Feensphäre gesammelt werden |
-| Faerie Boon | Feengabe | Geschenk/Belohnung einer Fee |
-| Spirit Away (power) | Hinwegführen | Große Feenkraft: Sterbliche über die Schwelle in/aus der Feensphäre befördern |
-| Trods | Feenpfade | Geographische Grenzverläufe (Flussufer, Waldränder) mit Feenaura; Wege in die Feensphäre |
-| Stock Characters | Stehende Figuren | Klischeehafte Rollen, die Feenwesen bei der Nachahmung von Menschen annehmen |
-| Mother Road | Mutterstraße | Hauptweg durch die Feensphäre |
-| Ars Fabulosa | Ars Fabulosa | Lat. Eigenname: Kunst der Feenverhandlung |
-| Faerie Legacy | Feenvermächtnis | Tugend (Kap. 5); Feenerbe eines Sterblichen |
-| Faerie Heritage (Flaw) | Feenerbe | Fehler |
-| Faerie Background | Feenhintergrund | Hintergrund des Feenerbes |
-| tinting / tinted aura | Färbung / gefärbte Aura | Sympathie-Mechanik: Aura wird durch Feeneinfluss gefärbt |
-| folk charm | Schutzzauber | Volkstümliches Schutzmittel gegen Feen (Objekte, Gesten, Symbole) |
-| Hermetic charm | Hermetische Feenverzauberung | Hermetische Variante des Schutzzaubers |
-| Nympholept | Nympholept | Von einer Nymphe besessener/verzauberter Mensch |
-| Milk Brother | Milchbruder | Mensch, der als Kind von einer Fee gesäugt wurde |
-| Faerie Metamorphosis | Feenmetamorphose | Fehler |
-| Homunculus Wizard | Homunculus-Zauberer | Charaktertyp |
-| Bonding (Faerie Power) | Bindung | Feenhandel: Bindung an ein Feenwesen (als Kraft) |
-| Dream (Faerie Power) | Traum | Feenkraft |
+| Fable Point | Fabelpunkt | Kap. 2, *Vitalität und Fabel in der Feenwelt* |
+| Faerie Boon | Feengabe | Kap. 2 (Eudokia), *Feengaben* |
+| Spirit Away (power) | Hinwegführen | Feenkraft (Kap. 2, Kasten *Neue Kraft: Hinwegführen*; auch Kap. 3, *Große und Mindere Feenkräfte*) |
+| Trods | Feenpfade | Kap. 2, Kasten *Feenpfade* |
+| Stock Characters | Stehende Figuren | Kap. 1, *Stehende Figuren* |
+| Mother Road | Mutterstraße | Kap. 2, *Die Mutterstraße* |
+| Ars Fabulosa | Ars Fabulosa | (Lat.) Oberbegriff des Feenhandels (Kap. 6, *Feenhandel*, Unterabschnitt *Ars Fabulosa*) |
+| Faerie Legacy | Feenvermächtnis | Tugend (Kap. 5) |
+| Faerie Heritage (Flaw) | Feenerbe | Fehler (Kap. 5) |
+| Faerie Background | Feenhintergrund | Tugend (Kap. 5) |
+| tinting / tinted aura | Färbung / gefärbte Aura | Kap. 5, *Gefärbte Auren* |
+| folk charm | Schutzzauber | Kap. 5, *Schutzzauber* |
+| Hermetic charm | Hermetische Feenverzauberung | Kap. 5, *Hermetische Feenverzauberungen* |
+| Nympholept | Nympholept | Kap. 5, *Nympholepten* |
+| Milk Brother | Milchbruder | Kap. 5, *Milchbrüder* (Milch geteilt mit einem Gwiber) |
+| Faerie Metamorphosis | Feenmetamorphose | Fehler (Kap. 5) |
+| Homunculus Wizard | Homunculus-Zauberer | Fehler (Kap. 5) |
 
 ### Feenkonzepte / Faerie Concepts
 
+*→ Fundstellen: SdM:F, Kapitel Eins (Abschnitte *Glamour: Regeln anstelle einer Seele*, *Feenauren*, *Regiones*, *Vis*) und Kapitel Zwei (Abschnitte *Die Drei Welten*, *Der Zugang zur Feenwelt*, *Abenteuer in der Feenwelt*, *Geschichten in der Feensphäre spinnen*); Kapitel Drei, *Tugenden für körperliche Gestalten*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Glamour | Glamour | Spirituelle Energie/Regelwerk, das Feenwesen zusammenhält und ihre Natur definiert; von schott. „Grammar" |
-| Extend Glamour (Power) | Glamour Ausdehnen | Feenkraft: Glamour über ein Gebiet ausdehnen, erzeugt Feenaura |
-| spiritual anchor | Geistiger Anker | Kern, um den eine Fee ihren Körper aufbaut; enthält ihr Vis |
-| principal faerie | Hauptfee | Dominierendes Feenwesen eines Gebiets; sein Glamour erzeugt die lokale Aura |
-| threshold faerie | Schwellenfee | Fee, die den Eingang zu einer Regio oder zur Feenwelt bewacht |
-| faerie roads | Feenstraßen | Von Feen benutzte Pfade mit Wegerecht; Leichenwege als häufigste Form |
-| corpse roads | Leichenwege | Traditionelle Wege zum Leichentransport; häufigste Form der Feenstraße |
-| Guardian of the Threshold | Wächter der Schwelle | Erstes Wesen, dem man beim Betreten der Feensphäre begegnet |
-| Passive Guardian | Passiver Wächter | Wächter in Form eines physischen Hindernisses |
-| kerberoi / kerberos | Kerberoi / Kerberos | Furchterregende Ungeheuerwächter (griech., beibehalten) |
-| Path of Chance | Pfad des Zufalls | Weg durch Arkadien (reine Abenteuer) |
-| Path of Destiny | Pfad des Schicksals | Weg durch Elysium (allegorische Geschichten) |
-| Path of Choice / Forked Path | Pfad der Wahl / Gegabelter Pfad | Weg durch Eudokia (persönliche Entwicklung) |
-| Summer Kingdom | Sommerreich | Beispielreich in einer Feengeschichte |
+| Glamour | Glamour | |
+| spiritual anchor | Geistiger Anker | Kap. 1, *Anker* |
+| principal faerie | Hauptfee | |
+| threshold faerie | Schwellenfee | |
+| faerie roads | Feenstraßen | Kap. 1, *Feenstraßen* |
+| corpse roads | Leichenwege | |
+| Guardian of the Threshold | Wächter der Schwelle | Kap. 2, *Der Wächter der Schwelle* |
+| Passive Guardian | Passiver Wächter | |
+| kerberoi / kerberos | Kerberoi / Kerberos | (Gr.) bleibt |
+| Path of Chance | Pfad des Zufalls | Weg durch Arkadien |
+| Path of Destiny | Pfad des Schicksals | Weg durch Elysium |
+| Path of Choice / Forked Path | Pfad der Wahl / Gegabelter Pfad | Weg durch Eudokia |
+| Summer Kingdom | Sommerreich | |
 | Elysian (adj.) | elysisch | Adjektivform zu Elysium, z. B. „elysische Geschichte" |
 | Eudokian (adj.) | eudokisch | Adjektivform zu Eudokia, z. B. „eudokische Geschichte" |
-| dramatis persona/personae | handelnde Figur(en) | Rollenfiguren in Feengeschichten |
+| dramatis persona/personae | handelnde Figur(en) | |
 | Barking Beast | Bellende Bestie | Kreaturenname (Kap. 4: Feenbestiarium) |
-| External Vis | Externes Vis | Vis, das außerhalb des Feenwesens existiert; bereits in Basisregeln etabliert |
-| Faerie Beast | Feentier | Feenwesen in Tiergestalt; bereits in HdH:MK, HZ:ÜA etabliert |
+| External Vis | Externes Vis | Tugend (Kap. 3, *Tugenden für körperliche Gestalten*) |
+| Faerie Beast | Feentier | Tugend (Kap. 3, *Tugenden für körperliche Gestalten*) |
 
 ### Feensphären-Spielmechanik / Faerie Realm Mechanics
 
+*→ Regeln: SdM:F, Kapitel Zwei (Abschnitte *Der Zugang zur Feenwelt*, *Abenteuer in der Feenwelt* mit *Vitalität und Fabel in der Feenwelt* und *Kreativität in der Feensphäre*, *Geschichten in der Feensphäre spinnen*).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| fable score | Fabelwert | Wert, der die Kontrolle des Charakters über die Feensphäre misst |
-| Threshold | Schwelle | Gleichzeitige Anziehung/Abstoßung der Feensphäre gegenüber der irdischen Welt |
-| Threshold strength | Schwellenstärke | Formel: (13 − Auramodifikator) × 3 |
-| Threshold points | Schwellenpunkte | Punkte, die angesammelt werden müssen, um die Feensphäre zu betreten |
-| Threshold total | Schwellensumme | Gesamtsumme der angesammelten Schwellenpunkte |
-| Offer Total | Angebotssumme | Würfelsumme für kreative Veränderungen in der Feensphäre |
-| Offer Modifier | Angebotsmodifikator | Modifikator auf die Angebotssumme |
-| Promise Modifier | Versprechensmodifikator | Modifikator für das Dienstversprechen |
-| Change Modifier | Veränderungsmodifikator | Modifikator für die Art der gewünschten Veränderung |
-| Threat Level | Bedrohungsstufe | Klassifizierung von Bedrohungen (Trivial bis Überwältigend) |
-| plot device | Schicksalsspruch | Sprichwort/Phrase, die ein Spieler einmal pro Abenteuer einsetzen kann |
+| fable score | Fabelwert | |
+| Threshold | Schwelle | |
+| Threshold strength | Schwellenstärke | |
+| Threshold points | Schwellenpunkte | |
+| Threshold total | Schwellensumme | |
+| Offer Total | Angebotssumme | |
+| Offer Modifier | Angebotsmodifikator | |
+| Promise Modifier | Versprechensmodifikator | |
+| Change Modifier | Veränderungsmodifikator | |
+| Threat Level | Bedrohungsstufe | |
+| plot device | Schicksalsspruch | |
 
 ### Feensphären-Erzähltechnik / Faerie Storytelling
 
+*→ SdM:F, Kapitel Zwei, Abschnitt *Geschichten in der Feensphäre spinnen*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| player-driven stories | Spielergesteuerte Geschichten | Spieler bestimmen die Szenerie, Spielleiter kontrolliert den Plot |
-| player-influenced stories | Spielerbeeinflusste Geschichten | Spieler beeinflussen einzelne Szenen über Schicksalssprüche |
-| audience participation | Publikumsbeteiligung | Methode, Spieler in Feengeschichten einzubinden |
+| player-driven stories | Spielergesteuerte Geschichten | |
+| player-influenced stories | Spielerbeeinflusste Geschichten | |
+| audience participation | Publikumsbeteiligung | |
 
 ### Feenvis-Typen / Faerie Vis Types
 
+*→ SdM:F, Kapitel Eins, Abschnitt *Vis*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| encased vis | Umhülltes Vis | Vis, das eine Fee mit Glamour umhüllt/beansprucht hat |
-| accrued vis | Angesammeltes Vis | Vis, das beim Ende einer Feenrolle aus Glamourfragmenten entsteht |
-| anchored vis | Verankertes Vis | Vis im Geistigen Anker eines Feenwesens |
-| sleeping vis | Schlafendes Vis | Vis mit Glamour aber ohne Vitalität; kann zu einer Fee erweckt werden |
-| abstract vis | Abstraktes Vis | Glamour, der als Vis erscheint, aber keines enthält; nur im Herrschaftsbereich des Erzeugers wirksam |
+| encased vis | Umhülltes Vis | |
+| accrued vis | Angesammeltes Vis | |
+| anchored vis | Verankertes Vis | |
+| sleeping vis | Schlafendes Vis | |
+| abstract vis | Abstraktes Vis | |
 
 ### Feenparameter / Faerie R/D/T
+
+*→ Regeln: SdM:F, Kapitel Sechs, Abschnitt *Riten der Feenwelt*, Kasten *Feenreichweiten, -dauern und -ziele*.*
 
 | Englisch (EN) | Deutsch (DE) | Typ | Anmerkung |
 |---|---|---|---|
@@ -569,6 +586,8 @@ Die Liste der Form- und Materialboni für Tugendobjekte übersetzt **nur das, wa
 
 ### Feenmethoden / Faerie Methods
 
+*→ SdM:F, Kapitel Sechs, Abschnitt *Feenmethoden*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Evocation | Evokation | Feenmethode |
@@ -577,51 +596,61 @@ Die Liste der Form- und Materialboni für Tugendobjekte übersetzt **nur das, wa
 
 ### Feenriten / Faerie Rites (Kap. 6)
 
+*→ SdM:F, Kapitel Sechs, Abschnitt *Feenkräfte*, Unterabschnitte der einzelnen Kräfte (*The Reflecting Pool* unter *Traum*).*
+
 Die Riten aus Kapitel 6 sind nicht vollständig tabelliert; hier stehen nur Namen, die
 außerhalb der ursprünglichen Übersetzung neu gebildet wurden.
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| The Reflecting Pool | Der Spiegelnde Teich | Evokation/Traum 30, Ritual; die Überschrift fehlte im englischen Original und kam erst mit dem Errata-Stand 2026-09 hinzu |
+| The Reflecting Pool | Der Spiegelnde Teich | Feenwirkung (Evokation/Traum), Ritual; die Überschrift fehlte im englischen Original und kam erst mit dem Errata-Stand 2026-09 hinzu |
 
 ### Feenkräfte / Faerie Powers
 
 #### Feenmagie-Kräfte (Kap. 6)
 
+*→ SdM:F, Kapitel Sechs, Abschnitt *Feenkräfte* (zugleich Übernatürliche Tugenden, Kapitel Fünf).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Beguile | Umgarnen | Feenkraft |
 | Conjure | Beschwören | Feenkraft |
-| Portage | Versetzen | Feenkraft: Teleportation durch Feenpfade |
-| Ware | Wacht | Feenkraft: Schutz/Abwehr |
-| Weal | Wohl | Feenkraft: Heilung/Wohlbefinden |
-| Woe | Wehe | Feenkraft: Schaden/Fluch |
+| Dream (Faerie Power) | Traum | Feenkraft |
+| Portage | Versetzen | Feenkraft |
+| Ware | Wacht | Feenkraft |
+| Weal | Wohl | Feenkraft |
+| Woe | Wehe | Feenkraft |
 
-#### Große Feenkräfte (Kap. 3)
+#### Große und Mindere Feenkräfte (Kap. 3)
+
+*→ Werte: SdM:F, Kapitel Drei, Abschnitt *Optionale Tugenden und Fehler*, Unterabschnitt *Große und Mindere Feenkräfte*.*
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Adhere | Haftung | |
-| Allure | Verlockung | +3 auf Beeindrucken/Überzeugen |
+| Loosely Material | Locker Materiell | Feenkraft; stand früher fälschlich als Fehler in `tugenden-fehler.md` |
+| Allure | Verlockung | |
 | Cause Drowsiness | Schläfrigkeit verursachen | |
 | Cause Sickness | Krankheit verursachen | |
-| Craft Magical Trinket | Magisches Schmuckstück herstellen | Rituelle Feenkraft |
-| Enthralling Sound | Fesselnder Klang | Erzeugt Emotionen in einer Gruppe (CrMe) |
-| Enthrallment | Unterwerfung | Vollständige Geisteskontrolle (ReMe) |
-| Fearful Flaming Eyes | Furchtbare flammende Augen | Lähmt bei Augenkontakt |
-| Hound | Wittern | Richtung/Entfernung zur Beute kennen |
+| Craft Magical Trinket | Magisches Schmuckstück herstellen | Große/Mindere Feenkraft (keine Rituelle Feenkraft) |
+| Enthralling Sound | Fesselnder Klang | |
+| Enthrallment | Unterwerfung | |
+| Fearful Flaming Eyes | Furchtbare flammende Augen | |
+| Hound | Wittern | |
 | Illusionary Home | Illusorisches Heim | |
-| Kiss of Forgetfulness | Kuss des Vergessens | Ziel vergisst sein sterbliches Leben |
+| Kiss of Forgetfulness | Kuss des Vergessens | |
 | Kiss of Frost | Kuss des Frosts | |
 | Kiss of the Mermaid | Kuss der Meerjungfrau | |
-| Pine Away | Dahinsiechen | Langsamer Verfall als schwere Krankheit |
-| Repel Animals | Tiere fernhalten | Wie Kreis der Bestienabwehr |
+| Pine Away | Dahinsiechen | |
+| Repel Animals | Tiere fernhalten | |
 | Send Message | Nachricht senden | |
 | Spreading a Mantle of Snow | Schneeschleier ausbreiten | |
 | Steal Judgment | Urteilskraft rauben | |
 | Torrent from the Lungs | Sturzbach aus den Lungen | |
 
 #### Fokussierte Kräfte (Kap. 3)
+
+*→ Werte: SdM:F, Kapitel Drei, Unterabschnitt *Fokussierte Mächte*.*
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
@@ -634,10 +663,12 @@ außerhalb der ursprünglichen Übersetzung neu gebildet wurden.
 
 #### Persönliche Kräfte (Kap. 3)
 
+*→ Werte: SdM:F, Kapitel Drei, Unterabschnitt *Persönliche Kräfte*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Appear Human | Menschlich erscheinen | |
-| Extended Glamour | Ausgedehnter Glamour | |
+| Extended Glamour | Ausgedehnter Glamour | Im Original auch *Extend Glamour* (dieselbe Kraft); die Übersetzung führt dafür an zwei Stellen „Glamour Ausdehnen“. Die frühere Dublette „Extend Glamour (Power) → Glamour Ausdehnen“ ist hier zusammengeführt |
 | Immateriality | Unkörperlichkeit | |
 | Shift Human Shapes | Menschliche Gestalt wechseln | |
 | Silent Motion | Lautlose Bewegung | |
@@ -646,20 +677,24 @@ außerhalb der ursprünglichen Übersetzung neu gebildet wurden.
 
 ### Feenhandel / Faerie Bargaining
 
+*→ SdM:F, Kapitel Sechs, Abschnitt *Feenhandel* (Unterabschnitte *Ars Fabulosa*, *Beschwörung*, *Bindung*, *Vereinnahmung*, *Entlassung*). Das Original nennt die vier „powers associated with bargaining“; sie sind nicht unter den *Feenkräften* (Kapitel Sechs) geführt und werden als Übernatürliche Fertigkeit oder Tugend erlernt.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Summoning | Beschwörung | Feenhandel: Feenwesen herbeirufen |
-| Bonding Ceremony | Bindungszeremonie | Feenhandel: Bindung an ein Feenwesen |
-| Captivating | Vereinnahmung | Feenhandel: Körpertausch mit einem Feenwesen |
-| Dismissing | Entlassung | Feenhandel: Feenwesen entlassen |
+| Summoning | Beschwörung | Feenhandel |
+| Bonding | Bindung | Feenhandel. Ersetzt die Dubletten „Bonding (Faerie Power)“ und „Bonding Ceremony“ – Letzteres gibt es im Original nicht |
+| Captivating | Vereinnahmung | Feenhandel |
+| Dismissing | Entlassung | Feenhandel |
 
 ### Heidnische Traditionen / Pagan Traditions
 
+*→ SdM:F, Kapitel Sechs, Abschnitt *Heidnische Traditionen*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Borrowers | Entleiher | Heidnische Tradition (Feenmagie) |
+| Borrowers | Entleiher | Heidnische Tradition (Feenhandel) |
 | Ollamhain | Ollamhain | Irische heidnische Tradition; Eigenname |
 
 ---
 
-*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024) · Ars Magica 5e – Sphären der Macht: Magie (Atlas Games) · Ars Magica 5e – Sphären der Macht: Das Infernale (Atlas Games) · Ars Magica 5e – Sphären der Macht: Das Göttliche (Atlas Games) · Ars Magica 5e – Sphären der Macht: Feenwelt (Atlas Games) · Deutsche Übersetzung (ArsMagica_DE_Gesamt_work.md)*
+*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024) · Ars Magica 5e – Sphären der Macht: Magie (Atlas Games) · Ars Magica 5e – Sphären der Macht: Das Infernale (Atlas Games) · Ars Magica 5e – Sphären der Macht: Das Göttliche (Atlas Games) · Ars Magica 5e – Sphären der Macht: Feenwelt (Atlas Games) · Deutsche Übersetzungen unter `german-wip/`*

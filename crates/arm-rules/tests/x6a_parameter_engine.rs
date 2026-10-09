@@ -777,7 +777,7 @@ mod e7_conditional_incompatibility {
 
     /// Representative red (§ 4, e7; D58/D58.1): Weak Sight (sense = sight) is
     /// a HARD error alongside Keen Vision, even though the -2 penalty itself
-    /// stays text (D61) — the incompatibility is absolute (ArMDE:7031, :7033).
+    /// stays text (D61) — the incompatibility is absolute (ArMDE:7102, :7104).
     #[test]
     fn weak_sight_excludes_sensitive_sight_and_keen_vision() {
         let rs = ruleset();
@@ -813,7 +813,7 @@ mod e7_conditional_incompatibility {
         );
     }
 
-    // --- RC review-C item 2: the same-copy twin (ArMDE:7033) ---------------
+    // --- RC review-C item 2: the same-copy twin (ArMDE:7104) ---------------
 
     fn same_item_ruleset() -> Ruleset {
         let items = r#"[
@@ -844,7 +844,7 @@ mod e7_conditional_incompatibility {
         Selection::with_params(Id::new("flaw.warped_senses"), params)
     }
 
-    /// New engine capability (RC review-C item 2, ArMDE:7033): a SECOND copy
+    /// New engine capability (RC review-C item 2, ArMDE:7104): a SECOND copy
     /// of the SAME item, whose own `affliction` value is one of
     /// `forbids_same_item_values`, is incompatible with the declaring copy.
     /// `forbids` alone (naming OTHER items' ids) cannot express this, since

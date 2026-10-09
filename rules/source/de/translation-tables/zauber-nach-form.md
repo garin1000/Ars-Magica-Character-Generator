@@ -59,7 +59,7 @@
 | Ice Of Drowning | Eis des Ertrinkens | ReAq35 | |
 | Dagger of Ice | Eisdolch | Cr(Re)Aq10 | HdH:S |
 | Subtle Taste Of Poison And Purity | Feiner Geschmack von Gift und Reinheit | InAq5 | |
-| Shackles of the Frozen Ice | Fesseln des Gefrorenen Eises | ReAq10 | HdH:S |
+| Shackles of the Frozen Ice | Fesseln des Gefrorenen Eises | ReAq20 | HdH:S |
 | Curse Of The Desert | Fluch der Wüste | PeAq25 | |
 | Mighty Torrent Of Water | Gewaltiger Wasserstrahl | CrAq20 | |
 | Breath Of Winter | Hauch des Winters | ReAq15 | |
@@ -299,6 +299,7 @@
 | Illusion Of The Shifted Image | Illusion des verschobenen Bildes | ReIm10 | |
 | Illusion Of The Misplaced Castle | Illusion des versetzten Schlosses | ReIm50 | |
 | Chamber Of Invisibility | Kammer der Unsichtbarkeit | PeIm25 | |
+| Locus Of The Literatus | Locus des Literatus | CrIm20 | SdM:M; „Literatus" bleibt lateinisch |
 | Phantasm Of The Human Form | Phantasma der menschlichen Gestalt | CrIm25 | |
 | Phantasm Of The Talking Head | Phantasma des sprechenden Hauptes | CrIm10 | |
 | Phantasmal Animal | Phantasmisches Tier | CrIm20 | |
@@ -356,7 +357,7 @@
 | Poisoning The Will | Vergiftung des Willens | PeMe65 | |
 | Loss Of But A Moment's Memory | Verlust eines flüchtigen Augenblicks | PeMe15 | |
 | Enslave The Mortal Mind | Versklavung des sterblichen Geistes | ReMe40 | |
-| Trust Of Childlike Faith | Vertrauen des kindlichen Glaubens | ReMe10 | |
+| Trust Of Childlike Faith | Vertrauen des kindlichen Glaubens | PeMe10 | |
 | Confusion Of The Numbed Will | Verwirrung des betäubten Willens | ReMe15 | |
 | Enchantment Of Detachment | Verzauberung der Gleichgültigkeit | PeMe15 | |
 | Perception Of The Conflicting Motives | Wahrnehmung der widerstreitenden Motive | InMe15 | |
@@ -461,9 +462,9 @@
 | Englisch (EN) | Deutsch (DE) | Form | Anmerkung |
 |---|---|---|---|
 | (Mental Char.) of the Followers | (Geist. Eigensch.) der Gefolgsleute | CrMe35 Rit. | HdH:WL; Kult der Helden: Eigenschaft +1 |
-| (Mental Char.) of the Heroes | (Geist. Eigensch.) der Helden | CrMe60 Rit. | HdH:WL; Kult der Helden: Eigenschaft +3 |
+| (Mental Char.) of the Heroes | (Geist. Eigensch.) der Helden | CrMe60 Rit. | HdH:WL; Kult der Helden: Eigenschaft +1 je Anwendung, höchstens +5 |
 | (Phys. Char.) of the Followers | (Körp. Eigensch.) der Gefolgsleute | CrCo35 Rit. | HdH:WL; Kult der Helden: Eigenschaft +1 |
-| (Phys. Char.) of the Heroes | (Körp. Eigensch.) der Helden | CrCo60 Rit. | HdH:WL; Kult der Helden: Eigenschaft +3 |
+| (Phys. Char.) of the Heroes | (Körp. Eigensch.) der Helden | CrCo60 Rit. | HdH:WL; Kult der Helden: Eigenschaft +1 je Anwendung, höchstens +5 |
 | By His Works | An seinen Werken | CrMe5 | HdH:WL; Eigene Erinnerung auffrischen |
 | Aura of Inconsequence | Aura der Bedeutungslosigkeit | ReMe25 | HdH:WL; Beiläufige Aufmerksamkeit ablenken |
 | Arming the Legion of the Dead | Bewaffnung der Legion der Toten | MuMe70 Rit. | HdH:WL; Massenversion für Geisterarmee |
@@ -474,13 +475,13 @@
 | The Discerning Eye | Das Unterscheidende Auge | InIm Gen | HdH:WL; Illusionen von Wirklichkeit unterscheiden |
 | Pierce the Magic Veil | Den Magieschleier durchdringen | InVi20 | HdH:WL; Analogon zu „Piercing the Faerie Veil" für Magie-Regiones |
 | Reveal the Lingering Spirit | Den verweilenden Geist enthüllen | InMe30 | HdH:WL; Unsichtbare Geister wahrnehmen |
-| Sense the True Path | Den wahren Pfad erspüren | InTe15 | HdH:WL; Mutantum-Zauber: Richtung zum nächsten Pfad |
+| Sense the True Path | Den wahren Pfad erspüren | InTe15 | HdH:WL; Mutantum-Zauber: Richtung zu einem Ort, zu dem eine Arkane Verbindung besteht |
 | The Oath of Truth | Der Eid der Wahrheit | PeCo | HdH:WL; Kleines Ritual: Wahrheitseid |
 | The Good Witness | Der Gute Zeuge | CrMe25 | HdH:WL; Tageserinnerung bei Zielperson auffrischen |
 | The Unfaithful Favor | Der treulose Gunstbeweis | ReAn45 | HdH:WL; Seidentuch als Fernmordwaffe |
 | Love's Unfaithful Witness | Der treulose Zeuge der Liebe | InTe35 | HdH:WL; Schmuck über Träger befragen |
 | The Tireless Flight | Der unermüdliche Flug | ReCo20 | HdH:WL; Mutantum-Zauber: Selbstflug ohne Ermüdung |
-| The Transformed Folio | Der verwandelte Foliant | MuAn45 Rit. | HdH:WL; Mutantum-Zauber: Buch in anderes Material |
+| The Transformed Folio | Der verwandelte Foliant | MuAn45 Rit. | HdH:WL; Mutantum-Zauber: verwandelt die Seiten eines Buches in die eines anderen |
 | The Will of Alatheia | Der Wille der Alatheia | PeCo | HdH:WL; Kleines Ritual: Schwur, Handlung zu unterlassen |
 | Cutting the Cords | Die Bande durchtrennen | PeVi Gen Rit. | HdH:WL; Vertrautenbindung dauerhaft trennen |
 | Call the Fallen Eagles from the Mist | Die gefallenen Adler aus dem Nebel rufen | ReMe65 Rit. | HdH:WL; Massenbeschwörung heidnischer Geister |
@@ -524,11 +525,11 @@
 | The Wicked Jar | Das verwünschte Gefäß | MuVi Gen | SdM:I; Dämon an physischen Gegenstand binden |
 | Plucking the Hair from the Billy Goat's Chin | Dem Ziegenbock das Barthaar zupfen | CrVi 20 | SdM:I; temporäre Arkane Verbindung zu Dämon |
 | Command the Vile Spirit | Den niederträchtigen Geist befehligen | ReVi 20 | SdM:I; Dämon zum Gehorsam zwingen |
-| Exorcise the Filthy Spirit | Den unreinen Geist austreiben | PeVi Gen | SdM:I; Exorzismus bei Besessung |
+| Exorcise the Filthy Spirit | Den unreinen Geist austreiben | PeVi Gen | SdM:I; Exorzismus bei Besessenheit |
 | Bind the Devil's Hands | Die Hände des Teufels binden | PeVi Gen | SdM:I; Infernale Kräfte in einem Raum behindern |
-| Early Punishment for the Sinful Witch | Frühe Bestrafung der sündigen Hexe | MuVi Gen | SdM:I; Infernalen Effekt auf Infernalist zerstören |
+| Early Punishment for the Sinful Witch | Frühe Bestrafung der sündigen Hexe | Pe(Mu)Vi(Ig) Gen | SdM:I (laut Errata nach Perdo Vim verschoben); Infernalen Effekt auf Infernalist zerstören |
 | Cleanse the Verminous Vis | Läuterung des besudelten Vis | ReVi 15 | SdM:I; infernales Vis um eine Stufe reinigen |
-| Lash of the Chastened Servant | Peitsche des gezüchtigten Dieners | PeVi 15 | SdM:I; 5 Machtpunkte entziehen |
+| Lash of the Chastened Servant | Peitsche des gezüchtigten Dieners | PeVi 5 | SdM:I; 5 Machtpunkte entziehen |
 | Sulfurous Whispers | Schwefelflüstern | InVi 30 | SdM:I; Fernkommunikation mit Dämon |
 
 ---

@@ -188,7 +188,7 @@ fn a_bare_string_parameter_on_a_save_claiming_schema_18_is_still_wrapped() {
     );
 }
 
-/// § 4: a `Literal` instance (`virtue.clan_ilfetu`'s pool, ArMDE:3565, funding
+/// § 4: a `Literal` instance (`virtue.clan_ilfetu`'s pool, ArMDE:3636, funding
 /// `ability.dead_language` at the `language.gothic` catalogue instance) is
 /// satisfied ONLY by `Catalogued{id}`, never by `Text` holding the identical
 /// letters — a literal can never mean "whichever spelling happens to match".

@@ -203,7 +203,7 @@ describe('ArtGrid effective-score badge', () => {
 
 // X10b (design-x10bc-save-format.md § 3): a banked-XP number input beside
 // each Art's score spinner — the "Z" of the book's own "X (Z)" notation
-// (ArMDE:1179). Labelled via the `art-banked-xp-label` Fluent key, never a
+// (ArMDE:1247). Labelled via the `art-banked-xp-label` Fluent key, never a
 // raw art id. Red-checkpoint protocol, phase 1: `ArtGrid.svelte`'s template
 // is untouched, so every assertion below fails looking for an element that
 // does not exist yet.

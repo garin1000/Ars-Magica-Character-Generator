@@ -84,7 +84,7 @@
   const hasMight = $derived(
     !hermeticallyTrained && (hasMythicType || (store.effective?.might ?? null) !== null),
   );
-  // Focus Power is a *Supernatural* Virtue (ArMDE:3895-3896) that grants no Might
+  // Focus Power is a *Supernatural* Virtue (ArMDE:3966-3967) that grants no Might
   // and is open to every character type, magi included — so the tab must also
   // open on the Focus Power pool, or a companion or magus who bought the Virtue
   // would have nowhere to enter the power it gives him. Existing focus powers

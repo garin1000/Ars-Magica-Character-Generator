@@ -144,7 +144,7 @@ async function describedByIds(selector) {
 describe('life-stage funding and Sample Childhoods', () => {
   it('defaults to life-stage funding, with the typed pool one click away (M6/D2)', async () => {
     await startWizard('companion');
-    // B2/D41 (ArMDE:2816): every character must take one Social Status before
+    // B2/D41 (ArMDE:2884): every character must take one Social Status before
     // Next unblocks past `virtues_flaws` — free, so it does not touch this
     // spec's Ability/XP figures. The companion built here is reused by every
     // later `it()` in this describe (via `standOnWizardStep`), so this is the
@@ -269,7 +269,7 @@ describe('life-stage funding and Sample Childhoods', () => {
     // companion of 25 whose childhood ends at 5 lived later life over ages 5-25 (#14).
     expect(laterLife).toContain('ages 5-25');
 
-    // Childhood's two figures are ONE block under one heading (ArMDE:2378),
+    // Childhood's two figures are ONE block under one heading (ArMDE:2446),
     // so #14 merges them into a single chip rather than two rows that read as two
     // blocks: the 75-point native-language block, restricted to that one Ability
     // instance, and the 45-point spread. Localized, never the raw block slug.
@@ -569,7 +569,7 @@ describe('life-stage funding and Sample Childhoods', () => {
     });
     expect(await textOf(LATER_LIFE)).toContain('5');
     // The 240 points of apprenticeship are the general pool: they alone may buy Arts
-    // as well as Abilities (ArMDE:2435).
+    // as well as Abilities (ArMDE:2503).
     expect(await textOf(XP_POOL_TOTAL)).toBe('240');
     expect(await textOf(APPRENTICESHIP)).toContain('240');
   });

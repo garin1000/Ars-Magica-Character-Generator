@@ -26,7 +26,7 @@ fn rules_dir() -> PathBuf {
 }
 
 /// A magus holding Parma Magica 1, Magic Theory 1 and Dead Language 1 with the
-/// given typed instance — the three minimums of ArMDE:2437 as the e2e helper buys
+/// given typed instance — the three minimums of ArMDE:2505 as the e2e helper buys
 /// them.
 fn magus_typing(language: &str) -> Entity {
     let mut magus = Entity::new(

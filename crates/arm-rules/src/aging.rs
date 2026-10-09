@@ -5,7 +5,7 @@
 //! character must roll on the aging table." — **AGING TOTAL: Stress die (no
 //! botch) + age/10 (round up) - Living Conditions modifier - Longevity Ritual
 //! modifier**
-//! (Source: ArMDE:16563-16617.)
+//! (Source: ArMDE:16640-16694.)
 //!
 //! # The engine never rolls
 //!
@@ -20,10 +20,10 @@
 //!
 //! The same line is drawn around the **Crisis** an aging row can send a
 //! character to ([`AgingRowEffect::NextDecrepitudeLevelAndCrisis`],
-//! `ArMDE:16619-16638`). The engine does the arithmetic and the look-up: the CRISIS
-//! TOTAL of `ArMDE:16621`, which row of the Crisis Table (`ArMDE:16624-16632`) that total
+//! `ArMDE:16696-16715`). The engine does the arithmetic and the look-up: the CRISIS
+//! TOTAL of `ArMDE:16698`, which row of the Crisis Table (`ArMDE:16701-16709`) that total
 //! lands on, the Ease Factor of the Stamina roll it calls for, and the level of
-//! the Creo Corpus Ritual that would resolve it (`ArMDE:16638`).
+//! the Creo Corpus Ritual that would resolve it (`ArMDE:16715`).
 //!
 //! What it never does is **resolve survival**. It does not throw the Stamina
 //! die, does not pronounce a character survived or died, and never kills one.
@@ -49,39 +49,39 @@ use crate::types::{AgingEffect, AgingLogEntry, Effect, Entity, Id, SourceRef, is
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AgingRules {
     /// The age after which a character rolls every year: "Characters begin aging
-    /// in the Winter after they turn 35" (`ArMDE:16565`).
+    /// in the Winter after they turn 35" (`ArMDE:16642`).
     pub start_age: u32,
     /// What the age term of the aging total is divided by, rounding up:
-    /// "age/10 (round up)" (`ArMDE:16567`).
+    /// "age/10 (round up)" (`ArMDE:16644`).
     pub age_divisor: u32,
     /// The lowest total at which "the character's apparent age increases by one
-    /// year" (`ArMDE:16600`); below it, "No apparent aging" (`ArMDE:16599`). Signed
+    /// year" (`ArMDE:16677`); below it, "No apparent aging" (`ArMDE:16676`). Signed
     /// because the two modifiers are subtracted from the total, which can
     /// therefore land below zero.
     pub apparent_age_increase_min: i32,
     /// The clamp a Longevity Ritual puts on the roll before [`Self::start_age`]
-    /// (`ArMDE:16575`), when the ruleset ships one.
+    /// (`ArMDE:16652`), when the ruleset ships one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub longevity_clamp: Option<LongevityClamp>,
-    /// The Living Conditions table (`ArMDE:16581-16594`), in file order.
+    /// The Living Conditions table (`ArMDE:16658-16671`), in file order.
     #[serde(default)]
     pub living_conditions: Vec<LivingCondition>,
-    /// The Aging Roll table (`ArMDE:16597-16611`), in file order.
+    /// The Aging Roll table (`ArMDE:16674-16688`), in file order.
     #[serde(default)]
     pub outcomes: Vec<AgingRow>,
-    /// The Crisis Table and its two rolls (`ArMDE:16619-16634`), when the ruleset
+    /// The Crisis Table and its two rolls (`ArMDE:16696-16711`), when the ruleset
     /// ships them. Optional so an aging block written before the crisis existed
     /// keeps loading unchanged.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub crisis: Option<CrisisRules>,
     /// The Decrepitude score at which a character is "extremely frail, and must
     /// roll on the Crisis Table if they undertake stressful activities, such as
-    /// long journeys, or any combat" (`ArMDE:16617`) — 4 in the core rules.
+    /// long journeys, or any combat" (`ArMDE:16694`) — 4 in the core rules.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub frail_decrepitude_score: Option<u8>,
     /// The Decrepitude score at which a character is "bedridden and will die
     /// within a few months at most. They cannot be saved by mortal intervention."
-    /// (`ArMDE:16617`) — 5 in the core rules.
+    /// (`ArMDE:16694`) — 5 in the core rules.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fatal_decrepitude_score: Option<u8>,
     /// The app's maximum age — an **app limit, not a rule**: no rulebook passage
@@ -100,29 +100,29 @@ impl AgingRules {
     /// deliberate off-by-one in the engine.
     ///
     /// "Characters begin aging in the Winter **after** they turn 35. Every year, a
-    /// character must roll on the aging table." (`ArMDE:16565`) The Winter after the
+    /// character must roll on the aging table." (`ArMDE:16642`) The Winter after the
     /// 35th birthday falls in the character's 36th year, so 35 is the last age
     /// owing nothing and 36 is the first owing a roll. The creation-time rule says
     /// the same thing from the other side: "a character **over** the age of 35
-    /// must make aging rolls … before the game begins" (`ArMDE:2232`).
+    /// must make aging rolls … before the game begins" (`ArMDE:2300`).
     ///
-    /// `ArMDE:2496` reads against this and is **disposed of, not ignored**: "you should
+    /// `ArMDE:2564` reads against this and is **disposed of, not ignored**: "you should
     /// also make aging rolls for the character each year **from the age of 35**".
     /// That sentence is advice inside the worked magus-advancement example, while
-    /// `ArMDE:2232` is the creation-time rule the app enforces — and `ArMDE:2232` agrees
-    /// with `ArMDE:16565`. So 36 it is.
+    /// `ArMDE:2300` is the creation-time rule the app enforces — and `ArMDE:2300` agrees
+    /// with `ArMDE:16642`. So 36 it is.
     ///
     /// No month or season is modelled. "The Winter after they turn 35" places the
     /// roll *inside* a year rather than splitting one, and the app tracks no
     /// seasons, so a year either owes a roll or it does not.
     ///
-    /// Source: ArMDE:16565, :2232,
-    /// :2496.
+    /// Source: ArMDE:16642, :2300,
+    /// :2564.
     pub fn first_roll_age(&self) -> u32 {
         self.start_age.saturating_add(1)
     }
 
-    /// The age term of the AGING TOTAL: "age/10 (round up)" (`ArMDE:16567`), with
+    /// The age term of the AGING TOTAL: "age/10 (round up)" (`ArMDE:16644`), with
     /// [`Self::age_divisor`] standing in for the 10.
     ///
     /// Rounding up means the term steps on the first year of each decade, not the
@@ -130,7 +130,7 @@ impl AgingRules {
     /// which [`Ruleset::validate_integrity`] rejects at load — a ruleset that
     /// reached the engine anyway has no age term to compute, not a panic to raise.
     ///
-    /// Source: ArMDE:16567.
+    /// Source: ArMDE:16644.
     pub fn age_modifier(&self, age: u32) -> i32 {
         if self.age_divisor == 0 {
             return 0;
@@ -194,18 +194,18 @@ fn logged_year(entity: &Entity, age: u32) -> Option<&AgingLogEntry> {
 /// invent a threshold).
 ///
 /// **A Longevity Ritual holder under 35 is not scheduled**, which is a decision
-/// rather than an oversight. `ArMDE:16575` says such a character "should roll on the
+/// rather than an oversight. `ArMDE:16652` says such a character "should roll on the
 /// table no matter what his age" — but that clause is unbounded downward, nothing
 /// on the entity records *when* the ritual was made, and those rolls are clamped
 /// (see [`LongevityClamp`]) so they can never grant an Aging Point. The obligation
-/// the app enforces is `ArMDE:2232`'s, which is age-gated and carries no ritual clause.
+/// the app enforces is `ArMDE:2300`'s, which is age-gated and carries no ritual clause.
 /// So the schedule yields `first_roll_age()..=age` and nothing below it; a later
 /// step's aging total will still compute a pre-35 roll correctly for a caller that
 /// asks for one.
 ///
 /// **Known gap — a trait may move the start age, and none does here.** Strong
 /// Faerie Blood reads "You start making aging rolls at the age of **fifty**,
-/// rather than the normal 35, and get -3 to Aging Rolls" (`ArMDE:5036`). The -3 is
+/// rather than the normal 35, and get -3 to Aging Rolls" (`ArMDE:5107`). The -3 is
 /// implemented (as an `aging_roll` modifier on the shipped item, folded in by
 /// [`aging_total`]); the start-at-fifty half is **not**, so such a character is
 /// still scheduled from [`AgingRules::first_roll_age`]. It would need a per-trait
@@ -215,7 +215,7 @@ fn logged_year(entity: &Entity, age: u32) -> Option<&AgingLogEntry> {
 /// never walks past it, even for an entity that skipped the load clamp, so an
 /// absurd age cannot materialize billions of rows.
 ///
-/// Source: ArMDE:16565, :16575, :2232,
+/// Source: ArMDE:16642, :16652, :2300,
 /// :5036.
 pub fn aging_schedule(entity: &Entity, ruleset: &Ruleset) -> Vec<AgingYear> {
     let (Some(rules), Some(age)) = (ruleset.aging(), entity.age) else {
@@ -232,13 +232,13 @@ pub fn aging_schedule(entity: &Entity, ruleset: &Ruleset) -> Vec<AgingYear> {
 }
 
 /// The resolved Living Conditions modifier — the number the AGING TOTAL
-/// subtracts (`ArMDE:16567-16569`), broken into the two places it comes from.
+/// subtracts (`ArMDE:16644-16646`), broken into the two places it comes from.
 ///
 /// Split rather than a bare integer because the sheet has to *show* the
 /// arithmetic: which rows the character lives under, and how much of the figure
 /// is his Virtues and Flaws rather than his circumstances.
 ///
-/// Source: ArMDE:16567-16594.
+/// Source: ArMDE:16644-16671.
 // `Serialize` only: this is a computed read-out that crosses the IPC edge for the
 // sheet to show, never something a save carries back in.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize)]
@@ -260,7 +260,7 @@ pub struct LivingConditionsModifier {
 /// # The sign is the book's, not the formula's
 ///
 /// "A high Longevity Ritual modifier and a high Living Conditions modifier both
-/// indicate longer life" (`ArMDE:16571`) — which works because the AGING TOTAL
+/// indicate longer life" (`ArMDE:16648`) — which works because the AGING TOTAL
 /// *subtracts* the modifier. So the numbers here are the ones the table and the
 /// descriptors print (Wealthy +2, Leper -2, Mild Aging +1, Poor Living Conditions
 /// -1), and the negation happens once, later, in the total. Returning the
@@ -274,9 +274,9 @@ pub struct LivingConditionsModifier {
 /// summed even when the ruleset ships no aging table at all; a Virtue's bonus does
 /// not depend on a table being present to be worth what it says.
 ///
-/// Sources: ArMDE:16567-16571 (the
-/// total and the sign), `ArMDE:16581-16594` (the table), `ArMDE:4530` (Mild Aging +1),
-/// `ArMDE:6340` (Leprosy -2), `ArMDE:6620` (Poor Living Conditions -1).
+/// Sources: ArMDE:16644-16648 (the
+/// total and the sign), `ArMDE:16658-16671` (the table), `ArMDE:4601` (Mild Aging +1),
+/// `ArMDE:6411` (Leprosy -2), `ArMDE:6691` (Poor Living Conditions -1).
 pub fn living_conditions_modifier(entity: &Entity, ruleset: &Ruleset) -> LivingConditionsModifier {
     let mut rows = Vec::new();
     let mut from_table = 0;
@@ -322,33 +322,33 @@ pub fn living_conditions_modifier(entity: &Entity, ruleset: &Ruleset) -> LivingC
 /// arithmetic — a player who cannot see which term moved the total cannot check
 /// it against the book.
 ///
-/// Source: ArMDE:16567-16569.
+/// Source: ArMDE:16644-16646.
 // `Serialize` only, like every other aging read-out: the aging calculator shows
 // these terms, and none of them is ever read back off a save.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct AgingTotal {
-    /// The actual age the roll was made at (`ArMDE:16577`).
+    /// The actual age the roll was made at (`ArMDE:16654`).
     pub age: u32,
     /// The player's stress die, as typed in.
     pub die: i32,
     /// ⌈`age` / [`AgingRules::age_divisor`]⌉ — ADDED.
     pub age_modifier: i32,
-    /// The Living Conditions Modifier — SUBTRACTED (`ArMDE:16571`).
+    /// The Living Conditions Modifier — SUBTRACTED (`ArMDE:16648`).
     pub living_conditions: LivingConditionsModifier,
     /// The Longevity Ritual bonus — SUBTRACTED. 0 with no ritual, or with a
     /// ritual whose bonus the player has not entered yet.
     pub longevity_bonus: i32,
     /// Σ of the Virtue/Flaw aging-ROLL modifiers — ADDED with their stored sign.
     pub trait_modifier: i32,
-    /// The total before the `ArMDE:16575` clamp.
+    /// The total before the `ArMDE:16652` clamp.
     pub uncapped_total: i32,
     /// The total after it — the number the Aging Roll table is indexed by.
     pub total: i32,
-    /// Whether the `ArMDE:16575` clamp fired on this roll.
+    /// Whether the `ArMDE:16652` clamp fired on this roll.
     pub capped_by_longevity: bool,
 }
 
-/// The AGING TOTAL for one year's roll (`ArMDE:16567-16569`).
+/// The AGING TOTAL for one year's roll (`ArMDE:16644-16646`).
 ///
 /// > **AGING TOTAL: Stress die (no botch) + age/10 (round up)**
 /// > **\- Living Conditions modifier**
@@ -356,21 +356,21 @@ pub struct AgingTotal {
 ///
 /// `die` is the player's stress die (no botch), typed in — the engine never rolls
 /// and `arm-rules` has no `rand` dependency. `age` is a parameter rather than read
-/// off the entity, because `ArMDE:2232`'s pre-play catch-up walks each owed year and
+/// off the entity, because `ArMDE:2300`'s pre-play catch-up walks each owed year and
 /// every year's roll uses THAT year's age. It is the ACTUAL age: "The modifier to
-/// rolls depends on the character's actual, not apparent, age" (`ArMDE:16577`).
+/// rolls depends on the character's actual, not apparent, age" (`ArMDE:16654`).
 ///
 /// # Signs
 ///
 /// The two modifiers keep the book's own sign wherever they are stored, and are
 /// negated exactly once — here. So Mild Aging's `+1` Living Conditions modifier
-/// (`ArMDE:4530`) *lowers* the total and Poor Living Conditions' `-1` (`ArMDE:6620`) *raises*
+/// (`ArMDE:4601`) *lowers* the total and Poor Living Conditions' `-1` (`ArMDE:6691`) *raises*
 /// it, which is what "a high … Living Conditions modifier … indicate[s] longer
-/// life" (`ArMDE:16571`) means. The Virtue/Flaw aging-ROLL modifiers are a different
-/// quantity and are ADDED with their stored sign: Faerie Blood's `-1` (`ArMDE:3801`)
+/// life" (`ArMDE:16648`) means. The Virtue/Flaw aging-ROLL modifiers are a different
+/// quantity and are ADDED with their stored sign: Faerie Blood's `-1` (`ArMDE:3872`)
 /// lowers the total directly.
 ///
-/// # The `ArMDE:16575` clamp applies to the TOTAL, not to the die
+/// # The `ArMDE:16652` clamp applies to the TOTAL, not to the die
 ///
 /// > A character under the influence of a Longevity Ritual should roll on the
 /// > table no matter what his age, but treats all rolls of 10 or more as rolls of
@@ -381,14 +381,14 @@ pub struct AgingTotal {
 /// note has:
 ///
 /// 1. The formula block those rolls feed is headed "AGING TOTAL", and the table's
-///    index column is headed "Aging Roll" (`ArMDE:16597`) — the clamp's "rolls" and the
+///    index column is headed "Aging Roll" (`ArMDE:16674`) — the clamp's "rolls" and the
 ///    table's "roll" are the same quantity.
 /// 2. 10 is meaningful only in the table's index space: it is exactly where the
-///    first aging-point row begins (`ArMDE:16601`). On a stress die 10 is nothing at
+///    first aging-point row begins (`ArMDE:16678`). On a stress die 10 is nothing at
 ///    all.
 /// 3. Decisive: a 34-year-old average peasant with the weakest legal ritual (+1 —
 ///    "+1 bonus for every five points **or fraction** of Creo Corpus Lab Total",
-///    `ArMDE:10662`) would, under the die reading, get `9 + ⌈34/10⌉ - 1 = 12` and take
+///    `ArMDE:10734`) would, under the die reading, get `9 + ⌈34/10⌉ - 1 = 12` and take
 ///    an Aging Point — while the same character with **no** ritual makes no roll
 ///    at all before 36. The die reading would make a Longevity Ritual strictly
 ///    worse than nothing in exactly the case the sentence calls safe.
@@ -396,9 +396,9 @@ pub struct AgingTotal {
 /// It is a ceiling, never a floor: an uncapped total of 2 stays 2.
 ///
 /// **The one-year seam is the text's, not a bug.** [`AgingRules::start_age`] (35,
-/// `ArMDE:16565`) and [`LongevityClamp::until_age`] (35, `ArMDE:16575`) are two numbers from
+/// `ArMDE:16642`) and [`LongevityClamp::until_age`] (35, `ArMDE:16652`) are two numbers from
 /// two different sentences that happen to coincide. "Until he reaches the age of
-/// 35" stops the clamp *at* 35, while rolls are owed only from 36 (`ArMDE:16565`) — so
+/// 35" stops the clamp *at* 35, while rolls are owed only from 36 (`ArMDE:16642`) — so
 /// at exactly 35 a ritual-holder rolls unclamped while a character without one
 /// does not roll at all. That is what the two sentences say when read together.
 ///
@@ -441,13 +441,13 @@ pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Op
                 //
                 // The two crisis kinds are here for a stronger reason: neither
                 // reaches the aging roll at all. "Virtues that affect aging rolls
-                // do not affect crisis survival rolls" (`ArMDE:16636`) separates the two
+                // do not affect crisis survival rolls" (`ArMDE:16713`) separates the two
                 // rolls, and this arm is its converse — a bonus granted
-                // specifically to the survival roll (Mild Aging's +3, `ArMDE:4530`) is
+                // specifically to the survival roll (Mild Aging's +3, `ArMDE:4601`) is
                 // no more an aging-roll modifier than an aging-roll modifier is a
                 // survival one. `crisis_heavy_wound` is not a number anywhere.
                 //
-                // Source: ArMDE:4530,
+                // Source: ArMDE:4601,
                 // :16636.
                 AgingEffect::NoAging
                 | AgingEffect::NoApparentAging
@@ -470,7 +470,7 @@ pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Op
     );
 
     // "treats all rolls of 10 or more as rolls of 9 until he reaches the age of
-    // 35" (`ArMDE:16575`) — a ceiling on the total, applied only to a ritual-holder
+    // 35" (`ArMDE:16652`) — a ceiling on the total, applied only to a ritual-holder
     // below the clamp's age. `min` alone would silently claim a cap on a total it
     // never touched, so the flag compares.
     let mut total = uncapped_total;
@@ -498,28 +498,28 @@ pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Op
 /// else. **Nothing here is written to the character**; applying an outcome (and
 /// logging the year) belongs to the single writer a later step introduces.
 ///
-/// Source: ArMDE:16599-16615.
+/// Source: ArMDE:16676-16692.
 // `Serialize` only: a reading, never a stored value.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct AgingOutcome {
     /// The total this resolves — post-clamp, so a caller can echo it back.
     pub total: i32,
     /// "Otherwise, the character's apparent age increases by one year"
-    /// (`ArMDE:16577`, `ArMDE:16600`) — unless the character is exempt from that sentence
+    /// (`ArMDE:16654`, `ArMDE:16677`) — unless the character is exempt from that sentence
     /// altogether, which an [`AgingEffect::NoApparentAging`] item
-    /// (`ArMDE:3488`, `ArMDE:5189`) makes him at every total.
+    /// (`ArMDE:3559`, `ArMDE:5260`) makes him at every total.
     pub apparent_age_increases: bool,
     /// The Aging Points the row awards, in the order the row names them. Empty
     /// below the table's first row, which costs nothing.
     pub awards: Vec<AgingPointAward>,
-    /// "… and Crisis" (`ArMDE:16602`, `ArMDE:16611`). Resolving the Crisis itself
-    /// (`ArMDE:16619-16632`) is its own slice; this only says one follows.
+    /// "… and Crisis" (`ArMDE:16679`, `ArMDE:16688`). Resolving the Crisis itself
+    /// (`ArMDE:16696-16709`) is its own slice; this only says one follows.
     pub crisis: bool,
 }
 
 /// One award an Aging Roll row makes: where the points go, and how many.
 ///
-/// Source: ArMDE:16601-16615.
+/// Source: ArMDE:16678-16692.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct AgingPointAward {
     /// Which Characteristic (or which question to ask the player) the points
@@ -538,7 +538,7 @@ pub struct AgingPointAward {
 /// questions to ask — and an exhaustive `match` makes a new kind of row a
 /// compile error until every reader has decided what to do with it.
 ///
-/// Source: ArMDE:16601-16615.
+/// Source: ArMDE:16678-16692.
 // **Adjacently** tagged, so the UI can switch on `kind` and a named
 // Characteristic still rides along in its own key. Internal tagging cannot carry
 // a newtype variant whose content is a plain string, and an untagged enum would
@@ -546,44 +546,44 @@ pub struct AgingPointAward {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", content = "characteristic", rename_all = "snake_case")]
 pub enum AgingPointTarget {
-    /// The table names the Characteristic itself: rows 14-21 (`ArMDE:16603-16610`).
+    /// The table names the Characteristic itself: rows 14-21 (`ArMDE:16680-16687`).
     Named(Characteristic),
-    /// "1 Aging Point in any Characteristic" (`ArMDE:16601`) — "the player may choose
-    /// the Characteristic" (`ArMDE:16615`).
+    /// "1 Aging Point in any Characteristic" (`ArMDE:16678`) — "the player may choose
+    /// the Characteristic" (`ArMDE:16692`).
     PlayerChoice,
     /// "sufficient Aging Points (in any Characteristics) to reach the next level
-    /// in Decrepitude" (`ArMDE:16602`, `ArMDE:16611`). The player still picks *where* the
+    /// in Decrepitude" (`ArMDE:16679`, `ArMDE:16688`). The player still picks *where* the
     /// points land, and may spread them, but the COUNT is derived — see
     /// [`points_to_next_decrepitude_level`].
     NextDecrepitudeLevel,
 }
 
-/// What the aging table does at `total` (`ArMDE:16599-16615`).
+/// What the aging table does at `total` (`ArMDE:16676-16692`).
 ///
 /// # Two questions, not two rows
 ///
 /// "2 or less — No apparent aging" and "3 or more — Apparent age increases by one
-/// year" (`ArMDE:16599-16600`) are **not** alternatives to the effect rows: they are
+/// year" (`ArMDE:16676-16677`) are **not** alternatives to the effect rows: they are
 /// one threshold ([`AgingRules::apparent_age_increase_min`]) asked of every
 /// total, so a 20 both ages the appearance and costs two Characteristics a point.
 ///
 /// # Why it needs the character
 ///
 /// Rows 13 and 22+ ask for "sufficient Aging Points … to reach the next level in
-/// Decrepitude" (`ArMDE:16602`, `ArMDE:16611`) — a count the table does not print, measured
+/// Decrepitude" (`ArMDE:16679`, `ArMDE:16688`) — a count the table does not print, measured
 /// off the character's accrued points and the Ability advancement curve.
 ///
 /// # Pure
 ///
 /// Nothing is written: not the Aging Points, not the apparent age, not the log.
 /// A row that carries a Crisis sets [`AgingOutcome::crisis`] and stops there —
-/// reading the Crisis Table (`ArMDE:16619-16632`) needs the Decrepitude the row's own
-/// award has yet to raise (`ArMDE:16619`), so it belongs to [`resolve_year`], which
+/// reading the Crisis Table (`ArMDE:16696-16709`) needs the Decrepitude the row's own
+/// award has yet to raise (`ArMDE:16696`), so it belongs to [`resolve_year`], which
 /// makes that award.
 ///
 /// `None` when the ruleset ships no aging rules.
 ///
-/// Source: ArMDE:16599-16617.
+/// Source: ArMDE:16676-16694.
 pub fn resolve_outcome(entity: &Entity, ruleset: &Ruleset, total: i32) -> Option<AgingOutcome> {
     let rules = ruleset.aging()?;
     let row = rules.outcomes.iter().find(|row| row.covers(total));
@@ -599,7 +599,7 @@ pub fn resolve_outcome(entity: &Entity, ruleset: &Ruleset, total: i32) -> Option
             }],
             false,
         ),
-        // "1 Aging Point in Str and Sta" (`ArMDE:16607`) gives EACH named
+        // "1 Aging Point in Str and Sta" (`ArMDE:16684`) gives EACH named
         // Characteristic a point, so one award per name.
         Some(AgingRowEffect::NamedCharacteristics {
             points,
@@ -632,17 +632,17 @@ pub fn resolve_outcome(entity: &Entity, ruleset: &Ruleset, total: i32) -> Option
     })
 }
 
-/// Whether the character's apparent age is exempt from `ArMDE:16577` — i.e. whether
+/// Whether the character's apparent age is exempt from `ArMDE:16654` — i.e. whether
 /// he carries an [`AgingEffect::NoApparentAging`] item.
 ///
 /// It gates the appearance **only**. A Bee King "do[es] not appear to age"
-/// (`ArMDE:3488`) and takes the row's Aging Points like anyone else; Unaging "may
-/// choose [its] apparent age freely" (`ArMDE:5189`) and additionally carries
+/// (`ArMDE:3559`) and takes the row's Aging Points like anyone else; Unaging "may
+/// choose [its] apparent age freely" (`ArMDE:5260`) and additionally carries
 /// [`AgingEffect::NoAging`], which is a different exemption applied elsewhere.
 /// Bound to (Role) carries neither this tag nor its effect: "the character's
-/// apparent age advances in line with their physical age" (`ArMDE:5743`).
+/// apparent age advances in line with their physical age" (`ArMDE:5814`).
 ///
-/// Source: ArMDE:3488, :5189, :5743.
+/// Source: ArMDE:3559, :5260, :5814.
 fn suppresses_apparent_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
     selections_for_effects(entity, ruleset)
         .iter()
@@ -659,12 +659,12 @@ fn suppresses_apparent_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
         })
 }
 
-/// How many Aging Points "reach the next level in Decrepitude" (`ArMDE:16602`,
-/// `ArMDE:16611`) costs this character.
+/// How many Aging Points "reach the next level in Decrepitude" (`ArMDE:16679`,
+/// `ArMDE:16688`) costs this character.
 ///
 /// Decrepitude is no separate curve: "Every Aging Point also counts as an
 /// experience point towards Decrepitude, which increases as an Ability"
-/// (`ArMDE:16617`). So the count is the advancement curve's price for the score above
+/// (`ArMDE:16694`). So the count is the advancement curve's price for the score above
 /// the character's current one, less the points he has already accrued — reusing
 /// [`decrepitude_points_total`] and [`decrepitude_score`] rather than
 /// re-deriving either.
@@ -676,7 +676,7 @@ fn suppresses_apparent_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// (`AdvancementTable::max_score`), and a level with no price is reported as
 /// unpriceable rather than silently costed at 0.
 ///
-/// Source: ArMDE:16602, :16611,
+/// Source: ArMDE:16679, :16688,
 /// :16617.
 fn points_to_next_decrepitude_level(entity: &Entity, ruleset: &Ruleset) -> Option<u32> {
     let accrued = decrepitude_points_total(entity);
@@ -690,9 +690,9 @@ fn points_to_next_decrepitude_level(entity: &Entity, ruleset: &Ruleset) -> Optio
 /// Split rather than a bare number for the same reason [`AgingTotal`] is: the
 /// sheet has to *show* the arithmetic, and a player who cannot see which term
 /// moved the total cannot check it against the book. Three terms is all there
-/// is (`ArMDE:16621`), so all three are here.
+/// is (`ArMDE:16698`), so all three are here.
 ///
-/// Source: ArMDE:16621.
+/// Source: ArMDE:16698.
 // `Serialize` only, like every other aging read-out: the crisis calculator shows
 // these terms, and none of them is ever read back off a save.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -713,7 +713,7 @@ pub struct CrisisTotal {
     pub total: i32,
 }
 
-/// The CRISIS TOTAL for one Crisis (`ArMDE:16621`).
+/// The CRISIS TOTAL for one Crisis (`ArMDE:16698`).
 ///
 /// > **CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score**
 ///
@@ -724,9 +724,9 @@ pub struct CrisisTotal {
 ///
 /// # Three terms, and no fourth
 ///
-/// `ArMDE:16621` names exactly three, all ADDED, and **no trait modifier of any kind
+/// `ArMDE:16698` names exactly three, all ADDED, and **no trait modifier of any kind
 /// reaches this total**. Nothing in any source gives a Virtue or Flaw a bearing
-/// on the crisis total, and `ArMDE:16636` — "Virtues that affect aging rolls do not
+/// on the crisis total, and `ArMDE:16713` — "Virtues that affect aging rolls do not
 /// affect crisis survival rolls" — cuts the same way for the roll that follows.
 /// (That sentence is strictly about the *survival* roll, which is its own
 /// read-out; it is quoted here because the temptation is to fold
@@ -736,7 +736,7 @@ pub struct CrisisTotal {
 /// # The Decrepitude is the year's, not today's
 ///
 /// > **Crisis:** Increase the character's Decrepitude first, and then roll on
-/// > the Crisis Table. (`ArMDE:16619`)
+/// > the Crisis Table. (`ArMDE:16696`)
 ///
 /// "First" fixes the score this total adds: the one the crisis year itself
 /// raised. Reading [`decrepitude_score`] live would be right only if the crisis
@@ -750,14 +750,14 @@ pub struct CrisisTotal {
 /// # The die is not policed
 ///
 /// "Roll a ten-sided die. Each number counts for its value, except that a zero
-/// counts as ten." (`ArMDE:474`) bounds what a UI should *offer*; it is an input
+/// counts as ten." (`ArMDE:542`) bounds what a UI should *offer*; it is an input
 /// affordance, not an engine rule. A storyguide may hand out any number, so a
 /// die outside 1..=10 is totalled as given rather than refused.
 ///
 /// `None` when the ruleset ships no aging rules, or aging rules with no Crisis
 /// Table — the engine never invents a table the ruleset does not carry.
 ///
-/// Source: ArMDE:16619, :16621,
+/// Source: ArMDE:16696, :16698,
 /// :16636, :474.
 pub fn crisis_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Option<CrisisTotal> {
     let rules = ruleset.aging()?;
@@ -790,7 +790,7 @@ fn clamp_to_i32(value: i64) -> i32 {
 /// The Aging Points that had reached Decrepitude by the end of the character's
 /// `age`th year — his lifetime total less every point a **later** year awarded.
 ///
-/// This is what `ArMDE:16619`'s "Increase the character's Decrepitude first, and then
+/// This is what `ArMDE:16696`'s "Increase the character's Decrepitude first, and then
 /// roll on the Crisis Table" needs and a live [`decrepitude_points_total`] read
 /// does not give, because years may be resolved in any order (see
 /// [`crisis_total`]).
@@ -799,12 +799,12 @@ fn clamp_to_i32(value: i64) -> i32 {
 ///
 /// - **Strictly greater.** The crisis year's own entry carries `age == Some(age)`,
 ///   which is not greater, so the points that year awarded stay IN — they are
-///   precisely the increase `ArMDE:16619` puts first.
+///   precisely the increase `ArMDE:16696` puts first.
 /// - **Undated entries never subtract.** A legacy hand-written entry carries
 ///   neither an `age` nor a distribution, so there is nothing to date it by and
 ///   nothing to take off; such a character rolls against every point he has.
 ///
-/// Source: ArMDE:16619, :16617.
+/// Source: ArMDE:16696, :16694.
 fn decrepitude_points_as_of(entity: &Entity, age: u32) -> u32 {
     let later: u32 = entity
         .aging_log
@@ -816,12 +816,12 @@ fn decrepitude_points_as_of(entity: &Entity, age: u32) -> u32 {
     decrepitude_points_total(entity).saturating_sub(later)
 }
 
-/// Which row of the Crisis Table a CRISIS TOTAL lands on (`ArMDE:16624-16632`).
+/// Which row of the Crisis Table a CRISIS TOTAL lands on (`ArMDE:16701-16709`).
 ///
 /// The Aging Roll table's [`resolve_outcome`] twin, and deliberately the simpler
 /// of the two: an aging row has to be read against the character before it means
 /// anything ("sufficient Aging Points … to reach the next level in Decrepitude",
-/// `ArMDE:16602`), while a crisis row already says everything it does. So this takes
+/// `ArMDE:16679`), while a crisis row already says everything it does. So this takes
 /// no [`Entity`] and hands back the row itself — the caller needs its [`Id`] as
 /// much as its [`CrisisOutcome`], because the row's display text ("Bedridden for
 /// a week") lives in `rules/i18n/<lang>/aging.json` keyed by that id and never in
@@ -829,13 +829,13 @@ fn decrepitude_points_as_of(entity: &Entity, age: u32) -> u32 {
 ///
 /// # Every total lands somewhere
 ///
-/// The table's first row is open below ("8 or less", `ArMDE:16626`) and its last open
-/// above ("19+", `ArMDE:16632`), and `Ruleset::validate_crisis_rules` refuses at load
+/// The table's first row is open below ("8 or less", `ArMDE:16703`) and its last open
+/// above ("19+", `ArMDE:16709`), and `Ruleset::validate_crisis_rules` refuses at load
 /// any table whose rows leave a gap or overlap between those ends. So for a
 /// ruleset that loaded, a `None` here means the ruleset ships **no Crisis Table**
 /// — not that the total fell off the table.
 ///
-/// Source: ArMDE:16624-16632.
+/// Source: ArMDE:16701-16709.
 pub fn resolve_crisis_row(ruleset: &Ruleset, total: i32) -> Option<&CrisisRow> {
     ruleset
         .aging()?
@@ -849,21 +849,21 @@ pub fn resolve_crisis_row(ruleset: &Ruleset, total: i32) -> Option<&CrisisRow> {
 /// What surviving one Crisis would take, and what the character brings to it.
 ///
 /// A **read-out, never a resolution.** It reports the Ease Factor of the Stamina
-/// stress roll (`ArMDE:16628-16631`), the level of the Momentary Creo Corpus Ritual
-/// that resolves the crisis instead (`ArMDE:16638`), every survival modifier the
+/// stress roll (`ArMDE:16705-16708`), the level of the Momentary Creo Corpus Ritual
+/// that resolves the crisis instead (`ArMDE:16715`), every survival modifier the
 /// character carries, and what the rules *allow* someone else to contribute
-/// (`ArMDE:16634`). It then stops. See [`crisis_survival`] for why.
+/// (`ArMDE:16711`). It then stops. See [`crisis_survival`] for why.
 ///
-/// Source: ArMDE:16628-16638.
+/// Source: ArMDE:16705-16715.
 // `Serialize` only, like every other aging read-out: computed on demand from the
 // entity and the ruleset, never read back off a save.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CrisisSurvival {
     /// The Ease Factor of the Stamina stress roll the row calls for — 3 at Minor
-    /// up to 12 at Critical (`ArMDE:16628-16631`).
+    /// up to 12 at Critical (`ArMDE:16705-16708`).
     ///
     /// `None` for Terminal illness, which offers **no roll at all**: "CrCo40
-    /// required to survive." (`ArMDE:16632`) An absent Ease Factor is not an
+    /// required to survive." (`ArMDE:16709`) An absent Ease Factor is not an
     /// unbeatable one; there is simply no Stamina roll to make, so
     /// [`Self::modifier_total`] has nothing to modify and only
     /// [`Self::ritual_level`] can answer.
@@ -871,7 +871,7 @@ pub struct CrisisSurvival {
     pub ease_factor: Option<i32>,
     /// The level of the Momentary Creo Corpus Ritual that resolves the crisis:
     /// "The level of spell required depends on the severity of the crisis, as
-    /// noted on the table." (`ArMDE:16638`) — 20 at Minor up to 40 at Terminal.
+    /// noted on the table." (`ArMDE:16715`) — 20 at Minor up to 40 at Terminal.
     pub ritual_level: u32,
     /// Every survival modifier the character carries, **itemized**: the UI has to
     /// be able to name each one, and a pre-summed number names none. Each carries
@@ -883,7 +883,7 @@ pub struct CrisisSurvival {
     /// terms to get the second.
     pub modifier_total: i32,
     /// What the rules **allow** someone else to bring, which is not the same
-    /// thing as a modifier the character has: the attending doctor of `ArMDE:16634`.
+    /// thing as a modifier the character has: the attending doctor of `ArMDE:16711`.
     /// The engine cannot score it, because the Medicine belongs to a character
     /// this sheet does not hold.
     pub allowances: Vec<CrisisAllowance>,
@@ -891,7 +891,7 @@ pub struct CrisisSurvival {
 
 /// One modifier to the crisis survival roll, named by where it comes from.
 ///
-/// Source: ArMDE:4530, :10844.
+/// Source: ArMDE:4601, :10916.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CrisisModifier {
     /// Where it comes from.
@@ -907,13 +907,13 @@ pub struct CrisisModifier {
 /// every reader until it is handled, and so the UI can render the two cases
 /// differently: a Virtue resolves through the item catalogue, the cord does not.
 ///
-/// Source: ArMDE:4530, :10844.
+/// Source: ArMDE:4601, :10916.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum CrisisModifierSource {
     /// A Virtue or Flaw the character carries that grants a bonus to the survival
     /// roll by name — Mild Aging's "+3 bonus to rolls to survive an aging crisis"
-    /// (`ArMDE:4530`).
+    /// (`ArMDE:4601`).
     ///
     /// Carries the **id**, never a name: a raw [`Id`] is never a user-facing
     /// label, so the frontend resolves it through its display-name lookup like
@@ -923,8 +923,8 @@ pub enum CrisisModifierSource {
         item: Id,
     },
     /// The familiar's Bronze cord: "You can apply your bronze cord score as a
-    /// bonus to … rolls to resist aging." (`ArMDE:10844`) The roll that names is this
-    /// one — an aging roll is not a roll one passes or fails — and `ArMDE:16636` keeps
+    /// bonus to … rolls to resist aging." (`ArMDE:10916`) The roll that names is this
+    /// one — an aging roll is not a roll one passes or fails — and `ArMDE:16713` keeps
     /// the two families apart, so the cord reaches this total and never the
     /// AGING TOTAL.
     BronzeCord,
@@ -933,7 +933,7 @@ pub enum CrisisModifierSource {
 /// Something the rules **permit** at a crisis, as opposed to a number the engine
 /// adds.
 ///
-/// Source: ArMDE:16634.
+/// Source: ArMDE:16711.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum CrisisAllowance {
@@ -941,7 +941,7 @@ pub enum CrisisAllowance {
     /// allows the character to add the attendant's Medicine score to the roll to
     /// survive the crisis. Only one doctor may usefully attend a patient, and if
     /// the doctor botches the character must subtract 3 from the survival roll."
-    /// (`ArMDE:16634`)
+    /// (`ArMDE:16711`)
     ///
     /// Reported rather than scored: the Medicine score belongs to *another*
     /// character, whom this sheet does not hold, so the app can state what is
@@ -960,7 +960,7 @@ pub enum CrisisAllowance {
 }
 
 /// What surviving `outcome` would take, and what this character brings to it
-/// (`ArMDE:16628-16638`).
+/// (`ArMDE:16705-16715`).
 ///
 /// # It computes; it never rolls
 ///
@@ -974,20 +974,20 @@ pub enum CrisisAllowance {
 ///
 /// # `None` means Bedridden
 ///
-/// "Bedridden for a week" (`ArMDE:16626`) and "Bedridden for a month." (`ArMDE:16627`) are
+/// "Bedridden for a week" (`ArMDE:16703`) and "Bedridden for a month." (`ArMDE:16704`) are
 /// time, not a roll: no Stamina roll, no Ritual level, nothing for a modifier to
 /// modify. There is no survival read-out to give, so there is none — rather than
 /// an empty one that would read as "survivable on a 0".
 ///
-/// # `ArMDE:16636` is the whole point
+/// # `ArMDE:16713` is the whole point
 ///
 /// > Virtues that affect aging rolls do not affect crisis survival rolls.
 ///
 /// So [`AgingEffect::AgingRoll`] and [`AgingEffect::LivingConditions`] amounts
 /// never reach [`CrisisSurvival::modifier_total`]. Only two things do: an
 /// [`AgingEffect::CrisisSurvival`] amount, which is a grant to *this* roll by
-/// name, and the Bronze cord (`ArMDE:10844`). Mild Aging is the case that proves the
-/// wall is load-bearing, because `ArMDE:4530` grants both kinds in one sentence —
+/// name, and the Bronze cord (`ArMDE:10916`). Mild Aging is the case that proves the
+/// wall is load-bearing, because `ArMDE:4601` grants both kinds in one sentence —
 /// "The character's aging rolls benefit from a +1 bonus to the Living Conditions
 /// Modifier … Furthermore, he receives a +3 bonus to rolls to survive an aging
 /// crisis." The +1 stays on the aging roll; only the +3 arrives here.
@@ -996,7 +996,7 @@ pub enum CrisisAllowance {
 ///
 /// Every modifier is ADDED with its stored sign — the one convention this file
 /// keeps, in which only the terms a rule *names* as subtracted are subtracted
-/// (`ArMDE:16567-16569` names two, and this roll's rules name none). That includes the
+/// (`ArMDE:16644-16646` names two, and this roll's rules name none). That includes the
 /// attendant's `botch_penalty`, which ships as -3.
 ///
 /// # Itemized, and summed
@@ -1007,14 +1007,14 @@ pub enum CrisisAllowance {
 /// source, so a magus with no familiar shows no cord line at all rather than a
 /// "+0".
 ///
-/// Source: ArMDE:4530, :10844, :16626,
-/// :16627, :16628-16632, :16634, :16636, :16638.
+/// Source: ArMDE:4601, :10916, :16703,
+/// :16704, :16705-16709, :16711, :16713, :16715.
 pub fn crisis_survival(
     entity: &Entity,
     ruleset: &Ruleset,
     outcome: &CrisisOutcome,
 ) -> Option<CrisisSurvival> {
-    // Bedridden is time, not a roll (`ArMDE:16626`, `ArMDE:16627`) — nothing to describe.
+    // Bedridden is time, not a roll (`ArMDE:16703`, `ArMDE:16704`) — nothing to describe.
     let CrisisOutcome::Illness {
         ease_factor,
         ritual_level,
@@ -1034,7 +1034,7 @@ pub fn crisis_survival(
                 continue;
             };
             match kind {
-                // A grant to this roll by name — Mild Aging's +3 (`ArMDE:4530`).
+                // A grant to this roll by name — Mild Aging's +3 (`ArMDE:4601`).
                 AgingEffect::CrisisSurvival => modifiers.push(CrisisModifier {
                     source: CrisisModifierSource::Trait {
                         item: selection.item_ref.clone(),
@@ -1042,13 +1042,13 @@ pub fn crisis_survival(
                     amount: i32::from(*amount),
                 }),
                 // "Virtues that affect aging rolls do not affect crisis survival
-                // rolls." (`ArMDE:16636`) — the two kinds the AGING TOTAL takes are
+                // rolls." (`ArMDE:16713`) — the two kinds the AGING TOTAL takes are
                 // walled off from this roll, and this arm is the wall. The
                 // remaining kinds belong to neither roll: `longevity_bonus`
                 // modifies a ritual bonus, `no_aging` / `no_apparent_aging` are
                 // exemptions rather than numbers, `decrepitude` moves the accrued
                 // score, and `crisis_heavy_wound` is a consequence of a crisis
-                // (`ArMDE:6340`) rather than a term of the roll to survive one.
+                // (`ArMDE:6411`) rather than a term of the roll to survive one.
                 AgingEffect::AgingRoll
                 | AgingEffect::LivingConditions
                 | AgingEffect::LongevityBonus
@@ -1060,8 +1060,8 @@ pub fn crisis_survival(
         }
     }
 
-    // "and to rolls to resist aging" (`ArMDE:10844`), through the one entity-level
-    // accessor, so the +5 cord maximum (`ArMDE:10836`) keeps its single home.
+    // "and to rolls to resist aging" (`ArMDE:10916`), through the one entity-level
+    // accessor, so the +5 cord maximum (`ArMDE:10908`) keeps its single home.
     let bronze_cord = crate::derived::bronze_cord_bonus(entity);
     if bronze_cord != 0 {
         modifiers.push(CrisisModifier {
@@ -1072,7 +1072,7 @@ pub fn crisis_survival(
 
     let modifier_total = modifiers.iter().map(|modifier| modifier.amount).sum();
 
-    // "Only one doctor may usefully attend a patient" (`ArMDE:16634`), so at most one
+    // "Only one doctor may usefully attend a patient" (`ArMDE:16711`), so at most one
     // — and none at all from a ruleset that ships no attendant.
     let allowances = ruleset
         .aging()
@@ -1098,7 +1098,7 @@ pub fn crisis_survival(
 
 /// Whether the character carries a trait that costs him a Heavy Wound at every
 /// Aging Crisis — Leprosy's "whenever she undergoes an Aging Crisis (page 392) the
-/// leper sustains a Heavy Wound in addition to any other result" (`ArMDE:6340`).
+/// leper sustains a Heavy Wound in addition to any other result" (`ArMDE:6411`).
 ///
 /// A predicate and not a sum: [`AgingEffect::CrisisHeavyWound`] is a **marker**
 /// whose `amount` means nothing (it ships as 0), because a Heavy Wound is a mark on
@@ -1106,7 +1106,7 @@ pub fn crisis_survival(
 /// one wound as far as this engine is concerned; how they interact is the table's,
 /// and the engine never writes the wound at all.
 ///
-/// Source: ArMDE:6340.
+/// Source: ArMDE:6411.
 fn carries_crisis_heavy_wound(entity: &Entity, ruleset: &Ruleset) -> bool {
     selections_for_effects(entity, ruleset).iter().any(|s| {
         ruleset
@@ -1135,23 +1135,23 @@ fn is_crisis_heavy_wound(effect: &Effect) -> bool {
 /// TOTAL with its row: a UI that assembled them itself would be free to pair a
 /// total with the wrong row, and there is exactly one right pairing.
 ///
-/// Source: ArMDE:16621-16638.
+/// Source: ArMDE:16698-16715.
 // `Serialize` only, like every other aging read-out: computed on demand from the
 // entity, the ruleset, the year and the die, and never read back off a save.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CrisisPreview {
-    /// The CRISIS TOTAL and every term that made it (`ArMDE:16621`).
+    /// The CRISIS TOTAL and every term that made it (`ArMDE:16698`).
     pub total: CrisisTotal,
     /// The **id** of the row the total landed on — `crisis.minor_illness` and
     /// friends. An id, never a name: the row's display text lives in
     /// `rules/i18n/<lang>/aging.json` keyed by this, so the frontend resolves it
     /// there like every other rules string.
     pub row: Id,
-    /// What that row costs the character (`ArMDE:16624-16632`).
+    /// What that row costs the character (`ArMDE:16701-16709`).
     pub outcome: CrisisOutcome,
-    /// What surviving it would take (`ArMDE:16628-16638`), when the row calls for a
+    /// What surviving it would take (`ArMDE:16705-16715`), when the row calls for a
     /// roll at all. Absent for [`CrisisOutcome::Bedridden`], which is time rather
-    /// than a roll (`ArMDE:16626`, `ArMDE:16627`) — see [`crisis_survival`].
+    /// than a roll (`ArMDE:16703`, `ArMDE:16704`) — see [`crisis_survival`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub survival: Option<CrisisSurvival>,
 }
@@ -1171,7 +1171,7 @@ pub struct CrisisPreview {
 ///
 /// The Crisis is a **reading**. No Aging Point moves, no log entry appears, no
 /// Decrepitude is raised — `resolve_year` remains the aging subsystem's single
-/// writer, and `ArMDE:16619`'s "increase the character's Decrepitude first" is
+/// writer, and `ArMDE:16696`'s "increase the character's Decrepitude first" is
 /// honoured by reading the score as of the crisis year (see [`crisis_total`])
 /// rather than by writing anything here. The Stamina die is never thrown and no
 /// character is ever pronounced dead: `arm-rules` has no `rand` dependency, and
@@ -1180,7 +1180,7 @@ pub struct CrisisPreview {
 /// `None` when the ruleset ships no aging rules, or aging rules with no Crisis
 /// Table.
 ///
-/// Source: ArMDE:16619-16638.
+/// Source: ArMDE:16696-16715.
 pub fn crisis_preview(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -1202,11 +1202,11 @@ pub fn crisis_preview(
 /// One year's aging roll as the player submits it.
 ///
 /// The engine never rolls: `die` is the stress die (no botch) thrown at the
-/// table and typed in (`ArMDE:16567`). `age` is the age the roll is made at rather
-/// than the character's current age, because `ArMDE:2232`'s pre-play catch-up walks
+/// table and typed in (`ArMDE:16644`). `age` is the age the roll is made at rather
+/// than the character's current age, because `ArMDE:2300`'s pre-play catch-up walks
 /// every owed year and each uses that year's own age.
 ///
-/// Source: ArMDE:16567, :16615.
+/// Source: ArMDE:16644, :16692.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct AgingYearRequest {
     /// The character's age in the year being resolved.
@@ -1215,14 +1215,14 @@ pub struct AgingYearRequest {
     pub die: i32,
     /// Where the points the row leaves to the player go, per Characteristic:
     /// "If an Aging Point 'in any Characteristic' is gained, the player may
-    /// choose the Characteristic" (`ArMDE:16615`). A **map** rather than a single
+    /// choose the Characteristic" (`ArMDE:16692`). A **map** rather than a single
     /// pick, because reaching the next Decrepitude level asks for points "in any
-    /// Characteristic**s**" (`ArMDE:16602`, `ArMDE:16611`) and forcing them all onto one
+    /// Characteristic**s**" (`ArMDE:16679`, `ArMDE:16688`) and forcing them all onto one
     /// would force Characteristic drops the player may legally avoid. Empty for
     /// a row that names its own Characteristics, and for one that awards
     /// nothing.
     pub distribution: BTreeMap<Characteristic, u8>,
-    /// The **Simple Die** the player threw at the Crisis Table (`ArMDE:16621`), when
+    /// The **Simple Die** the player threw at the Crisis Table (`ArMDE:16698`), when
     /// the year's row sent him there and he has rolled it. The engine never rolls
     /// this one either.
     ///
@@ -1230,10 +1230,10 @@ pub struct AgingYearRequest {
     /// legitimate state rather than a refusal: the aging roll happened whether or
     /// not the second die has been thrown, and refusing to record it would lose
     /// the one thing that did. A die given for a year the table sent to no Crisis
-    /// is simply unused — whether a Crisis happened is `ArMDE:16602`/`ArMDE:16611`'s call,
+    /// is simply unused — whether a Crisis happened is `ArMDE:16679`/`ArMDE:16688`'s call,
     /// never the player's.
     ///
-    /// Source: ArMDE:16619, :16621.
+    /// Source: ArMDE:16696, :16698.
     pub crisis_die: Option<i32>,
 }
 
@@ -1251,16 +1251,16 @@ pub struct AgingYearResult {
     pub total: AgingTotal,
     /// What the table did with it.
     pub outcome: AgingOutcome,
-    /// The Crisis the year sent the character to, read whole (`ArMDE:16619-16638`) —
+    /// The Crisis the year sent the character to, read whole (`ArMDE:16696-16715`) —
     /// present only when [`AgingOutcome::crisis`] is set **and** the request
     /// carried a [`AgingYearRequest::crisis_die`] **and** the ruleset ships a
     /// Crisis Table. Otherwise the Crisis is owed and unrolled, which the log
     /// records as `crisis` with no row.
     ///
-    /// Source: ArMDE:16619-16638.
+    /// Source: ArMDE:16696-16715.
     pub crisis: Option<CrisisPreview>,
     /// What the year changed about the character that the character itself cannot
-    /// show — today, only the Longevity Ritual a Crisis spends (`ArMDE:16573`). Empty
+    /// show — today, only the Longevity Ritual a Crisis spends (`ArMDE:16650`). Empty
     /// for almost every year.
     pub notes: Vec<AgingNote>,
 }
@@ -1273,7 +1273,7 @@ pub struct AgingYearResult {
 /// each variant through Fluent. An exhaustive `match` also makes a new note a
 /// compile error at every reader until it has been rendered somewhere.
 ///
-/// Source: ArMDE:16573.
+/// Source: ArMDE:16650.
 // `Serialize` so the note can cross the IPC edge unchanged; never deserialized,
 // because it is produced by a single call and stored by nobody.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -1284,25 +1284,25 @@ pub enum AgingNote {
     /// > A Longevity Ritual is effective until the character suffers a crisis.
     /// > When the crisis occurs, the ritual assures that the character survives,
     /// > but its power is spent, and the focal ritual must be performed again.
-    /// > (`ArMDE:16573`)
+    /// > (`ArMDE:16650`)
     ///
     /// **Reported, never applied.** [`resolve_year`] leaves
     /// [`Entity::longevity_ritual`] exactly as it found it: the entry is a stored
     /// choice holding a player-entered bonus and the focus that "must be repeated"
-    /// if the ritual is performed again (`ArMDE:10668`), and an engine that silently
+    /// if the ritual is performed again (`ArMDE:10740`), and an engine that silently
     /// deleted it would destroy both — and make the year unrevertible. Performing
     /// the focal ritual again is a season's work the player records; the sheet does
     /// not infer it.
     ///
     /// It follows the **Crisis**, not the Crisis roll: "when the crisis occurs" is
-    /// the aging row's doing (`ArMDE:16602`, `ArMDE:16611`), and the Simple Die only decides
+    /// the aging row's doing (`ArMDE:16679`, `ArMDE:16688`), and the Simple Die only decides
     /// how bad it was — so a Crisis owed and unrolled spends the ritual too.
     LongevityRitualSpent,
     /// The Crisis this year suffered costs the character a Heavy Wound on top of
     /// whatever the Crisis Table said.
     ///
     /// > … and whenever she undergoes an Aging Crisis (page 392) the leper
-    /// > sustains a Heavy Wound in addition to any other result. (`ArMDE:6340`)
+    /// > sustains a Heavy Wound in addition to any other result. (`ArMDE:6411`)
     ///
     /// **Reported, never applied**, for the same reason the spent ritual is: the
     /// health track is the player's to keep, and [`AgingEffect::CrisisHeavyWound`]
@@ -1316,7 +1316,7 @@ pub enum AgingNote {
     /// and unrolled costs the wound too. And "in addition to any other result" is
     /// why both notes can stand on one year.
     ///
-    /// Source: ArMDE:6340.
+    /// Source: ArMDE:6411.
     HeavyWound,
 }
 
@@ -1344,14 +1344,14 @@ pub enum AgingError {
     },
     /// The distribution does not sum to the points the row left to the player.
     /// The count is the table's, not the player's: "sufficient Aging Points … to
-    /// reach the next level in Decrepitude" (`ArMDE:16602`).
+    /// reach the next level in Decrepitude" (`ArMDE:16679`).
     DistributionMismatch {
         /// The points the row leaves to the player to place.
         owed: u32,
         /// What the request actually distributed.
         distributed: u32,
     },
-    /// The row names its own Characteristics (`ArMDE:16603-16610`) — or awards
+    /// The row names its own Characteristics (`ArMDE:16680-16687`) — or awards
     /// nothing at all — so there was nothing for the player to place, yet the
     /// request carried a distribution. Applying it would invent points the table
     /// never awarded.
@@ -1361,8 +1361,8 @@ pub enum AgingError {
         characteristics: Vec<Characteristic>,
     },
     /// The row asks for "sufficient Aging Points … to reach the next level in
-    /// Decrepitude" (`ArMDE:16602`) and the advancement curve cannot price that
-    /// level — Decrepitude "increases as an Ability" (`ArMDE:16617`) and the table
+    /// Decrepitude" (`ArMDE:16679`) and the advancement curve cannot price that
+    /// level — Decrepitude "increases as an Ability" (`ArMDE:16694`) and the table
     /// tops out. Reported as unpriceable rather than silently costed at 0.
     AwardUnpriceable,
     /// No log entry records this age, so there is nothing to revert. A
@@ -1380,7 +1380,7 @@ pub enum AgingError {
 /// It computes the year's [`AgingTotal`], reads it against the table with
 /// [`resolve_outcome`], and returns the character that results: the awarded
 /// Aging Points added to [`Entity::aging_points`], the apparent age advanced if
-/// the total cleared the threshold (`ArMDE:16577`), and a structured
+/// the total cleared the threshold (`ArMDE:16654`), and a structured
 /// [`AgingLogEntry`] appended.
 ///
 /// # What it does not do
@@ -1390,16 +1390,16 @@ pub enum AgingError {
 /// character survives is the table's to decide (see [`crisis_survival`]). And it
 /// **never touches Decrepitude**: "Every Aging Point also counts as an
 /// experience point towards Decrepitude, which increases as an Ability"
-/// (`ArMDE:16617`), so the score follows from the points through
+/// (`ArMDE:16694`), so the score follows from the points through
 /// [`decrepitude_score`] and is never written down beside them.
 ///
 /// # The Crisis leg, and why the order matters
 ///
 /// > **Crisis:** Increase the character's Decrepitude first, and then roll on
-/// > the Crisis Table. (`ArMDE:16619`)
+/// > the Crisis Table. (`ArMDE:16696`)
 ///
-/// A row carrying a Crisis (`ArMDE:16602`, `ArMDE:16611`) awards its Aging Points like any
-/// other, and **that award is the increase `ArMDE:16619` puts first**. The Crisis is
+/// A row carrying a Crisis (`ArMDE:16679`, `ArMDE:16688`) awards its Aging Points like any
+/// other, and **that award is the increase `ArMDE:16696` puts first**. The Crisis is
 /// then read off the character those points already made — never off the one who
 /// walked into the year — so the CRISIS TOTAL adds the Decrepitude this very year
 /// raised. [`crisis_preview`] does the reading; this only orders it.
@@ -1414,7 +1414,7 @@ pub enum AgingError {
 ///
 /// "A Longevity Ritual is effective until the character suffers a crisis. When
 /// the crisis occurs, the ritual assures that the character survives, but its
-/// power is spent, and the focal ritual must be performed again" (`ArMDE:16573`). The
+/// power is spent, and the focal ritual must be performed again" (`ArMDE:16650`). The
 /// year says so with an [`AgingNote::LongevityRitualSpent`] and leaves
 /// [`Entity::longevity_ritual`] exactly where it found it — see the variant for
 /// why deleting a stored choice is the wrong half of that sentence to implement.
@@ -1441,7 +1441,7 @@ pub enum AgingError {
 /// same apparent age as applying them in order. A hand-entered apparent age is
 /// never re-seeded, only advanced.
 ///
-/// A character carrying [`AgingEffect::NoApparentAging`] (`ArMDE:3488`, `ArMDE:5189`) is
+/// A character carrying [`AgingEffect::NoApparentAging`] (`ArMDE:3559`, `ArMDE:5260`) is
 /// neither seeded nor advanced, because [`resolve_outcome`] has already reported
 /// that his appearance does not follow the roll — one decision, read here rather
 /// than made twice.
@@ -1451,7 +1451,7 @@ pub enum AgingError {
 /// Every [`AgingError`] here is a refusal to write; nothing is ever partially
 /// applied or silently dropped. See the variants for the five cases.
 ///
-/// Source: ArMDE:16567-16617.
+/// Source: ArMDE:16644-16694.
 pub fn resolve_year(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -1490,11 +1490,11 @@ pub fn resolve_year(
     }
 
     // "**Crisis:** Increase the character's Decrepitude first, and then roll on
-    // the Crisis Table." (`ArMDE:16619`) — the award above IS that increase, and
+    // the Crisis Table." (`ArMDE:16696`) — the award above IS that increase, and
     // reading the Crisis off `applied` rather than off `entity` is what puts it
     // first. `crisis_total` measures the score as of this year, so the points
     // just awarded count and any later year's do not.
-    // Source: ArMDE:16619.
+    // Source: ArMDE:16696.
     let crisis = outcome
         .crisis
         .then_some(request.crisis_die)
@@ -1526,13 +1526,13 @@ pub fn resolve_year(
     //
     // "A Longevity Ritual is effective until the character suffers a crisis. When
     // the crisis occurs, the ritual assures that the character survives, but its
-    // power is spent" (`ArMDE:16573`) — the ritual is the player's stored choice and
+    // power is spent" (`ArMDE:16650`) — the ritual is the player's stored choice and
     // stays on the entity untouched.
     //
     // "whenever she undergoes an Aging Crisis (page 392) the leper sustains a Heavy
-    // Wound in addition to any other result" (`ArMDE:6340`) — "in addition" is why the
+    // Wound in addition to any other result" (`ArMDE:6411`) — "in addition" is why the
     // two stand together, and the health track is the player's to mark.
-    // Source: ArMDE:6340, :16573.
+    // Source: ArMDE:6411, :16650.
     let mut notes = Vec::new();
     if outcome.crisis {
         if entity.longevity_ritual.is_some() {
@@ -1557,7 +1557,7 @@ pub fn resolve_year(
 ///
 /// # Why this exists
 ///
-/// A magus of 60 owes 25 aging rolls before play begins (`ArMDE:2232`), and a
+/// A magus of 60 owes 25 aging rolls before play begins (`ArMDE:2300`), and a
 /// 25-roll walk with no undo is not shippable — a mistyped die has to be
 /// recoverable. It is *exact* rather than a recomputation because the widened
 /// [`AgingLogEntry`] records precisely what its year did: the points it placed,
@@ -1589,7 +1589,7 @@ pub fn resolve_year(
 /// silent no-op: a revert that quietly did nothing would tell the player the
 /// year had been undone.
 ///
-/// Source: ArMDE:16577-16617.
+/// Source: ArMDE:16654-16694.
 pub fn revert_year(entity: &Entity, ruleset: &Ruleset, age: u32) -> Result<Entity, AgingError> {
     let Some(entry) = logged_year(entity, age) else {
         return Err(AgingError::YearNotRecorded { age });
@@ -1628,7 +1628,7 @@ pub fn revert_year(entity: &Entity, ruleset: &Ruleset, age: u32) -> Result<Entit
 /// A zero is not an award, so it is never written — which keeps the log entry
 /// canonical and makes [`revert_year`] the exact inverse.
 ///
-/// Source: ArMDE:16601-16615.
+/// Source: ArMDE:16678-16692.
 fn award_points(
     outcome: &AgingOutcome,
     distribution: &BTreeMap<Characteristic, u8>,
@@ -1696,7 +1696,7 @@ fn add_points(
 /// clamp keeps him off every row that costs an Aging Point: "he is at no risk of
 /// actually aging before any other characters."
 ///
-/// Source: ArMDE:16575.
+/// Source: ArMDE:16652.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LongevityClamp {
     /// The total every higher total is treated as ("rolls of 10 or more as rolls
@@ -1710,10 +1710,10 @@ pub struct LongevityClamp {
 /// modify the aging total.
 ///
 /// A higher modifier means a longer life — "a high Longevity Ritual modifier and
-/// a high Living Conditions modifier both indicate longer life" (`ArMDE:16571`) —
+/// a high Living Conditions modifier both indicate longer life" (`ArMDE:16648`) —
 /// because the modifier is *subtracted* from the total.
 ///
-/// Source: ArMDE:16581-16594.
+/// Source: ArMDE:16658-16671.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LivingCondition {
     /// Slug-style id, e.g. `living_condition.average_peasant`. Its display name
@@ -1722,7 +1722,7 @@ pub struct LivingCondition {
     /// The modifier the row contributes, from `+2` down to `-2`.
     pub modifier: i8,
     /// Whether the row stacks with the other cumulative ones: "Modifiers marked
-    /// with an asterisk are cumulative with each other" (`ArMDE:16594`). The
+    /// with an asterisk are cumulative with each other" (`ArMDE:16671`). The
     /// non-cumulative rows are alternatives, so at most one of them applies.
     #[serde(default, skip_serializing_if = "is_false")]
     pub cumulative: bool,
@@ -1735,12 +1735,12 @@ pub struct LivingCondition {
 /// costs.
 ///
 /// The band is inclusive on both ends, and `max` is absent for the open-ended
-/// top row ("22+", `ArMDE:16611`). The two "apparent aging" rows of `ArMDE:16599-16600`
+/// top row ("22+", `ArMDE:16688`). The two "apparent aging" rows of `ArMDE:16676-16677`
 /// are **not** rows here — they are not alternatives to the rest but a separate
 /// question asked of every total, which is what
 /// [`AgingRules::apparent_age_increase_min`] answers.
 ///
-/// Source: ArMDE:16597-16611.
+/// Source: ArMDE:16674-16688.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AgingRow {
     /// Slug-style id, e.g. `aging.roll.10_12` (D72.3). Unlike
@@ -1769,7 +1769,7 @@ pub struct AgingRow {
 
 impl AgingRow {
     /// Whether `total` lands on this row: the band is inclusive on both ends, and
-    /// an absent [`Self::max`] is the open-ended "22+" top row (`ArMDE:16611`), which
+    /// an absent [`Self::max`] is the open-ended "22+" top row (`ArMDE:16688`), which
     /// has no upper bound at all rather than a very large one.
     fn covers(&self, total: i32) -> bool {
         self.min <= total && self.max.is_none_or(|max| total <= max)
@@ -1782,20 +1782,20 @@ impl AgingRow {
 /// load-time failure instead of a silently ignored row — and so adding a kind is
 /// a compile error until every reader has decided what to do with it.
 ///
-/// Source: ArMDE:16597-16611.
+/// Source: ArMDE:16674-16688.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum AgingRowEffect {
     /// Aging Points the player places where they like: "1 Aging Point in any
-    /// Characteristic" (`ArMDE:16601`), since "If an Aging Point 'in any
+    /// Characteristic" (`ArMDE:16678`), since "If an Aging Point 'in any
     /// Characteristic' is gained, the player may choose the Characteristic"
-    /// (`ArMDE:16615`).
+    /// (`ArMDE:16692`).
     AnyCharacteristic {
         /// How many points the row gives.
         points: u32,
     },
     /// Aging Points in Characteristics the row names — one ("1 Aging Point in
-    /// Qik", `ArMDE:16603`) or two ("1 Aging Point in Str and Sta", `ArMDE:16607`). The
+    /// Qik", `ArMDE:16680`) or two ("1 Aging Point in Str and Sta", `ArMDE:16684`). The
     /// points are per named Characteristic, not divided between them.
     NamedCharacteristics {
         /// How many points each named Characteristic gets.
@@ -1804,8 +1804,8 @@ pub enum AgingRowEffect {
         characteristics: Vec<Characteristic>,
     },
     /// "Gain sufficient Aging Points (in any Characteristics) to reach the next
-    /// level in Decrepitude, and Crisis" (`ArMDE:16602`, `ArMDE:16611`). Resolving the
-    /// crisis itself (`ArMDE:16619-16632`) is a later slice; this variant only
+    /// level in Decrepitude, and Crisis" (`ArMDE:16679`, `ArMDE:16688`). Resolving the
+    /// crisis itself (`ArMDE:16696-16709`) is a later slice; this variant only
     /// records that one is owed.
     NextDecrepitudeLevelAndCrisis,
 }
@@ -1814,22 +1814,22 @@ pub enum AgingRowEffect {
 /// `rules/core/aging.json`.
 ///
 /// "**Crisis:** Increase the character's Decrepitude first, and then roll on the
-/// Crisis Table." (`ArMDE:16619`) — **CRISIS TOTAL: Simple die + age/10 (round up) +
-/// Decrepitude Score** (`ArMDE:16621`).
+/// Crisis Table." (`ArMDE:16696`) — **CRISIS TOTAL: Simple die + age/10 (round up) +
+/// Decrepitude Score** (`ArMDE:16698`).
 ///
 /// [`Self::die`] and [`Self::attendant`] are optional because a ruleset may ship
 /// the table without them; the rows are not, since a crisis table with no rows
 /// resolves nothing.
 ///
-/// Source: ArMDE:16619-16634.
+/// Source: ArMDE:16696-16711.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CrisisRules {
-    /// The Crisis Table (`ArMDE:16624-16632`), in file order.
+    /// The Crisis Table (`ArMDE:16701-16709`), in file order.
     pub rows: Vec<CrisisRow>,
-    /// The die the crisis total is rolled on (`ArMDE:474`), when the ruleset ships it.
+    /// The die the crisis total is rolled on (`ArMDE:542`), when the ruleset ships it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub die: Option<CrisisDie>,
-    /// The attending doctor of `ArMDE:16634`, when the ruleset ships them.
+    /// The attending doctor of `ArMDE:16711`, when the ruleset ships them.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub attendant: Option<CrisisAttendant>,
 }
@@ -1838,24 +1838,24 @@ pub struct CrisisRules {
 /// costs.
 ///
 /// The band is inclusive on both ends and **both** ends may be open — "8 or
-/// less" (`ArMDE:16626`) has no lower bound and "19+" (`ArMDE:16632`) no upper one. That
+/// less" (`ArMDE:16703`) has no lower bound and "19+" (`ArMDE:16709`) no upper one. That
 /// is why [`Self::covers`] is its own function rather than
 /// [`AgingRow::covers`]: the Aging Roll table opens at exactly one end, and the
 /// loader's integrity gates depend on that.
 ///
-/// Source: ArMDE:16624-16632.
+/// Source: ArMDE:16701-16709.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CrisisRow {
     /// Slug-style id, e.g. `crisis.minor_illness`. Its display text lives in
     /// `rules/i18n`, keyed by this id.
     pub id: Id,
     /// Lowest total the row covers (inclusive). `None` for the row open below
-    /// ("8 or less", `ArMDE:16626`), which has no lower bound at all rather than a
+    /// ("8 or less", `ArMDE:16703`), which has no lower bound at all rather than a
     /// very small one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub min: Option<i32>,
     /// Highest total the row covers (inclusive). `None` for the row open above
-    /// ("19+", `ArMDE:16632`).
+    /// ("19+", `ArMDE:16709`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max: Option<i32>,
     /// What the row costs the character.
@@ -1867,10 +1867,10 @@ pub struct CrisisRow {
 
 impl CrisisRow {
     /// Whether `total` lands on this row: the band is inclusive on both ends, and
-    /// an absent bound is an open end — below for [`Self::min`] (`ArMDE:16626`), above
-    /// for [`Self::max`] (`ArMDE:16632`).
+    /// an absent bound is an open end — below for [`Self::min`] (`ArMDE:16703`), above
+    /// for [`Self::max`] (`ArMDE:16709`).
     ///
-    /// Source: ArMDE:16624-16632.
+    /// Source: ArMDE:16701-16709.
     fn covers(&self, total: i32) -> bool {
         self.min.is_none_or(|min| min <= total) && self.max.is_none_or(|max| total <= max)
     }
@@ -1881,29 +1881,29 @@ impl CrisisRow {
 /// A tagged enum for the same reason [`AgingRowEffect`] is one: an outcome the
 /// engine cannot read must fail at load rather than be silently ignored.
 ///
-/// Source: ArMDE:16624-16632.
+/// Source: ArMDE:16701-16709.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum CrisisOutcome {
-    /// "Bedridden for a week" (`ArMDE:16626`) and "Bedridden for a month." (`ArMDE:16627`)
+    /// "Bedridden for a week" (`ArMDE:16703`) and "Bedridden for a month." (`ArMDE:16704`)
     /// — no roll, no spell, nothing but time. How long is display text in
     /// `rules/i18n`, keyed by the row's id, not a mechanic.
     Bedridden,
     /// An illness the character must survive: "Stamina stress roll against an
-    /// Ease Factor of 3 or CrCo20 to survive" (`ArMDE:16628`) and its four heavier
-    /// siblings (`ArMDE:16629-16632`).
+    /// Ease Factor of 3 or CrCo20 to survive" (`ArMDE:16705`) and its four heavier
+    /// siblings (`ArMDE:16706-16709`).
     Illness {
         /// How bad it is, which is what fixes the required spell level: "The
         /// level of spell required depends on the severity of the crisis, as
-        /// noted on the table." (`ArMDE:16638`)
+        /// noted on the table." (`ArMDE:16715`)
         severity: CrisisSeverity,
         /// The Ease Factor of the Stamina stress roll. `None` for the Terminal
         /// row, which offers no roll at all — "**Terminal illness**. CrCo40
-        /// required to survive." (`ArMDE:16632`) — rather than an unbeatable one.
+        /// required to survive." (`ArMDE:16709`) — rather than an unbeatable one.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         ease_factor: Option<i32>,
         /// The level of the Momentary Creo Corpus Ritual that resolves the
-        /// crisis (`ArMDE:16638`), e.g. 20 for CrCo20.
+        /// crisis (`ArMDE:16715`), e.g. 20 for CrCo20.
         ritual_level: u32,
     },
 }
@@ -1912,26 +1912,26 @@ pub enum CrisisOutcome {
 ///
 /// Ordered, and **declaration order is the ladder**: "The level of spell
 /// required depends on the severity of the crisis, as noted on the table."
-/// (`ArMDE:16638`) The table's five illness rows climb together — 15/EF 3/CrCo20 up
-/// to 19+/no roll/CrCo40 (`ArMDE:16628-16632`) — so severity is a rank, not a label,
+/// (`ArMDE:16715`) The table's five illness rows climb together — 15/EF 3/CrCo20 up
+/// to 19+/no roll/CrCo40 (`ArMDE:16705-16709`) — so severity is a rank, not a label,
 /// and comparing two of them is a rules operation the source licenses.
 ///
-/// Source: ArMDE:16628-16632, :16638.
+/// Source: ArMDE:16705-16709, :16715.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CrisisSeverity {
     /// "**Minor illness**. Stamina stress roll against an Ease Factor of 3 or
-    /// CrCo20 to survive." (`ArMDE:16628`)
+    /// CrCo20 to survive." (`ArMDE:16705`)
     Minor,
     /// "**Serious illness**. … Ease Factor of 6 or CrCo25 to survive."
-    /// (`ArMDE:16629`)
+    /// (`ArMDE:16706`)
     Serious,
-    /// "**Major illness**. … Ease Factor of 9 or CrCo30 to survive." (`ArMDE:16630`)
+    /// "**Major illness**. … Ease Factor of 9 or CrCo30 to survive." (`ArMDE:16707`)
     Major,
     /// "**Critical illness**. … Ease Factor of 12 or CrCo35 to survive"
-    /// (`ArMDE:16631`)
+    /// (`ArMDE:16708`)
     Critical,
-    /// "**Terminal illness**. CrCo40 required to survive." (`ArMDE:16632`)
+    /// "**Terminal illness**. CrCo40 required to survive." (`ArMDE:16709`)
     Terminal,
 }
 
@@ -1963,14 +1963,14 @@ impl std::fmt::Display for CrisisSeverity {
 }
 
 /// The die the crisis total is rolled on: "Roll a ten-sided die. Each number
-/// counts for its value, except that a zero counts as ten." (`ArMDE:474`) — so the
+/// counts for its value, except that a zero counts as ten." (`ArMDE:542`) — so the
 /// Simple Die's range is 1 to 10, which this carries as data rather than as a
 /// literal in the engine.
 ///
 /// The engine never rolls it (see the module docs); the bounds are here so a UI
 /// can offer the legal results and the loader can reject a nonsensical range.
 ///
-/// Source: ArMDE:474, :16621.
+/// Source: ArMDE:542, :16698.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CrisisDie {
     /// Slug-style id, `crisis.die` (D72.3) — provenance only, like
@@ -1992,12 +1992,12 @@ pub struct CrisisDie {
 /// Factor of 6 allows the character to add the attendant's Medicine score to the
 /// roll to survive the crisis. Only one doctor may usefully attend a patient, and
 /// if the doctor botches the character must subtract 3 from the survival roll."
-/// (`ArMDE:16634`)
+/// (`ArMDE:16711`)
 ///
 /// The Ability and Characteristic are data rather than hard-coded ids, so the
 /// rule stays a property of the ruleset.
 ///
-/// Source: ArMDE:16634.
+/// Source: ArMDE:16711.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CrisisAttendant {
     /// Slug-style id, `crisis.attendant` (D72.3) — provenance only, like
@@ -2014,12 +2014,12 @@ pub struct CrisisAttendant {
     pub ease_factor: i32,
     /// What a botched attendance costs the patient, stored with its sign and
     /// **added** to the survival roll: -3, because "if the doctor botches the
-    /// character must subtract 3 from the survival roll" (`ArMDE:16634`).
+    /// character must subtract 3 from the survival roll" (`ArMDE:16711`).
     ///
     /// Signed-and-added, not a positive magnitude to subtract, because that is
     /// the convention every other aging modifier already follows — the aging
     /// roll's trait modifiers are added with their stored sign, and only the two
-    /// terms `ArMDE:16567-16569` *names* as subtracted are subtracted. One convention
+    /// terms `ArMDE:16644-16646` *names* as subtracted are subtracted. One convention
     /// for one file; a second would invert something eventually.
     pub botch_penalty: i32,
     /// Provenance into the authoritative Markdown rules source.
@@ -2041,9 +2041,9 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     /// The two tables of `## Aging` in miniature: a Living Conditions row of each
-    /// kind (ArMDE:16581-16594) and one row of every outcome shape the
-    /// Aging Roll table has (`ArMDE:16597-16611`), plus the longevity clamp of
-    /// `ArMDE:16575`.
+    /// kind (ArMDE:16658-16671) and one row of every outcome shape the
+    /// Aging Roll table has (`ArMDE:16674-16688`), plus the longevity clamp of
+    /// `ArMDE:16652`.
     const AGING: &str = r#"{
       "start_age": 35,
       "age_divisor": 10,
@@ -2080,7 +2080,7 @@ mod tests {
         assert!(rules.frail_decrepitude_score.is_none());
         assert!(rules.fatal_decrepitude_score.is_none());
 
-        // A plain condition and a cumulative one, the asterisk of `ArMDE:16594` being
+        // A plain condition and a cumulative one, the asterisk of `ArMDE:16671` being
         // the only thing that tells them apart.
         let conditions: Vec<(&str, i8, bool)> = rules
             .living_conditions
@@ -2169,10 +2169,10 @@ mod tests {
         );
     }
 
-    /// The Crisis Table of `ArMDE:16624-16632` in miniature — its two open ends, one
+    /// The Crisis Table of `ArMDE:16701-16709` in miniature — its two open ends, one
     /// `bedridden` row and one `illness` row of each shape (an Ease Factor, and
-    /// the Terminal row that has none, `ArMDE:16632`) — plus the Simple Die of `ArMDE:474`
-    /// and the attending doctor of `ArMDE:16634`. A sibling of [`AGING`] rather than an
+    /// the Terminal row that has none, `ArMDE:16709`) — plus the Simple Die of `ArMDE:542`
+    /// and the attending doctor of `ArMDE:16711`. A sibling of [`AGING`] rather than an
     /// extension of it: [`AGING`] is what an aging block with **no** crisis key
     /// looks like, and that case must keep parsing untouched.
     const AGING_WITH_CRISIS: &str = r#"{
@@ -2217,7 +2217,7 @@ mod tests {
             ]
         );
 
-        // "8 or less" (`ArMDE:16626`) is open below and "19+" (`ArMDE:16632`) open above —
+        // "8 or less" (`ArMDE:16703`) is open below and "19+" (`ArMDE:16709`) open above —
         // the Crisis Table, unlike the Aging Roll table, has *both* ends open.
         let below = &crisis.rows[0];
         assert_eq!((below.min, below.max), (None, Some(8)));
@@ -2247,7 +2247,7 @@ mod tests {
                 ritual_level: 20,
             }
         );
-        // "Terminal illness. CrCo40 required to survive." (`ArMDE:16632`) — no Stamina
+        // "Terminal illness. CrCo40 required to survive." (`ArMDE:16709`) — no Stamina
         // roll is offered at all, so the Ease Factor is absent, not zero.
         assert_eq!(
             above.outcome,
@@ -2326,16 +2326,16 @@ mod tests {
     /// its miniature table leaves a gap between 13 and 18, which the loader's
     /// tiling gate rejects, so the schedule fixtures ship a contiguous one.
     ///
-    /// The Living Conditions rows are the baseline (`ArMDE:16587`), a positive
-    /// alternative (`ArMDE:16583`) and two asterisked ones that stack (`ArMDE:16590`,
-    /// `ArMDE:16592`); the point items are the three shipped carriers of a
+    /// The Living Conditions rows are the baseline (`ArMDE:16664`), a positive
+    /// alternative (`ArMDE:16660`) and two asterisked ones that stack (`ArMDE:16667`,
+    /// `ArMDE:16669`); the point items are the three shipped carriers of a
     /// `living_conditions` aging modifier — plus one Personality Flaw, which any
     /// ruleset shipping a V/F catalogue at all must carry
     /// (`validate_engine_required_categories`), the shipped `aging_roll` carrier
-    /// Faerie Blood (`ArMDE:3801`), and one **synthetic** carrier of a
+    /// Faerie Blood (`ArMDE:3872`), and one **synthetic** carrier of a
     /// `longevity_bonus` modifier, a kind no shipped item uses today.
     ///
-    /// The eleven Aging Roll rows are the book's own (`ArMDE:16601-16611`), because
+    /// The eleven Aging Roll rows are the book's own (`ArMDE:16678-16688`), because
     /// [`resolve_outcome`] has to be witnessed against every row shape the table
     /// actually has. The advancement curve is the shipped one's first three rows
     /// (5 / 15 / 30), deliberately **short**: a table that tops out is what lets a
@@ -2426,10 +2426,10 @@ mod tests {
     /// total against it is `None`, which is its own test below.
     ///
     /// Both tables are the smallest that survive the loader's gates. The Crisis
-    /// Table tiles the integers contiguously with the open-below row (`ArMDE:16626`)
-    /// first and the open-above row (`ArMDE:16632`) last; the Aging Roll table carries
-    /// "10-12" (`ArMDE:16601`) for a year that costs one point and an open-ended
-    /// "13+" standing in for `ArMDE:16602`/`ArMDE:16611`, so a test can drive a year to a
+    /// Table tiles the integers contiguously with the open-below row (`ArMDE:16703`)
+    /// first and the open-above row (`ArMDE:16709`) last; the Aging Roll table carries
+    /// "10-12" (`ArMDE:16678`) for a year that costs one point and an open-ended
+    /// "13+" standing in for `ArMDE:16679`/`ArMDE:16688`, so a test can drive a year to a
     /// Crisis on demand.
     ///
     /// The advancement curve is the shipped one's first five rows (5 / 15 / 30 /
@@ -2437,9 +2437,9 @@ mod tests {
     /// crisis total has to be witnessed while the Decrepitude score is still
     /// climbing, not while it sits at a curve that has run out.
     ///
-    /// It ships **no attendant**, so the `ArMDE:16634` doctor's absence is testable;
+    /// It ships **no attendant**, so the `ArMDE:16711` doctor's absence is testable;
     /// the shipped table carries one, and `data_integrity.rs` tests that half.
-    /// Its three items are the two sides of the `ArMDE:16636` wall — an aging-ROLL
+    /// Its three items are the two sides of the `ArMDE:16713` wall — an aging-ROLL
     /// modifier, a LIVING CONDITIONS one, and Mild Aging, which carries one of
     /// each kind plus the crisis-survival grant.
     fn crisis_ruleset() -> Ruleset {
@@ -2547,16 +2547,16 @@ mod tests {
     /// The one deliberate off-by-one in the engine, and the three sentences that
     /// settle it.
     ///
-    /// `ArMDE:16565` — "Characters begin aging in the Winter **after** they turn 35.
+    /// `ArMDE:16642` — "Characters begin aging in the Winter **after** they turn 35.
     /// Every year, a character must roll on the aging table." The Winter *after*
     /// the 35th birthday falls in the character's 36th year, so 35 is the last
     /// year owing nothing and 36 is the first owing a roll.
     ///
-    /// `ArMDE:2496` reads against this and is disposed of, not ignored: "you should
+    /// `ArMDE:2564` reads against this and is disposed of, not ignored: "you should
     /// also make aging rolls for the character each year **from the age of 35**".
-    /// That is advice inside the worked magus-advancement example; `ArMDE:2232` is the
+    /// That is advice inside the worked magus-advancement example; `ArMDE:2300` is the
     /// creation-time rule proper — "a character **over** the age of 35 must make
-    /// aging rolls … before the game begins" — and it agrees with `ArMDE:16565`. Over
+    /// aging rolls … before the game begins" — and it agrees with `ArMDE:16642`. Over
     /// 35, from the Winter after 35: the first owed roll is at 36.
     #[test]
     fn aging_rolls_are_owed_from_the_year_after_thirty_five() {
@@ -2637,10 +2637,10 @@ mod tests {
         entity
     }
 
-    /// The Living Conditions table (`ArMDE:16581-16594`): the asterisked rows "are
-    /// cumulative with each other" (`ArMDE:16594`), so a leper working in a mine holds
+    /// The Living Conditions table (`ArMDE:16658-16671`): the asterisked rows "are
+    /// cumulative with each other" (`ArMDE:16671`), so a leper working in a mine holds
     /// both and their modifiers add. An empty set is not an incomplete entry — it
-    /// is the table's own baseline, "Average peasant 0" (`ArMDE:16587`).
+    /// is the table's own baseline, "Average peasant 0" (`ArMDE:16664`).
     #[test]
     fn the_living_conditions_modifier_sums_the_chosen_rows() {
         let ruleset = scheduled_ruleset();
@@ -2660,7 +2660,7 @@ mod tests {
         assert_eq!(stacked.from_traits, 0);
         assert_eq!(stacked.total, -3);
 
-        // A single row resolves to its own modifier, sign intact: `ArMDE:16571` says a
+        // A single row resolves to its own modifier, sign intact: `ArMDE:16648` says a
         // high modifier means a longer life, and the total *subtracts* it, so the
         // book's own signs are what this function returns.
         let wealthy = living_conditions_modifier(
@@ -2694,9 +2694,9 @@ mod tests {
         assert_eq!(modifier.total, -2);
     }
 
-    /// Mild Aging gives "a +1 bonus to the Living Conditions Modifier" (`ArMDE:4530`)
+    /// Mild Aging gives "a +1 bonus to the Living Conditions Modifier" (`ArMDE:4601`)
     /// and Poor Living Conditions "an additional -1 Living Conditions Modifier …
-    /// cumulative with the character's base" (`ArMDE:6620`) — so a Virtue/Flaw modifier
+    /// cumulative with the character's base" (`ArMDE:6691`) — so a Virtue/Flaw modifier
     /// joins the table rows in the total without disturbing `from_table`.
     #[test]
     fn virtue_living_condition_modifiers_join_the_table_rows() {
@@ -2725,7 +2725,7 @@ mod tests {
         assert_eq!(poor.total, -1);
     }
 
-    /// "age/10 (round up)" (`ArMDE:16567`) — so the term steps up on the first year of
+    /// "age/10 (round up)" (`ArMDE:16644`) — so the term steps up on the first year of
     /// each decade, not the last: 30 still scores 3, and 31 already scores 4.
     #[test]
     fn the_age_modifier_rounds_the_decade_up() {
@@ -2751,7 +2751,7 @@ mod tests {
     ///
     /// > **AGING TOTAL: Stress die (no botch) + age/10 (round up)**
     /// > **\- Living Conditions modifier**
-    /// > **\- Longevity Ritual modifier** (`ArMDE:16567-16569`)
+    /// > **\- Longevity Ritual modifier** (`ArMDE:16644-16646`)
     ///
     /// Every term is given a different magnitude here, so a swapped pair cannot
     /// coincidentally produce the right sum.
@@ -2784,7 +2784,7 @@ mod tests {
     /// The sign trap, stated as an assertion so it cannot be "simplified" away.
     ///
     /// Mild Aging ships `+1` and Poor Living Conditions `-1` — both in the book's
-    /// own sign (`ArMDE:4530`, `ArMDE:6620`) — and the AGING TOTAL *subtracts* the Living
+    /// own sign (`ArMDE:4601`, `ArMDE:6691`) — and the AGING TOTAL *subtracts* the Living
     /// Conditions modifier. So the Virtue must LOWER the total and the Flaw must
     /// RAISE it, from the very same die.
     #[test]
@@ -2844,7 +2844,7 @@ mod tests {
     }
 
     /// "The modifier to rolls depends on the character's **actual, not apparent**,
-    /// age." (`ArMDE:16577`) — so an apparent age far from the real one moves nothing.
+    /// age." (`ArMDE:16654`) — so an apparent age far from the real one moves nothing.
     #[test]
     fn the_aging_total_reads_the_actual_age_not_the_apparent_age() {
         let ruleset = scheduled_ruleset();
@@ -2864,7 +2864,7 @@ mod tests {
         );
     }
 
-    /// The `ArMDE:16575` clamp: a ritual-holder "treats all rolls of 10 or more as
+    /// The `ArMDE:16652` clamp: a ritual-holder "treats all rolls of 10 or more as
     /// rolls of 9 until he reaches the age of 35", so he "is at no risk of
     /// actually aging before any other characters".
     ///
@@ -2908,7 +2908,7 @@ mod tests {
     }
 
     /// "2 or less — No apparent aging" / "3 or more — Apparent age increases by
-    /// one year" (`ArMDE:16599-16600`). Not two rows of the outcome table but one
+    /// one year" (`ArMDE:16676-16677`). Not two rows of the outcome table but one
     /// threshold asked of every total, and it fires long before any total costs a
     /// Characteristic anything.
     #[test]
@@ -2944,11 +2944,11 @@ mod tests {
         entity
     }
 
-    /// "Bee Kings do not appear to age after reaching maturity" (`ArMDE:3488`) — and
+    /// "Bee Kings do not appear to age after reaching maturity" (`ArMDE:3559`) — and
     /// that is *all* it says. The appearance stops; the body does not. So the
     /// table's award is exactly the one anybody else takes at the same total, and
     /// the point it places still forces a Characteristic drop, because dropping is
-    /// what `no_aging` (`ArMDE:5189`) suppresses and a Bee King carries no `no_aging`.
+    /// what `no_aging` (`ArMDE:5260`) suppresses and a Bee King carries no `no_aging`.
     ///
     /// The shipped catalogue tagged this Virtue `no_aging` — the wrong one of the
     /// two facts, and the reason the tags had to come apart.
@@ -2966,7 +2966,7 @@ mod tests {
         let outcome = resolve_outcome(&bee_king, &ruleset, 15).expect("aging rules");
         assert!(
             !outcome.apparent_age_increases,
-            "'Bee Kings do not appear to age' (ArMDE:3488)"
+            "'Bee Kings do not appear to age' (ArMDE:3559)"
         );
         assert_eq!(
             outcome.awards, ordinary.awards,
@@ -2974,7 +2974,7 @@ mod tests {
         );
 
         // And the point the row places still costs him the Characteristic: a Sta
-        // of 0 drops on its first aging point (`ArMDE:16579`).
+        // of 0 drops on its first aging point (`ArMDE:16656`).
         bee_king.aging_points.insert(Characteristic::Sta, 1);
         assert_eq!(
             characteristic_aging_drops(&bee_king, &ruleset),
@@ -2987,8 +2987,8 @@ mod tests {
     ///
     /// "This Flaw also includes the effects of the Unaging Virtue, **but** the
     /// character's apparent age advances in line with their physical age"
-    /// (`ArMDE:5743`). That *but* is the proof the two facts are separable: Bound to
-    /// (Role) keeps Unaging's Characteristic immunity and withholds `ArMDE:5189`'s "You
+    /// (`ArMDE:5814`). That *but* is the proof the two facts are separable: Bound to
+    /// (Role) keeps Unaging's Characteristic immunity and withholds `ArMDE:5260`'s "You
     /// may choose your apparent age freely".
     #[test]
     fn bound_to_role_keeps_ageing_in_appearance_while_unaging_does_not() {
@@ -2998,13 +2998,13 @@ mod tests {
             .expect("aging rules");
         assert!(
             bound.apparent_age_increases,
-            "'the character's apparent age advances in line with their physical age' (ArMDE:5743)"
+            "'the character's apparent age advances in line with their physical age' (ArMDE:5814)"
         );
 
         let unaging = resolve_outcome(&carrying("virtue.unaging"), &ruleset, 15).expect("rules");
         assert!(
             !unaging.apparent_age_increases,
-            "'You may choose your apparent age freely' (ArMDE:5189)"
+            "'You may choose your apparent age freely' (ArMDE:5260)"
         );
 
         assert_eq!(
@@ -3014,7 +3014,7 @@ mod tests {
     }
 
     /// "In game terms, your aging points do not decrease your Characteristics,
-    /// **only building up to give you Decrepitude points**" (`ArMDE:5189`).
+    /// **only building up to give you Decrepitude points**" (`ArMDE:5260`).
     ///
     /// Both halves are load-bearing, and they pull in opposite directions: the
     /// Characteristic is spared, and the very same points still accrue and still
@@ -3023,11 +3023,11 @@ mod tests {
     /// character ages into Decrepitude exactly as fast as anyone else.
     ///
     /// The control is the same character without the Virtue, which guards the
-    /// `ArMDE:16613` worked examples: suppression must be the carrier's, not everyone's.
+    /// `ArMDE:16690` worked examples: suppression must be the carrier's, not everyone's.
     #[test]
     fn unaging_accrues_decrepitude_without_dropping_a_characteristic() {
         let ruleset = scheduled_ruleset();
-        // From a Stamina of 0, 21 aging points force six drops (`ArMDE:16579`).
+        // From a Stamina of 0, 21 aging points force six drops (`ArMDE:16656`).
         let aged = |item: Option<&str>| {
             let mut entity = match item {
                 Some(item) => carrying(item),
@@ -3042,13 +3042,13 @@ mod tests {
         assert_eq!(
             characteristic_aging_drops(&ordinary, &ruleset),
             BTreeMap::from([(Characteristic::Sta, 6)]),
-            "without the Virtue the points cost Characteristics as ever (ArMDE:16579)"
+            "without the Virtue the points cost Characteristics as ever (ArMDE:16656)"
         );
 
         let unaging = aged(Some("virtue.unaging"));
         assert!(
             characteristic_aging_drops(&unaging, &ruleset).is_empty(),
-            "'your aging points do not decrease your Characteristics' (ArMDE:5189)"
+            "'your aging points do not decrease your Characteristics' (ArMDE:5260)"
         );
         assert_eq!(
             effective_characteristic_after_aging(&unaging, &ruleset, Characteristic::Sta),
@@ -3061,12 +3061,12 @@ mod tests {
         assert_eq!(
             decrepitude_score(&unaging, &ruleset),
             decrepitude_score(&ordinary, &ruleset),
-            "'only building up to give you Decrepitude points' (ArMDE:5189)"
+            "'only building up to give you Decrepitude points' (ArMDE:5260)"
         );
         assert!(decrepitude_score(&unaging, &ruleset) > 0);
     }
 
-    /// Rows 14-21 name the Characteristics themselves (`ArMDE:16603-16610`), one or
+    /// Rows 14-21 name the Characteristics themselves (`ArMDE:16680-16687`), one or
     /// two of them, each taking a point of its own. The book writes Presence as
     /// "Prs"; the enum variant is `Pre`.
     #[test]
@@ -3105,9 +3105,9 @@ mod tests {
         assert_eq!(named(21), vec![Characteristic::Int, Characteristic::Per]);
     }
 
-    /// "10–12 — 1 Aging Point in any Characteristic" (`ArMDE:16601`), and "If an Aging
+    /// "10–12 — 1 Aging Point in any Characteristic" (`ArMDE:16678`), and "If an Aging
     /// Point 'in any Characteristic' is gained, the player may choose the
-    /// Characteristic" (`ArMDE:16615`) — so the engine names none of them.
+    /// Characteristic" (`ArMDE:16692`) — so the engine names none of them.
     #[test]
     fn ten_through_twelve_leave_the_characteristic_to_the_player() {
         let ruleset = scheduled_ruleset();
@@ -3129,10 +3129,10 @@ mod tests {
     }
 
     /// "Gain sufficient Aging Points (in any Characteristics) to reach the next
-    /// level in Decrepitude, and Crisis" (`ArMDE:16602`, `ArMDE:16611`).
+    /// level in Decrepitude, and Crisis" (`ArMDE:16679`, `ArMDE:16688`).
     ///
     /// The count is derived, never authored: Decrepitude "increases as an
-    /// Ability" off the accrued points (`ArMDE:16617`), so the next level costs the
+    /// Ability" off the accrued points (`ArMDE:16694`), so the next level costs the
     /// advancement curve's price for the next score less what the character has
     /// already accrued. The expectation is computed from the table rather than
     /// written out, so a re-priced curve moves the test with it.
@@ -3157,7 +3157,7 @@ mod tests {
             points: Some(to_first_level),
         }];
 
-        // 13 (`ArMDE:16602`), and the open-ended top row (`ArMDE:16611`) whatever the total.
+        // 13 (`ArMDE:16679`), and the open-ended top row (`ArMDE:16688`) whatever the total.
         for total in [13, 22, 30] {
             let outcome = resolve_outcome(&entity, &ruleset, total).expect("aging rules");
             assert_eq!(outcome.awards, owed, "total {total}");
@@ -3204,7 +3204,7 @@ mod tests {
         assert!(outcome.crisis);
     }
 
-    /// Below "10–12" the table costs nothing at all (`ArMDE:16601` is its first row
+    /// Below "10–12" the table costs nothing at all (`ArMDE:16678` is its first row
     /// that does) — but the apparent-aging threshold is a separate question and
     /// still answers for those totals.
     #[test]
@@ -3261,9 +3261,9 @@ mod tests {
     /// Everything the single writer writes, in one year: the row's points, the
     /// apparent age, the log entry — and nothing else.
     ///
-    /// A 40-year-old working in a mine ("Work in a mine -1", `ArMDE:16590`) rolls a
+    /// A 40-year-old working in a mine ("Work in a mine -1", `ArMDE:16667`) rolls a
     /// 10: `10 + ⌈40/10⌉ - (-1) = 15`, which the table answers with "1 Aging
-    /// Point in Sta" (`ArMDE:16604`).
+    /// Point in Sta" (`ArMDE:16681`).
     #[test]
     fn a_resolved_year_writes_the_points_the_appearance_and_a_log_entry() {
         let ruleset = scheduled_ruleset();
@@ -3338,7 +3338,7 @@ mod tests {
     }
 
     /// "Gain sufficient Aging Points (in any Characteristics) to reach the next
-    /// level in Decrepitude" (`ArMDE:16602`) — the count is the table's, so a
+    /// level in Decrepitude" (`ArMDE:16679`) — the count is the table's, so a
     /// distribution that does not sum to it is refused instead of quietly
     /// awarding whatever was typed.
     #[test]
@@ -3372,9 +3372,9 @@ mod tests {
     }
 
     /// "Gain sufficient Aging Points (**in any Characteristics**) to reach the
-    /// next level in Decrepitude" (`ArMDE:16602`, `ArMDE:16611`) — **plural**. Reaching
+    /// next level in Decrepitude" (`ArMDE:16679`, `ArMDE:16688`) — **plural**. Reaching
     /// Decrepitude 1 costs five points, and forcing all five into one
-    /// Characteristic would force Characteristic drops (`ArMDE:16579`) the player may
+    /// Characteristic would force Characteristic drops (`ArMDE:16656`) the player may
     /// legally avoid. So the distribution is a per-Characteristic map, and this
     /// test is what stops a later refactor narrowing it to a single pick.
     #[test]
@@ -3409,11 +3409,11 @@ mod tests {
         );
         assert!(
             spread.outcome.crisis,
-            "'… and Crisis' (`ArMDE:16602`) — flagged, not resolved"
+            "'… and Crisis' (`ArMDE:16679`) — flagged, not resolved"
         );
     }
 
-    /// Rows 14-21 name the Characteristics themselves (`ArMDE:16603-16610`), and so
+    /// Rows 14-21 name the Characteristics themselves (`ArMDE:16680-16687`), and so
     /// does every row below 10 by naming none at all. Placing points against
     /// either would invent an award the table never made.
     #[test]
@@ -3421,7 +3421,7 @@ mod tests {
         let ruleset = scheduled_ruleset();
         let entity = living_under(&[]);
 
-        // 10 + ceil(40/10) = 14: "1 Aging Point in Qik" (`ArMDE:16603`).
+        // 10 + ceil(40/10) = 14: "1 Aging Point in Qik" (`ArMDE:16680`).
         assert_eq!(
             resolve_year(
                 &entity,
@@ -3449,7 +3449,7 @@ mod tests {
     }
 
     /// "Every Aging Point also counts as an experience point towards
-    /// Decrepitude, which increases as an Ability" (`ArMDE:16617`) — so the writer
+    /// Decrepitude, which increases as an Ability" (`ArMDE:16694`) — so the writer
     /// writes points and Decrepitude follows from them. Nothing stores the
     /// score.
     #[test]
@@ -3479,7 +3479,7 @@ mod tests {
 
     /// `apparent_age` is `None` on most characters, so the first year that needs
     /// it seeds it at [`AgingRules::start_age`] — nothing has happened before the
-    /// first owed roll — and advances from there (`ArMDE:16577`). Seeding once and
+    /// first owed roll — and advances from there (`ArMDE:16654`). Seeding once and
     /// only incrementing afterwards is what makes an out-of-order catch-up land
     /// on the same number as an in-order one.
     #[test]
@@ -3514,7 +3514,7 @@ mod tests {
             Some(51)
         );
 
-        // "2 or less: No apparent aging" (`ArMDE:16599`) seeds nothing at all — a
+        // "2 or less: No apparent aging" (`ArMDE:16676`) seeds nothing at all — a
         // wealthy 40-year-old with Mild Aging rolling a 1: 1 + 4 - (2 + 1) = 2.
         let mut kept = living_under(&["living_condition.wealthy_or_healthy_location"]);
         kept.selections = vec![Selection::new(Id::new("virtue.mild_aging"))];
@@ -3553,7 +3553,7 @@ mod tests {
     }
 
     /// Two refusals with nothing to award: a Decrepitude level the advancement
-    /// curve cannot price (`ArMDE:16617` — Decrepitude "increases as an Ability", and
+    /// curve cannot price (`ArMDE:16694` — Decrepitude "increases as an Ability", and
     /// the table tops out), and a ruleset shipping no aging rules at all. Both
     /// are reported, never silently costed at 0.
     #[test]
@@ -3593,7 +3593,7 @@ mod tests {
     }
 
     /// A mistyped die must be recoverable: a magus of 60 owes 25 rolls
-    /// (`ArMDE:2232`), and a 25-roll walk with no undo is not shippable. The widened
+    /// (`ArMDE:2300`), and a 25-roll walk with no undo is not shippable. The widened
     /// log entry records precisely what its year did, so putting it back is
     /// exact — down to the bytes of the save.
     #[test]
@@ -3649,7 +3649,7 @@ mod tests {
     /// [`revert_year`] would walk the appearance backwards past a year that never
     /// advanced it.
     ///
-    /// Source: ArMDE:5189, :16577.
+    /// Source: ArMDE:5260, :16654.
     #[test]
     fn a_resolved_year_leaves_an_unaging_character_looking_exactly_as_he_did() {
         let ruleset = scheduled_ruleset();
@@ -3663,7 +3663,7 @@ mod tests {
         assert_eq!(
             resolved.entity.apparent_age,
             Some(30),
-            "'You may choose your apparent age freely' (ArMDE:5189)"
+            "'You may choose your apparent age freely' (ArMDE:5260)"
         );
         assert_eq!(
             resolved.entity.aging_points,
@@ -3748,7 +3748,7 @@ mod tests {
         );
     }
 
-    /// "2 or less: No apparent aging" (`ArMDE:16599`) — so the revert of such a year
+    /// "2 or less: No apparent aging" (`ArMDE:16676`) — so the revert of such a year
     /// must not walk the appearance backwards. The entry's own
     /// `apparent_age_increased` is what decides, not the total.
     #[test]
@@ -3768,7 +3768,7 @@ mod tests {
     }
 
     /// **CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score**
-    /// (`ArMDE:16621`) — exactly three terms, every one of them ADDED, and every one
+    /// (`ArMDE:16698`) — exactly three terms, every one of them ADDED, and every one
     /// of them reported so a sheet can show the arithmetic without re-deriving
     /// it.
     ///
@@ -3809,7 +3809,7 @@ mod tests {
         assert_eq!(steps, vec![3, 4, 4, 4, 5]);
 
         // Every term is ADDED: a bigger die and a frailer character both push the
-        // total up. No term is ever subtracted — `ArMDE:16621` names none.
+        // total up. No term is ever subtracted — `ArMDE:16698` names none.
         assert_eq!(
             crisis_total(&entity, &ruleset, 36, 10)
                 .expect("a Crisis Table")
@@ -3834,7 +3834,7 @@ mod tests {
         assert_eq!(unaged.total, 7);
 
         // The die is the player's and the engine does not police it: "Roll a
-        // ten-sided die … a zero counts as ten" (`ArMDE:474`) bounds what a UI offers,
+        // ten-sided die … a zero counts as ten" (`ArMDE:542`) bounds what a UI offers,
         // not what a storyguide may hand out.
         for die in [-2, 0, 11] {
             let total = crisis_total(&entity, &ruleset, 36, die).expect("a Crisis Table");
@@ -3844,7 +3844,7 @@ mod tests {
     }
 
     /// "**Crisis:** Increase the character's Decrepitude **first**, and then roll
-    /// on the Crisis Table." (`ArMDE:16619`) — so the Decrepitude the total adds is the
+    /// on the Crisis Table." (`ArMDE:16696`) — so the Decrepitude the total adds is the
     /// one *that year* raised, not the one the character carries today.
     ///
     /// The distinction is not academic, because this module is deliberately
@@ -3852,13 +3852,13 @@ mod tests {
     /// recorded, so a player may roll 36 (which flags a Crisis), carry on through
     /// 37-40, and only then resolve 36's Crisis. A live [`decrepitude_score`] read
     /// would charge that Crisis with four later years' Aging Points, which
-    /// `ArMDE:16619` does not license.
+    /// `ArMDE:16696` does not license.
     #[test]
     fn the_crisis_total_reads_the_decrepitude_that_year_raised_not_todays() {
         let ruleset = crisis_ruleset();
 
         // Age 36: `9 + ⌈36/10⌉ = 13` reaches the next Decrepitude level and flags
-        // a Crisis (`ArMDE:16602`) — five points on the fixture's curve.
+        // a Crisis (`ArMDE:16679`) — five points on the fixture's curve.
         let crisis_year = resolve_year(
             &character(Some(40), None),
             &ruleset,
@@ -3958,13 +3958,13 @@ mod tests {
     }
 
     /// The miniature twin of `data_integrity.rs`'s shipped-catalogue lock on
-    /// `ArMDE:16636` — "Virtues that affect aging rolls do not affect crisis survival
+    /// `ArMDE:16713` — "Virtues that affect aging rolls do not affect crisis survival
     /// rolls."
     ///
     /// Both quantities the aging roll takes are witnessed moving that roll and
     /// then failing to move this one: an [`AgingEffect::AgingRoll`] modifier and
     /// an [`AgingEffect::LivingConditions`] one. Mild Aging is the proof case,
-    /// because `ArMDE:4530` grants a Living Conditions +1 and a crisis-survival +3 in
+    /// because `ArMDE:4601` grants a Living Conditions +1 and a crisis-survival +3 in
     /// one sentence and exactly one of them belongs here.
     #[test]
     fn an_aging_roll_modifier_never_reaches_the_crisis_survival_total() {
@@ -4019,7 +4019,7 @@ mod tests {
         );
     }
 
-    /// The Bronze cord applies "to rolls to resist aging" (`ArMDE:10844`), and the
+    /// The Bronze cord applies "to rolls to resist aging" (`ArMDE:10916`), and the
     /// roll that names is the crisis *survival* roll — an aging roll is not a
     /// roll one passes or fails. So the cord goes in here and stays out of the
     /// AGING TOTAL, and this test watches both directions at once.
@@ -4058,12 +4058,12 @@ mod tests {
         let after = aging_total(&magus, &ruleset, 40, 6).expect("aging rules");
         assert_eq!(
             after, before,
-            "the cord moves no term of the AGING TOTAL (ArMDE:16636)"
+            "the cord moves no term of the AGING TOTAL (ArMDE:16713)"
         );
     }
 
     /// "8 or less — Bedridden for a week" and "9-14 — Bedridden for a month."
-    /// (`ArMDE:16626`, `ArMDE:16627`) cost nothing but time: no Stamina roll, no Ritual,
+    /// (`ArMDE:16703`, `ArMDE:16704`) cost nothing but time: no Stamina roll, no Ritual,
     /// nothing for a modifier to modify. So there is no survival read-out to
     /// give, and a character loaded with every modifier in the fixture still
     /// gets none.
@@ -4086,7 +4086,7 @@ mod tests {
         }
     }
 
-    /// The doctor of `ArMDE:16634` is *what the rules permit*, not a number the engine
+    /// The doctor of `ArMDE:16711` is *what the rules permit*, not a number the engine
     /// adds — and a ruleset that ships no attendant permits none. The fixture is
     /// deliberately one such ruleset; the shipped table's attendant is asserted
     /// against its own values in `data_integrity.rs`.
@@ -4114,9 +4114,9 @@ mod tests {
         assert_eq!(survival.allowances, vec![]);
     }
 
-    /// The Crisis Table is indexed by the CRISIS TOTAL (`ArMDE:16621`) and answers for
-    /// **every** integer: its first row is open below ("8 or less", `ArMDE:16626`) and
-    /// its last open above ("19+", `ArMDE:16632`), so a total no die could reach lands
+    /// The Crisis Table is indexed by the CRISIS TOTAL (`ArMDE:16698`) and answers for
+    /// **every** integer: its first row is open below ("8 or less", `ArMDE:16703`) and
+    /// its last open above ("19+", `ArMDE:16709`), so a total no die could reach lands
     /// on a row exactly as a middling one does.
     ///
     /// The row comes back whole rather than as a copied outcome, because the id is
@@ -4177,9 +4177,9 @@ mod tests {
     }
 
     /// One Crisis end to end, as a caller receives it: the CRISIS TOTAL broken
-    /// into its three terms (`ArMDE:16621`), the row that total lands on
-    /// (`ArMDE:16624-16632`), what the row costs, and what surviving it would take
-    /// (`ArMDE:16628-16638`).
+    /// into its three terms (`ArMDE:16698`), the row that total lands on
+    /// (`ArMDE:16701-16709`), what the row costs, and what surviving it would take
+    /// (`ArMDE:16705-16715`).
     ///
     /// And **nothing is written**. The Crisis is a reading, not a resolution:
     /// `aging_points` stays where `resolve_year` left it, no log entry appears,
@@ -4193,7 +4193,7 @@ mod tests {
         assert_eq!(decrepitude_score(&entity, &ruleset), 2);
         let before = saved(&entity);
 
-        // `9 + ⌈36/10⌉ + 2 = 15` — the minor illness of `ArMDE:16628`.
+        // `9 + ⌈36/10⌉ + 2 = 15` — the minor illness of `ArMDE:16705`.
         let preview = crisis_preview(&entity, &ruleset, 36, 9).expect("the fixture ships a table");
         assert_eq!(
             preview.total,
@@ -4219,7 +4219,7 @@ mod tests {
         assert_eq!(survival.ritual_level, 20);
         assert_eq!(survival.modifier_total, 0);
 
-        // The terminal row offers no Stamina roll at all (`ArMDE:16632`) — an absent
+        // The terminal row offers no Stamina roll at all (`ArMDE:16709`) — an absent
         // Ease Factor, and only the Ritual level can answer.
         let terminal = crisis_preview(&entity, &ruleset, 36, 10).expect("a table");
         assert_eq!(terminal.total.total, 16);
@@ -4232,7 +4232,7 @@ mod tests {
     }
 
     /// "8 or less — Bedridden for a week" and "9-14 — Bedridden for a month."
-    /// (`ArMDE:16626`, `ArMDE:16627`) are time, not a roll. So the composed read-out names
+    /// (`ArMDE:16703`, `ArMDE:16704`) are time, not a roll. So the composed read-out names
     /// the row and carries **no** survival read-out — an empty one would read as
     /// "survivable on a 0".
     #[test]
@@ -4266,13 +4266,13 @@ mod tests {
         assert!(crisis_preview(&entity, &no_crisis, 36, 9).is_none());
     }
 
-    /// `ArMDE:16636` — "Virtues that affect aging rolls do not affect crisis survival
+    /// `ArMDE:16713` — "Virtues that affect aging rolls do not affect crisis survival
     /// rolls" — held through the **composed** path, which is a second way for an
     /// aging-roll modifier to leak: the read-out that carries the total and the
     /// survival roll in one value could sum them into either.
     ///
-    /// Neither half moves. The three terms of `ArMDE:16621` are all the total has, and
-    /// only the survival grant `ArMDE:4530` makes by name reaches the survival roll.
+    /// Neither half moves. The three terms of `ArMDE:16698` are all the total has, and
+    /// only the survival grant `ArMDE:4601` makes by name reaches the survival roll.
     #[test]
     fn a_crisis_preview_leaks_no_aging_roll_modifier_into_either_half() {
         let ruleset = crisis_ruleset();
@@ -4333,7 +4333,7 @@ mod tests {
         }
     }
 
-    /// `ArMDE:16619`'s ordering, written into the writer: "**Crisis:** Increase the
+    /// `ArMDE:16696`'s ordering, written into the writer: "**Crisis:** Increase the
     /// character's Decrepitude first, and then roll on the Crisis Table."
     ///
     /// A 40-year-old with nothing accrued rolls a 9: `9 + ⌈40/10⌉ = 13`, the row
@@ -4404,11 +4404,11 @@ mod tests {
         assert!(entity.aging_points.is_empty());
     }
 
-    /// The severity of an illness row is recorded beside its id (`ArMDE:16628-16632`),
+    /// The severity of an illness row is recorded beside its id (`ArMDE:16705-16709`),
     /// and the heaviest row the table has still hands back a **living** character.
     ///
     /// The engine reports what surviving would take — the Creo Corpus level of
-    /// `ArMDE:16638`, and the Ease Factor where the row offers a roll at all — and then
+    /// `ArMDE:16715`, and the Ease Factor where the row offers a roll at all — and then
     /// stops. It throws no Stamina die and kills nobody; that is the table's to
     /// decide and the player's to record.
     #[test]
@@ -4436,7 +4436,7 @@ mod tests {
             }
         );
         let survival = crisis.survival.as_ref().expect("an illness is survivable");
-        assert_eq!(survival.ease_factor, None, "`ArMDE:16632` offers no roll");
+        assert_eq!(survival.ease_factor, None, "`ArMDE:16709` offers no roll");
         assert_eq!(survival.ritual_level, 40);
 
         let entry = &resolved.entity.aging_log[0];
@@ -4490,7 +4490,7 @@ mod tests {
         assert_eq!(owed.entity.aging_log[0].crisis_row, None);
     }
 
-    /// `ArMDE:16636` — "Virtues that affect aging rolls do not affect crisis survival
+    /// `ArMDE:16713` — "Virtues that affect aging rolls do not affect crisis survival
     /// rolls" — held through the **writer**, which is the third and worst place it
     /// could leak: one call now computes the AGING TOTAL, which *does* take the
     /// trait modifiers, and the CRISIS TOTAL, which takes none, off one character.
@@ -4499,8 +4499,8 @@ mod tests {
     ///
     /// The character wears all three kinds at once. Faerie Blood's aging-roll `-1`
     /// and the two Living Conditions modifiers demonstrably move the aging half;
-    /// the CRISIS TOTAL is still the three terms of `ArMDE:16621`; and only Mild
-    /// Aging's `+3`, which names the survival roll (`ArMDE:4530`), reaches the survival
+    /// the CRISIS TOTAL is still the three terms of `ArMDE:16698`; and only Mild
+    /// Aging's `+3`, which names the survival roll (`ArMDE:4601`), reaches the survival
     /// read-out the year hands back.
     #[test]
     fn a_resolved_crisis_year_leaks_no_aging_roll_modifier_into_the_crisis() {
@@ -4561,7 +4561,7 @@ mod tests {
     }
 
     /// `revert_year` stays **exact** across the Crisis leg, which is the property
-    /// a pre-play catch-up of 25 rolls (`ArMDE:2232`) depends on and the one a new leg
+    /// a pre-play catch-up of 25 rolls (`ArMDE:2300`) depends on and the one a new leg
     /// is most likely to break.
     ///
     /// The year under test writes everything the leg can write: the row's Aging
@@ -4611,7 +4611,7 @@ mod tests {
         );
     }
 
-    /// `ArMDE:6340`, the second thing a Crisis costs a character who was already ill:
+    /// `ArMDE:6411`, the second thing a Crisis costs a character who was already ill:
     ///
     /// > … and whenever she undergoes an Aging Crisis (page 392) the leper
     /// > sustains a Heavy Wound in addition to any other result.
@@ -4623,7 +4623,7 @@ mod tests {
     /// back off cleanly.
     ///
     /// It follows the **Crisis**, not the Crisis roll: "whenever she undergoes an
-    /// Aging Crisis" is the aging row's doing (`ArMDE:16602`, `ArMDE:16611`), and the Simple
+    /// Aging Crisis" is the aging row's doing (`ArMDE:16679`, `ArMDE:16688`), and the Simple
     /// Die only decides how bad the illness was. So a Crisis owed and unrolled
     /// costs the leper the wound too — and a year that is no Crisis costs nothing,
     /// however ill the character is.
@@ -4689,7 +4689,7 @@ mod tests {
         );
     }
 
-    /// `ArMDE:16573`, which is a rule about a **stored choice** and therefore a rule
+    /// `ArMDE:16650`, which is a rule about a **stored choice** and therefore a rule
     /// about what the engine must not quietly do to one.
     ///
     /// > A Longevity Ritual is effective until the character suffers a crisis.
@@ -4698,12 +4698,12 @@ mod tests {
     ///
     /// So the year reports that the ritual is spent, and the ritual stays exactly
     /// where the player put it. Clearing [`Entity::longevity_ritual`] would delete
-    /// a recorded bonus and a hand-typed focus that "must be repeated" (`ArMDE:10668`)
+    /// a recorded bonus and a hand-typed focus that "must be repeated" (`ArMDE:10740`)
     /// when the ritual is performed again — and would make the year unrevertible
     /// into the bargain.
     ///
     /// The note follows the **Crisis**, not the Crisis *roll*: "when the crisis
-    /// occurs" is the row's doing (`ArMDE:16602`, `ArMDE:16611`), and the Simple Die only
+    /// occurs" is the row's doing (`ArMDE:16679`, `ArMDE:16688`), and the Simple Die only
     /// decides how bad it was. So a Crisis owed and unrolled spends the ritual too.
     #[test]
     fn a_crisis_spends_the_longevity_ritual_and_never_deletes_it() {
@@ -4765,7 +4765,7 @@ mod tests {
         );
     }
 
-    /// Whether a Crisis happened is the **table's** call (`ArMDE:16602`, `ArMDE:16611`), not
+    /// Whether a Crisis happened is the **table's** call (`ArMDE:16679`, `ArMDE:16688`), not
     /// the player's. A Simple Die typed against a year the aging table never sent
     /// to the Crisis Table therefore resolves nothing — it is not an error,
     /// because nothing is written from it and no roll disagrees with the sheet.

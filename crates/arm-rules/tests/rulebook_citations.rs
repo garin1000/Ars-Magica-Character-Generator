@@ -949,6 +949,29 @@ fn every_rulebook_acronym_resolves_to_a_file_under_rules_source_en() {
     );
 }
 
+/// True for a path under `docs/` — the dated historical records
+/// `design-p8-resync.md` § "What moves" (e) and D1c both exempt from ever
+/// being rewritten to a post-resync line: "the line number is part of the
+/// snapshot and rewriting it to today's symbol would falsify the record."
+/// The corollary this function exists for: once a resync actually lands,
+/// such a frozen citation can legitimately land on blank or out-of-range
+/// content in the *current* book — that is not a defect to report, it is the
+/// snapshot aging exactly as designed. [`every_rulebook_citation_lands_inside_its_file`]
+/// must not flag it.
+fn is_dated_historical_record(path: &Path) -> bool {
+    path.starts_with(repo_root().join("docs"))
+}
+
+#[test]
+fn is_dated_historical_record_recognizes_only_the_docs_root() {
+    assert!(is_dated_historical_record(
+        &repo_root().join("docs/audit-2026-08.md")
+    ));
+    assert!(!is_dated_historical_record(
+        &repo_root().join("crates/arm-rules/RULES.md")
+    ));
+}
+
 #[test]
 fn every_rulebook_citation_lands_inside_its_file() {
     let (files_scanned, citations) = collect_all_citations();
@@ -965,6 +988,9 @@ fn every_rulebook_citation_lands_inside_its_file() {
     let cache = BookLinesCache::load();
     let mut errors = Vec::new();
     for (path, line, citation) in &citations {
+        if is_dated_historical_record(path) {
+            continue;
+        }
         let Citation {
             acronym,
             book_file,
@@ -2611,4 +2637,965 @@ fn every_citation_excerpt_matches_its_snapshot() {
         errors.len(),
         errors.join("\n")
     );
+}
+
+// ===========================================================================
+// P8-4: bare-citation relocation sweep (`docs/vf-audit/design-p8-resync.md`
+// § "What moves" (c)/(d)/(g); D85 Q5/Q6; `citation_relocation.rs`'s own
+// algorithm, adapted here for the live corpus).
+//
+// This reuses `citation_relocation.rs`'s exact/fuzzy/context algorithm —
+// deliberately NOT by importing it (each integration test is its own
+// compilation unit, see that file's and `source_relocation.rs`'s own doc
+// comments on why duplication beats a shared module here) — with one
+// adaptation: disambiguation context (`next_line`/`heading`) is compared
+// through `normalize_excerpt` on both sides, because the context here is read
+// fresh from the OLD file directly (full-fidelity, never truncated), while
+// the *candidate* line in the NEW file is compared the same way
+// `citation_excerpts.json`'s own snapshot entries were built — truncated at
+// `EXCERPT_MAX_CHARS`. Comparing a truncated 80-char prefix against an
+// untruncated real line with plain equality would spuriously fail for any
+// context line longer than 80 characters; `normalize_excerpt` on both sides
+// fixes that the same way the snapshot already handles it.
+// ===========================================================================
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SweepConfidence {
+    Exact,
+    Fuzzy,
+    Unresolved,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct SweepLineRelocation {
+    new_line: Option<usize>,
+    confidence: SweepConfidence,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct SweepRangeRelocation {
+    new_start: Option<usize>,
+    new_end: Option<usize>,
+    confidence: SweepConfidence,
+}
+
+/// True when `a` and `b` are different but sit at most one character-edit
+/// apart — duplicated verbatim from `citation_relocation.rs::within_one_edit`
+/// (pure, already proven there; see this section's header comment on why
+/// duplication rather than a shared import).
+fn sweep_within_one_edit(a: &str, b: &str) -> bool {
+    if a == b {
+        return false;
+    }
+    let a: Vec<char> = a.chars().collect();
+    let b: Vec<char> = b.chars().collect();
+    let (short, long) = if a.len() <= b.len() {
+        (&a, &b)
+    } else {
+        (&b, &a)
+    };
+    if long.len() - short.len() > 1 {
+        return false;
+    }
+    if long.len() == short.len() {
+        return short
+            .iter()
+            .zip(long.iter())
+            .filter(|(x, y)| x != y)
+            .count()
+            == 1;
+    }
+    let mut i = 0;
+    let mut j = 0;
+    let mut skipped = false;
+    while i < short.len() && j < long.len() {
+        if short[i] == long[j] {
+            i += 1;
+            j += 1;
+        } else if !skipped {
+            skipped = true;
+            j += 1;
+        } else {
+            return false;
+        }
+    }
+    true
+}
+
+/// [`resolve_candidates`]'s sweep analogue: narrows same-ranked candidate
+/// line indices (0-based into `new_lines`) to one, using `next_line` context
+/// first and `heading` context second — identical staging to
+/// `citation_relocation.rs::resolve_candidates`, but every comparison runs
+/// both sides through [`normalize_excerpt`] (see this section's header
+/// comment for why).
+fn sweep_resolve_candidates(
+    candidates: &[usize],
+    new_lines: &[String],
+    next_line_ctx: &str,
+    heading_ctx: &str,
+) -> Option<usize> {
+    let mut current: Vec<usize> = candidates.to_vec();
+    if current.len() <= 1 {
+        return current.first().copied();
+    }
+
+    let narrowed: Vec<usize> = current
+        .iter()
+        .copied()
+        .filter(|&idx| {
+            new_lines
+                .get(idx + 1)
+                .map(|l| normalize_excerpt(l))
+                .unwrap_or_default()
+                == next_line_ctx
+        })
+        .collect();
+    match narrowed.as_slice() {
+        [only] => return Some(*only),
+        [] => {}
+        _ => current = narrowed,
+    }
+    if current.len() <= 1 {
+        return current.first().copied();
+    }
+
+    let narrowed: Vec<usize> = current
+        .iter()
+        .copied()
+        .filter(|&idx| nearest_preceding_heading_excerpt(new_lines, idx) == heading_ctx)
+        .collect();
+    match narrowed.as_slice() {
+        [only] => Some(*only),
+        _ => None,
+    }
+}
+
+/// Relocates one cited line (1-based) from `old_lines` into `new_lines`,
+/// reading its own disambiguation context fresh from `old_lines` (full-
+/// fidelity, never the committed snapshot — see this section's header
+/// comment). Mirrors `citation_relocation.rs::relocate_line` exactly in
+/// shape: exact-match candidates first, [`sweep_within_one_edit`] fuzzy
+/// candidates only when no exact hit exists.
+fn sweep_relocate_line(
+    old_lines: &[String],
+    new_lines: &[String],
+    old_line: usize,
+) -> SweepLineRelocation {
+    let target = old_lines
+        .get(old_line - 1)
+        .map(|l| l.trim())
+        .unwrap_or_default();
+    let next_line_ctx = next_non_blank_excerpt(old_lines, old_line);
+    let heading_ctx = nearest_preceding_heading_excerpt(old_lines, old_line - 1);
+
+    let exact: Vec<usize> = new_lines
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| l.trim() == target)
+        .map(|(i, _)| i)
+        .collect();
+    if !exact.is_empty() {
+        return match sweep_resolve_candidates(&exact, new_lines, &next_line_ctx, &heading_ctx) {
+            Some(idx) => SweepLineRelocation {
+                new_line: Some(idx + 1),
+                confidence: SweepConfidence::Exact,
+            },
+            None => SweepLineRelocation {
+                new_line: None,
+                confidence: SweepConfidence::Unresolved,
+            },
+        };
+    }
+
+    let fuzzy: Vec<usize> = new_lines
+        .iter()
+        .enumerate()
+        .filter(|(_, l)| sweep_within_one_edit(l.trim(), target))
+        .map(|(i, _)| i)
+        .collect();
+    match sweep_resolve_candidates(&fuzzy, new_lines, &next_line_ctx, &heading_ctx) {
+        Some(idx) => SweepLineRelocation {
+            new_line: Some(idx + 1),
+            confidence: SweepConfidence::Fuzzy,
+        },
+        None => SweepLineRelocation {
+            new_line: None,
+            confidence: SweepConfidence::Unresolved,
+        },
+    }
+}
+
+/// Relocates one cited range (1-based inclusive) — mirrors
+/// `citation_relocation.rs::relocate_range`: relocate the start, then (for an
+/// actual multi-line range) verify the end's text still sits the same span
+/// away; a broken span is reported, never guessed.
+fn sweep_relocate_range(
+    old_lines: &[String],
+    new_lines: &[String],
+    old_start: usize,
+    old_end: usize,
+) -> SweepRangeRelocation {
+    let start = sweep_relocate_line(old_lines, new_lines, old_start);
+    let Some(new_start) = start.new_line else {
+        return SweepRangeRelocation {
+            new_start: None,
+            new_end: None,
+            confidence: SweepConfidence::Unresolved,
+        };
+    };
+    if old_start == old_end {
+        return SweepRangeRelocation {
+            new_start: Some(new_start),
+            new_end: Some(new_start),
+            confidence: start.confidence,
+        };
+    }
+
+    let span = old_end - old_start;
+    let candidate_new_end = new_start + span;
+    let old_end_text = old_lines
+        .get(old_end - 1)
+        .map(|l| l.trim())
+        .unwrap_or_default();
+    let new_end_text = new_lines
+        .get(candidate_new_end - 1)
+        .map(|l| l.trim())
+        .unwrap_or_default();
+    let end_matches =
+        old_end_text == new_end_text || sweep_within_one_edit(old_end_text, new_end_text);
+
+    if end_matches {
+        SweepRangeRelocation {
+            new_start: Some(new_start),
+            new_end: Some(candidate_new_end),
+            confidence: start.confidence,
+        }
+    } else {
+        SweepRangeRelocation {
+            new_start: Some(new_start),
+            new_end: None,
+            confidence: SweepConfidence::Unresolved,
+        }
+    }
+}
+
+#[test]
+fn sweep_relocate_line_finds_an_unchanged_line_after_an_offset_shift() {
+    let old: Vec<String> = ["Heading A", "Give quarter to a defeated foe.", "Next line"]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    let new: Vec<String> = [
+        "An inserted preamble line.",
+        "Heading A",
+        "Give quarter to a defeated foe.",
+        "Next line",
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
+    assert_eq!(
+        sweep_relocate_line(&old, &new, 2),
+        SweepLineRelocation {
+            new_line: Some(3),
+            confidence: SweepConfidence::Exact,
+        }
+    );
+}
+
+#[test]
+fn sweep_relocate_line_is_unresolved_inside_a_changed_hunk() {
+    let old: Vec<String> = ["Heading A", "This passage was entirely rewritten."]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    let new: Vec<String> = ["Heading A", "A completely different sentence now."]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    assert_eq!(
+        sweep_relocate_line(&old, &new, 2),
+        SweepLineRelocation {
+            new_line: None,
+            confidence: SweepConfidence::Unresolved,
+        }
+    );
+}
+
+#[test]
+fn sweep_relocate_line_tolerates_a_single_character_ocr_fix() {
+    let old: Vec<String> = ["Give guarter to a defeated foe."]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    let new: Vec<String> = ["Preamble.", "Give quarter to a defeated foe."]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    assert_eq!(
+        sweep_relocate_line(&old, &new, 1),
+        SweepLineRelocation {
+            new_line: Some(2),
+            confidence: SweepConfidence::Fuzzy,
+        }
+    );
+}
+
+/// The delta from `citation_relocation.rs`'s own test suite this file adds:
+/// disambiguation must still work when the real candidate's following line
+/// is **longer than `EXCERPT_MAX_CHARS`** — comparing a truncated context
+/// against the untruncated real text with plain equality would wrongly fail
+/// here; both sides must go through [`normalize_excerpt`].
+#[test]
+fn sweep_resolve_candidates_matches_a_next_line_longer_than_the_excerpt_cap() {
+    let long_line = "A".repeat(120);
+    let new_lines: Vec<String> = vec![
+        "*Minor, General*<br>".to_string(),
+        "Decoy follower, short and irrelevant.".to_string(),
+        "*Minor, General*<br>".to_string(),
+        long_line.clone(),
+    ];
+    let next_line_ctx = normalize_excerpt(&long_line);
+    let resolved = sweep_resolve_candidates(&[0, 2], &new_lines, &next_line_ctx, "");
+    assert_eq!(resolved, Some(2));
+}
+
+#[test]
+fn sweep_relocate_range_follows_an_unchanged_paragraph() {
+    let old: Vec<String> = ["Heading", "Line one.", "Line two."]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    let new: Vec<String> = ["Preamble.", "Heading", "Line one.", "Line two."]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    assert_eq!(
+        sweep_relocate_range(&old, &new, 2, 3),
+        SweepRangeRelocation {
+            new_start: Some(3),
+            new_end: Some(4),
+            confidence: SweepConfidence::Exact,
+        }
+    );
+}
+
+#[test]
+fn sweep_relocate_range_reports_rather_than_guesses_when_the_span_breaks() {
+    let old: Vec<String> = ["Heading", "Line one.", "Line two."]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    let new: Vec<String> = ["Heading", "Line one.", "An inserted line.", "Line two."]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    assert_eq!(
+        sweep_relocate_range(&old, &new, 1, 3),
+        SweepRangeRelocation {
+            new_start: Some(1),
+            new_end: None,
+            confidence: SweepConfidence::Unresolved,
+        }
+    );
+}
+
+/// Where the sweep reads the PRE-sync books from — `source_relocation.rs`'s
+/// own `tmp/p8-old-source` copy (committed by the P8-1/T1 slice), the same
+/// convention that file's `old_source_root` documents.
+fn old_rules_source_en() -> PathBuf {
+    repo_root().join("tmp/p8-old-source/en")
+}
+
+/// Reads every book in [`BOOK_ACRONYMS`] from `root`, as plain lines — a
+/// parameterized twin of [`BookLinesCache::load`] (which is hardcoded to
+/// [`rules_source_en`]) so the same loader serves both the OLD and NEW side.
+fn load_book_lines(root: &Path) -> BTreeMap<&'static str, Vec<String>> {
+    let mut books = BTreeMap::new();
+    for &(_, book_file) in BOOK_ACRONYMS {
+        let content = fs::read_to_string(root.join(book_file))
+            .unwrap_or_else(|e| panic!("{book_file} is readable under {root:?}: {e}"));
+        books.insert(book_file, content.lines().map(str::to_string).collect());
+    }
+    books
+}
+
+/// One row of the P8-4 relocation map: a distinct cited passage
+/// ([`citation_key`]-deduped — the relocation depends only on the book, not
+/// on which file cites it) and where it now resolves to.
+struct RelocationRow {
+    key: String,
+    book_file: &'static str,
+    new: Option<(usize, usize)>,
+    confidence: SweepConfidence,
+}
+
+fn render_relocation_map(rows: &[RelocationRow]) -> String {
+    let exact = rows
+        .iter()
+        .filter(|r| r.confidence == SweepConfidence::Exact)
+        .count();
+    let fuzzy: Vec<&RelocationRow> = rows
+        .iter()
+        .filter(|r| r.confidence == SweepConfidence::Fuzzy)
+        .collect();
+    let unresolved: Vec<&RelocationRow> = rows
+        .iter()
+        .filter(|r| r.confidence == SweepConfidence::Unresolved)
+        .collect();
+
+    let mut out = format!(
+        "# P8-4 citation relocation map\n\n**Outcome:** {} distinct cited passage(s) — {exact} \
+         exact, {} fuzzy, {} unresolved.\n",
+        rows.len(),
+        fuzzy.len(),
+        unresolved.len()
+    );
+
+    out.push_str(&format!(
+        "\n## Unresolved ({}) — never applied, needs a human read\n\n",
+        unresolved.len()
+    ));
+    if unresolved.is_empty() {
+        out.push_str("(none)\n");
+    } else {
+        out.push_str("| old | book |\n|---|---|\n");
+        for row in &unresolved {
+            out.push_str(&format!("| {} | {} |\n", row.key, row.book_file));
+        }
+    }
+
+    out.push_str(&format!(
+        "\n## Fuzzy ({}) — applied, single-character-edit match; worth a spot check\n\n",
+        fuzzy.len()
+    ));
+    if fuzzy.is_empty() {
+        out.push_str("(none)\n");
+    } else {
+        out.push_str("| old | new | book |\n|---|---|---|\n");
+        for row in &fuzzy {
+            let new = row
+                .new
+                .map(|(s, e)| {
+                    if s == e {
+                        s.to_string()
+                    } else {
+                        format!("{s}-{e}")
+                    }
+                })
+                .unwrap_or_default();
+            out.push_str(&format!("| {} | {new} | {} |\n", row.key, row.book_file));
+        }
+    }
+
+    out.push_str(&format!("\n## Exact ({exact}) — applied\n\n"));
+    out.push_str("| old | new | book |\n|---|---|---|\n");
+    for row in rows
+        .iter()
+        .filter(|r| r.confidence == SweepConfidence::Exact)
+    {
+        let new = row
+            .new
+            .map(|(s, e)| {
+                if s == e {
+                    s.to_string()
+                } else {
+                    format!("{s}-{e}")
+                }
+            })
+            .unwrap_or_default();
+        out.push_str(&format!("| {} | {new} | {} |\n", row.key, row.book_file));
+    }
+
+    out
+}
+
+/// **Builds the P8-4 relocation map — not a test the gate runs.** For every
+/// distinct cited passage [`collect_all_citations`] finds (deduped by
+/// [`citation_key`], since the relocation depends only on the book), relocates
+/// it from [`old_rules_source_en`] into [`rules_source_en`] via
+/// [`sweep_relocate_range`], and writes the result to
+/// `tmp/p8-4-relocation-map.md`. Read-only against the repository proper —
+/// only `tmp/` is written — so safe to run repeatedly while reviewing.
+///
+/// `#[ignore]`d like its siblings (`regenerate_source_relocations`,
+/// `regenerate_citation_excerpts`): `cargo test -p arm-rules --test
+/// rulebook_citations -- --ignored --nocapture
+/// build_p8_4_relocation_map`.
+#[test]
+#[ignore = "writes tmp/p8-4-relocation-map.md; run deliberately — see tmp/p8-34-handover.md"]
+fn build_p8_4_relocation_map() {
+    let (_, citations) = collect_all_citations();
+    let old_books = load_book_lines(&old_rules_source_en());
+    let new_books = load_book_lines(&rules_source_en());
+
+    let mut distinct: BTreeMap<String, (&'static str, i64, i64)> = BTreeMap::new();
+    for (_, _, citation) in &citations {
+        distinct.entry(citation_key(citation)).or_insert((
+            citation.book_file,
+            citation.start,
+            citation.end,
+        ));
+    }
+
+    let mut rows = Vec::new();
+    for (key, (book_file, start, end)) in &distinct {
+        let old_lines = old_books
+            .get(book_file)
+            .unwrap_or_else(|| panic!("{book_file} is not among the cached OLD books"));
+        let new_lines = new_books
+            .get(book_file)
+            .unwrap_or_else(|| panic!("{book_file} is not among the cached NEW books"));
+        let relocation = sweep_relocate_range(old_lines, new_lines, *start as usize, *end as usize);
+        rows.push(RelocationRow {
+            key: key.clone(),
+            book_file,
+            new: match (relocation.new_start, relocation.new_end) {
+                (Some(s), Some(e)) => Some((s, e)),
+                _ => None,
+            },
+            confidence: relocation.confidence,
+        });
+    }
+
+    let report = render_relocation_map(&rows);
+    let out_path = repo_root().join("tmp/p8-4-relocation-map.md");
+    fs::write(&out_path, &report).unwrap_or_else(|e| panic!("{out_path:?} is writable: {e}"));
+
+    let exact = rows
+        .iter()
+        .filter(|r| r.confidence == SweepConfidence::Exact)
+        .count();
+    let fuzzy = rows
+        .iter()
+        .filter(|r| r.confidence == SweepConfidence::Fuzzy)
+        .count();
+    let unresolved = rows.len() - exact - fuzzy;
+    println!(
+        "distinct={} exact={exact} fuzzy={fuzzy} unresolved={unresolved}",
+        rows.len()
+    );
+}
+
+// ===========================================================================
+// P8-4 phase 2: applying the relocation — byte-exact, self-verifying rewrite.
+//
+// Operates on each file's RAW text directly (not the block-joined text
+// `collect_all_citations` uses for *detection*), because joining erases byte
+// positions. This is safe for this corpus specifically: every
+// `ACRONYM:NNNN`-shaped substring found below is independently re-verified
+// against its expected old digits immediately before being touched (see
+// [`apply_citation_relocations`]) — a wrong match is therefore never written,
+// only silently skipped, so an imperfect position computation can degrade
+// coverage but can never corrupt a file.
+// ===========================================================================
+
+/// One `ACRONYM:NNNN` or `ACRONYM:NNNN-MMMM` citation occurrence located in a
+/// file's raw text, with the exact byte span of each number so it can be
+/// replaced independently. A chained `, :NNNN` continuation produces its own
+/// occurrence, keyed under the acronym it inherits — see
+/// [`find_citation_occurrences`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct CitationOccurrence {
+    /// The [`citation_key`]-shaped lookup key: `ACRONYM:START` or
+    /// `ACRONYM:START-END`.
+    key: String,
+    /// Byte range of the start number's digits in the file text.
+    start_span: (usize, usize),
+    /// Byte range of the end number's digits, only when this occurrence is
+    /// an actual `-MMMM` range (never set for a single-line citation, even
+    /// though `key`'s start == end in that case).
+    end_span: Option<(usize, usize)>,
+}
+
+/// `(start, end, start digits' byte span, end digits' byte span if a range,
+/// byte offset after the parse)`, as returned by [`parse_number_span`].
+type ParsedNumberSpan = (i64, i64, (usize, usize), Option<(usize, usize)>, usize);
+
+/// Parses one `NNNN` or `NNNN-MMMM` number starting at byte `at` in `text`.
+/// Returns the parsed (start, end) values, each number's own byte span, and
+/// the byte offset immediately after the whole parse — the position-tracking
+/// twin of [`parse_citation_number`].
+fn parse_number_span(text: &str, at: usize) -> Option<ParsedNumberSpan> {
+    let (start, start_len) = parse_digits(&text[at..])?;
+    let mut end = start;
+    let mut end_span = None;
+    let mut after = at + start_len;
+    if let Some(rest) = text[after..].strip_prefix('-')
+        && let Some((end_num, end_len)) = parse_digits(rest)
+    {
+        end = end_num;
+        let end_at = after + 1;
+        end_span = Some((end_at, end_at + end_len));
+        after = end_at + end_len;
+    }
+    Some((start, end, (at, at + start_len), end_span, after))
+}
+
+/// Finds every citation occurrence in `content`'s raw text (whole-file, not
+/// block-joined — see this section's header comment), chasing `, :NNNN`
+/// continuations exactly as [`find_citations`] does. Independent of that
+/// function: this one tracks byte spans for rewriting rather than collecting
+/// `Citation` values for detection.
+fn find_citation_occurrences(content: &str) -> Vec<CitationOccurrence> {
+    let mut found = Vec::new();
+    for &(acronym, _) in BOOK_ACRONYMS {
+        let needle = format!("{acronym}:");
+        let mut search_from = 0usize;
+        while let Some(rel) = content[search_from..].find(needle.as_str()) {
+            let acronym_at = search_from + rel;
+            let colon_at = acronym_at + acronym.len();
+            if !word_boundary_before(content, acronym_at) {
+                search_from = colon_at + 1;
+                continue;
+            }
+            let Some((start, end, start_span, end_span, mut pos)) =
+                parse_number_span(content, colon_at + 1)
+            else {
+                search_from = colon_at + 1;
+                continue;
+            };
+            found.push(CitationOccurrence {
+                key: if start == end {
+                    format!("{acronym}:{start}")
+                } else {
+                    format!("{acronym}:{start}-{end}")
+                },
+                start_span,
+                end_span,
+            });
+            while let Some(_rest) = content[pos..].strip_prefix(", :") {
+                let colon_at = pos + 2;
+                let Some((cstart, cend, cstart_span, cend_span, next_pos)) =
+                    parse_number_span(content, colon_at + 1)
+                else {
+                    break;
+                };
+                found.push(CitationOccurrence {
+                    key: if cstart == cend {
+                        format!("{acronym}:{cstart}")
+                    } else {
+                        format!("{acronym}:{cstart}-{cend}")
+                    },
+                    start_span: cstart_span,
+                    end_span: cend_span,
+                });
+                pos = next_pos;
+            }
+            search_from = pos;
+        }
+    }
+    found
+}
+
+/// Applies `relocations` (key -> new `(start, end)`) to every occurrence
+/// [`find_citation_occurrences`] finds in `content`, self-verifying each
+/// number span against its own expected old digits before touching it — see
+/// this section's header comment. A span whose live bytes do not match what
+/// the occurrence itself claims (should never happen, but "never guess"
+/// applies to the writer's own assumptions too) is skipped, not forced.
+/// Returns the rewritten text and how many number spans were actually
+/// replaced.
+fn apply_citation_relocations(
+    content: &str,
+    relocations: &BTreeMap<String, (usize, usize)>,
+) -> (String, usize) {
+    let occurrences = find_citation_occurrences(content);
+    let mut edits: Vec<((usize, usize), String)> = Vec::new();
+
+    for occ in &occurrences {
+        let Some(&(new_start, new_end)) = relocations.get(&occ.key) else {
+            continue;
+        };
+        let old_key_numbers: Vec<&str> = occ
+            .key
+            .rsplit(':')
+            .next()
+            .unwrap_or("")
+            .split('-')
+            .collect();
+        let expected_start = old_key_numbers.first().copied().unwrap_or("");
+        let expected_end = old_key_numbers.get(1).copied();
+
+        let (s, e) = occ.start_span;
+        if content.get(s..e) == Some(expected_start) {
+            edits.push(((s, e), new_start.to_string()));
+        }
+        if let (Some(end_span), Some(expected_end)) = (occ.end_span, expected_end) {
+            let (s, e) = end_span;
+            if content.get(s..e) == Some(expected_end) {
+                edits.push(((s, e), new_end.to_string()));
+            }
+        }
+    }
+
+    edits.sort_by_key(|a| std::cmp::Reverse(a.0.0));
+    let mut rewritten = content.to_string();
+    let mut applied = 0usize;
+    for ((s, e), replacement) in edits {
+        rewritten.replace_range(s..e, &replacement);
+        applied += 1;
+    }
+    (rewritten, applied)
+}
+
+#[test]
+fn find_citation_occurrences_tracks_the_byte_span_of_each_number() {
+    let content = "// See ArMDE:100 and ArMDE:200-205 for details.";
+    let found = find_citation_occurrences(content);
+    assert_eq!(found.len(), 2);
+    assert_eq!(found[0].key, "ArMDE:100");
+    assert_eq!(
+        &content[found[0].start_span.0..found[0].start_span.1],
+        "100"
+    );
+    assert_eq!(found[0].end_span, None);
+    assert_eq!(found[1].key, "ArMDE:200-205");
+    assert_eq!(
+        &content[found[1].start_span.0..found[1].start_span.1],
+        "200"
+    );
+    let end_span = found[1].end_span.expect("a range citation has an end span");
+    assert_eq!(&content[end_span.0..end_span.1], "205");
+}
+
+#[test]
+fn find_citation_occurrences_chases_a_continuation_inheriting_the_acronym() {
+    let content = "// ArMDE:100, :150 continues without repeating the acronym.";
+    let found = find_citation_occurrences(content);
+    assert_eq!(found.len(), 2);
+    assert_eq!(found[0].key, "ArMDE:100");
+    assert_eq!(found[1].key, "ArMDE:150");
+}
+
+#[test]
+fn apply_citation_relocations_rewrites_exactly_the_mapped_numbers() {
+    let content = "// ArMDE:100 and ArMDE:200-205, plus ArMDE:999 (unmapped).";
+    let mut relocations = BTreeMap::new();
+    relocations.insert("ArMDE:100".to_string(), (171, 171));
+    relocations.insert("ArMDE:200-205".to_string(), (271, 276));
+    let (rewritten, applied) = apply_citation_relocations(content, &relocations);
+    assert_eq!(applied, 3);
+    assert_eq!(
+        rewritten,
+        "// ArMDE:171 and ArMDE:271-276, plus ArMDE:999 (unmapped)."
+    );
+}
+
+/// A relocation map entry whose key is not actually cited in `content` must
+/// never fire — the lookup is keyed by the occurrence actually *found*, not
+/// walked the other way round from the map. (The per-span text check inside
+/// [`apply_citation_relocations`] is a tautology by construction — the
+/// expected digits come from the very same parse that produced the span, so
+/// it can never disagree with itself; it costs nothing to keep, but the real
+/// safety boundary for this tool is scanning *raw* file text rather than a
+/// block-joined copy, so no position-translation step exists to get wrong in
+/// the first place. See this section's header comment.)
+#[test]
+fn apply_citation_relocations_never_fires_a_map_entry_the_content_does_not_cite() {
+    let content = "// ArMDE:100 here.";
+    let mut relocations = BTreeMap::new();
+    relocations.insert("ArMDE:999".to_string(), (1, 1));
+    let (rewritten, applied) = apply_citation_relocations(content, &relocations);
+    assert_eq!(applied, 0);
+    assert_eq!(rewritten, content);
+}
+
+/// Hand-verified overrides for citations [`sweep_relocate_range`] could not
+/// resolve mechanically — read directly against both files during this P8-4
+/// slice, same discipline as `source_relocation.rs`'s `ANCHOR_OVERRIDES`
+/// and `MANUAL_BOUNDARY_RECOMPUTE_OVERRIDES`. Every entry's reasoning:
+///
+/// - `ArMDE:12385-15941` -> `12457-16018`: `## Animal Spells` (start) to the
+///   blank line before `# Chapter 10: Long Term Events` (end) — a whole-
+///   chapter descriptive range in RULES.md, both ends confirmed by heading
+///   search.
+/// - `ArMDE:14016` -> `14090`: the stat line of "Thaumaturgical
+///   Transformation of Plants to Iron"; upstream dropped the book's own
+///   erroneous inline `Reg: Terram` (a typo for `Req:`, already a documented
+///   special case in `spell_stat_line.rs`) — the shipped `requisites` data
+///   was already correct, only the comment text describing the book's old
+///   typo needs to follow it.
+/// - `ArMDE:4740-4742`/`:4742`/`:4742-4748` -> `4811-4813`/`:4813`/
+///   `:4813-4819`: Potent Magic's own entry; upstream fixed a genuine OCR
+///   duplication ("unlike a Magical Focus" tripled) confirmed by reading
+///   both files — more than a single-character edit, so never guessed by
+///   the fuzzy threshold, confirmed instead by heading match.
+/// - `ArMDE:5909-5911`/`:5911` -> `5980-5982`/`:5982`: Deficient Form;
+///   upstream fixed "actual value of the Technique" -> "...of the Form" (a
+///   real rules-text bug fix, confirmed by heading match).
+/// - `ArMDE:7177-7268` -> `7248-7340`: "General Abilities" heading through
+///   the blank line before `## Ability List`, confirmed by heading search
+///   both ends.
+/// - `ArMDE:364` -> `432`: "the middle ages" -> "the Middle Ages"
+///   (capitalization fix, confirmed unique).
+/// - `ArMDE:4793` -> `4864`: Prestigious Student's magnitude line; upstream
+///   fixed the book's own "*General, Minor*" ordering to the house style
+///   "*Minor, General*" (confirmed unique, by heading match).
+/// - `ArMDE:5775` -> `5846`: Reckless's own passage; upstream fixed "this
+///   Virtue is taken" -> "this Flaw is taken" (confirmed unique).
+/// - `ArMDE:5417` -> `5486`: the Flaws TOC's own `### Hermetic, Minor`
+///   sub-heading (two occurrences exist — Virtues TOC and Flaws TOC;
+///   confirmed by matching neighbors `[Repellent]`/`[Bound Casting Tools]`).
+/// - `ArMDE:5518` -> `5568`: the Flaws TOC's `[Weak Personality]` link;
+///   upstream added a trailing `<br>` other entries in that list already
+///   carry (confirmed unique).
+/// - `ArMDE:16594` -> `16671`: the Living Conditions table's asterisk
+///   footnote (two occurrences of the same generic sentence exist in the
+///   book; `16671` is the one inside this table's own neighborhood,
+///   confirmed by the surrounding lines already relocated during P8-3).
+/// - `ArMDE:16988`/`:16992`/`:17017` -> `17065`/`:17069`/`:17094`: the three
+///   weapon-statistics-legend duplicates `citation_excerpts.json`'s own
+///   duplicate report already named as unresolved even with full context —
+///   each book has the SAME legend twice (a main Combat-chapter table and a
+///   back-of-book quick-reference repeat, confirmed present in both the OLD
+///   and NEW files, so not a resync artifact); resolved to the FIRST
+///   (main-chapter) occurrence in each case, matching ordinary citation
+///   practice. A genuine pre-existing bug surfaced along the way: RULES.md
+///   cited `ArMDE:16988` (the asterisk footnote) while describing the
+///   "Ability" column, which is actually `ArMDE:16992`'s text — fixed
+///   directly in `RULES.md` (unrelated to the resync, caught while
+///   confirming this override).
+///
+/// Not overridden, left genuinely unresolved — `ArMDE:3006-3358`,
+/// `:3087`, `:3135-3185`, `:3187-3237`, `:5373`, `:5501-5518`: all sit inside
+/// the Virtues/Flaws table-of-contents region, whose own sub-headings
+/// (`### Hermetic, Minor` etc.) and link text recur or were reformatted
+/// (confirmed: `### Hermetic, Minor` and `### Story, Minor` each have
+/// multiple book-wide occurrences, and `[True Love (NPC)]`'s own link text
+/// no longer exists verbatim) in a way that span-preservation cannot safely
+/// resolve without a dedicated TOC-structure comparison — flagged for a
+/// follow-up pass, not guessed here.
+const RELOCATION_OVERRIDES: &[(&str, (usize, usize))] = &[
+    ("ArMDE:12385-15941", (12457, 16018)),
+    ("ArMDE:14016", (14090, 14090)),
+    ("ArMDE:4740-4742", (4811, 4813)),
+    ("ArMDE:4742", (4813, 4813)),
+    ("ArMDE:4742-4748", (4813, 4819)),
+    ("ArMDE:5909-5911", (5980, 5982)),
+    ("ArMDE:5911", (5982, 5982)),
+    ("ArMDE:7177-7268", (7248, 7340)),
+    ("ArMDE:364", (432, 432)),
+    ("ArMDE:4793", (4864, 4864)),
+    ("ArMDE:5775", (5846, 5846)),
+    ("ArMDE:5417", (5486, 5486)),
+    ("ArMDE:5518", (5568, 5568)),
+    ("ArMDE:16594", (16671, 16671)),
+    ("ArMDE:16988", (17065, 17065)),
+    ("ArMDE:16992", (17069, 17069)),
+    ("ArMDE:17017", (17094, 17094)),
+];
+
+#[test]
+fn relocation_overrides_keys_are_well_formed_citation_keys() {
+    for (key, _) in RELOCATION_OVERRIDES {
+        assert!(
+            key.starts_with("ArMDE:"),
+            "{key} must be an ArMDE citation key"
+        );
+        let numbers = key.rsplit(':').next().unwrap();
+        assert!(
+            numbers.chars().all(|c| c.is_ascii_digit() || c == '-'),
+            "{key}'s number part must be digits and at most one dash"
+        );
+    }
+}
+
+/// Every root this P8-4 rewrite pass touches — exactly
+/// [`collect_all_citations`]'s own file sets, **minus [`docs_markdown_files`]**:
+/// `docs/`'s citations are dated historical records (D1c; CLAUDE.md's
+/// "Cross-reference to another source file" rule draws the same line for
+/// source-file citations, and `design-p8-resync.md` § "What moves" (e) draws
+/// it explicitly for rulebook citations too) and must keep the line number
+/// they were written against, never rewritten to the post-sync position.
+fn p8_4_rewrite_files() -> Vec<PathBuf> {
+    let mut files = all_rust_files();
+    files.push(repo_root().join("crates/arm-rules/RULES.md"));
+    files.extend(web_source_files());
+    files
+}
+
+/// **Applies the P8-4 relocation across the live corpus — not a test the
+/// gate runs.** Builds the same relocation map
+/// [`build_p8_4_relocation_map`] does (recomputed rather than read back from
+/// `tmp/p8-4-relocation-map.md`, since that file is a report, not a
+/// machine-readable intermediate), folds in [`RELOCATION_OVERRIDES`], then
+/// runs [`apply_citation_relocations`] over every file
+/// [`p8_4_rewrite_files`] names, writing back only the files that actually
+/// changed. Re-renders the relocation map afterward so it reflects the
+/// overrides too.
+///
+/// `#[ignore]`d like every writer in this suite:
+/// `cargo test -p arm-rules --test rulebook_citations -- --ignored
+/// --nocapture apply_p8_4_citation_relocations`.
+#[test]
+#[ignore = "rewrites citations across crates/*/src, crates/*/tests, RULES.md, ui/src, ui/e2e; \
+            run deliberately — see tmp/p8-34-handover.md"]
+fn apply_p8_4_citation_relocations() {
+    let (_, citations) = collect_all_citations();
+    let old_books = load_book_lines(&old_rules_source_en());
+    let new_books = load_book_lines(&rules_source_en());
+
+    let mut distinct: BTreeMap<String, (&'static str, i64, i64)> = BTreeMap::new();
+    for (_, _, citation) in &citations {
+        distinct.entry(citation_key(citation)).or_insert((
+            citation.book_file,
+            citation.start,
+            citation.end,
+        ));
+    }
+
+    let mut rows = Vec::new();
+    let mut relocations: BTreeMap<String, (usize, usize)> = BTreeMap::new();
+    for (key, (book_file, start, end)) in &distinct {
+        if let Some(&(_, new)) = RELOCATION_OVERRIDES.iter().find(|(k, _)| k == key) {
+            relocations.insert(key.clone(), new);
+            rows.push(RelocationRow {
+                key: key.clone(),
+                book_file,
+                new: Some(new),
+                confidence: SweepConfidence::Exact,
+            });
+            continue;
+        }
+        let old_lines = old_books
+            .get(book_file)
+            .unwrap_or_else(|| panic!("{book_file} is not among the cached OLD books"));
+        let new_lines = new_books
+            .get(book_file)
+            .unwrap_or_else(|| panic!("{book_file} is not among the cached NEW books"));
+        let relocation = sweep_relocate_range(old_lines, new_lines, *start as usize, *end as usize);
+        if let (Some(s), Some(e)) = (relocation.new_start, relocation.new_end)
+            && relocation.confidence != SweepConfidence::Unresolved
+        {
+            relocations.insert(key.clone(), (s, e));
+        }
+        rows.push(RelocationRow {
+            key: key.clone(),
+            book_file,
+            new: match (relocation.new_start, relocation.new_end) {
+                (Some(s), Some(e)) => Some((s, e)),
+                _ => None,
+            },
+            confidence: relocation.confidence,
+        });
+    }
+
+    let mut files_changed = 0usize;
+    let mut citations_rewritten = 0usize;
+    for path in p8_4_rewrite_files() {
+        let content = fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path:?}: {e}"));
+        let (rewritten, applied) = apply_citation_relocations(&content, &relocations);
+        if applied > 0 {
+            fs::write(&path, &rewritten).unwrap_or_else(|e| panic!("{path:?} is writable: {e}"));
+            files_changed += 1;
+            citations_rewritten += applied;
+        }
+    }
+
+    let report = render_relocation_map(&rows);
+    let out_path = repo_root().join("tmp/p8-4-relocation-map.md");
+    fs::write(&out_path, &report).unwrap_or_else(|e| panic!("{out_path:?} is writable: {e}"));
+
+    println!("files_changed={files_changed} citations_rewritten={citations_rewritten}");
 }

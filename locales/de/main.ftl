@@ -1202,7 +1202,7 @@ param-label-role = Rolle
 # Begriff aus rules/source/de/translation-tables/tiere-kreaturen.md:144
 # („Power“ → „Kraft“).
 param-label-power = Kraft
-# „Verwundbare Magie" — „solange für jede Instanz eine andere Bedingung
+# „Anfällige Magie" — „solange für jede Instanz eine andere Bedingung
 # angegeben wird" (rules/source/de/Ars Magica Definitive Edition
 # Basisregeln.md:7009). Begriff aus
 # rules/source/de/translation-tables/magie-regeln.md:91
@@ -1310,7 +1310,7 @@ param-label-right = Recht
 # Parameter, den D80 niemals verpflichtend macht (ArMDE:3877-3882,
 # :4233-4236).
 param-label-cover = Vorgetäuschter Sozialer Status
-# Die bekleidete Position bei Templerstelleninhaber (ArMDE:5121-5124).
+# Die bekleidete Position bei Templer-Amtsträger (ArMDE:5121-5124).
 param-label-position = Position
 
 # C5b: Die Mehrfachauswahl-Checkliste (ein `multi_ref`-Parameter, D9 Teil 3)
@@ -1839,7 +1839,7 @@ derived-detail-spell_improvisation = Zauberimprovisation
 derived-detail-mercurian = Merkurische Magie
 derived-detail-life_boost = Lebensschub
 derived-detail-circumstantial = Umständeabhängig
-# Anfälligkeit für Göttliche Kraft: die Abzüge der Aura auf deine Magie — der
+# Anfälligkeit für Göttliche Macht: die Abzüge der Aura auf deine Magie — der
 # Auramodifikator und die Patzerwürfel — zählen in dieser Aura doppelt.
 derived-detail-doubled_aura_penalty = Verdoppelte Aura-Abzüge
 derived-detail-fatigue_roll = Erschöpfungswurf

@@ -570,7 +570,7 @@ async function addAbilityAtScoreOne(ability, index, parameter) {
  *
  * "Magi must have the following minimum Abilities: Parma Magica 1, Magic Theory 1,
  * Latin 1. Characters with lower scores would not be admitted to the Order."
- * (ArMDE:2437.) Those three are BLOCKING
+ * (ArMDE:2505.) Those three are BLOCKING
  * findings on the `abilities` phase for every magus, guided or flat — and an empty
  * experience pool leaves `not_enough_xp` blocking just as effectively — so any spec
  * walking a magus past that step has to settle both. Extracted rather than copied into
@@ -583,7 +583,7 @@ async function addAbilityAtScoreOne(ability, index, parameter) {
  * many times over anyway.
  *
  * @param {string} language the dead language to type into the "Other…" field. Only Latin
- *   satisfies `ArMDE:2437` (L2); typed text naming it in any shipped locale counts.
+ *   satisfies `ArMDE:2505` (L2); typed text naming it in any shipped locale counts.
  */
 export async function satisfyMagusMinimums(language = 'Latin') {
   const pool = await $('[data-testid="xp-pool"]');

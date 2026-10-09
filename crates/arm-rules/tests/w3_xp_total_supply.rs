@@ -7,8 +7,8 @@
 //! pool plus every restricted pool the flow solve is given (ability-XP grants,
 //! life-stage blocks, and the Spell-Mastery pool, which `restricted` never
 //! surfaces). Pinned here against the REAL shipped `rules/core/virtues_flaws.json`:
-//! Educated grants a 50-point restricted pool (ArMDE:3711-3713) and Mastered
-//! Spells a 50-point Spell-Mastery pool (ArMDE:4471-4474).
+//! Educated grants a 50-point restricted pool (ArMDE:3782-3784) and Mastered
+//! Spells a 50-point Spell-Mastery pool (ArMDE:4542-4545).
 
 use arm_rules::checked_xp_allocation;
 use arm_rules::ruleset::{Ruleset, RulesetSources};

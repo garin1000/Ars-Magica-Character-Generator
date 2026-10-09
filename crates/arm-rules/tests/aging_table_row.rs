@@ -1,11 +1,11 @@
 //! Aging table-row guard (data-integrity, PHASE 1 — test + triage only, see
 //! `tmp/table-guard-handover.md`): every `rules/core/aging.json` row must
 //! match the English core rulebook's own `## Aging` section
-//! (`ArMDE:16563-16642`) — the Living Conditions table (`ArMDE:16581-16594`),
-//! the Aging Roll table (`ArMDE:16597-16611`), the Crisis Roll table
-//! (`ArMDE:16624-16632`), and the two prose-derived facts that are not table
-//! rows at all: `crisis.die` (`ArMDE:472-474`, the Simple Die) and
-//! `crisis.attendant` (`ArMDE:16634`, the attending doctor).
+//! (`ArMDE:16640-16719`) — the Living Conditions table (`ArMDE:16658-16671`),
+//! the Aging Roll table (`ArMDE:16674-16688`), the Crisis Roll table
+//! (`ArMDE:16701-16709`), and the two prose-derived facts that are not table
+//! rows at all: `crisis.die` (`ArMDE:540-542`, the Simple Die) and
+//! `crisis.attendant` (`ArMDE:16711`, the attending doctor).
 //!
 //! Table rows are read the same way as `equipment_table_row.rs`: the header
 //! governing a cited data row is found by scanning upward for the nearest
@@ -434,7 +434,7 @@ fn check_crisis_row(entry: &Value, lines: &[&str]) -> Result<(), Vec<String>> {
 }
 
 /// `crisis.die` is prose, not a table row: "Roll a ten-sided die. Each number
-/// counts for its value, except that a zero counts as ten." (`ArMDE:474`).
+/// counts for its value, except that a zero counts as ten." (`ArMDE:542`).
 fn check_crisis_die(entry: &Value, lines: &[&str]) -> Result<(), Vec<String>> {
     let start = entry["source"]["lines"][0]
         .as_u64()
@@ -484,7 +484,7 @@ fn check_crisis_die(entry: &Value, lines: &[&str]) -> Result<(), Vec<String>> {
     }
 }
 
-/// `crisis.attendant` is prose, not a table row (`ArMDE:16634`): "An Int +
+/// `crisis.attendant` is prose, not a table row (`ArMDE:16711`): "An Int +
 /// Medicine roll against an Ease Factor of 6 allows the character to add the
 /// attendant's Medicine score to the roll to survive the crisis. ... if the
 /// doctor botches the character must subtract 3 from the survival roll."

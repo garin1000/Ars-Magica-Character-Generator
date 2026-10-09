@@ -124,14 +124,14 @@ fn commanding_aura_king_gives_mr_10_and_soak_2() {
     );
     let mr = magic_resistance(&e, &rs);
     let ignem = mr.iter().find(|m| m.form.as_str() == "art.ignem").unwrap();
-    assert_eq!(ignem.total, 10, "King: Magic Resistance 10 (ArMDE:17651)");
+    assert_eq!(ignem.total, 10, "King: Magic Resistance 10 (ArMDE:17728)");
     let soak_mod = soak(&e, &rs)
         .addends
         .iter()
         .find(|a| a.label == "soak_mod")
         .unwrap()
         .value;
-    assert_eq!(soak_mod, 2, "King: Soak bonus +2 (ArMDE:17651)");
+    assert_eq!(soak_mod, 2, "King: Soak bonus +2 (ArMDE:17728)");
 }
 
 #[test]
@@ -161,7 +161,7 @@ fn savantism_favored_ability_caps_at_6_regardless_of_age() {
         ability_age_cap(&e, &rs, &Id::new("ability.craft"), None),
         Some(6),
         "the favored Ability is limited to a score of 6 as a starting character \
-         (ArMDE:6705) — ABOVE the age-25 band's own cap of 5"
+         (ArMDE:6776) — ABOVE the age-25 band's own cap of 5"
     );
 }
 
@@ -180,7 +180,7 @@ fn savantism_other_abilities_cap_at_3_under_the_normal_age_cap() {
         ability_age_cap(&e, &rs, &Id::new("ability.awareness"), None),
         Some(3),
         "he may not begin with an Ability above 3, other than his favored one \
-         (ArMDE:6705)"
+         (ArMDE:6776)"
     );
 }
 
@@ -220,7 +220,7 @@ fn restricted_learning_refuses_a_sixth_ability() {
         issue_codes(&e, &rs)
             .iter()
             .any(|c| c == "wrong_param_count"),
-        "six named Abilities against exact_count: 5 must be reported (ArMDE:6685)"
+        "six named Abilities against exact_count: 5 must be reported (ArMDE:6756)"
     );
 }
 
@@ -243,7 +243,7 @@ fn restricted_learning_blocks_xp_outside_the_five_and_supernatural() {
     );
     // In scope: named directly.
     e.ability_scores.push(ability_score("ability.awareness", 3));
-    // In scope: the Supernatural-category union member (ArMDE:6685: "Any
+    // In scope: the Supernatural-category union member (ArMDE:6756: "Any
     // Supernatural Abilities from Virtues she possesses are added").
     e.ability_scores.push(ability_score("ability.dowsing", 1));
     // Out of scope: neither named nor Supernatural.
@@ -278,7 +278,7 @@ fn ability_block_martial_blocks_martial_xp() {
         issue_codes(&e, &rs)
             .iter()
             .any(|c| c == "ability_forbidden_by_effect"),
-        "a Martial Ability score must be refused under Ability Block (Martial), ArMDE:5651-5654"
+        "a Martial Ability score must be refused under Ability Block (Martial), ArMDE:5722-5725"
     );
 }
 
@@ -302,7 +302,7 @@ fn ability_block_custom_branch_stays_uncomputed() {
             .iter()
             .any(|c| c == "ability_forbidden_by_effect"),
         "the custom, free-text branch names no closed category and forbids nothing \
-         computationally (ArMDE:5651-5654, D9's stated boundary)"
+         computationally (ArMDE:5722-5725, D9's stated boundary)"
     );
 }
 
@@ -321,7 +321,7 @@ fn faerie_blood_sidhe_adds_one_presence_dwarf_adds_nothing_to_it() {
     assert_eq!(
         characteristic_score_bonus(&sidhe, &rs, Characteristic::Pre),
         1,
-        "Sidhe Blood: +1 to Presence (ArMDE:3815)"
+        "Sidhe Blood: +1 to Presence (ArMDE:3886)"
     );
 
     let dwarf = entity(
@@ -352,7 +352,7 @@ fn faerie_blood_dwarf_surfaces_a_craft_roll_bonus() {
     assert!(
         rows.iter()
             .any(|r| r.ability.as_ref().map(Id::as_str) == Some("ability.craft") && r.amount == 1),
-        "Dwarf Blood: +1 bonus to any total including a Craft Ability (ArMDE:3809)"
+        "Dwarf Blood: +1 bonus to any total including a Craft Ability (ArMDE:3880)"
     );
 }
 
@@ -370,7 +370,7 @@ fn strong_faerie_blood_requires_a_quirk_and_resolves_undine() {
         issue_codes(&missing_quirk, &rs)
             .iter()
             .any(|c| c == "missing_param"),
-        "the physical quirk is unconditional (ArMDE:5042) and must be required"
+        "the physical quirk is unconditional (ArMDE:5113) and must be required"
     );
 
     let complete = entity(
@@ -409,14 +409,14 @@ fn monstrous_blood_magic_human_lowers_a_characteristic_and_grants_reputation() {
     assert_eq!(
         characteristic_score_bonus(&e, &rs, Characteristic::Pre),
         -1,
-        "Magic Human: decrease one Characteristic by 1 (ArMDE:6462)"
+        "Magic Human: decrease one Characteristic by 1 (ArMDE:6533)"
     );
     let grants = reputation_grants(&e, &rs);
     assert!(
         grants
             .iter()
             .any(|g| g.source.as_str() == "flaw.monstrous_blood" && g.score == 3),
-        "Magic Human: a poor Reputation of level 3 among other magic beings (ArMDE:6462)"
+        "Magic Human: a poor Reputation of level 3 among other magic beings (ArMDE:6533)"
     );
 }
 
@@ -456,7 +456,7 @@ fn vengeful_powers_resolves_hermetic_and_story_but_not_a_third_reading() {
         !issue_codes(&hermetic, &rs)
             .iter()
             .any(|c| c == "unknown_param_value"),
-        "Vengeful Powers may be taken as a Hermetic Flaw (ArMDE:6975)"
+        "Vengeful Powers may be taken as a Hermetic Flaw (ArMDE:7046)"
     );
 
     let story = entity(
@@ -505,7 +505,7 @@ fn potent_magic_field_is_required_and_two_distinct_fields_are_legal() {
         !issue_codes(&two_fields, &rs)
             .iter()
             .any(|c| c == "too_many_for_param_value"),
-        "a maga may have more than one area of Potent Magic (ArMDE:4742)"
+        "a maga may have more than one area of Potent Magic (ArMDE:4813)"
     );
 }
 
@@ -528,7 +528,7 @@ fn special_circumstances_two_different_circumstances_allowed_one_repeated_blocke
         !issue_codes(&two_different, &rs)
             .iter()
             .any(|c| c == "too_many_for_param_value"),
-        "you may take this Virtue more than once (ArMDE:5000)"
+        "you may take this Virtue more than once (ArMDE:5071)"
     );
 
     let repeated = magus(vec![
@@ -565,7 +565,7 @@ fn performance_magic_requires_a_general_ability() {
         !issue_codes(&good, &rs)
             .iter()
             .any(|c| c == "unknown_param_value"),
-        "a General Ability legally resolves (ArMDE:4646)"
+        "a General Ability legally resolves (ArMDE:4717)"
     );
 
     let bad = magus(vec![sel_with(
@@ -576,7 +576,7 @@ fn performance_magic_requires_a_general_ability() {
         issue_codes(&bad, &rs)
             .iter()
             .any(|c| c == "unknown_param_value"),
-        "an Academic Ability must not resolve (ArMDE:4646: \"You may not choose \
+        "an Academic Ability must not resolve (ArMDE:4717: \"You may not choose \
          any Language, Supernatural, Academic, or Arcane Ability\")"
     );
 }
@@ -602,7 +602,7 @@ fn magian_lineage_major_requires_exactly_three_arcane_or_supernatural_abilities(
         !issue_codes(&three, &rs)
             .iter()
             .any(|c| c == "wrong_param_count" || c == "unknown_param_value"),
-        "three Arcane Abilities satisfy exact_count: 3 (ArMDE:4345)"
+        "three Arcane Abilities satisfy exact_count: 3 (ArMDE:4416)"
     );
 
     let two = entity(
@@ -652,7 +652,7 @@ fn magian_lineage_major_data_forbids_true_names() {
     };
     assert!(
         param.forbid_ids.contains(&Id::new("ability.true_names")),
-        "ArMDE:4345: \"which cannot be True Names\" — no catalogued ability.true_names exists \
+        "ArMDE:4416: \"which cannot be True Names\" — no catalogued ability.true_names exists \
          yet to prove behaviorally, so this is a direct data assertion"
     );
 }
@@ -677,7 +677,7 @@ fn repellent_scales_gives_soak_3_natural_weapons_gives_nothing() {
         .unwrap_or(0);
     assert_eq!(
         soak_mod, 3,
-        "a scaled character might have a Soak bonus of +3 (ArMDE:6681)"
+        "a scaled character might have a Soak bonus of +3 (ArMDE:6752)"
     );
 
     let natural_weapons = entity(
@@ -740,7 +740,7 @@ fn turb_trained_authorizes_only_the_chosen_dead_language() {
         issue_codes(&with_hebrew, &rs)
             .iter()
             .any(|c| c == "ability_category_requires_virtue"),
-        "a language other than the one chosen must NOT be authorized (ArMDE:5181: \"whichever \
+        "a language other than the one chosen must NOT be authorized (ArMDE:5252: \"whichever \
          single dead language\")"
     );
 }
@@ -764,7 +764,7 @@ fn warped_senses_weak_sight_excludes_keen_vision_but_weak_hearing_does_not() {
         issue_codes(&weak_sight, &rs)
             .iter()
             .any(|c| c == "incompatible"),
-        "Weak Sight is incompatible with Keen Vision (ArMDE:7033)"
+        "Weak Sight is incompatible with Keen Vision (ArMDE:7104)"
     );
 
     let weak_hearing = entity(

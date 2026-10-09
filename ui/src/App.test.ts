@@ -543,7 +543,7 @@ describe('editor tabs for the phases split out in Slice 3', () => {
     expect(openTag(html(), 'tab-experience')).toBeNull();
   });
 
-  // Focus Power is a *Supernatural* Virtue (ArMDE:3895-3896), open to every
+  // Focus Power is a *Supernatural* Virtue (ArMDE:3966-3967), open to every
   // character type including a magus — and it grants no Might. Gating the
   // Supernatural tab on Might alone would leave a companion or a magus holding
   // Focus Power with nowhere to enter one, so the tab opens on the pool too.

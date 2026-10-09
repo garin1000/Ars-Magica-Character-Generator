@@ -112,7 +112,7 @@
                 data-testid="power-name-{i}"
               />
               <!-- Levels spent one-for-one on Penetration, out of the SAME budget
-                 as the level (ArMDE:4019) — the engine's
+                 as the level (ArMDE:4090) — the engine's
                  `power_levels_used` counts both, so the bar above already
                  charges for this and it has to be enterable. Its own control
                  rather than a third field inside LevelRemoveField, which is
@@ -158,7 +158,7 @@
     <!-- Focus Powers draw on a SECOND pool, not the level budget above: "This
          Virtue grants a pool of 25 points… It costs 2 points to raise the maximum
          level of effect by 1, and 1 point to raise the Penetration by 1"
-         (ArMDE:3899). Their level column is a ceiling on what the character may
+         (ArMDE:3970). Their level column is a ceiling on what the character may
          create, not a level that was spent, which is why they are their own list
          with their own bar rather than rows in the one above. -->
     <div class="detail-section">
@@ -206,7 +206,7 @@
             />
             {#if focusPowerLines[i]}
               <!-- Magnitude, Initiative and the Fatigue cost are all engine-derived
-                   (ArMDE:3899, ArMDE:3901, ArMDE:9097) and only displayed here. -->
+                   (ArMDE:3970, ArMDE:3972, ArMDE:9169) and only displayed here. -->
               <p class="budget-readout" data-testid="focus-power-derived-{i}">
                 {store.t('focus-power-derived', {
                   magnitude: String(focusPowerLines[i].magnitude),

@@ -51,7 +51,7 @@ pub struct Confidence {
 
 /// The character's effective Confidence: the type profile's base plus every
 /// [`Effect::ConfidenceBonus`], clamped at 0. Confidence is derived, never
-/// stored. Source: ArMDE:2520-2526, :4900-4902.
+/// stored. Source: ArMDE:2588-2594, :4971-4973.
 pub fn confidence(
     base_score: u8,
     base_points: u8,
@@ -60,7 +60,7 @@ pub fn confidence(
 ) -> Confidence {
     let mut score = i32::from(base_score);
     let mut points = i32::from(base_points);
-    // A profile with no Confidence base at all (the grog, ArMDE:1161/:2522)
+    // A profile with no Confidence base at all (the grog, ArMDE:1229/:2522)
     // has no Confidence track for a ConfidenceBonus effect to add to — a
     // Virtue delta cannot conjure a Confidence Score/Points a type profile
     // denies outright.
@@ -85,7 +85,7 @@ pub fn confidence(
 
 /// The character's derived enchanted-device level budget: base 0 plus every
 /// [`Effect::ItemLevelBudget`] (Magic Items +25, Redcap 50), summed. Source:
-/// ArMDE:4347-4349, :4842-4846.
+/// ArMDE:4418-4420, :4913-4917.
 pub fn item_level_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
     for_each_effect!(entity, ruleset, |_selection, effect| {
@@ -98,7 +98,7 @@ pub fn item_level_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
 
 /// The total enchanted-device level the entity's `devices` consume — the "used"
 /// side of the item-level budget bar. Summed across every device. Source:
-/// ArMDE:4347-4349.
+/// ArMDE:4418-4420.
 pub fn item_level_used(entity: &Entity) -> u32 {
     // Saturating, not `sum()`: the rows come from the save, and enough maxed
     // `u16` levels overflow `u32` (a panic in release).
@@ -111,7 +111,7 @@ pub fn item_level_used(entity: &Entity) -> u32 {
 /// The character's derived power-levels budget: base 0 plus every
 /// [`Effect::PowerLevels`] grant (Demonic Blood 30, Demonic Powers +20, Strong
 /// Angelic Heritage 30), summed. The being's `powers` are charged against it,
-/// mirroring [`item_level_budget`]. Source: RoP:I:4122, :4142; RoP:D:1977.
+/// mirroring [`item_level_budget`]. Source: RoP:I:4182, :4202; RoP:D:2017.
 pub fn power_levels_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
     for_each_effect!(entity, ruleset, |_selection, effect| {
@@ -123,7 +123,7 @@ pub fn power_levels_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
 }
 
 /// The character's Focus Power point pool: base 0 plus every
-/// [`Effect::FocusPoints`] grant, summed. Source: ArMDE:3899, :3903.
+/// [`Effect::FocusPoints`] grant, summed. Source: ArMDE:3970, :3974.
 pub fn focus_points_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
     for_each_effect!(entity, ruleset, |_selection, effect| {
@@ -140,11 +140,11 @@ pub fn focus_points_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
 /// "It costs 2 points to raise the maximum level of effect by 1, and 1 point to
 /// raise the Penetration by 1. Thus, 25 points can allow a maximum level of 10
 /// with a Penetration of 5, or a maximum level of 5 with a Penetration of 15, or
-/// combinations in between" (`ArMDE:3899`) — hence `2 × max_level + penetration`,
+/// combinations in between" (`ArMDE:3970`) — hence `2 × max_level + penetration`,
 /// which both of the book's worked splits satisfy exactly.
 ///
 /// Charged against [`focus_points_budget`] alone: a focus power never touches the
-/// level budget [`powers_used`] spends, and vice versa. Source: `ArMDE:3899`.
+/// level budget [`powers_used`] spends, and vice versa. Source: `ArMDE:3970`.
 pub fn focus_points_used(entity: &Entity) -> u32 {
     entity
         .focus_powers
@@ -160,13 +160,13 @@ pub fn focus_points_used(entity: &Entity) -> u32 {
 ///
 /// Level **and** Penetration, because they are spent from one pool: "You may also
 /// spend levels one-for-one to give the power Penetration; otherwise, it has a
-/// Penetration of zero" (ArMDE:4019).
-/// The book's worked example (`ArMDE:4021`) spends the 100 levels of two Greater Powers
+/// Penetration of zero" (ArMDE:4090).
+/// The book's worked example (`ArMDE:4092`) spends the 100 levels of two Greater Powers
 /// as "a power with a level of 60 and a Penetration of 0, and a second power with
 /// a level and Penetration of 20 each" — 60 + 0 + 20 + 20 = 100. Counting the
 /// levels alone would report 80 and let the player buy 20 levels already spent.
 ///
-/// Source: RoP:I:4122; ArMDE:4019, :4021.
+/// Source: RoP:I:4182; ArMDE:4090, :4092.
 pub fn powers_used(entity: &Entity) -> u32 {
     entity
         .powers

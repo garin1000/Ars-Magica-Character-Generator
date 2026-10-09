@@ -207,7 +207,7 @@ describe('AbilityTab mounts the magus minimums checklist (slice 6b4)', () => {
 
   it('renders it in both funding modes', () => {
     setChecklist();
-    // Flat pool: `ArMDE:2437` is unconditional, so a magus owes the minimums either way …
+    // Flat pool: `ArMDE:2505` is unconditional, so a magus owes the minimums either way …
     expect(html()).toContain('data-testid="magus-minimums"');
     // … and under life-stage funding just the same. The mode is stored since schema
     // 16, so it is set alongside the plan.
@@ -699,7 +699,7 @@ describe('AbilityTab parameter picker (CV7)', () => {
 
 // X10b (design-x10bc-save-format.md § 3): a banked-XP number input beside
 // each bought Ability's score — the "Z" of the book's own "X (Z)" notation
-// (ArMDE:1177). Labelled via the `ability-banked-xp-label` Fluent key, never a
+// (ArMDE:1245). Labelled via the `ability-banked-xp-label` Fluent key, never a
 // raw ability id. Red-checkpoint protocol, phase 1: `AbilityTab.svelte`'s
 // template is untouched, so every assertion below fails looking for an
 // element that does not exist yet.

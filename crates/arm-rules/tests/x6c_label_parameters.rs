@@ -13,11 +13,11 @@
 //! **D80** (`docs/vf-audit/decisions.md`) settled the file's three open
 //! questions after the first red checkpoint: `flaw.rector` takes NO
 //! parameter at all (the required university Social Status Virtue already
-//! decides faculty vs nation, ArMDE:6673); `flaw.demonic_familiar`'s role is
-//! free TEXT, not enumerated (ArMDE:5930's list is only examples); and
+//! decides faculty vs nation, ArMDE:6744); `flaw.demonic_familiar`'s role is
+//! free TEXT, not enumerated (ArMDE:6001's list is only examples); and
 //! `virtue.fidai`/`virtue.lasiq` get an OPTIONAL "cover social status" —
 //! an [`ParameterDomain::Item`] reference narrowed to the `social_status`
-//! category (ArMDE:4235: "pretending to have some other social status"),
+//! category (ArMDE:4306: "pretending to have some other social status"),
 //! via the new `ParameterDef::required: bool` field
 //! (`d80_optional_parameter.rs` covers the field itself; red-first, already
 //! green before this file's own data lands).
@@ -168,7 +168,7 @@ fn repeat_findings(codes: &[String]) -> Vec<&String> {
         .collect()
 }
 
-/// ArMDE:3903: "This Virtue may be taken more than once, and the points
+/// ArMDE:3974: "This Virtue may be taken more than once, and the points
 /// gained may be combined", so a second copy for the SAME focus is legal
 /// (D81.9: copies may share a scope). No repeat check of ANY code may object —
 /// finding 25 was `too_many_for_param_value`, which the old form of this guard
@@ -186,7 +186,7 @@ fn focus_power_may_be_taken_twice_for_the_same_focus() {
     let codes = issue_codes(&twice, &rs);
     assert!(
         repeat_findings(&codes).is_empty(),
-        "two Focus Power copies on one focus combine their points (ArMDE:3903), got {codes:?}"
+        "two Focus Power copies on one focus combine their points (ArMDE:3974), got {codes:?}"
     );
 }
 
@@ -274,9 +274,9 @@ fn paid_rights_requires_a_right() {
 
 /// D80.3: Fida'i/Lasiq's "cover social status" is the ONE exception to
 /// D70's "every new parameter is required" — it applies only while the
-/// character is away from home on a mission (ArMDE:4235), so it must NEVER
+/// character is away from home on a mission (ArMDE:4306), so it must NEVER
 /// report `missing_param`. Modeled as an [`ParameterDomain::Item`]
-/// reference narrowed to the `social_status` category (ArMDE:3881, :4235:
+/// reference narrowed to the `social_status` category (ArMDE:3952, :4306:
 /// "pretending to have some other social status, which you should choose"),
 /// not free text — the book names an actual Social Status Virtue/Flaw, and
 /// `require_categories` already narrows exactly that without inventing a
@@ -350,7 +350,7 @@ fn curse_of_slander_requires_a_section_and_keeps_its_taken_as() {
         issue_codes(&missing_section, &rs)
             .iter()
             .any(|c| c == "missing_param"),
-        "ArMDE:5882: the slander is centered on one specific section of mundane \
+        "ArMDE:5953: the slander is centered on one specific section of mundane \
          society — an old save naming only `taken_as` must now also report \
          missing_param for `section`"
     );
@@ -379,7 +379,7 @@ fn curse_of_slander_requires_a_section_and_keeps_its_taken_as() {
 // text-only group above; both tests for them sit just after this section,
 // next to cyclic_magic_positive, where they were originally written.)
 
-/// ArMDE:4253-4274: the sidebar names exactly four examples, but the body
+/// ArMDE:4324-4345: the sidebar names exactly four examples, but the body
 /// text says only that the effect "should be comparable to other Minor
 /// Virtues" — the four are illustrative, not exhaustive, so this is E+custom.
 #[test]
@@ -431,7 +431,7 @@ fn lesser_benediction_resolves_its_four_examples_and_a_custom_branch() {
     );
 }
 
-/// ArMDE:4109: "A player who selects this Virtue... needs to select which
+/// ArMDE:4180: "A player who selects this Virtue... needs to select which
 /// form of the Virtue his character has" — exactly two forms are described
 /// (the forgettable-average character, and the one who distracts with a
 /// striking prop), no third option or troupe discretion is offered, so this
@@ -464,11 +464,11 @@ fn indescribable_face_resolves_exactly_two_forms() {
         issue_codes(&bogus, &rs)
             .iter()
             .any(|c| c == "unknown_param_value"),
-        "ArMDE:4107-4114 describes exactly two forms; a third must not resolve"
+        "ArMDE:4178-4185 describes exactly two forms; a third must not resolve"
     );
 }
 
-/// ArMDE:3380-3383: "'Alim ... may be a minor official ... or ... a major
+/// ArMDE:3451-3454: "'Alim ... may be a minor official ... or ... a major
 /// figure" — the named examples (mu'adhdhin, imam, mufti, qadi) are
 /// introduced with "such as", so only the two-way rank axis is closed.
 #[test]
@@ -497,7 +497,7 @@ fn alim_resolves_minor_official_and_major_figure_only() {
     );
 }
 
-/// D80.1 (drops the earlier red): ArMDE:6673 — "the representative leader
+/// D80.1 (drops the earlier red): ArMDE:6744 — "the representative leader
 /// of his faculty or nation at a university, depending on whether he is a
 /// master or a student. ... The character must have a Social Status Virtue
 /// dictating his place within the university." That required prerequisite
@@ -516,7 +516,7 @@ fn rector_takes_no_parameter_and_its_description_states_the_rule() {
         item.parameters.is_empty(),
         "D80.1: Rector/Proctor takes no parameter — the required Social \
          Status Virtue prerequisite already decides faculty vs nation \
-         (ArMDE:6673), got {:?}",
+         (ArMDE:6744), got {:?}",
         item.parameters
     );
 
@@ -533,14 +533,14 @@ fn rector_takes_no_parameter_and_its_description_states_the_rule() {
             text.to_lowercase().contains("student") || text.contains("Student");
         assert!(
             states_master_or_student,
-            "{lang}/flaw.rector must state ArMDE:6673's master-or-student rule; \
+            "{lang}/flaw.rector must state ArMDE:6744's master-or-student rule; \
              text was: {text:?}"
         );
     }
 }
 
 /// D80.2 (replaces the earlier red): "Demonic Familiar's role is free text.
-/// The book's list is only examples" (ArMDE:5930: "at the storyguide's
+/// The book's list is only examples" (ArMDE:6001: "at the storyguide's
 /// discretion... SUCH AS a warder, teacher, or paramour" — open-ended, not a
 /// closed enumeration). Folded into the same required-text shape every other
 /// label-only entry uses.
@@ -549,9 +549,9 @@ fn demonic_familiar_requires_a_role_description() {
     assert_required_text_param("flaw.demonic_familiar", "role", "a warder");
 }
 
-/// ArMDE:3635-3638: "attuned to some cycle of nature (solar, lunar, or
+/// ArMDE:3706-3709: "attuned to some cycle of nature (solar, lunar, or
 /// seasonal, for example)" — mirrors `flaw.cyclic_magic_negative`'s own
-/// shipped `cycle` parameter (ArMDE:5893-5896, `rules/core/virtues_flaws.json`),
+/// shipped `cycle` parameter (ArMDE:5964-5967, `rules/core/virtues_flaws.json`),
 /// which already resolves the same three values; the Virtue currently ships
 /// with NO parameter at all.
 #[test]
@@ -608,7 +608,7 @@ fn cyclic_magic_negative_cycle_parameter_already_resolves() {
 
 // --- Retypes: text → enumerated (3) -----------------------------------------
 
-/// F-03: ArMDE:3362-3367, :7310 — "one of the seven subjects of Artes
+/// F-03: ArMDE:3433-3438, :7382 — "one of the seven subjects of Artes
 /// Liberales" (Trivium: Grammar, Logic, Rhetoric; Quadrivium: Arithmetic,
 /// Geometry, Astronomy, Music). Today `subject` is `domain: text`
 /// (`rules/core/virtues_flaws.json:3685`).
@@ -675,7 +675,7 @@ fn academic_concentration_subject_retypes_to_the_seven_liberal_arts() {
     );
 }
 
-/// F-07: ArMDE:3388-3395 — "one of three classes of beings: mundane animals,
+/// F-07: ArMDE:3459-3466 — "one of three classes of beings: mundane animals,
 /// faeries, or magical beings." `being` is `domain: text`
 /// (`rules/core/virtues_flaws.json:3745`); retyped to enumerated, reusing the
 /// SAME `being.animals`/`being.faeries`/`being.magical_creatures` values
@@ -700,7 +700,7 @@ fn alluring_to_beings_retypes_to_its_three_named_classes() {
 
     // being.demons/being.divine/being.mundane_humans are used by sibling
     // entries (offensive_to_beings et al.) but are NOT among the three
-    // classes ArMDE:3390 names for Alluring to (Beings).
+    // classes ArMDE:3461 names for Alluring to (Beings).
     let wrong_sibling_value = entity(
         "companion",
         vec![sel_with(
@@ -712,7 +712,7 @@ fn alluring_to_beings_retypes_to_its_three_named_classes() {
         issue_codes(&wrong_sibling_value, &rs)
             .iter()
             .any(|c| c == "unknown_param_value"),
-        "ArMDE:3390 names only animals/faeries/magical beings; a sibling \
+        "ArMDE:3461 names only animals/faeries/magical beings; a sibling \
          entry's being.demons must not resolve here"
     );
 
@@ -732,7 +732,7 @@ fn alluring_to_beings_retypes_to_its_three_named_classes() {
     );
 }
 
-/// F-57: ArMDE:3683-3692 — "graduated from one of the higher faculties of a
+/// F-57: ArMDE:3754-3763 — "graduated from one of the higher faculties of a
 /// university, in medicine, civil or canon law, or theology." `faculty` is
 /// `domain: text` (`rules/core/virtues_flaws.json:4348`); retyped to
 /// enumerated over exactly those three, mirroring the shipped
@@ -838,7 +838,7 @@ fn new_x6c_enumerated_values_have_rules_i18n_names_in_both_locales() {
 
     let new_values = [
         // academic_concentration_subject's retype (F-03): the seven Artes
-        // Liberales subjects (Trivium + Quadrivium), ArMDE:3362-3367, :7310.
+        // Liberales subjects (Trivium + Quadrivium), ArMDE:3433-3438, :7382.
         "subject.grammar",
         "subject.logic",
         "subject.rhetoric",
@@ -863,7 +863,7 @@ fn new_x6c_enumerated_values_have_rules_i18n_names_in_both_locales() {
         "rank.minor_official",
         "rank.major_figure",
         // D80: flaw.rector takes no parameter, and flaw.demonic_familiar's
-        // `role` is free text (ArMDE:5930) — neither has enumerated values.
+        // `role` is free text (ArMDE:6001) — neither has enumerated values.
     ];
 
     for id in new_values {

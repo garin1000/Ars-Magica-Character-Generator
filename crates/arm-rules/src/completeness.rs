@@ -10,7 +10,7 @@
 //! This is product behaviour, not a rule: no passage in the sources says an
 //! untouched phase is incomplete, and none is cited for the criteria below. The one
 //! criterion that does rest on the rules — a magus has a House
-//! (ArMDE:2859) — cites it at its arm of
+//! (ArMDE:2927) — cites it at its arm of
 //! the match.
 //!
 //! Deliberately NOT a [`ValidationIssue`](crate::validation::ValidationIssue) of
@@ -131,7 +131,7 @@ fn phase_is_engaged(phase: CreationPhase, entity: &Entity, profile: &EntityTypeP
         CreationPhase::Arts => !entity.art_scores.is_empty(),
         CreationPhase::Spells => !entity.spells.is_empty(),
         // "You receive one free Minor Virtue from your choice of House"
-        // (ArMDE:2859) — a magus has a
+        // (ArMDE:2927) — a magus has a
         // House to choose, and that choice is the one thing this step stores. The
         // specialisation picks are not required for the step to count as visited:
         // a House offering no player choice leaves none to make.

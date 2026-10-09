@@ -6,7 +6,7 @@
 //
 // Five describes, one per acceptance criterion:
 //   1. a requisite spell's Casting Total reflects the requisite fold
-//      (ArMDE:12309-12313);
+//      (ArMDE:12381-12385);
 //   2. "add within focus" adds a spell already marked, and removing the
 //      Magical Focus produces the over-cap error + the stale-mark warning
 //      (D81.5/D81.17), and unticking the stale mark clears the warning (W4);
@@ -49,12 +49,12 @@ async function issueCodes() {
   return codes;
 }
 
-// End-to-end: ArMDE:12309's base min rule — "you must use the lesser of your
+// End-to-end: ArMDE:12381's base min rule — "you must use the lesser of your
 // score in the requisite and your score in the spell's main Technique or
 // Form". `spell.eyes_of_the_cat` (Mu/Co, requisite art.animal — a Form-class
 // requisite) is the vehicle: Corpus 5 vs the lower Animal 2 must fold the Form
 // side down to 2, so the Casting Total reads 5+2=7, never the naive 5+5=10.
-describe('requisite fold in the Casting Total (D81, ArMDE:12309-12313)', () => {
+describe('requisite fold in the Casting Total (D81, ArMDE:12381-12385)', () => {
   it("folds a Form-class requisite's lower score into the total", async () => {
     await startCharacter('magus');
 
@@ -201,7 +201,7 @@ describe('add within focus, and the stale-mark warning on removal (D81.5/D81.17)
   });
 });
 
-// End-to-end: Incompatible Arts (ArMDE:6290-6292) records two Technique+Form
+// End-to-end: Incompatible Arts (ArMDE:6361-6363) records two Technique+Form
 // combinations across four selects (technique_1/form_1/technique_2/form_2,
 // grouped in pairs); a barred combination's grid cell reads "Unusable" instead
 // of leaking a number, and any known spell touching a barred combination is a
@@ -273,7 +273,7 @@ describe('Incompatible Arts: barred pairs, the Unusable cell, and the spell erro
 });
 
 // End-to-end: a Characteristic-floor prerequisite (Supernatural Beauty
-// requires Presence >= 1, ArMDE:5089-5095) is not grey-gated on the Available
+// requires Presence >= 1, ArMDE:5160-5166) is not grey-gated on the Available
 // list — the engine cannot evaluate it ahead of the pick in the UI's current
 // menu-filtering (that only narrows on House) — so taking it must report
 // `prereq_not_met` once Presence is definitely below the floor.
@@ -311,7 +311,7 @@ describe('Characteristic-floor prerequisite reports its issue (Supernatural Beau
   });
 });
 
-// End-to-end: Merinita's conditional Warping Point (ArMDE:2280/D81.14) — "Any
+// End-to-end: Merinita's conditional Warping Point (ArMDE:2348/D81.14) — "Any
 // magus in this House without a faerie-related Virtue or Flaw has a Warping
 // Point" — appears the moment the House is chosen and disappears once a
 // faerie-related Flaw (Faerie Friend) is taken. Read off the Totals tab's

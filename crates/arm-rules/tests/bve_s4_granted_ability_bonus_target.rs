@@ -1,8 +1,8 @@
 //! bve S4 (`tmp/bve-sweep.md`): an Ability held through a Virtue's granted
 //! score is a held Ability, so Puissant / Affinity naming it do not dangle.
 //!
-//! ArMDE:4890 (Second Sight): "Choosing this Virtue confers the Ability Second
-//! Sight 1". ArMDE:4816 (Puissant Ability): "add 2 to its value whenever you
+//! ArMDE:4961 (Second Sight): "Choosing this Virtue confers the Ability Second
+//! Sight 1". ArMDE:4887 (Puissant Ability): "add 2 to its value whenever you
 //! use it". The engine already folds the grant into the effective score
 //! (`effective/ability.rs::effective_ability_score` = max(bought, floor) +
 //! bonus = 3), yet `validation/selections.rs::validate_ability_bonus_targets`
@@ -80,7 +80,7 @@ fn assert_second_sight_is_held_only_through_the_grant(e: &Entity, rs: &Ruleset) 
             .any(|floor| floor.ability == Id::new("ability.second_sight")
                 && floor.parameter.is_none()
                 && floor.floor == 1),
-        "precondition: the Second Sight Virtue grants Second Sight 1 (ArMDE:4890), got {floors:?}"
+        "precondition: the Second Sight Virtue grants Second Sight 1 (ArMDE:4961), got {floors:?}"
     );
 }
 
@@ -101,7 +101,7 @@ fn puissant_second_sight_on_the_granted_score_is_not_dangling() {
     let dangling = dangling_issues(&e, &rs);
     assert!(
         dangling.is_empty(),
-        "ArMDE:4890 + :4816: the character holds Second Sight 1, so Puissant's +2 \
+        "ArMDE:4961 + :4816: the character holds Second Sight 1, so Puissant's +2 \
          has a target; got {dangling:?}"
     );
 }
@@ -118,7 +118,7 @@ fn affinity_with_second_sight_on_the_granted_score_is_not_dangling() {
     let dangling = dangling_issues(&e, &rs);
     assert!(
         dangling.is_empty(),
-        "ArMDE:4890: the character holds Second Sight 1, so Affinity has a target; \
+        "ArMDE:4961: the character holds Second Sight 1, so Affinity has a target; \
          got {dangling:?}"
     );
 }

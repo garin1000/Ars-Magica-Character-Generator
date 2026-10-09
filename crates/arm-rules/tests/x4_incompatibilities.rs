@@ -62,7 +62,7 @@ fn issue_codes(result: &ValidationResult) -> Vec<&str> {
 // Group A — the Wealthy/Poor closed set (F-340 family; corrections.md § 3.5;
 // tmp/x3-scope.md § 4). Eleven pairs across seven entries — none ships any
 // `incompatible_with` today. Redcap's separate exclusion of The Gift (same
-// passage, ArMDE:4850, a distinct finding, F-242) gets its own test.
+// passage, ArMDE:4921, a distinct finding, F-242) gets its own test.
 // `virtue.covenfolk`/`virtue.custos` already carry both pairs (X1) and
 // `virtue.guild_apprentice` is D47's suppression (X7a) — neither is here.
 // Priest's ban is conditional text only (D68.7) and stays out of data.
@@ -70,13 +70,13 @@ fn issue_codes(result: &ValidationResult) -> Vec<&str> {
 
 /// (entry, excludes_wealthy, excludes_poor).
 const WEALTHY_POOR_GAPS: &[(&str, bool, bool)] = &[
-    ("virtue.almogavar", true, true),       // ArMDE:3406
-    ("virtue.mendicant_friar", true, true), // ArMDE:4494
-    ("virtue.redcap", true, true),          // ArMDE:4850
-    ("virtue.turb_trained", true, true),    // ArMDE:5181
-    ("virtue.perfectus", true, false),      // ArMDE:4634 (Wealthy only)
-    ("flaw.branded_criminal", true, false), // ArMDE:5751 (Wealthy only)
-    ("flaw.outcast", true, false),          // ArMDE:6540 (Wealthy only)
+    ("virtue.almogavar", true, true),       // ArMDE:3477
+    ("virtue.mendicant_friar", true, true), // ArMDE:4565
+    ("virtue.redcap", true, true),          // ArMDE:4921
+    ("virtue.turb_trained", true, true),    // ArMDE:5252
+    ("virtue.perfectus", true, false),      // ArMDE:4705 (Wealthy only)
+    ("flaw.branded_criminal", true, false), // ArMDE:5822 (Wealthy only)
+    ("flaw.outcast", true, false),          // ArMDE:6611 (Wealthy only)
 ];
 
 #[test]
@@ -112,7 +112,7 @@ fn wealthy_poor_closed_set_gaps_are_refused() {
 #[test]
 fn redcap_excludes_the_gift() {
     let rs = load_ruleset();
-    // ArMDE:4850, same passage as Redcap's Wealthy/Poor exclusion but a
+    // ArMDE:4921, same passage as Redcap's Wealthy/Poor exclusion but a
     // separate stated prohibition ("You may not take The Gift"), F-242.
     let e = entity(
         "companion",
@@ -121,7 +121,7 @@ fn redcap_excludes_the_gift() {
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"incompatible"),
-        "ArMDE:4850 'You may not take The Gift' — redcap + the_gift must be \
+        "ArMDE:4921 'You may not take The Gift' — redcap + the_gift must be \
          incompatible, got: {:?}",
         issue_codes(&result)
     );
@@ -139,34 +139,34 @@ fn redcap_excludes_the_gift() {
 // ---------------------------------------------------------------------------
 
 const D44_PLAIN_PAIRS: &[(&str, &str)] = &[
-    ("virtue.demonic_blood", "virtue.unaging"), // ArMDE:3661 F-51
-    ("virtue.demonic_blood", "flaw.age_quickly"), // ArMDE:3661 F-51
-    ("virtue.forgettable_face", "virtue.venus_blessing"), // ArMDE:3931 F-79
-    ("virtue.forgettable_face", "virtue.inspirational"), // ArMDE:3931 F-79
-    ("virtue.strong_faerie_blood", "virtue.faerie_blood"), // ArMDE:5044 F-291
-    ("virtue.withstand_casting", "flaw.vulnerable_casting"), // ArMDE:5269 F-352, creation-time
-    ("flaw.blatant_gift", "flaw.blatant_magical_air"), // ArMDE:5717 F-366
-    ("flaw.bound_magic", "virtue.harnessed_magic"), // ArMDE:5729 F-371
+    ("virtue.demonic_blood", "virtue.unaging"), // ArMDE:3732 F-51
+    ("virtue.demonic_blood", "flaw.age_quickly"), // ArMDE:3732 F-51
+    ("virtue.forgettable_face", "virtue.venus_blessing"), // ArMDE:4002 F-79
+    ("virtue.forgettable_face", "virtue.inspirational"), // ArMDE:4002 F-79
+    ("virtue.strong_faerie_blood", "virtue.faerie_blood"), // ArMDE:5115 F-291
+    ("virtue.withstand_casting", "flaw.vulnerable_casting"), // ArMDE:5340 F-352, creation-time
+    ("flaw.blatant_gift", "flaw.blatant_magical_air"), // ArMDE:5788 F-366
+    ("flaw.bound_magic", "virtue.harnessed_magic"), // ArMDE:5800 F-371
     (
         "flaw.ceremonial_spontaneous_magic",
         "flaw.difficult_spontaneous_magic",
-    ), // ArMDE:5783 F-385
+    ), // ArMDE:5854 F-385
     (
         "flaw.ceremonial_spontaneous_magic",
         "flaw.weak_spontaneous_magic",
-    ), // ArMDE:5783 F-385 — NOT difficult<->weak: the book explicitly
-    // permits combining those two (ArMDE:5970/:7088), so that pair
+    ), // ArMDE:5854 F-385 — NOT difficult<->weak: the book explicitly
+    // permits combining those two (ArMDE:6041/:7088), so that pair
     // must never be added.
-    ("flaw.failed_student", "virtue.doctor_in_faculty"), // ArMDE:6074 F-435
-    ("flaw.night_terrors", "flaw.sleep_disorder"),       // ArMDE:6492 F-465
-    ("flaw.uncertain_faith", "virtue.true_faith"),       // ArMDE:6905 F-527
-    ("virtue.blood_of_the_nephilim", "virtue.the_gift"), // ArMDE:3517 F-23
-    ("virtue.blood_of_the_nephilim", "virtue.true_faith"), // ArMDE:3517 F-23
-    ("virtue.blood_of_the_nephilim", "virtue.giant_blood"), // ArMDE:3517 F-23
-    ("virtue.blood_of_the_nephilim", "virtue.mythic_blood"), // ArMDE:3517 F-23
-    ("virtue.blood_of_the_nephilim", "virtue.faerie_blood"), // ArMDE:3517 F-23
-    ("virtue.blood_of_the_nephilim", "flaw.age_quickly"), // ArMDE:3517 F-23
-    ("virtue.blood_of_the_nephilim", "flaw.lycanthrope"), // ArMDE:3517 F-23
+    ("flaw.failed_student", "virtue.doctor_in_faculty"), // ArMDE:6145 F-435
+    ("flaw.night_terrors", "flaw.sleep_disorder"),       // ArMDE:6563 F-465
+    ("flaw.uncertain_faith", "virtue.true_faith"),       // ArMDE:6976 F-527
+    ("virtue.blood_of_the_nephilim", "virtue.the_gift"), // ArMDE:3588 F-23
+    ("virtue.blood_of_the_nephilim", "virtue.true_faith"), // ArMDE:3588 F-23
+    ("virtue.blood_of_the_nephilim", "virtue.giant_blood"), // ArMDE:3588 F-23
+    ("virtue.blood_of_the_nephilim", "virtue.mythic_blood"), // ArMDE:3588 F-23
+    ("virtue.blood_of_the_nephilim", "virtue.faerie_blood"), // ArMDE:3588 F-23
+    ("virtue.blood_of_the_nephilim", "flaw.age_quickly"), // ArMDE:3588 F-23
+    ("virtue.blood_of_the_nephilim", "flaw.lycanthrope"), // ArMDE:3588 F-23
 ];
 
 #[test]
@@ -213,7 +213,7 @@ fn blood_of_the_nephilim_excludes_hermetic_category() {
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"category_forbidden_by_effect"),
-        "ArMDE:3517 'Hermetic Virtues or Flaws' — blood_of_the_nephilim + any \
+        "ArMDE:3588 'Hermetic Virtues or Flaws' — blood_of_the_nephilim + any \
          hermetic-category item must raise category_forbidden_by_effect, got: {:?}",
         issue_codes(&result)
     );
@@ -221,7 +221,7 @@ fn blood_of_the_nephilim_excludes_hermetic_category() {
 
 // ---------------------------------------------------------------------------
 // Group D — F-466: `flaw.no_sense_of_direction` is "incompatible with the
-// Well Traveled Virtue" (ArMDE:6502), but `virtue.lone_redcap` GRANTS
+// Well Traveled Virtue" (ArMDE:6573), but `virtue.lone_redcap` GRANTS
 // well_traveled for free — a plain `incompatible_with` would also block Lone
 // Redcap, which the book never says. Needs `Prereq::Nor(Has(well_traveled))`
 // on the flaw side instead (the shape `tmp/x3-scope.md` names).
@@ -261,7 +261,7 @@ fn no_sense_of_direction_excludes_bought_well_traveled_but_not_granted() {
 }
 
 // ---------------------------------------------------------------------------
-// Group E — F-542 Weak Personality: "no other Personality Flaws" (ArMDE:7078)
+// Group E — F-542 Weak Personality: "no other Personality Flaws" (ArMDE:7149)
 // is a category-wide prohibition. `Effect::ForbidsItemCategory` and
 // `validate_category_effect_prohibitions` already exist (the Effect variant's
 // own doc comment cites this exact line — B1's D21 machinery), but
@@ -278,7 +278,7 @@ fn weak_personality_excludes_other_personality_flaws() {
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"category_forbidden_by_effect"),
-        "ArMDE:7078 'no other Personality Flaws' — weak_personality + any other \
+        "ArMDE:7149 'no other Personality Flaws' — weak_personality + any other \
          Personality Flaw must raise category_forbidden_by_effect, got: {:?}",
         issue_codes(&result)
     );
@@ -286,7 +286,7 @@ fn weak_personality_excludes_other_personality_flaws() {
 
 // ---------------------------------------------------------------------------
 // Group F — F-526 University Dean (Q-137): "can not have the Poor Flaw or
-// any other Flaw that grants a Bad Reputation" (ArMDE:6923-6926).
+// any other Flaw that grants a Bad Reputation" (ArMDE:6994-6997).
 // `ItemPredicate::GrantsReputation` and `PointItem::excluded_if_holds` already
 // exist, but two things are missing together: (1) university_dean does not
 // carry `excluded_if_holds: [GrantsReputation]` yet (data gap), and (2) the
@@ -331,7 +331,7 @@ fn university_dean_excludes_bad_reputation_flaws_but_not_doctor_in_faculty() {
 // ---------------------------------------------------------------------------
 // Group G — Q-138/D33/D68.4: Flawed Powers' "Any Flaw that is only
 // appropriate to Hermetic Magic ... cannot be taken with this Flaw"
-// (ArMDE:6148) restricts what the Flaw IMPORTS, not what the holder may also
+// (ArMDE:6219) restricts what the Flaw IMPORTS, not what the holder may also
 // hold (D33) — so this is NOT an incompatible_with or Prereq::Nor. It needs a
 // new `parameters` entry naming the imported Flaw, with an `exclude_if`
 // pointing at a new `requires_hermetic_arts` predicate (D68.4: Deficient
@@ -358,7 +358,7 @@ fn flawed_powers_has_no_import_filter_yet() {
 
 // ---------------------------------------------------------------------------
 // Group H — D68.8: every Major/Minor twin exclusion needs ITS OWN passage;
-// ArMDE:2814 is not a blanket source. These 26 personality-Flaw pairs carry
+// ArMDE:2882 is not a blanket source. These 26 personality-Flaw pairs carry
 // only a generic "Major or Minor, Personality" header and NO passage stating
 // the two magnitudes exclude each other — so `incompatible_with`/the guard
 // must stop forcing them. They are still hard-blocked today (the load-time
@@ -367,35 +367,35 @@ fn flawed_powers_has_no_import_filter_yet() {
 // ---------------------------------------------------------------------------
 
 const UNSOURCED_TWIN_PAIRS: &[(&str, &str)] = &[
-    ("flaw.ambitious_major", "flaw.ambitious_minor"), // ArMDE:5663
-    ("flaw.avaricious_major", "flaw.avaricious_minor"), // ArMDE:5683
-    ("flaw.compassionate_major", "flaw.compassionate_minor"), // ArMDE:5809
-    ("flaw.compulsion_major", "flaw.compulsion_minor"), // ArMDE:5813
-    ("flaw.compulsive_lying_major", "flaw.compulsive_lying_minor"), // ArMDE:5817
-    ("flaw.depraved_major", "flaw.depraved_minor"),   // ArMDE:5936
-    ("flaw.driven_major", "flaw.driven_minor"),       // ArMDE:5988
-    ("flaw.envious_major", "flaw.envious_minor"),     // ArMDE:6016
+    ("flaw.ambitious_major", "flaw.ambitious_minor"), // ArMDE:5734
+    ("flaw.avaricious_major", "flaw.avaricious_minor"), // ArMDE:5754
+    ("flaw.compassionate_major", "flaw.compassionate_minor"), // ArMDE:5880
+    ("flaw.compulsion_major", "flaw.compulsion_minor"), // ArMDE:5884
+    ("flaw.compulsive_lying_major", "flaw.compulsive_lying_minor"), // ArMDE:5888
+    ("flaw.depraved_major", "flaw.depraved_minor"),   // ArMDE:6007
+    ("flaw.driven_major", "flaw.driven_minor"),       // ArMDE:6059
+    ("flaw.envious_major", "flaw.envious_minor"),     // ArMDE:6087
     (
         "flaw.gender_nonconforming_major",
         "flaw.gender_nonconforming_minor",
-    ), // ArMDE:6202
-    ("flaw.generous_major", "flaw.generous_minor"),   // ArMDE:6206
-    ("flaw.greedy_major", "flaw.greedy_minor"),       // ArMDE:6214
-    ("flaw.hatred_major", "flaw.hatred_minor"),       // ArMDE:6236
-    ("flaw.higher_purpose_major", "flaw.higher_purpose_minor"), // ArMDE:6256
-    ("flaw.lecherous_major", "flaw.lecherous_minor"), // ArMDE:6334
-    ("flaw.meddler_major", "flaw.meddler_minor"),     // ArMDE:6422
-    ("flaw.obsessed_major", "flaw.obsessed_minor"),   // ArMDE:6520
-    ("flaw.optimistic_major", "flaw.optimistic_minor"), // ArMDE:6534
-    ("flaw.overconfident_major", "flaw.overconfident_minor"), // ArMDE:6562
-    ("flaw.oversensitive_major", "flaw.oversensitive_minor"), // ArMDE:6566
-    ("flaw.pious_major", "flaw.pious_minor"),         // ArMDE:6586
-    ("flaw.proud_major", "flaw.proud_minor"),         // ArMDE:6642
-    ("flaw.rebellious_major", "flaw.rebellious_minor"), // ArMDE:6659
-    ("flaw.reckless_major", "flaw.reckless_minor"),   // ArMDE:6663
-    ("flaw.vow_major", "flaw.vow_minor"),             // ArMDE:6989
-    ("flaw.weakness_major", "flaw.weakness_minor"),   // ArMDE:7090
-    ("flaw.wrathful_major", "flaw.wrathful_minor"),   // ArMDE:7106
+    ), // ArMDE:6273
+    ("flaw.generous_major", "flaw.generous_minor"),   // ArMDE:6277
+    ("flaw.greedy_major", "flaw.greedy_minor"),       // ArMDE:6285
+    ("flaw.hatred_major", "flaw.hatred_minor"),       // ArMDE:6307
+    ("flaw.higher_purpose_major", "flaw.higher_purpose_minor"), // ArMDE:6327
+    ("flaw.lecherous_major", "flaw.lecherous_minor"), // ArMDE:6405
+    ("flaw.meddler_major", "flaw.meddler_minor"),     // ArMDE:6493
+    ("flaw.obsessed_major", "flaw.obsessed_minor"),   // ArMDE:6591
+    ("flaw.optimistic_major", "flaw.optimistic_minor"), // ArMDE:6605
+    ("flaw.overconfident_major", "flaw.overconfident_minor"), // ArMDE:6633
+    ("flaw.oversensitive_major", "flaw.oversensitive_minor"), // ArMDE:6637
+    ("flaw.pious_major", "flaw.pious_minor"),         // ArMDE:6657
+    ("flaw.proud_major", "flaw.proud_minor"),         // ArMDE:6713
+    ("flaw.rebellious_major", "flaw.rebellious_minor"), // ArMDE:6730
+    ("flaw.reckless_major", "flaw.reckless_minor"),   // ArMDE:6734
+    ("flaw.vow_major", "flaw.vow_minor"),             // ArMDE:7060
+    ("flaw.weakness_major", "flaw.weakness_minor"),   // ArMDE:7161
+    ("flaw.wrathful_major", "flaw.wrathful_minor"),   // ArMDE:7177
 ];
 
 #[test]
@@ -418,7 +418,7 @@ fn unsourced_personality_twin_pairs_should_be_allowed_together() {
     );
 }
 
-/// D68.8/D44: ArMDE:4742 explicitly permits holding more than one area of
+/// D68.8/D44: ArMDE:4813 explicitly permits holding more than one area of
 /// Potent Magic — an unconditional permission, unlike Beloved Rival's hedge.
 #[test]
 fn potent_magic_twins_allowed() {
@@ -435,12 +435,12 @@ fn potent_magic_twins_allowed() {
     let result = validate(&e, &rs);
     assert!(
         !issue_codes(&result).contains(&"incompatible"),
-        "Potent Magic Major + Minor must be allowed together (ArMDE:4742), got: {:?}",
+        "Potent Magic Major + Minor must be allowed together (ArMDE:4813), got: {:?}",
         issue_codes(&result)
     );
 }
 
-/// D68.8/D16/Q-X4-3: ArMDE:5697's "the troupe MAY allow... both" is HEDGED,
+/// D68.8/D16/Q-X4-3: ArMDE:5768's "the troupe MAY allow... both" is HEDGED,
 /// unlike Potent Magic's unconditional permission — D16's rule is that a
 /// hedged restriction becomes a WARNING, never a hard block, and the
 /// machinery for that (`advisory_prerequisites` /
@@ -459,7 +459,7 @@ fn beloved_rival_twins_become_advisory_not_a_hard_block() {
     let codes = issue_codes(&result);
     assert!(
         !codes.contains(&"incompatible"),
-        "Beloved Rival Major + Minor must not be a hard block (ArMDE:5697), got: {codes:?}"
+        "Beloved Rival Major + Minor must not be a hard block (ArMDE:5768), got: {codes:?}"
     );
     assert!(
         codes.contains(&"advisory_prereq_not_met"),
@@ -473,7 +473,7 @@ fn beloved_rival_twins_become_advisory_not_a_hard_block() {
 // reworks the magnitude-twin guard. Not red today.
 // ---------------------------------------------------------------------------
 
-/// D68.8: ArMDE:4405 is an explicit blanket source ("either major or
+/// D68.8: ArMDE:4476 is an explicit blanket source ("either major or
 /// minor... regardless of the source") — the one twin pair the ruling names
 /// as staying sourced.
 #[test]
@@ -489,7 +489,7 @@ fn magical_focus_twins_stay_hard_blocked() {
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"incompatible"),
-        "ArMDE:4405 is a blanket source — this exclusion must stay, got: {:?}",
+        "ArMDE:4476 is a blanket source — this exclusion must stay, got: {:?}",
         issue_codes(&result)
     );
 }
@@ -498,25 +498,25 @@ fn magical_focus_twins_stay_hard_blocked() {
 /// itself across the two magnitudes, even with no passage naming the OTHER
 /// side explicitly (orchestrator judgment applying D44 to D68.8's per-pair
 /// sweep — Norbert may override, see tmp/x4-verdicts.md § 2):
-/// - Outsider: ArMDE:6554/:6556 state alternate, mutually exclusive living
+/// - Outsider: ArMDE:6625/:6556 state alternate, mutually exclusive living
 ///   circumstances for the SAME Social Status.
-/// - True Love (Flaw): ArMDE:6877 states alternate, mutually exclusive
+/// - True Love (Flaw): ArMDE:6948 states alternate, mutually exclusive
 ///   competence levels for the SAME named NPC ("the one person meant for
 ///   you", singular).
-/// - Amorphous: ArMDE:3412 describes two mutually exclusive trigger
+/// - Amorphous: ArMDE:3483 describes two mutually exclusive trigger
 ///   mechanics for the SAME shapeshifting ability.
-/// - Magian Lineage: ArMDE:4345's Major explicitly states it already
+/// - Magian Lineage: ArMDE:4416's Major explicitly states it already
 ///   includes Minor's benefit "in addition to" — holding both double-counts
 ///   the same bonus.
-/// - Pagan (X9c, D78.2): ArMDE:6571 "Major or Minor" is ONE entry, ONE
+/// - Pagan (X9c, D78.2): ArMDE:6642 "Major or Minor" is ONE entry, ONE
 ///   passage, for a single trait (not following the Church); the magnitude is
-///   a judgment call about the character's circumstances (ArMDE:6572's
+///   a judgment call about the character's circumstances (ArMDE:6643's
 ///   parenthetical), not two separable facts, so holding both at once is
 ///   incoherent the same way holding both Outsider magnitudes is.
 const ENTAILED_TWIN_PAIRS: &[(&str, &str)] = &[
     ("flaw.outsider_major", "flaw.outsider_minor"),
     ("flaw.true_love_major", "flaw.true_love_minor"),
-    // X2t (D60.3): True Friend copies True Love's own passage (ArMDE:6877)
+    // X2t (D60.3): True Friend copies True Love's own passage (ArMDE:6948)
     // verbatim, including the same alternate, mutually exclusive competence
     // levels for the same named NPC — same entailment, same reasoning.
     ("flaw.true_friend_major", "flaw.true_friend_minor"),
@@ -544,7 +544,7 @@ fn entailed_twin_pairs_stay_hard_blocked() {
 }
 
 /// F-385's negative control: the book explicitly says these two MAY be
-/// combined (ArMDE:5970, ArMDE:7088) — must never gain an `incompatible_with`
+/// combined (ArMDE:6041, ArMDE:7159) — must never gain an `incompatible_with`
 /// entry.
 #[test]
 fn difficult_and_weak_spontaneous_magic_stay_compatible() {
@@ -559,7 +559,7 @@ fn difficult_and_weak_spontaneous_magic_stay_compatible() {
     let result = validate(&e, &rs);
     assert!(
         !issue_codes(&result).contains(&"incompatible"),
-        "must stay legal — ArMDE:5970/:7088, got: {:?}",
+        "must stay legal — ArMDE:6041/:7088, got: {:?}",
         issue_codes(&result)
     );
 }
@@ -567,10 +567,10 @@ fn difficult_and_weak_spontaneous_magic_stay_compatible() {
 // ---------------------------------------------------------------------------
 // Group I — D69.6: the same-choice constraint (new engine machinery,
 // `PointItem::same_choice_exclusions`). Student of (Realm) may not name the
-// same Lore Ability Puissant Ability targets (ArMDE:5054); Academic
+// same Lore Ability Puissant Ability targets (ArMDE:5125); Academic
 // Concentration (Subject) always means Artes Liberales regardless of its own
 // `subject` parameter, so it conflicts with Puissant Ability only when THAT
-// targets Artes Liberales specifically (ArMDE:3364).
+// targets Artes Liberales specifically (ArMDE:3435).
 // ---------------------------------------------------------------------------
 
 fn sel_param(id: &str, key: &str, value: &str) -> Selection {
@@ -597,7 +597,7 @@ fn student_of_realm_and_puissant_ability_conflict_for_the_same_lore() {
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"same_choice_conflict"),
-        "ArMDE:5054 'You may not take Student of (Realm) and Puissant Ability for \
+        "ArMDE:5125 'You may not take Student of (Realm) and Puissant Ability for \
          the same Lore' — got: {:?}",
         issue_codes(&result)
     );
@@ -642,7 +642,7 @@ fn academic_concentration_and_puissant_artes_liberales_conflict() {
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"same_choice_conflict"),
-        "ArMDE:3364 'This Virtue is incompatible with the Virtue Puissant Artes \
+        "ArMDE:3435 'This Virtue is incompatible with the Virtue Puissant Artes \
          Liberales' — got: {:?}",
         issue_codes(&result)
     );
@@ -673,7 +673,7 @@ fn academic_concentration_and_puissant_ability_stay_legal_for_other_abilities() 
 // ---------------------------------------------------------------------------
 // Group J — D69.5: the "affects Size" tag (`ItemPredicate::AffectsSize`).
 // Blood of the Nephilim excludes every OTHER Size-affecting Virtue/Flaw
-// (ArMDE:3517, "such as Giant..."). Giant Blood is already a flat D44 pair
+// (ArMDE:3588, "such as Giant..."). Giant Blood is already a flat D44 pair
 // (Group B); Dwarf/Small Frame/Large are not, so they are this tag's actual
 // reach.
 // ---------------------------------------------------------------------------
@@ -689,7 +689,7 @@ fn blood_of_the_nephilim_excludes_other_size_affecting_entries() {
         let result = validate(&e, &rs);
         assert!(
             issue_codes(&result).contains(&"excluded_by_predicate"),
-            "ArMDE:3517 'Virtues or Flaws that affect your Size' — \
+            "ArMDE:3588 'Virtues or Flaws that affect your Size' — \
              blood_of_the_nephilim + {other} must raise excluded_by_predicate, \
              got: {:?}",
             issue_codes(&result)

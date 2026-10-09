@@ -83,7 +83,7 @@ fn category_slug(word: &str) -> Option<&'static str> {
         "hermetic" => Some("hermetic"),
         "social status" => Some("social_status"),
         "supernatural" => Some("supernatural"),
-        // ArMDE:5011 ships this exact typo in the source Markdown itself
+        // ArMDE:5082 ships this exact typo in the source Markdown itself
         // ("Major, Subernatural") — rules/source/ is a COPY (CLAUDE.md:
         // "repair defects upstream, not here"), so the parser recognizes the
         // typo instead of a local hand-edit papering over it.
@@ -184,7 +184,7 @@ fn parse_descriptor(inner: &str) -> Descriptor {
 /// italicized word, e.g. `` *Minor:* Your character's lineage... ``, which
 /// has substantial text after its closing `*`). This also accepts
 /// `virtue.prestigious_student`'s reversed-order descriptor (`*General,
-/// Minor*`, ArMDE:4793) without special-casing it — this gate does not care
+/// Minor*`, ArMDE:4864) without special-casing it — this gate does not care
 /// about word order, only shape. `None` means "no descriptor line found
 /// immediately under this heading", which the caller reports as a mismatch
 /// rather than panicking: the whole point of this guard is to list every
@@ -211,7 +211,7 @@ fn descriptor_after(text: &str, heading_line: usize) -> Option<String> {
 const RULED_EXCEPTIONS: &[(&str, &str)] = &[
     (
         "flaw.independent_craftsman",
-        "D54 (docs/vf-audit/decisions.md): ArMDE:6304 ends 'If you are not using \
+        "D54 (docs/vf-audit/decisions.md): ArMDE:6375 ends 'If you are not using \
          the rules in City and Guild..., treat this as a Personality Flaw.' The \
          app supports no supplements, so that stated condition holds today — \
          Norbert's ruling ships categories: [\"personality\"], overriding the \
@@ -221,7 +221,7 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[
         "virtue.inoffensive_to_beings",
         "RULES.md 'Full core Virtue/Flaw catalogue', Norbert's 2026-09-13 \
          ruling: an *and*-joined descriptor ('General and Hermetic', \
-         ArMDE:4134) models 'either route', not both-at-once, and hermetic \
+         ArMDE:4205) models 'either route', not both-at-once, and hermetic \
          cannot be a membership category here — gift_categories is \
          [\"hermetic\"] on every profile, so admitting it would make holding \
          this entry itself grant The Gift. The book's own Hermetic-heading \
@@ -231,13 +231,13 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[
     (
         "flaw.offensive_to_beings",
         "Same 2026-09-13 ruling as virtue.inoffensive_to_beings — descriptor \
-         'Hermetic and General' (ArMDE:6525); categories stays [\"general\"], \
+         'Hermetic and General' (ArMDE:6596); categories stays [\"general\"], \
          index_categories carries [\"hermetic\"].",
     ),
     (
         "flaw.primogeniture_lineage",
         "Same 2026-09-13 ruling as virtue.inoffensive_to_beings — descriptor \
-         'Story and Hermetic' (ArMDE:6635); categories stays [\"story\"], \
+         'Story and Hermetic' (ArMDE:6706); categories stays [\"story\"], \
          index_categories carries [\"hermetic\"]. The entry's real \
          Verditius-magi-only restriction is modelled as a prerequisite \
          (All([OrderMember, House(house.verditius)])), not a category.",
@@ -245,7 +245,7 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[
     (
         "flaw.unbearable_to_beings",
         "Same 2026-09-13 ruling, for the one *or*-joined case: descriptor \
-         'Hermetic or General' (ArMDE:6892) stays categories: [\"general\"] \
+         'Hermetic or General' (ArMDE:6963) stays categories: [\"general\"] \
          because hermetic is overloaded with Gift detection; the real \
          eligibility is already the Any([Has(virtue.the_gift), \
          Has(flaw.magical_air)]) prerequisite, and index_categories carries \
@@ -255,7 +255,7 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[
         "flaw.vengeful_powers",
         "RULES.md ('flaw.vengeful_powers' taken_as note): the descriptor \
          (ArMDE:6960) states only 'Major, Story, Tainted' — no Hermetic. \
-         ArMDE:6975 ('Vengeful Powers may be taken as a Hermetic Flaw... more \
+         ArMDE:7046 ('Vengeful Powers may be taken as a Hermetic Flaw... more \
          commonly associated with Supernatural Abilities') is body text, not \
          the descriptor, and is what the shipped taken_as parameter \
          ({\"hermetic\", \"story\"}, max_total: 1) and the widened categories: \
@@ -263,9 +263,9 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[
     ),
     (
         "flaw.false_power_minor",
-        "The shared heading's own descriptor (ArMDE:6081) states only 'Major, \
+        "The shared heading's own descriptor (ArMDE:6152) states only 'Major, \
          Supernatural, Tainted' — no 'or Minor'. The Minor magnitude comes from \
-         body text instead (ArMDE:6096: '...in each subsequent instance as a \
+         body text instead (ArMDE:6167: '...in each subsequent instance as a \
          Minor Flaw rather than a Major one'), which this guard does not read.",
     ),
 ];

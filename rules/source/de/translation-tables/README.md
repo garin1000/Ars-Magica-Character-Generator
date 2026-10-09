@@ -15,18 +15,18 @@ Thematisch gegliederte Übersetzungstabellen für die deutsche Ausgabe von Ars M
 
 ## ⚠️ Diese Tabellen sind KI-erzeugt und können Fehler enthalten
 
-Die Tabellen wurden mit Claude aus den Quelldateien erzeugt. Das V/F-Audit
-(2026-09-19 bis -21, alle 655 Tugenden und Fehler) hat **zehn belegte Fehler**
-gefunden, darunter drei Zeilen, die in zwei Magnitudentabellen gleichzeitig
-standen, und fünf Namen, die der Überschrift im deutschen Regelbuch
-widersprachen. Sie sind korrigiert — aber die Trefferquote sagt etwas über die
-übrigen Tabellen aus, die noch niemand Zeile für Zeile geprüft hat.
+Die Tabellen wurden mit Claude aus den Quelldateien erzeugt. Das V/F-Audit im
+Generator-Projekt `arm-char-gen` (2026-09-19 bis -21, alle 655 Tugenden und
+Fehler gegen das Regelbuch geprüft) hat **zehn belegte Fehler** gefunden,
+darunter drei Zeilen, die in zwei Magnitudentabellen gleichzeitig standen, und
+fünf Namen, die der Überschrift im deutschen Regelbuch widersprachen. Alle sind
+korrigiert — siehe `docs/todo.md`. Die Trefferquote sagt allerdings etwas über
+die übrigen Tabellen aus, die noch niemand Zeile für Zeile geprüft hat.
 
-**Diese Kopie wird aus `arm-de-translation` synchronisiert.** Das Quellprojekt
-ist führend; diese Verzeichnis ist eine Kopie und **driftet**. Eine Zeile hier,
-die dem Regelbuch widerspricht, kann deshalb zweierlei sein: ein echter Fehler
-(dann in **beiden** Projekten korrigieren) oder eine veraltete Kopie (dann von
-dort neu synchronisieren). **Erst im Quellprojekt nachsehen, dann urteilen.**
+**Dieses Projekt ist führend.** Die Kopie unter
+`arm-char-gen/rules/source/de/translation-tables/` wird von hier synchronisiert
+und driftet zwischen den Synchronisationen. Korrekturen gehören **zuerst
+hierher**.
 
 ### Wofür die Tabellen maßgeblich sind — und wofür nicht
 
@@ -41,47 +41,32 @@ Regeln aufstellte, die sie gar nicht hätte treffen müssen.
 
 ### Rangfolge bei Widerspruch
 
-Maßgeblich ist `docs/vf-audit/decisions.md`, **D6**, **D7** und **D31**. Kurzfassung:
-
 1. **Sachaussage über die Regeln** → das **Regelbuch** gewinnt, immer.
-2. **Name eines Eintrags** → die **Tabelle** gewinnt (D31). Das kehrt die
-   ursprüngliche Regel um: unsere deutsche Regelbuchkopie ist **älter** als die
-   Tabellen, eine Tabellenzeile mit einer veralteten Überschrift zu widerlegen
-   wäre zirkulär. Die Überschrift gewinnt erst wieder, wenn ein aktuelles
-   deutsches Regelbuch vorliegt; dann entfällt D31.
+2. **Name eines Eintrags** → die **Überschrift des zitierten Regelbuchs**
+   gewinnt. Das Glossar gewinnt nur dort, wo die Überschrift **defekt** ist —
+   etwa wenn sie mit der eines anderen Eintrags kollidiert (`Gefesselte Magie`
+   überschreibt im deutschen Grundregelwerk zwei verschiedene Einträge) oder wenn
+   das Regelbuch den Begriff gar nicht wiedergibt.
 3. **Sonstige Terminologie** → thematische Tabelle vor `tugenden-fehler.md`
    (die breiteste Tabelle, und damit die mit der höchsten Fehlerwahrscheinlichkeit).
 4. **Eine Zeile mit Buchkürzel eines *anderen* Buches** (`HdH:WL`, `SdM:G`)
    steht nicht im Widerspruch — sie beschreibt die Terminologie *jenes* Buches.
-
-### Gefundene und korrigierte Fehler (V/F-Audit 2026-09-19 bis -21)
-
-| Datei | Fehler | Korrektur | Beleg |
-|---|---|---|---|
-| `reputationen.md` | Reputation Stufe 3 „Unter Angehörigen der Blutlinie" war **Mythic Blood** zugeordnet | gehört zu **Magical Blood (Magic Human)** | ArMDE:4588 „does not grant any Reputation"; ArMDE:4367 |
-| `tugenden-fehler.md` | `Sense Passions`, `Summon Animals` standen in **beiden** Magnitudentabellen | beide sind **Groß**; Klein-Zeilen entfernt | ArMDE:4931, :5086 |
-| `tugenden-fehler.md` | `Monstrous Blood` stand in **beiden** Magnitudentabellen | ist **Klein**; Groß-Zeile entfernt | ArMDE:6455 |
-| `tugenden-fehler.md` | `Spirit Votary` als *Sozialer Status, Klein* | **Frei, Mythischer Gefährte** | ArMDE:5007 |
-| `tugenden-fehler.md` | `Deteriorating Power` → *Schwindende Kraft* | **Schwindende Macht** | ArMDE:5944 |
-| `tugenden-fehler.md` | `Disorientating Magic` → *Desorientierungsmagie* | **Desorientierende Magie** | ArMDE:5984 |
-| `tugenden-fehler.md` | `Enfeebled` → *Entkräftet* | **Geschwächt** | ArMDE:6008 |
-| `tugenden-fehler.md` | `Environmental Magic Condition` → *Umgebungs-*, doppelt geführt | **Umweltbedingung**, Doppelzeile entfernt | ArMDE:6020, Index :5292 |
-| `tugenden-fehler.md` | `Environmental Sensitivity` → *Umgebungsempfindlichkeit* | **Umweltempfindlichkeit** | ArMDE:6024 |
-| `grundbegriffe.md` | `Vulnerable Magic` → *Verwundbare Magie*; `Vulnerable to Folk Tradition` → *Volkszauber* | **Anfällige Magie**; **Anfällig für Volksüberlieferungen** | ArMDE:7005, :7011 |
 
 **Muster, keine Einzelfälle.** Zwei Fehlerarten traten mehrfach auf und lohnen
 eine gezielte Durchsicht der noch ungeprüften Tabellen: derselbe englische
 Schlüssel in **zwei Magnitudentabellen** (dreimal), und ein systematisch
 falsches Präfix (*Umgebungs-* statt *Umwelt-*) über mehrere Nachbarzeilen.
 
-**Kein Tabellenfehler, aber der Befund, aus dem alles andere folgt:**
-`Covenfolk` und `Magical Covenfolk` standen hier als *Konventsmitglied* /
-*Magisches Konventsmitglied*, während `arm-de-translation` längst
-**Konventsbewohner** führte — mitsamt Begründung („Konventsmitglied" wäre
-missverständlich, weil es die Magi meint). Das Quellprojekt war **richtig**,
-diese Kopie war **veraltet**. Genau daran wurde sichtbar, dass die Tabellen
-kopiert und nicht referenziert werden und die Kopie driftet — der Grund für den
-Hinweis am Anfang dieses Abschnitts.
+### Nur Begriffe, keine Regelwerte (Prinzip B, 2026-10-03/04)
+
+Die Tabellen legen **Übersetzungen** fest, nicht Regeln. Zahlenwerte, Formeln,
+Kosten, Stufen und Wirkungsbeschreibungen gehören in die Bücher; die Tabellen
+verweisen stattdessen auf den Abschnitt der Basisregeln bzw. des Supplements.
+Erlaubt sind kurze, am Quellbuch geprüfte Orientierungsnotizen (Art des Begriffs,
+Kategorie, Groß/Klein bei Tugenden und Fehlern, Kunst und Stufe bei Zaubern zur
+Unterscheidung gleichnamiger Zauber). Die Sachprüfung vom 2026-10-03
+(`lektorat/tabellen-sachpruefung-*.md`) hatte in Waffen-, Rüstungs-, Alterungs-,
+Reputations- und Konventstabellen überwiegend falsche Werte gefunden.
 
 ---
 
@@ -99,16 +84,16 @@ Hinweis am Anfang dieses Abschnitts.
 | [konvent.md](konvent.md) | Vis-Einheiten, Konventsjahreszeiten, Konventsbegriffe | Sek. 18–19, 22 + Zusatztermini |
 | [zauber-nach-form.md](zauber-nach-form.md) | 362 Zaubernamen alphabetisch nach deutschem Namen, gegliedert nach Form | Zauberübersetzungstabelle.md + Zusatztermini |
 | [uebersetzungsregeln.md](uebersetzungsregeln.md) | Sprachliche und formale Übersetzungsregeln (kein Glossar) | Sek. 23–24 |
-| [persoenlichkeitseigenschaften.md](persoenlichkeitseigenschaften.md) | Persönlichkeitseigenschaften: Mechanik, Schwierigkeitstabelle für Würfe, vollständige A-Z-Liste EN↔DE | Core Rules + ArsMagica_DE_Gesamt_work.md |
-| [reputationen.md](reputationen.md) | Reputationen: Mechanik, Typen, Schwierigkeitstabelle, Tugenden/Fehler mit Reputationsstufen, Beispiel-Inhalte | Core Rules + ArsMagica_DE_Gesamt_work.md |
-| [alterung-twilight.md](alterung-twilight.md) | Altern, Gebrechlichkeit, Verwicklung und Zauberers Dämmerung: Formeln, Würfeltabellen, Twilight-Effekte | Core Rules + ArsMagica_DE_Gesamt_work.md |
-| [sphären-mächte.md](sphären-mächte.md) | Die vier Sphären, Auren, Sphärenwechselwirkung, Machtwert/Machtvorrat, Kreaturenkräfte, Penetration | Core Rules + ArsMagica_DE_Gesamt_work.md |
-| [kampf.md](kampf.md) | Kampfbegriffe, Formeln, Wundstufen, Erschöpfung, Manöver, Gruppenregeln, Rüstungen, Waffentabellen | Core Rules + ArsMagica_DE_Gesamt_work.md |
-| [konvent-boons-hooks.md](konvent-boons-hooks.md) | Konventsvorzüge und -haken: Mechanik, vollständige Liste aller Kleinen/Großen Vorzüge und Haken nach Kategorie | Core Rules + ArsMagica_DE_Gesamt_work.md |
-| [tiere-kreaturen.md](tiere-kreaturen.md) | Tiere und Kreaturen: Statblock-Begriffe, Größentabelle, vollständige Eigenschaftsliste (Tiertugenden), natürliche Waffen, Grundfertigkeiten | Core Rules + ArsMagica_DE_Gesamt_work.md |
-| [magische-qualitaeten.md](magische-qualitaeten.md) | Magische Qualitäten und Mängel: alle Großen/Kleinen Qualitäten und Mängel | RoP:M Kap. 4 |
-| [kreaturenkraefte.md](kreaturenkraefte.md) | Häufige Kreaturenkräfte (sphärenunabhängig) | RoP:M |
-| [goettliche-kraefte.md](goettliche-kraefte.md) | Göttliche Kräfte: Engelskräfte nach Chor, allgemeine Engel-Mechaniken, Reliquienkräfte | RoP:D |
+| [persoenlichkeitseigenschaften.md](persoenlichkeitseigenschaften.md) | Persönlichkeitseigenschaften: A-Z-Liste EN↔DE, belegte Kreatur-Eigenschaften | Core Rules, Supplements |
+| [reputationen.md](reputationen.md) | Reputationen: Begriffe, reputationsrelevante Tugenden/Fehler, Beispiel-Reputationen | Core Rules |
+| [alterung-twilight.md](alterung-twilight.md) | Altern, Krankheit, Verzerrung, Zwielicht: Begriffe | Core Rules |
+| [sphären-mächte.md](sphären-mächte.md) | Die vier Sphären, Auren, Machtwert/Machtvorrat, sphärenspezifische Kräfte und Begriffe | Core Rules, RoP:M/F/D/I |
+| [kampf.md](kampf.md) | Kampfbegriffe, Wund- und Erschöpfungsstufen, Manöver, Gruppen, Rüstungen, Waffen (nur Namen) | Core Rules |
+| [konvent-boons-hooks.md](konvent-boons-hooks.md) | Konventsvorzüge und -haken mit Kategorie laut *Covenants* | Core Rules, Covenants |
+| [tiere-kreaturen.md](tiere-kreaturen.md) | Tiere und Kreaturen: Statblock-Begriffe, Tier-Qualitäten, natürliche Waffen | Core Rules, Supplements |
+| [magische-qualitaeten.md](magische-qualitaeten.md) | Magische Qualitäten und Mängel | RoP:M Kap. 4 |
+| [kreaturenkraefte.md](kreaturenkraefte.md) | Häufige Kreaturenkräfte von Wesen der Magiesphäre | RoP:M |
+| [goettliche-kraefte.md](goettliche-kraefte.md) | Göttliche Kräfte: Engelskräfte nach Chor, Heiligenkräfte | RoP:D |
 | [infernale-kraefte.md](infernale-kraefte.md) | Infernale Kräfte und Wesen: Dämonenkräfte nach Ordnung/Familie, Dämonentypen | RoP:I |
 | [islamische-begriffe.md](islamische-begriffe.md) | Islamische Fachbegriffe: religiöse Grundbegriffe, Fünf Säulen, Recht, Mystik, Konfessionen | RoP:D Kap. 5 |
 | [juedische-begriffe.md](juedische-begriffe.md) | Jüdische Fachbegriffe: Feiertage, religiöse/gesellschaftliche Begriffe, Personen, Orte/Texte | RoP:D Kap. 6 |

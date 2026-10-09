@@ -1,6 +1,6 @@
 # Ars Magica Definitive Edition – Kampf / Combat
 
-**Teil der deutschen Übersetzungstabellen** | Quellen: Ars Magica – Definitive Edition (Core Rules) · ArsMagica_DE_Gesamt_work.md
+**Teil der deutschen Übersetzungstabellen** | Quellen: Ars Magica – Definitive Edition (Core Rules) · deutsche Basisregeln (`german-reviewed/Ars Magica Definitive Edition Basisregeln.md`)
 
 **Legende:**
 - (Lat.) = Lateinischer Begriff, wird unübersetzt beibehalten
@@ -24,137 +24,109 @@
 | Defense Total | Verteidigungssumme | |
 | Damage | Schaden | |
 | Damage Total | Schadenssumme | |
-| Soak | Absorption | Rüstungsschutz + Ausdauer |
+| Soak | Absorption | |
 | Soak Total | Absorptionssumme | |
-| Attack Advantage | Angriffsvorteil | Angriffssumme − Verteidigungssumme (wenn > 0) |
-| Load | Last | Belastungs­beitrag von Waffe oder Rüstung |
-| Encumbrance | Belastung | Gesamte Beladung − Stärke; Abzug auf athletische Handlungen |
-| Burden | Beladung | Zwischenwert aus Gesamtlast; bestimmt Belastung |
-| Range (missile) | Reichweite | Entfernung für Fernkampf; −3 pro Schritt über erste Reichweite |
-| Pace | Schritt | Bewegungseinheit; 1 Schritt = 1,5 m (DE-Abweichung vom EN-Original) |
+| Attack Advantage | Angriffsvorteil | Differenz aus Angriffs- und Verteidigungssumme |
+| Load | Last | Beitrag einer Waffe oder Rüstung zur Beladung |
+| Encumbrance | Belastung | aus Beladung und Stärke abgeleiteter Abzug (Basisregeln, *Belastung*) |
+| Burden | Beladung | Zwischenwert aus der Gesamtlast; bestimmt die Belastung |
+| Range (missile) | Reichweite | Reichweiteninkrement einer Fernkampfwaffe |
+| Range increment | Reichweiteninkrement | |
+| Pace | Schritt | Bewegungseinheit; 1 Schritt ≈ 1 m, wird nicht umgerechnet (siehe `masseinheiten.md`) |
 
----
-
-## Kampfformeln / Combat Formulas
-
-| Größe | Formel |
-|---|---|
-| Initiative | Initiative + Schnelligkeit + Stresswürfel |
-| Angriffssumme | Kampffertigkeit + Angriffsmodifikator + Stresswürfel |
-| Verteidigungssumme | Kampffertigkeit + Verteidigungsmodifikator + Schnelligkeit + Stresswürfel |
-| Schadenssumme | Stärke + Schadensmodifikator + Angriffsvorteil |
-| Absorption | Ausdauer + Rüstungsschutz |
-| Erlittener Schaden | Schadenssumme − Absorptionssumme (bestimmt Wundstufe) |
-| Bewegung (Gehen) | 10 + Schnelligkeit − Behinderung Schritte/Runde |
-| Bewegung (Eilen) | 2 × (10 + Schnelligkeit − Behinderung) Schritte/Runde |
-| Bewegung (Rennen) | 4 × (10 + Schnelligkeit − Behinderung) Schritte/Runde |
+> **Nur Begriffe.** Die Formeln für Initiative, Angriff, Verteidigung, Schaden, Absorption und Bewegung stehen in den Basisregeln, Abschnitte *Kampfwerte*, *Schadenstafel* und *Bewegung im Kampf* (Kapitel Kampf). Die früher hier geführte Formeltabelle war teilweise falsch (Sachprüfung 2026-10-03) und ist entfernt. Für Encumbrance gilt durchgehend **Belastung**, nicht „Behinderung“.
 
 ---
 
 ## Wundstufen / Wound Levels
 
-*→ Vollständige Wundtabelle nach Größen­kategorie: [grundbegriffe.md](grundbegriffe.md)*
+*→ Abzüge und Schadensschwellen nach Größe: Basisregeln, Abschnitte *Schadenstafel* und *Wundtabelle* (Kapitel Wunden).*
 
-| Englisch (EN) | Deutsch (DE) | Abzug |
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Light Wound | Leichte Wunde | −1 |
-| Medium Wound | Mittelschwere Wunde | −3 |
-| Heavy Wound | Schwere Wunde | −5 |
-| Incapacitating Wound | Lähmende Wunde | Keine Handlungen möglich |
-| Dead | Tot | – |
-
-In manchen Stat-Blöcken auch:
-
-| Incapacitated | Kampfunfähig | Keine Handlungen möglich |
+| Light Wound | Leichte Wunde | |
+| Medium Wound | Mittelschwere Wunde | |
+| Heavy Wound | Schwere Wunde | |
+| Incapacitating Wound | Lähmende Wunde | |
+| Incapacitated | Kampfunfähig | Zustand nach einer Lähmenden Wunde (Wundtabelle) |
+| Dead | Tot | |
 
 ---
 
-## Erschöpfungsstufen im Kampf / Fatigue Levels in Combat
+## Erschöpfungsstufen / Fatigue Levels
 
-*→ Vollständige Erschöpfungsregeln: [grundbegriffe.md](grundbegriffe.md)*
+*→ Abzüge und Erholung: Basisregeln, Kapitel Erschöpfung.*
 
-| Englisch (EN) | Deutsch (DE) | Abzug |
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Fresh | Ausgeruht | – |
-| Winded | Außer Atem | – |
-| Weary | Erschöpft | −1 |
-| Tired | Müde | −3 |
-| Dazed | Betäubt | −5 |
-| Unconscious | Bewusstlos | – |
+| Fresh | Ausgeruht | |
+| Winded | Außer Atem | |
+| Weary | Erschöpft | |
+| Tired | Müde | |
+| Dazed | Betäubt | |
+| Unconscious | Bewusstlos | |
 
 ---
 
 ## Kampfoptionen / Combat Options
 
-| Englisch (EN) | Deutsch (DE) | Mechanik |
+*→ Regeln: Basisregeln, Abschnitt *Kampfoptionen*.*
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Exertion | Anstrengung | Erschöpfungsstufe ausgeben → Bonus = Kampffertigkeit für eine Runde (auf Angriff oder alle Verteidigungen) |
-| Withdrawal / Disengaging | Rückzug | Verteidigungssumme statt Angriff; +3 kumulativ pro Folgeversuch; automatisch wenn nicht angegriffen |
-| Mounted combat | Berittener Kampf | + Reitenwert (max. +3) auf Angriff und Verteidigung |
-| Missile combat | Fernkampf | −3 Angriffssumme pro Reichweiteninkrement über das erste; Schildverteidigungsbonus gilt |
+| Exertion | Anstrengung | Erschöpfung gegen einen Kampfbonus |
+| Disengaging | Rückzug | sich aus dem Nahkampf lösen. Im Original nur „Disengaging“, nicht „Withdrawal“ |
+| Mounted combat | Berittener Kampf | |
+| Missile combat | Fernkampf | |
+| Non-Lethal Combat | Nicht-tödlicher Kampf | |
 
 ---
 
 ## Nahkampfmanöver / Melee Maneuvers
 
-### Raufen / Scuffling (nicht-tödlich)
+*→ Regeln und Schwellenwerte: Basisregeln, Abschnitte *Nicht-tödlicher Kampf*, *Raufergebnisse*, *Sondermanöver*.*
 
-*−3 auf Angriffssumme mit echter Waffe; Waffen-Schadensbonus entfällt.*
-
-| Wundresultat | Rauf-Effekt |
-|---|---|
-| Leichte Wunde | 1 Erschöpfungsstufe |
-| Mittelschwere Wunde | 2 Erschöpfungsstufen |
-| Schwere Wunde | 2 Erschöpfungsstufen + Leichte Wunde |
-| Lähmende Wunde | 3 Erschöpfungsstufen + Leichte Wunde |
-| Tod | 5 Erschöpfungsstufen + Mittelschwere Wunde |
-
-### Ringen / Grappling
-
-| Schritt | Regelung |
-|---|---|
-| Greifen | Angriffsvorteil > 0 → Ringkampfstärke = Angriffsvorteil |
-| Befreien | Gegner würfelt Angriff; Erfolg → Angriffsvorteil von Ringkampfstärke subtrahieren |
-| Flucht | Ringkampfstärke ≤ 0 → Entkommen; Ringer erleidet Leichte Wunde |
-| Einschränkung | Geringter kann nicht angreifen oder sich bewegen |
-| Fertigkeit | Raufen (zum Ringen); jede Nahkampffertigkeit (zum Befreien) |
-
-### Sondermanöver / Special Maneuvers
-
-| Englisch (EN) | Deutsch (DE) | Erforderlicher Angriffsvorteil |
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Disarm | Entwaffnen | 9 |
-| Trip | Zu Fall bringen | 3 |
-| Grab worn item | Getragenen Gegenstand greifen | 6 |
-| Take opponent's weapon | Gegners Waffe nehmen | 12 |
+| Scuffling | Raufen | nicht-tödlicher Kampf, statt Wunden Erschöpfung |
+| Grappling | Ringen | Gegner festhalten; der Gegriffene darf sich nur befreien |
+| Special Effects / Special Maneuvers | Sondermanöver | Überschrift in den Basisregeln: *Sondermanöver* |
+| Disarm | Entwaffnen | |
+| Trip | Zu Fall bringen | |
+| Grab worn item | Getragenen Gegenstand greifen | |
+| Take the weapon your opponent is using | Gegners Waffe nehmen | im Original ausgeschrieben |
 
 ---
 
 ## Gruppenregeln / Group Combat
 
-| Englisch (EN) | Deutsch (DE) | Mechanik |
+*→ Regeln: Basisregeln, Abschnitte *Gruppen*, *Gruppenschaden*, *Unausgebildete Gruppe*, *Ausgebildete Gruppe*, *Beschützer*, *Gruppen aufspalten*.*
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Group | Gruppe | 1–6 Charaktere mit vergleichbaren Werten (Kampfwerte innerhalb 5 Punkte) |
-| Vanguard | Vorkämpfer | Trägt Hauptlast; bestimmt Kampfwerte der Gruppe |
-| Leader | Anführer | Nur bei ausgebildeten Gruppen |
-| Untrained group | Unausgebildete Gruppe | Werte = Vorkämpfer-Werte |
-| Trained group | Ausgebildete Gruppe | Bonus = Summe der Kampffertigkeiten aller Mitglieder, max. 3 × Führungswert des Anführers |
-| Group Damage | Gruppenschaden | Berechneter Schaden × Anzahl der Kämpfer |
-| Defenders | Beschützer | Beschützter Charakter wird nur verletzt wenn Beschützer patzen oder kampfunfähig werden |
-| Splitting a group | Gruppe aufspalten | Angriffsvorteil ≥ 0 → spaltet statt Schaden; Gruppe bestimmt neue Anführer/Vorkämpfer |
+| Group | Gruppe | |
+| Vanguard | Vorkämpfer | |
+| Leader | Anführer | nur bei ausgebildeten Gruppen |
+| Untrained group | Unausgebildete Gruppe | |
+| Trained group | Ausgebildete Gruppe | |
+| Group Damage | Gruppenschaden | |
+| Defender | Beschützer | Überschrift im Original „Defender“ |
+| Splitting Groups | Gruppen aufspalten | Überschrift im Original „Splitting Groups“ |
 
 ---
 
 ## Rüstungen / Armor
 
-| Englisch (EN) | Deutsch (DE) | Teilschutz | Vollschutz | Last (Teil/Voll) |
-|---|---|---|---|---|
-| Quilted / Fur | Gesteppt / Fell | 1 | 2 | 1 / 2 |
-| Heavy Leather | Schweres Leder | 2 | 3 | 1 / 2 |
-| Metal Reinforced Leather | Metallverstärktes Leder | 3 | 4 | 2 / 3 |
-| Leather Scale | Lederschuppen | 3 | 4 | 2 / 3 |
-| Metal Scale | Metallschuppen | 6 | 7 | 3 / 4 |
-| Chain Mail | Kettenhemd | 9 | 12 | 4 / 6 |
+> **Nur Begriffe.** Schutz- und Lastwerte stehen in den Basisregeln, Abschnitt *Rüstungstabelle* (Kapitel Kampf). Die früher hier geführten Zahlen waren durchgehend falsch (Sachprüfung 2026-10-03, `lektorat/tabellen-sachpruefung-kampf.md`) und sind entfernt.
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Quilted / Fur | Gesteppt / Fell | nur Teilrüstung |
+| Heavy Leather | Schweres Leder | nur Teilrüstung |
+| Metal Reinforced Leather | Metallverstärktes Leder | im Original abgekürzt „Metal Reinf Leather“ |
+| Leather Scale | Lederschuppen | |
+| Metal Scale | Metallschuppen | |
+| Chain Mail | Kettenhemd | |
 
 *Vollrüstung umfasst Handschuhe, Unterarmschienen (Vambraces), Beinschienen (Chausses) und geschlossenen Helm.*
 
@@ -168,67 +140,69 @@ In manchen Stat-Blöcken auch:
 | Single Weapon | Einzelwaffe | Einhändige Waffen und Schilde |
 | Great Weapon | Große Waffe | Zweihändige Waffen |
 | Thrown Weapon | Wurfwaffe | |
-| Bow | Bogen | |
+| Bows | Bogenschießen | |
 
 ---
 
-## Waffentabellen / Weapon Tables
+## Waffen / Weapons
 
-### Raufwaffen / Brawling Weapons
+> **Nur Begriffe.** Waffenwerte (Init, Angriff, Verteidigung, Schaden, Stärke, Last, Reichweite, Kosten) stehen in den Basisregeln, Abschnitte *Nahkampfwaffen-Statistiken* und *Fernkampfwaffen-Statistiken* (Kapitel Kampf). Die früher hier geführten Zahlen waren überwiegend falsch (Sachprüfung 2026-10-03) und sind entfernt.
 
-| Englisch (EN) | Deutsch (DE) | Init | Atk | Dfn | Dam | Last |
-|---|---|---|---|---|---|---|
-| Dodge | Ausweichen | +0 | – | +3 | – | 0 |
-| Fist | Faust | +0 | +0 | +0 | +0 | 0 |
-| Kick | Tritt | −1 | +0 | −1 | +3 | 0 |
-| Gauntlet | Panzerhandschuh | +0 | +0 | +1 | +2 | 1 |
-| Bludgeon | Knüppel | +0 | +0 | +0 | +2 | 0 |
-| Dagger | Dolch | +0 | +2 | +0 | +3 | 0 |
-| Knife | Messer | −1 | +1 | +0 | +2 | 0 |
+### Raufwaffen / Brawling Weapons (Fertigkeit: Raufen)
 
-### Einzelwaffen / Single Weapons
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Dodge | Ausweichen | |
+| Fist | Faust | |
+| Kick | Tritt | |
+| Gauntlet | Panzerhandschuh | |
+| Bludgeon | Knüppel | |
+| Dagger | Dolch | |
+| Knife | Messer | |
 
-| Englisch (EN) | Deutsch (DE) | Init | Atk | Dfn | Dam | Stä | Last |
-|---|---|---|---|---|---|---|---|
-| Axe | Axt | +1 | +3 | +0 | +6 | 0 | 1 |
-| Club | Keule | +0 | +2 | +1 | +4 | 0 | 1 |
-| Hatchet | Beil | +0 | +1 | +0 | +4 | 0 | 1 |
-| Lance | Lanze | +1 | +3 | +0 | +5 | 0 | 2 |
-| Mace | Streitkolben | +0 | +3 | +1 | +8 | +1 | 2 |
-| Mace and Chain | Flegel | −1 | +4 | +0 | +8 | 0 | 2 |
-| Spear, Short | Speer, kurz | +2 | +2 | +0 | +5 | 0 | 1 |
-| Sword, Short | Schwert, kurz | +1 | +3 | +1 | +5 | 0 | 1 |
-| Sword, Long | Schwert, lang | +1 | +4 | +1 | +6 | 0 | 1 |
-| Shield, Buckler | Faustschild | +0 | +0 | +3 | +0 | −2 | 1 |
-| Shield, Round | Rundschild | +0 | +0 | +4 | +0 | −1 | 2 |
-| Shield, Heater | Dreieckschild | +0 | +0 | +5 | +0 | 0 | 2 |
+### Einzelwaffen / Single Weapons (Fertigkeit: Einzelwaffe)
 
-### Große Waffen / Great Weapons
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Axe | Axt | |
+| Club | Keule | |
+| Hatchet | Beil | |
+| Lance | Lanze | |
+| Mace | Streitkolben | |
+| Mace and Chain | Flegel | |
+| Spear, Short | Speer, kurz | |
+| Sword, Short | Schwert, kurz | |
+| Sword, Long | Schwert, lang | |
+| Shield, Buckler | Faustschild | In der Waffentabelle der Basisregeln „Schild, Faustschild“ |
+| Shield, Round | Rundschild | In der Waffentabelle der Basisregeln „Schild, Rundschild“ |
+| Shield, Heater | Dreieckschild | In der Waffentabelle der Basisregeln „Schild, Dreieck“ |
 
-| Englisch (EN) | Deutsch (DE) | Init | Atk | Dfn | Dam | Stä | Last |
-|---|---|---|---|---|---|---|---|
-| Cudgel | Prügel | +0 | +2 | +1 | +5 | 0 | 1 |
-| Farm Implement | Ackergerät | +0 | +1 | +0 | +3 | 0 | 2 |
-| Flail | Dreschflegel | −1 | +4 | +0 | +9 | +1 | 3 |
-| Pole Arm | Stangenwaffe | +2 | +4 | +2 | +8 | +2 | 3 |
-| Pole Axe | Streitaxt | +1 | +5 | +1 | +11 | +3 | 4 |
-| Spear, Long | Speer, lang | +3 | +3 | +1 | +7 | +1 | 2 |
-| Sword, Great | Großschwert | +1 | +5 | +2 | +9 | +1 | 2 |
-| Staff | Stab | +2 | +2 | +3 | +4 | 0 | 1 |
-| Warhammer | Kriegshammer | +0 | +4 | +0 | +11 | +3 | 4 |
+### Große Waffen / Great Weapons (Fertigkeit: Große Waffe)
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Cudgel | Prügel | |
+| Farm Implement | Ackergerät | |
+| Flail | Dreschflegel | |
+| Pole Arm | Stangenwaffe | |
+| Pole Axe | Streitaxt | |
+| Spear, Long | Speer, lang | |
+| Sword, Great | Großschwert | |
+| Staff | Stab | |
+| Warhammer | Kriegshammer | |
 
 ### Fernkampfwaffen / Missile Weapons
 
-| Englisch (EN) | Deutsch (DE) | Init | Atk | Dam | Reichweite | Last |
-|---|---|---|---|---|---|---|
-| Axe, Throwing | Wurfaxt | −2 | +2 | +6 | 5 | 1 |
-| Javelin | Wurfspeer | +2 | +3 | +5 | 10 | 1 |
-| Knife | Messer (Wurf) | +0 | +2 | +3 | 5 | 0 |
-| Sling | Schleuder | −2 | +2 | +4 | 20 | 0 |
-| Stone | Stein | +0 | +1 | +2 | 5 | 0 |
-| Bow, Long | Langbogen | −3 | +4 | +8 | 30 | 2 |
-| Bow, Short | Kurzbogen | −1 | +3 | +6 | 15 | 1 |
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Axe, Throwing | Wurfaxt | Fertigkeit: Wurfwaffe |
+| Javelin | Wurfspeer | Fertigkeit: Wurfwaffe |
+| Knife | Messer (Wurf) | Fertigkeit: Wurfwaffe |
+| Sling | Schleuder | Fertigkeit: Wurfwaffe; braucht zwei freie Hände |
+| Stone | Stein | Fertigkeit: Wurfwaffe |
+| Bow, Long | Langbogen | Fertigkeit: Bogenschießen; braucht zwei freie Hände |
+| Bow, Short | Kurzbogen | Fertigkeit: Bogenschießen; braucht zwei freie Hände |
 
 ---
 
-*Quellen: Ars Magica Definitive Edition Core Rules (Atlas Games, 2024; GitHub: OriginalMadman/Ars-Magica-Open-License) · Deutsche Übersetzung (ArsMagica_DE_Gesamt_work.md)*
+*Quellen: Ars Magica Definitive Edition Core Rules (`original-english/reviewed/Ars Magica - Definitive Edition (Core Rules).md`, Submodul aus `garin1000/Ars-Magica-Open-License`) · Deutsche Übersetzung (`german-reviewed/Ars Magica Definitive Edition Basisregeln.md`)*

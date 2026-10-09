@@ -1,164 +1,164 @@
 # Ars Magica – Göttliche Kräfte / Divine Powers
 
-**Teil der deutschen Übersetzungstabellen** | Quelle: Ars Magica 5e – Sphären der Macht: Das Göttliche (SdM:G)
+**Teil der deutschen Übersetzungstabellen** | Quelle: Ars Magica 5e – Sphären der Macht: Das Göttliche (SdM:G) · englisches Original: `original-english/reviewed/Ars Magica 5e - Realms of Power - The Divine (Revised).md` · deutsche Übersetzung: `german-wip/Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md`
 
-**Legende:**
-- Allg. = Allgemeine Engelskraft (alle Chöre)
-- Chor-spezifische Kräfte sind nach Engelschor geordnet
+> **Nur Begriffe.** Kosten in Machtpunkten, Initiative, Form und Wirkung jeder Kraft stehen im Quellbuch an der jeweils genannten Stelle. Die früher hier geführten Kurzbeschreibungen waren teilweise falsch (Sachprüfung 2026-10-03, `lektorat/tabellen-sachpruefung-regeltabellen.md`) und sind entfernt.
 
 ---
 
-## Allgemeine Engel-Mechaniken / General Angelic Mechanics
+## Allgemeine Engelskräfte / General Angelic Powers
+
+*→ Werte und Wirkung: SdM:G, Kapitel Zwei, Abschnitt *Engelseigenschaften*, Unterabschnitte *ENGELSKRÄFTE* und *SPRACHE DER ENGEL*.*
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Angelic Mantle | Engelsgewand | Allg. Kraft aller Engel; Manifestation in physischer Gestalt |
-| Enfolding | Einhüllung | Allg. Kraft; Schutz der Seele/des Körpers |
-| Envisioning | Erscheinung | Allg. Kraft; Engel erscheint in Traum/Vision mit göttlicher Botschaft |
-| illumination | Einleuchtung | Kommunikationsform der Engel; direkte geistige Übertragung |
+| Angelic Mantle | Engelsgewand | Kraft aller Engel |
+| Enfolding | Einhüllung | Kraft aller Engel |
+| Envisioning | Erscheinung | Kraft aller Engel; dieselbe Kraft haben in SdM:I alle Dämonen. Kollidiert mit der Heiligenkraft *Apparition* → „Erscheinung“ (siehe unten) |
+| illumination | Einleuchtung | Kommunikationsform der Engel (Unterabschnitt *SPRACHE DER ENGEL*); keine Kraft |
 
 ---
 
 ## Engelskräfte nach Chor / Angelic Powers by Choir
 
+*→ Werte und Wirkung: SdM:G, Kapitel Zwei, Abschnitt *Die Heerscharen des Himmels*, Unterabschnitte der einzelnen Chöre (Kasten „Kräfte“).*
+
 ### Seraphim
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Heavenly Fire | Himmlisches Feuer | Wie Pilum aus Feuer; +30 Schaden |
-| Smite Evil | Das Böse niederstrecken | Wie Ewige Auslöschung des Dämons |
+| Heavenly Fire | Himmlisches Feuer | Chorkraft; auch bei St. Michael |
+| Smite Evil | Das Böse niederstrecken | Chorkraft; auch bei St. Michael |
 
 ### Cherubim
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Divine Insight | Göttliche Einsicht | Verleiht vorübergehend Kleine Tugenden |
-| The Chariot | Der Streitwagen | 4 Cherubim läutern ein Ziel vollständig |
+| Divine Insight | Göttliche Einsicht | Chorkraft |
+| The Chariot | Der Streitwagen | Chorkraft |
 
-### Throne
+### Throne / Thrones
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Deliverance of the Righteous | Errettung der Gerechten | Teleportation Gläubiger |
-| Divine Justice | Göttliche Gerechtigkeit | Wahrhaftiges Urteil |
-| Radiant Mirror | Strahlender Spiegel | Göttliche Aura erhöhen + Milderung |
+| Deliverance of the Righteous | Errettung der Gerechten | Chorkraft |
+| Divine Justice | Göttliche Gerechtigkeit | Chorkraft |
+| Radiant Mirror | Strahlender Spiegel | Chorkraft |
 
 ### Herrschaften / Dominations
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Divine Direction | Göttliche Weisung | Befehl an göttliche Wesen |
-| Liberate the Sinful | Den Sünder befreien | Persönlichkeitseigenschaft entfernen |
+| Divine Direction | Göttliche Weisung | Chorkraft |
+| Liberate the Sinful | Den Sünder befreien | Chorkraft |
 
 ### Autoritäten / Authorities
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Divine Authority | Göttliche Autorität | Absolute Herrschaft über Schöpfungsaspekt |
+| Divine Authority | Göttliche Autorität | Chorkraft |
 
 ### Gewalten / Potentates
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Divine Balance | Göttliches Gleichgewicht | Teuflischen Einflüssen entgegenwirken |
-| Mysterious Path | Geheimnisvoller Pfad | Instantaner Pfad zwischen Orten |
+| Divine Balance | Göttliches Gleichgewicht | Chorkraft |
+| Mysterious Path | Geheimnisvoller Pfad | Chorkraft |
 
 ### Fürstentümer / Principalities
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Incalculable Strength of Heaven | Unermessliche Stärke des Himmels | Nicht-göttliche Kreaturen verbannen |
-| Sway the Hearts of Man | Die Herzen der Menschen bewegen | Milderung auf Gebiete/Gruppen |
+| Incalculable Strength of Heaven | Unermessliche Stärke des Himmels | Chorkraft |
+| Sway the Hearts of Man | Die Herzen der Menschen bewegen | Chorkraft |
 
 ### Erzengel / Archangels
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Irresistible Light | Unwiderstehliches Licht | Vernichtender Lichtstrahl |
-| Infinite Divisibility | Unendliche Teilbarkeit | Gleichzeitig überall sein |
+| Irresistible Light | Unwiderstehliches Licht | Chorkraft |
+| Infinite Divisibility | Unendliche Teilbarkeit | Chorkraft |
 
 ### Engel / Angels
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Divine Guidance | Göttliche Führung | Persönlichkeitseigenschaft modifizieren |
-| Heavenly Servant | Himmlischer Diener | Verdopplung aller Eigenschaften gegen Infernale |
+| Divine Guidance | Göttliche Führung | Chorkraft |
+| Heavenly Servant | Himmlischer Diener | Chorkraft |
 
 ---
 
 ## Kräfte der Beispielengel / Example Angel Powers
 
-### Asuryal, Herold der Erlösung
+*→ Werte und Wirkung: SdM:G, Kapitel Zwei, Abschnitt *Beispielengel*, Unterabschnitt des jeweiligen Engels. Die Unterüberschriften folgen den Überschriften der deutschen Übersetzung.*
+
+### Azrael, der Erzengel des Todes
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Subtle Form | Unscheinbare Gestalt | Aussehen ändern |
-
-### Azrael, Erzengel des Todes
-
-| Englisch (EN) | Deutsch (DE) | Anmerkung |
-|---|---|---|
-| Extract Soul | Seele entziehen | Seele vom Körper trennen |
+| Extract Soul | Seele entziehen | |
+| Subtle Form | Unscheinbare Gestalt | Ebenso bei Gabriel, Munkar und Nakir sowie Nasir. **Nicht** bei Asuryal (dessen einzige Kraft ist *Blessing*) |
 
 ### Camuel, der Dunkle Engel
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Comfort the Righteous | Den Gerechten trösten | Zweifel/Furcht lindern |
-| Unrelenting Struggle | Unerbittlicher Kampf | Ermüdungsfreier Kampf |
+| Comfort the Righteous | Den Gerechten trösten | |
+| Unrelenting Struggle | Unerbittlicher Kampf | |
 
 ### Eiael, Beistand der Weisen
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Impart Wisdom | Weisheit vermitteln | Ars-Notoria-Unterricht |
-| Revoke Gifts | Gaben widerrufen | Ringe Salomons widerrufen |
-| Grant Longevity | Langlebigkeit gewähren | Alterungspunkte entfernen |
+| Impart Wisdom | Weisheit vermitteln | |
+| Revoke Gifts | Gaben widerrufen | |
+| Grant Longevity | Langlebigkeit gewähren | |
 
-### Gabriel, Erzengel der Prophezeiung
-
-| Englisch (EN) | Deutsch (DE) | Anmerkung |
-|---|---|---|
-| Enlighten | Erleuchten | Wissen einpflanzen |
-
-### Kalazonta, der Züchtiger
+### Gabriel, der Erzengel der Prophezeiung
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Chastise the Sinful | Die Sündhaften züchtigen | Plage bringen |
+| Enlighten | Erleuchten | |
+
+### Kolazonta, der Züchtiger
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Chastise the Sinful | Die Sündhaften züchtigen | |
 
 ### St. Michael, Hauptmann der Heerscharen des Herrn
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Celestial Immunity | Celestische Immunität | Schutz vor nicht-göttlichen Kräften |
-| Command Chaos | Chaos befehligen | Ordnung/Chaos steuern |
-| Create Rain | Regen erschaffen | Regenherrschaft |
-| Heavenly Lance | Himmlische Lanze | Blitzschlag |
-| The Pious Restored | Wiederherstellung der Frommen | Heilung |
+| Command Chaos | Chaos befehligen | |
+| Create rain | Regen erschaffen | im Original klein: „Create rain“ |
+| Heavenly Lance | Himmlische Lanze | |
+| The Pious Restored | Wiederherstellung der Frommen | |
 
-### Midael, Hauptmann der Celestischen Armee
+*Michael führt außerdem *Heavenly Fire* und *Smite Evil* (→ Seraphim) sowie die Heiligenkraft *Celestial Immunity* (→ Heiligenkräfte).*
+
+### Midael, Hauptmann der Himmlischen Armee
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Confound the Wicked | Die Frevler verwirren | Verwirrung |
-| Radiance of the Divine Host | Glanz der Göttlichen Heerscharen | Feinde ehrfürchtig machen |
-| Refuge of the Worthy | Zuflucht der Würdigen | Celestische Immunität |
-| Tireless Pursuit | Unermüdliche Verfolgung | Feind verfolgen |
+| Confound the Wicked | Die Frevler verwirren | |
+| Radiance of the Divine Host | Glanz der Göttlichen Heerscharen | |
+| Refuge of the Worthy | Zuflucht der Würdigen | verweist auf die Heiligenkraft *Celestial Immunity* |
+| Tireless Pursuit | Unermüdliche Verfolgung | |
 
 ### Munkar und Nakir, die Befrager
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Question | Befragung | Erzwungene Antwort |
+| Question | Befragung | |
 
 ### Samuil, Engelsführer
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Infallible Guide | Unfehlbarer Führer | Regio-Navigation |
-| Grant Vision | Vision gewähren | Verständniswirkung |
-| Transport the Devout | Den Frommen geleiten | Transport jenseits der Mondsphäre |
+| Infallible Guide | Unfehlbarer Führer | |
+| Grant Vision | Vision gewähren | |
+| Transport the Devout | Den Frommen geleiten | |
 
 ---
 
@@ -166,48 +166,53 @@
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Scourging the Infernal | Geißelung des Infernalen | Reliquienkraft |
-| Blinding Reflection | Blendende Spiegelung | Chalkydri; Sonnenlicht gegen Feinde reflektieren |
-| Radiant Invisibility | Strahlende Unsichtbarkeit | Chalkydri; Unsichtbarkeit |
+| Scourging the Infernal | Geißelung des Infernalen | Kraft aller Reliquien (SdM:G, Kapitel Drei, Abschnitt *Die Kräfte der Reliquien*) |
+| Blinding Reflection | Blendende Spiegelung | Kraft der Chalkydri (SdM:G, Kapitel Zwei, Abschnitt *Göttliche Wesen*, Kasten *Chalkydri*) |
+| Radiant Invisibility | Strahlende Unsichtbarkeit | Kraft der Chalkydri (ebenda) |
 
-### Heiligenkräfte / Relic and Saint Powers
+### Heiligenkräfte / Saint Powers
+
+*→ Werte und Wirkung: SdM:G, Kapitel Vier, Abschnitt *Wunder der Heiligen*, Unterabschnitt *KRÄFTE*. Reliquien (z. B. Nehuschtan, das Haupt Johannes des Täufers) sind nur Träger dieser Kräfte.*
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Mass Healing | Massenheilung | Nehuschtan; heilt alle, die die Schlange anblicken |
-| Resist Temptation | Versuchung widerstehen | Haupt Johannes des Täufers |
-| The Faithful Made Whole | Heilung der Gläubigen | Haupt Johannes des Täufers |
-| Acknowledgment of Evil | Erkenntnis des Bösen | 1 Punkt, Vim |
-| Apparition | Erscheinung | 0 Punkte, Imaginem |
-| Cure Blindness | Blindheit heilen | 2 Punkte, Corpus |
-| Expel Demons | Dämonen vertreiben | 1 Punkt, Vim |
-| Grant of Serenity | Gewährung der Gelassenheit | 1 Punkt, Mentem |
-| Raise the Dead | Tote erwecken | 7 Punkte, Corpus |
-| Sanctuary of Virginity | Zuflucht der Jungfräulichkeit | 4 Punkte, Corpus |
-| Scourging of Snakes | Vertreibung der Schlangen | 4 Punkte, Animal |
-| Straighten the Crippled | Den Krüppel aufrichten | 3 Punkte, Corpus |
-| The Dutiful Shepherd | Der treue Hirte | 4 Punkte, Imaginem |
-| The Incombustible Shroud | Das unbrennbare Leichentuch | 3 Punkte, Ignem |
-| The Laborer's Boon | Segen des Arbeiters | 1 Punkt, Terram |
-| The Leap of the Faithful | Sprung der Gläubigen | 5 Punkte, Corpus |
-| Tomorrow's Bounty | Ernte des Morgens | 2 Punkte, Herbam |
+| Acknowledgment of Evil | Erkenntnis des Bösen | |
+| Apparition | Heiligenerscheinung | Heiligenkraft (SdM:G). Freigabe 2026-10-04: nicht „Erscheinung“ – das ist die Engels-/Dämonenkraft *Envisioning* (Grundregelwerk) |
+| Celestial Immunity | Celestische Immunität | auch bei St. Michael |
+| Cure Blindness | Blindheit heilen | |
+| Expel Demons | Dämonen vertreiben | |
+| Grant of Serenity | Gewährung der Gelassenheit | |
+| Mass Healing | Massenheilung | |
+| Raise the Dead | Tote erwecken | |
+| Resist Temptation | Versuchung widerstehen | |
+| Sanctuary of Virginity | Zuflucht der Jungfräulichkeit | |
+| Scourging of Snakes | Vertreibung der Schlangen | |
+| Straighten the Crippled | Den Krüppel aufrichten | |
+| The Dutiful Shepherd | Der treue Hirte | |
+| The Faithful Made Whole | Heilung der Gläubigen | |
+| The Incombustible Shroud | Das unbrennbare Leichentuch | |
+| The Laborer's Boon | Segen des Arbeiters | |
+| The Leap of the Faithful | Sprung der Gläubigen | |
+| Tomorrow's Bounty | Ernte des Morgens | |
 
 ### Heiligenflüche / Saint Curses
 
+*→ Werte und Wirkung: SdM:G, Kapitel Vier, Abschnitt *Wunder der Heiligen*, Unterabschnitt *FLÜCHE*.*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Blindness | Blindheit | 1 Punkt, Corpus |
-| Blisters of Humility | Blasen der Demut | 1 Punkt, Corpus |
-| Dysenteric Infliction | Dysenterie-Heimsuchung | 5 Punkte, Corpus |
-| Flabbergast the Impertinent | Verblüffung des Unverschämten | 2 Punkte, Mentem |
-| Humility of Caesar | Demut des Caesars | 1 Punkt, Animal/Corpus |
-| Ignis Domini | Ignis Domini | 4 Punkte, Ignem; Lat. beibehalten |
-| Rebuke the Unfaithful | Zurechtweisung der Ungläubigen | 4 Punkte, Mentem |
-| Smiting of the Lord | Strafgericht des Herrn | 4 Punkte, Auram |
-| Swallowed Alive and Sent to Hell | Lebendig verschlungen und in die Hölle gestürzt | 5 Punkte, Terram |
-| Terrify the Unbeliever | Schrecken des Ungläubigen | 2 Punkte, Mentem |
-| The Earth's Riches | Reichtümer der Erde | 3 Punkte, Terram |
-| The Feast of Worms | Festmahl der Würmer | 3 Punkte, Corpus |
+| Blindness | Blindheit | |
+| Blisters of Humility | Blasen der Demut | |
+| Dysenteric Infliction | Dysenterie-Plage | Fluch; nicht „-Heimsuchung“ (*Heimsuchung* = Dämonenkraft *Obsession*) |
+| Flabbergast the Impertinent | Verblüffung des Unverschämten | |
+| Humility of Caesar | Demut des Caesars | |
+| Ignis Domini | Ignis Domini | Lat., bleibt |
+| Rebuke the Unfaithful | Zurechtweisung der Ungläubigen | |
+| Smiting of the Lord | Strafgericht des Herrn | |
+| Swallowed Alive and Sent to Hell | Lebendig verschlungen und in die Hölle gestürzt | |
+| Terrify the Unbeliever | Schrecken des Ungläubigen | |
+| The Earth's Riches | Reichtümer der Erde | |
+| The Feast of Worms | Festmahl der Würmer | |
 
 ---
 

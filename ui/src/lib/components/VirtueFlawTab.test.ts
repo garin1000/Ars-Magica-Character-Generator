@@ -262,7 +262,7 @@ describe('VirtueFlawTab merges granted Virtues into the category list (#9)', () 
 });
 
 // I5 (try-out finding 1): House Tremere's fixed grant is Minor Magical Focus with
-// `focus` = "certamen" (`rules/core/houses.json`, ArMDE:2281), but the name has no
+// `focus` = "certamen" (`rules/core/houses.json`, ArMDE:2349), but the name has no
 // `{focus}` token, so the granted row read only "Minor Magical Focus". A granted
 // row has no ParameterPicker, so its NAME must carry the value; a bought row
 // already shows it in its picker and keeps the plain name (no double display).
@@ -294,7 +294,7 @@ describe("VirtueFlawTab names a granted row's fixed parameter (I5)", () => {
 });
 
 // The rulebook's Virtue index lists Sufi twice — at
-// `ArMDE:3179` under
+// `ArMDE:3248` under
 // "### Supernatural, Minor" and at :3230 under "### Social Status, Minor" — so
 // the Available list offers it under both headings, exactly as the book does.
 // The Selected list cannot: its rows are removed by `entity.selections` index.
@@ -408,7 +408,7 @@ describe('VirtueFlawTab badges every category an item carries', () => {
 
 // Row 19: a dual-category Virtue can record WHICH of its own categories it was
 // taken as — Sufi, "either as a Minor Social Status Virtue or a Minor
-// Supernatural Virtue" (ArMDE:5083).
+// Supernatural Virtue" (ArMDE:5154).
 // Every engine category rule then judges that one reading alone, so the Selected
 // row must say the same thing: the badge and the heading both name the chosen
 // category, and neither mentions the reading the player declined. The Available

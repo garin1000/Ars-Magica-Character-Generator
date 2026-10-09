@@ -49,7 +49,7 @@
     return store.effective?.art_bonuses?.find((b) => b.art === artId)?.bonus ?? 0;
   }
 
-  // X10b: the "Z" of the book's own "X (Z)" notation (ArMDE:1179) — XP already
+  // X10b: the "Z" of the book's own "X (Z)" notation (ArMDE:1247) — XP already
   // banked toward the next score.
   function bankedXpOf(artId: string): number {
     return store.entity.art_scores?.find((a) => a.art === artId)?.banked_xp ?? 0;

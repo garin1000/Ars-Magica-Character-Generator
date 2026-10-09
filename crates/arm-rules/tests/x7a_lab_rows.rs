@@ -91,7 +91,7 @@ fn creo_corpus_total(e: &Entity, rs: &Ruleset) -> i32 {
 
 // --- D4: `virtue.adept_laboratory_student` (F-04) --------------------------
 
-/// ArMDE:3368-3371: "+6 bonus to Lab Totals **when working from the lab texts
+/// ArMDE:3439-3442: "+6 bonus to Lab Totals **when working from the lab texts
 /// of others**." D4: that condition does not hold at character generation (a
 /// beginning magus writes his own texts), so the bonus must not appear in the
 /// in-play Lab Total grid. Today's data folds it in unconditionally.
@@ -105,7 +105,7 @@ fn adept_laboratory_student_lab_bonus_does_not_apply_at_creation() {
     assert_eq!(
         creo_corpus_total(&e, &rs),
         0,
-        "the +6 is conditional on working from ANOTHER magus's lab texts (ArMDE:3368-3371); \
+        "the +6 is conditional on working from ANOTHER magus's lab texts (ArMDE:3439-3442); \
          nothing about character generation makes that true, so the Lab Total grid must not \
          include it (D4)"
     );
@@ -113,7 +113,7 @@ fn adept_laboratory_student_lab_bonus_does_not_apply_at_creation() {
 
 // --- D4: `flaw.weak_scholar` (mirror of the above) --------------------------
 
-/// ArMDE:7080-7083: "-6 penalty to Lab Totals **when working from the Lab
+/// ArMDE:7151-7154: "-6 penalty to Lab Totals **when working from the Lab
 /// Texts of others**." Same D4 shape as Adept Laboratory Student, opposite
 /// sign.
 #[test]
@@ -123,14 +123,14 @@ fn weak_scholar_lab_penalty_does_not_apply_at_creation() {
     assert_eq!(
         creo_corpus_total(&e, &rs),
         0,
-        "the -6 is conditional on working from ANOTHER magus's Lab Texts (ArMDE:7080-7083); \
+        "the -6 is conditional on working from ANOTHER magus's Lab Texts (ArMDE:7151-7154); \
          character generation does not make that true, so it must not appear in the grid (D4)"
     );
 }
 
 // --- D4/D52: `virtue.cyclic_magic_positive` (F-45), unchanged by D52 -------
 
-/// ArMDE:3635-3638: the Lab Total bonus applies "**if** the positive part of
+/// ArMDE:3706-3709: the Lab Total bonus applies "**if** the positive part of
 /// the cycle covers the whole season" — a fact character generation cannot
 /// know (D4: "creation fixes no season"). D52 re-examined this row for the
 /// Flaw and left the Virtue's "no" standing. Today's data folds the +3 in
@@ -179,7 +179,7 @@ fn cyclic_magic_positive_bonus_does_not_inflate_the_longevity_hint() {
 
 // --- D52/F-555: `flaw.cyclic_magic_negative` --------------------------------
 
-/// ArMDE:5893-5896: "The penalty applies to Lab Totals **even if** the
+/// ArMDE:5964-5967: "The penalty applies to Lab Totals **even if** the
 /// negative period does not cover the whole of the season" — the opposite
 /// wording from the Virtue. D52: on any cycle shorter than a season (the
 /// book's own solar/lunar examples), every season contains negative time, so
@@ -225,7 +225,7 @@ fn cyclic_magic_negative_lab_penalty_is_cycle_gated() {
 
 // --- D4 (residual): `virtue.aristotelian_training` --------------------------
 
-/// ArMDE:3440-3443: the +1 Lab Total is conditional on "attempting to
+/// ArMDE:3511-3514: the +1 Lab Total is conditional on "attempting to
 /// synthesize the New Aristotle with Magic Theory" (Art and Academe, p.11) —
 /// content this app does not model at all. D4's explicit verdict: "the
 /// bonus can never legitimately fire in any Lab Total" — not the D4 grid,
@@ -259,7 +259,7 @@ fn aristotelian_trainings_lab_bonus_must_never_apply_anywhere() {
             false,
             SpellMarks::default()
         ),
-        // Int(0) + MagicTheory(0) + Creo(0) + Ignem(0) + 3 (ArMDE:2465) + 0 (no lab_mod)
+        // Int(0) + MagicTheory(0) + Creo(0) + Ignem(0) + 3 (ArMDE:2533) + 0 (no lab_mod)
         3,
         "D1's normally-generous flat fold must ALSO exclude this carrier — D4 says the \
          condition is unsatisfiable in principle, which is why D4 flags this entry as \
@@ -269,7 +269,7 @@ fn aristotelian_trainings_lab_bonus_must_never_apply_anywhere() {
 
 // --- D47: Guild Apprentice suppresses Wealthy/Poor's later-life XP rate ----
 
-/// ArMDE:4043: a Guild Apprentice is "not able to benefit from either the
+/// ArMDE:4114: a Guild Apprentice is "not able to benefit from either the
 /// Poor Flaw or the Wealthy Virtue … until he moves to the journeyman
 /// stage" — D47: keyed on holding `virtue.guild_apprentice`, since D41 makes
 /// the guild stages mutually exclusive Social Status Virtues. Nothing
@@ -290,7 +290,7 @@ fn guild_apprentice_suppresses_wealthys_later_life_rate() {
     assert_eq!(
         rules.later_life_rate(&e, &rs),
         15,
-        "Guild Apprentice denies Wealthy's benefit until the journeyman stage (ArMDE:4043); a \
+        "Guild Apprentice denies Wealthy's benefit until the journeyman stage (ArMDE:4114); a \
          companion holding both is shown the ruleset's base rate, not Wealthy's 20 (D47)"
     );
 }

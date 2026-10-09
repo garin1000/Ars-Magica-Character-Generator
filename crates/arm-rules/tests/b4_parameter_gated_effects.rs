@@ -14,7 +14,7 @@
 //! Fixtures (a)-(b) use INVENTED ids, on B1/B3's own precedent — the real
 //! `virtue.magical_blood` entry in `rules/core/virtues_flaws.json` carries the
 //! `bloodline`/`characteristic` parameters and the two gated effects
-//! (Magic Human's clause, ArMDE:4367), landed by B4 directly per design § 7.
+//! (Magic Human's clause, ArMDE:4438), landed by B4 directly per design § 7.
 //! Fixture (c) loads the REAL shipped ruleset to prove that data is in place.
 //!
 //! Two follow-up fixes, both test-first (coordinator review, post-B4):
@@ -22,7 +22,7 @@
 //! Thing, which the clause never reads; fixed via
 //! `ParameterDef::required_if: Option<ParamGate>`, consumed by
 //! `validate_selection_parameters`'s separate "required" set. **Gap 2** —
-//! "but not above +3" (ArMDE:4367): a corrected SECOND pass — the first cut
+//! "but not above +3" (ArMDE:4438): a corrected SECOND pass — the first cut
 //! wrongly inferred "no precondition, clamp instead" from `gate.is_some()`,
 //! which would have silently misclassified a future GATED effect with
 //! Great-Characteristic semantics (raising ABOVE the cap). Fixed via explicit
@@ -165,10 +165,10 @@ fn grants_reputation_does_not_apply_when_gate_does_not_hold() {
 
 // --- (c) the shipped `virtue.magical_blood` ---------------------------------
 //
-// ArMDE:4359-4372 (Magical Blood, verified directly): only the Magic Human
+// ArMDE:4430-4443 (Magical Blood, verified directly): only the Magic Human
 // sub-type states a determinate mechanic — "may increase one of his
 // Characteristics by 1, but not above +3 ... also has a positive Reputation
-// at level 3 among others of his bloodline" (ArMDE:4367). The shipped entry
+// at level 3 among others of his bloodline" (ArMDE:4438). The shipped entry
 // now carries `bloodline`/`characteristic` parameters and the two effects
 // gated on `bloodline=bloodline.magic_human`; Magic Lore's authorization and
 // the Animal/Spirit/Thing sub-type bonuses stay uncomputed
@@ -212,12 +212,12 @@ fn shipped_magical_blood_magic_human_gains_characteristic_bonus_and_reputation()
     let grants = reputation_grants(&entity, &rs);
     assert_eq!(
         bonus, 1,
-        "Magic Human's +1 Characteristic (ArMDE:4367) must be granted on the shipped \
+        "Magic Human's +1 Characteristic (ArMDE:4438) must be granted on the shipped \
          entry — bonus: {bonus}"
     );
     assert!(
         grants.iter().any(|g| g.score == 3),
-        "Magic Human's level-3 Reputation (ArMDE:4367) must be granted on the shipped \
+        "Magic Human's level-3 Reputation (ArMDE:4438) must be granted on the shipped \
          entry — grants: {grants:?}"
     );
 }
@@ -417,13 +417,13 @@ fn magic_human_bloodline_still_requires_the_characteristic_param() {
     );
 }
 
-// --- gap 2 (ArMDE:4367): "but not above +3" ---------------------------------
+// --- gap 2 (ArMDE:4438): "but not above +3" ---------------------------------
 
 /// The gap-2 fix: Magic Human's +1 must not push an already-capped
 /// Characteristic past the printed base cap (+3). Fails today —
 /// `characteristic_score_bonus` adds the gated delta unconditionally, with no
 /// ceiling of its own (unlike Great Characteristic, which explicitly has none
-/// because ArMDE:3977/Giant Blood deliberately overshoot it).
+/// because ArMDE:4048/Giant Blood deliberately overshoot it).
 #[test]
 fn magic_human_characteristic_bonus_does_not_exceed_the_base_cap() {
     let rs = load_shipped_ruleset();
@@ -439,13 +439,13 @@ fn magic_human_characteristic_bonus_does_not_exceed_the_base_cap() {
     assert!(
         effective <= 3,
         "Magic Human's +1 must not push an already-capped Characteristic past +3 \
-         (ArMDE:4367) — effective: {effective}"
+         (ArMDE:4438) — effective: {effective}"
     );
 }
 
-/// The other direction: ArMDE:4367 states no precondition requiring the
+/// The other direction: ArMDE:4438 states no precondition requiring the
 /// Characteristic to ALREADY be at the cap (unlike Great Characteristic's own
-/// "already has a score of at least +3", ArMDE:3987) — a Magic Human
+/// "already has a score of at least +3", ArMDE:4058) — a Magic Human
 /// character with Strength at +1 must be able to take the Virtue and reach
 /// +2 cleanly, not be told the Characteristic is already too low. Fails today
 /// if `validate_characteristic_delta_preconditions` (Great Characteristic's
@@ -468,7 +468,7 @@ fn magic_human_below_the_base_cap_does_not_require_a_pre_existing_plus_three() {
             .iter()
             .any(|i| i.code == ValidationIssue::CODE_CHARACTERISTIC_MAX_BASE_TOO_LOW),
         "Magic Human's +1 must not require the Characteristic to already be at the \
-         base cap — ArMDE:4367 states no such precondition — issues: {issues:?}"
+         base cap — ArMDE:4438 states no such precondition — issues: {issues:?}"
     );
 }
 

@@ -6,7 +6,7 @@
   import Spinner from './Spinner.svelte';
 
   const reputations = $derived(store.entity.reputations ?? []);
-  // Reputation input is offered only for the slots a V/F grants (ArMDE:2514) —
+  // Reputation input is offered only for the slots a V/F grants (ArMDE:2582) —
   // and the grant IS the row. There is no add control: an authorized Reputation
   // is already known, so it renders as a row waiting for its description rather
   // than a button that could be pressed twice into a duplicate.
@@ -30,7 +30,7 @@
   const isWildcard = (row: ReputationRow): boolean => row.grant?.kind === null;
 
   // D11/Q5 + D58: a grant states `max_score` for exactly one entry in the
-  // catalogue (Outsider, "a bad Reputation of level 1 to 3", ArMDE:6554), and
+  // catalogue (Outsider, "a bad Reputation of level 1 to 3", ArMDE:6625), and
   // a legal character at level 2 or 3 must be enterable — the app refusing a
   // legal character is itself a defect (D58). Every other grant is exact
   // (`max_score` absent, or equal to `score`), and gets no level control at

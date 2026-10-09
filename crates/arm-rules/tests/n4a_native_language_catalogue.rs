@@ -3,7 +3,7 @@
 //!
 //! "In the first five years of life, characters gain 75 experience points in their
 //! native language […] and 45 experience points to divide between […] Living
-//! Language (other than the character's native language)" (ArMDE:2378).
+//! Language (other than the character's native language)" (ArMDE:2446).
 //!
 //! The plan's `native_language` is free text ("Arabic"), while a Living Language
 //! row is a `Catalogued` value whenever the player picked it from the list or the

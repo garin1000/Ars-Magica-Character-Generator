@@ -97,7 +97,7 @@ struct SummaryCase {
 
 const CASES: &[SummaryCase] = &[
     // WRONG: the Ability is not exempt from the age-based cap; it may exceed
-    // it by two points during character generation (ArMDE:3374, last
+    // it by two points during character generation (ArMDE:3445, last
     // sentence, verbatim in both locales minus the page reference).
     SummaryCase {
         id: "virtue.affinity_ability",
@@ -108,9 +108,9 @@ const CASES: &[SummaryCase] = &[
              Fertigkeit um zwei Punkte überschreiten.",
     },
     // WRONG: Verditius Magic does not cast enchantments through craft; it
-    // incorporates craft Abilities into the magus's magic (ArMDE:10078, first
+    // incorporates craft Abilities into the magus's magic (ArMDE:10150, first
     // sentence) and needs casting tools for Formulaic and Ritual spells
-    // (ArMDE:10090, first sentence). The Virtue itself is ArMDE:5215-5217.
+    // (ArMDE:10162, first sentence). The Virtue itself is ArMDE:5286-5288.
     SummaryCase {
         id: "virtue.verditius_magic",
         en: "Initiation into the Outer Mystery of House Verditius, which allows you to \
@@ -120,7 +120,7 @@ const CASES: &[SummaryCase] = &[
              Handwerksfertigkeiten in deine Magie zu integrieren. Du benötigst \
              Zauberwerkzeuge, um Formulaische Zauber oder Ritualzauber zu wirken.",
     },
-    // INCOMPLETE: missile-weapon attacks are excluded (ArMDE:4189, second
+    // INCOMPLETE: missile-weapon attacks are excluded (ArMDE:4260, second
     // sentence, verbatim in both locales).
     SummaryCase {
         id: "virtue.keen_vision",
@@ -129,7 +129,7 @@ const CASES: &[SummaryCase] = &[
              Fernkampfwaffen.",
     },
     // INCOMPLETE: the bonus does not apply to learning, teaching or writing
-    // (ArMDE:4820, third sentence, verbatim in both locales).
+    // (ArMDE:4891, third sentence, verbatim in both locales).
     SummaryCase {
         id: "virtue.puissant_art",
         en: "+3 to all totals using one Art; it does not apply when learning, teaching, or \
@@ -138,7 +138,7 @@ const CASES: &[SummaryCase] = &[
              Schreiben über die Kunst. Kann zweimal gewählt werden, für zwei Künste.",
     },
     // INCOMPLETE: Academic and Martial Abilities stay closed to the normal
-    // pool (ArMDE:4808, third sentence, verbatim in both locales).
+    // pool (ArMDE:4879, third sentence, verbatim in both locales).
     SummaryCase {
         id: "virtue.privileged_upbringing",
         en: "+50 experience points, spent only on General, Academic, or Martial Abilities. \
@@ -149,7 +149,7 @@ const CASES: &[SummaryCase] = &[
              EP-Vorrat erwerben, sofern du keine andere Tugend oder keinen anderen Fehler \
              hast, der dies erlaubt.",
     },
-    // INCOMPLETE: no immunity to aging (ArMDE:4011, third sentence, verbatim
+    // INCOMPLETE: no immunity to aging (ArMDE:4082, third sentence, verbatim
     // in both locales minus the page reference).
     SummaryCase {
         id: "virtue.greater_immunity",

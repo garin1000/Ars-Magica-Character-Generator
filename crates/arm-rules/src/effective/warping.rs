@@ -66,7 +66,7 @@ fn warping_grant_points_in(selections: &[Selection], ruleset: &Ruleset) -> u32 {
 /// never be double-counted or diverge. Owed warping fills carrying
 /// [`Effect::WarpingGrant`] are filtered out of the folded grants (see
 /// [`warping_granted_selections`]), so they never contribute here either.
-/// Source: ArMDE:16464-16475.
+/// Source: ArMDE:16541-16552.
 pub fn warping_points_total(entity: &Entity, ruleset: &Ruleset) -> u32 {
     entity
         .warping_points
@@ -82,7 +82,7 @@ pub fn warping_points_total(entity: &Entity, ruleset: &Ruleset) -> u32 {
 /// ([`entity_grants_base`]) ONLY. The owed warping fills are deliberately excluded
 /// so a fill can never raise the score that decides how many fills are owed — the
 /// recursion guard against the self-amplifying `warped_by_magic` feedback loop.
-/// Source: ArMDE:16553-16561.
+/// Source: ArMDE:16630-16638.
 fn warping_points_for_owed(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut base = entity.selections.clone();
     base.extend(entity_grants_base(entity, ruleset));
@@ -93,7 +93,7 @@ fn warping_points_for_owed(entity: &Entity, ruleset: &Ruleset) -> u32 {
 }
 
 /// Whether `entity` holds, among its effective (bought ∪ House/mythic/VF-
-/// granted, non-warping-fill) selections, any Virtue or Flaw ArMDE:2280 reads
+/// granted, non-warping-fill) selections, any Virtue or Flaw ArMDE:2348 reads
 /// as "faerie-related" — the gate on Merinita's conditional Warping Point
 /// ([`house_conditional_warping_points`]).
 ///
@@ -129,7 +129,7 @@ fn has_faerie_related_vf(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// creation, per the House's data-driven
 /// [`crate::house::House::conditional_warping`] field — e.g. Merinita's "Any
 /// magus in this House without a faerie-related Virtue or Flaw has a Warping
-/// Point, inflicted to allow initiation into the Mystery" (ArMDE:2280). 0 for
+/// Point, inflicted to allow initiation into the Mystery" (ArMDE:2348). 0 for
 /// an entity with no House, a House absent the field entirely, or one whose
 /// stated exemption holds; the House's own `points` otherwise.
 ///
@@ -169,7 +169,7 @@ fn warping_exemption_holds(
 
 /// The Warping Score used to decide the owed warping V/F: [`warping_points_for_owed`]
 /// inverted through the advancement curve (owed fills excluded — the recursion
-/// guard). Source: ArMDE:16553-16561.
+/// guard). Source: ArMDE:16630-16638.
 fn warping_score_for_owed(entity: &Entity, ruleset: &Ruleset) -> u8 {
     ruleset
         .advancement
@@ -178,7 +178,7 @@ fn warping_score_for_owed(entity: &Entity, ruleset: &Ruleset) -> u8 {
 
 /// The character's derived Warping Score: [`warping_points_total`] inverted through
 /// the (Ability) advancement curve (Warping rises "like an Ability": cumulative
-/// 5/15/30/50/75, so 15 points → Warping Score 2). Source: ArMDE:16464-16475.
+/// 5/15/30/50/75, so 15 points → Warping Score 2). Source: ArMDE:16541-16552.
 pub fn warping_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
     ruleset
         .advancement
@@ -198,7 +198,7 @@ pub struct Warping {
 
 /// The character's derived Warping — the unified readout: the score from
 /// [`warping_score`], the points from [`warping_points_total`]. Derived, never
-/// stored on the entity as a resolved value. Source: ArMDE:7019-7021, :16464-16475.
+/// stored on the entity as a resolved value. Source: ArMDE:7090-7092, :16541-16552.
 pub fn warping(entity: &Entity, ruleset: &Ruleset) -> Warping {
     Warping {
         score: warping_score(entity, ruleset),
@@ -207,7 +207,7 @@ pub fn warping(entity: &Entity, ruleset: &Ruleset) -> Warping {
 }
 
 /// The category slug a warping-owed supernatural Minor Virtue must belong to
-/// (ArMDE:16559, "a supernatural Minor Virtue"). The category taxonomy is
+/// (ArMDE:16636, "a supernatural Minor Virtue"). The category taxonomy is
 /// data; this names the slug the rule's "supernatural" wording maps to.
 const WARPING_SUPERNATURAL_CATEGORY: &str = "supernatural";
 
@@ -219,7 +219,7 @@ pub(crate) const WARPING_SUPERNATURAL_VIRTUE_KEY: &str = "warping.supernatural_v
 pub(crate) const WARPING_MAJOR_FLAW_KEY: &str = "warping.major_flaw.";
 
 /// The Virtues and Flaws a character owes from its Warping Score, per "Effects of
-/// Warping" (ArMDE:16547-16561). These are auto-granted, off-budget V/F
+/// Warping" (ArMDE:16624-16638). These are auto-granted, off-budget V/F
 /// (never counted against the creation Virtue/Flaw budget), filled by the player
 /// choosing specific items (stored in [`Entity::warping_choices`]). Derived, never
 /// stored as a resolved value.
@@ -229,20 +229,20 @@ pub(crate) const WARPING_MAJOR_FLAW_KEY: &str = "warping.major_flaw.";
 /// NOT model — a magus always owes zero.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct WarpingOwed {
-    /// Owed Minor Flaws: 1 at Warping Score 1 (ArMDE:16553), 2 at Score 3 (ArMDE:16557).
+    /// Owed Minor Flaws: 1 at Warping Score 1 (ArMDE:16630), 2 at Score 3 (ArMDE:16634).
     pub minor_flaws: u8,
-    /// Owed supernatural Minor Virtues: 1 at Warping Score 5 (ArMDE:16559), else 0.
+    /// Owed supernatural Minor Virtues: 1 at Warping Score 5 (ArMDE:16636), else 0.
     pub minor_supernatural_virtues: u8,
-    /// Owed Major Flaws: 1 at Warping Score 6 and every point thereafter (ArMDE:16561).
+    /// Owed Major Flaws: 1 at Warping Score 6 and every point thereafter (ArMDE:16638).
     pub major_flaws: u8,
 }
 
 impl WarpingOwed {
     /// The owed V/F for a non-magus at Warping Score `score` — the pure threshold
-    /// curve of "Effects of Warping". Source: ArMDE:16553-16561.
+    /// curve of "Effects of Warping". Source: ArMDE:16630-16638.
     pub fn from_score(score: u8) -> Self {
         WarpingOwed {
-            // A Minor Flaw at Warping Score 1 (ArMDE:16553); a second at Score 3 (ArMDE:16557).
+            // A Minor Flaw at Warping Score 1 (ArMDE:16630); a second at Score 3 (ArMDE:16634).
             minor_flaws: if score >= 3 {
                 2
             } else if score >= 1 {
@@ -250,9 +250,9 @@ impl WarpingOwed {
             } else {
                 0
             },
-            // A supernatural Minor Virtue at Warping Score 5 (ArMDE:16559).
+            // A supernatural Minor Virtue at Warping Score 5 (ArMDE:16636).
             minor_supernatural_virtues: u8::from(score >= 5),
-            // A Major Flaw at Warping Score 6, and every point thereafter (ArMDE:16561).
+            // A Major Flaw at Warping Score 6, and every point thereafter (ArMDE:16638).
             major_flaws: score.saturating_sub(5),
         }
     }
@@ -263,7 +263,7 @@ impl WarpingOwed {
 /// never inflate the count); the Hermetically trained (`is_hermetically_trained`,
 /// D56/A0's union of the profile flag with any selection carrying
 /// [`Effect::ConfersHermeticTraining`]) are exempt and owe zero — Warping gives
-/// them Wizard's Twilight instead (ArMDE:16551). An Abandoned Apprentice casting
+/// them Wizard's Twilight instead (ArMDE:16628). An Abandoned Apprentice casting
 /// spells is equally exposed to Twilight, so he must get the same exemption a
 /// magus gets.
 pub fn warping_owed(entity: &Entity, ruleset: &Ruleset) -> WarpingOwed {
@@ -294,7 +294,7 @@ pub(crate) fn item_carries_warping_grant(item_ref: &Id, ruleset: &Ruleset) -> bo
 /// satisfy (a Minor Flaw, a supernatural Minor Virtue, or a Major Flaw). The list
 /// length tracks the recursion-guarded Warping Score via [`warping_owed`]. The
 /// frontend renders one picker per grant; validation resolves each pick against
-/// its constraint. Source: ArMDE:16553-16561.
+/// its constraint. Source: ArMDE:16630-16638.
 pub fn warping_owed_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<Grant> {
     let owed = warping_owed(entity, ruleset);
     let mut grants = Vec::new();
@@ -356,7 +356,7 @@ fn warping_open_grant(
 /// against the folded bought-plus-granted list. A pick carrying
 /// [`Effect::WarpingGrant`] is dropped (ineligible — the recursion guard), so a
 /// warping fill can never feed Warping Points back into the owed count.
-/// Source: ArMDE:16553-16561.
+/// Source: ArMDE:16630-16638.
 pub fn warping_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
     resolve_grants(
         &warping_owed_grants(entity, ruleset),
@@ -369,14 +369,14 @@ pub fn warping_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Sel
 
 /// The character's total accrued aging points across every Characteristic — the
 /// character's Decrepitude XP (every aging point is 1 XP toward Decrepitude).
-/// Source: ArMDE:16617.
+/// Source: ArMDE:16694.
 pub fn decrepitude_points_total(entity: &Entity) -> u32 {
     entity.aging_points.values().map(|p| u32::from(*p)).sum()
 }
 
 /// The character's derived Decrepitude Score: [`decrepitude_points_total`] inverted
 /// through the (Ability) advancement curve (Decrepitude rises "like an Ability",
-/// 5×new score, so 17 aging points → Decrepitude 2). Source: ArMDE:16617.
+/// 5×new score, so 17 aging points → Decrepitude 2). Source: ArMDE:16694.
 pub fn decrepitude_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
     ruleset
         .advancement
@@ -387,7 +387,7 @@ pub fn decrepitude_score(entity: &Entity, ruleset: &Ruleset) -> u8 {
 /// absolute value of its current score, i.e. the `actual` score before aging
 /// lowered by the `drops_so_far`. "Once a character has a number of Aging Points
 /// greater than the absolute value of the Characteristic, the Characteristic drops
-/// by one point and all Aging Points are lost." Source: ArMDE:16579.
+/// by one point and all Aging Points are lost." Source: ArMDE:16656.
 fn aging_drop_cost(actual: i32, drops_so_far: u32) -> u32 {
     let aged = i64::from(actual) - i64::from(drops_so_far);
     u32::try_from(aged.unsigned_abs())
@@ -401,7 +401,7 @@ fn aging_drop_cost(actual: i32, drops_so_far: u32) -> u32 {
 /// toward 1 and then grows again; points left over do not yet exceed the current
 /// score. The inverse of [`minimal_aging_points_for_drops`] — both walk the same
 /// cost sequence, which is what keeps the live derivation and the legacy save
-/// migration in lockstep. Source: ArMDE:16579, :16613.
+/// migration in lockstep. Source: ArMDE:16656, :16690.
 pub(crate) fn drops_forced_by_aging_points(actual: i32, points: u32) -> u32 {
     let mut remaining = points;
     let mut drops = 0u32;
@@ -419,7 +419,7 @@ pub(crate) fn drops_forced_by_aging_points(actual: i32, points: u32) -> u32 {
 /// Characteristic whose score before aging is `actual` — the sum of the first
 /// `drops` [`aging_drop_cost`]s. Used to reconstruct a legacy `aging_reductions`
 /// count as `aging_points`; the inverse of [`drops_forced_by_aging_points`].
-/// Source: ArMDE:16579.
+/// Source: ArMDE:16656.
 pub(crate) fn minimal_aging_points_for_drops(actual: i32, drops: u32) -> u32 {
     (0..drops).fold(0u32, |total, drops_so_far| {
         total.saturating_add(aging_drop_cost(actual, drops_so_far))
@@ -435,17 +435,17 @@ pub(crate) fn minimal_aging_points_for_drops(actual: i32, drops: u32) -> u32 {
 /// shrinks toward 0 and then grows again.
 /// Worked examples: a Communication of +2 drops on its 3rd aging point; a
 /// Stamina of −3 on its 4th.
-/// Source: ArMDE:16579, :16613.
+/// Source: ArMDE:16656, :16690.
 ///
 /// # The threshold is the actual score (ruling F-A)
 ///
 /// "The Characteristic" whose absolute value is the threshold is the score the
 /// character actually has — the bought score **plus** every free delta
 /// ([`effective_characteristic_score`]): Great (Characteristic) "raise[s]" the
-/// Characteristic itself (`ArMDE:3989`). So Great (Stamina) twice over a bought +3
+/// Characteristic itself (`ArMDE:4060`). So Great (Stamina) twice over a bought +3
 /// is a +5, and four aging points do not yet drop it. Norbert's ruling F-A
 /// (2026-10-03) reversed the earlier reading that used the bought score.
-/// Source: ArMDE:16579, :3989.
+/// Source: ArMDE:16656, :4060.
 ///
 /// Crate-internal primitive: the frontend consumes the surfaced
 /// [`characteristic_aging_drops`] map (which wraps this per-Characteristic), so
@@ -455,14 +455,14 @@ pub(crate) fn minimal_aging_points_for_drops(actual: i32, drops: u32) -> u32 {
 ///
 /// Returns 0 for a character carrying an [`AgingEffect::NoAging`] item: "In game
 /// terms, your aging points do not decrease your Characteristics, only building up
-/// to give you Decrepitude points" (`ArMDE:5189`; Bound to (Role) "also includes the
-/// effects of the Unaging Virtue" at `ArMDE:5743`). The second half of that sentence is
+/// to give you Decrepitude points" (`ArMDE:5260`; Bound to (Role) "also includes the
+/// effects of the Unaging Virtue" at `ArMDE:5814`). The second half of that sentence is
 /// why [`decrepitude_points_total`] and [`decrepitude_score`] are deliberately
 /// **not** gated the same way — the points still accrue and still build
 /// Decrepitude, at everybody else's rate. The *appearance* is a separate exemption
 /// ([`AgingEffect::NoApparentAging`]), applied in `aging.rs`.
 ///
-/// Source: ArMDE:5189, :5743.
+/// Source: ArMDE:5260, :5814.
 pub(crate) fn aging_drops(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -486,11 +486,11 @@ pub(crate) fn aging_drops(
 /// whether he carries an [`AgingEffect::NoAging`] item.
 ///
 /// It gates the Characteristic drop **only**. Unaging carries this tag alongside
-/// `no_apparent_aging`, Bound to (Role) carries it alone (`ArMDE:5743` advances the
+/// `no_apparent_aging`, Bound to (Role) carries it alone (`ArMDE:5814` advances the
 /// apparent age "in line with their physical age"), and a Bee King carries neither
-/// — "do not appear to age" (`ArMDE:3488`) is about the appearance and nothing else.
+/// — "do not appear to age" (`ArMDE:3559`) is about the appearance and nothing else.
 ///
-/// Source: ArMDE:5189, :5743, :3488.
+/// Source: ArMDE:5260, :5814, :3559.
 fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
     selections_for_effects(entity, ruleset)
         .iter()
@@ -511,7 +511,7 @@ fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// aging ([`effective_characteristic_score`] — the bought score plus any free
 /// [`Effect::CharacteristicScoreDelta`] bonus, Giant Blood +1 Str/Sta, Dwarf -1,
 /// Great/Poor (Characteristic)) lowered by the DERIVED aging drops
-/// ([`aging_drops`]). "The Characteristic drops by one point" (`ArMDE:16579`), and
+/// ([`aging_drops`]). "The Characteristic drops by one point" (`ArMDE:16656`), and
 /// that Characteristic is the actual score — the same one whose absolute value is
 /// the threshold (ruling F-A). The free delta is a one-time raise of the score, not
 /// re-evaluated against the aged value, so the result is `(bought + delta) - drops`
@@ -523,7 +523,7 @@ fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
 ///
 /// # There is no floor, deliberately
 ///
-/// `ArMDE:16579` gives the drop condition and names no minimum, so neither does
+/// `ArMDE:16656` gives the drop condition and names no minimum, so neither does
 /// this function. It carried an engine-invented one (-5, then -10) until
 /// 2026-09-15; a clamp at either value says something the book does not — that a
 /// character decrepit with age can be no weaker than a freshly-built grog. The
@@ -532,7 +532,7 @@ fn suppresses_characteristic_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// each drop costs one point more than the last, so the drops terminate on their
 /// own. Nothing invented is needed to make the arithmetic safe.
 ///
-/// Source: ArMDE:16579.
+/// Source: ArMDE:16656.
 pub fn effective_characteristic_after_aging(
     entity: &Entity,
     ruleset: &Ruleset,

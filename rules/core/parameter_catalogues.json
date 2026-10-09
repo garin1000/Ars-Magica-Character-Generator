@@ -3,43 +3,43 @@
     {
       "id": "catalogue.language_dead",
       "values": [
-        { "id": "language.gothic", "source": { "anchor": "clan-ilfetu", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } },
-        { "id": "language.hebrew", "source": { "anchor": "educated-hebrew", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3723, 3725] } },
-        { "id": "language.latin", "source": { "anchor": "educated", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3711, 3713] } }
+        { "id": "language.gothic", "source": { "anchor": "clan-ilfetu", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3634, 3636] } },
+        { "id": "language.hebrew", "source": { "anchor": "educated-hebrew", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3794, 3796] } },
+        { "id": "language.latin", "source": { "anchor": "educated", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3782, 3784] } }
       ]
     },
     {
       "id": "catalogue.language_living",
       "values": [
-        { "id": "language.arabic", "source": { "anchor": "educated-islamic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3719, 3721] } },
-        { "id": "language.aramaic", "source": { "anchor": "educated-hebrew", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3723, 3725] } },
-        { "id": "language.greek", "source": { "anchor": "educated-islamic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3719, 3721] } },
-        { "id": "language.persian", "source": { "anchor": "educated-islamic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3719, 3721] } }
+        { "id": "language.arabic", "source": { "anchor": "educated-islamic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3790, 3792] } },
+        { "id": "language.aramaic", "source": { "anchor": "educated-hebrew", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3794, 3796] } },
+        { "id": "language.greek", "source": { "anchor": "educated-islamic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3790, 3792] } },
+        { "id": "language.persian", "source": { "anchor": "educated-islamic", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3790, 3792] } }
       ]
     },
     {
       "id": "catalogue.magical_focus",
       "values": [
-        { "id": "magical_focus.certamen", "source": { "anchor": "hermetic-houses-summary", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2266, 2281] } }
+        { "id": "magical_focus.certamen", "source": { "anchor": "hermetic-houses-summary", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [2334, 2351] } }
       ]
     },
     {
       "id": "catalogue.organization",
       "values": [
-        { "id": "organization.church", "source": { "anchor": "church-upbringing", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5789, 5791] } },
-        { "id": "organization.house_bjornaer", "source": { "anchor": "clan-ilfetu", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3563, 3565] } },
-        { "id": "organization.order_of_hermes", "source": { "anchor": "hermetic-experience", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4063, 4065] } }
+        { "id": "organization.church", "source": { "anchor": "church-upbringing", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [5860, 5862] } },
+        { "id": "organization.house_bjornaer", "source": { "anchor": "clan-ilfetu", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3634, 3636] } },
+        { "id": "organization.order_of_hermes", "source": { "anchor": "hermetic-experience", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4134, 4136] } }
       ]
     },
     {
       "id": "catalogue.profession",
       "values": [
-        { "id": "profession.falconer", "source": { "anchor": "falconer", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3847, 3851] } },
-        { "id": "profession.marshal", "source": { "anchor": "marshal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4449, 4453] } },
-        { "id": "profession.master_of_kennels", "source": { "anchor": "master-of-kennels", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4467, 4469] } },
-        { "id": "profession.merchant", "source": { "anchor": "educated-vernacular", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3727, 3729] } },
-        { "id": "profession.poet", "source": { "anchor": "master-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4457, 4461] } },
-        { "id": "profession.storyteller", "source": { "anchor": "master-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4457, 4461] } }
+        { "id": "profession.falconer", "source": { "anchor": "falconer", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3918, 3922] } },
+        { "id": "profession.marshal", "source": { "anchor": "marshal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4520, 4526] } },
+        { "id": "profession.master_of_kennels", "source": { "anchor": "master-of-kennels", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4538, 4540] } },
+        { "id": "profession.merchant", "source": { "anchor": "educated-vernacular", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [3798, 3800] } },
+        { "id": "profession.poet", "source": { "anchor": "master-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4528, 4532] } },
+        { "id": "profession.storyteller", "source": { "anchor": "master-bard", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [4528, 4532] } }
       ]
     }
   ]

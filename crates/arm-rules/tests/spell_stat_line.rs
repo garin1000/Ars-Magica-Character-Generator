@@ -2,31 +2,31 @@
 //!
 //! Cross-checks every `rules/core/spells.json` entry against what the book
 //! actually states at the entry's own cited `source.lines`: Technique, Form,
-//! Level, Range/Duration/Target (ArMDE:12001-12099, the RDT chart) and Ritual
-//! (Year Duration forces it, ArMDE:12055; Boundary Target forces it,
-//! ArMDE:12077), plus Art requisites where the book states them.
+//! Level, Range/Duration/Target (ArMDE:12073-12171, the RDT chart) and Ritual
+//! (Year Duration forces it, ArMDE:12127; Boundary Target forces it,
+//! ArMDE:12149), plus Art requisites where the book states them.
 //!
 //! # Book layout this parser relies on
 //!
-//! A spell chapter nests four heading levels (ArMDE:12426 "Creo Animal
+//! A spell chapter nests four heading levels (ArMDE:12498 "Creo Animal
 //! Guidelines" onward is the first full example):
 //! - `## <Form> Spells` (e.g. "Animal Spells") — not used by this parser; the
 //!   next level already carries both Technique and Form.
 //! - `### <Technique> <Form> (Guidelines|Spells)` — sets the current
 //!   Technique+Form. Matched by word content only, ignoring both the heading
 //!   depth and the trailing word: the book carries two heading-depth
-//!   anomalies ("## Muto Herbam Guidelines" ArMDE:13971, "## Creo Mentem
-//!   Spells" ArMDE:14860, both "##" where every sibling section is "###") and
-//!   one trailing-word typo ("### Rego Corpus Svells" ArMDE:13769, "Svells"
+//!   anomalies ("## Muto Herbam Guidelines" ArMDE:14045, "## Creo Mentem
+//!   Spells" ArMDE:14935, both "##" where every sibling section is "###") and
+//!   one trailing-word typo ("### Rego Corpus Svells" ArMDE:13841, "Svells"
 //!   for "Spells") that a depth- or suffix-strict match would silently lose a
 //!   whole section to.
 //! - `#### LEVEL <n>` or `#### GENERAL` — sets the current Level for every
 //!   spell heading until the next one (a General spell's catalogue `level` is
-//!   `None`, ArMDE:12349-12353 — see `spell.rs`'s own doc comment).
+//!   `None`, ArMDE:12421-12425 — see `spell.rs`'s own doc comment).
 //! - `##### <Spell Name>` — the spell itself, immediately followed by its
 //!   `R: ..., D: ..., T: ...[, Ritual]` stat line and, for some spells, a
 //!   `Req:`/`Reg:` requisite line (`Reg:` is the book's own typo for `Req:`,
-//!   seen at ArMDE:13222, :15448, :15545 and inline at ArMDE:14016 — this
+//!   seen at ArMDE:13294, :15525, :15622 and inline at ArMDE:14090 — this
 //!   parser treats both spellings as the same marker, which is exactly how it
 //!   catches the four entries that are missing the requisite this typo
 //!   states; see the handover's DATA BUG rows).
@@ -37,10 +37,10 @@
 //! target the fixed enums have no slot for — `rules/core/spells.json` omits
 //! the field entirely for those five spells rather than inventing a value,
 //! confirmed against the book at each one: `spell.wind_at_the_back`
-//! ArMDE:13319, `spell.the_bountiful_feast` :13918, `spell.trackless_step`
+//! ArMDE:13391, `spell.the_bountiful_feast` :13918, `spell.trackless_step`
 //! :15506, `spell.the_earth_split_asunder` :15569, `spell.watching_ward`
 //! :15919). `normalize_duration`/`normalize_target` reproduce that mapping.
-//! One spell, Mists of Change (ArMDE:13634), states a combined
+//! One spell, Mists of Change (ArMDE:13706), states a combined
 //! "D: Sun & Year" — `normalize_duration` reads this as Year (the token that
 //! actually appears in the RDT chart and the one the data already carries),
 //! treating "Sun" as descriptive text about *when* the ritual is cast rather
@@ -213,9 +213,9 @@ fn build_heading_contexts(source: &str) -> BTreeMap<usize, HeadingContext> {
 /// Matches `R: <range>, D: <duration>, T: <target>` tolerantly: a missing
 /// comma (space only), a trailing period instead of a comma, and a
 /// `<duration-or-range> & <word>` combined token (Mists of Change's
-/// "D: Sun & Year", ArMDE:13634) all still match. Does not anchor the end of
+/// "D: Sun & Year", ArMDE:13706) all still match. Does not anchor the end of
 /// the line, so trailing junk — a ", Ritual" suffix, or (for
-/// `spell.thaumaturgical_transformation_of_plants_to_iron`, ArMDE:14016) an
+/// `spell.thaumaturgical_transformation_of_plants_to_iron`, ArMDE:14090) an
 /// inline "Reg: Terram" the book ran onto the same line with no separating
 /// comma — is simply left unconsumed.
 fn stat_line_regex() -> &'static Regex {
@@ -231,7 +231,7 @@ fn stat_line_regex() -> &'static Regex {
 /// Matches a `Req:`/`Reg:` requisite declaration anywhere in a line (not
 /// anchored to the line start), so it also catches the one spell where the
 /// book runs it onto the end of the stat line itself with no preceding
-/// comma (ArMDE:14016). `Reg:` is the book's own typo for `Req:` (see module
+/// comma (ArMDE:14090). `Reg:` is the book's own typo for `Req:` (see module
 /// doc); both are treated as the same marker.
 fn requisites_regex() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
@@ -256,7 +256,7 @@ fn normalize_range(token: &str) -> Option<SpellRange> {
 fn normalize_duration(raw: &str) -> Option<Option<SpellDuration>> {
     let trimmed = raw.trim();
     if trimmed.eq_ignore_ascii_case("sun & year") {
-        // Mists of Change, ArMDE:13634 — see module doc.
+        // Mists of Change, ArMDE:13706 — see module doc.
         return Some(Some(SpellDuration::Year));
     }
     Some(match trimmed {

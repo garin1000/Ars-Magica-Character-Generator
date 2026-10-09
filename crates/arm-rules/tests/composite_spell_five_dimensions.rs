@@ -1,9 +1,9 @@
 //! review-final.json finding #3 (MINOR): one spell combining all five
 //! cross-cutting dimensions today's commits each tested individually (at most
-//! two or three together) — the requisite fold (ArMDE:12309-12311), Magical
-//! Focus doubling (ArMDE:4403), Potent Magic (D79), a Deficient Art
-//! (ArMDE:5909-5915), and an Incompatible Arts barred combination reached only
-//! through a requisite (ArMDE:6292, D81.8/D81.15) — with hand-computed
+//! two or three together) — the requisite fold (ArMDE:12381-12383), Magical
+//! Focus doubling (ArMDE:4474), Potent Magic (D79), a Deficient Art
+//! (ArMDE:5980-5986), and an Incompatible Arts barred combination reached only
+//! through a requisite (ArMDE:6363, D81.8/D81.15) — with hand-computed
 //! expected values, verified against the actual rule functions
 //! (`effective/spell.rs::spell_level_cap`'s formula and
 //! `derived/casting.rs::spell_casting_total`'s, both read directly rather than
@@ -11,7 +11,7 @@
 //!
 //! A genuine rules wrinkle surfaces in building this: a Deficient Art flaw
 //! (`flaw.deficient_form`/`flaw.deficient_technique`) is `incompatible_with`
-//! an Incompatible Arts flaw (ArMDE:6292's own closing sentence, "may not be
+//! an Incompatible Arts flaw (ArMDE:6363's own closing sentence, "may not be
 //! combined with a Deficiency") — so the two cannot coexist LEGALLY. This test
 //! still constructs the combination anyway (reachable via direct-unchecked
 //! entry, a hand-edited save, or simply never running `validate`): CLAUDE.md's
@@ -25,15 +25,15 @@
 //!
 //! - Arts: Cr 15, Ig 12, Re 5 (LOWER than Cr — binds the Technique fold),
 //!   Aq 20 (HIGHER than Ig — does NOT numerically bind the Form fold, but
-//!   Deficiency still applies per ArMDE:12311's closing sentence).
+//!   Deficiency still applies per ArMDE:12383's closing sentence).
 //! - `flaw.deficient_form { form: art.aquam }` — Aq is Deficient.
 //! - `virtue.major_magical_focus` + the spell marked `within_focus: true`.
-//! - `virtue.potent_magic_major` (+6, ArMDE:4744-4748) + the spell marked
+//! - `virtue.potent_magic_major` (+6, ArMDE:4815-4819) + the spell marked
 //!   `within_potent_field: true`.
 //! - `flaw.incompatible_arts { technique_1: art.rego, form_1: art.ignem,
 //!   technique_2: art.muto, form_2: art.herbam }` — combo 1 is (Re, Ig): NOT
 //!   the spell's own primary pair (Cr, Ig), reached only because Re is a
-//!   Technique-class requisite (ArMDE:6292, "even if one or both are
+//!   Technique-class requisite (ArMDE:6363, "even if one or both are
 //!   requisites").
 //!
 //! **Level cap** (`effective/spell.rs::spell_level_cap`):
@@ -59,7 +59,7 @@
 //! 0 (Encumbrance) + 0 (Aura) + 0 (no unconditional CastingTotalMod) = 17`.
 //! `within_focus` (focus held) adds `te.min(fo) = 5` -> `22`. `within_potent_
 //! field` adds Potent Magic Major's own `casting_total_mod { amount: 6, scope:
-//! "all", potent_field_only: true }`, the MAX (not sum, ArMDE:4742) over
+//! "all", potent_field_only: true }`, the MAX (not sum, ArMDE:4813) over
 //! matching carriers -> `28`. Deficient (same Aq-in-requisites test) halves:
 //! `28 / 2 = 14`. **casting total = 14.**
 //!
@@ -249,7 +249,7 @@ fn casting_total_folds_requisite_focus_potent_bonus_and_deficiency_together() {
         Some(14),
         "hand-computed casting total: min(15,5)+min(12,20)+0+0+0+0 = 17, +5 \
          within_focus (min of the two folded scores) = 22, +6 within_potent_field \
-         (Major Potent Magic, MAX not sum per ArMDE:4742) = 28, halved for the \
+         (Major Potent Magic, MAX not sum per ArMDE:4813) = 28, halved for the \
          Deficient Aq requisite -> 14; got {total:?}"
     );
 }
@@ -258,7 +258,7 @@ fn casting_total_folds_requisite_focus_potent_bonus_and_deficiency_together() {
 fn incompatible_arts_barred_combination_still_fires_alongside_everything_else() {
     // The barred pair (Re, Ig) is reached ONLY through the spell's Rego
     // requisite — its own primary pair (Cr, Ig) is not one of the two
-    // declared combinations — exactly ArMDE:6292's "even if one or both are
+    // declared combinations — exactly ArMDE:6363's "even if one or both are
     // requisites" (D81.15), and this must still fire with every other marker
     // (focus, potent field, deficiency) also in play.
     let ruleset = ruleset_with_only_spell(SPELL_JSON);
@@ -282,7 +282,7 @@ fn incompatible_arts_barred_combination_still_fires_alongside_everything_else() 
 fn entity_still_reports_the_flaw_level_incompatibility() {
     // Honest, not papered over (task instruction): `flaw.incompatible_arts`
     // and `flaw.deficient_form` are mutually `incompatible_with` each other
-    // (ArMDE:6292, "may not be combined with a Deficiency") — this combination
+    // (ArMDE:6363, "may not be combined with a Deficiency") — this combination
     // is reachable (direct-unchecked entry, a hand-edited save) but is a rules
     // VIOLATION the engine must still flag, independently of whichever of the
     // two numeric totals above compose correctly regardless.
@@ -296,7 +296,7 @@ fn entity_still_reports_the_flaw_level_incompatibility() {
             .issues
             .iter()
             .any(|i| i.code == ValidationIssue::CODE_INCOMPATIBLE),
-        "ArMDE:6292: Incompatible Arts + a Deficiency on the same character must \
+        "ArMDE:6363: Incompatible Arts + a Deficiency on the same character must \
          still be reported as mutually incompatible: {:?}",
         result.issues
     );

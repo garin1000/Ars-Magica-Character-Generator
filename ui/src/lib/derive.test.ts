@@ -823,7 +823,7 @@ describe('incompatibleRefs — same-choice exclusions (D69.6)', () => {
 
 // --- blockedSameItemValues() -------------------------------------------------
 
-describe('blockedSameItemValues — same-item value exclusions (RC review-C item 2, ArMDE:7033)', () => {
+describe('blockedSameItemValues — same-item value exclusions (RC review-C item 2, ArMDE:7104)', () => {
   // Warped Senses' own shape: Weak Sight declares `forbids_same_item_values`
   // naming Sensitive Sight, so a SECOND copy of the same item may not hold
   // Sensitive Sight while a held copy's own value is Weak Sight — but two
@@ -1171,7 +1171,7 @@ describe('selectionDisplayName', () => {
   // B7 recorded WHICH supernatural realm a copy of Folk Magic is aligned to
   // ("The choice of (Realm) Lore also determines which supernatural realm his
   // magic is aligned to for the purposes of aura modifiers" —
-  // `ArMDE:3909`), and surfaced it in
+  // `ArMDE:3980`), and surfaced it in
   // the picker and the Markdown export — but not on the row, because the name
   // template mentioned only `{category}` and `displayName` substitutes nothing
   // else. Both halves are asserted: the template must name the Realm, and the
@@ -1310,7 +1310,7 @@ describe('exemplarLabel / requirementAbilityLabel', () => {
   });
 
   it('heads the requirement with the exemplar, so its score follows it directly', () => {
-    // `ArMDE:2437` demands "Latin 1". The label used to read "Dead Language (e.g. Latin)",
+    // `ArMDE:2505` demands "Latin 1". The label used to read "Dead Language (e.g. Latin)",
     // which put the example between the Ability and its score — "Dead Language
     // (e.g. Latin) 1" reads as though "e.g. Latin" were the thing being scored.
     expect(requirementAbilityLabel(rs, 'ability.dead_language', null, 'latin', t)).toBe('Latin');
@@ -1405,7 +1405,7 @@ describe('paramValueUsage', () => {
     expect(usage.size).toBe(1);
   });
 
-  // B7: Folk Magic gained a second axis (ArMDE:3909, :3919 — "you can
+  // B7: Folk Magic gained a second axis (ArMDE:3980, :3990 — "you can
   // align it to the same Realm as before or pick a different one"), so a copy
   // is a repeat only when it matches on EVERY parameter, exactly as the
   // engine's `(item_ref, params)` duplicate key says. Counting one key in
@@ -1658,9 +1658,9 @@ describe('groupByCategory', () => {
 
   // The rulebook's own Virtue/Flaw indexes list a dual-category item under BOTH
   // of its categories, with no notion of one being primary: Sufi appears at
-  // `ArMDE:3179` under
-  // "### Supernatural, Minor" (ArMDE:3135) and again at ArMDE:3230 under
-  // "### Social Status, Minor" (ArMDE:3187). The Available list mirrors that — an item
+  // `ArMDE:3248` under
+  // "### Supernatural, Minor" (ArMDE:3203) and again at ArMDE:3300 under
+  // "### Social Status, Minor" (ArMDE:3256). The Available list mirrors that — an item
   // is offered under every category that can make it legal for the character.
   it('lists a dual-category item under every category it carries', () => {
     const ruleset = makeRuleset([
@@ -2540,7 +2540,7 @@ describe('art helpers', () => {
 });
 
 // I4 (try-out finding 22): the spell code, requisites included ("Cr(Re)Ig 30",
-// ArMDE:19301), is composed by the engine and arrives on the payload as
+// ArMDE:19378), is composed by the engine and arrives on the payload as
 // `spell_codes`. The TS side only appends the level, a space apart.
 describe('spellCodeWithLevel', () => {
   function withCodes(spell_codes: Record<string, string>): LocalizedRuleset {
@@ -4022,7 +4022,7 @@ describe('generalXpAllocation', () => {
 
   it('spends Skilled Parens before the base', () => {
     // "You gain an additional 60 experience points … during apprenticeship"
-    // (ArMDE:4966): a typed 240 becomes a pool of 300, of which 50 are
+    // (ArMDE:5037): a typed 240 becomes a pool of 300, of which 50 are
     // spent — all of them off the bonus, exactly as the engine drains a restricted
     // pool before the general one.
     const a = generalXpAllocation(50, 300, 60);
@@ -4200,7 +4200,7 @@ describe('grantItemLabel', () => {
 
 // --- I5 (try-out finding 1): a grant's fixed parameter the name does not name ---
 //
-// House Tremere grants "Minor Magical Focus (certamen)" (ArMDE:2281) as a fixed
+// House Tremere grants "Minor Magical Focus (certamen)" (ArMDE:2349) as a fixed
 // grant whose `focus` is set by the data (`rules/core/houses.json`). The name
 // template "Minor Magical Focus" has no `{focus}` token, so `displayName` had
 // nowhere to put the value and the row read only "Minor Magical Focus". A granted
@@ -4376,7 +4376,7 @@ describe('grantItemLabel: fixed parameters the name template does not consume (I
   }
 
   // The try-out case itself, pinned in both locales, as each book prints it: "Minor
-  // Magical Focus (certamen)." (ArMDE:2281) and "Kleiner Magischer Fokus
+  // Magical Focus (certamen)." (ArMDE:2349) and "Kleiner Magischer Fokus
   // (Certamen)." (the German book, same line). I5b: the shipped data names the
   // parameter-catalogue value `magical_focus.certamen`, whose words live per locale
   // in `rules/i18n/<lang>/parameter_catalogue.json`.
@@ -4605,7 +4605,7 @@ describe('eligibleForConstraint', () => {
 
   // An item that declares a `category`-domain parameter is an explicit either/or
   // between two readings of ONE item (Sufi "either as a Minor Social Status
-  // Virtue or a Minor Supernatural Virtue", ArMDE:5077-5084), and the engine
+  // Virtue or a Minor Supernatural Virtue", ArMDE:5148-5155), and the engine
   // judges the pick on the reading in force — `open_pick_satisfies` resolves the
   // pick's categories through `types.rs::PointItem::categories_for`. A menu is
   // built BEFORE any reading is chosen, so it must admit an item when ANY
@@ -4674,7 +4674,7 @@ describe('eligibleForConstraint', () => {
 
   // Mirrors the engine's `open_pick_satisfies` House check: an open grant menu
   // must not offer a Virtue whose own descriptor makes its bearer a member of a
-  // DIFFERENT House (Heartbeast → Bjornaer, ArMDE:4059-4061). A grant pick is
+  // DIFFERENT House (Heartbeast → Bjornaer, ArMDE:4130-4132). A grant pick is
   // never prerequisite-checked, so if the menu offers it nothing else will
   // complain. Only `house` prerequisites filter; a `has` prerequisite resolves as
   // the build progresses and must stay on the menu.
@@ -5442,7 +5442,7 @@ describe('childhoodSlots / childhoodEntryPreview / childhoodSlotFault', () => {
 
     it('faults a childhood language repeating the native language', () => {
       // Childhood's spread buys a Living Language *other than* the native one.
-      // Source: ArMDE:2378
+      // Source: ArMDE:2446
       const slots = { area_a: 'Rhine', area_b: 'Provence', language: 'German' };
       expect(childhoodSlotFault(rs, traveling, 'language', slots, plan)).toBe('native');
     });
@@ -5704,7 +5704,7 @@ describe('sameParam', () => {
 
 // L2 (try-out finding 8, ruling F5): the language requirements name the real
 // languages. The Academic warning lists every qualifying language from data
-// (ArMDE:7151: "a Latin, Greek, Hebrew, or Arabic score of at least 3"); the magus
+// (ArMDE:7222: "a Latin, Greek, Hebrew, or Arabic score of at least 3"); the magus
 // minimum is Latin itself, so its note no longer says "any Dead Language".
 describe('language requirement messages (L2)', () => {
   const bundles = { en: buildBundle('en'), de: buildBundle('de') } as const;

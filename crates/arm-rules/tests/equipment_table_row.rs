@@ -2,16 +2,16 @@
 //! see `tmp/table-guard-handover.md`): every `rules/core/equipment.json`
 //! weapon/shield/armor entry's shipped stats must match the actual Markdown
 //! table row its own `source.lines[0]` cites — the Armor Table
-//! (`ArMDE:16940-16949`), Melee Weapon Statistics (`ArMDE:16955-16990`),
-//! Missile Weapon Statistics (`ArMDE:17001-17013`), and the Natural Weapons
-//! Table's lone `weapon.grapple` row (`ArMDE:18557-18572`).
+//! (`ArMDE:17017-17026`), Melee Weapon Statistics (`ArMDE:17032-17067`),
+//! Missile Weapon Statistics (`ArMDE:17078-17090`), and the Natural Weapons
+//! Table's lone `weapon.grapple` row (`ArMDE:18634-18649`).
 //!
 //! Every row's table header is read fresh by scanning upward from the cited
 //! data row for the nearest Markdown separator line (`| --- | --- |`) and
 //! taking the row immediately above it — cells are mapped to fields **by
 //! that header text**, never a hardcoded column position. The one exception
 //! is the Armor Table's header, which repeats the word "Load" under both its
-//! "Partial" and "Full" super-columns (`ArMDE:16942`); [`disambiguate_headers`]
+//! "Partial" and "Full" super-columns (`ArMDE:17019`); [`disambiguate_headers`]
 //! resolves that by carrying the nearest preceding "Partial"/"Full" word
 //! forward, which is itself header-driven rather than a literal index.
 //!
@@ -62,7 +62,7 @@ fn split_row(line: &str) -> Vec<String> {
 
 /// Disambiguates the Armor Table's two same-named "Load" header cells into
 /// "Partial Load" / "Full Load" by carrying forward the nearest preceding
-/// "Partial"/"Full" header word (`ArMDE:16942`) — still header-driven, not a
+/// "Partial"/"Full" header word (`ArMDE:17019`) — still header-driven, not a
 /// hardcoded index. Every other table's headers are already unique and pass
 /// through unchanged.
 fn disambiguate_headers(headers: Vec<String>) -> Vec<String> {
@@ -163,7 +163,7 @@ fn parse_u16_opt(raw: &str) -> Result<Option<u16>, String> {
 }
 
 /// Maps the table's "Ability" column word to the engine's `ability.*` id,
-/// including the one OCR slip the source ships at `ArMDE:16965` ("Braw1" for
+/// including the one OCR slip the source ships at `ArMDE:17042` ("Braw1" for
 /// "Brawl", a digit standing in for the letter l — `rules/source/` is a COPY,
 /// so the parser recognizes the typo rather than a local hand-edit).
 fn ability_id(word: &str) -> Result<&'static str, String> {
@@ -270,18 +270,18 @@ fn check_weapon(entry: &Value, lines: &[&str]) -> Result<(), Vec<String>> {
 
     // Natural Weapons Table has no Load/Str/Ability columns at all: "Strength,
     // Load and Cost are not applicable" / "All natural weapons use the Brawl
-    // Ability" (ArMDE:18572) fix these to constants instead of reading a cell.
+    // Ability" (ArMDE:18649) fix these to constants instead of reading a cell.
     if heading == "natural-weapons-table" {
         let shipped_load = entry["load"].as_u64().expect("load") as u8;
         if shipped_load != 0 {
             problems.push(format!(
-                "load: Natural Weapons Table has no Load column (ArMDE:18572: \"Load... \
+                "load: Natural Weapons Table has no Load column (ArMDE:18649: \"Load... \
                  not applicable\"), so load must be 0, but shipped {shipped_load}"
             ));
         }
         if entry.get("min_strength").is_some() {
             problems.push(
-                "min_strength: Natural Weapons Table has no Str column (ArMDE:18572: \
+                "min_strength: Natural Weapons Table has no Str column (ArMDE:18649: \
                  \"Strength... not applicable\"), so min_strength must be absent"
                     .to_string(),
             );
@@ -289,7 +289,7 @@ fn check_weapon(entry: &Value, lines: &[&str]) -> Result<(), Vec<String>> {
         let shipped_ability = entry["ability"].as_str().expect("ability");
         if shipped_ability != "ability.brawl" {
             problems.push(format!(
-                "ability: Natural Weapons Table has no Ability column (ArMDE:18572: \"All \
+                "ability: Natural Weapons Table has no Ability column (ArMDE:18649: \"All \
                  natural weapons use the Brawl Ability\"), so ability must be ability.brawl, \
                  but shipped {shipped_ability}"
             ));
@@ -361,8 +361,8 @@ fn check_weapon(entry: &Value, lines: &[&str]) -> Result<(), Vec<String>> {
     }
 
     // two_handed is derived per table, never a column: Melee table rows whose
-    // Ability is "Great" (9 rows, ArMDE:7494); Missile table rows whose name
-    // cell carries the footnote asterisk (ArMDE:17008-17013).
+    // Ability is "Great" (9 rows, ArMDE:7566); Missile table rows whose name
+    // cell carries the footnote asterisk (ArMDE:17085-17090).
     let ability_word = cell(&headers, &cells, "Ability").map(str::trim);
     let expected_two_handed = match heading {
         "melee-weapon-statistics" => ability_word == Some("Great"),
@@ -388,7 +388,7 @@ fn check_weapon(entry: &Value, lines: &[&str]) -> Result<(), Vec<String>> {
 }
 
 /// Compares one `shields[]` entry's shipped stats against its own cited table
-/// row (shields share the Melee Weapon Statistics table, ArMDE:16975-16977).
+/// row (shields share the Melee Weapon Statistics table, ArMDE:17052-17054).
 /// A shield has no Ability/Dam/Range/two_handed of its own, so those columns
 /// are not checked.
 fn check_shield(entry: &Value, lines: &[&str]) -> Result<(), Vec<String>> {
@@ -567,7 +567,7 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[(
     "weapon.sling",
     "RULES.md \"Two-handed weapon\" row: the Missile Weapon Statistics \
      table's asterisk footnote (\"Requires two free hands to load and \
-     fire\", ArMDE:17008-17013) covers the Sling row too, but the existing \
+     fire\", ArMDE:17085-17090) covers the Sling row too, but the existing \
      ruling keeps it unflagged — \"the Sling shares that asterisk but \
      stays unflagged: it is a thrown weapon and keeps the status-quo \
      shield handling\" — so two_handed stays false despite the footnote \
@@ -745,7 +745,7 @@ fn check_rejects_synthetic_wrong_entries() {
 }
 
 /// Guards the guard: [`ability_id`] must recognize the real catalogue's
-/// own source typo (ArMDE:16965, "Braw1") without silently accepting an
+/// own source typo (ArMDE:17042, "Braw1") without silently accepting an
 /// arbitrary unrecognized word.
 #[test]
 fn ability_id_rejects_unrecognized_words() {

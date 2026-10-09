@@ -3,7 +3,7 @@
 //!
 //! "In the first five years of life, characters gain 75 experience points in their
 //! native language […] and 45 experience points to divide between […] Living
-//! Language (other than the character's native language)" (ArMDE:2378).
+//! Language (other than the character's native language)" (ArMDE:2446).
 //!
 //! A `Catalogued` native language is the catalogue value itself: it matches a
 //! picked row by id and a typed row spelling any of its names, it is what a Sample

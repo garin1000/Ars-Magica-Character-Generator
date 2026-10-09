@@ -110,7 +110,7 @@ fn bare_entity(kind: EntityKind, type_id: &str) -> Entity {
 /// unset) renders none of the "something to show" sections — only the title
 /// and, because it is still a Character, the body-constant Fatigue/Wound
 /// tracks. The grog profile is used deliberately: it is the one shipped
-/// profile that grants NO baseline Confidence at all (`ArMDE:1161/:2522`,
+/// profile that grants NO baseline Confidence at all (`ArMDE:1229/:2522`,
 /// see `confidence()`'s own doc comment), so this also exercises
 /// `write_confidence`'s all-zero early return — unreachable from any other
 /// profile, which all grant a non-zero baseline.

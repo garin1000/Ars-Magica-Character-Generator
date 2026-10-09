@@ -1,5 +1,5 @@
 //! D81.4/D81.14 (`docs/vf-audit/decisions.md`; `tmp/merinita-handover.md`) —
-//! tests for Merinita's conditional Warping Point: ArMDE:2280, "Any magus in
+//! tests for Merinita's conditional Warping Point: ArMDE:2348, "Any magus in
 //! this House without a faerie-related Virtue or Flaw has a Warping Point,
 //! inflicted to allow initiation into the Mystery."
 //!
@@ -85,7 +85,7 @@ fn bound_to_realm(realm: &str) -> Selection {
     )
 }
 
-/// ArMDE:2280's first clause fires: a Merinita magus with no faerie-related
+/// ArMDE:2348's first clause fires: a Merinita magus with no faerie-related
 /// Virtue or Flaw owes the Mystery's initiation Warping Point.
 ///
 /// Already GREEN under the phase-1 stub: with no faerie-related V/F present,
@@ -102,11 +102,11 @@ fn merinita_without_faerie_related_vf_gets_one_warping_point() {
     assert_eq!(
         outcome.points, 1,
         "a Merinita magus with no faerie-related V/F must owe 1 Warping Point \
-         from ArMDE:2280's initiation clause, got {outcome:?}"
+         from ArMDE:2348's initiation clause, got {outcome:?}"
     );
 }
 
-/// ArMDE:2280's exception: a faerie-related Virtue (here, Faerie Blood) means
+/// ArMDE:2348's exception: a faerie-related Virtue (here, Faerie Blood) means
 /// the magus does not owe the initiation Warping Point.
 ///
 /// RED under the phase-1 stub: `has_faerie_related_vf` always returns
@@ -123,7 +123,7 @@ fn merinita_with_a_faerie_related_virtue_gets_none_from_this_source() {
     assert_eq!(
         outcome.points, 0,
         "a Merinita magus holding a faerie-related Virtue must owe NO Warping \
-         Point from ArMDE:2280's initiation clause, got {outcome:?}"
+         Point from ArMDE:2348's initiation clause, got {outcome:?}"
     );
 }
 
@@ -164,7 +164,7 @@ fn merinita_initiation_point_stacks_additively_with_other_warping() {
     assert_eq!(
         outcome.points, 3,
         "the initiation point must add to pre-existing accrued Warping \
-         Points (2 stored + 1 from ArMDE:2280), got {outcome:?}"
+         Points (2 stored + 1 from ArMDE:2348), got {outcome:?}"
     );
 }
 
@@ -189,7 +189,7 @@ fn merinita_initiation_point_stacks_additively_with_a_warping_grant_flaw() {
 
     assert_eq!(
         outcome.points, 6,
-        "the initiation point (1, ArMDE:2280 — no faerie-related V/F held) \
+        "the initiation point (1, ArMDE:2348 — no faerie-related V/F held) \
          must add to Warped by Magic's own grant (5, Effect::WarpingGrant), \
          neither suppressing the other, got {outcome:?}"
     );
@@ -197,7 +197,7 @@ fn merinita_initiation_point_stacks_additively_with_a_warping_grant_flaw() {
 
 // --- D81.14: the three explicitly flagged entries --------------------------
 
-/// D81.14: Faerie Friend (ArMDE:6052) is flagged `faerie_related: true` even
+/// D81.14: Faerie Friend (ArMDE:6123) is flagged `faerie_related: true` even
 /// though it carries no realm association at all (`categories: ["story"]`).
 ///
 /// RED before phase 2: the predicate ignored the flag entirely.
@@ -211,11 +211,11 @@ fn merinita_with_faerie_friend_gets_none_from_this_source() {
     assert_eq!(
         outcome.points, 0,
         "Faerie Friend is flagged faerie-related (D81.14) and must exempt \
-         the magus from ArMDE:2280's initiation point, got {outcome:?}"
+         the magus from ArMDE:2348's initiation point, got {outcome:?}"
     );
 }
 
-/// D81.14: Faerie Upbringing (ArMDE:6056) is flagged `faerie_related: true`
+/// D81.14: Faerie Upbringing (ArMDE:6127) is flagged `faerie_related: true`
 /// (`categories: ["personality"]`, no realm association).
 ///
 /// RED before phase 2.
@@ -229,11 +229,11 @@ fn merinita_with_faerie_upbringing_gets_none_from_this_source() {
     assert_eq!(
         outcome.points, 0,
         "Faerie Upbringing is flagged faerie-related (D81.14) and must \
-         exempt the magus from ArMDE:2280's initiation point, got {outcome:?}"
+         exempt the magus from ArMDE:2348's initiation point, got {outcome:?}"
     );
 }
 
-/// D81.14: Susceptibility to Faerie Power (ArMDE:6819) is flagged
+/// D81.14: Susceptibility to Faerie Power (ArMDE:6890) is flagged
 /// `faerie_related: true` (`categories: ["hermetic"]`, no realm association —
 /// it is a Hermetic Flaw with a `magic_resistance_mod` effect, not a
 /// Supernatural entry).
@@ -252,7 +252,7 @@ fn merinita_with_susceptibility_to_faerie_power_gets_none_from_this_source() {
     assert_eq!(
         outcome.points, 0,
         "Susceptibility to Faerie Power is flagged faerie-related (D81.14) \
-         and must exempt the magus from ArMDE:2280's initiation point, got \
+         and must exempt the magus from ArMDE:2348's initiation point, got \
          {outcome:?}"
     );
 }
@@ -274,7 +274,7 @@ fn merinita_bound_to_faerie_realm_gets_none_from_this_source() {
     assert_eq!(
         outcome.points, 0,
         "Bound to (Realm) at Faerie resolves to the Faerie realm (D81.14) \
-         and must exempt the magus from ArMDE:2280's initiation point, got \
+         and must exempt the magus from ArMDE:2348's initiation point, got \
          {outcome:?}"
     );
 }
@@ -296,7 +296,7 @@ fn merinita_bound_to_magic_realm_still_gets_one_warping_point() {
     assert_eq!(
         outcome.points, 1,
         "Bound to (Realm) at Magic is not faerie-related and must NOT \
-         exempt the magus from ArMDE:2280's initiation point, got {outcome:?}"
+         exempt the magus from ArMDE:2348's initiation point, got {outcome:?}"
     );
 }
 
@@ -340,7 +340,7 @@ fn exported(entity: &Entity) -> String {
 }
 
 /// `export/magic.rs::Doc::write_annotations` prints the Warping section from
-/// `effective::warping`, so the House's conditional point (ArMDE:2280) must
+/// `effective::warping`, so the House's conditional point (ArMDE:2348) must
 /// show on the sheet even though nothing is stored in `warping_points`.
 #[test]
 fn merinita_initiation_point_appears_in_the_exported_warping_section() {
@@ -360,7 +360,7 @@ fn merinita_initiation_point_appears_in_the_exported_warping_section() {
         rendered
             .lines()
             .any(|l| l == "- **warping-points-label**: 1"),
-        "the exported Warping Points must include ArMDE:2280's point, got:\n{rendered}"
+        "the exported Warping Points must include ArMDE:2348's point, got:\n{rendered}"
     );
 }
 

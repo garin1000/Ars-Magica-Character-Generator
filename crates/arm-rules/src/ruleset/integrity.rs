@@ -249,7 +249,7 @@ impl Ruleset {
 
     /// A rules-named instance of a **catalogued** Ability must be a value of that
     /// Ability's own catalogue (L2): "Dead Language: Arabic" names a value Dead
-    /// Language cannot hold (ArMDE:7432), so a requirement naming it could never be
+    /// Language cannot hold (ArMDE:7504), so a requirement naming it could never be
     /// met. An uncatalogued Ability's instance is free text and is not checked.
     fn check_value_in_own_catalogue(
         &self,
@@ -272,10 +272,10 @@ impl Ruleset {
         }
     }
 
-    /// The scholarly languages of ArMDE:7151 name catalogue values, so each
+    /// The scholarly languages of ArMDE:7222 name catalogue values, so each
     /// listed Ability must be catalogued and each value must sit in its own
     /// catalogue (L2): "Latin, Greek, Hebrew, or Arabic", of which "only Hebrew is
-    /// a dead language" (ArMDE:7432) — so Greek and Arabic are Living Language
+    /// a dead language" (ArMDE:7504) — so Greek and Arabic are Living Language
     /// values, and naming one under Dead Language is a broken rules file.
     fn validate_scholarly_language_values(&self, errors: &mut Vec<String>) {
         let Some(requirement) = &self.scholarly_language else {
@@ -361,7 +361,7 @@ impl Ruleset {
 
     /// Checks the "mandatory companion change" for a `taken_as` item: any item
     /// declaring a [`ParameterDomain::Category`] parameter must cap `max_total`
-    /// at 1. `ArMDE:5083` ("either as a Minor Social Status Virtue or a Minor
+    /// at 1. `ArMDE:5154` ("either as a Minor Social Status Virtue or a Minor
     /// Supernatural Virtue") offers a choice between two READINGS of one item,
     /// not two items — without this cap, `taken_as` sitting inside the
     /// `(item_ref, params)` duplicate key would let a character hold Sufi
@@ -406,7 +406,7 @@ impl Ruleset {
     /// `ParameterDef`s.
     ///
     /// A group states "at most one of these values may be named across this
-    /// item's copies" (Folk Magic's Divine/Infernal exclusion, `ArMDE:3919`). Two
+    /// item's copies" (Folk Magic's Divine/Infernal exclusion, `ArMDE:3990`). Two
     /// authoring slips would otherwise sit in the data looking enforced:
     ///
     /// - a **member that does not resolve** in the parameter's own domain
@@ -702,7 +702,7 @@ impl Ruleset {
     /// consumed. Both is contradictory rather than doubly authoritative: a
     /// flat addend and a total-halving factor are different arithmetic
     /// operations (add to the assembled Advancement Total vs. multiply it,
-    /// ArMDE:15989), and no shipped entry states both in one clause, so one
+    /// ArMDE:16066), and no shipped entry states both in one clause, so one
     /// JSON row combining them would be inventing an order the book never
     /// gives. Both failure modes are authoring slips, so both fail the load
     /// naming the offending item and source — exactly as
@@ -1032,8 +1032,8 @@ impl Ruleset {
     }
 
     /// Validates the apprenticeship block's own Ability references: every
-    /// requirement — the minimums of `ArMDE:2437` and the recommendations of
-    /// `ArMDE:2451-2461` — must name an Ability the catalogue knows, and a requirement
+    /// requirement — the minimums of `ArMDE:2505` and the recommendations of
+    /// `ArMDE:2519-2529` — must name an Ability the catalogue knows, and a requirement
     /// that narrows itself to an *instance* must name a parameterized Ability, since
     /// a plain one has no instance to be.
     ///
@@ -1048,8 +1048,8 @@ impl Ruleset {
         };
         let Some(apprenticeship) = life_stages.apprenticeship.as_ref() else {
             // A ruleset declaring Hermetic magi must declare their apprenticeship
-            // too: a magus's later life runs only "until apprenticeship" (`ArMDE:2214`,
-            // `ArMDE:2364`), so without the block the engine would cost a magus exactly as
+            // too: a magus's later life runs only "until apprenticeship" (`ArMDE:2282`,
+            // `ArMDE:2432`), so without the block the engine would cost a magus exactly as
             // it costs a companion — every year to its age, funding Arts out of a
             // child's experience. Gated on a `hermetically_trained` profile, like
             // `validate_engine_required_roles`, because that is the condition under
@@ -1070,7 +1070,7 @@ impl Ruleset {
         };
         // Each requirement's `ability` IS a ref and is resolved below, and so is
         // its `parameter` when the Ability is catalogued (L2: "Latin 1" names
-        // `language.latin`, ArMDE:2437). Its `exemplar` deliberately is NOT: it is
+        // `language.latin`, ArMDE:2505). Its `exemplar` deliberately is NOT: it is
         // a **label key** pointing at `exemplar.<slug>` in `rules/i18n/<lang>/`,
         // the rules' own wording of the demand, not a catalogue entry.
         let requirements = apprenticeship
@@ -1103,10 +1103,10 @@ impl Ruleset {
         }
 
         // The recommended set states its own total — "Total Cost: 90 experience
-        // points" (ArMDE:2461) — so the list must price to it off the
+        // points" (ArMDE:2529) — so the list must price to it off the
         // advancement table. The trust gate on transcribed data: a mistyped score
         // fails the load rather than shipping a recommendation the rulebook never
-        // costed. The *minimum* set carries no total in the source (`ArMDE:2437`), so it
+        // costed. The *minimum* set carries no total in the source (`ArMDE:2505`), so it
         // is deliberately not priced — the engine would only be checking itself.
         let mut total = Some(0u32);
         for requirement in &apprenticeship.recommended_abilities {
@@ -1216,7 +1216,7 @@ impl Ruleset {
     /// [`Self::validate_apprenticeship_refs`], so a cached ruleset returning through
     /// [`Ruleset::from_serialized`] is held to the same standard.
     ///
-    /// Source: ArMDE:2471, :2482.
+    /// Source: ArMDE:2539, :2550.
     fn validate_post_apprenticeship_rules(&self, errors: &mut Vec<String>) {
         let Some(life_stages) = self.life_stages.as_ref() else {
             return;
@@ -1224,7 +1224,7 @@ impl Ruleset {
         let Some(post) = life_stages.post_apprenticeship.as_ref() else {
             // A ruleset declaring Hermetic magi must declare their years after the
             // Gauntlet too. The apprenticeship block already ends a magus's later
-            // life at its Gauntlet age (`ArMDE:2364`); with nothing granted for the years
+            // life at its Gauntlet age (`ArMDE:2432`); with nothing granted for the years
             // after it, a magus would simply lose them. Gated on a
             // `hermetically_trained` profile, exactly like the apprenticeship
             // block above (profile-level only, D56/A0).
@@ -1281,13 +1281,13 @@ impl Ruleset {
     ///   rule: an empty set of conditions already contributes 0. It would catch no
     ///   transcription error worth catching.
     /// - *`start_age == longevity_clamp.until_age`* — two numbers from two
-    ///   different sentences (`ArMDE:16565` and `ArMDE:16575`) that happen to coincide.
+    ///   different sentences (`ArMDE:16642` and `ArMDE:16652`) that happen to coincide.
     ///   Asserting equality would invent a relationship the rules never state.
     /// - *requiring the block whenever the ruleset declares characters* — an
     ///   absent `Option` stands the subsystem down, which is the house position
     ///   stated on [`Ruleset::aging`].
     ///
-    /// Source: ArMDE:16567, :16575,
+    /// Source: ArMDE:16644, :16652,
     /// :16577, :16597-16611.
     fn validate_aging_rules(&self, errors: &mut Vec<String>) {
         let Some(aging) = self.aging.as_ref() else {
@@ -1306,7 +1306,7 @@ impl Ruleset {
             errors,
         );
 
-        // The age term is "age/10 (round up)" (`ArMDE:16567`); a divisor of 0 has no
+        // The age term is "age/10 (round up)" (`ArMDE:16644`); a divisor of 0 has no
         // rounding-up to do, it has a division by zero.
         if aging.age_divisor == 0 {
             errors.push(
@@ -1407,9 +1407,9 @@ impl Ruleset {
     }
 
     /// The three Aging Roll bound checks that are not about tiling: the top row
-    /// must be open-ended ("22+", `ArMDE:16611`), the low-roll "no older" exception
-    /// (`ArMDE:16577`) must not sit above the first Aging-Point row, and a Longevity
-    /// Ritual clamp (`ArMDE:16575`) must clear that same row for its stated purpose to
+    /// must be open-ended ("22+", `ArMDE:16688`), the low-roll "no older" exception
+    /// (`ArMDE:16654`) must not sit above the first Aging-Point row, and a Longevity
+    /// Ritual clamp (`ArMDE:16652`) must clear that same row for its stated purpose to
     /// hold. Split out of [`Self::validate_aging_rules`] (GC3) as its own named
     /// step.
     fn validate_aging_outcome_bounds(
@@ -1419,7 +1419,7 @@ impl Ruleset {
         last_index: usize,
         errors: &mut Vec<String>,
     ) {
-        // "22+" (`ArMDE:16611`) catches every total above the table; a bounded top row
+        // "22+" (`ArMDE:16688`) catches every total above the table; a bounded top row
         // would let a high total fall off the end with no result at all.
         if let Some(max) = aging.outcomes[last_index].max {
             errors.push(format!(
@@ -1430,7 +1430,7 @@ impl Ruleset {
 
         // "Particularly low rolls on the table mean that the character appears no
         // older. Otherwise, the character's apparent age increases by one year"
-        // (`ArMDE:16577`) — low rolls being the *only* exception, no row that costs
+        // (`ArMDE:16654`) — low rolls being the *only* exception, no row that costs
         // Aging Points may sit below the threshold.
         if aging.apparent_age_increase_min > first.min {
             errors.push(format!(
@@ -1461,16 +1461,16 @@ impl Ruleset {
     /// Validates the Crisis Table: that no row id is used twice, that the rows
     /// tile every crisis total between the table's two open ends, that the illness
     /// rows climb as one ladder, that the attending doctor's Ability resolves, and
-    /// that the two Decrepitude thresholds of `ArMDE:16617` sit in the right order.
+    /// that the two Decrepitude thresholds of `ArMDE:16694` sit in the right order.
     ///
     /// The tiling check is **contiguity**, like the Aging Roll table's, and for
-    /// the same reason — but with a second open end. "8 or less" (`ArMDE:16626`) has no
-    /// lower bound and "19+" (`ArMDE:16632`) no upper one, so the first row and only the
+    /// the same reason — but with a second open end. "8 or less" (`ArMDE:16703`) has no
+    /// lower bound and "19+" (`ArMDE:16709`) no upper one, so the first row and only the
     /// first may omit its minimum, the last and only the last its maximum, and
     /// between them no total may land on two rows or on none.
     ///
     /// The ladder check is licensed by one sentence: "The level of spell required
-    /// depends on the severity of the crisis, as noted on the table." (`ArMDE:16638`)
+    /// depends on the severity of the crisis, as noted on the table." (`ArMDE:16715`)
     /// That makes severity a **rank** rather than a label, and makes the required
     /// Ritual level a function of it — so severity and Ritual level must both climb
     /// strictly down the illness rows, or the stated dependency does not hold. The
@@ -1486,12 +1486,12 @@ impl Ruleset {
     ///
     /// **Considered and rejected** (recorded so they are not re-litigated):
     /// - *the `+3` Ease-Factor and `+5` Ritual-level steps* — the shipped columns
-    ///   do step by exactly 3 and 5 (`ArMDE:16628-16632`), but the rulebook never states
+    ///   do step by exactly 3 and 5 (`ArMDE:16705-16709`), but the rulebook never states
     ///   that relation, and gating it would refuse a legitimate house table. Slice
     ///   6b6 rejected `start_age == longevity_clamp.until_age` on the same ground:
     ///   a gate must not invent a relationship the rules do not state.
     /// - *`ritual_level` == the Creo Corpus guideline + 5* — the guidelines at
-    ///   `ArMDE:13372-13376` price a minor/serious/major/critical/terminal aging crisis
+    ///   `ArMDE:13444-13448` price a minor/serious/major/critical/terminal aging crisis
     ///   at 15/20/25/30/35, exactly 5 below the table's 20/25/30/35/40, which is the
     ///   `+1` Touch magnitude of a Ritual cast on someone else. But the guidelines
     ///   are not loaded data and the `+5` is an inference, not a stated rule. It
@@ -1510,7 +1510,7 @@ impl Ruleset {
     ///   subsystem down, and the player learns about it from a refusal at command
     ///   time rather than from a ruleset that will not load at all.
     ///
-    /// Source: ArMDE:16617,
+    /// Source: ArMDE:16694,
     /// :16624-16634, :16638.
     fn validate_crisis_rules(&self, errors: &mut Vec<String>) {
         let Some(aging) = self.aging.as_ref() else {
@@ -1535,7 +1535,7 @@ impl Ruleset {
         let last_index = crisis.rows.len() - 1;
         let last = &crisis.rows[last_index];
 
-        // "8 or less" (`ArMDE:16626`) opens the table below and "19+" (`ArMDE:16632`) closes
+        // "8 or less" (`ArMDE:16703`) opens the table below and "19+" (`ArMDE:16709`) closes
         // it above. A bounded end would let a total fall off the table with no
         // result at all.
         if let Some(min) = first.min {
@@ -1585,7 +1585,7 @@ impl Ruleset {
         self.validate_crisis_ladder(&crisis.rows, errors);
 
         // "An Int + Medicine roll against an Ease Factor of 6 allows the character
-        // to add the attendant's Medicine score" (`ArMDE:16634`) names the Ability by
+        // to add the attendant's Medicine score" (`ArMDE:16711`) names the Ability by
         // id, so a typo would leave the survival read-out quietly finding no score
         // to add — a referential-integrity failure like every other ref in the
         // rules data.
@@ -1599,7 +1599,7 @@ impl Ruleset {
         }
 
         // "Characters with a Decrepitude score of 4 are extremely frail … Characters
-        // with a Decrepitude score of 5 are bedridden and will die" (`ArMDE:16617`) — two
+        // with a Decrepitude score of 5 are bedridden and will die" (`ArMDE:16694`) — two
         // thresholds on one ascending track, so frailty must be reached first. The
         // pair rides with the crisis block because the crisis subsystem is the only
         // thing that reads it.
@@ -1648,16 +1648,16 @@ impl Ruleset {
         }
     }
 
-    /// The illness ladder of `ArMDE:16638`: severity, required Ritual level and Ease
+    /// The illness ladder of `ArMDE:16715`: severity, required Ritual level and Ease
     /// Factor all climb together down the illness rows, and the bedridden rows —
     /// which carry no severity at all — sit in front of every illness.
     ///
     /// Only the **last** illness row may omit its Ease Factor: "**Terminal
-    /// illness**. CrCo40 required to survive." (`ArMDE:16632`) offers no Stamina roll,
+    /// illness**. CrCo40 required to survive." (`ArMDE:16709`) offers no Stamina roll,
     /// and a milder row that offered none either would be unsurvivable without
     /// magic while a worse one was not.
     ///
-    /// Source: ArMDE:16626-16632, :16638.
+    /// Source: ArMDE:16703-16709, :16715.
     fn validate_crisis_ladder(&self, rows: &[CrisisRow], errors: &mut Vec<String>) {
         let mut illnesses: Vec<(&Id, CrisisSeverity, Option<i32>, u32)> = Vec::new();
         let mut first_illness: Option<&Id> = None;
@@ -1735,7 +1735,7 @@ impl Ruleset {
     /// Per-row sanity for one Aging Roll outcome: a row that awards no Aging
     /// Points is a no-op that reads as a rule, and a row that names
     /// Characteristics must name at least one, each of them once — "1 Aging Point
-    /// in Str and Sta" (ArMDE:16607) gives *each* named Characteristic a
+    /// in Str and Sta" (ArMDE:16684) gives *each* named Characteristic a
     /// point, so a repeat would silently double it.
     fn validate_aging_row_effect(
         &self,
@@ -1791,7 +1791,7 @@ impl Ruleset {
     /// This is the **trust gate on transcribed rulebook data**. A package is one
     /// way of spending the two childhood blocks
     /// ("75 experience points in their native language … and 45 experience points
-    /// to divide between …", ArMDE:2378), so its entries must price to
+    /// to divide between …", ArMDE:2446), so its entries must price to
     /// exactly those blocks: a mistyped score fails the load rather than shipping
     /// a package that quietly costs 40 or 50 experience points. It also makes
     /// [`ChildhoodPackage::native_entry`]'s "at most one native entry" a real
@@ -2051,7 +2051,7 @@ impl Ruleset {
     /// the player, so it may not be literal words in a language-neutral file —
     /// it must name a parameter-catalogue value, whose text each locale supplies
     /// in `rules/i18n/<lang>/parameter_catalogue.json` (House Tremere's
-    /// `magical_focus.certamen`, ArMDE:2281). Text the PLAYER types stays free;
+    /// `magical_focus.certamen`, ArMDE:2349). Text the PLAYER types stays free;
     /// this judges rules data only. An unknown item or key is reported elsewhere.
     fn validate_grant_text_params<'v>(
         &self,
@@ -2181,11 +2181,11 @@ impl Ruleset {
                 ));
             }
         }
-        // Ritual creation-legality (ArMDE:12279-12295, :12055, :12077, :12039/:12115). Rituals are floored at
+        // Ritual creation-legality (ArMDE:12351-12367, :12127, :12149, :12111/:12115). Rituals are floored at
         // RITUAL_MIN_LEVEL; Formulaic/Spontaneous spells are capped at level 50;
         // Year duration and Boundary target each force a Ritual; a Momentary Creo
         // spell that creates a lasting thing must be a Ritual. Vision, though
-        // Boundary-level in difficulty, does NOT (ArMDE:12099).
+        // Boundary-level in difficulty, does NOT (ArMDE:12171).
         if let Some(level) = spell.level {
             if spell.ritual && level < RITUAL_MIN_LEVEL {
                 errors.push(format!(
@@ -2236,7 +2236,7 @@ impl Ruleset {
     /// `combat_ability` in data — Brawl, which the rules categorize as General but
     /// which is the combat Ability for unarmed and improvised weapons); and its
     /// source line range (if any) must be well-formed. This is the load-time trust
-    /// gate that a weapon can only ship once its combat Ability exists. Source: ArMDE:16992 (the "Ability" column names
+    /// gate that a weapon can only ship once its combat Ability exists. Source: ArMDE:17069 (the "Ability" column names
     /// the Weapon Ability needed to use the weapon).
     fn validate_weapon_refs(&self, weapon: &Weapon, errors: &mut Vec<String>) {
         let id = &weapon.id;
@@ -2570,7 +2570,7 @@ impl Ruleset {
     /// itself — both `gate.equals` (checked by [`Self::validate_param_gate`]
     /// above) and every value here are read against ONE parameter
     /// (`gate.param`), since both the declaring copy and the copy it forbids
-    /// are instances of the same item's same parameter (ArMDE:7033: Weak
+    /// are instances of the same item's same parameter (ArMDE:7104: Weak
     /// Sight's copy and the Sensitive Sight copy it forbids both read Warped
     /// Senses' own `affliction` parameter). A no-op when the list is empty, or
     /// when the gate's own parameter is unknown — that failure is already
@@ -3326,13 +3326,13 @@ impl Ruleset {
     ///
     /// **D68.8 exemption**: a pair where EITHER side sets
     /// [`PointItem::skip_magnitude_variant_guard`] is skipped entirely — the
-    /// ruling is that each twin exclusion needs its own passage (ArMDE:2814
+    /// ruling is that each twin exclusion needs its own passage (ArMDE:2882
     /// is not a blanket source), and a pair without one loses its exclusion.
     /// The flag is checked on either side (not required on both) so a single
     /// authoring slip cannot silently re-enable the guard on a pair meant to
     /// be exempt.
     ///
-    /// Source: ArMDE:4405 ("A character
+    /// Source: ArMDE:4476 ("A character
     /// can have only one Magical Focus, either major or minor").
     fn validate_magnitude_variant_exclusivity(&self, errors: &mut Vec<String>) {
         for (major_id, major_item) in &self.point_items {
@@ -3432,7 +3432,7 @@ enum CopiesJudgedTogether {
 /// `None` for a spell, which has no `categories` field at all) — a third
 /// authoring slip specific to `category`: its `values` must be a SUBSET of
 /// that list, since the whole point of the domain is "one of the categories
-/// THIS item already carries" (Sufi's `taken_as`, `ArMDE:5083`). Declaring
+/// THIS item already carries" (Sufi's `taken_as`, `ArMDE:5154`). Declaring
 /// `category` on a spell, or a value the item's own descriptor never lists, is
 /// rejected here rather than silently resolving to a slug the picker cannot
 /// label.
@@ -3572,7 +3572,7 @@ fn validate_parameter_defs(
         }
         // A `max_per_value` of 0 forbids every value the parameter could ever
         // name, so the declaring item is unfillable — the mirror of the
-        // `at_most_one_of` group that excludes nothing. `ArMDE:6482` caps the
+        // `at_most_one_of` group that excludes nothing. `ArMDE:6553` caps the
         // one real user at one, never at none.
         if param.max_per_value == 0 {
             errors.push(format!(

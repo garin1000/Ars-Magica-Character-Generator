@@ -4,7 +4,10 @@
 
 **Legende:**
 - (Lat.) = Lateinischer Begriff, wird unübersetzt beibehalten
-- \* = Fertigkeit, die ohne mindestens 1 Erfahrungspunkt nicht einsetzbar ist (ArMDE, S. 157)
+- \* = Sternchen wie im englischen Original gesetzt (Bedeutung: Basisregeln, Abschnitt *Fertigkeiten ohne Wert*)
+- Typ = Fertigkeitstyp laut Quellbuch (Allgemein, Akademisch, Arkan, Kampf, Übernatürlich); „(abgeleitet)“ = im Quellbuch ohne Typangabe, Typ aus der Grundregel abgeleitet (alle Gebiets- und Organisationskunden sind Allgemein); „offen“ = Typ nicht bestimmbar
+
+> **Nur Begriffe.** Beschreibungen, Spezialisierungen und Voraussetzungen stehen in den Basisregeln, Kapitel 5: Fertigkeiten, Abschnitte *Fertigkeitstypen*, *Fertigkeiten nach Typ* und *Fertigkeitsliste*, bzw. im jeweils genannten Supplement.
 
 ---
 
@@ -13,12 +16,12 @@
 | Englisch (EN) | Typ | Deutsch (DE) | Anmerkung |
 |---|---|---|---|
 | (Area) Lore\* | Allgemein | (Gebiets-)Kunde | auch Gebietskunde (Spezialisierung) |
-| Ars Notoria\* | Übernatürlich | Ars Notoria | SdM:G; Salomons heilige Kunst; Lat. beibehalten |
+| Ars Notoria\* | Akademisch, Arkan, Übernatürlich | Ars Notoria | SdM:G; Salomons heilige Kunst; Lat. beibehalten. Typangabe im Original: „(Academic, Arcane, Supernatural)“ |
 | (Dead Language)\* | Akademisch | (Tote Sprache) | |
 | (Living Language)\* | Allgemein | (Lebende Sprache) | |
 | (Mystery Cult) Lore\* | Allgemein | (Mysterienkult-)Kunde | auch Myterienkultkunde (Spezialisierung) |
 | (Organization) Lore\* | Allgemein | (Organisations-)Kunde | auch Organisationskunde (Spezialisierung) |
-| Animal Handling | Allgemein | Tierumgang | SdM:M: auch für unintelligente Wesen mit Gerissenheit (Elementare, belebte Bäume) |
+| Animal Handling | Allgemein | Tierumgang | |
 | Animal Ken\* | Übernatürlich | Tierverständnis | |
 | Art of Memory\* | Akademisch | Gedächtniskunst | |
 | Artes Liberales\* | Akademisch | Artes Liberales | Lat., behalten |
@@ -38,7 +41,7 @@
 | Craft (Type) | Allgemein | Handwerk (Art) | |
 | Crafter's Healing\* | Übernatürlich | Handwerkerheiler | |
 | Curse-Throwing\* | Übernatürlich | Fluchschleudern | |
-| Divination & Augury\* | Übernatürlich | Weissagung & Zeichendeutung | |
+| Divination & Augury | Übernatürlich | Weissagung & Zeichendeutung | Nicht im Grundregelwerk. SdM:M („Supernatural Ability Divination & Augury“); TMRE Kap. 7 (dort Tugend *Divination and Augury*, Fertigkeit *Divination*) |
 | Dominion Lore\* | Arkan | Dominiumkunde | |
 | Dowsing\* | Übernatürlich | Wünschelrutengehen | |
 | Embitterment\* | Übernatürlich | Verbitterung | |
@@ -51,7 +54,7 @@
 | Finesse | Arkan | Finesse | |
 | Folk Ken | Allgemein | Menschenkenntnis | |
 | Font of Knowledge\* | Übernatürlich | Quell des Wissens | |
-| Forest Lore\* | Arkan | Waldkunde | WdW; Machtpfade des Waldes; benannter Wald als Kompositum („Schwarzwaldkunde") oder in Klammern („Waldkunde (Westerwald)"); verwandt mit Nature Lore/Naturkunde, erfordert aber keine Einweihung |
+| Forest Lore | Arkan | Waldkunde | WdW; Machtpfade des Waldes; benannter Wald als Kompositum („Schwarzwaldkunde") oder in Klammern („Waldkunde (Westerwald)"); nicht dasselbe wie Nature Lore/Naturkunde (HdH:MK) |
 | Great Weapon | Kampf | Große Waffe | |
 | Guile | Allgemein | Täuschung | |
 | Heartbeast\* | Arkan | Herztier | Bjornaer-Fertigkeit |
@@ -60,7 +63,7 @@
 | Induction\* | Übernatürlich | Einflüstern | |
 | Infernal Lore\* | Arkan | Infernalkunde | |
 | Intrigue | Allgemein | Intrige | |
-| Israel Lore | Arkan | Israel-Kunde | SdM:G; Geschichte und Geheimnisse Israels |
+| Israel Lore | Allgemein (abgeleitet) | Israel-Kunde | SdM:G (nur in einem Werteblock, Spezialisierung „history“) |
 | Islamic Law\* | Akademisch | Islamisches Recht | |
 | Judaic Lore\* | Allgemein | Jüdische Kunde | |
 | Leadership | Allgemein | Führung | |
@@ -70,7 +73,7 @@
 | Magic Theory\* | Arkan | Magietheorie | |
 | Medicine\* | Akademisch | Medizin | |
 | Music | Allgemein | Musik | |
-| Nature Lore\* | Arkan | Naturkunde | HdH:MK; (Typ-)Kunde des Naturmysteriums (Waldkunde, Tierkunde, Bergkunde …); per Errata arkan, vormals übernatürlich |
+| Nature Lore | Arkan | Naturkunde | HdH:MK, Kleines Äußeres Mysterium; benannt nach dem Naturtyp (Waldkunde, Tierkunde, Bergkunde …) |
 | Parma Magica\* | Arkan | Parma Magica | |
 | Penetration | Arkan | Penetration | |
 | Persona\* | Übernatürlich | Persona | |
@@ -102,42 +105,42 @@
 
 | Englisch (EN) | Typ | Deutsch (DE) | Anmerkung |
 |---|---|---|---|
-| (Form) Resistance\* | Übernatürlich | (Form-)Resistenz | Nur mit Machtwert; Bonus auf Widerstand gegen die Form; addiert sich zur Magieresistenz (nicht zur Parma) |
-| Magical Meditation\* | Übernatürlich | Magische Meditation | Nur mit Machtwert; beschleunigte Machtpunkt-Erholung in Magieaura; verhindert Gewöhnung |
+| (Form) Resistance | Übernatürlich | (Form-)Resistenz | SdM:M; Fertigkeit für Wesen mit Machtwert |
+| Magical Meditation\* | Übernatürlich | Magische Meditation | SdM:M; Fertigkeit für Wesen mit Machtwert |
 
 
 ### Ergänzungen aus Häuser des Hermes: Wahre Linien (HdH:WL)
 
 | Englisch (EN) | Typ | Deutsch (DE) | Anmerkung |
 |---|---|---|---|
-| Legion Lore | Arkane | Legionskunde | HdH:WL; Wissen über römische Legionsstrukturen (Geisterarmeen) |
+| Legion Lore | Allgemein (abgeleitet) | Legionskunde | HdH:WL (nur in einem Werteblock, Spezialisierung „pay and conditions“); römische Legionen (Geisterarmeen) |
 
 ### Ergänzungen aus Sphären der Macht: Das Göttliche (SdM:G)
 
 | Englisch (EN) | Typ | Deutsch (DE) | Anmerkung |
 |---|---|---|---|
-| Adjuration\* | Übernatürlich | Adjuration | SdM:G; Heilige Kraft; übernatürliche Wesen befehligen/kontrollieren/bannen |
-| Blessing\* | Übernatürlich | Segnen | SdM:G; Heilige Kraft; schützende und inspirierende Effekte |
-| Ceremony\* | Übernatürlich | Zeremonie | SdM:G; Hilfsfertigk.; Gruppe auf heiliges Gebet fokussieren |
-| Cursing\* | Übernatürlich | Verfluchen | SdM:G; Heilige Kraft; negative Effekte des göttlichen Zorns |
-| Intervention\* | Übernatürlich | Intervention | SdM:G; Heilige Kraft; Göttliches in der Welt manifestieren |
-| Invocation\* | Übernatürlich | Anrufung | SdM:G; Heilige Methode; heilige Worte und Gebete |
-| Meditation\* | Übernatürlich | Meditation | SdM:G; Heilige Methode; ekstatischer Zustand |
-| Purity\* | Übernatürlich | Reinheit | SdM:G; Heilige Methode; körperliche Anstrengung und Wille |
-| Transcendence\* | Übernatürlich | Transzendenz | SdM:G; Heilige Kraft; Grenzen der physischen Welt überwinden |
-| Understanding\* | Übernatürlich | Verständnis | SdM:G; Heilige Kraft; heilige Visionen empfangen |
-| Wonders\* | Übernatürlich | Wunder | SdM:G; Heilige Kraft; Kreaturen, Gegenstände, Naturkräfte manifestieren |
-| Church Lore | Allgemein | Kirchenkunde | SdM:G; Wissen über Kirchenstruktur, -geschichte |
-| Divine Lore | Arkan | Göttliche Kunde | SdM:G; Wissen über die Göttliche Sphäre |
-| Holy Magic\* | Übernatürlich | Heilige Magie | SdM:G; ersetzt Magietheorie für göttliche Magie |
-| Orthodox Church Lore | Allgemein | Orthodoxe Kirchenkunde | SdM:G; Wissen über die orthodoxe Kirche |
-| Holy Music\* | Übernatürlich | Heilige Musik | SdM:G; präsenzbasierte Meditationsvariante |
-| Dream Interpretation\* | Übernatürlich | Traumdeutung | SdM:G; Heilige Methode (ersetzt Meditation) |
-| Craft Amulets\* | Übernatürlich | Amulette fertigen | SdM:G; Kap. 6; jüdische Amulett-Fertigung |
-| Gematria\* | Übernatürlich | Gematria | SdM:G; Kap. 6; hebräische Zahlenmystik |
-| Kabbalah\* | Übernatürlich | Kabbalah | SdM:G; Kap. 6; jüdische Mystik |
-| Merkavah\* | Übernatürlich | Merkavah | SdM:G; Kap. 6; Mysterien des Thronwagens |
-| East Norse | Allgemein | Ostnordisch | WdW; Lebende Sprache (Dänisch); Errata der Definitive Edition ersetzt durchgehend „West Norse" |
+| Adjuration\* | Übernatürlich | Adjuration | SdM:G; Heilige Kraft |
+| Blessing\* | Übernatürlich | Segnen | SdM:G; Heilige Kraft |
+| Ceremony\* | Übernatürlich | Zeremonie | SdM:G |
+| Cursing\* | Übernatürlich | Verfluchen | SdM:G; Heilige Kraft |
+| Intervention\* | Übernatürlich | Intervention | SdM:G; Heilige Kraft |
+| Invocation\* | Übernatürlich | Anrufung | SdM:G; Heilige Methode |
+| Meditation\* | Übernatürlich | Meditation | SdM:G; Heilige Methode |
+| Purity\* | Übernatürlich | Reinheit | SdM:G; Heilige Methode |
+| Transcendence\* | Übernatürlich | Transzendenz | SdM:G; Heilige Kraft |
+| Understanding\* | Übernatürlich | Verständnis | SdM:G; Heilige Kraft |
+| Wonders\* | Übernatürlich | Wunder | SdM:G; Heilige Kraft |
+| Church Lore | Allgemein | Kirchenkunde | eine (Organisations-)Kunde (Basisregeln, *Dominiumkunde*); auch SdM:G |
+| Divine Lore | offen | Göttliche Kunde | SdM:G (nur in Werteblöcken und Proben); vermutlich ältere/freie Bezeichnung für *Dominion Lore* = Dominiumkunde (Arkan) |
+| Holy Magic\* | Übernatürlich, Arkan | Heilige Magie | SdM:G. Typangabe im Original: „(Supernatural, Arcane)“ |
+| Orthodox Church Lore | Allgemein (abgeleitet) | Orthodoxe Kirchenkunde | SdM:G (nur in einem Werteblock) |
+| Holy Music\* | Übernatürlich | Heilige Musik | SdM:G; „a Supernatural Ability that works like Meditation“ (RoP:D:4596); Heilige Methode |
+| Dream Interpretation | Übernatürlich | Traumdeutung | SdM:G, Kap. 6 (jüdische Tradition) |
+| Craft Amulets | Übernatürlich | Amulette fertigen | SdM:G, Kap. 6 (jüdische Tradition) |
+| Gematria | Übernatürlich | Gematria | SdM:G, Kap. 6 (jüdische Tradition) |
+| Kabbalah | Übernatürlich | Kabbalah | SdM:G, Kap. 6 (jüdische Tradition) |
+| Merkavah | Übernatürlich | Merkavah | SdM:G, Kap. 6 (jüdische Tradition) |
+| East Norse | Allgemein | Ostnordisch | WdW; eine (Lebende Sprache) |
 
 ---
 

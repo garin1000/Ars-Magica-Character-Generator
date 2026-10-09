@@ -153,7 +153,7 @@ export class SpellWorkflow {
 
   /**
    * Set (or clear) the player's own claim that the spell at `index` falls
-   * within the character's Magical Focus (X10c, ArMDE:4399-4422) — a recorded
+   * within the character's Magical Focus (X10c, ArMDE:4470-4493) — a recorded
    * choice, not a derivation; the engine cannot tell which of a magus's spells
    * a free-text Focus covers (MAG8's capability gap). `false` omits the field.
    */
@@ -167,7 +167,7 @@ export class SpellWorkflow {
 
   /**
    * Set (or clear) the player's own claim that the spell at `index` falls
-   * within the character's Potent Magic field (D79, ArMDE:4740-4748) — same
+   * within the character's Potent Magic field (D79, ArMDE:4811-4819) — same
    * shape as {@link setWithinFocusAt} and independent of it, since the two
    * free-text themes need not coincide. `false` omits the field.
    */

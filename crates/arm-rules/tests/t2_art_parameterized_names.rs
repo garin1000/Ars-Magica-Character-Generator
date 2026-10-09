@@ -7,7 +7,7 @@
 //! template's slot. The two Deficiencies are the case C3 decided: EN
 //! "Deficient Creo" / "Deficient Ignem", DE "Defizitäre Technik: Creo" /
 //! "Defizitäre Form: Ignem" (no adjective agreement with a Latin Art name);
-//! unfilled "Deficient Technique" / "Deficient Form" (ArMDE:5913, :5909) and
+//! unfilled "Deficient Technique" / "Deficient Form" (ArMDE:5984, :5980) and
 //! "Defizitäre Technik" / "Defizitäre Form". Before T2, `flaw.deficient_form`
 //! had no `{form}` slot, so the sheet appended the Art ("Deficient Form
 //! (Ignem)") while its sibling read "Deficient Creo".

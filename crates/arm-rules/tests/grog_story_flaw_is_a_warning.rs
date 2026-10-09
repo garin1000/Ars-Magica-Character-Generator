@@ -1,5 +1,5 @@
 //! F10 (`tmp/ftl-rules-audit.md`): a grog's Story Flaw is discouraged, not
-//! forbidden. ArMDE:1009 and :2826 say grogs "should not" take Story Flaws, so
+//! forbidden. ArMDE:1077 and :2826 say grogs "should not" take Story Flaws, so
 //! Norbert ruled on 2026-10-03 that it is the soft "more than recommended"
 //! warning only — never a `category_not_permitted` error.
 
@@ -32,7 +32,7 @@ fn grog_with_animal_companion() -> Entity {
         Id::new("grog"),
         RulesetRef::new(Id::new("arm5-core"), "2024.1"),
     );
-    // A shipped Minor Story Flaw (ArMDE:5671-5673).
+    // A shipped Minor Story Flaw (ArMDE:5742-5744).
     e.selections = vec![Selection::new(Id::new("flaw.animal_companion"))];
     e
 }
@@ -49,7 +49,7 @@ fn a_grogs_story_flaw_is_not_a_category_error() {
         .collect();
     assert!(
         not_permitted.is_empty(),
-        "ArMDE:1009, :2826 — grogs 'should not' take Story Flaws; that is advice, \
+        "ArMDE:1077, :2894 — grogs 'should not' take Story Flaws; that is advice, \
          not a ban: {not_permitted:?}"
     );
 }

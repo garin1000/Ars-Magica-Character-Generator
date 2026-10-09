@@ -181,7 +181,7 @@ use crate::validation::birth_year_in_saga_year;
 ///
 /// Bumped 20 → 21 for X9b (F-16, `docs/vf-audit/corrections.md`): the point
 /// item `virtue.rard` is renamed to `virtue.bard` — the English name at
-/// ArMDE:3476 is the scanno "Rard", but the book's own index (ArMDE:24289) and
+/// ArMDE:3547 is the scanno "Rard", but the book's own index (ArMDE:24372) and
 /// the German translation table (`tugenden-fehler.md:243`) both read "Bard",
 /// and the **id**, not only the displayed name, was wrong. `source.anchor`
 /// stays `"rard"`: the heading itself is still misspelled `#### Rard`, and
@@ -407,9 +407,9 @@ const BEING_PARAM_KEY: &str = "being";
 /// `rules/i18n/en/virtues_flaws.json` and `rules/i18n/de/virtues_flaws.json`, both
 /// at the `being.*` entries. The rulebook supplies the wording a player copying
 /// from the page would have typed:
-/// ArMDE:4135, :6526, :6893, and the
+/// ArMDE:4206, :6597, :6964, and the
 /// German mirror at the same line numbers. The English lists and the German lists
-/// at `ArMDE:6526` / `ArMDE:6893` fold onto the i18n labels exactly; the German `ArMDE:4135` list
+/// at `ArMDE:6597` / `ArMDE:6964` fold onto the i18n labels exactly; the German `ArMDE:4206` list
 /// is in the dative, which contributes the three extra keys below. No synonym
 /// beyond what those print is invented — an unrecognised value is left exactly as
 /// typed.
@@ -432,13 +432,13 @@ const LEGACY_BEING_LABELS: &[(&str, &str)] = &[
     ("Magische Kreaturen", "being.magical_creatures"),
     ("Sterbliche Menschen", "being.mundane_humans"),
     // The German **dative** forms, printed by the Inoffensive entry at
-    // `ArMDE:4135` — "…von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen
+    // `ArMDE:4206` — "…von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen
     // oder magischen Kreaturen." A player filling the old free-text box while
     // reading that page copied the inflected form off it, so these are recovered
     // too. Transcribed, not declined: "Feen" and "Dämonen" are identical in the
     // dative and are already above, and the fourth class has no dative form here
     // to take — `sterbliche Menschen` appears only in the two entries that print
-    // the nominative (`ArMDE:6526`, `ArMDE:6893`), so no "sterblichen Menschen" key is
+    // the nominative (`ArMDE:6597`, `ArMDE:6964`), so no "sterblichen Menschen" key is
     // invented.
     ("Tieren", "being.animals"),
     ("göttlichen Wesen", "being.divine"),
@@ -1068,7 +1068,7 @@ fn clamp_ages_to_max_age(entity: &mut Entity, ruleset: &Ruleset) {
 ///
 /// Saves at schema ≤ 9 carried a manual `aging_reductions` map of completed
 /// Characteristic drops. The current model derives those drops from
-/// `aging_points` (ArMDE:16579), so any legacy reductions are folded into
+/// `aging_points` (ArMDE:16656), so any legacy reductions are folded into
 /// `aging_points` as the minimal point total that reproduces the same number of
 /// drops — counted from the actual score, free deltas included, by the same helper
 /// the live `effective/warping.rs::aging_drops` uses. Because every aging point counts toward Decrepitude — including those
@@ -1279,7 +1279,7 @@ pub fn load_entity_migrating(
             }
             // Ruling F-A: the drops are reconstructed against the actual score
             // (free deltas included), through the same cost sequence the live
-            // `effective/warping.rs::aging_drops` walks. Source: ArMDE:16579.
+            // `effective/warping.rs::aging_drops` walks. Source: ArMDE:16656.
             let actual = effective_characteristic_score(&entity, ruleset, characteristic);
             let add = minimal_aging_points_for_drops(actual, u32::from(drops));
             let slot = entity.aging_points.entry(characteristic).or_insert(0);
@@ -1403,7 +1403,7 @@ mod tests {
 
     /// Ruling F-A, in lockstep: the legacy fold reconstructs the drops against the
     /// same threshold the live [`crate::effective::aging_drops`] uses — the actual
-    /// score, free delta included (ArMDE:16579). Great (Stamina) twice over a bought
+    /// score, free delta included (ArMDE:16656). Great (Stamina) twice over a bought
     /// +3 is an actual +5, so one legacy drop needs |5| + 1 = 6 points, and the
     /// live computation reads exactly one drop back from them (and none from 5).
     #[test]
@@ -2352,7 +2352,7 @@ mod tests {
         );
     }
 
-    /// German `ArMDE:4135` — the Inoffensive entry — prints its list of classes in the
+    /// German `ArMDE:4206` — the Inoffensive entry — prints its list of classes in the
     /// **dative** ("Tieren, göttlichen Wesen, … magischen Kreaturen"), so a player
     /// copying the class straight off the page typed an inflected form. Those three
     /// forms are printed by the source, not invented, and all three name a class

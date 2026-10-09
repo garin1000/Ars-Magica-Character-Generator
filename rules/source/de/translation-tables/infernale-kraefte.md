@@ -1,14 +1,28 @@
 # Ars Magica – Infernale Kräfte und Wesen / Infernal Powers and Beings
 
-**Teil der deutschen Übersetzungstabellen** | Quelle: Ars Magica 5e – Sphären der Macht: Das Infernale (SdM:I)
+**Teil der deutschen Übersetzungstabellen** | Quelle: Ars Magica 5e – Sphären der Macht: Das Infernale (SdM:I) · englisches Original: `original-english/reviewed/Ars Magica 5e - Realms of Power - The Infernal.md` · deutsche Übersetzung: `german-wip/Ars Magica 5e - Sphären der Macht - Das Infernale.md`
 
-**Legende:**
-- Kräfte sind nach Dämonenordnung/-familie geordnet
-- Allg. = Allgemeine Dämonenkraft
+> **Nur Begriffe.** Kosten in Machtpunkten, Initiative, Form und Wirkung jeder Kraft stehen im Quellbuch an der jeweils genannten Stelle. Die Zuordnung zu Ordnung, Familie oder Dämon ist am Quellbuch geprüft (Sachprüfung 2026-10-03, `lektorat/tabellen-sachpruefung-regeltabellen.md`).
 
 ---
 
-## Allgemeine Dämonenkräfte / Common Demon Powers
+## Allgemeine Dämonenkräfte / Demonic Powers
+
+*→ Werte und Wirkung: SdM:I, Kapitel 4, Abschnitt *Dämonische Eigenschaften*, Unterabschnitt *Dämonische Kräfte*.*
+
+| Englisch (EN) | Deutsch (DE) | Anmerkung |
+|---|---|---|
+| Coagulation | Koagulation | Kraft aller Dämonen |
+| Obsession | Heimsuchung | Kraft aller Dämonen (Vim); *Obsession Trait* = Heimsuchungszug, *Obsession Power* = Heimsuchungskraft, Verb „heimsuchen“. Freigabe 2026-10-04 (nicht „Besessenheit“) |
+| Possession | Besessenheit | Kraft vieler Dämonen (Mentem); Adj. besessen, *Possession Might Pool* = Besessenheits-Machtvorrat (ArMDE: Besessenheitsmachtpool). Freigabe 2026-10-04 (nicht „Besessung“) |
+
+*Im selben Unterabschnitt steht außerdem die Kraft aller Dämonen *Envisioning*; sie ist hier noch nicht tabelliert.*
+
+---
+
+## Ordnungskräfte / Powers of the Demonic Orders
+
+*→ Werte und Wirkung: SdM:I, Kapitel 4, Abschnitt *Die infernale Hierarchie*, Unterabschnitt der jeweiligen Ordnung (Kasten „Kräfte“).*
 
 | Englisch (EN) | Deutsch (DE) | Ordnung / Anmerkung |
 |---|---|---|
@@ -19,56 +33,60 @@
 | Trust of the Innocent | Vertrauen des Unschuldigen | Geister des Betrugs |
 | Forked Tongue of the Serpent | Gespaltene Zunge der Schlange | Geister des Betrugs |
 | The Serpent's Oracle | Das Orakel der Schlange | Geister des Betrugs |
-| Form of Wickedness | Gestalt der Verruchtheit | Gefäße der Bosheit |
+| Form of Wickedness | Gestalt der Verruchtheit | Gefäße der Bosheit; ersetzt bei dieser Ordnung *Coagulation* |
 | Form of Man | Menschengestalt | Gefäße der Bosheit |
-| Contagious Obsession | Ansteckende Besessenheit | Gefäße der Bosheit |
+| Contagious Obsession | Ansteckende Heimsuchung | Gefäße der Bosheit. Freigabe 2026-10-04 (vorher „Ansteckende Besessenheit“) |
 | Punish the Sinner | Den Sünder bestrafen | Rächer des Bösen |
 | Delusion | Verblendung | Verführer |
-| Duplicate the Magi's Creation | Die Schöpfung der Magi duplizieren | Verführer |
+| Duplicate the Magi's Creation | Die Schöpfung der Magi duplizieren | Verführer; im Original eine Reihe (… Creation / Perception / Transmutation / Destruction / Control) |
 | Elemental Control | Elementare Beherrschung | Luftmächte |
 | Recalcitrance | Aufsässigkeit | Luftmächte |
 | Waxing Tide of Humors | Anschwellende Flut der Säfte | Furien |
-| Berserker Rage | Berserkerrausch | Furien |
+| Berserker Rage | Berserkerrausch | Furien; im Original an einer Stelle verschrieben „Beserker Rage“ |
 | Endurance of the Enraged | Ausdauer der Rasenden | Furien |
 | Betrayal of the Heart | Verrat des Herzens | Ankläger |
 | Whispers Behind the Back | Flüstern hinter dem Rücken | Ankläger |
-| Coagulation | Koagulation | Allg. Dämonenkraft; physische Manifestation |
 
 ---
 
 ## Dämonenfamilien und -typen / Demon Families and Types
 
+*→ Ordnung und Rolle: SdM:I, Kapitel 4, Kasten *Ein Verzeichnis der Dämonen*; Beschreibung im Kasten der jeweiligen Familie (Kapitel 5–7).*
+
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Enervators | Blender | Verführer-Unterfamilie; täuschen stärkere Magie vor |
-| Infernal Dragons | Infernale Drachen | Meister der Geister des Betrugs |
-| Men of Good Intent | Männer guter Absicht | Geister-des-Betrugs-Unterfamilie |
-| Spirits of Solomon | Geister Salomons | Verführer-Unterfamilie |
-| Watchers (Demons) | Wächter | Herzöge der Verführer (Grigori) |
-| Miser's Pot | Topf des Knausers | Ankläger-Dämon |
-| Aethnici | Aethnici | Luftmächte-Familie; lat. Eigenname |
-| Demons of the Fifth Trump | Dämonen der Fünften Posaune | Furien-Familie; Offb. 9 |
-| Dibbukim | Dibbukim | Furien-Familie; hebr. Eigenname |
-| Lord of the Furies | Fürst der Furien | Hierarchie-Titel; Bael |
-| Master of the Furies | Meister der Furien | Hierarchie-Titel; Architectus |
-| Fictiles / Fictilis | Fictiles / Fictilis | Lat. Eigenname; Luftmächte aus nassem Ton |
-| Lilin / Lil | Lilin / Lil | Hebr. Eigenname; Nachtgeister, Versucher |
-| Lucifuges | Lucifuges | Lat. „Lichtflüchtige"; Luftmächte in der Erde |
-| Maggots / Astasian | Maden / Astasian | Winzige Versucher |
-| Merry Devils | Lustige Teufel | Gefäße der Bosheit |
-| Reveners | Wiedergänger | Gefäße der Bosheit; beleben Leichname |
-| Mazzikim / Mazzik | Mazzikim / Mazzik | Hebr.; Schädiger des Menschen; Versucher |
-| Khrafstar | Khrafstar | Pers.; schädliche Kreaturen |
-| Daevas | Daevas | Zoroastrische böse Geister |
-| Spentas | Spentas | Zoroastrische Geister der Güte |
+| Enervators | Blender | Dämonenfamilie (Verführer) |
+| Infernal Creatures | Infernale Kreaturen | Oberbegriff (Basisregeln, Sphärenkapitel und Bestiarium). Freigabe 2026-10-04: nicht „Höllische Kreaturen“ |
+| Infernal Dragons | Infernale Drachen | Dämonenfamilie (Geister des Betrugs) |
+| Men of Good Intent | Männer guter Absicht | Dämonenfamilie (Geister des Betrugs) |
+| Spirits of Solomon | Geister Salomons | Dämonenfamilie (Verführer) |
+| Watchers (Demons) | Wächter | Dämonenfamilie (Verführer) |
+| Miser's Pot | Topf des Knausers | einzelner Dämon (Ankläger) |
+| Aethnici | Aethnici | Dämonenfamilie (Luftmächte); Eigenname, bleibt |
+| Demons of the Fifth Trump | Dämonen der Fünften Posaune | Dämonenfamilie (Furien) |
+| Dibbukim | Dibbukim | Dämonenfamilie (Furien); Eigenname, bleibt |
+| Lord of the Furies | Fürst der Furien | Ordnungsangabe im Statblock von Bael |
+| Master of the Furies | Meister der Furien | Ordnungsangabe im Statblock von Architectus |
+| Fictiles / Fictilis | Fictiles / Fictilis | Dämonenfamilie (Luftmächte); Eigenname, bleibt (Sg. fictilis) |
+| Lilin / Lil | Lilin / Lil | Dämonenfamilie (Versucher); Eigenname, bleibt (Sg. lil) |
+| Lucifuges | Lucifuges | Dämonenfamilie (Luftmächte); Eigenname, bleibt |
+| Maggots / Astasian | Maden / Astasian | Dämonenfamilie (Versucher); *astasian* ist im Original der griechische Beiname |
+| Merry Devils | Lustige Teufel | Dämonenfamilie (Gefäße der Bosheit) |
+| Reveners | Wiedergänger | Dämonenfamilie (Gefäße der Bosheit) |
+| Mazzikim / Mazzik | Mazzikim / Mazzik | Dämonenfamilie (Versucher); Eigenname, bleibt (Sg. mazzik) |
+| Khrafstar | Khrafstar | im Original persisches Wort für die Kreaturen aus Naonhaithyas Kraft *Calling the Khrafstar* |
+| Daevas | Daevas | zoroastrische Geister; Naonhaithya ist einer der sieben *daevas* |
+| Spentas | Spentas | zoroastrische Geister, Gegenspieler der *daevas* |
 
 ---
 
 ## Individuelle Dämonenkräfte / Individual Demon Powers
 
+*→ Werte und Wirkung: SdM:I, Kapitel 5–7, Statblock bzw. Familienkasten des jeweiligen Dämons.*
+
 | Englisch (EN) | Deutsch (DE) | Dämon / Anmerkung |
 |---|---|---|
-| Deceiver's Boost | Schub des Betrügers | Blender-Kraft |
+| Deceiver's Boost | Schub des Betrügers | Blender |
 | Nails of the Cuckold's Vengeance | Nägel der Rache des Gehörnten | Andrew |
 | Ennoble the Base | Das Niedrige erheben | Berith |
 | Face of the Count | Antlitz des Grafen | Berith |
@@ -83,7 +101,7 @@
 | The Wordless Conversation | Das Wortlose Gespräch | Wächter |
 | Corrupted Knowledge | Korrumpiertes Wissen | Wächter |
 | The Worst You Can Be | Das Schlimmste, das du sein kannst | Geister Salomons |
-| The Abandoned Corpse | Der zurückgelassene Leichnam | Premnemosyne |
+| The Abandoned Corpse | Der zurückgelassene Leichnam | Premnemosyne (Überschrift im Original verschrieben „Premnenosyne“) |
 | Command the Four Hosts of Builders | Gebiete den vier Heerscharen der Erbauer | Architectus |
 | Eyes of Stone Demons | Augen der Steindämonen | Architectus |
 | Form of the Serpent | Schlangengestalt | Aethnici |
@@ -116,7 +134,7 @@
 | Breath of the Desert | Atem der Wüste | Xaphan |
 | Breath of the Bellows | Atem des Blasebalgs | Xaphan |
 | Burning Curse | Brennender Fluch | Xaphan |
-| Ways of the Ocean | Wege des Ozeans | Tugend; Rahab |
+| Ways of the Ocean | Wege des Ozeans | Tugend (keine Kraft); Rahab |
 
 ---
 

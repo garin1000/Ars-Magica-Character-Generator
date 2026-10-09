@@ -177,10 +177,10 @@ pub struct EffectiveScores {
     /// The levels of spells the magus's years past its Gauntlet bought: the player's
     /// chosen slice of the fungible 30-points-a-year, where "Each point can be an
     /// experience point in an Art or Ability or one level of spell"
-    /// (ArMDE:2471). 0 for a magus standing
+    /// (ArMDE:2539). 0 for a magus standing
     /// at its Gauntlet and for anyone who serves no apprenticeship.
     ///
-    /// **Not a second budget** like apprenticeship's 120 levels (`ArMDE:2435`), which are
+    /// **Not a second budget** like apprenticeship's 120 levels (`ArMDE:2503`), which are
     /// the type profile's `spell_levels` and reach the UI as
     /// [`Self::spell_levels_profile_base`] — these are added on top of it.
     pub spell_levels_life_stage: u32,
@@ -195,19 +195,19 @@ pub struct EffectiveScores {
     pub spell_level_caps: Vec<SpellLevelCap>,
     /// Per-catalogue-spell maximum learnable level (X11b, D81.5): unlike
     /// [`Self::spell_level_caps`]'s Te/Fo-keyed grid, each row folds that
-    /// spell's own requisites (ArMDE:2465/:12309-12313), so two spells sharing
+    /// spell's own requisites (ArMDE:2533/:12309-12313), so two spells sharing
     /// a Te/Fo pair but different requisites can report different caps. A row
-    /// also carries a Magical-Focus-doubled figure (ArMDE:4403) when the
+    /// also carries a Magical-Focus-doubled figure (ArMDE:4474) when the
     /// character holds a Magical Focus at all — the picker greys by the plain
     /// `cap` and offers an "add within focus" action when only
     /// `within_focus_cap` admits the spell's level, adding it already marked.
     /// Empty for an entity that is not Hermetically trained, same gate as
     /// [`Self::spell_level_caps`].
     pub spell_caps: Vec<SpellCap>,
-    /// The Hermetic minimum-Ability checklist: what the Order demands (ArMDE:2437) and
-    /// what the rulebook recommends (ArMDE:2451-2461), each with the character's bought
+    /// The Hermetic minimum-Ability checklist: what the Order demands (ArMDE:2505) and
+    /// what the rulebook recommends (ArMDE:2519-2529), each with the character's bought
     /// score and whether it suffices. Empty for a non-magus, exactly like
-    /// [`Self::spell_level_caps`] — `ArMDE:2437` is about admission to the Order.
+    /// [`Self::spell_level_caps`] — `ArMDE:2505` is about admission to the Order.
     /// Engine-authoritative: the same reading the `magus_minimum_ability` /
     /// `magus_recommended_ability` findings come from.
     pub magus_minimum_abilities: Vec<MagusMinimumAbility>,
@@ -273,11 +273,11 @@ pub struct EffectiveScores {
     /// power-levels bar (engine-authoritative; the UI never recomputes it).
     pub power_levels_used: u32,
     /// The Focus Power point pool the character's copies of the Virtue grant (25
-    /// each, `ArMDE:3899`, `ArMDE:3903`); 0 when none. A *second* power currency,
+    /// each, `ArMDE:3970`, `ArMDE:3974`); 0 when none. A *second* power currency,
     /// carried separately so neither bar can subsidise the other.
     pub focus_points_budget: u32,
     /// The points the character's `focus_powers` spend — 2 per level of effect
-    /// plus 1 per point of Penetration (`ArMDE:3899`).
+    /// plus 1 per point of Penetration (`ArMDE:3970`).
     pub focus_points_used: u32,
     /// The creation phases actually in force for THIS entity, in the profile's
     /// own declared order — the type profile's `creation_phases`, each
@@ -368,7 +368,7 @@ fn realm_associations_for_ui(entity: &Entity, ruleset: &Ruleset) -> Vec<Resolved
 /// stamps a stated per-grant realm onto the row's own `association` param
 /// before this ever sees it, so [`resolve_realm`] resolves it correctly with
 /// no change of its own — a Strong-Faerie-Blood-granted Second Sight
-/// (ArMDE:5038, "faerie eyes") reads Faerie here, not the plain-chain
+/// (ArMDE:5109, "faerie eyes") reads Faerie here, not the plain-chain
 /// fallback. `fixed` is always `true` — see the struct field's own doc
 /// comment for why.
 ///
@@ -415,20 +415,20 @@ fn granted_realm_associations_for_ui(
 
 /// Everything about a character's aging that does **not** depend on a die.
 ///
-/// The stress die is player input the entity must never store (`ArMDE:16567` — the
+/// The stress die is player input the entity must never store (`ArMDE:16644` — the
 /// engine has no `rand` dependency and never will), so the roll itself is a
 /// command the player triggers. Every field here, by contrast, is a pure function
 /// of `(entity, ruleset)`, which is exactly why it rides on the always-recomputed
 /// effective-scores payload rather than on a separate request: it can never be
 /// stale, and the UI never has to ask for it.
 ///
-/// Source: ArMDE:16563-16617.
+/// Source: ArMDE:16640-16694.
 #[derive(Debug, Clone, Serialize)]
 pub struct AgingReadout {
     /// The first age at which a roll is owed — 36 under the shipped rules, the
-    /// Winter after the character turns 35 (`ArMDE:16565`).
+    /// Winter after the character turns 35 (`ArMDE:16642`).
     pub first_roll_age: u32,
-    /// The age aging begins AFTER (`ArMDE:16565`) — the ruleset's own `start_age`,
+    /// The age aging begins AFTER (`ArMDE:16642`) — the ruleset's own `start_age`,
     /// surfaced for the explanatory line so the UI never prints the threshold as
     /// a literal.
     pub begins_after_age: u32,
@@ -439,24 +439,24 @@ pub struct AgingReadout {
     pub rolls_owed: u32,
     /// How many of those owed years the log already records.
     pub rolls_recorded: u32,
-    /// ⌈age / divisor⌉ at the character's **actual** age (`ArMDE:16577`); 0 when no
+    /// ⌈age / divisor⌉ at the character's **actual** age (`ArMDE:16654`); 0 when no
     /// age is entered, because there is then no age term to compute.
     pub age_modifier: i32,
-    /// The Living Conditions modifier the total SUBTRACTS (`ArMDE:16569`, `ArMDE:16571`),
+    /// The Living Conditions modifier the total SUBTRACTS (`ArMDE:16646`, `ArMDE:16648`),
     /// the chosen rows and the Virtue/Flaw contributions together.
     pub living_conditions_modifier: i32,
-    /// The Longevity Ritual modifier the total SUBTRACTS (`ArMDE:16569`); 0 with no
+    /// The Longevity Ritual modifier the total SUBTRACTS (`ArMDE:16646`); 0 with no
     /// ritual, or with one whose bonus the player has not entered.
     pub longevity_modifier: i32,
     /// Σ of the Virtue/Flaw aging-ROLL modifiers — ADDED with their stored sign
-    /// (Faerie Blood's -1, `ArMDE:3801`). The book's three-line formula does not name
+    /// (Faerie Blood's -1, `ArMDE:3872`). The book's three-line formula does not name
     /// this term, but [`AgingReadout::fixed_total`] has always included it, so the
     /// read-out cannot state its own arithmetic without it: a character with an
     /// aging-roll Flaw read "+4 (age) 0 (living conditions) 0 (Longevity Ritual) =
     /// stress die +3". Surfaced rather than derived in the UI, so the sentence's
     /// terms and its total come from the one engine computation.
     pub trait_modifier: i32,
-    /// Whether the `ArMDE:16575` clamp stands over this character — he holds a
+    /// Whether the `ArMDE:16652` clamp stands over this character — he holds a
     /// Longevity Ritual and has not yet reached the clamp's age.
     ///
     /// **Named apart from [`arm_rules::AgingTotal::capped_by_longevity`] on
@@ -467,7 +467,7 @@ pub struct AgingReadout {
     /// The whole non-die half of the AGING TOTAL, so the UI adds only the number
     /// the player typed: `age_modifier - living_conditions_modifier -
     /// longevity_modifier`, plus the Virtue/Flaw aging-roll modifiers (Faerie
-    /// Blood's -1, `ArMDE:3801`), which the book's three-line formula does not name
+    /// Blood's -1, `ArMDE:3872`), which the book's three-line formula does not name
     /// but which are just as die-independent.
     pub fixed_total: i32,
 }
@@ -492,11 +492,11 @@ pub struct AgingScheduleYear {
 /// the roll the player will actually make arithmetically identical by
 /// construction, sign conventions included.
 ///
-/// Source: ArMDE:16563-16617.
+/// Source: ArMDE:16640-16694.
 fn aging_readout(entity: &Entity, ruleset: &Ruleset) -> Option<AgingReadout> {
     let rules = ruleset.aging()?;
     let schedule = aging_schedule(entity, ruleset);
-    // No age entered means no age term (`ArMDE:16577` asks for the actual age, and
+    // No age entered means no age term (`ArMDE:16654` asks for the actual age, and
     // there is none) — and an empty schedule, so nothing is owed either.
     let age = entity.age.unwrap_or(0);
     let terms = aging_total(entity, ruleset, age, 0)?;
@@ -548,7 +548,7 @@ pub struct ReputationGrant {
     pub score: u8,
     /// The upper bound of a stated range (D11/Q5), or `None` when the score is
     /// exact. Outsider alone states one ("a bad Reputation of level 1 to 3",
-    /// ArMDE:6554); every other grant leaves this absent.
+    /// ArMDE:6625); every other grant leaves this absent.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_score: Option<u8>,
 }

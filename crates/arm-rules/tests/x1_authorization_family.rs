@@ -403,7 +403,7 @@ fn authorization_family_entries_carry_the_stated_permission() {
         // turb_trained: the dead-language half is now asserted too (X6b,
         // design-x6-parameters.md e5) — `language` is a player-chosen
         // enumerated parameter over the dead languages the book prints
-        // (ArMDE:5181), bound via the same `ParamValue::Bound` shape
+        // (ArMDE:5252), bound via the same `ParamValue::Bound` shape
         // `latin()` above uses for its own literal instance.
         (
             "virtue.turb_trained",
@@ -452,7 +452,7 @@ fn authorization_family_entries_carry_the_stated_permission() {
     }
 }
 
-/// `virtue.folk_magic` (ArMDE:3907-3920): "he may learn this Ability [the
+/// `virtue.folk_magic` (ArMDE:3978-3991): "he may learn this Ability [the
 /// chosen (Realm) Lore] at Character Creation even if he is normally unable
 /// to take Arcane Abilities" — same D14-shape-2 binding `virtue.student_of_realm`
 /// already uses (`realm` param → one gated Lore Ability per realm value).
@@ -506,7 +506,7 @@ fn folk_magic_authorizes_only_the_chosen_realms_lore() {
     );
 }
 
-/// row 50(b): `virtue.well_traveled` (ArMDE:5239-5242) ships `narrative` with
+/// row 50(b): `virtue.well_traveled` (ArMDE:5310-5313) ships `narrative` with
 /// **no effects at all** today. Its fifty bonus XP fund only `general`
 /// Abilities, so no `ability_authorization` is needed — only the missing
 /// `restricted_ability_xp` pool and the reclassification to `creation_effect`
@@ -546,7 +546,7 @@ fn well_traveled_carries_its_fifty_point_pool() {
     );
 }
 
-/// `flaw.church_upbringing` (ArMDE:5789-5792): "The player must spend 25
+/// `flaw.church_upbringing` (ArMDE:5860-5863): "The player must spend 25
 /// experience points FROM THE NORMAL BUDGET on Artes Liberales, Latin, Music,
 /// Organization Lore: Church, or Theology." D13's `from_normal_budget: true`
 /// (already built — see `types.rs::Effect::RestrictedAbilityXp` and
@@ -596,14 +596,14 @@ fn church_upbringing_earmarks_from_the_normal_budget() {
 }
 
 /// § 3.2a: the four missing `#### Educated (...)` headings
-/// (ArMDE:3715-3717/:3719-3721/:3723-3725/:3727-3729) are not parameter
+/// (ArMDE:3786-3788/:3719-3721/:3723-3725/:3727-3729) are not parameter
 /// variants — each is its own distinct Virtue, entirely absent from the
 /// catalogue today. Phase 1 asserts only existence + shape (minor, general,
 /// creation_effect) plus the authorization each variant's own passage states;
 /// the exact `restricted_ability_xp` pool shape for each is Phase-2 authoring
 /// (see `tmp/x1-verdicts.md`).
 ///
-/// `virtue.educated_bardic` is excluded here — ArMDE:3715-3717 carries no
+/// `virtue.educated_bardic` is excluded here — ArMDE:3786-3788 carries no
 /// "may purchase Academic Abilities" sentence at all, unlike its three
 /// siblings, so under D43 it gets NO `ability_authorization`: its pool alone
 /// (pool-implied permission) is what legalizes owning Art of Memory, up to
@@ -650,7 +650,7 @@ fn educated_family_is_complete() {
     }
 }
 
-/// `virtue.educated_bardic` (ArMDE:3715-3717): only a 50-point pool naming
+/// `virtue.educated_bardic` (ArMDE:3786-3788): only a 50-point pool naming
 /// Art of Memory/Profession: Storyteller/Profession: Poet/Area Lore/
 /// Organization Lore — no broader "may purchase Academic Abilities" sentence.
 /// D43 (coordinator correction, 2026-09-29): a pool with no separately-stated
@@ -669,7 +669,7 @@ fn educated_bardic_carries_no_authorization_beyond_its_pool() {
                 .effects
                 .iter()
                 .any(|e| matches!(e, Effect::AbilityAuthorization { .. })),
-            "virtue.educated_bardic: must carry NO ability_authorization (ArMDE:3715-3717 \
+            "virtue.educated_bardic: must carry NO ability_authorization (ArMDE:3786-3788 \
              states no broader permission), got {:?}",
             item.effects
         );
@@ -683,7 +683,7 @@ fn educated_bardic_carries_no_authorization_beyond_its_pool() {
 
 /// row 45: "`virtue.covenfolk`/`virtue.custos` additionally state 'may not
 /// take the Wealthy Virtue or Poor Flaw', which `incompatible_with` already
-/// expresses" (ArMDE:3611/:3631). Verified against the shipped data that
+/// expresses" (ArMDE:3682/:3631). Verified against the shipped data that
 /// neither entry (nor the reverse edges on `virtue.wealthy`/`flaw.poor`)
 /// carries this exclusion today.
 #[test]
@@ -740,7 +740,7 @@ const D43_TYPES: &str = r#"[
     "creation_phases": [] }
 ]"#;
 
-/// (a) `virtue.privileged_upbringing` (ArMDE:4806-4808): "You may not...buy
+/// (a) `virtue.privileged_upbringing` (ArMDE:4877-4879): "You may not...buy
 /// Academic or Martial Abilities with your normal pool of experience points
 /// unless you have another Virtue or Flaw permitting that." A 75-xp Artes
 /// Liberales score (score 5) cannot be funded by the 50-point pool alone, so
@@ -859,7 +859,7 @@ fn d43_explicit_authorization_permits_spending_beyond_the_pool() {
     );
 }
 
-/// (d) `virtue.hermetic_experience`'s id-form pool (ArMDE:4063-4066): "You
+/// (d) `virtue.hermetic_experience`'s id-form pool (ArMDE:4134-4137): "You
 /// cannot spend other experience points on Magic Lore or Latin unless the
 /// character has another Virtue or Flaw permitting this." Same shape as (a),
 /// on the id-form (not category-form) pool — a 75-xp Magic Lore score (score
@@ -927,7 +927,7 @@ fn d43_hermetic_experience_refuses_spending_beyond_its_pool() {
     );
 }
 
-/// `flaw.church_upbringing`'s "no other XP on Academic Abilities" (ArMDE:5789-
+/// `flaw.church_upbringing`'s "no other XP on Academic Abilities" (ArMDE:5860-
 /// 5792) falls out of the same change: its 25-point earmark
 /// (`from_normal_budget: true`) names Theology among its targets; a 50-xp
 /// Theology: Christian score (score 4) exceeds it by 25.

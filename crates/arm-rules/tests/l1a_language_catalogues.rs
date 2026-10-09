@@ -8,8 +8,8 @@
 //! (`ruleset/integrity.rs`) and the catalogue-matching load fold
 //! (`migration.rs`).
 //!
-//! Norbert's decision: Dead = Latin, Hebrew, Gothic (ArMDE:3565 "the dead
-//! language"); Living = Arabic, Greek, Persian, Aramaic. ArMDE:7432: "Arabic,
+//! Norbert's decision: Dead = Latin, Hebrew, Gothic (ArMDE:3636 "the dead
+//! language"); Living = Arabic, Greek, Persian, Aramaic. ArMDE:7504: "Arabic,
 //! Greek and Hebrew fill similar functions, although of these only Hebrew is a
 //! dead language". The split IS the decision, so the shipped-data tests below
 //! assert the exact sets.
@@ -108,7 +108,7 @@ fn living_language_offers_exactly_arabic_greek_persian_and_aramaic() {
 
 /// With the lists split, a Virtue's pool instance must name the Ability whose
 /// catalogue holds the value. Educated (Islamic)'s 50 XP go to "Arabic,
-/// Persian, Greek, Latin, …" (ArMDE:3721): Arabic is now a Living Language, so
+/// Persian, Greek, Latin, …" (ArMDE:3792): Arabic is now a Living Language, so
 /// the pool must fund Living Language: Arabic.
 #[test]
 fn educated_islamic_pool_funds_living_language_arabic() {
@@ -128,7 +128,7 @@ fn educated_islamic_pool_funds_living_language_arabic() {
     );
 }
 
-/// Educated (Hebrew)'s 50 XP go to "Hebrew, Aramaic, …" (ArMDE:3725): Aramaic
+/// Educated (Hebrew)'s 50 XP go to "Hebrew, Aramaic, …" (ArMDE:3796): Aramaic
 /// is now a Living Language.
 #[test]
 fn educated_hebrew_pool_funds_living_language_aramaic() {
@@ -149,7 +149,7 @@ fn educated_hebrew_pool_funds_living_language_aramaic() {
 }
 
 /// Turb Trained may learn "whichever single dead language the magi speak"
-/// (ArMDE:5181); Q-X6-2 made its `language` parameter range over "the
+/// (ArMDE:5252); Q-X6-2 made its `language` parameter range over "the
 /// catalogue's dead languages". After the split that is Dead Language's own
 /// list, so it must offer exactly Latin, Hebrew and Gothic.
 #[test]

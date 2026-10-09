@@ -490,7 +490,7 @@ fn a_value_inside_its_catalogue_or_free_text_is_not_flagged() {
 // --- Turb Trained -------------------------------------------------------------------
 
 /// Turb Trained may learn "whichever single dead language the magi speak"
-/// (ArMDE:5181), and L1a narrowed its `language` choice to the dead languages.
+/// (ArMDE:5252), and L1a narrowed its `language` choice to the dead languages.
 /// A pre-split save that chose Greek keeps that choice exactly as written: the
 /// migration moves Ability instances, never a Virtue's recorded choice, so the
 /// player sees `unknown_param_value` and re-chooses. Pin: green today (L1a), must

@@ -2,12 +2,12 @@
 //! #1, #4-6, #7).
 //!
 //! - D81.1: `flaw.incompatible_arts` carries a symmetric `incompatible_with`
-//!   toward `flaw.deficient_technique`/`flaw.deficient_form` (ArMDE:6292,
+//!   toward `flaw.deficient_technique`/`flaw.deficient_form` (ArMDE:6363,
 //!   "may not be combined with a Deficiency").
-//! - D81.2: `virtue.supernatural_beauty` (ArMDE:5095), `flaw.envied_beauty`
-//!   (ArMDE:6014), and `flaw.uncontrollable_strength` (ArMDE:6909) each carry
+//! - D81.2: `virtue.supernatural_beauty` (ArMDE:5166), `flaw.envied_beauty`
+//!   (ArMDE:6085), and `flaw.uncontrollable_strength` (ArMDE:6980) each carry
 //!   a `Prereq::CharacteristicMin` `prerequisites` field.
-//! - D81.3: `flaw.broken_vessel` (ArMDE:5755) carries
+//! - D81.3: `flaw.broken_vessel` (ArMDE:5826) carries
 //!   `Any([AbilityCategoryScoreMin{category:"supernatural",score:1},
 //!   AnyArtMin{score:1}])` — "at least one Supernatural Ability or Art
 //!   normally improved through experience points" is a disjunction, not a
@@ -63,7 +63,7 @@ fn issue_codes(e: &Entity, rs: &Ruleset) -> Vec<String> {
 }
 
 // ---------------------------------------------------------------------------
-// D81.1 — Incompatible Arts excludes the Deficiencies outright. ArMDE:6292:
+// D81.1 — Incompatible Arts excludes the Deficiencies outright. ArMDE:6363:
 // "This Flaw may be taken repeatedly with different combinations, but may not
 // be combined with a Deficiency (see page 125)." A flat, symmetric
 // `incompatible_with` — none of the three entries carries it today. Both
@@ -91,7 +91,7 @@ fn incompatible_arts_excludes_deficient_technique() {
     let codes = issue_codes(&e, &rs);
     assert!(
         codes.contains(&"incompatible".to_string()),
-        "ArMDE:6292 'may not be combined with a Deficiency' — \
+        "ArMDE:6363 'may not be combined with a Deficiency' — \
          flaw.incompatible_arts + flaw.deficient_technique must be incompatible, got: {codes:?}"
     );
 }
@@ -117,16 +117,16 @@ fn incompatible_arts_excludes_deficient_form() {
     let codes = issue_codes(&e, &rs);
     assert!(
         codes.contains(&"incompatible".to_string()),
-        "ArMDE:6292 'may not be combined with a Deficiency' — \
+        "ArMDE:6363 'may not be combined with a Deficiency' — \
          flaw.incompatible_arts + flaw.deficient_form must be incompatible, got: {codes:?}"
     );
 }
 
 // ---------------------------------------------------------------------------
-// D81.2 — Characteristic-floor prerequisite. Supernatural Beauty (ArMDE:5095)
-// and Envied Beauty (ArMDE:6014): "A character lacking a positive Presence
+// D81.2 — Characteristic-floor prerequisite. Supernatural Beauty (ArMDE:5166)
+// and Envied Beauty (ArMDE:6085): "A character lacking a positive Presence
 // score may not have this Virtue/Flaw" (Presence >= 1). Uncontrollable
-// Strength (ArMDE:6909): "This Flaw may not be taken if the character's
+// Strength (ArMDE:6980): "This Flaw may not be taken if the character's
 // Strength is below 0" (Strength >= 0). None of the three carries a
 // `prerequisites` field today, so nothing enforces this yet.
 // ---------------------------------------------------------------------------
@@ -201,7 +201,7 @@ fn uncontrollable_strength_requires_non_negative_strength() {
 }
 
 // ---------------------------------------------------------------------------
-// D81.3 — Broken Vessel (ArMDE:5755): "Characters may only take this Flaw if
+// D81.3 — Broken Vessel (ArMDE:5826): "Characters may only take this Flaw if
 // they have at least one Supernatural Ability or Art normally improved
 // through experience points." No `prerequisites` field today.
 // ---------------------------------------------------------------------------
@@ -216,7 +216,7 @@ fn broken_vessel_requires_a_supernatural_ability_or_art() {
     let codes = issue_codes(&none, &rs);
     assert!(
         codes.contains(&"prereq_not_met".to_string()),
-        "ArMDE:5755: no Supernatural Ability or Art must refuse Broken Vessel, got: {codes:?}"
+        "ArMDE:5826: no Supernatural Ability or Art must refuse Broken Vessel, got: {codes:?}"
     );
 
     let mut with_ability = entity("companion", vec![sel("flaw.broken_vessel")]);
@@ -224,7 +224,7 @@ fn broken_vessel_requires_a_supernatural_ability_or_art() {
     let codes = issue_codes(&with_ability, &rs);
     assert!(
         !codes.contains(&"prereq_not_met".to_string()),
-        "ArMDE:5755: a Supernatural Ability at 1 must satisfy Broken Vessel, got: {codes:?}"
+        "ArMDE:5826: a Supernatural Ability at 1 must satisfy Broken Vessel, got: {codes:?}"
     );
 
     let mut with_art = entity("magus", vec![sel("flaw.broken_vessel")]);
@@ -232,7 +232,7 @@ fn broken_vessel_requires_a_supernatural_ability_or_art() {
     let codes = issue_codes(&with_art, &rs);
     assert!(
         !codes.contains(&"prereq_not_met".to_string()),
-        "ArMDE:5755: an Art at 1 must satisfy Broken Vessel, got: {codes:?}"
+        "ArMDE:5826: an Art at 1 must satisfy Broken Vessel, got: {codes:?}"
     );
 }
 

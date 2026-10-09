@@ -34,7 +34,7 @@ pub(crate) fn validate_prerequisites(
         };
 
         if let Some(ref prereq) = item.prerequisites {
-            // B2/ArMDE:4441: an item's own prerequisite excludes its own
+            // B2/ArMDE:4512: an item's own prerequisite excludes its own
             // contribution to `HasCategory` — see `evaluate_for_item`'s doc
             // comment.
             let (outcome, depended_on_unknown) = ctx.evaluate_for_item(prereq, &selection.item_ref);
@@ -187,14 +187,14 @@ pub(crate) struct PrereqCtx<'a> {
     /// entity holds — the grant-aware twin of
     /// [`crate::validation::selections::categories_in_force`]'s bought-only
     /// fold. `flaw.rector`'s "must have a Social Status Virtue"
-    /// (ArMDE:6671-6674) is satisfied by a
+    /// (ArMDE:6742-6745) is satisfied by a
     /// House-granted Social Status exactly as by a bought one, the same reach
     /// `present_ids` already gives `Has`.
     ///
     /// Keyed on category, valued on the `item_ref`s that contribute it (not a
     /// bare `BTreeSet<String>`) so [`evaluate_for_item`](PrereqCtx::evaluate_for_item)
     /// can ask "does some item OTHER than the one asking hold this category" —
-    /// B2/ArMDE:4441: `virtue.male_guild_sponsor` is itself `social_status`, so
+    /// B2/ArMDE:4512: `virtue.male_guild_sponsor` is itself `social_status`, so
     /// a self-blind `HasCategory` on its own prerequisite would be trivially
     /// satisfied by itself and never actually require the SEPARATE guild
     /// status the book demands.
@@ -266,7 +266,7 @@ impl<'a> PrereqCtx<'a> {
         // parameterized ability may appear more than once with different
         // specialties; an `AbilityMin` is keyed by id, so the highest wins).
         // No `ability_bonus`: Puissant Ability adds 2 only "whenever you use
-        // it" (ArMDE:4816), and meeting a minimum is not a use (ArMDE:4389).
+        // it" (ArMDE:4887), and meeting a minimum is not a use (ArMDE:4460).
         // Keyed by owned `Id` so granted floors (below) fold in even for
         // abilities that were never bought.
         let mut ability_scores: BTreeMap<Id, u8> = BTreeMap::new();
@@ -275,7 +275,7 @@ impl<'a> PrereqCtx<'a> {
             *entry = (*entry).max(a.score);
         }
         // A conferred score from an `AbilityScoreGrant` effect — Second Sight
-        // 1 (ArMDE:4890), a House-granted Mystery Ability (Bjornaer →
+        // 1 (ArMDE:4961), a House-granted Mystery Ability (Bjornaer →
         // Heartbeast 1) — is a held score, so it counts even with no bought
         // row.
         for floor in crate::effective::ability_score_floors(entity, ruleset) {
@@ -285,7 +285,7 @@ impl<'a> PrereqCtx<'a> {
         }
 
         // Held score per Art (D83.5): the max bought score. No `art_bonus`:
-        // Puissant Art adds 3 only "whenever you use it" (ArMDE:4820).
+        // Puissant Art adds 3 only "whenever you use it" (ArMDE:4891).
         let mut art_scores: BTreeMap<Id, u8> = BTreeMap::new();
         for a in &entity.art_scores {
             let entry = art_scores.entry(a.art.clone()).or_insert(0);
@@ -390,7 +390,7 @@ impl<'a> PrereqCtx<'a> {
     }
 
     /// Evaluates a prerequisite as `item_ref`'s OWN statement about itself
-    /// (`PointItem::prerequisites`/`advisory_prerequisites`) — B2/ArMDE:4441.
+    /// (`PointItem::prerequisites`/`advisory_prerequisites`) — B2/ArMDE:4512.
     ///
     /// A prerequisite states what the REST of the character must hold, not
     /// what the item itself trivially supplies. `Prereq::HasCategory`
@@ -511,7 +511,7 @@ fn evaluate_prereq(
         },
         // AbilityMin compares against the entity's max *held* score for that
         // ability (bought or granted; D83.5 — Puissant Ability counts only
-        // "whenever you use it", ArMDE:4816). An ability the entity does not
+        // "whenever you use it", ArMDE:4887). An ability the entity does not
         // have counts as score 0, so any positive threshold is False.
         Prereq::AbilityMin { ability, score } => {
             let have = ctx.ability_scores.get(ability).copied().unwrap_or(0);
@@ -522,7 +522,7 @@ fn evaluate_prereq(
             }
         }
         // ArtMin compares against the entity's bought Art score (D83.5 —
-        // Puissant Art counts only "whenever you use it", ArMDE:4820). An Art
+        // Puissant Art counts only "whenever you use it", ArMDE:4891). An Art
         // the entity does not have counts as 0.
         Prereq::ArtMin { art, score } => {
             let have = ctx.art_scores.get(art).copied().unwrap_or(0);
@@ -542,7 +542,7 @@ fn evaluate_prereq(
         },
         // Static (an item's own category never depends on missing data), so
         // always a definite True/False, never Unknown — matching `Has`'s own
-        // shape (design § 3a site 2). Self-excluding (B2/ArMDE:4441): when
+        // shape (design § 3a site 2). Self-excluding (B2/ArMDE:4512): when
         // evaluated for a specific item (`excluding`), an item contributing
         // ONLY via that item's own selection does not count — see
         // `PrereqCtx::evaluate_for_item`'s doc comment.
@@ -712,7 +712,7 @@ pub(crate) fn validate_incompatibilities(
 
         // X6a/e7: a per-VALUE incompatibility, active only while its own
         // gate holds for THIS selection — Warped Senses' sight-only clause
-        // forbids Keen Vision only when `sense` names sight (D58, ArMDE:7029-7037:
+        // forbids Keen Vision only when `sense` names sight (D58, ArMDE:7100-7108:
         // a hard error even though the -2 penalty stays text). Reported
         // through the same `incompatible`/pair-dedup machinery as the flat
         // list above.
@@ -741,7 +741,7 @@ pub(crate) fn validate_incompatibilities(
                 }
             }
 
-            // RC review-C item 2 (ArMDE:7033): the same-copy twin of the loop
+            // RC review-C item 2 (ArMDE:7104): the same-copy twin of the loop
             // above — while `gate` holds for THIS selection, forbid any OTHER
             // selection of the SAME item whose own value of `gate.param` is
             // one of `forbids_same_item_values` (Weak Sight forbids a
@@ -1170,7 +1170,7 @@ mod tests {
         assert_eq!(outcome, Tri::True);
     }
 
-    /// B2/ArMDE:4441: `Prereq::HasCategory`, evaluated via
+    /// B2/ArMDE:4512: `Prereq::HasCategory`, evaluated via
     /// [`PrereqCtx::evaluate_for_item`] as an item's own prerequisite about
     /// ITSELF, excludes that item's own contribution. An item whose own
     /// category is `social_status` and whose own prerequisite is
@@ -1455,7 +1455,7 @@ mod tests {
         assert!(!depended_on_unknown);
     }
 
-    /// B2/ArMDE:4441's self-excluding shape, for `HasCategoryAtMagnitude`
+    /// B2/ArMDE:4512's self-excluding shape, for `HasCategoryAtMagnitude`
     /// (D69/X7b-e row 42/D68.4): an item whose own prerequisite names the SAME
     /// category/kind/magnitude it itself carries must not self-satisfy — the
     /// magnitude/kind-filtered twin of

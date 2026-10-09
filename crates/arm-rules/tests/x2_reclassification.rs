@@ -69,7 +69,7 @@ fn displayed_text<'a>(loc: &'a LocalizedRuleset, id: &str) -> Option<&'a str> {
 const EN_VF: &str = include_str!("../../../rules/i18n/en/virtues_flaws.json");
 const DE_VF: &str = include_str!("../../../rules/i18n/de/virtues_flaws.json");
 
-/// X2a (`tmp/x2-worklist.md` § 1 rows 1-51, ArMDE:3362-4061): entries that
+/// X2a (`tmp/x2-worklist.md` § 1 rows 1-51, ArMDE:3433-4132): entries that
 /// compute nothing today, whose passage the mechanical-token screen does not
 /// flag (so no pending list carries them), and that D8/D20/D46/D50/D65 all the
 /// same require to become `uncomputed_rule` with their rule written into
@@ -79,7 +79,7 @@ const RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
     (
         "virtue.common_sense",
         "D50's own worked example: \"common sense (the storyguide) alerts you to the error\" \
-         (ArMDE:3597-3600) — no number, no roll, but a storyguide who does not know it will not \
+         (ArMDE:3668-3671) — no number, no roll, but a storyguide who does not know it will not \
          do it",
     ),
     (
@@ -91,22 +91,22 @@ const RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
     (
         "virtue.feather_messenger",
         "D8 capability: \"can painlessly separate a feather... controlling its movements \
-         telepathically\" (ArMDE:3869-3872); the summary does not carry it",
+         telepathically\" (ArMDE:3940-3943); the summary does not carry it",
     ),
     (
         "virtue.gender_shift",
-        "D8 capability: \"may choose to change genders\" each midnight (ArMDE:3951-3954)",
+        "D8 capability: \"may choose to change genders\" each midnight (ArMDE:4022-4025)",
     ),
     (
         "virtue.greater_purifying_touch",
-        "D8 capability + a Fatigue cost: \"cure a single serious disease\" (ArMDE:4027-4030)",
+        "D8 capability + a Fatigue cost: \"cure a single serious disease\" (ArMDE:4098-4101)",
     ),
     (
         "virtue.guest_of_house_criamon",
         "D50: \"may be created using the rules for any other House\" while remaining politically \
-         Criamon (ArMDE:4037-4040) is a real creation-rules substitution; 0 effects today",
+         Criamon (ArMDE:4108-4111) is a real creation-rules substitution; 0 effects today",
     ),
-    // "virtue.guild_apprentice" (F-100, ArMDE:4041-4044) is REMOVED here (X7a-refactor):
+    // "virtue.guild_apprentice" (F-100, ArMDE:4112-4115) is REMOVED here (X7a-refactor):
     // its one stated mechanical rule — the Poor/Wealthy later-life-XP-rate suppression —
     // is now computed, via `Effect::SuppressesLaterLifeXpRate`
     // (`types.rs`/`life_stage.rs::later_life_rate`), so D67's "any stated rule computed
@@ -116,28 +116,28 @@ const RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
     (
         "virtue.aristotelian_training",
         "D4/D65 N6: the +1 Lab Total is conditioned on an Art and Academe activity this app can \
-         never verify, so it can never legitimately fire as an in_play_effect (ArMDE:3440-3443); \
+         never verify, so it can never legitimately fire as an in_play_effect (ArMDE:3511-3514); \
          its two sibling clauses are in the same position",
     ),
     (
         "virtue.diedne_magic",
         "D20: the required Major Story Flaw clause (\"does not grant you any points\", \
-         ArMDE:3675-3682) is not computed, and the computed casting mechanic itself reaches the \
+         ArMDE:3746-3753) is not computed, and the computed casting mechanic itself reaches the \
          player only as a bare surfaced label, not text",
     ),
     (
         "virtue.faerie_raised_magic",
-        "D20: \"this Virtue also includes the Virtue Spell Improvisation\" (ArMDE:3829-3842) \
+        "D20: \"this Virtue also includes the Virtue Spell Improvisation\" (ArMDE:3900-3913) \
          grants a second Virtue's effect that is not itself present",
     ),
     (
         "virtue.the_gift",
-        "D46: ArMDE:2870-2876's \"suffers all the penalties of The Gift\" is computed nowhere, \
+        "D46: ArMDE:2938-2944's \"suffers all the penalties of The Gift\" is computed nowhere, \
          though the entry is named in the grog profile's forbidden_traits",
     ),
     (
         "virtue.devil_child",
-        "D67 (coordinator-routed into X2a): ArMDE:3671-3674's free-Virtue-choice grant (\"gets \
+        "D67 (coordinator-routed into X2a): ArMDE:3742-3745's free-Virtue-choice grant (\"gets \
          the Demonic Might or Demonic Powers... Minor Virtue free\") is computed by no effect at \
          all, though the entry's incompatible_with is computed — D67 allows uncomputed_rule \
          regardless of what else is computed",
@@ -176,7 +176,7 @@ fn x2a_entries_reclassify_to_uncomputed_rule_with_a_description() {
 }
 
 /// D20's worst surfaced-only entry (`docs/vf-audit/decisions.md` D20):
-/// ArMDE:3579-3596 states eight rank-based Magic Resistance/Soak figures that
+/// ArMDE:3650-3667 states eight rank-based Magic Resistance/Soak figures that
 /// reach the player nowhere under a bare `aura_bonus` effect kind. X2a owns
 /// only the reclassification and the text+numbers; the effect-kind and rank
 /// parameter fix is X6's, so this test deliberately does not touch `effects`.
@@ -186,12 +186,12 @@ fn commanding_aura_reclassifies_and_states_its_eight_figures() {
     assert_eq!(
         classification_of(&rs, "virtue.commanding_aura"),
         Classification::UncomputedRule,
-        "D20: ArMDE:3585-3591's eight Pope/Cardinal/Legatus-missus/Archbishop Magic \
+        "D20: ArMDE:3656-3662's eight Pope/Cardinal/Legatus-missus/Archbishop Magic \
          Resistance/Soak figures reach the player nowhere under a bare `aura_bonus` kind; \
          virtue.commanding_aura must reclassify to uncomputed_rule"
     );
 
-    // ArMDE:3585-3591, one (Magic Resistance, Soak bonus) pair per rank. Phase
+    // ArMDE:3656-3662, one (Magic Resistance, Soak bonus) pair per rank. Phase
     // 2 must write all eight numbers into `description`, both locales — checked
     // as bare numeral substrings rather than exact prose, since the wording
     // (and which locale's phrasing) is Phase 2's choice.
@@ -371,8 +371,8 @@ fn cached_source_lines<'a>(
 /// non-body lines are excluded and [`normalize_markdown`] is applied.
 ///
 /// **What the citation excludes, and why.** Checked directly against three
-/// cited ranges (`virtue.berserk` ArMDE:3500-3503, `virtue.commanding_aura`
-/// ArMDE:3579-3596, `virtue.blood_of_the_nephilim` ArMDE:3504-3518):
+/// cited ranges (`virtue.berserk` ArMDE:3571-3574, `virtue.commanding_aura`
+/// ArMDE:3650-3667, `virtue.blood_of_the_nephilim` ArMDE:3575-3589):
 /// `start` is always the `#### <Name>` heading line, and `start + 1` is
 /// always the `*<Magnitude>, <Category>*<br>` descriptor line — neither
 /// states a rule, so the body is `[start + 2, end]` inclusive. `end` is
@@ -457,7 +457,7 @@ fn bracketed_verbatim_body(lines: &[String], start: u32, end: u32) -> String {
 }
 
 /// X2a (2026-09-29), D46: `virtue.the_gift`'s shipped description legitimately
-/// composes two passages — its own entry citation (ArMDE:3967-3969, the
+/// composes two passages — its own entry citation (ArMDE:4038-4040, the
 /// standard header-skipped citation) plus the "### The Gift" prose-section's
 /// penalties clause. That clause has no two-line entry header of its own
 /// (`#### Name` / `*Magnitude, Category*<br>`) to skip, so its range is
@@ -471,8 +471,8 @@ fn bracketed_verbatim_body(lines: &[String], start: u32, end: u32) -> String {
 /// `virtue.the_gift` is on this table for now; X2b-h may add more.
 ///
 /// X2d (2026-09-30), D70: `virtue.true_faith`'s shipped description composes
-/// its own entry citation (ArMDE:5169-5171) with the whole "### True Faith"
-/// prose section (ArMDE:17603-17617) that entry's own text points readers to
+/// its own entry citation (ArMDE:5240-5242) with the whole "### True Faith"
+/// prose section (ArMDE:17680-17694) that entry's own text points readers to
 /// ("For more about True Faith, see page 419"). Unlike `virtue.the_gift`'s
 /// second range, this one is not a single paragraph clipped to a section
 /// heading — it is the entire section, so its range starts at the `###`
@@ -488,8 +488,8 @@ fn bracketed_verbatim_body(lines: &[String], start: u32, end: u32) -> String {
 ///
 /// D79.2 (2026-10-01), F-256: `virtue.relic`/`virtue.powerful_relic` compose
 /// their own entry citation with the narrower "### Relics" heading, its intro
-/// paragraph and the FAITH clause only (ArMDE:17619-17623) — Divine Might and
-/// Scourging the Infernal (ArMDE:17624-17627) are the relic's own defenses,
+/// paragraph and the FAITH clause only (ArMDE:17696-17700) — Divine Might and
+/// Scourging the Infernal (ArMDE:17701-17704) are the relic's own defenses,
 /// not a rule about the bearer's sheet, and stay out of scope
 /// (`docs/vf-audit/design-x7-relic-and-ct-mirror.md` § 1). Same shape as
 /// `virtue.true_faith`'s second range: it starts at the `###` heading itself
@@ -500,10 +500,10 @@ fn bracketed_verbatim_body(lines: &[String], start: u32, end: u32) -> String {
 /// ends mid-list, deliberately short of DIVINE MIGHT). Both ids share this
 /// exact second range.
 const COMPOSED_DESCRIPTIONS: &[(&str, &[(u32, u32)])] = &[
-    ("virtue.the_gift", &[(3967, 3969), (2868, 2870)]),
-    ("virtue.true_faith", &[(5169, 5171), (17603, 17617)]),
-    ("virtue.powerful_relic", &[(4782, 4786), (17619, 17623)]),
-    ("virtue.relic", &[(4852, 4854), (17619, 17623)]),
+    ("virtue.the_gift", &[(4038, 4040), (2936, 2938)]),
+    ("virtue.true_faith", &[(5240, 5242), (17680, 17694)]),
+    ("virtue.powerful_relic", &[(4853, 4857), (17696, 17700)]),
+    ("virtue.relic", &[(4923, 4925), (17696, 17700)]),
 ];
 
 /// The shared scope-tracking list the verbatim-fidelity guard
@@ -526,9 +526,9 @@ const X2_VERBATIM_SCOPE: &[&str] = &[
     // `description` against the verbatim-fidelity check. Two are expected to
     // fail today (a real Phase 2 finding, not a bug in this test):
     // `flaw.abandoned_apprentice`'s shipped English text flattens the
-    // rulebook's four paragraphs (ArMDE:5643-5649) into one running
+    // rulebook's four paragraphs (ArMDE:5714-5720) into one running
     // paragraph, and `flaw.a_deal_with_the_devil`'s shipped text normalizes
-    // the rulebook's curly apostrophe in "Hell's" (ArMDE:5907) to a straight
+    // the rulebook's curly apostrophe in "Hell's" (ArMDE:5978) to a straight
     // one, which the verbatim check (only en-dash-before-digit and Markdown
     // normalization are allowed) does not permit.
     "flaw.a_deal_with_the_devil",
@@ -698,7 +698,7 @@ const X2_VERBATIM_SCOPE: &[&str] = &[
     // whole passage verbatim — no separate description, the flaw.missing_ear
     // precedent) are deliberately not here, matching earlier slices' own
     // precedent. true_faith (D70) IS here: its description composes its own
-    // entry with the "### True Faith" section (ArMDE:17603-17617) via
+    // entry with the "### True Faith" section (ArMDE:17680-17694) via
     // COMPOSED_DESCRIPTIONS, resolving F-330's earlier deferral.
     "virtue.senior_bard",
     "virtue.senior_clergy",
@@ -799,7 +799,7 @@ const X2_VERBATIM_SCOPE: &[&str] = &[
     "flaw.restricted_power",
     "flaw.restriction",
     "flaw.savantism",
-    // X2h (tmp/x2h-verdicts.md, rows 375-432, ArMDE:6709-7109): 21 entries
+    // X2h (tmp/x2h-verdicts.md, rows 375-432, ArMDE:6780-7180): 21 entries
     // reclassified narrative -> uncomputed_rule with the full cited passage
     // as `description` in both locales (20 bulk-table + tragic_life
     // dedicated); `flaw.short_ranged_magic` (D20, classification-only this
@@ -912,6 +912,164 @@ fn x2_shipped_descriptions_match_their_cited_passage_verbatim() {
     );
 }
 
+/// Rewrites the `"description"` value of exactly the ids named in `updates`,
+/// inside an i18n catalogue's canonical shape — one JSON object per top-level
+/// id, `"description"` always its last field (verified: every such line in
+/// `rules/i18n/<lang>/virtues_flaws.json` is immediately followed by `}` or
+/// `},`, never another field). A line-based replace rather than a
+/// `serde_json` round-trip, for the same reason `source_relocation.rs`'s
+/// writer gives: re-serializing the whole document would reflow every entry
+/// and bury the real diff (`CLAUDE.md` -> "Canonical serialization").
+fn rewrite_description_lines(text: &str, updates: &BTreeMap<String, String>) -> (String, usize) {
+    let mut current_id: Option<&str> = None;
+    let mut replaced = 0usize;
+    let mut out_lines = Vec::new();
+
+    for line in text.lines() {
+        let indent = line.len() - line.trim_start().len();
+        let trimmed = line.trim();
+        if indent == 2 && trimmed.ends_with(": {") && trimmed.starts_with('"') {
+            current_id = trimmed
+                .strip_prefix('"')
+                .and_then(|rest| rest.split_once("\": {"))
+                .map(|(id, _)| id);
+        }
+
+        if line.trim_start().starts_with("\"description\": \"")
+            && let Some(id) = current_id
+            && let Some(new_description) = updates.get(id)
+        {
+            let encoded = serde_json::to_string(new_description).expect("a string serializes");
+            out_lines.push(format!("    \"description\": {encoded}"));
+            replaced += 1;
+        } else {
+            out_lines.push(line.to_string());
+        }
+    }
+
+    (format!("{}\n", out_lines.join("\n")), replaced)
+}
+
+#[test]
+fn rewrite_description_lines_replaces_only_the_named_ids_description() {
+    let text = "{\n  \"virtue.foo\": {\n    \"name\": \"Foo\",\n    \"description\": \"Old foo \
+                text.\"\n  },\n  \"virtue.bar\": {\n    \"name\": \"Bar\",\n    \"description\": \
+                \"Old bar text.\"\n  }\n}\n";
+    let mut updates = BTreeMap::new();
+    updates.insert(
+        "virtue.foo".to_string(),
+        "New foo text with \"quotes\".".to_string(),
+    );
+    let (out, count) = rewrite_description_lines(text, &updates);
+    assert_eq!(count, 1);
+    assert!(out.contains("\"description\": \"New foo text with \\\"quotes\\\".\""));
+    assert!(out.contains("\"description\": \"Old bar text.\""));
+}
+
+/// P8-5-shaped refresh (`design-p8-resync.md` § "What moves" (f), Q6: "the
+/// intended meaning was already captured... refresh — 'verbatim' means
+/// matching the *current* canonical source, not a frozen snapshot of a past
+/// OCR error"), surfaced as a byproduct of P8-3's relocation rather than a
+/// separate pass: once every `X2_VERBATIM_SCOPE` entry's `source.lines`
+/// pointed at its real post-sync position,
+/// [`x2_shipped_descriptions_match_their_cited_passage_verbatim`] found 38
+/// stored descriptions that no longer match the resynced book — almost all
+/// upstream OCR fixes the old scan had baked into our text (e.g. "onespoint"
+/// -> "one point", "vears" -> "years", "eves" -> "eyes", "Stinnen" ->
+/// "Spinnen"), a few genuine upstream wording revisions. This mirrors the
+/// X7a/x9c precedent of this very file (`regenerate_*` tools writing
+/// corrected data back from a verified source reading) rather than hand-
+/// transcribing 38 entries across two locales.
+///
+/// **Never writes what it has not itself verified**: `expected` here is
+/// computed by the exact same `bracketed_verbatim_body` +
+/// `normalize_quote_pairs` pipeline the live guard
+/// (`x2_shipped_descriptions_match_their_cited_passage_verbatim`) checks
+/// against, so a passing guard afterward is not circular — it is the same
+/// computation, re-run, confirming the file now holds what it just wrote.
+#[test]
+#[ignore = "writes into rules/i18n; run after a rulebook re-sync to refresh stale \
+            X2_VERBATIM_SCOPE descriptions — see tmp/p8-34-handover.md"]
+fn regenerate_x2_verbatim_descriptions() {
+    let rs = load_ruleset();
+    let loc_en = LocalizedRuleset::new(rs.clone(), EN_VF).unwrap();
+    let loc_de = LocalizedRuleset::new(rs.clone(), DE_VF).unwrap();
+    let mut cache: BTreeMap<(String, String), Vec<String>> = BTreeMap::new();
+
+    let mut updates: BTreeMap<&str, BTreeMap<String, String>> = BTreeMap::new();
+
+    for id in X2_VERBATIM_SCOPE {
+        let item = rs
+            .items()
+            .find(|i| i.id.as_str() == *id)
+            .unwrap_or_else(|| panic!("{id} is not in the shipped catalogue"));
+        let source = item
+            .source
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} carries no source citation"));
+        let start = source.lines.start;
+        let end = source.lines.end;
+        let composed_ranges = COMPOSED_DESCRIPTIONS
+            .iter()
+            .find(|(composed_id, _)| composed_id == id)
+            .map(|(_, ranges)| *ranges);
+
+        for (lang, loc, source_file) in [
+            ("en", &loc_en, CORE_RULES_FILE_EN),
+            ("de", &loc_de, CORE_RULES_FILE_DE),
+        ] {
+            let Some(shipped) = loc.description(&Id::new(*id)) else {
+                continue;
+            };
+            let lines = cached_source_lines(&mut cache, lang, source_file);
+            let expected = match composed_ranges {
+                Some(ranges) => ranges
+                    .iter()
+                    .map(|(range_start, range_end)| {
+                        bracketed_verbatim_body(lines, *range_start, *range_end)
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n\n"),
+                None => bracketed_verbatim_body(lines, start, end),
+            };
+            let expected = normalize_quote_pairs(&expected);
+            if shipped != expected {
+                updates
+                    .entry(lang)
+                    .or_default()
+                    .insert((*id).to_string(), expected);
+            }
+        }
+    }
+
+    let mut total_replaced = 0usize;
+    for (lang, ids) in &updates {
+        let path = rules_dir()
+            .join("i18n")
+            .join(lang)
+            .join("virtues_flaws.json");
+        let text = fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("{} is readable: {e}", path.display()));
+        let (rewritten, replaced) = rewrite_description_lines(&text, ids);
+        assert_eq!(
+            replaced,
+            ids.len(),
+            "{lang}: expected to rewrite exactly {} description line(s), rewrote {replaced} — a \
+             name must have matched no block (id typo, or 'description' is not that block's last \
+             field)",
+            ids.len()
+        );
+        fs::write(&path, rewritten)
+            .unwrap_or_else(|e| panic!("{} is writable: {e}", path.display()));
+        total_replaced += replaced;
+    }
+
+    println!(
+        "updated {total_replaced} description(s) across {} locale(s)",
+        updates.len()
+    );
+}
+
 /// Bug guard (fix-round, 2026-09-29): a stray `*` in a shipped `description`
 /// is always leftover Markdown emphasis/bold that [`normalize_markdown`]
 /// failed to fully strip when the description was authored — never
@@ -943,9 +1101,9 @@ fn no_shipped_description_contains_a_literal_asterisk() {
     );
 }
 
-/// ArMDE:3745 ("This is the same as the Knight Virtue") means Emir inherits
+/// ArMDE:3816 ("This is the same as the Knight Virtue") means Emir inherits
 /// Knight's *computed* mechanics, not just its flavor text. Knight's own
-/// passage (ArMDE:4195-4198) states equipment access, a male-only
+/// passage (ArMDE:4266-4269) states equipment access, a male-only
 /// restriction, a Wealthy/Poor null-interaction, and Landed Noble
 /// compatibility, of which only the ability-authorization grant is currently
 /// computed (`effects: [{ability_authorization, categories: [martial]}]`,
@@ -978,7 +1136,7 @@ fn emir_carries_the_same_computed_effects_as_knight() {
 
     assert_eq!(
         emir.effects, knight.effects,
-        "ArMDE:3745 \"This is the same as the Knight Virtue\": Emir must carry Knight's \
+        "ArMDE:3816 \"This is the same as the Knight Virtue\": Emir must carry Knight's \
          computed effects ({:?}), not none",
         knight.effects
     );
@@ -992,7 +1150,7 @@ fn emir_carries_the_same_computed_effects_as_knight() {
 }
 
 // ---------------------------------------------------------------------------
-// X2b (`tmp/x2-worklist.md` § 1 rows 52-102, ArMDE:4067-4442) — see
+// X2b (`tmp/x2-worklist.md` § 1 rows 52-102, ArMDE:4138-4513) — see
 // `tmp/x2b-verdicts.md` for the full per-entry citation and rationale this file
 // intentionally does not re-derive inline.
 // ---------------------------------------------------------------------------
@@ -1006,51 +1164,51 @@ const X2B_RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
     (
         "virtue.immune_to_disease",
         "D8 capability: the character is marked as a demon's property, so the lesser demons \
-         that cause most diseases refuse to harm him (ArMDE:4095-4098); no number, no roll, no \
+         that cause most diseases refuse to harm him (ArMDE:4166-4169); no number, no roll, no \
          idiom the screen recognizes",
     ),
     (
         "virtue.immunity_to_cold",
-        "D8 capability: \"Normal cold does not harm you\" (ArMDE:4099-4102); no number, no roll",
+        "D8 capability: \"Normal cold does not harm you\" (ArMDE:4170-4173); no number, no roll",
     ),
     (
         "virtue.infernal_heirloom",
         "D8 capability + a frequency figure: each heirloom \"may create an effect once per day \
-         that is equivalent to a Hermetic spell of level 25\" (ArMDE:4127-4132); an unsigned \
+         that is equivalent to a Hermetic spell of level 25\" (ArMDE:4198-4203); an unsigned \
          number is not a modifier the screen recognizes (states_a_mechanical_rule's own \
          documented exclusion)",
     ),
     (
         "virtue.lesser_immunity",
         "D8 capability + cross-reference: \"immune to some hazard which is either rare, or not \
-         deadly, or both\" (ArMDE:4275-4278); Greater Immunity itself carries no effect to \
+         deadly, or both\" (ArMDE:4346-4349); Greater Immunity itself carries no effect to \
          inherit, unlike Emir/Knight",
     ),
     (
         "virtue.just_an_instant",
-        "D50: \"does not need to make Awareness checks\" (ArMDE:4169-4172) exempts a roll \
+        "D50: \"does not need to make Awareness checks\" (ArMDE:4240-4243) exempts a roll \
          requirement a player must know applies; no signed number, no recognized idiom",
     ),
     (
         "virtue.knows_people",
         "D50: \"Once per story or session, a character with this Virtue may ask for a bait\" \
-         (ArMDE:4199-4206) is a real, invokable ability with a real frequency limit; 0 effects",
+         (ArMDE:4270-4277) is a real, invokable ability with a real frequency limit; 0 effects",
     ),
     (
         "virtue.landed_noble",
         "D50: \"you may not impose the death penalty, nor may you mutilate criminals\" and, if \
          Poor, \"you must spend every season managing it, or it may collapse completely\" \
-         (ArMDE:4219-4228) are real constraints a player/storyguide must apply; F-131",
+         (ArMDE:4290-4299) are real constraints a player/storyguide must apply; F-131",
     ),
     (
         "virtue.magical_memory",
         "D50: \"You need not keep laboratory texts... to get the benefit of a Lab Text\" \
-         (ArMDE:4355-4358) is a real exemption from the normal Lab Text requirement; F-162",
+         (ArMDE:4426-4429) is a real exemption from the normal Lab Text requirement; F-162",
     ),
     (
         "virtue.life_linked_spontaneous_magic",
         "D20: one of the fourteen \"number right\" surfaced-only entries — the per-five-points \
-         Fatigue rule and the wound conversion (ArMDE:4299-4306) reach the player only as a bare \
+         Fatigue rule and the wound conversion (ArMDE:4370-4377) reach the player only as a bare \
          `special_casting_mod` label, not text; F-148",
     ),
 ];
@@ -1099,11 +1257,11 @@ fn leper_magus_reclassifies_and_states_its_wound_for_vis_figures() {
     assert_eq!(
         classification_of(&rs, "virtue.leper_magus"),
         Classification::UncomputedRule,
-        "D20: ArMDE:4249-4252's wound-for-vis figures reach the player nowhere under a bare \
+        "D20: ArMDE:4320-4323's wound-for-vis figures reach the player nowhere under a bare \
          `special_casting_mod` kind; virtue.leper_magus must reclassify to uncomputed_rule"
     );
 
-    // ArMDE:4249-4252, one pawn figure per wound severity (Light through Deadly).
+    // ArMDE:4320-4323, one pawn figure per wound severity (Light through Deadly).
     // The book itself is inconsistent about digits vs. words: the English passage
     // spells Light/Medium/Heavy as words ("three pawns", "six pawns", "nine
     // pawns") but Incapacitating/Deadly as digits ("12 pawns", "15 pawns"); the
@@ -1151,7 +1309,7 @@ fn life_boost_reclassifies_and_states_its_fatigue_figures() {
     assert_eq!(
         classification_of(&rs, "virtue.life_boost"),
         Classification::UncomputedRule,
-        "D20: ArMDE:4295-4298's +5-per-Fatigue-level bonus and its damage formula reach the \
+        "D20: ArMDE:4366-4369's +5-per-Fatigue-level bonus and its damage formula reach the \
          player nowhere under a bare `special_casting_mod` kind; virtue.life_boost must \
          reclassify to uncomputed_rule"
     );
@@ -1161,7 +1319,7 @@ fn life_boost_reclassifies_and_states_its_fatigue_figures() {
     let mut offenders = Vec::new();
     for (lang, loc) in [("en", &loc_en), ("de", &loc_de)] {
         let text = displayed_text(loc, "virtue.life_boost").unwrap_or_default();
-        // ArMDE:4295-4298: "+5" per level, and the worked example's "15" damage
+        // ArMDE:4366-4369: "+5" per level, and the worked example's "15" damage
         // (three levels x 5).
         for figure in ["5", "15"] {
             if !text.contains(figure) {
@@ -1182,7 +1340,7 @@ fn life_boost_reclassifies_and_states_its_fatigue_figures() {
 
 /// F-173's second half (`docs/vf-audit/corrections.md`): virtue.magister_in_medicina's
 /// own summary states no mechanical token at all, so the coarse screen never
-/// reaches this entry to record a pending row for it — ArMDE:4397-4398's
+/// reaches this entry to record a pending row for it — ArMDE:4468-4469's
 /// "available to female characters, although they must have graduated from
 /// Salerno, male characters may have graduated from any of the medical
 /// schools" reaches the player nowhere. `classification` stays `creation_effect`
@@ -1205,7 +1363,7 @@ fn magister_in_medicina_states_its_salerno_restriction() {
     // A bare "Salerno" substring is already satisfied by the shipped summary's
     // list of medical schools ("Salerno, Cremona, Montpellier, or Bologna") —
     // that is not the restriction. The needles below are unique to the
-    // restriction clause itself (ArMDE:4397's "although they must have
+    // restriction clause itself (ArMDE:4468's "although they must have
     // graduated from Salerno" / the DE mirror's "an der Schule von Salerno
     // graduiert").
     for (lang, loc, needle) in [
@@ -1216,7 +1374,7 @@ fn magister_in_medicina_states_its_salerno_restriction() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.magister_in_medicina: displayed text {text:?} does not state the \
-                 Salerno restriction (ArMDE:4397-4398)"
+                 Salerno restriction (ArMDE:4468-4469)"
             ));
         }
     }
@@ -1232,7 +1390,7 @@ fn magister_in_medicina_states_its_salerno_restriction() {
 /// F-153 (`docs/vf-audit/corrections.md`): virtue.long_winded's own summary
 /// already states its "+3 on all your Fatigue rolls" bonus in both locales, so
 /// the coarse mechanical-token screen cannot see the one clause it drops —
-/// ArMDE:4329's "This bonus does not apply to casting spells" reaches the
+/// ArMDE:4400's "This bonus does not apply to casting spells" reaches the
 /// player nowhere. `classification` stays `in_play_effect` (the bonus itself is
 /// genuinely computed via `health_mod`/`fatigue_roll`); only a targeted content
 /// check catches this kind of gap.
@@ -1254,7 +1412,7 @@ fn long_winded_states_its_casting_exclusion() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.long_winded: displayed text {text:?} does not state the \
-                 casting-spells exclusion (ArMDE:4329)"
+                 casting-spells exclusion (ArMDE:4400)"
             ));
         }
     }
@@ -1268,7 +1426,7 @@ fn long_winded_states_its_casting_exclusion() {
 }
 
 // ---------------------------------------------------------------------------
-// X2c (`tmp/x2-worklist.md` § 1 rows 103-153, ArMDE:4443-4899) — see
+// X2c (`tmp/x2-worklist.md` § 1 rows 103-153, ArMDE:4514-4970) — see
 // `tmp/x2c-verdicts.md` for the full per-entry citation and rationale this file
 // intentionally does not re-derive inline.
 // ---------------------------------------------------------------------------
@@ -1283,42 +1441,42 @@ const X2C_RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
     (
         "virtue.muqta_muq_ta",
         "F-202: \"All rules for the Landed Noble Virtue apply, except that most Muslims take \
-         the Minor Status Virtue Emir, rather than Knight\" (ArMDE:4559-4562) is a \
+         the Minor Status Virtue Emir, rather than Knight\" (ArMDE:4630-4633) is a \
          cross-reference instruction inheriting Landed Noble's own (uncomputed_rule, 0-effect) \
          rule; the entry itself computes nothing",
     ),
     (
         "virtue.mystical_choreography",
         "F-204: two numeric ceremony-time reductions, \"five minutes per magnitude\" and, with a \
-         prepared space, \"one minute per magnitude\" (ArMDE:4567-4572); 0 effects today",
+         prepared space, \"one minute per magnitude\" (ArMDE:4638-4643); 0 effects today",
     ),
     (
         "virtue.personal_vis_source",
         "D50's own worked example: the hedged yield \"should be about one tenth as much as the \
-         player covenant expects to gather per year\" (ArMDE:4728-4731) is a quantity the \
+         player covenant expects to gather per year\" (ArMDE:4799-4802) is a quantity the \
          troupe must set",
     ),
     (
         "virtue.rabbi",
         "F-240: a mandatory companion Virtue (\"must take the Educated (Hebrew) Virtue to \
          provide the required Academic Abilities\") and a male-only restriction \
-         (ArMDE:4828-4833); 0 effects today",
+         (ArMDE:4899-4904); 0 effects today",
     ),
     (
         "virtue.rat_up_a_drainpipe",
         "F-241: \"a substantial advantage in opposed Athletics rolls which represent being \
-         chased\" (ArMDE:4838-4841) is a real, storyguide-adjudicated modifier; 0 effects today",
+         chased\" (ArMDE:4909-4912) is a real, storyguide-adjudicated modifier; 0 effects today",
     ),
     (
         "virtue.see_in_darkness",
         "D8 capability: \"You can see in complete darkness\", bounded by two limiting clauses \
-         on acuity and range (ArMDE:4896-4899) — explicitly named in this file's own S2_IDIOMS \
+         on acuity and range (ArMDE:4967-4970) — explicitly named in this file's own S2_IDIOMS \
          comments as too bare for the general capability idiom",
     ),
     (
         "virtue.nephilim",
         "D46/OQ-3: the free Strong Angelic Heritage grant (\"You receive the Strong Angelic \
-         Heritage Virtue free\", ArMDE:4594-4597) is computed by no effect at all, though its \
+         Heritage Virtue free\", ArMDE:4665-4668) is computed by no effect at all, though its \
          incompatible_with is computed — D67 allows uncomputed_rule regardless of what else is \
          computed, the same shape as X2a's virtue.devil_child",
     ),
@@ -1359,7 +1517,7 @@ fn x2c_entries_reclassify_to_uncomputed_rule_with_a_description() {
 /// states its "50 extra experience points" grant, so the coarse mechanical-token
 /// screen never flagged it (its `PENDING_DROPPED_CLAUSE` row instead named a
 /// different, since-resolved gap — X1's Martial Abilities authorization).
-/// ArMDE:4453's "It functions as the Ability Medicine for the purpose of
+/// ArMDE:4524's "It functions as the Ability Medicine for the purpose of
 /// treating veterinary diseases, and for surgery involving these animals"
 /// reaches the player nowhere. `classification` stays `creation_effect`.
 #[test]
@@ -1384,7 +1542,7 @@ fn marshal_states_its_medicine_substitution() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.marshal: displayed text {text:?} does not state the \
-                 Medicine-substitution rule (ArMDE:4453)"
+                 Medicine-substitution rule (ArMDE:4524)"
             ));
         }
     }
@@ -1399,8 +1557,8 @@ fn marshal_states_its_medicine_substitution() {
 
 /// F-184: virtue.master_bard's own summary already states "at least nine years
 /// of study" (a signed-phrase false positive for the coarse screen), so it never
-/// flagged the two genuinely dropped clauses: ArMDE:4459's "he has an
-/// obligation to teach for at least two seasons a year" and ArMDE:4461's "This
+/// flagged the two genuinely dropped clauses: ArMDE:4530's "he has an
+/// obligation to teach for at least two seasons a year" and ArMDE:4532's "This
 /// Social Status is only available in Ireland." `classification` stays
 /// `creation_effect`.
 #[test]
@@ -1427,7 +1585,7 @@ fn master_bard_states_its_teaching_obligation_and_ireland_restriction() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.master_bard: displayed text {text:?} does not state {needle:?} \
-                 (ArMDE:4457-4462)"
+                 (ArMDE:4528-4533)"
             ));
         }
     }
@@ -1442,7 +1600,7 @@ fn master_bard_states_its_teaching_obligation_and_ireland_restriction() {
 
 /// F-201: virtue.minor_magical_focus's own summary already states its doubling
 /// effect ("add" in English, "doppelt" in German — both mechanical-phrase false
-/// positives for the coarse screen), so it never flagged ArMDE:4538's "You
+/// positives for the coarse screen), so it never flagged ArMDE:4609's "You
 /// cannot be focused on a laboratory activity, such as creating charged items,
 /// although a focus does apply to laboratory activities." `classification`
 /// stays `in_play_effect`.
@@ -1467,7 +1625,7 @@ fn minor_magical_focus_states_its_laboratory_activity_restriction() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.minor_magical_focus: displayed text {text:?} does not state the \
-                 lab-activity restriction (ArMDE:4538)"
+                 lab-activity restriction (ArMDE:4609)"
             ));
         }
     }
@@ -1482,7 +1640,7 @@ fn minor_magical_focus_states_its_laboratory_activity_restriction() {
 
 /// F-236: virtue.protection's own summary already states its Reputation grant
 /// (a signed number, "3"), so the coarse screen never flagged the two dropped
-/// clauses: ArMDE:4812's "could be higher if your protector is particularly
+/// clauses: ArMDE:4883's "could be higher if your protector is particularly
 /// great or well-known" and the good/bad choice ("a Reputation (good or bad,
 /// your choice)"). `classification` stays `creation_effect`.
 #[test]
@@ -1506,7 +1664,7 @@ fn protection_states_its_variable_reputation_and_choice() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.protection: displayed text {text:?} does not state the \
-                 variable-Reputation clause (ArMDE:4810-4813)"
+                 variable-Reputation clause (ArMDE:4881-4884)"
             ));
         }
     }
@@ -1520,7 +1678,7 @@ fn protection_states_its_variable_reputation_and_choice() {
 }
 
 /// F-237: virtue.puissant_ability's own summary already states its "+2" bonus
-/// (a signed number), so the coarse screen never flagged ArMDE:4816's "Note
+/// (a signed number), so the coarse screen never flagged ArMDE:4887's "Note
 /// that you do not, in general, use an Ability when learning it, writing about
 /// it, or helping someone else to improve it." `classification` stays
 /// `creation_effect`.
@@ -1545,7 +1703,7 @@ fn puissant_ability_states_its_learning_exclusion() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.puissant_ability: displayed text {text:?} does not state the \
-                 learning/writing/helping exclusion (ArMDE:4814-4816)"
+                 learning/writing/helping exclusion (ArMDE:4885-4887)"
             ));
         }
     }
@@ -1559,7 +1717,7 @@ fn puissant_ability_states_its_learning_exclusion() {
 }
 
 /// F-238: virtue.puissant_art's own summary already states its "+3" bonus (a
-/// signed number), so the coarse screen never flagged ArMDE:4820's "It does not
+/// signed number), so the coarse screen never flagged ArMDE:4891's "It does not
 /// apply when learning, teaching, or writing about the Art." `classification`
 /// stays `creation_effect`.
 #[test]
@@ -1591,7 +1749,7 @@ fn puissant_art_states_its_learning_exclusion() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.puissant_art: displayed text {text:?} does not state the \
-                 learning/teaching/writing exclusion (ArMDE:4818-4820)"
+                 learning/teaching/writing exclusion (ArMDE:4889-4891)"
             ));
         }
     }
@@ -1605,7 +1763,7 @@ fn puissant_art_states_its_learning_exclusion() {
 }
 
 /// F-239: virtue.quiet_magic's own summary already states its "-5" penalty (a
-/// signed number), so the coarse screen never flagged ArMDE:4826's "You may
+/// signed number), so the coarse screen never flagged ArMDE:4897's "You may
 /// take this Virtue twice, and eliminate the penalty altogether."
 /// `classification` stays `in_play_effect`.
 #[test]
@@ -1629,7 +1787,7 @@ fn quiet_magic_states_its_twice_taken_elimination() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.quiet_magic: displayed text {text:?} does not state the \
-                 twice-taken elimination (ArMDE:4826)"
+                 twice-taken elimination (ArMDE:4897)"
             ));
         }
     }
@@ -1644,10 +1802,10 @@ fn quiet_magic_states_its_twice_taken_elimination() {
 
 /// F-257: virtue.relic's own summary already states its True Faith score of
 /// one (a signed-looking figure), so the coarse screen never flagged
-/// ArMDE:4854's "The relic does not possess any additional powers."
+/// ArMDE:4925's "The relic does not possess any additional powers."
 /// `classification` was `creation_effect` at F-257's own time — D79.2/F-256
 /// (2026-10-01) now composes this same entry's description with the
-/// bearer-facing Relics clause (ArMDE:17619-17623), a stated rule computed
+/// bearer-facing Relics clause (ArMDE:17696-17700), a stated rule computed
 /// nowhere, so D67 moves `classification` to `uncomputed_rule` regardless of
 /// what else the entry computes (`RelicTrueFaith` stays, see
 /// `f256_relic_and_powerful_relic_reclassify_with_the_relics_bearer_clause`).
@@ -1687,11 +1845,11 @@ fn relic_states_it_has_no_additional_powers() {
 
 /// F-229: virtue.powerful_relic's own summary already states its True Faith
 /// score of 3 (a signed-looking figure), so the coarse screen never flagged
-/// ArMDE:4786's "If you ever behave impiously (as judged by the storyguide)
+/// ArMDE:4857's "If you ever behave impiously (as judged by the storyguide)
 /// your relic will cease to function until suitable penance is made."
 /// `classification` was `creation_effect` at F-229's own time — D79.2/F-256
 /// (2026-10-01) now composes this same entry's description with the
-/// bearer-facing Relics clause (ArMDE:17619-17623), a stated rule computed
+/// bearer-facing Relics clause (ArMDE:17696-17700), a stated rule computed
 /// nowhere, so D67 moves `classification` to `uncomputed_rule` regardless of
 /// what else the entry computes (`RelicTrueFaith` stays, see
 /// `f256_relic_and_powerful_relic_reclassify_with_the_relics_bearer_clause`).
@@ -1717,14 +1875,14 @@ fn powerful_relic_states_its_impiety_consequence() {
         (
             "de",
             &loc_de,
-            "hört das Relikt auf zu funktionieren, bis angemessene Buße",
+            "hört die Reliquie auf zu funktionieren, bis angemessene Buße",
         ),
     ] {
         let text = displayed_text(loc, "virtue.powerful_relic").unwrap_or_default();
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.powerful_relic: displayed text {text:?} does not state the \
-                 impiety/cessation rule (ArMDE:4782-4786)"
+                 impiety/cessation rule (ArMDE:4853-4857)"
             ));
         }
     }
@@ -1739,9 +1897,9 @@ fn powerful_relic_states_its_impiety_consequence() {
 
 /// D79.2/F-256 (`docs/vf-audit/decisions.md` D79, `docs/vf-audit/design-x7-relic-and-ct-mirror.md`
 /// § 1): `virtue.relic`/`virtue.powerful_relic` each compose their description
-/// with the bearer-facing "Relics" clause (ArMDE:17619-17623 — the Relics
+/// with the bearer-facing "Relics" clause (ArMDE:17696-17700 — the Relics
 /// heading, its intro paragraph and the FAITH clause only; Divine Might and
-/// Scourging the Infernal, ArMDE:17624-17627, are the relic's own defenses,
+/// Scourging the Infernal, ArMDE:17701-17704, are the relic's own defenses,
 /// not a rule about the bearer's sheet) via [`COMPOSED_DESCRIPTIONS`]. D67: once the
 /// description states a rule computed nowhere (the relic's Faith Points
 /// "usable by its bearer as Confidence" and its Magic-Resistance grant to the
@@ -1754,7 +1912,7 @@ fn powerful_relic_states_its_impiety_consequence() {
 /// D67 also keeps an entry's existing effects on reclassification: both still
 /// carry their own `Effect::RelicTrueFaith` (the RELIC's score, 1/3), checked
 /// here directly. That score still must not leak onto the bearer's own True
-/// Faith Score/MR floor (ArMDE:17607, "Only by possessing the True Faith
+/// Faith Score/MR floor (ArMDE:17684, "Only by possessing the True Faith
 /// Major Virtue may a character have a True Faith score") — already pinned by
 /// `f256_relic_does_not_grant_the_character_a_true_faith_score`
 /// (`x7bd_wrong_numbers.rs`) and the inline `true_faith(&relic, ...)`/
@@ -1769,7 +1927,7 @@ fn f256_relic_and_powerful_relic_reclassify_with_the_relics_bearer_clause() {
             classification_of(&rs, id),
             Classification::UncomputedRule,
             "D79.2/F-256: {id}'s composed description states the bearer-facing Relics clause \
-             (ArMDE:17619-17623), computed nowhere (D67)"
+             (ArMDE:17696-17700), computed nowhere (D67)"
         );
 
         let item = rs
@@ -1811,7 +1969,7 @@ fn f256_relic_and_powerful_relic_reclassify_with_the_relics_bearer_clause() {
                 if !text.contains(needle) {
                     offenders.push(format!(
                         "{lang}/{id}: displayed text {text:?} does not state the Relics \
-                         bearer clause needle {needle:?} (ArMDE:17619-17623)"
+                         bearer clause needle {needle:?} (ArMDE:17696-17700)"
                     ));
                 }
             }
@@ -1829,7 +1987,7 @@ fn f256_relic_and_powerful_relic_reclassify_with_the_relics_bearer_clause() {
 /// F-258: virtue.schooled_in_crime's own summary already states its 50-XP
 /// grant (a bare number, no sign, so this one is genuinely invisible to the
 /// coarse screen for a different reason — the passage itself trips on no
-/// token at all). ArMDE:4886's "other Abilities may be added to this list with
+/// token at all). ArMDE:4957's "other Abilities may be added to this list with
 /// troupe approval" reaches the player nowhere. `classification` stays
 /// `creation_effect`.
 #[test]
@@ -1853,7 +2011,7 @@ fn schooled_in_crime_states_its_troupe_extension() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.schooled_in_crime: displayed text {text:?} does not state the \
-                 troupe-approval extension (ArMDE:4884-4887)"
+                 troupe-approval extension (ArMDE:4955-4958)"
             ));
         }
     }
@@ -1868,7 +2026,7 @@ fn schooled_in_crime_states_its_troupe_extension() {
 
 /// F-259: virtue.secondary_insight's own summary already states its
 /// Technique-to-Forms grant, so the coarse screen never flagged three of its
-/// four stated clauses; ArMDE:4894's "not increased by Affinities or any other
+/// four stated clauses; ArMDE:4965's "not increased by Affinities or any other
 /// factors" is the one this test pins down. `classification` stays
 /// `in_play_effect`.
 #[test]
@@ -1892,7 +2050,7 @@ fn secondary_insight_states_its_affinity_exclusion() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.secondary_insight: displayed text {text:?} does not state the \
-                 Affinity exclusion (ArMDE:4892-4895)"
+                 Affinity exclusion (ArMDE:4963-4966)"
             ));
         }
     }
@@ -1906,7 +2064,7 @@ fn secondary_insight_states_its_affinity_exclusion() {
 }
 
 // ---------------------------------------------------------------------------
-// X2d (`tmp/x2-worklist.md` § 1 rows 154-203, ArMDE:4904-5282) — see
+// X2d (`tmp/x2-worklist.md` § 1 rows 154-203, ArMDE:4975-5353) — see
 // `tmp/x2d-verdicts.md` for the full per-entry citation and rationale this file
 // intentionally does not re-derive inline.
 // ---------------------------------------------------------------------------
@@ -1919,7 +2077,7 @@ const X2D_RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
     (
         "virtue.tethered_magic",
         "a whole Hermetic spell mechanic (tether control to another caster or an object; the \
-         Arcane-Connection side effect) under `narrative`, 0 effects, ArMDE:5141-5144",
+         Arcane-Connection side effect) under `narrative`, 0 effects, ArMDE:5212-5215",
     ),
     (
         "virtue.unaffected_by_the_gift",
@@ -1977,7 +2135,7 @@ fn x2d_entries_reclassify_to_uncomputed_rule_with_a_description() {
     );
 }
 
-/// D50/Q-66 (`docs/vf-audit/decisions.md` D50's own worked example): ArMDE:4928
+/// D50/Q-66 (`docs/vf-audit/decisions.md` D50's own worked example): ArMDE:4999
 /// "your sensitivity may overwhelm you" in a strong divine/infernal aura is
 /// computed nowhere. Overturns the entry's own `COMPUTED_ENTRY_COVERS_WHOLE_
 /// PASSAGE` certification (`uncomputed_clauses.rs`) — D67 permits
@@ -1988,7 +2146,7 @@ fn sense_holiness_and_unholiness_reclassifies_and_states_its_overwhelm_clause() 
     assert_eq!(
         classification_of(&rs, "virtue.sense_holiness_and_unholiness"),
         Classification::UncomputedRule,
-        "D50/Q-66: ArMDE:4928's overwhelm clause reaches the player nowhere; \
+        "D50/Q-66: ArMDE:4999's overwhelm clause reaches the player nowhere; \
          virtue.sense_holiness_and_unholiness must reclassify to uncomputed_rule"
     );
 
@@ -2003,7 +2161,7 @@ fn sense_holiness_and_unholiness_reclassifies_and_states_its_overwhelm_clause() 
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.sense_holiness_and_unholiness: displayed text {text:?} does not \
-                 state the overwhelm clause (ArMDE:4926-4929)"
+                 state the overwhelm clause (ArMDE:4997-5000)"
             ));
         }
     }
@@ -2047,7 +2205,7 @@ fn special_circumstances_reclassifies_to_uncomputed_rule() {
 
 /// D20: `virtue.spell_improvisation`'s Casting-Total bonus reaches the player
 /// only as a bare `special_casting_mod` label; the non-stacking rule
-/// (ArMDE:5004-5005) reaches nobody at all.
+/// (ArMDE:5075-5076) reaches nobody at all.
 #[test]
 fn spell_improvisation_reclassifies_and_states_its_bonus_rules() {
     let rs = load_ruleset();
@@ -2077,7 +2235,7 @@ fn spell_improvisation_reclassifies_and_states_its_bonus_rules() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.spell_improvisation: displayed text {text:?} does not state the \
-                 non-stacking rule (ArMDE:5002-5005)"
+                 non-stacking rule (ArMDE:5073-5076)"
             ));
         }
     }
@@ -2132,7 +2290,7 @@ fn tainted_treasure_reclassifies_and_states_its_curse() {
 /// F-267/F-268: virtue.shadchan's own summary already states its role and its
 /// 50-XP grant, so the coarse screen never flagged the Social-Status
 /// compatibility override ("this Virtue is compatible with any other Minor or
-/// Free Social Status Virtue", ArMDE:4936) or the community-scoping of the
+/// Free Social Status Virtue", ArMDE:5007) or the community-scoping of the
 /// Area Lore half of the XP pool. `classification` stays `creation_effect`.
 #[test]
 fn shadchan_states_its_compatibility_and_community_scope() {
@@ -2163,7 +2321,7 @@ fn shadchan_states_its_compatibility_and_community_scope() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.shadchan: displayed text {text:?} does not state the \
-                 compatibility override (ArMDE:4934-4939)"
+                 compatibility override (ArMDE:5005-5010)"
             ));
         }
     }
@@ -2178,7 +2336,7 @@ fn shadchan_states_its_compatibility_and_community_scope() {
 
 /// F-300: virtue.study_bonus's own summary already states its two +2 bonuses
 /// (signed numbers), so the coarse screen never flagged the eight-row
-/// Art-Score-to-environment table (ArMDE:5058-5071) that determines which
+/// Art-Score-to-environment table (ArMDE:5129-5142) that determines which
 /// environments qualify. `classification` stays `in_play_effect`.
 #[test]
 fn study_bonus_states_its_environment_table() {
@@ -2209,7 +2367,7 @@ fn study_bonus_states_its_environment_table() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.study_bonus: displayed text {text:?} does not state the \
-                 environment-table rule (ArMDE:5056-5072)"
+                 environment-table rule (ArMDE:5127-5143)"
             ));
         }
     }
@@ -2263,7 +2421,7 @@ fn templar_administrator_states_its_status_substitution_and_restrictions() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.templar_administrator: displayed text {text:?} does not state \
-                 {needle:?} (ArMDE:5109-5112)"
+                 {needle:?} (ArMDE:5180-5183)"
             ));
         }
     }
@@ -2302,7 +2460,7 @@ fn templar_commander_states_its_taxation_and_judicial_powers() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.templar_commander: displayed text {text:?} does not state the \
-                 taxation/judicial powers (ArMDE:5113-5116)"
+                 taxation/judicial powers (ArMDE:5184-5187)"
             ));
         }
     }
@@ -2348,7 +2506,7 @@ fn templar_office_holder_states_its_compatibility_overrides() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.templar_office_holder: displayed text {text:?} does not state the \
-                 compatibility override (ArMDE:5121-5124)"
+                 compatibility override (ArMDE:5192-5195)"
             ));
         }
     }
@@ -2366,7 +2524,7 @@ fn templar_office_holder_states_its_compatibility_overrides() {
 /// summary already trips the coarse mechanical-token screen for an unrelated
 /// reason (verified: adding this entry to `PENDING_DROPPED_CLAUSE` produces a
 /// false "gap already closed" failure), so this dedicated test is the only
-/// carrier for ArMDE:5151's "occupies the character for two seasons each
+/// carrier for ArMDE:5222's "occupies the character for two seasons each
 /// year, but he is free for the remaining two seasons". `classification`
 /// stays `creation_effect`.
 #[test]
@@ -2394,7 +2552,7 @@ fn town_magistrate_states_its_seasonal_commitment() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.town_magistrate: displayed text {text:?} does not state the \
-                 seasonal-commitment clause (ArMDE:5149-5152)"
+                 seasonal-commitment clause (ArMDE:5220-5223)"
             ));
         }
     }
@@ -2410,7 +2568,7 @@ fn town_magistrate_states_its_seasonal_commitment() {
 /// F-346's residual half: virtue.university_grammar_teacher's classification
 /// was already fixed to `creation_effect` before this slice, but the
 /// certification's own "should have a score in Teaching is soft" reading
-/// missed ArMDE:5197's separate, HARD obligation: "They must teach two
+/// missed ArMDE:5268's separate, HARD obligation: "They must teach two
 /// seasons out of the year." `classification` stays `creation_effect`.
 #[test]
 fn university_grammar_teacher_states_its_teaching_obligation() {
@@ -2433,7 +2591,7 @@ fn university_grammar_teacher_states_its_teaching_obligation() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.university_grammar_teacher: displayed text {text:?} does not \
-                 state the teaching obligation (ArMDE:5195-5198)"
+                 state the teaching obligation (ArMDE:5266-5269)"
             ));
         }
     }
@@ -2447,7 +2605,7 @@ fn university_grammar_teacher_states_its_teaching_obligation() {
 }
 
 /// F-303: virtue.sufi's own summary already states its role, so the coarse
-/// screen never flagged ArMDE:5079's "you should choose an appropriate Minor
+/// screen never flagged ArMDE:5150's "you should choose an appropriate Minor
 /// Story Flaw, such as Mentor, which does not yield any points for buying
 /// Virtues" — an exception to the normal Flaw-for-points exchange.
 /// `classification` stays `creation_effect`.
@@ -2480,7 +2638,7 @@ fn sufi_states_its_no_points_story_flaw_rule() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.sufi: displayed text {text:?} does not state the no-points Story \
-                 Flaw rule (ArMDE:5077-5084)"
+                 Flaw rule (ArMDE:5148-5155)"
             ));
         }
     }
@@ -2525,7 +2683,7 @@ fn unaging_states_its_crisis_and_decrepitude_exceptions() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.unaging: displayed text {text:?} does not state the \
-                 Decrepitude-4/5 waiver (ArMDE:5187-5190)"
+                 Decrepitude-4/5 waiver (ArMDE:5258-5261)"
             ));
         }
     }
@@ -2578,7 +2736,7 @@ fn wise_one_states_its_wealthy_poor_and_sex_inclusive_clauses() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.wise_one: displayed text {text:?} does not state {needle:?} \
-                 (ArMDE:5257-5260)"
+                 (ArMDE:5328-5331)"
             ));
         }
     }
@@ -2592,7 +2750,7 @@ fn wise_one_states_its_wealthy_poor_and_sex_inclusive_clauses() {
 }
 
 /// F-301: virtue.subtle_magic's own summary already states its no-gestures
-/// permission, so the coarse screen never flagged ArMDE:5075's "You gain no
+/// permission, so the coarse screen never flagged ArMDE:5146's "You gain no
 /// benefits from using normal gestures but gain the normal benefit for
 /// exaggerated gestures". `classification` stays `in_play_effect`.
 #[test]
@@ -2624,7 +2782,7 @@ fn subtle_magic_states_its_gesture_exclusion() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.subtle_magic: displayed text {text:?} does not state the \
-                 exaggerated-gesture clause (ArMDE:5073-5076)"
+                 exaggerated-gesture clause (ArMDE:5144-5147)"
             ));
         }
     }
@@ -2642,7 +2800,7 @@ fn subtle_magic_states_its_gesture_exclusion() {
 /// never flagged the 22-line passage's other rules. Not added to
 /// `PENDING_DROPPED_CLAUSE` (untested against the false-positive risk
 /// `town_magistrate`/`unaging` hit; a dedicated test is the safer carrier).
-/// This test pins the Vulnerable-Casting ordering rule (ArMDE:5269).
+/// This test pins the Vulnerable-Casting ordering rule (ArMDE:5340).
 /// `classification` stays `in_play_effect`.
 #[test]
 fn withstand_casting_states_its_vulnerable_casting_ordering() {
@@ -2673,7 +2831,7 @@ fn withstand_casting_states_its_vulnerable_casting_ordering() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/virtue.withstand_casting: displayed text {text:?} does not state the \
-                 Vulnerable-Casting ordering rule (ArMDE:5261-5282)"
+                 Vulnerable-Casting ordering rule (ArMDE:5332-5353)"
             ));
         }
     }
@@ -2687,7 +2845,7 @@ fn withstand_casting_states_its_vulnerable_casting_ordering() {
 }
 
 // ---------------------------------------------------------------------------
-// X2e (`tmp/x2-worklist.md` rows 204-260, ArMDE:5641-5979) — see
+// X2e (`tmp/x2-worklist.md` rows 204-260, ArMDE:5712-6050) — see
 // `tmp/x2e-verdicts.md` for the full per-entry citation and rationale this file
 // intentionally does not re-derive inline.
 // ---------------------------------------------------------------------------
@@ -2695,7 +2853,7 @@ fn withstand_casting_states_its_vulnerable_casting_ordering() {
 /// X2e: `flaw.busybody` is this slice's only reclassification with no
 /// existing pending-list mechanism to bite on it — it sat on
 /// `uncomputed_clauses.rs::NO_RULE_DESPITE_TOKEN`, whose row this slice
-/// overturns rather than confirms. D50: ArMDE:5763-5764's "unless they choose
+/// overturns rather than confirms. D50: ArMDE:5834-5835's "unless they choose
 /// to apply this Flaw specifically to such people at character creation" is a
 /// real creation-time scope choice a player must know to make, the same shape
 /// as X2b's `virtue.indescribable_face` overturn.
@@ -2705,7 +2863,7 @@ fn busybody_reclassifies_and_states_its_creation_time_scope_choice() {
     assert_eq!(
         classification_of(&rs, "flaw.busybody"),
         Classification::UncomputedRule,
-        "D50: ArMDE:5763-5764's creation-time scope choice (whether the Flaw's gossip network \
+        "D50: ArMDE:5834-5835's creation-time scope choice (whether the Flaw's gossip network \
          extends to the covenant's lower-class members) reaches the player nowhere; \
          flaw.busybody must reclassify to uncomputed_rule"
     );
@@ -2747,7 +2905,7 @@ fn busybody_reclassifies_and_states_its_creation_time_scope_choice() {
 /// F-401: flaw.deleterious_circumstances's own summary already states the
 /// halving (a signed-shaped clause, D58's surfaced-modifier family), so the
 /// coarse screen never flagged the circumstance taxonomy (state/target/place
-/// examples, ArMDE:5917-5920) that determines when the halving applies.
+/// examples, ArMDE:5988-5991) that determines when the halving applies.
 /// **D20/D67 correction (X2f Phase 2):** X2e's original reading kept this
 /// `in_play_effect` on the theory that a surfaced-only effect (a bare
 /// `special_casting_mod: circumstantial` label with no number) satisfies
@@ -2777,7 +2935,7 @@ fn deleterious_circumstances_states_its_circumstance_taxonomy() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/flaw.deleterious_circumstances: displayed text {text:?} does not state \
-                 the circumstance taxonomy (ArMDE:5917-5920)"
+                 the circumstance taxonomy (ArMDE:5988-5991)"
             ));
         }
     }
@@ -2825,7 +2983,7 @@ fn disjointed_magic_states_its_two_clauses() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/flaw.disjointed_magic: displayed text {text:?} does not state the \
-                 enchantment-bonus clause (ArMDE:5972-5975)"
+                 enchantment-bonus clause (ArMDE:6043-6046)"
             ));
         }
     }
@@ -2839,7 +2997,7 @@ fn disjointed_magic_states_its_two_clauses() {
 }
 
 // ---------------------------------------------------------------------------
-// X2f (`tmp/x2-worklist.md` rows 261-317, ArMDE:5984-6377, `tmp/x2f-verdicts.md`)
+// X2f (`tmp/x2-worklist.md` rows 261-317, ArMDE:6055-6448, `tmp/x2f-verdicts.md`)
 // ---------------------------------------------------------------------------
 
 /// D8 (`docs/vf-audit/decisions.md`): every `supernatural`-category
@@ -2851,19 +3009,19 @@ fn disjointed_magic_states_its_two_clauses() {
 const X2F_RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
     (
         "flaw.fluctuating_fortune",
-        "D8: ArMDE:6150-6153 states the character effectively holds Wealthy one year and Poor \
+        "D8: ArMDE:6221-6224 states the character effectively holds Wealthy one year and Poor \
          the next (one season of work one year, three the next) — a concrete, unmodelled \
          toggling mechanic naming both Virtue/Flaw by name, not mere colour",
     ),
     (
         "flaw.form_monstrosity",
-        "D8: ArMDE:6162-6185 states a real quantity — \"1 pawn of Muto vis may be extracted from \
+        "D8: ArMDE:6233-6256 states a real quantity — \"1 pawn of Muto vis may be extracted from \
          the corpse of a monstrous character\" — computed nowhere (the entry ships only a `form` \
          parameter, no effects)",
     ),
     (
         "flaw.greater_malediction",
-        "D8/F-442: ArMDE:6210-6213's curse-design guidance (\"effects... should be comparable to \
+        "D8/F-442: ArMDE:6281-6284's curse-design guidance (\"effects... should be comparable to \
          those of other Major Flaws\") is the storyguide-actionable content D50 requires reach \
          the player as text, and the category (supernatural) independently requires \
          uncomputed_rule under D8",
@@ -2911,7 +3069,7 @@ fn x2f_entries_reclassify_to_uncomputed_rule_with_a_description() {
 /// same `special_casting_mod: circumstantial` shape as
 /// flaw.deleterious_circumstances/flaw.disjointed_magic), so the coarse
 /// screen never flagged the missing severity comparison
-/// (ArMDE:6020-6023's second sentence). **D20/D67 correction (X2f Phase 2):**
+/// (ArMDE:6091-6094's second sentence). **D20/D67 correction (X2f Phase 2):**
 /// X2f Phase 1 originally "overturned" this back to `in_play_effect` on the
 /// same surfaced-only theory X2e used for its two siblings — D20 rejects that
 /// theory for all 19 of its entries, so this one reclassifies to
@@ -2946,7 +3104,7 @@ fn environmental_magic_condition_states_its_severity_comparison() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/flaw.environmental_magic_condition: displayed text {text:?} does not \
-                 state the severity comparison to Deleterious Circumstances (ArMDE:6020-6023)"
+                 state the severity comparison to Deleterious Circumstances (ArMDE:6091-6094)"
             ));
         }
     }
@@ -2961,7 +3119,7 @@ fn environmental_magic_condition_states_its_severity_comparison() {
 
 /// `tmp/rules-md-audit-2026-09-30.md` item 5 / D3: flaw.imagined_folk_
 /// tradition_vulnerability's "a score of 1 (but no more)" cap on Faerie Lore
-/// (ArMDE:6280-6283) is D3-inexpressible (no score-cap effect exists), the
+/// (ArMDE:6351-6354) is D3-inexpressible (no score-cap effect exists), the
 /// same shape as flaw.magical_fascination's own PENDING_DROPPED_CLAUSE row —
 /// but unlike that row, the generic screen cannot see this gap at all: the
 /// shipped summary IS the passage's own first sentence, "...has other game
@@ -2991,7 +3149,7 @@ fn imagined_folk_tradition_vulnerability_states_its_faerie_lore_cap() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/flaw.imagined_folk_tradition_vulnerability: displayed text {text:?} does \
-                 not state the score-of-1 Faerie Lore cap (ArMDE:6280-6283)"
+                 not state the score-of-1 Faerie Lore cap (ArMDE:6351-6354)"
             ));
         }
     }
@@ -3006,7 +3164,7 @@ fn imagined_folk_tradition_vulnerability_states_its_faerie_lore_cap() {
 }
 
 // ---------------------------------------------------------------------------
-// X2g (`tmp/x2-worklist.md` rows 318-374, ArMDE:6382-6708, `tmp/x2g-verdicts.md`)
+// X2g (`tmp/x2-worklist.md` rows 318-374, ArMDE:6453-6779, `tmp/x2g-verdicts.md`)
 // ---------------------------------------------------------------------------
 
 /// Four entries this slice's own read finds narrative-but-actionable, none
@@ -3015,7 +3173,7 @@ fn imagined_folk_tradition_vulnerability_states_its_faerie_lore_cap() {
 /// `flaw.prohibition`/`flaw.restricted_power` are `categories:["supernatural"]`
 /// (D8: "a capability is a rule"). `flaw.oath_of_fealty` states a hard
 /// eligibility rule — "Magi are forbidden from taking Oaths of Fealty by the
-/// Hermetic Code" (ArMDE:6512-6515) — no `Prereq`/`incompatible_with`
+/// Hermetic Code" (ArMDE:6583-6586) — no `Prereq`/`incompatible_with`
 /// enforces (D50: a player building a magus would get it wrong without the
 /// text). `flaw.regular` states a compulsory seasonal expenditure D62 rules
 /// stays text ("The season rules of Landed Noble, License of Absence, Lone
@@ -3028,30 +3186,30 @@ fn imagined_folk_tradition_vulnerability_states_its_faerie_lore_cap() {
 const X2G_RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
     (
         "flaw.prohibition",
-        "D8: categories:[\"supernatural\"], ArMDE:6638-6641 — a Geas's obey-or-be-cursed \
+        "D8: categories:[\"supernatural\"], ArMDE:6709-6712 — a Geas's obey-or-be-cursed \
          capability is a rule regardless of table adjudication; the shipped summary already \
          states it, so only the classification is owed, no new description text",
     ),
     (
         "flaw.restricted_power",
-        "D8: categories:[\"supernatural\"], ArMDE:6687-6690 — the ceremony/limited-target \
+        "D8: categories:[\"supernatural\"], ArMDE:6758-6761 — the ceremony/limited-target \
          activation mechanism is computed nowhere and the shipped summary stops before it",
     ),
     (
         "flaw.oath_of_fealty",
-        "D50: ArMDE:6512-6515's \"Magi are forbidden from taking Oaths of Fealty by the \
+        "D50: ArMDE:6583-6586's \"Magi are forbidden from taking Oaths of Fealty by the \
          Hermetic Code\" is a hard eligibility rule no Prereq/incompatible_with enforces",
     ),
     (
         "flaw.regular",
-        "D62/F-503: ArMDE:6675-6678's compulsory seasonal worship activity and the \
+        "D62/F-503: ArMDE:6746-6749's compulsory seasonal worship activity and the \
          Poor-Regular consequence (\"effectively has no free seasons\") are D62's own named \
          case for staying text (\"The season rules of ... Regular stay in description\")",
     ),
     (
         "flaw.savantism",
         "D67/F-510 (points 1-3): the two ability_score_cap_* effects (X6b) compute the score \
-         caps, but ArMDE:6703-6708's halved starting XP, halved future Advancement Totals, and \
+         caps, but ArMDE:6774-6779's halved starting XP, halved future Advancement Totals, and \
          +3-not-+1 specialization roll are computed nowhere — D67: any stated rule computed \
          nowhere makes the whole entry uncomputed_rule",
     ),
@@ -3120,7 +3278,7 @@ fn poor_eyesight_states_its_non_combat_sight_penalty() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/flaw.poor_eyesight: displayed text {text:?} does not state the general \
-                 sight-roll penalty, only attack/defense (ArMDE:6606-6609)"
+                 sight-roll penalty, only attack/defense (ArMDE:6677-6680)"
             ));
         }
     }
@@ -3154,7 +3312,7 @@ fn primogeniture_lineage_reclassifies_to_creation_effect() {
 }
 
 // ============================================================================
-// X2h (`tmp/x2-worklist.md` rows 375-432, ArMDE:6709-7109): the last Flaws,
+// X2h (`tmp/x2-worklist.md` rows 375-432, ArMDE:6780-7180): the last Flaws,
 // `flaw.secretive` through `flaw.wrathful_minor`. See `tmp/x2h-verdicts.md`
 // for the full per-entry reading.
 // ============================================================================
@@ -3171,111 +3329,111 @@ fn primogeniture_lineage_reclassifies_to_creation_effect() {
 const X2H_RECLASSIFY_WITH_DESCRIPTION: &[(&str, &str)] = &[
     (
         "flaw.sheltered_upbringing",
-        "D50/PMC: ArMDE:6721-6724 — \"may not take\" seven named Abilities as beginning \
+        "D50/PMC: ArMDE:6792-6795 — \"may not take\" seven named Abilities as beginning \
          Abilities, computed nowhere",
     ),
     (
         "flaw.short_lived_magic",
-        "D50/D67: ArMDE:6729-6732's duration-reduction table (year->moon, moon->sun-cycle, \
+        "D50/D67: ArMDE:6800-6803's duration-reduction table (year->moon, moon->sun-cycle, \
          sun->Diameter) is a real uncomputed clause surviving the entry's own \
          `hermetically_trained` gate",
     ),
     (
         "flaw.slow_caster",
-        "D50/D67: ArMDE:6755-6758 — Formulaic/Spontaneous casting takes two rounds instead of \
+        "D50/D67: ArMDE:6826-6829 — Formulaic/Spontaneous casting takes two rounds instead of \
          one (with fast-cast/Mastered/Muto Vim/Ritual exceptions), computed nowhere",
     ),
     (
         "flaw.spontaneous_casting_tools",
         "D67: a concurrent slice added `prerequisites: all(order_member, house.verditius)` for \
-         the Verditius-only eligibility clause, but ArMDE:6779-6782's \"must use casting tools \
+         the Verditius-only eligibility clause, but ArMDE:6850-6853's \"must use casting tools \
          to cast spontaneous spells\" is a real, separately uncomputed rule that survives it",
     ),
     (
         "flaw.stockade_parma_magica",
-        "D50/D67: ArMDE:6787-6790 — cannot suppress Parma once erected, computed nowhere",
+        "D50/D67: ArMDE:6858-6861 — cannot suppress Parma once erected, computed nowhere",
     ),
     (
         "flaw.study_requirement",
-        "D50/D67: ArMDE:6795-6798 — must study in the presence of the appropriate Art, and may \
+        "D50/D67: ArMDE:6866-6869 — must study in the presence of the appropriate Art, and may \
          take both Study Bonus and Study Requirement, computed nowhere",
     ),
     (
         "flaw.suppressed_gift",
-        "D50/D67: ArMDE:6803-6810 — cannot perform Hermetic magic/improve Arts/Parma Magica \
+        "D50/D67: ArMDE:6874-6881 — cannot perform Hermetic magic/improve Arts/Parma Magica \
          while suppressed (Arts still grant MR, Gift's social penalty still applies, may still \
          use Supernatural V/A, may remain an OoH member), computed nowhere despite the entry's \
          own `has(virtue.the_gift)` prerequisite",
     ),
     (
         "flaw.unnatural_magic",
-        "D50/D67: ArMDE:6931-6934 — Creo rituals have no permanent effect, and cannot extract \
+        "D50/D67: ArMDE:7002-7005 — Creo rituals have no permanent effect, and cannot extract \
          vis from an aura using Creo, computed nowhere",
     ),
     (
         "flaw.unstructured_caster",
-        "D50/D67: ArMDE:6947-6950 — casts all Formulaic spells as Ritual (incl. vis need) and \
+        "D50/D67: ArMDE:7018-7021 — casts all Formulaic spells as Ritual (incl. vis need) and \
          may not learn Ritual spells at all, computed nowhere",
     ),
     (
         "flaw.vulnerable_magic",
-        "D50/D67: ArMDE:7005-7010 — the dispelling-condition examples, the repeatable-with- \
+        "D50/D67: ArMDE:7076-7081 — the dispelling-condition examples, the repeatable-with- \
          different-conditions clause, and \"may not be combined with\" Restrictions/Necessary \
          Conditions, computed nowhere",
     ),
     (
         "flaw.warped_magic",
-        "D50/D67: ArMDE:7023-7026 — the side effect's intensity scales with the level of the \
+        "D50/D67: ArMDE:7094-7097 — the side effect's intensity scales with the level of the \
          spell cast, a storyguide-narration rule computed nowhere despite the entry's blanket \
          `hermetically_trained` gate (X3b/X3c)",
     ),
     (
         "flaw.tainted_with_evil",
-        "D50/PMC: ArMDE:6843-6846 — \"Gaining a positive Reputation is impossible\", computed \
+        "D50/PMC: ArMDE:6914-6917 — \"Gaining a positive Reputation is impossible\", computed \
          nowhere",
     ),
     (
         "flaw.wanderlust",
-        "D50/PMC: ArMDE:7015-7018 — can only spend two nonconsecutive seasons a year in the \
+        "D50/PMC: ArMDE:7086-7089 — can only spend two nonconsecutive seasons a year in the \
          same area and must travel to new locales the rest of the time (D62's own shape), \
          computed nowhere",
     ),
     (
         "flaw.stuck_in_your_ways",
-        "D50: ArMDE:6791-6794 — uses the lower of the Ability score and the character's current \
+        "D50: ArMDE:6862-6865 — uses the lower of the Ability score and the character's current \
          Covenant Lore for stress rolls concerning his new covenant, a roll-substitution rule \
          computed nowhere",
     ),
     (
         "flaw.unruly_air",
-        "D8: categories:[\"supernatural\"], ArMDE:6939-6942 — others with Magic Resistance are \
+        "D8: categories:[\"supernatural\"], ArMDE:7010-7013 — others with Magic Resistance are \
          not influenced by the character, computed nowhere",
     ),
     (
         "flaw.visions",
-        "D8: categories:[\"story\",\"supernatural\"], ArMDE:6985-6988 — visions come purely at \
+        "D8: categories:[\"story\",\"supernatural\"], ArMDE:7056-7059 — visions come purely at \
          the storyguide's discretion, computed nowhere",
     ),
     (
         "flaw.slow_power",
-        "D8: categories:[\"supernatural\"], ArMDE:6759-6762 — the repeatable-but-not-more-than- \
+        "D8: categories:[\"supernatural\"], ArMDE:6830-6833 — the repeatable-but-not-more-than- \
          once-for-a-single-power cap is not enforced (`max_per_target` unset), computed nowhere",
     ),
     (
         "flaw.susceptibility_to_warping",
-        "D8: categories:[\"supernatural\"], ArMDE:6831-6838 — gains one additional Warping \
+        "D8: categories:[\"supernatural\"], ArMDE:6902-6909 — gains one additional Warping \
          Point per Realm already gaining one that year (capped at four/year, no Twilight \
          contribution), computed nowhere",
     ),
     (
         "flaw.vow_major",
-        "D50: ArMDE:6989-6992 — breaking the vow requires a guaranteed atonement (D50's Q-09 \
+        "D50: ArMDE:7060-7063 — breaking the vow requires a guaranteed atonement (D50's Q-09 \
          shape), and the Major variant must be a vow to DO something rather than refrain, \
          computed nowhere",
     ),
     (
         "flaw.vow_minor",
-        "D50: ArMDE:6989-6992 — the same shared guaranteed-atonement clause as flaw.vow_major, \
+        "D50: ArMDE:7060-7063 — the same shared guaranteed-atonement clause as flaw.vow_major, \
          computed nowhere",
     ),
 ];
@@ -3313,7 +3471,7 @@ fn x2h_entries_reclassify_to_uncomputed_rule_with_a_description() {
 
 /// OQ-6 overturn of `flaw.tragic_life`'s own `NO_RULE_DESPITE_TOKEN` row: that
 /// row's reading addressed only the "cannot" token ("describes a limit on the
-/// demon's narrative planning"), which still holds, but missed ArMDE:6859's
+/// demon's narrative planning"), which still holds, but missed ArMDE:6930's
 /// separate, real creation-time instruction — "The predisposition toward sin
 /// at the character's pivotal moment should be represented with a sinful
 /// Personality Trait" — the same shape that already overturned
@@ -3324,7 +3482,7 @@ fn tragic_life_states_its_sinful_personality_trait_instruction() {
     assert_eq!(
         classification_of(&rs, "flaw.tragic_life"),
         Classification::UncomputedRule,
-        "OQ-6: ArMDE:6859's sinful-Personality-Trait instruction is a real creation-time rule \
+        "OQ-6: ArMDE:6930's sinful-Personality-Trait instruction is a real creation-time rule \
          computed nowhere; flaw.tragic_life must reclassify to uncomputed_rule"
     );
 
@@ -3339,7 +3497,7 @@ fn tragic_life_states_its_sinful_personality_trait_instruction() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/flaw.tragic_life: displayed text {text:?} does not state the sinful- \
-                 Personality-Trait instruction (ArMDE:6859)"
+                 Personality-Trait instruction (ArMDE:6930)"
             ));
         }
     }
@@ -3480,7 +3638,7 @@ fn short_of_breath_states_its_stamina_roll_penalty() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/flaw.short_of_breath: displayed text {text:?} does not state the \
-                 Stamina-roll penalty (ArMDE:6733-6736)"
+                 Stamina-roll penalty (ArMDE:6804-6807)"
             ));
         }
     }
@@ -3494,7 +3652,7 @@ fn short_of_breath_states_its_stamina_roll_penalty() {
 }
 
 /// F-544 group: `flaw.vulnerable_casting` ships a Fatigue-loss-increase effect
-/// but neither locale states ArMDE:7003's resolution ORDER when the Flaw
+/// but neither locale states ArMDE:7074's resolution ORDER when the Flaw
 /// stacks with Withstand Casting ("apply the vulnerability first, then
 /// withstand the increased loss") — the mirror finding of
 /// `withstand_casting_states_its_vulnerable_casting_ordering`, which covers
@@ -3529,7 +3687,7 @@ fn vulnerable_casting_states_its_ordering_rule() {
         if !text.contains(needle) {
             offenders.push(format!(
                 "{lang}/flaw.vulnerable_casting: displayed text {text:?} does not state the \
-                 Vulnerable/Withstand ordering rule (ArMDE:7003)"
+                 Vulnerable/Withstand ordering rule (ArMDE:7074)"
             ));
         }
     }

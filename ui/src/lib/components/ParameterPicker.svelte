@@ -176,7 +176,7 @@
   // Every catalogue Ability the parameter admits, plus the character's own
   // instances of the parameterized ones. Like the `art` domain below, the
   // target need NOT already be on the sheet: Puissant Ability is "choose one
-  // Ability" with no requirement that a score exists (ArMDE:4814-4816), and
+  // Ability" with no requirement that a score exists (ArMDE:4885-4887), and
   // abilities are bought on a LATER step — so offering only owned rows left the
   // parameter unfillable where the Virtue is taken and deadlocked the wizard
   // (manual-testing-findings-2026-09-03 #5).
@@ -253,7 +253,7 @@
   // C5c), `ability` (Restricted Learning, Magian Lineage Major) and `art`
   // (Corrupted Arts). `spell` resolves against the character's OWN learned
   // spells (`Entity.spells`), never the whole spell catalogue — § 8's own "the
-  // character's spells" reading (ArMDE:5859-5863) — deduplicated by base spell
+  // character's spells" reading (ArMDE:5930-5934) — deduplicated by base spell
   // id and left in learned order. `ability` reuses the single-select's own
   // catalogue + filter (`catalogueAbilityIds`), but lists only the generic
   // catalogue entry per ability, never a parameterized instance: both shipped
@@ -435,14 +435,14 @@
   //
   // Both passes carry this row's OTHER parameter values, because a target is
   // the whole `(ref, params)` tuple — the engine's own duplicate key. Folk
-  // Magic has two axes (ArMDE:3909)
-  // and `ArMDE:3919` lets a second copy "align it to the same Realm as before or
+  // Magic has two axes (ArMDE:3980)
+  // and `ArMDE:3990` lets a second copy "align it to the same Realm as before or
   // pick a different one", so a copy sharing this row's spell category in a
   // different Realm is legal and must not grey anything out here.
   //
   // A key inside one of the item's `unordered_param_groups` counts nothing
   // (D83.1, try-out finding 20): Incompatible Arts bars a whole Technique+Form
-  // combination across copies, never a single Art (ArMDE:6292), so its selects
+  // combination across copies, never a single Art (ArMDE:6363), so its selects
   // grey no value and a shared combination is left to the engine's
   // `param_group_shared_across_copies` finding — the same skip
   // `validate_per_value_cap` makes for a grouped key.
@@ -469,7 +469,7 @@
 
   // Values forbidden for THIS row because a sibling copy of the SAME item
   // already holds a conflicting value — `PointItem.conditional_incompatible_with`'s
-  // `forbids_same_item_values` (RC review-C item 2, ArMDE:7033: Warped Senses'
+  // `forbids_same_item_values` (RC review-C item 2, ArMDE:7104: Warped Senses'
   // Weak Sight/Sensitive Sight pair). Bought selections only, like `usage()`'s
   // own bought pass: `validate_incompatibilities` never lets a House-granted
   // copy block a pick either.
@@ -766,7 +766,7 @@
             </select>
           {:else if param.domain === 'category'}
             <!-- The item is "taken as" one of its OWN listed categories — Sufi
-           (ArMDE:5083) "either as a
+           (ArMDE:5154) "either as a
            Minor Social Status Virtue or a Minor Supernatural Virtue". The menu
            is the item's own declared `values` (a subset of its `categories`,
            enforced at load), labelled through the same `category-<id>` Fluent
@@ -790,14 +790,14 @@
             </select>
           {:else if param.domain === 'realm'}
             <!-- The supernatural realm the item is aligned to — Folk Magic
-           (ArMDE:3909) "The choice of
+           (ArMDE:3980) "The choice of
            (Realm) Lore also determines which supernatural realm his magic is
            aligned to". The four Realms are a closed engine taxonomy, so the menu
            is `REALMS` (the single frontend source of that order, never
            re-hardcoded) and the labels are the `realm-<id>` Fluent family the
            Might picker already reads — NOT `displayName`, which resolves rules
            ids and would find no i18n entry for a bare realm slug.
-           Deliberately NOT greyed by `full()`: `ArMDE:3919` says a further copy "can
+           Deliberately NOT greyed by `full()`: `ArMDE:3990` says a further copy "can
            align it to the same Realm as before or pick a different one", so a
            Realm another copy holds stays offered. What may not be repeated is
            the whole target, which `usage()` now judges across every axis. -->

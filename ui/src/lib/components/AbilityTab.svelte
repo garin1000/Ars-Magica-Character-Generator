@@ -275,7 +275,7 @@
     return Math.max(entry.score, floorOf(entry.ability, entry.parameter)) >= max;
   }
 
-  // X10b: the "Z" of the book's own "X (Z)" notation (ArMDE:1177) — XP already
+  // X10b: the "Z" of the book's own "X (Z)" notation (ArMDE:1245) — XP already
   // banked toward the next score.
   function bankedXpOf(entry: AbilityScore): number {
     return entry.banked_xp ?? 0;
@@ -368,7 +368,7 @@
   }
 </script>
 
-<!-- What the Order demands of a magus (ArMDE:2437), read before the lists it
+<!-- What the Order demands of a magus (ArMDE:2505), read before the lists it
      is about — an auto-height SIBLING of `.region-row`, never a wrapper: the row must
      stay the only `flex: 1` child of `.vf-tab`, or the Available/Selected lists
      collapse.

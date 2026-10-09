@@ -14,7 +14,7 @@ use std::fmt;
 
 /// The eight inborn Characteristics.
 ///
-/// Source: ArMDE:1023-1025 ("There are
+/// Source: ArMDE:1091-1093 ("There are
 /// eight Characteristics in Ars Magica").
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -104,16 +104,16 @@ pub struct CharacteristicCost {
 /// buyable (the rulebook's ±3), which is also the full span of the printed cost
 /// table. Great and Poor (Characteristic) do **not** widen it — they grant a
 /// free score delta on top of the bought score (see
-/// [`Effect::CharacteristicScoreDeltaParam`]), because `ArMDE:3989` and
-/// `ArMDE:6600` perform the raise/drop themselves and the table prints no price
+/// [`Effect::CharacteristicScoreDeltaParam`]), because `ArMDE:4060` and
+/// `ArMDE:6671` perform the raise/drop themselves and the table prints no price
 /// for ±4 or ±5.
 ///
 /// That buy limit is the **only** bound this type carries. A `derived`-side
 /// `aging_floor` lived here until 2026-09-15, clamping an aged-down score; it is
-/// gone because `ArMDE:16579` names no such floor, and a limit the rules do not
+/// gone because `ArMDE:16656` names no such floor, and a limit the rules do not
 /// state has no business in the rules data (open-todos row 44).
 ///
-/// Source: ArMDE:2340-2354 (table),
+/// Source: ArMDE:2408-2422 (table),
 /// :4105 (the "+3 unless Great Characteristic" base cap).
 ///
 /// [`Effect::CharacteristicScoreDeltaParam`]: crate::types::Effect::CharacteristicScoreDeltaParam
@@ -124,11 +124,11 @@ pub struct CharacteristicRules {
     /// The cost table, one row per legal score, sorted ascending by `score`.
     pub costs: Vec<CharacteristicCost>,
     /// The highest base score buyable with no limit-shifting virtue (the "+3"
-    /// cap). `None` falls back to the table maximum. Source: ArMDE:4105.
+    /// cap). `None` falls back to the table maximum. Source: ArMDE:4176.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_max: Option<i8>,
     /// The lowest base score buyable (the "−3" floor). `None` falls back to the
-    /// table minimum. Source: ArMDE:2340-2354 (the "−3" row of the point-buy
+    /// table minimum. Source: ArMDE:2408-2422 (the "−3" row of the point-buy
     /// table).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_min: Option<i8>,
@@ -312,7 +312,7 @@ mod tests {
         .unwrap()
     }
 
-    /// ±4 and ±5 have no printed cost (`ArMDE:2346-2354` stops at ±3), and the
+    /// ±4 and ±5 have no printed cost (`ArMDE:2414-2422` stops at ±3), and the
     /// table must not invent one: Great/Poor (Characteristic) grant their point
     /// for free rather than unlocking a purchase.
     #[test]

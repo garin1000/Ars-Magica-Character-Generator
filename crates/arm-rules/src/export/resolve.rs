@@ -234,7 +234,7 @@ impl<'a> Doc<'a> {
         let domain = item.parameters.iter().find(|p| p.key == key)?.domain;
         match domain {
             ParameterDomain::Category => Some(self.label(&format!("category-{value}"))),
-            // Folk Magic's realm axis (ArMDE:3909, :3919). The stored value is `realm.<slug>`
+            // Folk Magic's realm axis (ArMDE:3980, :3990). The stored value is `realm.<slug>`
             // and the Fluent family is keyed on the bare slug — the same
             // `realm-<id>` keys `Doc::realm_score` reads for a Might score, so
             // nothing new has to be declared. A value that is not a Realm at
@@ -396,7 +396,7 @@ impl<'a> Doc<'a> {
     /// space with Technique before Form ("Creo Ignem"). This is the same pairing
     /// the in-app picker shows (`ParameterPicker.svelte::paramGroups`). Without
     /// it, Incompatible Arts printed its four Arts in key order and the two
-    /// barred combinations could not be read off the sheet (ArMDE:6290-6292).
+    /// barred combinations could not be read off the sheet (ArMDE:6361-6363).
     /// Ungrouped values trail afterwards in key order, which is the whole output
     /// for an item with no groups, exactly as before.
     fn template_extras(

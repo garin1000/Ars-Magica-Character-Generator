@@ -85,7 +85,7 @@ fn companion_with_parameter(
     e
 }
 
-/// The actual D48 defect: `virtue.marshal` (ArMDE:4449-4456) ties its 50 points
+/// The actual D48 defect: `virtue.marshal` (ArMDE:4520-4527) ties its 50 points
 /// to "Profession: Marshal", never "any Profession". A companion whose ONLY
 /// funding source is Marshal's pool and who bought Profession: Sailor (not
 /// Marshal) must be UNDER-funded — `max_flow < total_demand` — because the

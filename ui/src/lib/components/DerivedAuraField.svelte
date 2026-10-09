@@ -22,7 +22,7 @@
   // What the hint reports is the CLAMP, not the stored value's range — Gerda #1 /
   // Sabine #2, full-audit round 2. A stored aura can no longer be out of range at
   // all: `state.svelte.ts::AppStore.setAura` clamps what is typed, and
-  // `migration.rs::load_entity_migrating` clamps what is loaded (ArMDE:17390,
+  // `migration.rs::load_entity_migrating` clamps what is loaded (ArMDE:17467,
   // :17404-17409), which between them is every route into the store. Testing the
   // stored value therefore asked a question with only one answer, leaving the
   // field free to overrule the player in complete silence. It reports the event

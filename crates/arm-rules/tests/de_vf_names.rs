@@ -4,7 +4,7 @@
 //! (`rules/i18n/de/virtues_flaws.json`) must match the translation tables'
 //! `Deutsch (DE)` value for its EN name (`rules/i18n/en/virtues_flaws.json`),
 //! per CLAUDE.md "German translation tables" and
-//! `docs/vf-audit/decisions.md` D6/D7/D31/D65/D71.
+//! `docs/vf-audit/decisions.md` D6/D7/D18/D31/D65/D71/D86.
 //!
 //! No `rules/core/`, `rules/i18n/`, or `rules/source/` change lands in this
 //! phase. [`RULED_EXCEPTIONS`] is the only departure from a literal
@@ -13,17 +13,31 @@
 //! not a license, and [`ruled_exceptions_still_mismatch`] asserts every row
 //! still fails the plain comparison, so the list can only shrink).
 //!
-//! ## Precedence (CLAUDE.md "German translation tables"; D6, D7, D31)
+//! ## Precedence (CLAUDE.md "German translation tables"; D6, D7, D31, D86)
+//!
+//! **D86 (P8-6): D31 retires.** D31 made the table win on a NAME because the
+//! `rules/source/de/` rulebook copy was then older than the tables. The P8
+//! re-sync landed a current rulebook, so D7.1's original rule is back in
+//! force: the rulebook heading wins by default, and the table wins only
+//! where the heading is defective (collides with another entry's heading, or
+//! never renders the term at all). This file does not parse the rulebook
+//! heading programmatically — that comparison was done by hand, entry by
+//! entry, against the current `rules/source/de/` file (see
+//! `tmp/p8-6-names.md`) — so a heading-wins verdict shows up here either as a
+//! corrected `rules/i18n/de/` name (so the plain table comparison below now
+//! agrees too, needing no exception) or, where the table still disagrees for
+//! a reason worth recording, a [`RULED_EXCEPTIONS`] row. D71's
+//! `FORCED_COVERAGE_DESPITE_TAG` mechanism — which forced three `SdM:M`-tagged
+//! rows into the table dispute despite precedence rule 4, back when the table
+//! was the only current source — is retired along with it: those three now
+//! resolve by rule 1 below, uncontested, exactly like any other tagged row.
 //!
 //! 1. A table row tagged to a book OTHER than the one an entry is sourced
 //!    from is not in the dispute (precedence rule 4) — every entry in
 //!    `rules/core/virtues_flaws.json` cites only the core rulebook (`ArMDE`),
 //!    so a row tagged
 //!    `HdH:WL`/`SdM:M`/`SdM:G`/`SdM:F`/`SdM:I`/`HM:RE`/`DM:ÜA`/`GotF` is
-//!    skipped UNLESS the entry is named in [`FORCED_COVERAGE_DESPITE_TAG`]
-//!    (D71: three Definitive-Edition virtues that the table happens to tag to
-//!    their originating supplement even though the core book also prints
-//!    them).
+//!    always skipped.
 //! 2. Among untagged rows, a thematic table wins over `tugenden-fehler.md`
 //!    (precedence rule 3 — the broadest table is the likeliest to be wrong).
 //!    "A thematic table" is narrowed to [`VF_RELEVANT_THEMATIC_FILES`], not
@@ -33,8 +47,8 @@
 //!    — see that constant's doc comment for the concrete collision
 //!    (`Delusion`) that proved this narrowing necessary.
 //! 3. [`RULED_EXCEPTIONS`] overrides the plain comparison for a name
-//!    disagreement that a specific ruling has already closed (D7's rulebook-
-//!    heading-wins cases; D71's table-is-wrong case).
+//!    disagreement that a specific ruling has already closed (D7's and D86's
+//!    rulebook-heading-wins cases).
 //!
 //! ## Normalisations (see `tmp/de-names-handover.md` for the full rationale)
 //!
@@ -192,18 +206,6 @@ const TABLE_FILES: &[(&str, &str)] = &[
 const BOOK_ACRONYMS: &[&str] = &[
     "HdH:WL", "HdH:TL", "HdH:MC", "HdH:S", "SdM:M", "SdM:G", "SdM:F", "SdM:I", "HM:RE", "DM:ÜA",
     "GotF", "GdW",
-];
-
-/// Three Definitive-Edition virtues that the translation table tags `SdM:M`
-/// (their originating supplement, Realms of Power: Magic) even though the
-/// core rulebook — the only source `rules/core/virtues_flaws.json` cites —
-/// prints them too. D71 rules these three ARE in the dispute despite the
-/// tag; a fourth (`Deteriorating Power`) is ruled by D31 instead and needs no
-/// override here because its own table row carries no tag at all.
-const FORCED_COVERAGE_DESPITE_TAG: &[&str] = &[
-    "Homing Instinct",
-    "Magical Warder",
-    "Unaffected by The Gift",
 ];
 
 #[derive(Debug, Clone)]
@@ -662,9 +664,7 @@ fn find_match<'a>(en_name: &str, rows: &'a [TableRow]) -> Match<'a> {
     let mut thematic: Vec<&TableRow> = Vec::new();
     let mut vf_table: Vec<&TableRow> = Vec::new();
     for row in rows {
-        let eligible =
-            row.book_tag.is_none() || FORCED_COVERAGE_DESPITE_TAG.contains(&row.en.as_str());
-        if !eligible {
+        if row.book_tag.is_some() {
             continue;
         }
         let row_key = match_key(&row.en);
@@ -738,104 +738,49 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[
     (
         "flaw.primogeniture_lineage",
         "D7 (docs/vf-audit/decisions.md): the DE rulebook heading wins for an \
-         entry's name when the heading is not itself defective. ArMDE:6634 heads \
+         entry's name when the heading is not itself defective. ArMDE:6705 heads \
          this Flaw 'Erstgeburts-Abstammung', which is what ships; \
-         grundbegriffe.md:333's 'Primogenitur-Abstammungslinie' is the glossary's \
+         grundbegriffe.md:355's 'Primogenitur-Abstammungslinie' is the glossary's \
          broader catalogue reconciliation, and its own Anmerkung already notes \
          the heading form is what the generator ships.",
     ),
-    (
-        "flaw.hobbled",
-        "D71 item 2 (docs/vf-audit/decisions.md): Norbert asked for \
-         arm-de-translation's reviewed core to be checked; its \
-         german-reviewed/…Basisregeln.md uses 'Humpelnd' for Hobbled (:6328) and \
-         'Verkrüppelt' for the separate Flaw Crippled (:5945). \
-         grundbegriffe.md:331's 'Hobbled -> Verkrüppelt' row is therefore a table \
-         error (collides with Crippled's own name), not a shipped-data defect; \
-         the two Flaws keep distinct names and nothing is filed upstream (D65 N7).",
-    ),
-    // --- D31 reversions: the shipped DE name is correct; the LOCAL table copy
-    // still carries the withdrawn "correction" because D31's upstream re-sync
-    // of rules/source/de/translation-tables/ (and arm-de-translation) was
-    // never done — tracked as an open todo by D65 N7. X8d (commit 598620f,
-    // "German Virtue/Flaw names per D31 and D71") set rules/i18n/de/ back to
-    // this original wording on purpose; these seven are literally D31's own
-    // named list of reverted corrections.
-    (
-        "flaw.deteriorating_power",
-        "D31 names 'Deteriorating Power' as one of the seven reverted \
-         corrections. Shipped 'Schwindende Kraft ({power})' is correct; \
-         tugenden-fehler.md still shows the withdrawn 'Schwindende Macht' \
-         pending its own re-sync (D65 N7).",
-    ),
-    (
-        "flaw.disorientating_magic",
-        "D31 names 'Disorientating Magic' as one of the seven reverted \
-         corrections. Shipped 'Desorientierungsmagie' is correct; \
-         tugenden-fehler.md still shows the withdrawn 'Desorientierende Magie' \
-         pending its own re-sync (D65 N7).",
-    ),
-    (
-        "flaw.enfeebled",
-        "D31 names 'Enfeebled' as one of the seven reverted corrections. \
-         Shipped 'Entkräftet' is correct; tugenden-fehler.md still shows the \
-         withdrawn 'Geschwächt' pending its own re-sync (D65 N7).",
-    ),
-    (
-        "flaw.environmental_magic_condition",
-        "D31 names 'Environmental Magic Condition' as one of the seven \
-         reverted corrections. Shipped 'Magische Umgebungsbedingung' is \
-         correct; tugenden-fehler.md still shows the withdrawn 'Magische \
-         Umweltbedingung' pending its own re-sync (D65 N7).",
-    ),
-    (
-        "flaw.environmental_sensitivity",
-        "D31 names 'Environmental Sensitivity' as one of the seven reverted \
-         corrections. Shipped 'Umgebungsempfindlichkeit' is correct; \
-         tugenden-fehler.md still shows the withdrawn 'Umweltempfindlichkeit' \
-         pending its own re-sync (D65 N7).",
-    ),
-    (
-        "flaw.vulnerable_magic",
-        "D31 names 'Vulnerable Magic' (grundbegriffe.md) as one of the seven \
-         reverted corrections. Shipped 'Verwundbare Magie ({condition})' is \
-         correct; grundbegriffe.md still shows the withdrawn 'Anfällige Magie' \
-         pending its own re-sync (D65 N7).",
-    ),
-    (
-        "flaw.vulnerable_to_folk_tradition",
-        "D31 names 'Vulnerable to Folk Tradition' (grundbegriffe.md) as one of \
-         the seven reverted corrections. Shipped 'Anfällig für Volkszauber' is \
-         correct; grundbegriffe.md still shows the withdrawn 'Anfällig für \
-         Volksüberlieferungen' pending its own re-sync (D65 N7).",
-    ),
-    // --- Parser cannot safely compare, not a shipped-data defect: see
-    // tmp/de-names-handover.md for the full rationale.
+    // --- Parser cannot safely compare the comma-phrase/colon rendering
+    // styles below, not a shipped-data defect: see tmp/de-names-handover.md
+    // for the full rationale. Each is re-confirmed against the current (P8
+    // re-synced) rulebook heading in tmp/p8-6-names.md: the heading uses the
+    // same bracket-placeholder form as the table, so these remain pure
+    // parser limitations, not naming disputes.
     (
         "flaw.bound_to_realm",
         "Parser cannot compare the comma-phrase style: shipped 'Gebunden an \
          eine Sphäre, {realm}' uses a deliberate, widespread (14-occurrence) \
          DE convention — a descriptive label clause before ', {param}' — that \
          contains words (e.g. 'eine Sphäre') with no counterpart in the \
-         table's bare '(Sphäre)' placeholder notation.",
+         table's bare '(Sphäre)' placeholder notation. ArMDE:5802's heading \
+         'Gebunden an (Sphäre)' uses the identical bracket form, confirming \
+         this is a rendering-style gap, not a name dispute.",
     ),
     (
         "virtue.enchanting_ability",
         "Parser cannot compare the comma-phrase style — same convention as \
          flaw.bound_to_realm ('Bezaubernde Fertigkeit, {medium}' vs the \
-         table's '(Fertigkeit)').",
+         table's '(Fertigkeit)'). ArMDE:3818's heading 'Bezaubernde \
+         (Fertigkeit)' confirms the same bracket form.",
     ),
     (
         "virtue.extractor_of_form_vis",
         "Parser cannot compare the comma-phrase style — same convention as \
          flaw.bound_to_realm ('Vis-Gewinner der Form, {form}' vs the table's \
-         '(Form)').",
+         '(Form)'). ArMDE:3850's heading 'Vis-Gewinner der (Form)' confirms \
+         the same bracket form.",
     ),
     (
         "virtue.student_of_realm",
         "Parser cannot compare the comma-phrase style — same convention as \
          flaw.bound_to_realm ('Student einer Sphäre, {realm}' vs the table's \
-         '(Sphäre)').",
+         '(Sphäre)'). ArMDE:5123's heading 'Student der (Sphäre)' confirms \
+         the same bracket form (the shipped 'einer' vs the heading's 'der' is \
+         the pre-existing comma-phrase convention, not a new finding).",
     ),
     (
         "flaw.deficient_technique",
@@ -846,36 +791,71 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[
          signal to bridge the English parameter key to its German spelling. \
          Shipped 'Defizitäre Technik: {technique}' (T2, C3) is the table name \
          plus the chosen Technique after a colon; the unfilled name is the \
-         table's 'Defizitäre Technik' exactly.",
+         table's 'Defizitäre Technik' exactly. ArMDE:5984's heading \
+         'Defizitäre Technik' confirms this (bare, no bracket, same word).",
     ),
     (
         "flaw.deficient_form",
         "Parser cannot compare — same bare-placeholder limitation as \
          flaw.deficient_technique: shipped 'Defizitäre Form: {form}' (T2, C3) \
          is the table's 'Defizitäre Form' plus the chosen Form after a colon; \
-         the unfilled name is the table's 'Defizitäre Form' exactly.",
+         the unfilled name is the table's 'Defizitäre Form' exactly. \
+         ArMDE:5980's heading 'Defizitäre Form' confirms this.",
     ),
     (
         "virtue.great_characteristic",
         "Parser cannot compare — same bare-bare-placeholder limitation as \
          flaw.deficient_technique ('Hervorragende {characteristic}' vs the \
-         table's bare 'Hervorragende Eigenschaft').",
+         table's bare 'Hervorragende Eigenschaft'). ArMDE:4058's heading \
+         'Hervorragende (Eigenschaft)' confirms the same word, bracketed.",
     ),
-    // --- Pending Norbert's ruling — see tmp/de-names-handover.md QUESTIONS.
-    // This list shrinks (to a real fix or a cited ruling) once he rules.
+    (
+        "flaw.realm_stigmatic",
+        "Parser cannot compare the comma-phrase style — same family as \
+         flaw.bound_to_realm. Shipped 'Stigmatisierter, {realm}' vs the \
+         table's '(Sphäre-)Stigmatisierter'; ArMDE:6725's heading \
+         '(Sphäre-)Stigmatisierter' confirms the 'Stigmatisierter' root and \
+         the table agree — the comma-phrase rendering just isn't literally \
+         comparable. New P8-6 case (D86): not part of D18/D31's original 30.",
+    ),
+    // --- D86 (docs/vf-audit/decisions.md): D31 retires because a current
+    // German rulebook landed in the P8 re-sync. D7.1 applies again: the
+    // rulebook heading wins for a NAME unless defective, and each row below
+    // was individually re-checked against the current heading
+    // (tmp/p8-6-names.md). The table still disagrees for each, pending its
+    // own upstream re-sync (arm-de-translation), so these stay exceptions.
+    (
+        "virtue.leather_ripper",
+        "D86: ArMDE:4316's heading 'Lederreißer' wins over the untagged \
+         tugenden-fehler.md:120 row 'Lederzerreißer' (not defective — no \
+         collision, no absence). Shipped corrected to 'Lederreißer'.",
+    ),
+    (
+        "flaw.stigmatic_catalyst",
+        "D86: ArMDE:6854's heading 'Stigma-Katalysator' wins over the \
+         untagged grundbegriffe.md:338 row 'Stigmatischer Katalysator'. \
+         Shipped corrected to 'Stigma-Katalysator'.",
+    ),
+    (
+        "virtue.independent_study",
+        "D86: ArMDE:4186's heading 'Unabhängiges Studium' wins over the \
+         untagged grundbegriffe.md:370 row 'Eigenständiges Studium'. Shipped \
+         corrected to 'Unabhängiges Studium'.",
+    ),
     (
         "flaw.form_monstrosity",
-        "Pending Norbert's ruling (tmp/de-names-handover.md QUESTIONS): shipped \
-         '{form} Missgeburt' vs the table's '(Form-)Monstrosität' — no ruling \
-         covers whether 'Missgeburt' is a deliberate period-appropriate word \
-         choice or should be aligned to the table.",
+        "D86 (resolves the former 'pending Norbert's ruling' row): ArMDE:6233's \
+         heading '(Form) Missgeburt' confirms shipped '{form} Missgeburt' is \
+         correct; the table's '(Form-)Monstrosität' (tugenden-fehler.md:350) \
+         is outvoted since the heading is not defective.",
     ),
     (
         "virtue.alluring_to_beings",
-        "Pending Norbert's ruling (tmp/de-names-handover.md QUESTIONS): shipped \
-         'Anziehend auf {being}' vs the table's 'Anziehend für (Wesen)' — the \
-         sibling '(Beings)' family is consistently 'für', but no ruling covers \
-         this specific entry yet.",
+        "D86 (resolves the former 'pending Norbert's ruling' row): ArMDE:3459's \
+         heading 'Anziehend auf (Wesen)' confirms shipped 'Anziehend auf \
+         {being}' is correct; the table's 'Anziehend für (Wesen)' \
+         (grundbegriffe.md:371) is outvoted since the heading is not \
+         defective.",
     ),
 ];
 
