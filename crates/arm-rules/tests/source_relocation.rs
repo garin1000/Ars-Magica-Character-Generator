@@ -943,17 +943,37 @@ fn render_report(
     out
 }
 
+/// Where the sweep reads the PRE-sync books from. Before the copy-in, today's
+/// `rules/source/` is saved to `tmp/p8-old-source/` (same `en/`, `de/`
+/// layout); once that copy exists, it is the old side and `rules/source/` is
+/// the new side. Without it, both sides are `rules/source/` (identity run).
+fn old_source_root(source_root: &Path, saved_copy: &Path, saved_copy_exists: bool) -> PathBuf {
+    if saved_copy_exists {
+        return saved_copy.to_path_buf();
+    }
+    source_root.to_path_buf()
+}
+
+#[test]
+fn the_old_side_is_the_saved_pre_sync_copy_once_it_exists() {
+    let source = Path::new("rules/source");
+    let saved = Path::new("tmp/p8-old-source");
+    assert_eq!(old_source_root(source, saved, true), saved);
+    assert_eq!(old_source_root(source, saved, false), source);
+}
+
 #[test]
 #[ignore = "writes into rules/; run deliberately — see tmp/t1-handover.md"]
 fn regenerate_source_relocations() {
+    let new_root = rules_dir().join("source");
+    let saved_copy = tmp_dir().join("p8-old-source");
+    let old_root = old_source_root(&new_root, &saved_copy, saved_copy.is_dir());
     let mut book_text_cache: BTreeMap<String, String> = BTreeMap::new();
-    let mut book_text = |lang: &str, file: &str| -> String {
+    let mut book_text = |root: &Path, lang: &str, file: &str| -> String {
+        let path = root.join(lang).join(file);
         book_text_cache
-            .entry(format!("{lang}/{file}"))
-            .or_insert_with(|| {
-                fs::read_to_string(rules_dir().join("source").join(lang).join(file))
-                    .unwrap_or_default()
-            })
+            .entry(path.display().to_string())
+            .or_insert_with(|| fs::read_to_string(&path).unwrap_or_default())
             .clone()
     };
 
@@ -1037,8 +1057,8 @@ fn regenerate_source_relocations() {
             // on why more than one id can legitimately share one key.
             let id = ids.join(" / ");
 
-            let old_text = book_text("en", file);
-            let new_text = book_text("en", file);
+            let old_text = book_text(&old_root, "en", file);
+            let new_text = book_text(&new_root, "en", file);
             let relocation = relocate_anchor(&old_text, &new_text, anchor, level);
 
             match relocation {
@@ -1146,8 +1166,8 @@ fn regenerate_source_relocations() {
         let anchor = row["anchor"]
             .as_str()
             .unwrap_or_else(|| panic!("de/{id}: source_anchors.json anchor is a string"));
-        let old_text = book_text("de", file);
-        let new_text = book_text("de", file);
+        let old_text = book_text(&old_root, "de", file);
+        let new_text = book_text(&new_root, "de", file);
         match relocate_anchor(&old_text, &new_text, anchor, level) {
             Relocation::Unresolved(reason) => unresolved.push(ReportRow {
                 catalogue: "source_anchors.json".to_string(),
