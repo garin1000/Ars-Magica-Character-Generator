@@ -3457,15 +3457,43 @@ fn apply_citation_relocations_never_fires_a_map_entry_the_content_does_not_cite(
 ///   directly in `RULES.md` (unrelated to the resync, caught while
 ///   confirming this override).
 ///
-/// Not overridden, left genuinely unresolved — `ArMDE:3006-3358`,
-/// `:3087`, `:3135-3185`, `:3187-3237`, `:5373`, `:5501-5518`: all sit inside
-/// the Virtues/Flaws table-of-contents region, whose own sub-headings
-/// (`### Hermetic, Minor` etc.) and link text recur or were reformatted
-/// (confirmed: `### Hermetic, Minor` and `### Story, Minor` each have
-/// multiple book-wide occurrences, and `[True Love (NPC)]`'s own link text
-/// no longer exists verbatim) in a way that span-preservation cannot safely
-/// resolve without a dedicated TOC-structure comparison — flagged for a
-/// follow-up pass, not guessed here.
+/// P8-5 cleanup (2026-10): the six Virtues/Flaws TOC citations the P8-4 sweep
+/// left unresolved (`ArMDE:3006-3358`, `:3087`, `:3135-3185`, `:3187-3237`,
+/// `:5373`, `:5501-5518`) — all sitting inside the Virtues/Flaws
+/// table-of-contents region, whose own sub-headings (`### Hermetic, Minor`
+/// etc.) and link text recur or were reformatted (`### Hermetic, Minor` and
+/// `### Story, Minor` each have multiple book-wide occurrences, and
+/// `[True Love (NPC)]`'s own link text no longer exists verbatim), so
+/// span-preservation could not resolve them mechanically. Hand-verified
+/// against both files instead:
+///
+/// - `ArMDE:3006-3358` -> `3074-3429`: the Virtues TOC's whole link-list span
+///   (`[The Gift]` through `[Commanding Aura]`), confirmed heading-to-heading
+///   against `## List of Virtues` / `## Virtues`. The +3 line growth
+///   (353 -> 356 lines) is exactly the three omission fixes below.
+/// - `ArMDE:3087` -> `3155`: the Virtues TOC's own `### Hermetic, Minor`
+///   sub-heading, confirmed by matching neighbors (`[Potent Magic]` above,
+///   `[Adept Laboratory Student]` below).
+/// - `ArMDE:3135-3185` -> `3203-3254`: the Virtues TOC's
+///   `### Supernatural, Minor` section (heading through last entry); the P8
+///   re-sync also added the `[Minor Enchantments]` link that RULES.md's
+///   "Known source errata" (X9c sweep) had recorded as a missing index entry
+///   for `virtue.minor_enchantments` — that row is updated in the same change
+///   to reflect the fix rather than guessed here.
+/// - `ArMDE:3187-3237` -> `3256-3308`: the Virtues TOC's
+///   `### Social Status, Minor` section; the re-sync similarly added both
+///   `[Lupus (the Wolf)]` and `[Turb Trained]`, resolving the other two X9c
+///   omission rows (`virtue.lupus_the_wolf`, `virtue.turb_trained`).
+/// - `ArMDE:5373` -> `5444`: the Flaws TOC's `### Story, Major` entry for True
+///   Love; the re-sync also renamed the link from `[True Love (NPC)]` to
+///   `[True Love]`, matching the descriptor's own heading rename (no longer
+///   `#### True Love (NPC)`).
+/// - `ArMDE:5501-5518` -> `5571-5588`: the Flaws TOC's `### Story, Minor`
+///   section; net span length is unchanged (18 lines both before and after)
+///   because the re-sync added `[True Love]` (resolving the X9c omission row
+///   for `flaw.true_love_minor`) while moving `[Weak Personality]` out to
+///   `### Personality, Minor` — a *different*, pre-existing X9c errata row
+///   this pass did not re-verify.
 const RELOCATION_OVERRIDES: &[(&str, (usize, usize))] = &[
     ("ArMDE:12385-15941", (12457, 16018)),
     ("ArMDE:14016", (14090, 14090)),
@@ -3484,6 +3512,12 @@ const RELOCATION_OVERRIDES: &[(&str, (usize, usize))] = &[
     ("ArMDE:16988", (17065, 17065)),
     ("ArMDE:16992", (17069, 17069)),
     ("ArMDE:17017", (17094, 17094)),
+    ("ArMDE:3006-3358", (3074, 3429)),
+    ("ArMDE:3087", (3155, 3155)),
+    ("ArMDE:3135-3185", (3203, 3254)),
+    ("ArMDE:3187-3237", (3256, 3308)),
+    ("ArMDE:5373", (5444, 5444)),
+    ("ArMDE:5501-5518", (5571, 5588)),
 ];
 
 #[test]

@@ -3729,6 +3729,11 @@
     "next_line": "Choose a few words to describe your character's personality, and attach a value ",
     "heading": "### Personality"
   },
+  "ArMDE:2570": {
+    "excerpt": "Choose a few words to describe your character's personality, and attach a value ",
+    "next_line": "Grogs should have a score (positive or negative) in Loyal, and warriors should h",
+    "heading": "### Personality"
+  },
   "ArMDE:2580-2582": {
     "excerpt": "### Reputations",
     "next_line": "Characters only start with a Reputation if they choose a Virtue or Flaw that gra",
@@ -4284,11 +4289,6 @@
     "next_line": "| **Minor Virtues** | Almogaten, Almogavar |",
     "heading": "#### Iberia"
   },
-  "ArMDE:3006-3358": {
-    "excerpt": "",
-    "next_line": "#### North Africa",
-    "heading": "#### Iberia"
-  },
   "ArMDE:3026": {
     "excerpt": "### Supernatural",
     "next_line": "Supernatural Virtues and Flaws provide the character with some benefit that goes",
@@ -4349,27 +4349,27 @@
     "next_line": "[The Gift](#the-gift-1)",
     "heading": "### General"
   },
-  "ArMDE:3087": {
-    "excerpt": "[Mercurian Magic](#mercurian-magic)<br>",
-    "next_line": "[Mythic Blood](#mythic-blood)<br>",
-    "heading": "### Hermetic, Major"
+  "ArMDE:3074-3429": {
+    "excerpt": "[The Gift](#the-gift-1)",
+    "next_line": "### Hermetic, Major",
+    "heading": "## List of Virtues"
   },
-  "ArMDE:3135-3185": {
-    "excerpt": "[Rosh Beth Din](#rosh-beth-din)<br>",
-    "next_line": "[Senior Clergy](#senior-clergy)<br>",
-    "heading": "### Social Status, Major"
+  "ArMDE:3155": {
+    "excerpt": "### Hermetic, Minor",
+    "next_line": "[Adept Laboratory Student](#adept-laboratory-student)<br>",
+    "heading": "### General, Major"
   },
   "ArMDE:3178": {
     "excerpt": "[Inoffensive to (Beings)](#inoffensive-to-beings)<br>",
     "next_line": "[Inventive Genius](#inventive-genius)<br>",
     "heading": "### Hermetic, Minor"
   },
-  "ArMDE:3187-3237": {
-    "excerpt": "[Performance Magic](#performance-magic)<br>",
-    "next_line": "[Personal Vis Source](#personal-vis-source)<br>",
+  "ArMDE:3203": {
+    "excerpt": "### Supernatural, Minor",
+    "next_line": "[Amorphous](#amorphous)<br>",
     "heading": "### Hermetic, Minor"
   },
-  "ArMDE:3203": {
+  "ArMDE:3203-3254": {
     "excerpt": "### Supernatural, Minor",
     "next_line": "[Amorphous](#amorphous)<br>",
     "heading": "### Hermetic, Minor"
@@ -4385,6 +4385,11 @@
     "heading": "### Supernatural, Minor"
   },
   "ArMDE:3256": {
+    "excerpt": "### Social Status, Minor",
+    "next_line": "[ʿAlim](#alim)<br>",
+    "heading": "### Supernatural, Minor"
+  },
+  "ArMDE:3256-3308": {
     "excerpt": "### Social Status, Minor",
     "next_line": "[ʿAlim](#alim)<br>",
     "heading": "### Supernatural, Minor"
@@ -7594,11 +7599,6 @@
     "next_line": "[Twilight Prone](#twilight-prone)<br>",
     "heading": "### Hermetic, Major"
   },
-  "ArMDE:5373": {
-    "excerpt": "[Twilight Prone](#twilight-prone)<br>",
-    "next_line": "[Unnatural Magic](#unnatural-magic)<br>",
-    "heading": "### Hermetic, Major"
-  },
   "ArMDE:540": {
     "excerpt": "### Simple Die",
     "next_line": "Roll a ten-sided die. Each number counts for its value, except that a zero count",
@@ -7627,6 +7627,11 @@
   "ArMDE:5440": {
     "excerpt": "[Suppressed Gift](#suppressed-gift)<br>",
     "next_line": "[Tainted Offspring](#tainted-offspring)<br>",
+    "heading": "### Story, Major"
+  },
+  "ArMDE:5444": {
+    "excerpt": "[True Love](#true-love)<br>",
+    "next_line": "[Tzadik Nistar](#tzadik-nistar)<br>",
     "heading": "### Story, Major"
   },
   "ArMDE:5445": {
@@ -7659,11 +7664,6 @@
     "next_line": "[Bound Casting Tools](#bound-casting-tools)<br>",
     "heading": "### General, Major"
   },
-  "ArMDE:5501-5518": {
-    "excerpt": "[Difficult Spontaneous Magic](#difficult-spontaneous-magic)<br>",
-    "next_line": "[Disjointed Magic](#disjointed-magic)<br>",
-    "heading": "### Hermetic, Minor"
-  },
   "ArMDE:5514": {
     "excerpt": "[Offensive to (Beings)](#offensive-to-beings)<br>",
     "next_line": "[Poor Formulaic Magic](#poor-formulaic-magic)<br>",
@@ -7685,6 +7685,11 @@
     "heading": "### Personality, Minor"
   },
   "ArMDE:5571": {
+    "excerpt": "### Story, Minor",
+    "next_line": "[Animal Companion](#animal-companion)<br>",
+    "heading": "### Personality, Minor"
+  },
+  "ArMDE:5571-5588": {
     "excerpt": "### Story, Minor",
     "next_line": "[Animal Companion](#animal-companion)<br>",
     "heading": "### Personality, Minor"

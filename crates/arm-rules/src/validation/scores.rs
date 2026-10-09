@@ -834,7 +834,7 @@ pub(crate) fn validate_supernatural_abilities(
 
 /// Validates Personality Traits: `|value|` never exceeds 6, and at most one trait
 /// per selected Major Personality Flaw may exceed ±3 (a Major Personality Flaw is
-/// represented by a single ±6 trait; others stay ±3). Source: ArMDE:2568-2571.
+/// represented by a single ±6 trait; others stay ±3). Source: ArMDE:2570.
 pub(crate) fn validate_personality_traits(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -843,7 +843,7 @@ pub(crate) fn validate_personality_traits(
     // The personality category slug is referenced directly here, deliberately.
     // Unlike caps.rs — whose per-category caps are driven by profile data that
     // *happens* to name categories, so no slug is baked in — this is a universal
-    // core rule keyed specifically to the Personality Flaw category (ArMDE:2568-2571,
+    // core rule keyed specifically to the Personality Flaw category (ArMDE:2570,
     // :2888): each Major Personality Flaw permits exactly one ±6 trait. Categories
     // are free-form data slugs with no registry or per-item metadata that marks
     // "this is the personality category", and the rule is not per-profile, so there

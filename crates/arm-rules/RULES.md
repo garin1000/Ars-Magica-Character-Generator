@@ -398,7 +398,7 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
 
   | id | descriptor | source | `categories` | indexed at |
   |---|---|---|---|---|
-  | `virtue.inoffensive_to_beings` | *Minor, General and Hermetic* | `ArMDE:4205` | `["general"]` | `ArMDE:3178` (`### Hermetic, Minor` `ArMDE:3087`) and `ArMDE:3347` (`### General, Minor` `ArMDE:3310`) |
+  | `virtue.inoffensive_to_beings` | *Minor, General and Hermetic* | `ArMDE:4205` | `["general"]` | `ArMDE:3178` (`### Hermetic, Minor` `ArMDE:3155`) and `ArMDE:3347` (`### General, Minor` `ArMDE:3310`) |
   | `flaw.curse_of_slander` | *Minor, General or Supernatural* | `ArMDE:5953` | `["general", "supernatural"]` | `ArMDE:5610` (`### Supernatural, Minor` `ArMDE:5604`) and `ArMDE:5646` (`### General, Minor` `ArMDE:5635`) |
   | `flaw.offensive_to_beings` | *Minor, Hermetic and General* | `ArMDE:6596` | `["general"]` | `ArMDE:5514` (`### Hermetic, Minor` `ArMDE:5486`) and `ArMDE:5679` (`### General, Minor` `ArMDE:5635`) |
   | `flaw.primogeniture_lineage` | *Minor, Story and Hermetic* | `ArMDE:6706` | `["story"]` | `ArMDE:5516` (`### Hermetic, Minor` `ArMDE:5486`) and `ArMDE:5586` (`### Story, Minor` `ArMDE:5571`) |
@@ -858,7 +858,7 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
 #### Known source errata (D25, D78)
 
 The book's own catalogue index (the `### <Category>, <Magnitude>` link lists,
-Virtues `ArMDE:3006-3358`, Flaws `ArMDE:5356-5708`) is provenance, never a data
+Virtues `ArMDE:3074-3429`, Flaws `ArMDE:5356-5708`) is provenance, never a data
 source and never a guard (D25) — where it disagrees with an entry's own
 descriptor, **the descriptor always wins**, and the disagreement is recorded
 here rather than left implicit. D25 found the first row (`flaw.weak_personality`)
@@ -870,10 +870,10 @@ descriptor) and exactly these further 7 index errata, for 8 rows total:
 
 | Entry | Descriptor cites | Index cites | Kind | Side taken |
 |---|---|---|---|---|
-| `virtue.lupus_the_wolf` (Lupus (the Wolf)) | `ArMDE:4407` *Minor, Social Status* | absent from Social Status, Minor (`ArMDE:3187-3237`) | omission | descriptor stands — the entry is real, just unindexed |
-| `virtue.minor_enchantments` (Minor Enchantments) | `ArMDE:4604` *Minor, Supernatural* | absent from Supernatural, Minor (`ArMDE:3135-3185`) | omission | descriptor stands |
-| `virtue.turb_trained` (Turb Trained) | `ArMDE:5251` *Minor, Social Status* | absent from Social Status, Minor (`ArMDE:3187-3237`) | omission | descriptor stands |
-| `flaw.true_love_minor` (True Love, Minor) | `ArMDE:6943` and `ArMDE:6948` *Major or Minor, Story* | absent from Story, Minor (`ArMDE:5501-5518`); only "True Love (NPC)" appears under Story, Major (`ArMDE:5373`) | omission | descriptor stands — both magnitudes are real, per the Dual-magnitude split convention above |
+| `virtue.lupus_the_wolf` (Lupus (the Wolf)) | `ArMDE:4407` *Minor, Social Status* | now listed under Social Status, Minor (`ArMDE:3256-3308`) | omission, resolved by the P8 re-sync | the re-sync added the missing index link; descriptor and index now agree |
+| `virtue.minor_enchantments` (Minor Enchantments) | `ArMDE:4604` *Minor, Supernatural* | now listed under Supernatural, Minor (`ArMDE:3203-3254`) | omission, resolved by the P8 re-sync | the re-sync added the missing index link; descriptor and index now agree |
+| `virtue.turb_trained` (Turb Trained) | `ArMDE:5251` *Minor, Social Status* | now listed under Social Status, Minor (`ArMDE:3256-3308`) | omission, resolved by the P8 re-sync | the re-sync added the missing index link; descriptor and index now agree |
+| `flaw.true_love_minor` (True Love, Minor) | `ArMDE:6943` and `ArMDE:6948` *Major or Minor, Story* | now listed under Story, Minor (`ArMDE:5571-5588`); Story, Major's own link (`ArMDE:5444`) was also renamed from "True Love (NPC)" to "True Love" | omission, resolved by the P8 re-sync | the re-sync added the missing index link and dropped the stale "(NPC)" qualifier; both magnitudes are real, per the Dual-magnitude split convention above |
 | `flaw.bound_to_role_role` (Bound to (Role) Role) | `ArMDE:5807` *Minor*, Supernatural | `ArMDE:5607`, listed under Supernatural, **Major** | disagreement (magnitude) | descriptor (Minor) stands — shipped data already agrees |
 | `flaw.broken_vessel` (Broken Vessel) | `ArMDE:5825` *Minor*, Supernatural | `ArMDE:5608`, listed under Supernatural, **Major** | disagreement (magnitude) | descriptor (Minor) stands — shipped data already agrees |
 | `flaw.weak_personality` (Weak Personality) | `ArMDE:7148` *Minor*, **Personality** | `ArMDE:5568`, listed under Story, Minor | disagreement (category) | descriptor (Personality) stands — shipped data already agrees (D25's original finding) |
@@ -882,6 +882,13 @@ descriptor) and exactly these further 7 index errata, for 8 rows total:
 **Sweep result, stated explicitly per D25 obligation 2: all 662 catalogue
 entries checked, 0 data mismatches, 8 index errata (the above), none still
 open.**
+
+**P8 re-sync update (2026-10, commit 6955ee8a):** the re-sync fixed the first
+four rows' omissions directly upstream — each now has its missing index link,
+and True Love's also dropped the stale "(NPC)" qualifier — so those four are no
+longer disagreements; the citations above point at the resolved entries. The
+remaining four rows (`bound_to_role_role`, `broken_vessel`, `weak_personality`,
+Folk Magic) were not re-examined against the re-synced text for this pass.
 
 #### A category rule may carry a condition (open-to-dos row 20)
 > "You may not take Hermetic Virtues and Flaws, unless you have The Gift (this
@@ -1124,7 +1131,7 @@ not strike an entry off the book's own Hermetic index.
 
 Four shipped items carry `index_categories`, all naming `hermetic`, all
 hand-verified against the `### Hermetic, Minor` block at `ArMDE:5486` (Flaws) and
-`ArMDE:3087` (Virtues). The frozen `INDEX_CATEGORY_ITEMS` table in
+`ArMDE:3155` (Virtues). The frozen `INDEX_CATEGORY_ITEMS` table in
 `tests/data_integrity.rs` pins the set with the index line each was verified at:
 
 | item | descriptor | membership `categories` | indexed under Hermetic at |
