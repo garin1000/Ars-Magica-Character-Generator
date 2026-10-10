@@ -790,14 +790,19 @@ fn relocate_anchor(old_text: &str, new_text: &str, anchor: &str, level: usize) -
 /// file at the passage's own body text, not the stale heading:
 /// - `virtue.bard` (`#rard`) — an OCR fix; the heading now reads "Bard"
 ///   (ArMDE:3547), anchor `bard`.
-/// - `spell.sense_the_feet_that_thread_the_earth`
+/// - `spell.sense_the_feet_that_tread_the_earth`
 ///   (`#sense-the-feet-that-thread-the-earth`) — reworded "Thread" ->
 ///   "Tread" (same file, line 15411), anchor
-///   `sense-the-feet-that-tread-the-earth`.
+///   `sense-the-feet-that-tread-the-earth`. At resync time (P8-3, 2026-10-09)
+///   the catalogue's own id still read `...thread_the_earth` — D87
+///   (2026-10-10) renamed the id to match the heading one day later, so the
+///   key below is the id as it is TODAY, not as it was when this override was
+///   recorded; the resync's own finding (the heading's wording changed) is
+///   otherwise unaffected and is kept verbatim above.
 const ANCHOR_OVERRIDES: &[(&str, &str)] = &[
     ("virtue.bard", "bard"),
     (
-        "spell.sense_the_feet_that_thread_the_earth",
+        "spell.sense_the_feet_that_tread_the_earth",
         "sense-the-feet-that-tread-the-earth",
     ),
 ];

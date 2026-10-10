@@ -2224,7 +2224,7 @@ mod tests {
             json.contains(r#""childhood_package": "childhood.athletic""#),
             "{json}"
         );
-        assert!(json.contains(r#""schema_version": 23"#), "{json}");
+        assert!(json.contains(r#""schema_version": 24"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
@@ -2286,10 +2286,11 @@ mod tests {
         // per-document saga year, 18 from CV4's ability-parameter widening, 19
         // from C5a's multi-valued parameter type, 20 from F1's
         // `EquipmentSlot::loadout` move, 21 from X9b's `virtue.rard` ->
-        // `virtue.bard` id rename, 22 from L1b's Dead/Living Language move, and
-        // 23 from N4b's native-language value — the plan's, but not these fields').
-        assert_eq!(SCHEMA_VERSION, 23);
-        assert!(json.contains(r#""schema_version": 23"#), "{json}");
+        // `virtue.bard` id rename, 22 from L1b's Dead/Living Language move, 23
+        // from N4b's native-language value — the plan's, but not these fields —
+        // and 24 from D87's spell id rename, also unrelated to these fields).
+        assert_eq!(SCHEMA_VERSION, 24);
+        assert!(json.contains(r#""schema_version": 24"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(back.life_stages, Some(out_of_apprenticeship));

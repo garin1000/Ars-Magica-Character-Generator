@@ -1159,6 +1159,11 @@
     "next_line": "Soak: +10 (chain mail, Stamina)",
     "heading": "#### The Knight"
   },
+  "ArMDE:15410": {
+    "excerpt": "##### Sense the Feet That Tread the Earth",
+    "next_line": "R: Touch, D: Conc, T: Part<br>",
+    "heading": "#### LEVEL 30"
+  },
   "ArMDE:1542": {
     "excerpt": "Soak: +10 (chain mail, Stamina)",
     "next_line": "Fatigue Levels: OK, 0, -1, -3, -5, Unconscious",

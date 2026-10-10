@@ -222,7 +222,25 @@ use crate::validation::birth_year_in_saga_year;
 /// then turns text naming a value of the native-language Ability's catalogue into
 /// that value on every load, silently and without a stamp — the
 /// [`fold_catalogue_matching`] rule.
-pub const SCHEMA_VERSION: u32 = 23;
+///
+/// Bumped 23 → 24 for D87 (Norbert, 2026-10-10): the point item
+/// `spell.sense_the_feet_that_thread_the_earth` is renamed to
+/// `spell.sense_the_feet_that_tread_the_earth` — the book's own heading at
+/// ArMDE:15410 reads "Tread", not the catalogue's "Thread", and the **id**,
+/// not only the displayed English name, was wrong. The German name was
+/// already correct ("Die Schritte auf der Erde spüren") and is unchanged;
+/// only its key moves. `source.anchor` is unaffected: the P8-3 re-sync had
+/// already relocated it to `sense-the-feet-that-tread-the-earth` ahead of
+/// this rename (`source_relocation.rs`'s `ANCHOR_OVERRIDES`), because the
+/// heading's own wording, not just its position, had changed. This is a
+/// genuine value move (an id, not a shape), exactly like X9b's
+/// `virtue.rard` -> `virtue.bard`, but narrower in scope: a spell id lives in
+/// exactly one place on [`Entity`] — [`crate::types::SpellSelection::spell`]
+/// — never in a `Selection`, a resolved-pick map, or a `Linked` ability
+/// parameter, so [`fold_legacy_tread_spell_id`] walks only `entity.spells`,
+/// and the version is stamped only when something was actually found, the
+/// same dispatch-on-presence rule [`fold_legacy_bard_id`] uses.
+pub const SCHEMA_VERSION: u32 = 24;
 
 /// `(ability, original text, resolved catalogue id)` — see
 /// [`LoadedEntity::migrated_catalogued_parameters`]. A named alias rather than
@@ -579,6 +597,31 @@ fn fold_legacy_bard_id(entity: &mut Entity) -> bool {
             && item.as_str() == LEGACY_BARD_ID
         {
             *item = Id::new(RENAMED_BARD_ID);
+            found = true;
+        }
+    }
+    found
+}
+
+/// D87: the spell id [`fold_legacy_tread_spell_id`] renames away from. See
+/// [`SCHEMA_VERSION`]'s 23 → 24 paragraph for why.
+const LEGACY_TREAD_SPELL_ID: &str = "spell.sense_the_feet_that_thread_the_earth";
+/// What [`LEGACY_TREAD_SPELL_ID`] renames to.
+const RENAMED_TREAD_SPELL_ID: &str = "spell.sense_the_feet_that_tread_the_earth";
+
+/// D87: renames every `entity.spells[].spell` equal to
+/// [`LEGACY_TREAD_SPELL_ID`] to [`RENAMED_TREAD_SPELL_ID`], leaving every other
+/// field of the [`SpellSelection`] untouched. Unlike [`fold_legacy_bard_id`], a
+/// spell id has exactly one home on [`Entity`] — no `Selection`, resolved-pick
+/// map, or `Linked` ability parameter ever names a spell — so this fold walks
+/// only `entity.spells`. Returns whether anything was found, so the caller
+/// stamps [`SCHEMA_VERSION`] only when something actually renamed, the same
+/// dispatch-on-presence rule [`fold_legacy_bard_id`] uses.
+fn fold_legacy_tread_spell_id(entity: &mut Entity) -> bool {
+    let mut found = false;
+    for spell in &mut entity.spells {
+        if spell.spell.as_str() == LEGACY_TREAD_SPELL_ID {
+            spell.spell = Id::new(RENAMED_TREAD_SPELL_ID);
             found = true;
         }
     }
@@ -1261,6 +1304,13 @@ pub fn load_entity_migrating(
     // and BEFORE `fold_dangling_and_ambiguous_links` below, so a renamed
     // `Linked.item` resolves against the also-renamed `selections` in the same pass.
     if fold_legacy_bard_id(&mut entity) {
+        entity.schema_version = SCHEMA_VERSION;
+    }
+
+    // D87: dispatch is on finding the OLD spell id itself, exactly like the
+    // bard rename above — the Virtue/Flaw-only renames aside, a spell id has no
+    // other home to sweep (see `fold_legacy_tread_spell_id`'s own doc comment).
+    if fold_legacy_tread_spell_id(&mut entity) {
         entity.schema_version = SCHEMA_VERSION;
     }
 
@@ -2156,7 +2206,7 @@ mod tests {
     /// talisman folds do. The aging log itself is still untouched.
     #[test]
     fn a_schema_fourteen_save_loads_without_migration() {
-        assert_eq!(SCHEMA_VERSION, 23);
+        assert_eq!(SCHEMA_VERSION, 24);
         let schema_14 = r#"{
           "schema_version": 14,
           "ruleset": { "id": "arm5-core", "version": "2024.1" },
@@ -2188,12 +2238,13 @@ mod tests {
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 
-    /// The current-version pin, advanced at every bump (most recently 22 → 23 for
-    /// N4b's native-language value — see [`SCHEMA_VERSION`]'s own doc comment for
-    /// why that bump owns a fold, unlike C5a's 18 → 19 pure marker).
+    /// The current-version pin, advanced at every bump (most recently 23 → 24 for
+    /// D87's `spell.sense_the_feet_that_thread_the_earth` -> `...tread_the_earth`
+    /// id rename — see [`SCHEMA_VERSION`]'s own doc comment for why that bump owns
+    /// a fold, unlike C5a's 18 → 19 pure marker).
     #[test]
-    fn schema_version_is_23() {
-        assert_eq!(SCHEMA_VERSION, 23);
+    fn schema_version_is_24() {
+        assert_eq!(SCHEMA_VERSION, 24);
     }
 
     /// C5a's bump is a **pure version marker**: no shape moved, so no fold

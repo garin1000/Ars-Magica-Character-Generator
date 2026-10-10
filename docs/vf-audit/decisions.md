@@ -828,6 +828,18 @@ presumption of correctness.
 
 ---
 
+## D87 — "Thread" → "Tread": a spell id renamed, old saves converted (Norbert, 2026-10-10)
+
+The book's heading at ArMDE:15410 reads "Sense the Feet That Tread the Earth".
+Norbert ruled that the id is renamed along with the name:
+`spell.sense_the_feet_that_thread_the_earth` → `spell.sense_the_feet_that_tread_the_earth`.
+- The English name changed. The German name was already correct; only its key moved.
+- `SCHEMA_VERSION` goes from 23 to 24. On load, `fold_legacy_tread_spell_id`
+  migrates `entity.spells[].spell`, following the X9b Rard → Bard precedent.
+- The shipped example saves are regenerated.
+
+---
+
 ## D86 — P8-6: D31 retires, D7.1 returns (2026-10-09)
 
 The P8 re-sync brought in a current German rulebook, so D31 retires as it said it

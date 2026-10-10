@@ -296,14 +296,16 @@ fn no_example_save_names_virtue_rard() {
 
 /// The target this bump had to reach was 21 (X9b's virtue.rard -> virtue.bard
 /// id rename, phase-2-plan.md § 1: "X9b ... bump"). L1b has since moved the
-/// constant to 22 for the Dead/Living Language move and N4b to 23 for the
-/// native-language value, so this tracks the current value; X9b's own
-/// contribution is still the 20 -> 21 step.
+/// constant to 22 for the Dead/Living Language move, N4b to 23 for the
+/// native-language value, and D87 to 24 for the
+/// spell.sense_the_feet_that_thread_the_earth -> ...tread_the_earth id
+/// rename, so this tracks the current value; X9b's own contribution is still
+/// the 20 -> 21 step.
 #[test]
 fn schema_version_target_is_one_past_todays() {
     assert_eq!(
-        SCHEMA_VERSION, 23,
-        "L1b and N4b bump SCHEMA_VERSION past X9b's 21; today's build \
+        SCHEMA_VERSION, 24,
+        "L1b, N4b and D87 bump SCHEMA_VERSION past X9b's 21; today's build \
          is still at {SCHEMA_VERSION}"
     );
 }
