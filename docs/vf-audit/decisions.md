@@ -828,6 +828,26 @@ presumption of correctness.
 
 ---
 
+## D88 — row 56: post-Gauntlet lab work is stored as year counts (Norbert, 2026-10-10)
+
+Supersedes D83.8's storage; its charging rule stands. Norbert chose "year counts".
+- `LifeStagePlan.post_gauntlet_lab_years` = `LabYears { one_season, two_seasons,
+  three_seasons, four_seasons }`: how many post-Gauntlet years held 1–4 lab seasons.
+  A year's cost depends only on its season count (ArMDE:2550), never its order, so
+  the counts are lossless. Zero counts and an empty `LabYears` write no key.
+- Charged = Σ count × min(seasons, 3), saturating (`LabYears::charged_seasons`).
+  Darius, one year of four seasons over nine years, is worth 240 (ArMDE:2554, :2556).
+- Validation counts years, not seasons: the years used may not exceed the
+  post-Gauntlet years. The issue codes stay; their args are `years_used`/`years`.
+- `SCHEMA_VERSION` goes from 24 to 25. On load, a total `s` folds to
+  `four_seasons = s/4`, plus one year in bucket `s mod 4` when that is 1–3. That
+  keeps the old charge, including its `min(s, 4·years)` cap.
+- A total of 0 is dropped and nothing is stamped. If both keys are present, the new
+  one wins and the save is stamped. A malformed total (string, float, negative,
+  above u32, object, array, bool, null) is a load error, never a silent drop.
+
+---
+
 ## D87 — "Thread" → "Tread": a spell id renamed, old saves converted (Norbert, 2026-10-10)
 
 The book's heading at ArMDE:15410 reads "Sense the Feet That Tread the Earth".
@@ -988,11 +1008,12 @@ Answers to `design-p8-resync.md` § QUESTIONS.
    anyone." The four status Virtues carry `mythic_status: true`. A bought copy
    is the error `mythic_status_virtue_bought`, and the picker greys them out.
 8. **Post-Gauntlet lab seasons pack into full lab years** (ruling F1). A year
-   holds four seasons, all of which may be lab work (ArMDE:2482), and at most
+   holds four seasons, all of which may be lab work (ArMDE:2550), and at most
    three of them are charged. The stored total is read as packed into full
    years: charged = floor(s/4)*3 + min(s mod 4, 3), with s capped at 4 x years.
-   The book's Darius is worth 240 (ArMDE:2486, :2488). Storing real per-year
+   The book's Darius is worth 240 (ArMDE:2554, :2556). Storing real per-year
    seasons is open-todos row 56 (a save-format change, later).
+   *Superseded on storage by D88 (2026-10-10): the plan now stores year counts.*
 9. **Maximum age 500** (after-deadline answer 7). This is an app limit, not a
    rule. `rules/core/aging.json` declares `max_age: 500`, and a value below the
    first aging-roll age fails the load. The age, apparent-age and birth-year

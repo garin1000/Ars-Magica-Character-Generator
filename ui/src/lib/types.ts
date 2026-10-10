@@ -925,6 +925,20 @@ export interface LifeStageBudget {
 // `AbilityParamValue`, so the same combo writes both.
 export type NativeLanguage = { id: string } | { text: string };
 
+// How many post-Gauntlet years held one, two, three or four lab seasons — mirrors
+// the engine's `LabYears`. Each year costs 10 points per season from its 30, the
+// deduction stopping at the third season (`life_stage.rs::LabYears::charged_seasons`),
+// so a year of four costs what a year of three does. A zero count is no key.
+export interface LabYears {
+  one_season?: number;
+  two_seasons?: number;
+  three_seasons?: number;
+  four_seasons?: number;
+}
+
+/** One `LabYears` count, named by the field that holds it. */
+export type LabYearsBucket = keyof LabYears;
+
 // A character's life-stage choices — never its resolved numbers (see
 // `LifeStageBudget`). Its presence switches Ability funding from the typed
 // `xp_pool` to the derived life-stage blocks.
@@ -941,10 +955,9 @@ export interface LifeStagePlan {
   // every other figure derived from it. Omitted means the character stands AT its
   // Gauntlet, which is how a magus was built before the field existed.
   gauntlet_age?: number;
-  // Lab seasons charged against the yearly 30 points, totalled across every
-  // post-Gauntlet year (-10 each, and the deduction stops at the third season of any
-  // year, so a fourth is free). Omitted when zero.
-  post_gauntlet_lab_seasons?: number;
+  // The post-Gauntlet years spent partly or wholly in the lab, counted by how many
+  // lab seasons each held (row 56). Omitted when every count is zero.
+  post_gauntlet_lab_years?: LabYears;
   // How many of the post-Gauntlet points the player took as levels of spells rather
   // than experience; the rest are experience. Omitted when zero.
   post_gauntlet_spell_levels?: number;

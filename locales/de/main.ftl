@@ -367,12 +367,18 @@ xp-pool-block-after-gauntlet-tooltip = { $years } × { $rate } - { $lab } für L
 # wird — es wird hier ebenso bearbeitet wie im Details-Reiter.
 life-stage-age-label = Alter
 life-stage-gauntlet-age-label = Alter bei der Lehrlingsprüfung
-life-stage-lab-seasons-label = Laborquartale
+# Zeile 56: Laborarbeit nach der Lehrlingsprüfung als Zahl der Jahre je Anzahl
+# Laborquartale. „Quartal“ ist die Spielzeiteinheit (grundbegriffe.md).
+life-stage-lab-years-legend = Jahre mit Laborarbeit
+life-stage-lab-years-1-label = 1 Quartal
+life-stage-lab-years-2-label = 2 Quartale
+life-stage-lab-years-3-label = 3 Quartale
+life-stage-lab-years-4-label = 4 Quartale
 life-stage-spell-levels-label = Zauberstufen
-# Warum beide Felder darüber schreibgeschützt sind: die Aussage über einen
+# Warum die Felder darüber schreibgeschützt sind: die Aussage über einen
 # schreibgeschützten Zustand, den die Felder selbst nicht treffen können; sie ist
-# das `aria-describedby`-Ziel beider Felder.
-life-stage-post-gauntlet-no-years-note = Noch keine Jahre als Magus, daher können Laborquartale und Zauberstufen nichts aufnehmen.
+# ihr `aria-describedby`-Ziel.
+life-stage-post-gauntlet-no-years-note = Noch keine Jahre als Magus, daher können Jahre mit Laborarbeit und Zauberstufen nichts aufnehmen.
 life-stage-post-gauntlet-summary = Jahre als Magus: { $years }; { $points } Punkte = { $xp } EP + Zauberstufen ({ $levels })
 # Notausgang für eine von Hand bearbeitete Datei: ein Charakter, der über seine
 # Lebensabschnitte finanziert wird, darf keinen eingetragenen Vorrat führen, und die
@@ -1508,8 +1514,8 @@ issue-life_stage_age_before_childhood = Alter { $age } liegt innerhalb der Kindh
 issue-life_stage_age_before_gauntlet = Kein Magus legt die Lehrlingsprüfung mit { $age } Jahren ab: Sie kommt frühestens mit { $min } — Kindheit plus fünfzehn Jahre Lehrlingszeit.
 issue-life_stage_age_before_truncation = Alter { $age } ist zu jung, um { $min } Jahre aus Kindheit und lehrlingszeit-förmiger Ausbildung durchlaufen zu haben.
 issue-life_stage_gauntlet_age_after_age = Die Lehrlingsprüfung mit { $gauntlet_age } liegt für diesen Magus mit { $age } Jahren noch in der Zukunft; die Jahre als Magus werden ab der Lehrlingsprüfung gezählt.
-issue-life_stage_lab_seasons_out_of_range = { $seasons } Quartale Laborarbeit sind mehr als die { $max } Quartale in den Jahren als Magus ({ $years }).
-issue-life_stage_lab_seasons_without_years = Eingetragene Quartale Laborarbeit: { $seasons }; dieser Charakter hat aber keine Jahre als Magus, in denen sie stattfinden könnten.
+issue-life_stage_lab_seasons_out_of_range = Jahre mit Laborarbeit ({ $years_used }) sind mehr als die Jahre als Magus ({ $years }).
+issue-life_stage_lab_seasons_without_years = Eingetragene Jahre mit Laborarbeit: { $years_used }; dieser Charakter hat aber keine Jahre als Magus, in denen sie stattfinden könnten.
 issue-life_stage_spell_level_split_exceeds_points = Die aus den Jahren als Magus genommenen Zauberstufen ({ $levels }) übersteigen, was diese Jahre gewähren: Sie sind { $points } Punkte wert, die zwischen Erfahrung und Zauberstufen aufzuteilen sind.
 issue-life_stage_native_language_unset = Wähle eine Muttersprache: der größte Erfahrungsblock der Kindheit kann für nichts anderes ausgegeben werden.
 issue-life_stage_native_language_missing_score = Kein Wert in { $language } gekauft, daher bleibt die Erfahrung der Kindheit für die Muttersprache unausgegeben.

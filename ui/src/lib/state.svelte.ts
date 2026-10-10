@@ -60,6 +60,7 @@ import type {
   DerivedTotals,
   EffectiveScores,
   Entity,
+  LabYearsBucket,
   LoadoutState,
   LocalizedRuleset,
   LongevitySource,
@@ -96,7 +97,7 @@ const VALIDATE_DEBOUNCE_MS = 150;
  * Mirrors `arm_rules::SCHEMA_VERSION` by hand; the Rust constant is the source
  * and `the_frontend_mirrors_the_engine_schema_version` pins the two together.
  */
-export const SCHEMA_VERSION = 24;
+export const SCHEMA_VERSION = 25;
 
 /**
  * The saga year a document starts at when nothing else says otherwise — the
@@ -1293,7 +1294,7 @@ class AppStore {
    * **A pure mode set: it destroys no entity data in either direction.** It used to
    * destroy plenty — entering the guided mode zeroed a hand-typed `xp_pool`, and
    * leaving it deleted the whole `life_stages` plan (native language, Gauntlet age,
-   * lab seasons, spell levels, childhood package) — so a round trip lost everything
+   * lab years, spell levels, childhood package) — so a round trip lost everything
    * typed on either side, unprompted and unrecoverable. That was not a policy but a
    * consequence of the mode being *inferred* from the plan's presence: discarding
    * the plan was the only way to record "pool". Schema 16 stores the mode, so both
@@ -1391,12 +1392,28 @@ class AppStore {
   }
 
   /**
-   * Set (or clear) the lab seasons charged against the post-Gauntlet years — 10
-   * points each, and at most three a year count (the third already takes the whole
-   * 30, so a fourth is free). Zero deletes the key, like {@link setGauntletAge}.
+   * Set (or clear) how many post-Gauntlet years held `bucket`'s number of lab
+   * seasons (row 56). A blank, zero or non-numeric count deletes that bucket, and
+   * clearing the last one drops the whole key — the sparse shape the engine writes
+   * (`LabYears::is_empty`), so a cleared field leaves no `{}` behind.
+   *
+   * A no-op when no plan exists, like {@link setGauntletAge}.
    */
-  setPostGauntletLabSeasons(seasons: number | null): void {
-    this.#setPlanCount('post_gauntlet_lab_seasons', seasons);
+  setPostGauntletLabYears(bucket: LabYearsBucket, count: number | null): void {
+    const plan = this.entity.life_stages;
+    if (!plan) return;
+    const labYears = { ...plan.post_gauntlet_lab_years };
+    if (count != null && Number.isFinite(count) && count > 0) {
+      labYears[bucket] = clampInt(count, 1, U32_MAX);
+    } else {
+      delete labYears[bucket];
+    }
+    if (Object.keys(labYears).length > 0) {
+      plan.post_gauntlet_lab_years = labYears;
+    } else {
+      delete plan.post_gauntlet_lab_years;
+    }
+    this.#scheduleValidate();
   }
 
   /**
@@ -1410,16 +1427,13 @@ class AppStore {
 
   /**
    * Write one of the plan's optional u32 counts, deleting the key when the input is
-   * blank, zero or not a number. The three post-Gauntlet fields share this shape:
-   * absent is the meaningful default for every one of them, so a sparse save is the
-   * canonical one.
+   * blank, zero or not a number. The flat post-Gauntlet fields share this shape:
+   * absent is the meaningful default for each of them, so a sparse save is the
+   * canonical one. (The lab years are a nested object and have their own setter.)
    *
    * A no-op when no plan exists, exactly like {@link setNativeLanguage}.
    */
-  #setPlanCount(
-    field: 'gauntlet_age' | 'post_gauntlet_lab_seasons' | 'post_gauntlet_spell_levels',
-    value: number | null,
-  ): void {
+  #setPlanCount(field: 'gauntlet_age' | 'post_gauntlet_spell_levels', value: number | null): void {
     const plan = this.entity.life_stages;
     if (!plan) return;
     if (value != null && Number.isFinite(value) && value > 0) {

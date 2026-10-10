@@ -202,8 +202,8 @@ impl fmt::Display for IssueSeverity {
 /// | `life_stage_age_before_gauntlet` | error | experience | `age`, `min` |
 /// | `life_stage_age_before_truncation` | error | experience | `age`, `min` |
 /// | `life_stage_gauntlet_age_after_age` | error | experience | `gauntlet_age`, `age` |
-/// | `life_stage_lab_seasons_out_of_range` | error | experience | `seasons`, `max`, `years` |
-/// | `life_stage_lab_seasons_without_years` | error | experience | `seasons` |
+/// | `life_stage_lab_seasons_out_of_range` | error | experience | `years_used`, `years` |
+/// | `life_stage_lab_seasons_without_years` | error | experience | `years_used` |
 /// | `life_stage_spell_level_split_exceeds_points` | error | experience | `levels`, `points` |
 /// | `life_stage_native_language_unset` | error | experience | (none) |
 /// | `life_stage_native_language_missing_score` | warning | experience | `language` |
@@ -672,28 +672,26 @@ impl ValidationIssue {
     /// would otherwise absorb in silence.
     pub const CODE_LIFE_STAGE_GAUNTLET_AGE_AFTER_AGE: &'static str =
         "life_stage_gauntlet_age_after_age";
-    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: more lab seasons are
-    /// charged against the post-Gauntlet years than those years can hold. Only three
-    /// seasons a year cost anything — the deduction runs "to a minimum of 0 if three
-    /// or four seasons are spent on lab work" (ArMDE:2550) — so the ceiling
-    /// is `max_charged_lab_seasons_per_year × post_gauntlet_years`.
-    /// [`crate::life_stage::LifeStageRules::budget`] caps the total there, making the
-    /// surplus free rather than an error of its own.
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the plan's lab years
+    /// ([`crate::life_stage::LabYears::years_used`]) count more years than the
+    /// character has lived as a magus. Each lab year is one post-Gauntlet year, and
+    /// each costs at most what it grants — "to a minimum of 0 if three or four
+    /// seasons are spent on lab work" (ArMDE:2550) — so the surplus years would be
+    /// absorbed by that floor in silence rather than raising an error of their own.
     ///
     /// Emitted only while the character HAS years as a magus; with none, the ceiling
     /// is zero for a different reason entirely and
     /// [`ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS`] says so.
     pub const CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE: &'static str =
         "life_stage_lab_seasons_out_of_range";
-    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: lab seasons recorded for a
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: lab years recorded for a
     /// character with no year as a magus to work them in — a magus standing at its
     /// Gauntlet, whose post-Gauntlet span is empty.
     ///
     /// Split from [`ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE`]
-    /// because the two faults differ: over the ceiling, the player has miscounted how
-    /// many seasons a year may be charged for; with no years, the per-year rule is
-    /// beside the point and the missing span is the whole story. The same rule
-    /// (ArMDE:2550) produces both.
+    /// because the two faults differ: over the ceiling, the player has counted more
+    /// lab years than the span holds; with no years, the missing span is the whole
+    /// story. The same rule (ArMDE:2550) produces both.
     pub const CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS: &'static str =
         "life_stage_lab_seasons_without_years";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: more of a magus's yearly

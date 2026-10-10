@@ -3141,24 +3141,25 @@ chain).
   `Ruleset::from_sources` — no separate `ruleset/integrity.rs` check needed.
 - DTO: `arm_app::effective_dto::EffectiveScores::granted_realm_associations`
   (`Vec<ResolvedRealmEntry>`, mirrored in `ui/src/lib/types.ts`) — the
-  granted-row counterpart to `realm_associations`, `index`-keyed into
-  `granted_selections` rather than `Entity::selections`. `fixed` is always
+  granted-row counterpart to `realm_associations`. Its `index` is a
+  same-`item_ref` occurrence count (first copy `0`, second `1`, …), not a
+  position in `granted_selections`, because a position does not survive the
+  frontend's virtue/flaw column split. `fixed` is always
   `true`: a granted row has no stable `entity.selections` index for the
   player to attach an override control to, unlike a bought row's. Consumed by
   `export/sections.rs::Doc::item_rows` for free (it already calls
-  `resolve_realm` on the granted table exactly like the bought one); the live
-  Svelte V/F editor does not yet render a granted row's realm at all
-  (`docs/open-todos.md` row 55's own note) — left for a follow-up slice.
+  `resolve_realm` on the granted table exactly like the bought one), and by
+  the live Svelte V/F editor (`VirtueFlawTab.svelte::grantedRealmEntry`),
+  which shows a granted row's realm read-only (commit `39799701`).
 - Tests: `crates/arm-rules/tests/row55_grant_realm.rs` (the stamping chain,
   per source, the mythic-type cases, the unaffected/bought-selection guards,
   load-time integrity); `crates/arm-rules/tests/export_golden.rs`
   (`a_granted_supernatural_entrys_realm_rides_the_granted_table_text_cell`);
   `crates/arm-app/src/effective_dto.rs` tests
   (`granted_realm_associations_surfaces_a_stated_per_grant_realm`,
-  `granted_realm_associations_is_empty_for_a_bought_only_entity`).
-- **Not modelled**: the live Svelte V/F editor does not show a granted row's
-  realm (bought rows do, via the existing `realm-fixed`/`<select>` control).
-  Recorded as an open question, not invented.
+  `granted_realm_associations_is_empty_for_a_bought_only_entity`);
+  `ui/src/lib/components/VirtueFlawTab.test.ts` ("row 55 granted realm row",
+  including the `[A, B, B]` occurrence-not-position case).
 
 #### Selection multiplicity — one copy per named power
 > "This Flaw may be taken once for each power the character possesses."
@@ -8430,7 +8431,7 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `skip_serializing_if`, exactly like `apprenticeship`: `ArMDE:2432` calls these "two
   **more** periods", so a ruleset with no Hermetic magi ships neither block and writes
   neither key. The player's three choices live on `LifeStagePlan` (`gauntlet_age`,
-  `post_gauntlet_lab_seasons`, `post_gauntlet_spell_levels`), the derived figures on
+  `post_gauntlet_lab_years`, `post_gauntlet_spell_levels`), the derived figures on
   `LifeStageBudget` (`gauntlet_age`, `post_gauntlet_years`, `post_gauntlet_points`,
   `post_gauntlet_spell_levels`, `post_gauntlet_xp`).
 - **Points, not experience points.** `ArMDE:2539` makes each point fungible — "an experience
@@ -8461,10 +8462,9 @@ Abilities are bought with experience earned in blocks, not from one bank:
   gauntlet_age        = min(plan.gauntlet_age ?? age, age)     # magi only
   later_life_years    = gauntlet_age − childhood.years − apprenticeship.years
   post_gauntlet_years = age − gauntlet_age
-  seasons             = min(plan.post_gauntlet_lab_seasons, 4 × post_gauntlet_years)
-  charged_seasons     = (seasons ÷ 4) × max_charged_lab_seasons_per_year
-                        + min(seasons mod 4, max_charged_lab_seasons_per_year)
-                        # F1 (Norbert 2026-10-03): packed into full lab years
+  charged_seasons     = Σ over n in 1..4 of
+                          lab_years[n seasons] × min(n, max_charged_lab_seasons_per_year)
+                        # row 56 / D88: LabYears::charged_seasons
   post_gauntlet_points      = post_gauntlet_years × points_per_year
                               − charged_seasons × lab_season_cost
   post_gauntlet_spell_levels = min(plan.post_gauntlet_spell_levels, post_gauntlet_points)
@@ -8496,12 +8496,23 @@ Abilities are bought with experience earned in blocks, not from one bank:
     `gauntlet_age: 25` at age 60 silently lose 35 later-life years (525 experience
     points). It is clamped to the age because Advisory and Silent validation do not
     block a Gauntlet later than the character's own.
-- **`post_gauntlet_lab_seasons` is one total of *charged* seasons, not a per-year list.**
-  The deduction stops at the third season of a year (`ArMDE:2550`), so every legal per-year
-  distribution totals at most `3 × years`, every total in that range is realizable, and
-  all of them cost the same — one number is lossless. It must count *charged* seasons:
-  sixteen seasons actually worked cost 0 points across four years but 30 across five, so
-  a single total of worked seasons could not tell those apart.
+- **`post_gauntlet_lab_years` counts years by their lab seasons, not a per-year list
+  (row 56, D88).** `LabYears { one_season, two_seasons, three_seasons, four_seasons }`
+  records how many post-Gauntlet years held 1, 2, 3 or 4 lab seasons. A year's cost
+  depends only on how many seasons it held (`ArMDE:2550`), never on when it fell, so the
+  four counts are lossless; a zero count writes no key and an all-zero `LabYears` writes
+  no field. It replaced the single season total (D83.8/F1), which could not represent an
+  uneven split. `LabYears::charged_seasons` charges each year up to
+  `max_charged_lab_seasons_per_year`, saturating; `LabYears::years_used` is the
+  saturating sum of the counts. The book's Darius (`ArMDE:2554`, :2556; 9 years, one of
+  them four lab seasons) is worth 240.
+- **Migration 24 → 25** (`migration.rs`, a raw-`Value` fold before the typed parse): a
+  stored total `s` becomes `four_seasons = s ÷ 4`, plus one year in bucket `s mod 4`
+  when that is 1–3. That keeps the old charge (`⌊s/4⌋·3 + min(s mod 4, 3)`), including
+  the old `min(s, 4·years)` cap, since past it both readings give 0 points. A total of 0
+  is dropped with no stamp; if both keys are present the new one wins and the save is
+  stamped; a malformed total (string, float, negative, above u32, object, array, bool,
+  null) is a load error, never a silent drop.
 - **The post-Gauntlet experience joins the *general* pool — it is not a block of its
   own.** `effective/xp.rs`'s `xp_allocation` selects `base_general` as
   `apprenticeship_xp + post_gauntlet_xp` for a Hermetically trained entity
@@ -8562,17 +8573,15 @@ Abilities are bought with experience earned in blocks, not from one bank:
   (Optional)**" and on any other plan the values are ignored outright:
   - `life_stage_gauntlet_age_after_age` (`gauntlet_age`, `age`) — a Gauntlet in the
     character's future.
-  - `life_stage_lab_seasons_out_of_range` (`seasons`, `max`, `years`) — more lab
-    seasons than the `4 × post_gauntlet_years` the span holds (`ArMDE:2550`, "three or
-    four seasons"; F1, Norbert 2026-10-03). The book's Darius (`ArMDE:2554`, :2488; 9
-    years, one full lab year) is worth 240, because the stored total is read as packed
-    into full lab years by `charged_lab_seasons` in `crates/arm-rules/src/life_stage.rs`.
-    Recording seasons per year is planned; it needs a save-format change. The message
-    names `max` as the seasons the years hold, never as seasons that can be charged.
-  - `life_stage_lab_seasons_without_years` (`seasons`) — the same rule (`ArMDE:2550`) on a
-    plan with **no** post-Gauntlet year, which is a different fault told a different
-    way. The branch is on `post_gauntlet_years == 0`, not on the ceiling being 0: a
-    zero span means the seasons have nowhere to happen, and the per-year charging
+  - `life_stage_lab_seasons_out_of_range` (`years_used`, `years`) — more years of lab
+    work (`LabYears::years_used`) than the `post_gauntlet_years` the span holds
+    (`ArMDE:2550`; row 56, D88). Validation counts years, not seasons: each count is a
+    year of the span whatever its seasons, which is the old `seasons > 4 × years`
+    trigger restated.
+  - `life_stage_lab_seasons_without_years` (`years_used`) — the same rule (`ArMDE:2550`)
+    on a plan with **no** post-Gauntlet year, which is a different fault told a
+    different way. The branch is on `post_gauntlet_years == 0`, not on the ceiling being
+    0: a zero span means the lab years have nowhere to happen, and the per-year charging
     limit the sibling message used to recite explains nothing about it. Both
     messages were shortened at the same time — the "the third already takes the whole
     30, so a fourth is free" gloss belonged to the field's own

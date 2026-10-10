@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 
 use crate::characteristics::Characteristic;
 use crate::effective::{effective_characteristic_score, minimal_aging_points_for_drops};
-use crate::life_stage::NativeLanguage;
+use crate::life_stage::{LabYears, NativeLanguage};
 use crate::ruleset::Ruleset;
 use crate::types::{
     AURA_MODIFIER_MAX, AURA_MODIFIER_MIN, AbilityFunding, AbilityParameterValue, Entity, Id,
@@ -240,7 +240,20 @@ use crate::validation::birth_year_in_saga_year;
 /// parameter, so [`fold_legacy_tread_spell_id`] walks only `entity.spells`,
 /// and the version is stamped only when something was actually found, the
 /// same dispatch-on-presence rule [`fold_legacy_bard_id`] uses.
-pub const SCHEMA_VERSION: u32 = 24;
+///
+/// Bumped 24 → 25 for row 56 (`docs/open-todos.md`): the one stored total
+/// `life_stages.post_gauntlet_lab_seasons`, read as packed into full lab years
+/// (F1), becomes year counts,
+/// [`crate::life_stage::LifeStagePlan::post_gauntlet_lab_years`], which can also
+/// hold an uneven split. [`fold_legacy_lab_seasons`] turns `s` into `s / 4` years
+/// of four seasons plus one year of `s % 4` when that is 1–3 — the packing F1
+/// already charged, so the charge is preserved (ArMDE:2550). Dispatch is on the
+/// legacy key, before the typed parse. A malformed value fails the load, as the
+/// old `u32` field did, because `LifeStagePlan` does not deny unknown fields and
+/// a silent drop would lose the charge. A plan already carrying the new key keeps
+/// it and the old key is dropped. The version is stamped only when a non-zero
+/// total was consumed; a 0 carried no lab work and is dropped without a stamp.
+pub const SCHEMA_VERSION: u32 = 25;
 
 /// `(ability, original text, resolved catalogue id)` — see
 /// [`LoadedEntity::migrated_catalogued_parameters`]. A named alias rather than
@@ -746,6 +759,59 @@ fn wrap_legacy_native_language(value: &mut serde_json::Value) -> bool {
     true
 }
 
+/// The pre-25 plan key holding one total of post-Gauntlet lab seasons.
+const LEGACY_LAB_SEASONS_KEY: &str = "post_gauntlet_lab_seasons";
+
+/// The seasons in a year, for unpacking the pre-25 total into full lab years.
+const SEASONS_PER_YEAR: u32 = 4;
+
+/// The year counts F1's packing read a pre-25 total of `seasons` as: full lab
+/// years of four seasons, then one year of the remainder.
+fn lab_years_from_packed_seasons(seasons: u32) -> LabYears {
+    let mut lab_years = LabYears {
+        four_seasons: seasons / SEASONS_PER_YEAR,
+        ..LabYears::default()
+    };
+    match seasons % SEASONS_PER_YEAR {
+        1 => lab_years.one_season = 1,
+        2 => lab_years.two_seasons = 1,
+        3 => lab_years.three_seasons = 1,
+        _ => {}
+    }
+    lab_years
+}
+
+/// Folds a pre-25 `life_stages.post_gauntlet_lab_seasons` total into
+/// `post_gauntlet_lab_years` before the typed parse (row 56, 24 → 25 — see
+/// [`SCHEMA_VERSION`]). The legacy key is always removed.
+///
+/// A value that is not a `u32` is an `Err`, never a drop: the old field failed the
+/// load on it, and dropping it would lose the lab charge in silence. A plan that
+/// already carries the new key keeps it. Returns whether a non-zero total was
+/// consumed, so the caller stamps [`SCHEMA_VERSION`] only then.
+fn fold_legacy_lab_seasons(value: &mut serde_json::Value) -> Result<bool, serde_json::Error> {
+    let Some(plan) = value
+        .get_mut("life_stages")
+        .and_then(serde_json::Value::as_object_mut)
+    else {
+        return Ok(false);
+    };
+    let Some(legacy) = plan.remove(LEGACY_LAB_SEASONS_KEY) else {
+        return Ok(false);
+    };
+    let seasons: u32 = serde_json::from_value(legacy)?;
+    if seasons == 0 {
+        return Ok(false);
+    }
+    if !plan.contains_key("post_gauntlet_lab_years") {
+        plan.insert(
+            "post_gauntlet_lab_years".into(),
+            serde_json::to_value(lab_years_from_packed_seasons(seasons))?,
+        );
+    }
+    Ok(true)
+}
+
 /// Turns a typed native language naming a value of the native-language Ability's
 /// own catalogue — trimmed, case-folded, in any locale — into that value (N4b).
 /// The [`fold_catalogue_matching`] rule for the plan: value-driven and idempotent,
@@ -1208,6 +1274,7 @@ pub fn load_entity_migrating(
         .and_then(|obj| obj.remove("talisman_attunements"));
     wrap_legacy_ability_parameters(&mut value);
     let native_language_wrapped = wrap_legacy_native_language(&mut value);
+    let lab_seasons_folded = fold_legacy_lab_seasons(&mut value)?;
     let equipment_loadout_absent = fold_legacy_equipment_loadout(&mut value);
     // Dispatch on the key's absence, never on the recorded `schema_version`: a
     // hand-edited save may carry any version alongside either shape. Read before the
@@ -1272,6 +1339,11 @@ pub fn load_entity_migrating(
 
     if native_language_wrapped {
         // N4b: a bare-string native language is the pre-23 shape, wrapped above.
+        entity.schema_version = SCHEMA_VERSION;
+    }
+
+    if lab_seasons_folded {
+        // Row 56: a non-zero pre-25 lab-season total, folded into year counts above.
         entity.schema_version = SCHEMA_VERSION;
     }
 
@@ -2206,7 +2278,7 @@ mod tests {
     /// talisman folds do. The aging log itself is still untouched.
     #[test]
     fn a_schema_fourteen_save_loads_without_migration() {
-        assert_eq!(SCHEMA_VERSION, 24);
+        assert_eq!(SCHEMA_VERSION, 25);
         let schema_14 = r#"{
           "schema_version": 14,
           "ruleset": { "id": "arm5-core", "version": "2024.1" },
@@ -2238,13 +2310,13 @@ mod tests {
         assert_eq!(loaded.entity.schema_version, SCHEMA_VERSION);
     }
 
-    /// The current-version pin, advanced at every bump (most recently 23 → 24 for
-    /// D87's `spell.sense_the_feet_that_thread_the_earth` -> `...tread_the_earth`
-    /// id rename — see [`SCHEMA_VERSION`]'s own doc comment for why that bump owns
-    /// a fold, unlike C5a's 18 → 19 pure marker).
+    /// The current-version pin, advanced at every bump (most recently 24 → 25 for
+    /// row 56's lab-season total -> lab-year counts fold — see [`SCHEMA_VERSION`]'s
+    /// own doc comment for why that bump owns a fold, unlike C5a's 18 → 19 pure
+    /// marker).
     #[test]
-    fn schema_version_is_24() {
-        assert_eq!(SCHEMA_VERSION, 24);
+    fn schema_version_is_25() {
+        assert_eq!(SCHEMA_VERSION, 25);
     }
 
     /// C5a's bump is a **pure version marker**: no shape moved, so no fold

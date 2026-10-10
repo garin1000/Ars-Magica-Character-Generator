@@ -40,7 +40,7 @@ pub mod house;
 pub mod life_stage;
 #[doc(inline)]
 pub use life_stage::{
-    AbilityRequirement, AbilityRequirementKind, ApprenticeshipRules, ChildhoodRules,
+    AbilityRequirement, AbilityRequirementKind, ApprenticeshipRules, ChildhoodRules, LabYears,
     LaterLifeRules, LifeStageBudget, LifeStagePlan, LifeStageRules, MagusMinimumAbility,
     NativeLanguage, PostApprenticeshipRules, magus_minimum_abilities,
 };

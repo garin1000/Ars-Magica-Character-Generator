@@ -260,13 +260,15 @@ fn no_example_save_names_the_old_spell_id() {
 
 // --- 3. Migration: an old save's known spell becomes the new id ------------
 
-/// The target this bump had to reach: one past today's.
+/// The target this bump had to reach was 24, one past N4b's 23. Row 56 has
+/// since moved the constant to 25 for the lab-year counts, so this tracks the
+/// current value; D87's own contribution is still the 23 -> 24 step.
 #[test]
 fn schema_version_target_is_one_past_todays() {
     assert_eq!(
-        SCHEMA_VERSION, 24,
-        "D87 bumps SCHEMA_VERSION past N4b's 23; today's build is still at \
-         {SCHEMA_VERSION}"
+        SCHEMA_VERSION, 25,
+        "D87 and row 56 bump SCHEMA_VERSION past N4b's 23; today's build is \
+         at {SCHEMA_VERSION}"
     );
 }
 
@@ -346,11 +348,11 @@ fn migrating_the_spell_id_keeps_its_other_fields() {
     assert!(spell.within_focus);
 }
 
-/// A save already written by a build at the new version (id already the new
-/// one, `schema_version` already the new target) must load with NO further
-/// change.
+/// A save written by a build at D87's version (24: id already the new one) must
+/// load with NO further change — no fold fires, so its version is not
+/// re-stamped either.
 #[test]
-fn a_save_already_at_the_new_version_with_the_new_id_is_untouched() {
+fn a_save_already_at_d87s_version_with_the_new_id_is_untouched() {
     let current = format!(
         r#"{{
       "schema_version": 24,
@@ -370,9 +372,8 @@ fn a_save_already_at_the_new_version_with_the_new_id_is_untouched() {
     );
     assert!(
         result.is_ok(),
-        "a save already claiming the new SCHEMA_VERSION (24) must be accepted \
-         once D87 bumps the constant; today it is refused because the build's \
-         own SCHEMA_VERSION is still {SCHEMA_VERSION}: {result:?}"
+        "a save written at D87's version (24) must be accepted by this build \
+         (SCHEMA_VERSION {SCHEMA_VERSION}): {result:?}"
     );
     let entity = result.unwrap().entity;
     assert_eq!(

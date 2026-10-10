@@ -4125,7 +4125,10 @@ mod tests {
         let mut annotated = planned_companion();
         annotated.life_stages = Some(crate::life_stage::LifeStagePlan {
             gauntlet_age: Some(20),
-            post_gauntlet_lab_seasons: 4,
+            post_gauntlet_lab_years: crate::life_stage::LabYears {
+                four_seasons: 1,
+                ..Default::default()
+            },
             post_gauntlet_spell_levels: 100,
             ..annotated.life_stages.clone().expect("a plan")
         });
@@ -4141,7 +4144,10 @@ mod tests {
         let rs = life_stage_ruleset();
         let mut magus = planned_magus();
         magus.life_stages = Some(crate::life_stage::LifeStagePlan {
-            post_gauntlet_lab_seasons: 4,
+            post_gauntlet_lab_years: crate::life_stage::LabYears {
+                four_seasons: 1,
+                ..Default::default()
+            },
             post_gauntlet_spell_levels: 100,
             ..magus.life_stages.clone().expect("a plan")
         });

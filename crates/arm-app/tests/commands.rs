@@ -340,7 +340,7 @@ fn sample_entity_with_characteristics_and_abilities_validates() {
     // The shipped sample now carries characteristics, ability scores, and a bank,
     // and is kept at the current schema version so a save/load round trip on it is
     // an identity (see `save_then_load_round_trips_with_byte_stable_canonical_json`).
-    assert_eq!(entity.schema_version, 24);
+    assert_eq!(entity.schema_version, 25);
     assert!(!entity.characteristics.is_empty());
     assert!(!entity.ability_scores.is_empty());
     let result = validate_loaded(&entity, &ruleset, ValidationMode::Enforced);
@@ -1002,7 +1002,7 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     .unwrap()
     .entity;
     assert_eq!(
-        migrated.schema_version, 24,
+        migrated.schema_version, 25,
         "the field move bumps the schema"
     );
     let talisman = migrated
@@ -1020,7 +1020,7 @@ fn legacy_talisman_save_migrates_through_the_real_load_path() {
     let written = fs::read_to_string(&path).unwrap();
     assert!(!written.contains("talisman_attunements"), "got: {written}");
     assert!(written.contains("\"talisman\""), "got: {written}");
-    assert!(written.contains("\"schema_version\": 24"), "got: {written}");
+    assert!(written.contains("\"schema_version\": 25"), "got: {written}");
 }
 
 /// C8: the app's load door is what carries the user's configured default into the
@@ -1100,7 +1100,7 @@ fn a_schema_20_save_keeps_a_within_focus_mark_through_migration() {
         vec![Selection::new(Id::new("virtue.bard"))],
         "fixture premise: the 20 -> 21 fold ran"
     );
-    assert_eq!(migrated.schema_version, 24);
+    assert_eq!(migrated.schema_version, 25);
     assert_eq!(migrated.spells.len(), 1);
     assert!(
         migrated.spells[0].within_focus,
@@ -1185,7 +1185,7 @@ fn save_stamps_current_schema_version() {
     save_entity_to_path(&entity, &path).unwrap();
     let written = fs::read_to_string(&path).unwrap();
     assert!(
-        written.contains("\"schema_version\": 24"),
+        written.contains("\"schema_version\": 25"),
         "save must stamp the current schema version, got: {written}"
     );
 }
@@ -1745,7 +1745,7 @@ fn arts_round_trip_and_puissant_art_reports_bonus() {
     )
     .unwrap()
     .entity;
-    assert_eq!(reloaded.schema_version, 24);
+    assert_eq!(reloaded.schema_version, 25);
     assert_eq!(reloaded.art_scores, entity.art_scores);
 }
 
@@ -3701,7 +3701,14 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         // optional field here is: `skip_serializing_if` would otherwise drop them
         // from the serialization and hide them from the check.
         gauntlet_age: Some(25),
-        post_gauntlet_lab_seasons: 13,
+        // Every bucket non-zero: a zero count writes no key, so an empty bucket would
+        // drop its name from the serialization and hide a rename from the check.
+        post_gauntlet_lab_years: arm_rules::LabYears {
+            one_season: 1,
+            two_seasons: 2,
+            three_seasons: 3,
+            four_seasons: 4,
+        },
         post_gauntlet_spell_levels: 300,
     };
     let budget = arm_rules::LifeStageBudget {
@@ -3712,8 +3719,8 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         later_life_xp: 300,
         apprenticeship_years: 15,
         apprenticeship_xp: 240,
-        // A magus of 60 gauntleted at 25, ten of its 13 lab seasons charged (three
-        // full lab years of three, plus one: F1) and 300 of
+        // A magus of 60 gauntleted at 25, ten lab seasons charged (three years of
+        // four seasons, three charged each, plus one year of one) and 300 of
         // the remaining points taken as spell levels. Unlike the plan's choices
         // above, these five are unconditional fields of the derived budget: the
         // engine sends them on every payload, so `types.ts` mirrors them here.
@@ -4803,7 +4810,7 @@ fn the_examples_keep_a_genuine_pre_migration_fixture() {
     // And the current fixture is genuinely current, so the round-trip test above is
     // comparing like with like.
     let current = fs::read_to_string(repo_root().join("examples/companion_sample.json")).unwrap();
-    assert!(current.contains("\"schema_version\": 24"), "got {current}");
+    assert!(current.contains("\"schema_version\": 25"), "got {current}");
     assert!(current.contains("\"saga_year\": 1220"), "got {current}");
 }
 

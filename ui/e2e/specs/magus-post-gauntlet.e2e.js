@@ -12,10 +12,10 @@
 //
 //   later life    (25 - 5 - 15) x 15 = 75   — unchanged by the years that followed
 //   post-Gauntlet 60 - 25 = 35 years  = 35 x 30 = 1050 points
-//   lab work      13 seasons = 3 full lab years (3 charged each) + 1 = 10 charged
+//   lab work      3 years of 4 seasons (3 charged each) + 1 year of 1 = 10 charged
 //                                     = 1050 - 100 = 950 points
-//                 (F1, Norbert 2026-10-03: a year holds 4 seasons, 3 charged, and
-//                 the stored total packs into full lab years; 35 years hold 140)
+//                 (row 56: stored as years per number of seasons, each year charging
+//                 at most 3; the years of lab work cannot outnumber the 35 years)
 //   the split     300 levels of spells → 650 experience
 //   general pool  240 apprenticeship + 650 = 890
 //   spell levels  120 profile base + 300 = 420
@@ -25,7 +25,7 @@
 // span behind it.
 //
 // TWO STEPS, NOT ONE (Slice 2 of the guided-creation plan). Every field of the plan —
-// age, Gauntlet age, lab seasons, the spell-level split, the native language — is
+// age, Gauntlet age, years of lab work, the spell-level split, the native language — is
 // typed on the wizard's `experience` step, which mounts `LifeStagePanel` alone, and
 // every one of its findings is an `experience`-phase finding, so that step's Next is
 // the gate they trip. The XP bar those numbers feed (the general pool's total, the
@@ -61,7 +61,11 @@ const FUNDING_LIFE_STAGES = '[data-testid="ability-funding-life_stages"]';
 // step; the GAUNTLET age stays an input here, because it belongs to the plan.
 const AGE_READOUT = '[data-testid="age-readout"]';
 const GAUNTLET_AGE_INPUT = '[data-testid="life-stage-gauntlet-age-input"]';
-const LAB_SEASONS_INPUT = '[data-testid="life-stage-lab-seasons-input"]';
+// Row 56: one count of years per number of lab seasons those years held.
+const LAB_YEARS_1_INPUT = '[data-testid="life-stage-lab-years-1-input"]';
+const LAB_YEARS_2_INPUT = '[data-testid="life-stage-lab-years-2-input"]';
+const LAB_YEARS_3_INPUT = '[data-testid="life-stage-lab-years-3-input"]';
+const LAB_YEARS_4_INPUT = '[data-testid="life-stage-lab-years-4-input"]';
 const SPELL_LEVELS_INPUT = '[data-testid="life-stage-spell-levels-input"]';
 const NATIVE_LANGUAGE = '[data-testid="native-language-input"]';
 const GAUNTLET_NOTE = '[data-testid="life-stage-gauntlet-note"]';
@@ -119,11 +123,18 @@ describe('a magus past its Gauntlet', () => {
     // Until 6b5 a note here ended "an older magus should use the experience pool
     // instead" — the guided flow disowning the very years this slice models. That note
     // was removed outright by manual-testing-findings #21, so the claim it made in
-    // words is now made by the FIELDS and the read-out: the three inputs the points
-    // come from are offered, and the engine's own post-Gauntlet summary prices them at
-    // 30 a year (`ArMDE:2539`) — asserted with real numbers by the next test.
+    // words is now made by the FIELDS and the read-out: the inputs the points come
+    // from are offered, and the engine's own post-Gauntlet summary prices them at 30 a
+    // year (`ArMDE:2539`) — asserted with real numbers by the next test.
     expect(await $(GAUNTLET_NOTE).isExisting()).toBe(false);
-    for (const field of [GAUNTLET_AGE_INPUT, LAB_SEASONS_INPUT, SPELL_LEVELS_INPUT]) {
+    for (const field of [
+      GAUNTLET_AGE_INPUT,
+      LAB_YEARS_1_INPUT,
+      LAB_YEARS_2_INPUT,
+      LAB_YEARS_3_INPUT,
+      LAB_YEARS_4_INPUT,
+      SPELL_LEVELS_INPUT,
+    ]) {
       expect(await $(field).isExisting()).toBe(true);
     }
   });
@@ -145,51 +156,54 @@ describe('a magus past its Gauntlet', () => {
     // and the Abilities step is where they are read — see below.)
   });
 
-  it('charges lab seasons against the yearly points, and refuses more than the years hold', async () => {
-    await replaceValue(await $(LAB_SEASONS_INPUT), '13');
+  it('charges lab years against the yearly points, and refuses more than the years hold', async () => {
+    await replaceValue(await $(LAB_YEARS_4_INPUT), '3');
+    await replaceValue(await $(LAB_YEARS_1_INPUT), '1');
 
-    // 13 seasons pack as 3 full lab years plus 1 (F1), so 10 are charged at 10
-    // points each: 1050 - 100 = 950.
+    // Three years of four seasons charge 3 each and the year of one charges 1, so 10
+    // are charged at 10 points each: 1050 - 100 = 950.
     await browser.waitUntil(async () => (await textOf(SUMMARY)).includes('950 points'), {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'thirteen lab seasons (ten charged) should take 100 off the 1050',
+      timeoutMsg: 'four years of lab work (ten seasons charged) should take 100 off the 1050',
     });
     // (The XP bar shows the deduction itself, derived from the engine's points rather
-    // than recomputed from the season count — read on the Abilities step, which is
-    // where the bar is mounted.)
+    // than recomputed from the counts — read on the Abilities step, which is where the
+    // bar is mounted.)
 
-    // A year holds four seasons (`ArMDE:2550`, "three or four seasons"; F1), so 35
-    // years hold 140 and 200 is not a plan — past the cap the extra seasons are simply
-    // free, which reads as a bargain unless it is said out loud.
-    await replaceValue(await $(LAB_SEASONS_INPUT), '200');
+    // Each year of lab work is one of the 35 years as a magus, so 200 years of four
+    // seasons (201 with the year of one) is not a plan — and since a year of four
+    // charges no more than a year of three (`ArMDE:2550`), the extra years would read
+    // as a bargain unless it is said out loud.
+    await replaceValue(await $(LAB_YEARS_4_INPUT), '200');
     await browser.waitUntil(
       async () => (await issueCount('life_stage_lab_seasons_out_of_range')) === 1,
       {
         timeout: STEP_TIMEOUT,
-        timeoutMsg: '200 lab seasons across 35 years should be refused',
+        timeoutMsg: '201 years of lab work across 35 years should be refused',
       },
     );
     const refusal = await issue('life_stage_lab_seasons_out_of_range');
-    // Reads as a sentence, never as its code, and names the ceiling it is about.
+    // Reads as a sentence, never as its code, and names both counts it compares.
     expect(refusal.text).not.toContain('life_stage_lab_seasons_out_of_range');
-    expect(refusal.text).toContain('140');
+    expect(refusal.text).toContain('201');
+    expect(refusal.text).toContain('35');
     expect(refusal.severity).toBe('error');
     await browser.waitUntil(async () => !(await $(NEXT).isEnabled()), {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'lab seasons beyond the cap must block the Experience step',
+      timeoutMsg: 'lab years beyond the years as a magus must block the Experience step',
     });
 
-    await replaceValue(await $(LAB_SEASONS_INPUT), '13');
+    await replaceValue(await $(LAB_YEARS_4_INPUT), '3');
     await browser.waitUntil(
       async () => (await issueCount('life_stage_lab_seasons_out_of_range')) === 0,
       {
         timeout: STEP_TIMEOUT,
-        timeoutMsg: 'restoring thirteen seasons should clear the refusal',
+        timeoutMsg: 'restoring three years of four seasons should clear the refusal',
       },
     );
     await browser.waitUntil(async () => await $(NEXT).isEnabled(), {
       timeout: STEP_TIMEOUT,
-      timeoutMsg: 'clearing the lab-season refusal should unblock the step',
+      timeoutMsg: 'clearing the lab-year refusal should unblock the step',
     });
   });
 
@@ -282,7 +296,7 @@ describe('a magus past its Gauntlet', () => {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'the post-Gauntlet experience should join apprenticeship in the general pool',
     });
-    // And the bar names the points left after the lab seasons (1050 - 100 = 950) and
+    // And the bar names the points left after the lab work (1050 - 100 = 950) and
     // their split: 650 XP + 300 spell levels. The deduction itself is the chip's
     // tooltip since N9, pinned in `XpBar.client.test.ts`.
     const bar = await textOf(POST_GAUNTLET);
@@ -402,9 +416,9 @@ describe('a magus past its Gauntlet', () => {
       timeoutMsg: 'save did not write the file',
     });
 
-    // CHOICES, never resolved values: one Gauntlet age, one season total, one split —
-    // every figure above is derived from these four and the age. Asserted exactly, so
-    // a stray derived field cannot creep into the save.
+    // CHOICES, never resolved values: one Gauntlet age, the lab-year counts, one split
+    // — every figure above is derived from these and the age. Asserted exactly, so a
+    // stray derived field (or a zero count) cannot creep into the save.
     const saved = JSON.parse(fs.readFileSync(e2eFile, 'utf-8'));
     // Plus the stored funding mode, which since schema 16 is a choice of its own.
     expect(saved.ability_funding).toBe('life_stages');
@@ -412,7 +426,7 @@ describe('a magus past its Gauntlet', () => {
       // N4b (schema 23): no catalogue value, so typed text.
       native_language: { text: 'German' },
       gauntlet_age: 25,
-      post_gauntlet_lab_seasons: 13,
+      post_gauntlet_lab_years: { one_season: 1, four_seasons: 3 },
       post_gauntlet_spell_levels: 300,
     });
     expect(saved.xp_pool ?? 0).toBe(0);
@@ -437,7 +451,10 @@ describe('a magus past its Gauntlet', () => {
     expect(await $(XP_POOL_INPUT).isExisting()).toBe(false);
     expect(await textOf(XP_POOL_TOTAL)).toBe('890');
     expect(await $(GAUNTLET_AGE_INPUT).getValue()).toBe('25');
-    expect(await $(LAB_SEASONS_INPUT).getValue()).toBe('13');
+    expect(await $(LAB_YEARS_1_INPUT).getValue()).toBe('1');
+    expect(await $(LAB_YEARS_2_INPUT).getValue()).toBe('');
+    expect(await $(LAB_YEARS_3_INPUT).getValue()).toBe('');
+    expect(await $(LAB_YEARS_4_INPUT).getValue()).toBe('3');
     expect(await $(SPELL_LEVELS_INPUT).getValue()).toBe('300');
     expect(await textOf(SUMMARY)).toContain('650 XP');
     expect(await textOf(LATER_LIFE)).toContain('75');
@@ -456,5 +473,49 @@ describe('a magus past its Gauntlet', () => {
     expect(await $(SPELL_LEVELS_BASE).getTagName()).toBe('input');
     // And the pair still closes on this mount: the denominator is not the field.
     expect(await textOf(SPELL_LEVELS_TOTAL)).toBe('420');
+  });
+
+  it('opens a schema-24 save with a lab-season total as the same lab years', async () => {
+    // The engine-boundary half of this proof lives in `arm-rules`'s migration tests;
+    // this is the UI half — a real Open of a hand-written schema-24 file in the real
+    // binary. Before row 56 the plan stored one total of seasons; 13 of them fold
+    // into three years of four seasons plus one year of one, which charges the same
+    // ten seasons, so the same magus keeps its 950 points.
+    fs.writeFileSync(
+      e2eFile,
+      JSON.stringify({
+        schema_version: 24,
+        ruleset: { id: 'arm5-core', version: '2024.1' },
+        entity_kind: 'character',
+        type_id: 'magus',
+        selections: [{ ref: 'virtue.the_gift' }, { ref: 'virtue.hermetic_magus' }],
+        ability_funding: 'life_stages',
+        age: 60,
+        life_stages: {
+          native_language: { text: 'German' },
+          gauntlet_age: 25,
+          post_gauntlet_lab_seasons: 13,
+        },
+      }),
+    );
+
+    await runDocumentAction('open');
+    const discard = await $('[data-testid="discard-confirm"]');
+    if (await discard.isExisting()) await discard.click();
+
+    await $(TAB_BAR).waitForExist({ timeout: STEP_TIMEOUT });
+    await $(EXPERIENCE_TAB).click();
+    await $(PANEL).waitForExist({ timeout: STEP_TIMEOUT });
+
+    // 35 years × 30 = 1050, less 10 charged seasons × 10 = 950.
+    await browser.waitUntil(async () => (await textOf(SUMMARY)).includes('950 points'), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'thirteen migrated lab seasons should still cost 100 of the 1050 points',
+    });
+    expect(await textOf(SUMMARY)).toContain(YEARS_35);
+    expect(await $(LAB_YEARS_1_INPUT).getValue()).toBe('1');
+    expect(await $(LAB_YEARS_2_INPUT).getValue()).toBe('');
+    expect(await $(LAB_YEARS_3_INPUT).getValue()).toBe('');
+    expect(await $(LAB_YEARS_4_INPUT).getValue()).toBe('3');
   });
 });

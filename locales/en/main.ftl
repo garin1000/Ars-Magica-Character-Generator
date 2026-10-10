@@ -347,11 +347,16 @@ xp-pool-block-after-gauntlet-tooltip = { $years } × { $rate } - { $lab } for la
 # is edited here as well as on the Details tab.
 life-stage-age-label = Age
 life-stage-gauntlet-age-label = Gauntlet age
-life-stage-lab-seasons-label = Lab seasons
+# Row 56: post-Gauntlet lab work as a count of years per number of lab seasons.
+life-stage-lab-years-legend = Years of lab work
+life-stage-lab-years-1-label = 1 season
+life-stage-lab-years-2-label = 2 seasons
+life-stage-lab-years-3-label = 3 seasons
+life-stage-lab-years-4-label = 4 seasons
 life-stage-spell-levels-label = Levels of spells
-# Why both fields above are read-only: it states a read-only state the controls
-# cannot state for themselves, and it is the `aria-describedby` target of both.
-life-stage-post-gauntlet-no-years-note = No years as a magus yet, so lab seasons and levels of spells can take nothing.
+# Why the fields above are read-only: it states a read-only state the controls
+# cannot state for themselves, and it is their `aria-describedby` target.
+life-stage-post-gauntlet-no-years-note = No years as a magus yet, so years of lab work and levels of spells can take nothing.
 life-stage-post-gauntlet-summary = Years as a magus: { $years }; { $points } points = { $xp } XP + { $levels } level(s) of spells
 # Escape hatch for a hand-edited save: a character funded by its life stages must
 # not also carry an entered pool, and guided mode offers no field to correct one,
@@ -1428,8 +1433,8 @@ issue-life_stage_age_before_childhood = Age { $age } falls inside childhood, whi
 issue-life_stage_age_before_gauntlet = No magus is gauntleted at { $age }: the Gauntlet comes no earlier than { $min } — childhood plus fifteen years of apprenticeship.
 issue-life_stage_age_before_truncation = Age { $age } is too young to have completed { $min } years of childhood and apprenticeship-shaped training.
 issue-life_stage_gauntlet_age_after_age = The Gauntlet at { $gauntlet_age } is still ahead of this magus, who is { $age }; the years as a magus are counted forward from the Gauntlet.
-issue-life_stage_lab_seasons_out_of_range = { $seasons } lab seasons is more than the { $max } seasons in { $years } year(s) as a magus.
-issue-life_stage_lab_seasons_without_years = { $seasons } lab season(s) recorded, but this character has no years as a magus to work them in.
+issue-life_stage_lab_seasons_out_of_range = { $years_used } year(s) of lab work is more than the { $years } year(s) as a magus.
+issue-life_stage_lab_seasons_without_years = { $years_used } year(s) of lab work recorded, but this character has no years as a magus to work them in.
 issue-life_stage_spell_level_split_exceeds_points = Taking { $levels } level(s) of spells out of the years as a magus is more than those years grant: they are worth { $points } points, to be divided between experience and levels of spells.
 issue-life_stage_native_language_unset = Choose a native language: childhood's largest block of experience can be spent on nothing else.
 issue-life_stage_native_language_missing_score = No { $language } score is bought, so childhood's native-language experience is unspent.

@@ -97,12 +97,12 @@ fn save(mut entity: Entity) -> String {
 }
 
 /// The bump is a genuine shape move: a schema-22 reader cannot parse the
-/// object. The constant has since moved once more, to 24 for D87's unrelated
-/// spell id rename — this assertion tracks the current value, not N4b's own
-/// contribution to it (still 22 -> 23).
+/// object. The constant has since moved on — to 24 for D87's spell id rename and
+/// 25 for row 56's lab-year counts, both unrelated — so this assertion tracks the
+/// current value, not N4b's own contribution to it (still 22 -> 23).
 #[test]
-fn the_schema_version_is_23() {
-    assert_eq!(SCHEMA_VERSION, 24);
+fn the_schema_version_is_current() {
+    assert_eq!(SCHEMA_VERSION, 25);
 }
 
 /// A schema-22 save typed its language. Text spelling a catalogue name, in any
@@ -117,7 +117,7 @@ fn a_v22_string_naming_a_catalogue_value_loads_as_that_value() {
             json!({ "id": "language.arabic" }),
             "{typed:?}"
         );
-        assert_eq!(loaded.entity.schema_version, 24, "{typed:?}");
+        assert_eq!(loaded.entity.schema_version, 25, "{typed:?}");
     }
 }
 
@@ -202,7 +202,7 @@ fn a_migrated_save_round_trips_byte_stably() {
         let reopened = load(&saved).expect("the saved bytes load");
         assert_eq!(native_of(&reopened.entity), expected, "{typed:?}");
         assert!(
-            saved.contains("\"schema_version\": 24"),
+            saved.contains("\"schema_version\": 25"),
             "{typed:?}: {saved}"
         );
         assert_eq!(save(reopened.entity), saved, "{typed:?}");

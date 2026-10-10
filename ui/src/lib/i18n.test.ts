@@ -222,6 +222,43 @@ describe('German UI bundle', () => {
     expect(translate(de, 'life-stage-post-gauntlet-no-years-note')).toContain('als Magus');
   });
 
+  // Row 56: post-Gauntlet lab work is entered as a count of years per number of lab
+  // seasons, under one fieldset. DE „Quartal“ is the glossary's game-time season
+  // (`grundbegriffe.md`); „Jahreszeit“ is reserved for the magic-character sense
+  // (`sphären-mächte.md`).
+  it('labels the lab-year buckets and their fieldset in both locales', () => {
+    const en = buildBundle('en');
+    const de = buildBundle('de');
+    expect(translate(en, 'life-stage-lab-years-legend')).toBe('Years of lab work');
+    expect(translate(de, 'life-stage-lab-years-legend')).toBe('Jahre mit Laborarbeit');
+    const labels = {
+      en: ['1 season', '2 seasons', '3 seasons', '4 seasons'],
+      de: ['1 Quartal', '2 Quartale', '3 Quartale', '4 Quartale'],
+    };
+    for (const [n, i] of [1, 2, 3, 4].map((n, i) => [n, i] as const)) {
+      expect(translate(en, `life-stage-lab-years-${n}-label`)).toBe(labels.en[i]);
+      expect(translate(de, `life-stage-lab-years-${n}-label`)).toBe(labels.de[i]);
+    }
+    // The read-only note names the fieldset's own words.
+    expect(translate(en, 'life-stage-post-gauntlet-no-years-note')).toBe(
+      'No years as a magus yet, so years of lab work and levels of spells can take nothing.',
+    );
+    expect(translate(de, 'life-stage-post-gauntlet-no-years-note')).toBe(
+      'Noch keine Jahre als Magus, daher können Jahre mit Laborarbeit und Zauberstufen nichts aufnehmen.',
+    );
+  });
+
+  // The four counts replace the single lab-seasons total, so its label is a dead
+  // string a later reader would take for a live one.
+  it('retires the single lab-seasons label in both locales', () => {
+    for (const lang of ['en', 'de']) {
+      const keys = messageKeys(sourceForLang(lang));
+      expect(keys, `${lang} still carries the retired label`).not.toContain(
+        'life-stage-lab-seasons-label',
+      );
+    }
+  });
+
   // The German block names are the rulebook's own, at the mirrored lines
   // (Basisregeln.md:2213 Frühe Kindheit, :2214 Späteres Leben, :2215 Lehrlingszeit).
   it('names the life-stage blocks as the German rulebook does', () => {
@@ -968,15 +1005,14 @@ describe('German UI bundle, DE .ftl audit fixes', () => {
     expect(say('wizard-blocked-hint')).toContain(`„${say('settings-title')}“`);
   });
 
-  it('D2: states the lab-season limit correctly for one year as a magus', () => {
-    // Wording since F1 (tmp/ftl-rules-audit.md): `max` is the seasons the years
-    // hold, four a year, not the seasons that can be charged.
-    expect(
-      say('issue-life_stage_lab_seasons_out_of_range', { seasons: '5', max: '4', years: '1' }),
-    ).toBe('5 Quartale Laborarbeit sind mehr als die 4 Quartale in den Jahren als Magus (1).');
-    expect(
-      say('issue-life_stage_lab_seasons_out_of_range', { seasons: '9', max: '8', years: '2' }),
-    ).toBe('9 Quartale Laborarbeit sind mehr als die 8 Quartale in den Jahren als Magus (2).');
+  it('D2: states the lab-year limit correctly for one year as a magus', () => {
+    // Row 56: the limit is in years — each lab year is one of the years as a magus.
+    expect(say('issue-life_stage_lab_seasons_out_of_range', { years_used: '2', years: '1' })).toBe(
+      'Jahre mit Laborarbeit (2) sind mehr als die Jahre als Magus (1).',
+    );
+    expect(say('issue-life_stage_lab_seasons_out_of_range', { years_used: '3', years: '2' })).toBe(
+      'Jahre mit Laborarbeit (3) sind mehr als die Jahre als Magus (2).',
+    );
   });
 
   // Same defect as D2, outside the audit: LifeStagePanel.svelte passes
@@ -1145,9 +1181,9 @@ describe('English UI bundle, wording at a count of 1', () => {
     );
   });
 
-  it('states a single lab season without years as a magus correctly', () => {
-    expect(say('issue-life_stage_lab_seasons_without_years', { seasons: '1' })).toBe(
-      '1 lab season(s) recorded, but this character has no years as a magus to work them in.',
+  it('states a single lab year without years as a magus correctly', () => {
+    expect(say('issue-life_stage_lab_seasons_without_years', { years_used: '1' })).toBe(
+      '1 year(s) of lab work recorded, but this character has no years as a magus to work them in.',
     );
   });
 
@@ -1243,9 +1279,9 @@ describe('German UI bundle, wording at a count of 1', () => {
     );
   });
 
-  it('states a single lab season without years as a magus correctly', () => {
-    expect(say('issue-life_stage_lab_seasons_without_years', { seasons: '1' })).toBe(
-      'Eingetragene Quartale Laborarbeit: 1; dieser Charakter hat aber keine Jahre als Magus, in denen sie stattfinden könnten.',
+  it('states a single lab year without years as a magus correctly', () => {
+    expect(say('issue-life_stage_lab_seasons_without_years', { years_used: '1' })).toBe(
+      'Eingetragene Jahre mit Laborarbeit: 1; dieser Charakter hat aber keine Jahre als Magus, in denen sie stattfinden könnten.',
     );
   });
 
@@ -1483,23 +1519,22 @@ describe('UI bundles, rules-claim audit fixes', () => {
       args: { spell: 'Pilum des Feuers' },
       want: 'Pilum des Feuers verwendet eine Kombination aus Technik und Form, die der Fehler Unvereinbare Künste verbietet.',
     },
-    // F1: a year holds four lab seasons, of which at most three are charged
-    // (ArMDE:2550, `life_stage.rs::charged_lab_seasons`), so `max` counts the
-    // seasons the years HOLD (`validation/life_stage.rs::validate_post_gauntlet_choices`),
-    // not the seasons that can be charged.
+    // Row 56: each lab year is one of the years as a magus (ArMDE:2550), so the
+    // limit counts YEARS (`validation/life_stage.rs::validate_post_gauntlet_choices`),
+    // not seasons.
     {
       finding: 'F1',
       lang: 'en',
       key: 'issue-life_stage_lab_seasons_out_of_range',
-      args: { seasons: '200', max: '140', years: '35' },
-      want: '200 lab seasons is more than the 140 seasons in 35 year(s) as a magus.',
+      args: { years_used: '50', years: '35' },
+      want: '50 year(s) of lab work is more than the 35 year(s) as a magus.',
     },
     {
       finding: 'F1',
       lang: 'de',
       key: 'issue-life_stage_lab_seasons_out_of_range',
-      args: { seasons: '200', max: '140', years: '35' },
-      want: '200 Quartale Laborarbeit sind mehr als die 140 Quartale in den Jahren als Magus (35).',
+      args: { years_used: '50', years: '35' },
+      want: 'Jahre mit Laborarbeit (50) sind mehr als die Jahre als Magus (35).',
     },
   ];
 

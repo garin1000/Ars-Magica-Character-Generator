@@ -6,6 +6,7 @@ import type {
   AbilityCategory,
   EffectiveScores,
   Entity,
+  LabYears,
   LifeStageBudget,
   LifeStagePlan,
   LocalizedRuleset,
@@ -165,17 +166,23 @@ function magusBudget(years = 5, rate = 15): LifeStageBudget {
 }
 
 /**
- * A guided magus a while past its Gauntlet: `years × 30` less `seasons × 10`, with
- * `spellLevels` of those points taken as spells and the rest as experience. That
+ * A guided magus a while past its Gauntlet: `years × 30` less `charged seasons × 10`,
+ * with `spellLevels` of those points taken as spells and the rest as experience. That
  * experience joins apprenticeship in the general pool, which is why the caller must
  * raise `xp_general_pool` to match.
  */
-function pastGauntletBudget(years: number, seasons = 0, spellLevels = 0): LifeStageBudget {
-  // Mirrors `life_stage.rs::charged_lab_seasons` (F1): the stored seasons pack into
-  // full lab years of four, three of them charged, plus a remainder.
-  const held = Math.min(seasons, 4 * years);
-  const charged = Math.floor(held / 4) * 3 + Math.min(held % 4, 3);
-  const points = years * 30 - charged * 10;
+function pastGauntletBudget(
+  years: number,
+  labYears: LabYears = {},
+  spellLevels = 0,
+): LifeStageBudget {
+  // Mirrors `life_stage.rs::LabYears::charged_seasons` (row 56): each year charges
+  // its lab seasons up to three, so a year of four costs what a year of three does.
+  const charged =
+    (labYears.one_season ?? 0) +
+    (labYears.two_seasons ?? 0) * 2 +
+    ((labYears.three_seasons ?? 0) + (labYears.four_seasons ?? 0)) * 3;
+  const points = Math.max(0, years * 30 - charged * 10);
   return {
     ...magusBudget(),
     post_gauntlet_years: years,
@@ -629,16 +636,20 @@ describe('XpBar under a guided magus plan (slice 6b4)', () => {
 });
 
 describe('XpBar for a magus past its Gauntlet (slice 6b5)', () => {
-  /** A magus of 55 gauntleted at 25: 30 years, 6 lab seasons, 120 spell levels. */
+  /**
+   * A magus of 55 gauntleted at 25: 30 years, one of them with four lab seasons and
+   * one with two, and 120 spell levels.
+   */
   function installPastGauntlet(): void {
+    const labYears: LabYears = { two_seasons: 1, four_seasons: 1 };
     resetEntity(0);
     installPlan({
       gauntlet_age: 25,
-      post_gauntlet_lab_seasons: 6,
+      post_gauntlet_lab_years: labYears,
       post_gauntlet_spell_levels: 120,
     });
     installPostApprenticeshipRules();
-    setEffective(0, laterLifePool(75), pastGauntletBudget(30, 6, 120));
+    setEffective(0, laterLifePool(75), pastGauntletBudget(30, labYears, 120));
     // Those years' experience joins apprenticeship in the general pool (the engine's
     // `base_general`), so the total the bar charges against is 240 + 730.
     store.effective!.xp_general_pool = 240 + 730;
@@ -648,7 +659,7 @@ describe('XpBar for a magus past its Gauntlet (slice 6b5)', () => {
     installPastGauntlet();
     const { open, text } = element(html(), 'life-stage-post-gauntlet');
     // N9 (try-out 2026-10-04): 30 years × 30 = 900, less 5 charged lab seasons × 10
-    // (F1, `life_stage.rs::charged_lab_seasons`) = 850 points; 120 of them taken as
+    // (3 + 2, `life_stage.rs::LabYears::charged_seasons`) = 850 points; 120 of them taken as
     // levels of spells leave 730 XP. The chip states the split; the deduction is the
     // tooltip's (the rate read off the ruleset is pinned in `XpBar.client.test.ts`).
     expect(clean(text)).toBe(
@@ -662,7 +673,7 @@ describe('XpBar for a magus past its Gauntlet (slice 6b5)', () => {
     resetEntity(0);
     installPlan({ gauntlet_age: 25, post_gauntlet_spell_levels: 1 });
     installPostApprenticeshipRules();
-    setEffective(0, laterLifePool(75), pastGauntletBudget(1, 0, 1));
+    setEffective(0, laterLifePool(75), pastGauntletBudget(1, {}, 1));
     expect(clean(element(html(), 'life-stage-post-gauntlet').text)).toBe(
       'After the Gauntlet (1 year): 30 points = 29 XP + 1 spell level',
     );

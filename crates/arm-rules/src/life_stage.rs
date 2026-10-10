@@ -450,27 +450,79 @@ pub struct LifeStagePlan {
     /// Source: ArMDE:2284, :2535-2539.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub gauntlet_age: Option<u32>,
-    /// Lab seasons **charged** against the yearly 30 points, totalled across every
-    /// post-Gauntlet year: "the character loses 10 points from the yearly 30
-    /// experience points, to a minimum of 0 if three or four seasons are spent on lab
-    /// work" (ArMDE:2550).
+    /// The post-Gauntlet years spent partly or wholly in the lab, counted by how
+    /// many lab seasons each held: "For each season that your magus spends working
+    /// on a lab project, the character loses 10 points from the yearly 30 experience
+    /// points, to a minimum of 0 if three or four seasons are spent on lab work"
+    /// (ArMDE:2550).
     ///
-    /// One total rather than a season list per year, because the arithmetic cannot
-    /// tell the difference: the deduction stops at the third season of any year, so
-    /// every legal per-year distribution totals at most `3 × years`, every total in
-    /// that range is realizable by some distribution, and all of them cost the same.
-    ///
-    /// It counts **charged** seasons, not seasons actually worked — the fourth season
-    /// of a year is free (`ArMDE:2550` has already reached 0 by the third), so 16 seasons
-    /// worked costs nothing across four years but 30 points across five, and a single
-    /// total of *worked* seasons could not tell those two apart.
-    #[serde(default, skip_serializing_if = "is_zero")]
-    pub post_gauntlet_lab_seasons: u32,
+    /// Year counts rather than a list of years (row 56), because the cost of a year
+    /// depends only on how many seasons it held, never on when it fell. Absent when
+    /// every count is zero.
+    #[serde(default, skip_serializing_if = "LabYears::is_empty")]
+    pub post_gauntlet_lab_years: LabYears,
     /// How many of the post-Gauntlet points the player took as **levels of spells**
     /// rather than experience: "Each point can be an experience point in an Art or
     /// Ability or one level of spell" (ArMDE:2539). The rest are experience.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub post_gauntlet_spell_levels: u32,
+}
+
+/// How many post-Gauntlet years held one, two, three or four lab seasons (row 56).
+/// A zero count writes no key.
+///
+/// Source: ArMDE:2550.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct LabYears {
+    /// Years with one lab season.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub one_season: u32,
+    /// Years with two lab seasons.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub two_seasons: u32,
+    /// Years with three lab seasons.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub three_seasons: u32,
+    /// Years with four lab seasons.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub four_seasons: u32,
+}
+
+impl LabYears {
+    /// `true` when no year holds any lab work, so the plan writes no key for it.
+    pub fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+
+    /// How many post-Gauntlet years the counts take up, whatever their seasons.
+    /// Saturates rather than overflowing on a crafted save.
+    pub fn years_used(&self) -> u32 {
+        self.counts_by_seasons()
+            .into_iter()
+            .fold(0u32, |used, (years, _)| used.saturating_add(years))
+    }
+
+    /// Each count paired with the lab seasons its years held.
+    fn counts_by_seasons(&self) -> [(u32, u32); 4] {
+        [
+            (self.one_season, 1),
+            (self.two_seasons, 2),
+            (self.three_seasons, 3),
+            (self.four_seasons, 4),
+        ]
+    }
+
+    /// The lab seasons that cost points: each year charges its seasons up to
+    /// `max_per_year`, since the deduction stops "at a minimum of 0 if three or four
+    /// seasons are spent on lab work" (`ArMDE:2550`). Saturates rather than
+    /// overflowing on a crafted save.
+    fn charged_seasons(&self, max_per_year: u32) -> u32 {
+        self.counts_by_seasons()
+            .into_iter()
+            .fold(0u32, |charged, (years, seasons)| {
+                charged.saturating_add(years.saturating_mul(seasons.min(max_per_year)))
+            })
+    }
 }
 
 /// The experience a life-stage plan earns, split into the blocks the rules grant
@@ -887,11 +939,10 @@ impl LifeStageRules {
     /// character loses 10 points from the yearly 30 experience points, to a minimum
     /// of 0 if three or four seasons are spent on lab work" (`ArMDE:2550`).
     ///
-    /// The stored season total is packed into full lab years first
-    /// ([`charged_lab_seasons`]), which is that per-year minimum of 0 read across the
-    /// whole span: no year can lose more than three seasons' worth, so no span can.
-    /// Everything saturates, so a stored total beyond what the span holds costs the
-    /// same as a full span rather than underflowing — a validator reports it instead.
+    /// Each lab year charges its seasons up to `max_charged_lab_seasons_per_year`
+    /// ([`LabYears::charged_seasons`]), which is that per-year minimum of 0.
+    /// Everything saturates, so lab years beyond what the span holds cost no more
+    /// than the span is worth rather than underflowing — a validator reports them.
     ///
     /// 0 throughout for a ruleset shipping no `post_apprenticeship` block: the rate
     /// is data, so with no block there is no number to grant.
@@ -901,36 +952,13 @@ impl LifeStageRules {
         let Some(rules) = self.post_apprenticeship.as_ref() else {
             return 0;
         };
-        let charged = charged_lab_seasons(
-            plan.post_gauntlet_lab_seasons,
-            post_gauntlet_years,
-            rules.max_charged_lab_seasons_per_year,
-        );
+        let charged = plan
+            .post_gauntlet_lab_years
+            .charged_seasons(rules.max_charged_lab_seasons_per_year);
         post_gauntlet_years
             .saturating_mul(rules.points_per_year)
             .saturating_sub(charged.saturating_mul(rules.lab_season_cost))
     }
-}
-
-/// The seasons in a year, all of which a magus may spend in the lab: "to a minimum
-/// of 0 if three or four seasons are spent on lab work" (`ArMDE:2550`).
-pub const SEASONS_PER_YEAR: u32 = 4;
-
-/// How many of `seasons` post-Gauntlet lab seasons cost points over `years`.
-///
-/// Norbert 2026-10-03 (F1): the stored total is read as packed into full lab
-/// years, as `ArMDE:2550` recommends ("it is most cost effective to have the magus
-/// engage in a full year of lab work at a time"). Each full year of four seasons
-/// charges `max_per_year`, the remainder charges one per season up to that same
-/// ceiling, and the span holds at most four seasons a year. Recording seasons per
-/// year instead is planned (it needs a save-format change).
-fn charged_lab_seasons(seasons: u32, years: u32, max_per_year: u32) -> u32 {
-    let seasons = seasons.min(SEASONS_PER_YEAR.saturating_mul(years));
-    let full_years = seasons / SEASONS_PER_YEAR;
-    let remainder = seasons % SEASONS_PER_YEAR;
-    full_years
-        .saturating_mul(max_per_year)
-        .saturating_add(remainder.min(max_per_year))
 }
 
 impl LifeStageRules {
@@ -1633,23 +1661,49 @@ mod tests {
 
     // --- life as a magus after the Gauntlet (M6/6b5) -------------------------
 
-    /// A magus of `age` gauntleted at `gauntlet_age`, having charged `lab_seasons`
-    /// seasons of lab work against its yearly points and taken `spell_levels` of
-    /// them as levels of spells.
+    /// A magus of `age` gauntleted at `gauntlet_age`, with `lab_years` of lab work
+    /// against its yearly points and `spell_levels` of them taken as levels of
+    /// spells.
     fn magus_out_of_apprenticeship(
         age: u32,
         gauntlet_age: u32,
-        lab_seasons: u32,
+        lab_years: LabYears,
         spell_levels: u32,
     ) -> Entity {
         let mut entity = planned_magus(age);
         entity.life_stages = Some(LifeStagePlan {
             gauntlet_age: Some(gauntlet_age),
-            post_gauntlet_lab_seasons: lab_seasons,
+            post_gauntlet_lab_years: lab_years,
             post_gauntlet_spell_levels: spell_levels,
             ..LifeStagePlan::default()
         });
         entity
+    }
+
+    /// No lab work at all.
+    const NO_LAB: LabYears = LabYears {
+        one_season: 0,
+        two_seasons: 0,
+        three_seasons: 0,
+        four_seasons: 0,
+    };
+
+    /// `years` years spent wholly in the lab, four seasons each.
+    fn full_lab_years(years: u32) -> LabYears {
+        LabYears {
+            four_seasons: years,
+            ..LabYears::default()
+        }
+    }
+
+    /// Three full lab years plus one year of a single season: 13 seasons worked,
+    /// 10 of them charged.
+    fn thirteen_lab_seasons() -> LabYears {
+        LabYears {
+            one_season: 1,
+            four_seasons: 3,
+            ..LabYears::default()
+        }
     }
 
     /// At the ruleset's own baseline age the stored value and the default coincide:
@@ -1733,7 +1787,10 @@ mod tests {
     #[test]
     fn the_years_after_the_gauntlet_earn_thirty_points_each() {
         let budget = rules_with_apprenticeship()
-            .budget(&magus_out_of_apprenticeship(60, 25, 0, 0), &rate_ruleset())
+            .budget(
+                &magus_out_of_apprenticeship(60, 25, NO_LAB, 0),
+                &rate_ruleset(),
+            )
             .expect("a magus with a plan");
         assert_eq!(budget.gauntlet_age, 25);
         assert_eq!(budget.post_gauntlet_years, 35);
@@ -1748,28 +1805,151 @@ mod tests {
 
     /// "For each season that your magus spends working on a lab project, the
     /// character loses 10 points from the yearly 30 experience points" (`ArMDE:2550`), so
-    /// ten charged seasons cost 100 of the 1050. Thirteen stored seasons pack as three
-    /// full lab years (three charged each) plus one, so ten are charged (F1).
+    /// ten charged seasons cost 100 of the 1050. Three full lab years (three charged
+    /// each) plus a year of one season charge ten.
     #[test]
     fn each_charged_lab_season_costs_ten_points() {
         let budget = rules_with_apprenticeship()
-            .budget(&magus_out_of_apprenticeship(60, 25, 13, 0), &rate_ruleset())
+            .budget(
+                &magus_out_of_apprenticeship(60, 25, thirteen_lab_seasons(), 0),
+                &rate_ruleset(),
+            )
             .expect("a magus with a plan");
         assert_eq!(budget.post_gauntlet_points, 950);
         assert_eq!(budget.post_gauntlet_xp, 950);
     }
 
-    /// Norbert 2026-10-03 (F1): the stored total is read as packed into full lab
-    /// years, as `ArMDE:2550` recommends, so a fourth season fills a year rather than
-    /// costing the next one. Darius's nine years with one full lab year are worth
-    /// the book's 240 (`ArMDE:2554`, :2488), not 230.
+    // --- post-Gauntlet lab work stored as year counts (row 56) -------------
+
+    /// A magus of `age` gauntleted at `gauntlet_age` whose post-Gauntlet lab work is
+    /// recorded as how many years held one, two, three or four lab seasons.
+    fn magus_with_lab_years(age: u32, gauntlet_age: u32, lab_years: LabYears) -> Entity {
+        magus_out_of_apprenticeship(age, gauntlet_age, lab_years, 0)
+    }
+
+    /// Darius "will spend the next year in the laboratory, so he gains no
+    /// experience points in that year" (`ArMDE:2556`) after lumping eight years
+    /// together for 240 (`ArMDE:2554`): one year of four lab seasons, nine years out
+    /// of apprenticeship, still worth 240.
     #[test]
-    fn darius_nine_years_with_one_full_lab_year_are_worth_240() {
+    fn darius_with_one_four_season_lab_year_is_worth_240() {
+        let lab_years = LabYears {
+            four_seasons: 1,
+            ..LabYears::default()
+        };
         let budget = rules_with_apprenticeship()
-            .budget(&magus_out_of_apprenticeship(34, 25, 4, 0), &rate_ruleset())
+            .budget(&magus_with_lab_years(34, 25, lab_years), &rate_ruleset())
             .expect("a magus with a plan");
         assert_eq!(budget.post_gauntlet_years, 9);
         assert_eq!(budget.post_gauntlet_points, 240);
+    }
+
+    /// "For each season that your magus spends working on a lab project, the
+    /// character loses 10 points from the yearly 30" (`ArMDE:2550`): two years of
+    /// two lab seasons each cost 4 × 10 = 40.
+    #[test]
+    fn two_years_of_two_lab_seasons_cost_40_points() {
+        let rules = rules_with_apprenticeship();
+        let rs = rate_ruleset();
+        let unworked = rules
+            .budget(&magus_with_lab_years(60, 25, LabYears::default()), &rs)
+            .expect("a magus with a plan");
+        let lab_years = LabYears {
+            two_seasons: 2,
+            ..LabYears::default()
+        };
+        let worked = rules
+            .budget(&magus_with_lab_years(60, 25, lab_years), &rs)
+            .expect("a magus with a plan");
+        assert_eq!(unworked.post_gauntlet_points, 1050);
+        assert_eq!(
+            unworked.post_gauntlet_points - worked.post_gauntlet_points,
+            40
+        );
+    }
+
+    /// "to a minimum of 0 if three or four seasons are spent on lab work"
+    /// (`ArMDE:2550`): a year of four lab seasons costs exactly what a year of three
+    /// does.
+    #[test]
+    fn a_four_season_lab_year_costs_the_same_as_a_three_season_one() {
+        let rules = rules_with_apprenticeship();
+        let rs = rate_ruleset();
+        let three = rules
+            .budget(
+                &magus_with_lab_years(
+                    34,
+                    25,
+                    LabYears {
+                        three_seasons: 1,
+                        ..LabYears::default()
+                    },
+                ),
+                &rs,
+            )
+            .expect("a magus with a plan");
+        let four = rules
+            .budget(
+                &magus_with_lab_years(
+                    34,
+                    25,
+                    LabYears {
+                        four_seasons: 1,
+                        ..LabYears::default()
+                    },
+                ),
+                &rs,
+            )
+            .expect("a magus with a plan");
+        assert_eq!(three.post_gauntlet_points, 240);
+        assert_eq!(four.post_gauntlet_points, three.post_gauntlet_points);
+    }
+
+    /// A save is untrusted input: buckets at `u32::MAX` saturate the charge and
+    /// leave the points at 0 rather than overflowing or panicking. The validator
+    /// reports the impossible plan; the budget only has to stay sane.
+    #[test]
+    fn lab_year_buckets_at_u32_max_saturate_without_panicking() {
+        let lab_years = LabYears {
+            one_season: u32::MAX,
+            two_seasons: u32::MAX,
+            three_seasons: u32::MAX,
+            four_seasons: u32::MAX,
+        };
+        let budget = rules_with_apprenticeship()
+            .budget(&magus_with_lab_years(60, 25, lab_years), &rate_ruleset())
+            .expect("a magus with a plan");
+        assert_eq!(budget.post_gauntlet_years, 35);
+        assert_eq!(budget.post_gauntlet_points, 0);
+        assert_eq!(budget.post_gauntlet_xp, 0);
+    }
+
+    /// A zero bucket writes no key, and an all-zero `LabYears` writes no
+    /// `post_gauntlet_lab_years` key at all, so a plan with no lab work saves as
+    /// before. A non-zero bucket reads back unchanged.
+    #[test]
+    fn zero_lab_year_buckets_are_omitted_from_the_json() {
+        let lab_years = LabYears {
+            two_seasons: 3,
+            ..LabYears::default()
+        };
+        assert_eq!(
+            serde_json::to_string(&lab_years).unwrap(),
+            r#"{"two_seasons":3}"#
+        );
+
+        let plan = LifeStagePlan {
+            post_gauntlet_lab_years: lab_years,
+            ..LifeStagePlan::default()
+        };
+        let json = serde_json::to_string(&plan).unwrap();
+        assert_eq!(json, r#"{"post_gauntlet_lab_years":{"two_seasons":3}}"#);
+        assert_eq!(serde_json::from_str::<LifeStagePlan>(&json).unwrap(), plan);
+
+        assert_eq!(
+            serde_json::to_string(&LifeStagePlan::default()).unwrap(),
+            "{}"
+        );
     }
 
     /// The deduction runs "to a minimum of 0 if three or four seasons are spent on
@@ -1780,21 +1960,34 @@ mod tests {
     fn a_fourth_lab_season_in_a_year_costs_nothing() {
         let rules = rules_with_apprenticeship();
         let rs = rate_ruleset();
+        let one_year_of_three = LabYears {
+            three_seasons: 1,
+            ..LabYears::default()
+        };
         let three = rules
-            .budget(&magus_out_of_apprenticeship(26, 25, 3, 0), &rs)
+            .budget(
+                &magus_out_of_apprenticeship(26, 25, one_year_of_three, 0),
+                &rs,
+            )
             .expect("a magus with a plan");
         assert_eq!(three.post_gauntlet_years, 1);
         assert_eq!(three.post_gauntlet_points, 0);
 
         let four = rules
-            .budget(&magus_out_of_apprenticeship(26, 25, 4, 0), &rs)
+            .budget(
+                &magus_out_of_apprenticeship(26, 25, full_lab_years(1), 0),
+                &rs,
+            )
             .expect("a magus with a plan");
         assert_eq!(four.post_gauntlet_points, 0);
 
         // Over 35 years the same cap holds: 105 charged seasons exhaust the 1050,
-        // and a stored total beyond that neither costs more nor underflows.
+        // and lab years beyond the span neither cost more nor underflow.
         let all_lab = rules
-            .budget(&magus_out_of_apprenticeship(60, 25, 200, 0), &rs)
+            .budget(
+                &magus_out_of_apprenticeship(60, 25, full_lab_years(50), 0),
+                &rs,
+            )
             .expect("a magus with a plan");
         assert_eq!(all_lab.post_gauntlet_points, 0);
         assert_eq!(all_lab.post_gauntlet_xp, 0);
@@ -1808,7 +2001,7 @@ mod tests {
     fn points_taken_as_spell_levels_are_not_experience() {
         let budget = rules_with_apprenticeship()
             .budget(
-                &magus_out_of_apprenticeship(60, 25, 13, 300),
+                &magus_out_of_apprenticeship(60, 25, thirteen_lab_seasons(), 300),
                 &rate_ruleset(),
             )
             .expect("a magus with a plan");
@@ -1820,7 +2013,7 @@ mod tests {
         // More levels than there are points buys only the points that exist.
         let greedy = rules_with_apprenticeship()
             .budget(
-                &magus_out_of_apprenticeship(60, 25, 13, 5_000),
+                &magus_out_of_apprenticeship(60, 25, thirteen_lab_seasons(), 5_000),
                 &rate_ruleset(),
             )
             .expect("a magus with a plan");
@@ -1836,7 +2029,10 @@ mod tests {
     #[test]
     fn a_gauntlet_age_above_the_characters_age_is_clamped_to_it() {
         let budget = rules_with_apprenticeship()
-            .budget(&magus_out_of_apprenticeship(25, 40, 0, 0), &rate_ruleset())
+            .budget(
+                &magus_out_of_apprenticeship(25, 40, NO_LAB, 0),
+                &rate_ruleset(),
+            )
             .expect("a magus with a plan");
         assert_eq!(budget.gauntlet_age, 25);
         assert_eq!(budget.later_life_years, 5);
@@ -1860,7 +2056,7 @@ mod tests {
         let mut edited = plain.clone();
         edited.life_stages = Some(LifeStagePlan {
             gauntlet_age: Some(25),
-            post_gauntlet_lab_seasons: 4,
+            post_gauntlet_lab_years: full_lab_years(1),
             post_gauntlet_spell_levels: 300,
             ..LifeStagePlan::default()
         });
@@ -1879,7 +2075,7 @@ mod tests {
     /// missing age is reported on its own (`life_stage_age_unset`).
     #[test]
     fn an_unset_age_earns_no_post_gauntlet_year() {
-        let mut magus = magus_out_of_apprenticeship(60, 25, 4, 100);
+        let mut magus = magus_out_of_apprenticeship(60, 25, full_lab_years(1), 100);
         magus.age = None;
 
         let budget = rules_with_apprenticeship()
@@ -1903,7 +2099,10 @@ mod tests {
         rules.post_apprenticeship = None;
 
         let budget = rules
-            .budget(&magus_out_of_apprenticeship(60, 25, 0, 0), &rate_ruleset())
+            .budget(
+                &magus_out_of_apprenticeship(60, 25, NO_LAB, 0),
+                &rate_ruleset(),
+            )
             .expect("a magus with a plan");
         assert_eq!(budget.post_gauntlet_years, 35);
         assert_eq!(budget.post_gauntlet_points, 0);
@@ -2224,7 +2423,7 @@ mod tests {
             json.contains(r#""childhood_package": "childhood.athletic""#),
             "{json}"
         );
-        assert!(json.contains(r#""schema_version": 24"#), "{json}");
+        assert!(json.contains(r#""schema_version": 25"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(entity, back);
@@ -2262,7 +2461,7 @@ mod tests {
 
         let out_of_apprenticeship = LifeStagePlan {
             gauntlet_age: Some(25),
-            post_gauntlet_lab_seasons: 12,
+            post_gauntlet_lab_years: full_lab_years(3),
             post_gauntlet_spell_levels: 300,
             ..nothing_chosen
         };
@@ -2272,25 +2471,25 @@ mod tests {
         entity.normalize();
         let json = serde_json::to_string_pretty(&entity).unwrap();
         assert!(json.contains(r#""gauntlet_age": 25"#), "{json}");
-        assert!(
-            json.contains(r#""post_gauntlet_lab_seasons": 12"#),
-            "{json}"
-        );
+        assert!(json.contains(r#""post_gauntlet_lab_years": {"#), "{json}");
+        assert!(json.contains(r#""four_seasons": 3"#), "{json}");
+        assert!(!json.contains("post_gauntlet_lab_seasons"), "{json}");
         assert!(
             json.contains(r#""post_gauntlet_spell_levels": 300"#),
             "{json}"
         );
-        // The post-Gauntlet fields are additive and bumped nothing of their own;
-        // the literal is here so a bump has to be a conscious edit (15 came from
-        // the widened aging log, 16 from the funding discriminator, 17 from the
-        // per-document saga year, 18 from CV4's ability-parameter widening, 19
-        // from C5a's multi-valued parameter type, 20 from F1's
+        // The Gauntlet age and spell levels were additive and bumped nothing of
+        // their own; the literal is here so a bump has to be a conscious edit (15
+        // came from the widened aging log, 16 from the funding discriminator, 17
+        // from the per-document saga year, 18 from CV4's ability-parameter
+        // widening, 19 from C5a's multi-valued parameter type, 20 from F1's
         // `EquipmentSlot::loadout` move, 21 from X9b's `virtue.rard` ->
         // `virtue.bard` id rename, 22 from L1b's Dead/Living Language move, 23
-        // from N4b's native-language value — the plan's, but not these fields —
-        // and 24 from D87's spell id rename, also unrelated to these fields).
-        assert_eq!(SCHEMA_VERSION, 24);
-        assert!(json.contains(r#""schema_version": 24"#), "{json}");
+        // from N4b's native-language value, 24 from D87's spell id rename, and 25
+        // from row 56's lab-season total -> lab-year counts fold, the one bump
+        // these fields own).
+        assert_eq!(SCHEMA_VERSION, 25);
+        assert!(json.contains(r#""schema_version": 25"#), "{json}");
 
         let back: Entity = serde_json::from_str(&json).unwrap();
         assert_eq!(back.life_stages, Some(out_of_apprenticeship));

@@ -302,10 +302,12 @@ pub struct EffectiveScores {
     pub realm_associations: Vec<ResolvedRealmEntry>,
     /// D74.4/row 55 (`docs/open-todos.md`): the resolved realm for every GRANTED
     /// selection (`Self::granted_selections`) that carries one. `index` here is
-    /// the position in `granted_selections` — a *different* numbering space from
-    /// `realm_associations`' `index` into the entity's own bought selections,
-    /// matching the frontend's existing `grantIndex`/`index` split
-    /// (`ui/src/lib/derive.ts` `SelectionRow`). `fixed` is unconditionally `true`:
+    /// NOT a position in `granted_selections`: it is the 0-based count of
+    /// earlier granted entries sharing the same `item_ref` (first copy `0`,
+    /// second `1`, …), because a position does not survive the frontend's
+    /// virtue/flaw column split — see [`granted_realm_associations_for_ui`].
+    /// It is a *different* numbering space from `realm_associations`' `index`
+    /// into the entity's own bought selections. `fixed` is unconditionally `true`:
     /// a granted row has no stable `entity.selections` index for the player to
     /// attach an override to, so every granted realm is read-only regardless of
     /// whether the book states it outright or the item would otherwise default
@@ -322,7 +324,9 @@ pub struct ResolvedRealmEntry {
     /// The selection's position in `Entity::selections` — repeatable items
     /// (Folk Magic) can hold the same `item_ref` more than once with
     /// different overrides, so `item_ref` alone cannot key a row; this
-    /// matches the `index` the V/F tab already keys a selection row by.
+    /// matches the `index` the V/F tab already keys a selection row by. In
+    /// [`EffectiveScores::granted_realm_associations`] it is instead a
+    /// same-`item_ref` occurrence count — see that field.
     pub index: usize,
     /// The selection's `PointItem` id, for display alongside the resolved realm.
     pub item_ref: Id,

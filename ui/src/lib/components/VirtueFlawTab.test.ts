@@ -829,6 +829,30 @@ describe('VirtueFlawTab row 55 granted realm row', () => {
     expect(clean(realm)).toContain('Faerie');
   });
 
+  it('keys a repeated grant by its occurrence of the ref, not its position', () => {
+    // [A, B, B]: the second B sits at position 2 but is occurrence 1 of its ref.
+    grant(
+      { ref: 'virtue.heartbeast' },
+      { ref: 'virtue.second_sight' },
+      { ref: 'virtue.second_sight' },
+    );
+    store.effective!.granted_realm_associations = [
+      { index: 0, item_ref: 'virtue.second_sight', realm: 'faerie', fixed: true },
+      { index: 1, item_ref: 'virtue.second_sight', realm: 'divine', fixed: true },
+    ];
+
+    const body = virtueColumn(html());
+    const realmAt = (position: number) =>
+      clean(
+        new RegExp(
+          `<[a-z]+[^>]*data-testid="granted-realm-virtue\\.second_sight-${position}"[\\s\\S]*?</[a-z]+>`,
+        ).exec(body)![0],
+      );
+    expect(realmAt(1)).toContain('Faerie');
+    expect(realmAt(2)).toContain('Divine');
+    expect(body).not.toContain('data-testid="granted-realm-virtue.heartbeast-');
+  });
+
   it('renders no realm line for a granted item with no realm association', () => {
     grant({ ref: 'virtue.heartbeast' });
     store.effective!.granted_realm_associations = [];

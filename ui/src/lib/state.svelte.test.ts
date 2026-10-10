@@ -3284,7 +3284,7 @@ describe('ability funding mode', () => {
       native_language: { text: 'German' },
       childhood_package: 'childhood.traveling',
       gauntlet_age: 25,
-      post_gauntlet_lab_seasons: 6,
+      post_gauntlet_lab_years: { two_seasons: 1, four_seasons: 1 },
       post_gauntlet_spell_levels: 120,
     };
     store.entity.ability_funding = 'life_stages';
@@ -3294,7 +3294,7 @@ describe('ability funding mode', () => {
 
     // A deliberate departure from the sparse-save principle: the save now keeps data
     // the active mode ignores, because discarding it silently destroyed a native
-    // language, a Gauntlet age, lab seasons, spell levels and a childhood package.
+    // language, a Gauntlet age, lab years, spell levels and a childhood package.
     expect(store.entity.life_stages).toEqual(plan);
     expect(store.abilityFunding).toBe('pool');
   });
@@ -3561,28 +3561,74 @@ describe('the post-Gauntlet plan fields', () => {
     });
   });
 
-  describe('setPostGauntletLabSeasons', () => {
-    it('stores the charged lab seasons', () => {
-      store.setPostGauntletLabSeasons(6);
-      expect(store.entity.life_stages).toEqual({ post_gauntlet_lab_seasons: 6 });
+  // Row 56: the lab work is stored as how many post-Gauntlet years held one, two,
+  // three or four lab seasons — one bucket per input, written one at a time.
+  describe('setPostGauntletLabYears', () => {
+    it('stores the years counted in one bucket', () => {
+      store.setPostGauntletLabYears('four_seasons', 2);
+      expect(store.entity.life_stages).toEqual({ post_gauntlet_lab_years: { four_seasons: 2 } });
     });
 
-    it('deletes the key for a blank or zero count', () => {
-      store.setPostGauntletLabSeasons(6);
-      store.setPostGauntletLabSeasons(0);
+    it('writes each bucket beside the others, never over them', () => {
+      store.setPostGauntletLabYears('four_seasons', 3);
+      store.setPostGauntletLabYears('one_season', 1);
+      store.setPostGauntletLabYears('two_seasons', 2);
+      store.setPostGauntletLabYears('three_seasons', 4);
+      expect(store.entity.life_stages).toEqual({
+        post_gauntlet_lab_years: {
+          one_season: 1,
+          two_seasons: 2,
+          three_seasons: 4,
+          four_seasons: 3,
+        },
+      });
+    });
+
+    it('deletes only that bucket for a blank or zero count', () => {
+      store.setPostGauntletLabYears('four_seasons', 3);
+      store.setPostGauntletLabYears('one_season', 1);
+      store.setPostGauntletLabYears('one_season', 0);
+      // The sparse shape the engine writes: a zero count is no key, never `0`.
+      expect(store.entity.life_stages).toEqual({ post_gauntlet_lab_years: { four_seasons: 3 } });
+
+      store.setPostGauntletLabYears('one_season', 1);
+      store.setPostGauntletLabYears('one_season', null);
+      expect(store.entity.life_stages).toEqual({ post_gauntlet_lab_years: { four_seasons: 3 } });
+    });
+
+    it('drops the whole key once the last bucket is cleared', () => {
+      store.setPostGauntletLabYears('four_seasons', 3);
+      store.setPostGauntletLabYears('four_seasons', null);
+      // An empty `{}` would be a key the engine never writes (`LabYears::is_empty`),
+      // so a cleared field would leave the save differing from a fresh one.
       expect(store.entity.life_stages).toEqual({});
-      store.setPostGauntletLabSeasons(6);
-      store.setPostGauntletLabSeasons(null);
+    });
+
+    it('writes no empty object when a bucket is cleared that was never set', () => {
+      store.setPostGauntletLabYears('two_seasons', null);
+      store.setPostGauntletLabYears('two_seasons', 0);
       expect(store.entity.life_stages).toEqual({});
+    });
+
+    it('deletes the bucket for a negative or non-numeric count', () => {
+      store.setPostGauntletLabYears('four_seasons', 3);
+      store.setPostGauntletLabYears('one_season', 1);
+      store.setPostGauntletLabYears('one_season', -2);
+      expect(store.entity.life_stages?.post_gauntlet_lab_years).toEqual({ four_seasons: 3 });
+      store.setPostGauntletLabYears('one_season', 1);
+      store.setPostGauntletLabYears('one_season', Number.NaN);
+      expect(store.entity.life_stages?.post_gauntlet_lab_years).toEqual({ four_seasons: 3 });
     });
 
     it('clamps to the u32 range the engine field is', () => {
-      store.setPostGauntletLabSeasons(9999999999);
-      expect(store.entity.life_stages?.post_gauntlet_lab_seasons).toBe(4294967295);
+      store.setPostGauntletLabYears('three_seasons', 9999999999);
+      expect(store.entity.life_stages?.post_gauntlet_lab_years?.three_seasons).toBe(4294967295);
+      store.setPostGauntletLabYears('three_seasons', 2.7);
+      expect(store.entity.life_stages?.post_gauntlet_lab_years?.three_seasons).toBe(2);
     });
 
     it('validates through the debounce', () => {
-      store.setPostGauntletLabSeasons(6);
+      store.setPostGauntletLabYears('four_seasons', 1);
       expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
       vi.advanceTimersByTime(200);
       expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
@@ -3593,7 +3639,7 @@ describe('the post-Gauntlet plan fields', () => {
       delete store.entity.life_stages;
       vi.mocked(ipc.validateEntity).mockClear();
 
-      store.setPostGauntletLabSeasons(6);
+      store.setPostGauntletLabYears('four_seasons', 1);
 
       expect('life_stages' in store.entity).toBe(false);
       vi.advanceTimersByTime(200);
@@ -3643,7 +3689,8 @@ describe('the post-Gauntlet plan fields', () => {
 
   it('keeps all three when guided funding is left, plan and all', async () => {
     store.setGauntletAge(40);
-    store.setPostGauntletLabSeasons(6);
+    store.setPostGauntletLabYears('four_seasons', 1);
+    store.setPostGauntletLabYears('two_seasons', 1);
     store.setPostGauntletSpellLevels(120);
 
     await store.setAbilityFunding('pool');
@@ -3652,7 +3699,7 @@ describe('the post-Gauntlet plan fields', () => {
     // exactly the kind of work #29 was about losing: the plan is now inert, not gone.
     expect(store.entity.life_stages).toEqual({
       gauntlet_age: 40,
-      post_gauntlet_lab_seasons: 6,
+      post_gauntlet_lab_years: { two_seasons: 1, four_seasons: 1 },
       post_gauntlet_spell_levels: 120,
     });
   });

@@ -36,12 +36,12 @@ use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 ///   [`crate::life_stage::LifeStageRules::budget`] — see
 ///   [`validate_post_gauntlet_choices`] for why the clamp stays and the finding is
 ///   still made.
-/// - `life_stage_lab_seasons_out_of_range`: more lab seasons charged against the
-///   post-Gauntlet years than three per year (`ArMDE:2550`), which is all a year can be
-///   charged for. Capped by [`crate::life_stage::LifeStageRules::budget`].
-/// - `life_stage_lab_seasons_without_years`: lab seasons on a plan with no year as a
-///   magus to work them in. The same rule (`ArMDE:2550`), reported separately because the
-///   per-year charging limit is not what makes the ceiling zero here.
+/// - `life_stage_lab_seasons_out_of_range`: more years of lab work
+///   ([`crate::life_stage::LabYears::years_used`]) than the post-Gauntlet years
+///   (`ArMDE:2550`): each counted year is one of them, whatever its seasons (row 56).
+/// - `life_stage_lab_seasons_without_years`: years of lab work on a plan with no year
+///   as a magus to work them in. The same rule (`ArMDE:2550`), reported separately
+///   because there is no span for the years to fall in at all.
 /// - `life_stage_spell_level_split_exceeds_points`: more of the post-Gauntlet points
 ///   taken as levels of spells than the years granted (`ArMDE:2539`). Held to the points
 ///   by [`crate::life_stage::LifeStageRules::budget`]. Filed under `abilities`, the
@@ -320,26 +320,24 @@ fn validate_post_gauntlet_choices(
     // "For each season that your magus spends working on a lab project, the
     // character loses 10 points from the yearly 30 experience points, to a minimum
     // of 0 if three or four seasons are spent on lab work"
-    // (ArMDE:2550). Norbert 2026-10-03 (F1): a year holds four lab seasons, of
-    // which the fourth costs nothing, and the stored total is packed into full lab
-    // years (`life_stage.rs::charged_lab_seasons`). So the span holds four seasons
-    // a year — the ceiling `budget()` caps the stored total at. Past it the extra
-    // seasons are simply free, so without this finding an impossible plan looks
-    // like a bargain.
+    // (ArMDE:2550). Every lab year is one of the post-Gauntlet years (row 56), so
+    // the year counts together may not exceed the span. Past it the extra years'
+    // charge is lost to the floor of 0, so without this finding an impossible plan
+    // looks like a bargain.
     //
     // **Two codes, one rule.** The branch is on the *years*, not on the ceiling
     // being zero: with no year as a magus the plan has no span to work in at all,
-    // and a message reciting how many seasons the years hold names a cause that is
+    // and a message reciting how many years the span holds names a cause that is
     // not the cause.
     if rules.post_apprenticeship.is_some() {
-        let max = crate::life_stage::SEASONS_PER_YEAR.saturating_mul(budget.post_gauntlet_years);
-        if plan.post_gauntlet_lab_seasons > max {
-            let seasons = plan.post_gauntlet_lab_seasons.to_string();
+        let years_used = plan.post_gauntlet_lab_years.years_used();
+        if years_used > budget.post_gauntlet_years {
+            let years_used = years_used.to_string();
             issues.push(if budget.post_gauntlet_years == 0 {
                 ValidationIssue::error(
                     ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS,
                     CreationPhase::Experience,
-                    args([("seasons", seasons)]),
+                    args([("years_used", years_used)]),
                     None,
                 )
             } else {
@@ -347,9 +345,8 @@ fn validate_post_gauntlet_choices(
                     ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE,
                     CreationPhase::Experience,
                     args([
-                        ("max", max.to_string()),
-                        ("seasons", seasons),
                         ("years", budget.post_gauntlet_years.to_string()),
+                        ("years_used", years_used),
                     ]),
                     None,
                 )
@@ -363,7 +360,7 @@ fn validate_post_gauntlet_choices(
     // `budget()` holds it to the points, which quietly rewrites "600 levels" as "all
     // of them" and hands the rest to nobody.
     //
-    // **Not split the way the lab seasons above are**, deliberately. A zero ceiling
+    // **Not split the way the lab-year findings above are**, deliberately. A zero ceiling
     // here has two possible causes — no years at all, or lab work that consumed the
     // whole span — so a message naming either would be wrong half the time. And it
     // needs none: this message states the ceiling and the split rule, both of which
@@ -504,7 +501,7 @@ fn parameter_key(ability: &Id, ruleset: &Ruleset) -> String {
 #[cfg(test)]
 mod tests {
     use crate::childhood::ChildhoodRejection;
-    use crate::life_stage::LifeStagePlan;
+    use crate::life_stage::{LabYears, LifeStagePlan};
     use crate::types::{
         AbilityFunding, AbilityParameterValue, AbilityScore, Entity, EntityKind, Id, RulesetRef,
         Selection,
@@ -974,13 +971,13 @@ mod tests {
         );
     }
 
-    /// A magus of `age` gauntleted at `gauntlet_age`, charging `lab_seasons` seasons
-    /// of lab work against its yearly points and taking `spell_levels` of them as
-    /// levels of spells.
+    /// A magus of `age` gauntleted at `gauntlet_age`, with `lab_years` of lab work
+    /// against its yearly points and taking `spell_levels` of them as levels of
+    /// spells.
     fn out_of_apprenticeship(
         age: u32,
         gauntlet_age: u32,
-        lab_seasons: u32,
+        lab_years: LabYears,
         spell_levels: u32,
     ) -> Entity {
         let mut magus = planned(age);
@@ -988,11 +985,37 @@ mod tests {
         magus.life_stages = Some(LifeStagePlan {
             native_language: Some("German".into()),
             gauntlet_age: Some(gauntlet_age),
-            post_gauntlet_lab_seasons: lab_seasons,
+            post_gauntlet_lab_years: lab_years,
             post_gauntlet_spell_levels: spell_levels,
             ..LifeStagePlan::default()
         });
         magus
+    }
+
+    /// No lab work at all.
+    const NO_LAB: LabYears = LabYears {
+        one_season: 0,
+        two_seasons: 0,
+        three_seasons: 0,
+        four_seasons: 0,
+    };
+
+    /// `years` years spent wholly in the lab, four seasons each.
+    fn full_lab_years(years: u32) -> LabYears {
+        LabYears {
+            four_seasons: years,
+            ..LabYears::default()
+        }
+    }
+
+    /// Three full lab years plus one year of a single season: 13 seasons worked,
+    /// 10 of them charged.
+    fn thirteen_lab_seasons() -> LabYears {
+        LabYears {
+            one_season: 1,
+            four_seasons: 3,
+            ..LabYears::default()
+        }
     }
 
     /// A Gauntlet in the character's future. `budget()` clamps it to the age so no
@@ -1001,7 +1024,7 @@ mod tests {
     /// the clamp happened, rather than letting a magus lose years in silence.
     #[test]
     fn a_gauntlet_age_after_the_characters_age_is_an_error() {
-        let result = validate(&out_of_apprenticeship(25, 40, 0, 0), &rs());
+        let result = validate(&out_of_apprenticeship(25, 40, NO_LAB, 0), &rs());
         let issue = result
             .issues
             .iter()
@@ -1018,8 +1041,8 @@ mod tests {
         // A Gauntlet at the character's own age is the magus standing at it, and a
         // Gauntlet behind it is a magus who has lived on: neither is a fault.
         for legal in [
-            out_of_apprenticeship(25, 25, 0, 0),
-            out_of_apprenticeship(60, 25, 0, 0),
+            out_of_apprenticeship(25, 25, NO_LAB, 0),
+            out_of_apprenticeship(60, 25, NO_LAB, 0),
         ] {
             let issues = codes(&validate(&legal, &rs()));
             assert!(
@@ -1029,31 +1052,102 @@ mod tests {
         }
     }
 
-    /// More lab seasons than the years can hold. A year holds four seasons, all of
-    /// which may be lab work — "to a minimum of 0 if three or four seasons are spent
-    /// on lab work" (ArMDE:2550) — so 35 years hold 140 (F1, 2026-10-03), and
-    /// `budget()` caps the stored total there. Beyond the cap the extra seasons cost
-    /// nothing, which reads as a bargain rather than a mistake unless it is said out
-    /// loud.
+    /// The args of the first issue `entity` raises under `code`, if any.
+    fn issue_args(entity: &Entity, code: &str) -> Option<BTreeMap<String, String>> {
+        validate(entity, &rs())
+            .issues
+            .into_iter()
+            .find(|i| i.code == code)
+            .map(|i| i.args)
+    }
+
+    /// `[(key, value)]` as an issue's args map.
+    fn expected_args(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
+        pairs
+            .iter()
+            .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
+            .collect()
+    }
+
+    /// More lab years than years as a magus (row 56). Each lab year is one of the
+    /// post-Gauntlet years, so the buckets together may not count more years than
+    /// the span holds. Past it the extra years' charge is lost to the floor of 0
+    /// (ArMDE:2550), which reads as a bargain rather than a mistake unless it is
+    /// said out loud.
     #[test]
-    fn more_charged_lab_seasons_than_the_years_hold_is_an_error() {
-        let result = validate(&out_of_apprenticeship(60, 25, 200, 0), &rs());
+    fn more_lab_years_than_years_as_a_magus_is_an_error() {
+        let result = validate(&out_of_apprenticeship(60, 25, full_lab_years(50), 0), &rs());
         let issue = result
             .issues
             .iter()
             .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE)
-            .expect("lab seasons beyond the span are reported");
+            .expect("lab years beyond the span are reported");
         assert_eq!(issue.severity, IssueSeverity::Error);
         assert_eq!(issue.phase, CreationPhase::Experience);
-        assert_eq!(issue.args.get("seasons").map(String::as_str), Some("200"));
-        assert_eq!(issue.args.get("max").map(String::as_str), Some("140"));
-        assert_eq!(issue.args.get("years").map(String::as_str), Some("35"));
+        assert_eq!(
+            issue.args,
+            expected_args(&[("years_used", "50"), ("years", "35")])
+        );
+    }
 
-        // Exactly the cap is legal: 35 years of nothing but lab work.
-        let issues = codes(&validate(&out_of_apprenticeship(60, 25, 140, 0), &rs()));
+    /// The boundary: lab years that exactly fill the span are legal, whatever their
+    /// mix of seasons, and one year more is not — even when that year holds a single
+    /// season, so the span's *seasons* are nowhere near used up.
+    #[test]
+    fn lab_years_exactly_filling_the_span_are_in_range_and_one_more_is_not() {
+        let filling = LabYears {
+            one_season: 10,
+            two_seasons: 10,
+            three_seasons: 10,
+            four_seasons: 5,
+        };
+        let issues = codes(&validate(&out_of_apprenticeship(60, 25, filling, 0), &rs()));
         assert!(
             !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE.into()),
             "issues: {issues:?}"
+        );
+
+        let one_more = LabYears {
+            one_season: 11,
+            ..filling
+        };
+        assert_eq!(
+            issue_args(
+                &out_of_apprenticeship(60, 25, one_more, 0),
+                ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE,
+            ),
+            Some(expected_args(&[("years_used", "36"), ("years", "35")]))
+        );
+    }
+
+    /// A save is untrusted input: buckets at `u32::MAX` sum to a saturated
+    /// `years_used` rather than overflowing or panicking, and are still reported —
+    /// over the span, or without one.
+    #[test]
+    fn lab_year_buckets_at_u32_max_saturate_and_are_reported() {
+        let crafted = LabYears {
+            one_season: u32::MAX,
+            two_seasons: u32::MAX,
+            three_seasons: u32::MAX,
+            four_seasons: u32::MAX,
+        };
+        let saturated = u32::MAX.to_string();
+        assert_eq!(
+            issue_args(
+                &out_of_apprenticeship(60, 25, crafted, 0),
+                ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE,
+            ),
+            Some(expected_args(&[
+                ("years_used", saturated.as_str()),
+                ("years", "35")
+            ]))
+        );
+        assert_eq!(
+            issue_args(
+                &out_of_apprenticeship(25, 25, crafted, 0),
+                ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS,
+            ),
+            Some(expected_args(&[("years_used", saturated.as_str())]))
         );
     }
 
@@ -1062,7 +1156,10 @@ mod tests {
     /// lab seasons is not out of range.
     #[test]
     fn one_year_of_four_lab_seasons_is_in_range() {
-        let issues = codes(&validate(&out_of_apprenticeship(26, 25, 4, 0), &rs()));
+        let issues = codes(&validate(
+            &out_of_apprenticeship(26, 25, full_lab_years(1), 0),
+            &rs(),
+        ));
         assert!(
             !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE.into()),
             "issues: {issues:?}"
@@ -1071,12 +1168,16 @@ mod tests {
 
     /// A magus standing at its Gauntlet has lived no year to work in. The ceiling is
     /// 0 there, and the over-the-ceiling message becomes a non-sequitur: it states
-    /// how many seasons the years hold, which has nothing to do with why the cap is
+    /// how many years the span holds, which has nothing to do with why the cap is
     /// zero. The cause is that the character has no years as a magus at all, so that
-    /// is a finding of its own.
+    /// is a finding of its own, naming only the lab years recorded.
     #[test]
     fn lab_seasons_without_a_year_as_a_magus_name_the_missing_years() {
-        let result = validate(&out_of_apprenticeship(25, 25, 1, 0), &rs());
+        let one_season = LabYears {
+            one_season: 1,
+            ..LabYears::default()
+        };
+        let result = validate(&out_of_apprenticeship(25, 25, one_season, 0), &rs());
         let issue = result
             .issues
             .iter()
@@ -1084,7 +1185,7 @@ mod tests {
             .expect("a season without a year is reported");
         assert_eq!(issue.severity, IssueSeverity::Error);
         assert_eq!(issue.phase, CreationPhase::Experience);
-        assert_eq!(issue.args.get("seasons").map(String::as_str), Some("1"));
+        assert_eq!(issue.args, expected_args(&[("years_used", "1")]));
 
         // One fault, one finding: the general over-the-ceiling code stays silent.
         let issues = codes(&result);
@@ -1094,7 +1195,10 @@ mod tests {
         );
 
         // And with years to work in, the general finding is the one that speaks.
-        let issues = codes(&validate(&out_of_apprenticeship(60, 25, 200, 0), &rs()));
+        let issues = codes(&validate(
+            &out_of_apprenticeship(60, 25, full_lab_years(50), 0),
+            &rs(),
+        ));
         assert!(
             !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS.into()),
             "issues: {issues:?}"
@@ -1111,7 +1215,10 @@ mod tests {
     /// number lives on the Abilities step.
     #[test]
     fn taking_more_spell_levels_than_the_years_grant_is_an_error() {
-        let result = validate(&out_of_apprenticeship(60, 25, 13, 5_000), &rs());
+        let result = validate(
+            &out_of_apprenticeship(60, 25, thirteen_lab_seasons(), 5_000),
+            &rs(),
+        );
         let issue = result
             .issues
             .iter()
@@ -1120,12 +1227,15 @@ mod tests {
         assert_eq!(issue.severity, IssueSeverity::Error);
         assert_eq!(issue.phase, CreationPhase::Experience);
         assert_eq!(issue.args.get("levels").map(String::as_str), Some("5000"));
-        // 35 years × 30 points, less 10 charged lab seasons × 10 (13 stored seasons
-        // pack as three full lab years of three charged, plus one: F1).
+        // 35 years × 30 points, less 10 charged lab seasons × 10 (three full lab
+        // years of three charged, plus one year of one).
         assert_eq!(issue.args.get("points").map(String::as_str), Some("950"));
 
         // Taking every point as levels of spells is a legal split, not a fault.
-        let issues = codes(&validate(&out_of_apprenticeship(60, 25, 13, 950), &rs()));
+        let issues = codes(&validate(
+            &out_of_apprenticeship(60, 25, thirteen_lab_seasons(), 950),
+            &rs(),
+        ));
         assert!(
             !issues.contains(
                 &ValidationIssue::CODE_LIFE_STAGE_SPELL_LEVEL_SPLIT_EXCEEDS_POINTS.into()

@@ -76,7 +76,12 @@ fn fully_populated_entity() -> Entity {
         native_language: Some("Latin".into()),
         childhood_package: Some(Id::new("childhood.package")),
         gauntlet_age: Some(25),
-        post_gauntlet_lab_seasons: 3,
+        post_gauntlet_lab_years: arm_rules::LabYears {
+            one_season: 1,
+            two_seasons: 2,
+            three_seasons: 3,
+            four_seasons: 4,
+        },
         post_gauntlet_spell_levels: 5,
     });
 

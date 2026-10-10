@@ -5,6 +5,7 @@ import type {
   EffectiveScores,
   Entity,
   EntityTypeProfile,
+  LabYears,
   LifeStageBudget,
   LifeStagePlan,
   LifeStageRules,
@@ -144,8 +145,8 @@ function installPlan(plan: LifeStagePlan = {}): void {
 
 /**
  * The engine's life-stage budget, which the post-Gauntlet read-out reports. Shaped
- * as `LifeStageBudget::budget` derives it: `years × 30` less `seasons × 10`, split
- * into levels of spells and the experience left over.
+ * as `LifeStageBudget::budget` derives it: `years × 30` less `charged seasons × 10`,
+ * split into levels of spells and the experience left over.
  */
 function setLifeStageBudget(budget: LifeStageBudget | null): void {
   store.effective = {
@@ -154,14 +155,16 @@ function setLifeStageBudget(budget: LifeStageBudget | null): void {
   } as unknown as EffectiveScores;
 }
 
-/** A magus gauntleted at 25 and now `age`, with `seasons` lab seasons. */
-function magusBudget(age: number, seasons = 0, spellLevels = 0): LifeStageBudget {
+/** A magus gauntleted at 25 and now `age`, with `labYears` of lab work. */
+function magusBudget(age: number, labYears: LabYears = {}, spellLevels = 0): LifeStageBudget {
   const years = age - 25;
-  // Mirrors `life_stage.rs::charged_lab_seasons` (F1): the stored seasons pack into
-  // full lab years of four, three of them charged, plus a remainder.
-  const held = Math.min(seasons, 4 * years);
-  const charged = Math.floor(held / 4) * 3 + Math.min(held % 4, 3);
-  const points = years * 30 - charged * 10;
+  // Mirrors `life_stage.rs::LabYears::charged_seasons` (row 56): each year charges
+  // its lab seasons up to three, so a year of four costs what a year of three does.
+  const charged =
+    (labYears.one_season ?? 0) +
+    (labYears.two_seasons ?? 0) * 2 +
+    ((labYears.three_seasons ?? 0) + (labYears.four_seasons ?? 0)) * 3;
+  const points = Math.max(0, years * 30 - charged * 10);
   return {
     childhood_native_xp: 75,
     childhood_spread_xp: 45,
@@ -382,13 +385,38 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
     installPlan(plan);
   }
 
+  /** The four lab-year counts (row 56), one per number of seasons a year held. */
+  const labYearInputs = [1, 2, 3, 4].map((n) => `life-stage-lab-years-${n}-input`);
+
   const inputs = [
     'life-stage-gauntlet-age-input',
-    'life-stage-lab-seasons-input',
+    ...labYearInputs,
     'life-stage-spell-levels-input',
   ];
 
-  it('offers all three number inputs to a guided magus', () => {
+  /** The `<fieldset>` block holding the lab-year counts. */
+  function labYearsFieldset(body: string): string {
+    // From the `<fieldset>` opening the counts, not crossing a `</fieldset>` before them.
+    const block =
+      /<fieldset(?:(?!<\/fieldset>)[\s\S])*?life-stage-lab-years-1-input[\s\S]*?<\/fieldset>/i;
+    const match = block.exec(body);
+    if (!match) throw new Error('no <fieldset> around the lab-year counts');
+    return match[0];
+  }
+
+  /** The text of the `<label>` wrapping the element with `testid`. */
+  function labelText(body: string, testid: string): string {
+    const label = [...body.matchAll(/<label[\s\S]*?<\/label>/gi)]
+      .map((m) => m[0])
+      .find((block) => block.includes(`data-testid="${testid}"`));
+    if (!label) throw new Error(`no <label> wraps data-testid="${testid}"`);
+    return label
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<[^>]*>/g, '')
+      .trim();
+  }
+
+  it('offers every post-Gauntlet number input to a guided magus', () => {
     installGuidedMagus();
     const body = html();
     for (const testid of inputs) {
@@ -427,7 +455,7 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
   it('carries the plan values, and offers the ruleset default as the Gauntlet placeholder', () => {
     installGuidedMagus({
       gauntlet_age: 25,
-      post_gauntlet_lab_seasons: 6,
+      post_gauntlet_lab_years: { two_seasons: 1, four_seasons: 3 },
       post_gauntlet_spell_levels: 40,
     });
     store.entity.age = 40;
@@ -439,8 +467,50 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
     // `apprenticeship.default_gauntlet_age`. Showing the age here (it used to show
     // 40) told the player the opposite of what the engine would do.
     expect(gauntlet.open).toMatch(/placeholder="25"/);
-    expect(element(body, 'life-stage-lab-seasons-input').open).toMatch(/value="6"/);
+    // Each count in its own field; a bucket the plan does not carry reads as blank.
+    expect(element(body, 'life-stage-lab-years-1-input').open).toMatch(/value=""/);
+    expect(element(body, 'life-stage-lab-years-2-input').open).toMatch(/value="1"/);
+    expect(element(body, 'life-stage-lab-years-3-input').open).toMatch(/value=""/);
+    expect(element(body, 'life-stage-lab-years-4-input').open).toMatch(/value="3"/);
     expect(element(body, 'life-stage-spell-levels-input').open).toMatch(/value="40"/);
+  });
+
+  // Row 56: the lab work is four counts of years, not one total of seasons, so the
+  // single field that held the total is gone rather than kept beside them.
+  it('offers no single lab-seasons total any more', () => {
+    installGuidedMagus({ gauntlet_age: 25 });
+    store.entity.age = 40;
+    expect(has(html(), 'life-stage-lab-seasons-input')).toBe(false);
+  });
+
+  it('groups the four lab-year counts in a fieldset whose legend names them', () => {
+    installGuidedMagus();
+    const fieldset = labYearsFieldset(html());
+    // Native grouping: the legend is what a screen reader announces before each
+    // count, so "1 season" is heard as one of the years of lab work.
+    const legend = /<legend[^>]*>([\s\S]*?)<\/legend>/i.exec(fieldset);
+    expect(legend).not.toBeNull();
+    expect(legend![1].replace(/<[^>]*>/g, '').trim()).toBe('Years of lab work');
+    for (const testid of labYearInputs) expect(fieldset).toContain(`data-testid="${testid}"`);
+  });
+
+  it('labels each lab-year count with its number of seasons', () => {
+    installGuidedMagus();
+    const body = html();
+    expect(labelText(body, 'life-stage-lab-years-1-input')).toBe('1 season');
+    expect(labelText(body, 'life-stage-lab-years-2-input')).toBe('2 seasons');
+    expect(labelText(body, 'life-stage-lab-years-3-input')).toBe('3 seasons');
+    expect(labelText(body, 'life-stage-lab-years-4-input')).toBe('4 seasons');
+  });
+
+  it('takes a whole count of years, from 0 up to the engine u32', () => {
+    installGuidedMagus();
+    const body = html();
+    for (const testid of labYearInputs) {
+      const open = element(body, testid).open;
+      expect(open).toMatch(/min="0"/);
+      expect(open).toMatch(/max="4294967295"/);
+    }
   });
 
   it('clamps the Gauntlet placeholder to a magus younger than the default', () => {
@@ -476,9 +546,13 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
     installGuidedMagus();
     const body = html();
     expect(body).toContain('Gauntlet age');
-    expect(body).toContain('Lab seasons');
+    expect(body).toContain('Years of lab work');
     expect(body).toContain('Levels of spells');
-    expect(body).not.toMatch(/>\s*post_gauntlet_lab_seasons\s*</);
+    // The retired single-total label is gone with its field.
+    expect(body).not.toContain('Lab seasons');
+    expect(body).not.toMatch(/>\s*post_gauntlet_lab_years\s*</);
+    expect(body).not.toMatch(/>\s*(one_season|two_seasons|three_seasons|four_seasons)\s*</);
+    expect(body).not.toMatch(/>\s*life-stage-lab-years-[\w-]+\s*</);
     expect(body).not.toMatch(/>\s*gauntlet_age\s*</);
   });
 
@@ -497,16 +571,17 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
   });
 
   it('reads out the engine years, points and split, announced', () => {
+    const labYears: LabYears = { two_seasons: 1, four_seasons: 1 };
     installGuidedMagus({
       gauntlet_age: 25,
-      post_gauntlet_lab_seasons: 6,
+      post_gauntlet_lab_years: labYears,
       post_gauntlet_spell_levels: 40,
     });
     store.entity.age = 40;
-    setLifeStageBudget(magusBudget(40, 6, 40));
+    setLifeStageBudget(magusBudget(40, labYears, 40));
     const summary = element(html(), 'life-stage-post-gauntlet-summary');
-    // 15 years × 30 = 450. The 6 stored lab seasons pack as one full lab year (3
-    // charged) plus 2 (F1, `life_stage.rs::charged_lab_seasons`), so 5 charged × 10
+    // 15 years × 30 = 450. A year of four lab seasons charges three and a year of two
+    // charges two (`life_stage.rs::LabYears::charged_seasons`), so 5 charged × 10
     // leave 400 points, 40 of them taken as levels of spells.
     expect(summary.open).toMatch(/role="status"/);
     expect(summary.text).toContain('15');
@@ -525,10 +600,10 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
   });
 
   describe('with no years as a magus (guided-creation-review-2026-08 #11)', () => {
-    /** The two fields whose ceiling is a multiple of the post-Gauntlet years. */
-    const scaled = ['life-stage-lab-seasons-input', 'life-stage-spell-levels-input'];
+    /** The fields whose ceiling is a multiple of the post-Gauntlet years. */
+    const scaled = [...labYearInputs, 'life-stage-spell-levels-input'];
 
-    it('takes no lab seasons or levels of spells while the span is empty', () => {
+    it('takes no lab years or levels of spells while the span is empty', () => {
       installGuidedMagus({ gauntlet_age: 25 });
       store.entity.age = 25;
       setLifeStageBudget(magusBudget(25));
@@ -543,7 +618,7 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
       expect(element(body, 'life-stage-gauntlet-age-input').open).not.toMatch(/readonly/);
     });
 
-    it('says why, in words, and points both fields at the explanation', () => {
+    it('says why, in words, and points every such field at the explanation', () => {
       installGuidedMagus({ gauntlet_age: 25 });
       store.entity.age = 25;
       setLifeStageBudget(magusBudget(25));
@@ -562,7 +637,7 @@ describe('LifeStagePanel post-Gauntlet fields (slice 6b5)', () => {
       }
     });
 
-    it('opens both fields again as soon as one year is earned', () => {
+    it('opens every such field again as soon as one year is earned', () => {
       installGuidedMagus({ gauntlet_age: 25 });
       store.entity.age = 26;
       setLifeStageBudget(magusBudget(26));

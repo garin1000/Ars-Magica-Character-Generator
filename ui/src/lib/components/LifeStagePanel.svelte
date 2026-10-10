@@ -5,6 +5,7 @@
   import AbilityParameterCombo from './AbilityParameterCombo.svelte';
   import AgeFields from './AgeFields.svelte';
   import ChildhoodPackagePicker from './ChildhoodPackagePicker.svelte';
+  import LabYearsFields from './LabYearsFields.svelte';
 
   // Where the character's experience comes from: one total the player enters, or
   // the experience its life stages earn.
@@ -45,7 +46,7 @@
 
   // The years after the Gauntlet are worth what the DATA says (30 points a year, 10
   // a charged lab season), so a ruleset shipping no such block grants nothing and the
-  // three fields would be dead controls — hence the gate.
+  // post-Gauntlet fields would be dead controls — hence the gate.
   const postGauntlet = $derived(rules?.post_apprenticeship ?? null);
   const showPostGauntlet = $derived(isMagus && postGauntlet != null);
   const plan = $derived(store.entity.life_stages ?? null);
@@ -63,20 +64,20 @@
   });
   // The engine's own figures for those years; null until an age makes a budget.
   const budget = $derived(store.effective?.life_stage ?? null);
-  // A magus standing at its Gauntlet has lived no year as a magus, and BOTH the lab
-  // seasons and the levels of spells are priced per year — three charged seasons a
-  // year (`ArMDE:2550`), 30 fungible points a year (`ArMDE:2539`) — so with no years each
-  // ceiling is 0 and every value either field could take is already an error. The
-  // fields go read-only rather than staying open to be typed into: the state cannot
-  // be entered by hand, and the note below says why it is closed.
+  // A magus standing at its Gauntlet has lived no year as a magus, and BOTH the years
+  // of lab work and the levels of spells are counted against those years — each lab
+  // year is one of them (`ArMDE:2550`), and the points are 30 a year (`ArMDE:2539`) —
+  // so with no years each ceiling is 0 and every value those fields could take is
+  // already an error. The fields go read-only rather than staying open to be typed
+  // into: the state cannot be entered by hand, and the note below says why it is closed.
   //
   // `readonly`, not `disabled` — a disabled control leaves the tab order and takes
   // its label out of the accessibility tree with it, so the one user who most needs
   // the explanation never lands on the field that carries it.
   //
   // Gated on the ENGINE's year count, not on the points: a points total of 0 can also
-  // come from lab seasons eating the whole span, and that is a live consequence of
-  // the neighbouring field which the player fixes by editing it. Only an empty span
+  // come from lab work eating the whole span, and that is a live consequence of the
+  // neighbouring fields which the player fixes by editing them. Only an empty span
   // is unfixable from either field — the Gauntlet age above ends it, and stays open.
   // `budget == null` is "not computed yet", never "no years".
   const noPostGauntletYears = $derived(budget != null && budget.post_gauntlet_years === 0);
@@ -156,20 +157,13 @@
               data-testid="life-stage-gauntlet-age-input"
             />
           </label>
-          <label class="field inline">
-            <span>{store.t('life-stage-lab-seasons-label')}</span>
-            <input
-              type="number"
-              min="0"
-              max={U32_MAX}
-              readonly={noPostGauntletYears}
-              value={fieldValue(plan?.post_gauntlet_lab_seasons)}
-              aria-describedby={noPostGauntletYears ? noYearsNoteId : undefined}
-              oninput={(event) => store.setPostGauntletLabSeasons(count(event))}
-              use:commitStored={{ read: () => fieldValue(plan?.post_gauntlet_lab_seasons) }}
-              data-testid="life-stage-lab-seasons-input"
-            />
-          </label>
+          <LabYearsFields
+            value={plan?.post_gauntlet_lab_years}
+            testidPrefix="life-stage-lab-years"
+            readonly={noPostGauntletYears}
+            describedBy={noYearsNoteId}
+            onchange={(bucket, years) => store.setPostGauntletLabYears(bucket, years)}
+          />
           <label class="field inline">
             <span>{store.t('life-stage-spell-levels-label')}</span>
             <input
@@ -213,10 +207,11 @@
       {#if showPostGauntlet}
         {#if noPostGauntletYears}
           <!-- The one surviving note on this panel (manual-testing-findings #21): it
-               states why the two fields above are read-only, which they cannot state
-               for themselves, and it is the `aria-describedby` target of both.
-               Deliberately NOT a `role="status"` live region: the two references
-               together would announce it twice, once on arrival and again on focus. -->
+               states why the lab-year counts and the levels of spells above are
+               read-only, which they cannot state for themselves, and it is the
+               `aria-describedby` target of each. Deliberately NOT a `role="status"`
+               live region: the references would announce it twice, once on arrival
+               and again on focus. -->
           <div class="life-stage-hints">
             <span class="funding-hint" id={noYearsNoteId} data-testid={noYearsNoteId}>
               {store.t('life-stage-post-gauntlet-no-years-note')}
@@ -225,7 +220,7 @@
         {/if}
         {#if budget}
           <!-- Announced: the numbers arrive in response to an edit above (either age,
-               the lab seasons or the split), so their change must reach a screen
+               the lab years or the split), so their change must reach a screen
                reader. Every figure is the engine's own — nothing is recomputed here. -->
           <span
             class="post-gauntlet-summary"
