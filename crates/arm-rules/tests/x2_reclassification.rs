@@ -842,6 +842,20 @@ const X2_VERBATIM_SCOPE: &[&str] = &[
     "flaw.weak_scholar",
     "flaw.weak_spontaneous_magic",
     "virtue.true_friend_pc",
+    // P8-5 (`design-p8-resync.md` § "What moves" (f)): three `uncomputed_rule`
+    // entries with a full shipped `description` that no earlier X2 slice
+    // happened to gate, found by the resync's own relocation exposing a
+    // pre-existing mismatch against the book (none of the three involve a
+    // resync-caused text change). `flaw.bound_casting_tools`: D85 Q3
+    // withdraws D39 — the book's own line is "...for a few weeks, his last
+    // years." ("last" as the verb), not the truncated-looking reconstruction
+    // this catalogue shipped. `flaw.careless_with_ability`: shipped text said
+    // "chosen when this Virtue is taken" in both locales, though the entry is
+    // a Flaw (ArMDE:5846 says "this Flaw", as does its German equivalent).
+    // `flaw.repellent`: ArMDE:6752's scanned "eves" is "eyes".
+    "flaw.bound_casting_tools",
+    "flaw.careless_with_ability",
+    "flaw.repellent",
 ];
 
 /// D5/D46: a shipped `description` is a rule's only carrier once the entry

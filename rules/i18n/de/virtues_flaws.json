@@ -239,8 +239,8 @@
   },
   "flaw.careless_with_ability": {
     "name": "Nachlässig mit {ability}",
-    "summary": "Der Charakter ist in Bezug auf eine bestimmte Fertigkeit, die bei der Aufnahme dieser Tugend gewählt wird, besonders leichtsinnig.",
-    "description": "Der Charakter ist in Bezug auf eine bestimmte Fertigkeit, die bei der Aufnahme dieser Tugend gewählt wird, besonders leichtsinnig. Diese Fertigkeit sollte eine sein, die für den Charakter wichtig ist, andernfalls kann die Spieltruppe die Wahl dieses Fehlers ablehnen. Wenn er scheitert, tut er es auf dramatische Weise. Immer wenn er bei der Verwendung der Fertigkeit eine Null würfelt, wird diese Null als Patzer behandelt. Er muss je nach Umständen möglicherweise zusätzliche Patzerwürfel würfeln, erleidet aber stets mindestens die Auswirkungen eines einzelnen Patzers. Dieser Fehler kann mehr als einmal genommen werden; jedes Mal gilt er für eine andere Fertigkeit."
+    "summary": "Der Charakter ist in Bezug auf eine bestimmte Fertigkeit, die bei der Aufnahme dieses Fehlers gewählt wird, besonders leichtsinnig.",
+    "description": "Der Charakter ist in Bezug auf eine bestimmte Fertigkeit, die bei der Aufnahme dieses Fehlers gewählt wird, besonders leichtsinnig. Diese Fertigkeit sollte eine sein, die für den Charakter wichtig ist, andernfalls kann die Spieltruppe die Wahl dieses Fehlers ablehnen. Wenn er scheitert, tut er es auf dramatische Weise. Immer wenn er bei der Verwendung der Fertigkeit eine Null würfelt, wird diese Null als Patzer behandelt. Er muss je nach Umständen möglicherweise zusätzliche Patzerwürfel würfeln, erleidet aber stets mindestens die Auswirkungen eines einzelnen Patzers. Dieser Fehler kann mehr als einmal genommen werden; jedes Mal gilt er für eine andere Fertigkeit."
   },
   "flaw.castratus": {
     "name": "Kastrat",

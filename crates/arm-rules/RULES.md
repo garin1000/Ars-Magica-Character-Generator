@@ -874,21 +874,26 @@ descriptor) and exactly these further 7 index errata, for 8 rows total:
 | `virtue.minor_enchantments` (Minor Enchantments) | `ArMDE:4604` *Minor, Supernatural* | now listed under Supernatural, Minor (`ArMDE:3203-3254`) | omission, resolved by the P8 re-sync | the re-sync added the missing index link; descriptor and index now agree |
 | `virtue.turb_trained` (Turb Trained) | `ArMDE:5251` *Minor, Social Status* | now listed under Social Status, Minor (`ArMDE:3256-3308`) | omission, resolved by the P8 re-sync | the re-sync added the missing index link; descriptor and index now agree |
 | `flaw.true_love_minor` (True Love, Minor) | `ArMDE:6943` and `ArMDE:6948` *Major or Minor, Story* | now listed under Story, Minor (`ArMDE:5571-5588`); Story, Major's own link (`ArMDE:5444`) was also renamed from "True Love (NPC)" to "True Love" | omission, resolved by the P8 re-sync | the re-sync added the missing index link and dropped the stale "(NPC)" qualifier; both magnitudes are real, per the Dual-magnitude split convention above |
-| `flaw.bound_to_role_role` (Bound to (Role) Role) | `ArMDE:5807` *Minor*, Supernatural | `ArMDE:5607`, listed under Supernatural, **Major** | disagreement (magnitude) | descriptor (Minor) stands — shipped data already agrees |
-| `flaw.broken_vessel` (Broken Vessel) | `ArMDE:5825` *Minor*, Supernatural | `ArMDE:5608`, listed under Supernatural, **Major** | disagreement (magnitude) | descriptor (Minor) stands — shipped data already agrees |
-| `flaw.weak_personality` (Weak Personality) | `ArMDE:7148` *Minor*, **Personality** | `ArMDE:5568`, listed under Story, Minor | disagreement (category) | descriptor (Personality) stands — shipped data already agrees (D25's original finding) |
-| Folk Magic | Virtue heading `ArMDE:3978`, correctly listed under Supernatural, Minor in the Virtue index (`ArMDE:3218`) | ALSO stray-listed under Supernatural, Minor in the **Flaw** index (`ArMDE:3218`) | stray index entry | Folk Magic is a Virtue only (`virtue.folk_magic`); the Flaw-index row is spurious and ignored |
+| `flaw.bound_to_role_role` (Bound to (Role) Role) | `ArMDE:5807` *Minor, Supernatural* | now listed under Supernatural, Minor (`ArMDE:5607`) | disagreement (magnitude), resolved by the P8 re-sync | the index's stray "Major" placement is gone; descriptor and index now agree (shipped data already agreed) |
+| `flaw.broken_vessel` (Broken Vessel) | `ArMDE:5825` *Minor, Supernatural* | now listed under Supernatural, Minor (`ArMDE:5608`) | disagreement (magnitude), resolved by the P8 re-sync | the index's stray "Major" placement is gone; descriptor and index now agree (shipped data already agreed) |
+| `flaw.weak_personality` (Weak Personality) | `ArMDE:7148` *Minor, Personality* | now listed under Personality, Minor (`ArMDE:5568`) | disagreement (category), resolved by the P8 re-sync | the index moved from Story to Personality; descriptor and index now agree (shipped data already agreed, D25's original finding) |
+| Folk Magic | Virtue heading `ArMDE:3978`, correctly listed under Supernatural, Minor in the Virtue index (`ArMDE:3218`) | the stray listing under Supernatural, Minor in the Flaw index is gone | stray index entry, resolved by the P8 re-sync | the re-sync's own errata list confirms the fix (`ArMDE:85`: "The virtue Folk Magic is erroneously listed in Flaws (fixed...)"); Folk Magic is a Virtue only (`virtue.folk_magic`), and now listed as one exactly once |
 
 **Sweep result, stated explicitly per D25 obligation 2: all 662 catalogue
 entries checked, 0 data mismatches, 8 index errata (the above), none still
 open.**
 
-**P8 re-sync update (2026-10, commit 6955ee8a):** the re-sync fixed the first
-four rows' omissions directly upstream — each now has its missing index link,
-and True Love's also dropped the stale "(NPC)" qualifier — so those four are no
-longer disagreements; the citations above point at the resolved entries. The
-remaining four rows (`bound_to_role_role`, `broken_vessel`, `weak_personality`,
-Folk Magic) were not re-examined against the re-synced text for this pass.
+**P8 re-sync update (2026-10, commit 6955ee8a; P8-5 pass confirms the
+remaining four):** the re-sync fixed all eight rows' index errata directly
+upstream — the first four omissions each gained their missing index link (True
+Love also dropping the stale "(NPC)" qualifier), the two magnitude
+disagreements (`bound_to_role_role`, `broken_vessel`) now list under
+Supernatural, **Minor** instead of Major, `weak_personality`'s index entry
+moved from Story to Personality, and Folk Magic's stray Flaw-index listing is
+gone (confirmed by the re-sync's own new errata-list entry at `ArMDE:85`,
+crediting "garin1000" for the report). None of the eight rows is still a live
+disagreement; the citations above all point at the resolved, now-agreeing
+text.
 
 #### A category rule may carry a condition (open-to-dos row 20)
 > "You may not take Hermetic Virtues and Flaws, unless you have The Gift (this

@@ -190,7 +190,7 @@
   "flaw.bound_casting_tools": {
     "name": "Bound Casting Tools",
     "summary": "The magus's casting tools, as used by House Verditius, are so personal that they become lasting Arcane Connections to him.",
-    "description": "The magus's casting tools, as used by House Verditius, are so personal that they become lasting Arcane Connections to him. Regular casting tools remain as Arcane Connections for a few weeks, but his last for years."
+    "description": "The magus's casting tools, as used by House Verditius, are so personal that they become lasting Arcane Connections to him. Regular casting tools remain as Arcane Connections for a few weeks, his last years."
   },
   "flaw.bound_magic": {
     "name": "Bound Magic",
@@ -238,8 +238,8 @@
   },
   "flaw.careless_with_ability": {
     "name": "Careless with {ability}",
-    "summary": "The character is particularly reckless when it comes to a particular Ability, chosen when this Virtue is taken.",
-    "description": "The character is particularly reckless when it comes to a particular Ability, chosen when this Virtue is taken. This Ability should be one that is important to the character, or the troupe may veto the choice of this Flaw. When she fails, she does so dramatically. Whenever she rolls a zero when using the Ability, that zero is treated as a botch. She may need to roll extra botch dice depending on the circumstances, but she always suffer the effects of at least a single botch. This Flaw may be taken more than once; each time, it applies to a different Ability."
+    "summary": "The character is particularly reckless when it comes to a particular Ability, chosen when this Flaw is taken.",
+    "description": "The character is particularly reckless when it comes to a particular Ability, chosen when this Flaw is taken. This Ability should be one that is important to the character, or the troupe may veto the choice of this Flaw. When she fails, she does so dramatically. Whenever she rolls a zero when using the Ability, that zero is treated as a botch. She may need to roll extra botch dice depending on the circumstances, but she always suffer the effects of at least a single botch. This Flaw may be taken more than once; each time, it applies to a different Ability."
   },
   "flaw.castratus": {
     "name": "Castratus",
@@ -1207,7 +1207,7 @@
   "flaw.repellent": {
     "name": "Repellent",
     "summary": "The character has developed one of the physical characteristics of his demonic creator, which causes fear and revulsion among normal humans.",
-    "description": "The character has developed one of the physical characteristics of his demonic creator, which causes fear and revulsion among normal humans. The character makes all rolls requiring trust with a -6 penalty. The character also gains a minor advantage from the repellent feature. As examples, a character with horns, claws, or fangs could learn to use them in melee, a scaled character might have a Soak bonus of +3, and a character with demonic eves might see in the dark."
+    "description": "The character has developed one of the physical characteristics of his demonic creator, which causes fear and revulsion among normal humans. The character makes all rolls requiring trust with a -6 penalty. The character also gains a minor advantage from the repellent feature. As examples, a character with horns, claws, or fangs could learn to use them in melee, a scaled character might have a Soak bonus of +3, and a character with demonic eyes might see in the dark."
   },
   "flaw.restricted_learning": {
     "name": "Restricted Learning",
