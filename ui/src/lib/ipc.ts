@@ -51,6 +51,8 @@ export interface PersistedSettings {
   default_saga_year: number;
   lang: string | null;
   theme: string | null;
+  update_check: boolean | null;
+  update_check_asked_version: string | null;
   validation_mode: ValidationMode | null;
 }
 
@@ -63,6 +65,8 @@ export interface SettingsPatch {
   default_saga_year?: number;
   lang?: string;
   theme?: string;
+  update_check?: boolean;
+  update_check_asked_version?: string;
   validation_mode?: ValidationMode;
 }
 
@@ -81,6 +85,35 @@ export function readSettings(): Promise<PersistedSettings> {
 /** Persist the settings the patch names, leaving every other key alone. */
 export function writeSettings(patch: SettingsPatch): Promise<void> {
   return invoke('write_settings', { patch });
+}
+
+/** The update check's state at start, as `arm_app::commands::UpdateCheckStatus`. */
+export interface UpdateCheckStatus {
+  prompt_due: boolean;
+  enabled: boolean;
+}
+
+/** Whether the consent prompt is due and whether the check is on. Infallible. */
+export function updateCheckStatus(): Promise<UpdateCheckStatus> {
+  return invoke('update_check_status');
+}
+
+/** Record the consent answer together with the running version, in one write. */
+export function answerUpdatePrompt(enabled: boolean): Promise<void> {
+  return invoke('answer_update_prompt', { enabled });
+}
+
+/**
+ * The newer release's version, or `null` for every other outcome. Rust re-reads
+ * the consent first, so this sends nothing unless the user agreed.
+ */
+export function checkForUpdate(): Promise<string | null> {
+  return invoke('check_for_update');
+}
+
+/** Open the fixed release-page URL in the browser. */
+export function openReleasePage(): Promise<void> {
+  return invoke('open_release_page');
 }
 
 /**

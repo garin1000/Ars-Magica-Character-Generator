@@ -36,6 +36,19 @@ settings-close = Close
 # and this seeds the next one. The label says what it seeds so the dialog needs no
 # explanatory sentence under it.
 settings-default-saga-year-label = Saga year for new documents
+# M6.6: the opt-in update check, as a Settings checkbox.
+settings-update-check = Check for updates at start
+
+# M6.6: the consent prompt on a first start (and the first start of a newer
+# version), and the newer-release notice. `$version` is passed as a string, so
+# Fluent applies no number formatting.
+update-prompt-title = Check for updates?
+update-prompt-message = At each start, ask GitHub whether a newer version exists. Nothing is downloaded.
+update-prompt-enable = Check at start
+update-prompt-decline = Don't check
+update-available = Version { $version } is available.
+update-open-release-page = Open release page
+update-dismiss = Dismiss
 
 type-label = Character type
 type-grog = Grog

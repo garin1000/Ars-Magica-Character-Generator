@@ -44,6 +44,7 @@ import * as ipc from './ipc';
 import { MythicWorkflow } from './mythic-workflow.svelte';
 import { SelectionWorkflow } from './selection-workflow.svelte';
 import { SpellWorkflow } from './spell-workflow.svelte';
+import { UpdateCheck } from './update-check.svelte';
 import type {
   AgingNote,
   CloseGuardLabels,
@@ -914,6 +915,8 @@ class AppStore {
     // A native file dialog is open: the shell is inert and the store actions
     // no-op, so nothing may start a second one.
     if (this.busy) return false;
+    // The update-check consent prompt is modal and must be answered first.
+    if (this.updateCheck.promptOpen) return false;
     switch (action) {
       case 'new':
       case 'open':
@@ -991,6 +994,9 @@ class AppStore {
    */
   async init(): Promise<void> {
     await this.loadSettings();
+    // Not awaited: the update check must never hold the ruleset load back, and
+    // `start` swallows its own read failures.
+    void this.updateCheck.start();
     await this.#reloadRuleset(true);
   }
 
@@ -1075,6 +1081,17 @@ class AppStore {
    * closing it answers nothing and cancels nothing.
    */
   settingsOpen = $state(false);
+
+  /**
+   * The opt-in update check (M6.6): consent prompt, session check and notice.
+   * An app preference, never document state, so nothing in it touches `entity`
+   * and the unsaved-changes guard cannot see it.
+   */
+  readonly updateCheck = new UpdateCheck({
+    setError: (error) => {
+      this.error = error;
+    },
+  });
 
   /** Show the settings modal. @see documentActionEnabled */
   openSettings(): void {
@@ -2745,6 +2762,7 @@ class AppStore {
       if (isLang(stored.lang)) this.lang = stored.lang;
       if (isTheme(stored.theme)) this.theme = stored.theme;
       if (stored.validation_mode !== null) this.mode = stored.validation_mode;
+      this.updateCheck.enabled = stored.update_check === true;
     } catch {
       // See above: defaults stand, and the launch proceeds.
     }

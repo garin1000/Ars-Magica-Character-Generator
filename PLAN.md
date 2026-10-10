@@ -730,24 +730,30 @@ Scope: the app can check GitHub for a newer release and tell the user. The check
 is **opt-in**: nothing goes out over the network until the user has agreed.
 Requested by Norbert, 2026-10-04. Comes **before M7**.
 
-- [ ] **Ask on first start.** On the first launch, and on the first launch of a
+Done 2026-10-10; design decisions in `docs/vf-audit/decisions.md` **D90**.
+
+- [x] **Ask on first start.** On the first launch, and on the first launch of a
       newer app version, ask whether the app should check for updates. The
       answer is stored in a per-user settings file, along with the app version
       it was given for. A version newer than the stored one asks again.
-- [ ] **Preference can be changed later**, e.g. through a menu item or a
+- [x] **Preference can be changed later**, e.g. through a menu item or a
       settings entry, following the menu-accelerator rule in `CLAUDE.md`.
-- [ ] **The check itself:** if enabled, query the GitHub latest-release
+      *Shipped as a checkbox in the Settings dialog, so no new menu item or
+      accelerator.*
+- [x] **The check itself:** if enabled, query the GitHub latest-release
       endpoint and compare semver against the running version. A newer
       release shows a non-blocking notice with a link to the release page.
       Failures (offline, rate limit, bad response) are silent. Nothing is
       downloaded or installed.
-- [ ] **Hostile-input robustness:** the response is untrusted. Use a size cap
+- [x] **Hostile-input robustness:** the response is untrusted. Use a size cap
       and a timeout, parse the version strictly, and never panic.
-- [ ] **All strings in Fluent**, EN and DE.
-- [ ] **`CLAUDE.md` invariant update:** it says the app "makes no outbound
+- [x] **All strings in Fluent**, EN and DE.
+- [x] **`CLAUDE.md` invariant update:** it says the app "makes no outbound
       calls in normal operation". Amend it to name this single opt-in call.
       The same applies to the CSP's `connect-src`.
-- [ ] **Tests:** the version comparison and the "ask again?" logic are pure
+      *The request is made in Rust, not the webview, so the CSP and the
+      capabilities are unchanged.*
+- [x] **Tests:** the version comparison and the "ask again?" logic are pure
       and unit-tested. The HTTP call sits behind a seam so it can be mocked.
       e2e covers the first-start prompt.
 
@@ -852,7 +858,7 @@ Full detail, field inventory, and quirks: **`docs/scribus-character-sheet.md`**.
 
 ---
 
-## Current focus: Milestone 6.6 — Milestones 0–6, both audits and the stabilisation round are complete
+## Current focus: Milestone 7 — Milestones 0–6.6, both audits and the stabilisation round are complete
 
 Milestones 0–5.6 complete: the direct-entry gate is closed — every core-rules
 character is fully enterable and its combat/Soak/casting/lab totals computed
@@ -986,9 +992,8 @@ each with a fix round planned slice by slice (decisions D83 and D84). The second
 retest passed every step. The save schema is at version 23. The app is at **version
 0.4.0**.
 
-**Next: Milestone 6.6, the optional update check**, then **Milestone 7, the
-character-sheet window**. Detail: their sections above. Two small open to-dos can go
-alongside them (`docs/open-todos.md` rows 55 and 56).
+**Milestone 6.6, the optional update check, is done** (D90). **Next: Milestone 7, the
+character-sheet window**. Detail: its section above.
 
 ---
 

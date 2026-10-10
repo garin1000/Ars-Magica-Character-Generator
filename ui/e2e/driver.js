@@ -24,6 +24,9 @@ import fs from 'node:fs';
 import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 /** The port worker 0 uses — the one the suite has always used. */
 const BASE_PORT = 4444;
@@ -157,6 +160,80 @@ export function workerConfigHome(repoRoot, env) {
   const dir = path.resolve(repoRoot, `tmp/e2e-config${workerSuffix(env) || '-0'}`);
   fs.mkdirSync(dir, { recursive: true });
   return dir;
+}
+
+/**
+ * The settings file the app reads under a worker's `XDG_CONFIG_HOME`.
+ *
+ * Tauri's `app_config_dir()` on Linux is `$XDG_CONFIG_HOME/<identifier>`, and
+ * the identifier is read out of `tauri.conf.json` rather than retyped here.
+ *
+ * @param {string} configHome a {@link workerConfigHome} directory
+ * @returns {string}
+ */
+export function workerSettingsFile(configHome) {
+  const conf = JSON.parse(
+    fs.readFileSync(path.resolve(repoRoot, 'crates/arm-app/tauri.conf.json'), 'utf8'),
+  );
+  return path.join(configHome, conf.identifier, 'settings.json');
+}
+
+/**
+ * Throws unless `dir` lies inside the repo-local `tmp/`. Every helper below
+ * writes or deletes under a config home, and a mistake there must never reach
+ * the developer's real `~/.config`.
+ *
+ * @param {string} dir
+ */
+function assertUnderRepoTmp(dir) {
+  const tmpRoot = path.resolve(repoRoot, 'tmp') + path.sep;
+  if (!path.resolve(dir).startsWith(tmpRoot)) {
+    throw new Error(`refusing to touch ${dir}: config homes must live under ${tmpRoot}`);
+  }
+}
+
+/**
+ * Merge `patch` into a worker's settings file, keeping every other key. A file
+ * that is missing or not a JSON object counts as empty.
+ *
+ * @param {string} configHome a {@link workerConfigHome} directory under `tmp/`
+ * @param {Record<string, unknown>} patch
+ */
+export function mergeWorkerSettings(configHome, patch) {
+  assertUnderRepoTmp(configHome);
+  const file = workerSettingsFile(configHome);
+  let stored = {};
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) stored = parsed;
+  } catch {
+    // Missing or unreadable: start from nothing, as the app itself would.
+  }
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, `${JSON.stringify({ ...stored, ...patch })}\n`);
+}
+
+/**
+ * Record a "Don't check" answer to the update-check consent prompt (M6.6) for
+ * `version`, so the app launches without the prompt and never checks. Every
+ * spec but the consent spec starts this way; see `e2e/README.md`.
+ *
+ * @param {string} configHome a {@link workerConfigHome} directory under `tmp/`
+ * @param {string} version the running app's version (`ui/package.json`)
+ */
+export function seedUpdateCheckAnswer(configHome, version) {
+  mergeWorkerSettings(configHome, { update_check: false, update_check_asked_version: version });
+}
+
+/**
+ * Empty a worker's config home, so the next launch is a genuine first start.
+ *
+ * @param {string} configHome a {@link workerConfigHome} directory under `tmp/`
+ */
+export function resetWorkerConfigHome(configHome) {
+  assertUnderRepoTmp(configHome);
+  fs.rmSync(configHome, { recursive: true, force: true });
+  fs.mkdirSync(configHome, { recursive: true });
 }
 
 /**

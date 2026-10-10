@@ -116,6 +116,20 @@ pub struct SettingsPatch {
         skip_serializing_if = "Option::is_none"
     )]
     pub theme: Option<String>,
+    /// Whether the user agreed to the update check (M6.6).
+    #[serde(
+        default,
+        deserialize_with = "lenient",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub update_check: Option<bool>,
+    /// The app version that last asked for the update-check consent.
+    #[serde(
+        default,
+        deserialize_with = "lenient",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub update_check_asked_version: Option<String>,
     /// The default [`ValidationMode`](arm_rules::ValidationMode) for a new document.
     #[serde(
         default,
@@ -137,6 +151,10 @@ pub struct Settings {
     pub lang: Option<String>,
     /// The UI color theme, or `None` when unset.
     pub theme: Option<String>,
+    /// The update-check consent, or `None` when never answered.
+    pub update_check: Option<bool>,
+    /// The app version that last asked for the consent, or `None`.
+    pub update_check_asked_version: Option<String>,
     /// The default validation mode, or `None` when unset.
     pub validation_mode: Option<arm_rules::ValidationMode>,
 }
@@ -200,6 +218,8 @@ pub fn read_settings(path: Option<&Path>) -> Settings {
             .unwrap_or(arm_rules::DEFAULT_SAGA_YEAR),
         lang: stored.lang,
         theme: stored.theme,
+        update_check: stored.update_check,
+        update_check_asked_version: stored.update_check_asked_version,
         validation_mode: stored.validation_mode,
     }
 }
@@ -221,6 +241,14 @@ pub fn write_settings(path: &Path, patch: &SettingsPatch) -> Result<(), AppError
     }
     if patch.theme.is_some() {
         settings.theme.clone_from(&patch.theme);
+    }
+    if patch.update_check.is_some() {
+        settings.update_check = patch.update_check;
+    }
+    if patch.update_check_asked_version.is_some() {
+        settings
+            .update_check_asked_version
+            .clone_from(&patch.update_check_asked_version);
     }
     if patch.validation_mode.is_some() {
         settings.validation_mode = patch.validation_mode;

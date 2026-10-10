@@ -16,6 +16,7 @@ use crate::menu::{MenuFlags, MenuLabels};
 use crate::ruleset_io;
 use crate::ruleset_io::{AgingApplication, AgingProjection, AgingReversion, ChildhoodApplication};
 use crate::settings;
+use crate::update_check;
 
 /// Holds the parsed, localized ruleset so validation does not re-read and
 /// re-check the rules files on every keystroke. `None` until `load_ruleset`
@@ -558,6 +559,156 @@ pub fn write_settings(patch: settings::SettingsPatch, app: AppHandle) -> Result<
     settings::store_settings(&settings_candidates(&app), &patch).map(|_| ())
 }
 
+/// What the frontend needs to know about the update check at start (M6.6).
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct UpdateCheckStatus {
+    /// The consent prompt must be shown.
+    pub prompt_due: bool,
+    /// The user agreed to the check.
+    pub enabled: bool,
+}
+
+/// The stored settings, read from whichever candidate really exists.
+fn stored_settings(candidates: &[std::path::PathBuf]) -> settings::Settings {
+    settings::read_settings(settings::pick_settings_file(candidates).as_deref())
+}
+
+/// The update-check status as the settings in `candidates` record it.
+///
+/// Never fails: an unreadable file reads as "never asked, not enabled", which
+/// shows the prompt and sends nothing.
+pub fn update_check_status_from(candidates: &[std::path::PathBuf]) -> UpdateCheckStatus {
+    let stored = stored_settings(candidates);
+    UpdateCheckStatus {
+        prompt_due: update_check::update_prompt_due(
+            stored.update_check_asked_version.as_deref(),
+            &update_check::running_version(),
+        ),
+        enabled: stored.update_check == Some(true),
+    }
+}
+
+/// The one patch an answer to the consent prompt writes: the answer together
+/// with the version that asked. One patch, so no failure between two writes can
+/// split them.
+pub fn update_prompt_answer(enabled: bool) -> settings::SettingsPatch {
+    settings::SettingsPatch {
+        update_check: Some(enabled),
+        update_check_asked_version: Some(update_check::running_version().to_string()),
+        ..settings::SettingsPatch::default()
+    }
+}
+
+/// Records an answer to the consent prompt in `candidates`. A failed write is an
+/// error, because the user asked for it (decision 9).
+pub fn answer_update_prompt_to(
+    candidates: &[std::path::PathBuf],
+    enabled: bool,
+) -> Result<(), AppError> {
+    settings::store_settings(candidates, &update_prompt_answer(enabled)).map(|_| ())
+}
+
+/// The check, behind the consent the settings in `candidates` record: the file is
+/// re-read here, so nothing the webview does can make a request without consent
+/// (decision 2). The newer version as text, or `None` for every other outcome.
+pub fn check_for_update_from(
+    candidates: &[std::path::PathBuf],
+    fetch: impl FnOnce() -> Result<Vec<u8>, update_check::FetchError>,
+) -> Option<String> {
+    let stored = stored_settings(candidates);
+    update_check::check_with(stored.update_check, fetch, &update_check::running_version())
+        .map(|version| version.to_string())
+}
+
+/// E2E seam: a file standing in for GitHub's latest-release response, so the
+/// e2e build of the check never touches the network. Same gate as
+/// [`e2e_file_override`]; both halves are proved in `tests/commands.rs`.
+#[cfg(feature = "e2e-testing")]
+const E2E_UPDATE_FEED_ENV: &str = "ARM_E2E_UPDATE_FEED";
+
+/// The `ARM_E2E_UPDATE_FEED` path, when the `e2e-testing` feature is built in.
+#[cfg(feature = "e2e-testing")]
+pub fn e2e_update_feed_override() -> Option<std::path::PathBuf> {
+    std::env::var_os(E2E_UPDATE_FEED_ENV).map(std::path::PathBuf::from)
+}
+
+/// Always `None`: the shipped build has no update-feed seam.
+#[cfg(not(feature = "e2e-testing"))]
+pub fn e2e_update_feed_override() -> Option<std::path::PathBuf> {
+    None
+}
+
+/// The e2e build's fetch: the feed file, or a (silent) failure when none is
+/// named. Never the network.
+#[cfg(feature = "e2e-testing")]
+pub fn update_fetch() -> Result<Vec<u8>, update_check::FetchError> {
+    let feed = e2e_update_feed_override().ok_or_else(|| {
+        update_check::FetchError::Transport(format!("{E2E_UPDATE_FEED_ENV} is not set"))
+    })?;
+    std::fs::read(feed).map_err(|error| update_check::FetchError::Transport(error.to_string()))
+}
+
+/// The shipped fetch: one GET to GitHub's latest-release endpoint under the
+/// production limits.
+#[cfg(not(feature = "e2e-testing"))]
+pub fn update_fetch() -> Result<Vec<u8>, update_check::FetchError> {
+    update_check::fetch_latest_release(
+        &update_check::latest_release_api_url(),
+        &update_check::FetchLimits::production(),
+    )
+}
+
+/// Whether this build really opens the release page. The e2e build must never
+/// launch a browser.
+#[cfg(not(feature = "e2e-testing"))]
+pub fn release_page_opening_enabled() -> bool {
+    true
+}
+
+/// Always `false` under `e2e-testing`: [`open_release_page`] is a no-op there.
+#[cfg(feature = "e2e-testing")]
+pub fn release_page_opening_enabled() -> bool {
+    false
+}
+
+/// Whether the consent prompt is due, and whether the check is on. Infallible.
+#[tauri::command]
+pub fn update_check_status(app: AppHandle) -> UpdateCheckStatus {
+    update_check_status_from(&settings_candidates(&app))
+}
+
+/// Records the user's answer to the consent prompt.
+#[tauri::command]
+pub fn answer_update_prompt(enabled: bool, app: AppHandle) -> Result<(), AppError> {
+    answer_update_prompt_to(&settings_candidates(&app), enabled)
+}
+
+/// The newer release's version, or `None` — for no consent, a failed fetch, an
+/// unusable response, an equal or older release alike. Silent by design.
+///
+/// The blocking settings read and HTTP call run on the blocking pool, off the
+/// async runtime; a join error is `None` like every other failure.
+#[tauri::command]
+pub async fn check_for_update(app: AppHandle) -> Option<String> {
+    let candidates = settings_candidates(&app);
+    tauri::async_runtime::spawn_blocking(move || check_for_update_from(&candidates, update_fetch))
+        .await
+        .ok()
+        .flatten()
+}
+
+/// Opens the project's release page in the user's browser. Takes no argument:
+/// the URL is the fixed [`update_check::release_page_url`], never anything from
+/// the response (decision 4). Detached, so a slow launcher cannot block the app.
+#[tauri::command]
+pub fn open_release_page() -> Result<(), AppError> {
+    if !release_page_opening_enabled() {
+        return Ok(());
+    }
+    open::that_detached(update_check::release_page_url())?;
+    Ok(())
+}
+
 /// How old a character born in `birthYear` is in `sagaYear`, plus any advisory the
 /// pair warrants (a saga year before the birth year clamps the age to 0).
 ///
@@ -704,6 +855,7 @@ pub fn native_discard_confirmation_enabled() -> bool {
     true
 }
 
+/// The e2e half of `native_discard_confirmation_enabled`: always `false`.
 #[cfg(feature = "e2e-testing")]
 pub fn native_discard_confirmation_enabled() -> bool {
     false

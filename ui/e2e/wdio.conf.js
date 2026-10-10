@@ -19,7 +19,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { hasXvfbRun, preflightDisplay } from './display.js';
-import { allDriverPorts, startWorkerDriver, workerConfigHome, workerSuffix } from './driver.js';
+import {
+  allDriverPorts,
+  resetWorkerConfigHome,
+  seedUpdateCheckAnswer,
+  startWorkerDriver,
+  workerConfigHome,
+  workerSuffix,
+} from './driver.js';
 import { preflightDriverPorts } from './ports.js';
 import {
   killDriverTree,
@@ -29,7 +36,10 @@ import {
   registerDriverPid,
   unregisterDriverPid,
 } from './reap.js';
-import { e2eLogDir, MAX_WORKERS, sharedWdioConfig } from './wdio.shared.conf.js';
+import { appVersion, e2eLogDir, MAX_WORKERS, sharedWdioConfig } from './wdio.shared.conf.js';
+
+// The one spec that must see the update-check consent prompt (see beforeSession).
+const UPDATE_CONSENT_SPEC = 'update-check.e2e.js';
 
 // Xvfb offers no DRI3 extension and no GPU, so Mesa's EGL hardware probe fails
 // and falls back to swrast on its own — noisy (`libEGL warning: DRI3 ...`) and
@@ -154,11 +164,26 @@ export const config = {
   // tauri-driver is actually listening. Mutating `config.port` here is safe —
   // `@wdio/runner` calls `beforeSession` with the live config and only creates
   // the session afterwards (`_initSession`).
+  //
+  // M6.6: the update-check consent prompt makes the shell `inert` on a first
+  // start, so every spec launches with a "Don't check" answer already on file —
+  // except the consent spec, which gets an emptied config home (a real first
+  // start, retries included) and `ARM_E2E_UPDATE_FEED`, the file the
+  // `e2e-testing` build reads instead of GitHub.
   beforeSession: async (config, capabilities, specs, cid) => {
+    const configHome = workerConfigHome(repoRoot, process.env);
+    const updateEnv = {};
+    if (specs.some((spec) => spec.endsWith(`/${UPDATE_CONSENT_SPEC}`))) {
+      resetWorkerConfigHome(configHome);
+      updateEnv.ARM_E2E_UPDATE_FEED = path.resolve(dirname, 'fixtures/update-feed-newer.json');
+    } else {
+      seedUpdateCheckAnswer(configHome, appVersion(repoRoot));
+    }
     tauriDriver = await startWorkerDriver(config, cid, {
       ARM_E2E_FILE: e2eFile,
       ARM_E2E_EXPORT_FILE: e2eExportFile,
-      XDG_CONFIG_HOME: workerConfigHome(repoRoot, process.env),
+      XDG_CONFIG_HOME: configHome,
+      ...updateEnv,
     });
     // Recorded so the `onComplete`/`onWorkerEnd` safety net below can still
     // find and terminate this driver even if this worker crashes before its

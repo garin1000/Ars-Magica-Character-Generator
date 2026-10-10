@@ -19,3 +19,4 @@ pub mod error;
 pub mod menu;
 pub mod ruleset_io;
 pub mod settings;
+pub mod update_check;

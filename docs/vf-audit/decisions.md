@@ -828,6 +828,27 @@ presumption of correctness.
 
 ---
 
+## D90 — M6.6: the opt-in update check (Norbert, 2026-10-10)
+
+1. The request is made in Rust (`arm-app`, `ureq` 3, blocking in `spawn_blocking`), never in the
+   webview: the CSP `connect-src` and the `core:default` capability stay as they were, and a test
+   pins both. `arm-rules` stays offline.
+2. Rust enforces consent: `check_for_update` re-reads `settings.json` and sends nothing unless
+   `update_check` is `true`. Limits: https only, no redirects, 10 s, 512 KiB, non-2xx is a failure.
+3. The preference is a Settings-dialog checkbox, so there is no new menu item or accelerator.
+4. The link is the fixed `<repository>/releases/latest`, opened with the `open` crate; no response
+   field is ever used as a URL. No Tauri plugin (`tauri-plugin-opener` rejected).
+5. Only the strictly parsed semver (one leading `v`, no pre-release or build) is rendered, as a
+   Fluent arg. Drafts and prereleases are ignored.
+6. Enable and decline both record the answer plus the running version; Escape declines. A newer
+   running version asks again, even after a yes; a downgrade does not.
+7. One check per start, plus one when enabled mid-session; no "check now" or periodic checks.
+8. The notice is `role="status"`, dismissible per session, inside `.app-shell` so `inert` gates it.
+9. Failures to write the consent reach `store.error`; failures of the status read or the check
+   stay silent.
+
+---
+
 ## D89 — optional life sections, a display-only timeline, and the Life table (Norbert, 2026-10-10)
 
 - Storage: `LifeStagePlan.life_sections_enabled` (default off, no key when off) and

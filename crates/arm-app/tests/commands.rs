@@ -5160,3 +5160,273 @@ fn derived_totals_spell_casting_totals_are_index_aligned_with_entity_spells() {
          (marked {marked_total}, unmarked {unmarked_total})"
     );
 }
+
+// ---------------------------------------------------------------------------
+// M6.6: the update-check commands, through their webview-free cores.
+
+/// One settings candidate inside a fresh temp dir, as `settings_candidates` would
+/// offer it.
+fn update_settings_candidates() -> (tempfile::TempDir, Vec<PathBuf>) {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join(arm_app::settings::SETTINGS_FILE_NAME);
+    (tmp, vec![path])
+}
+
+fn running_text() -> String {
+    arm_app::update_check::running_version().to_string()
+}
+
+#[test]
+fn with_no_settings_file_the_prompt_is_due_and_the_check_is_off() {
+    let (_tmp, candidates) = update_settings_candidates();
+    assert_eq!(
+        arm_app::commands::update_check_status_from(&candidates),
+        arm_app::commands::UpdateCheckStatus {
+            prompt_due: true,
+            enabled: false,
+        }
+    );
+    assert_eq!(
+        arm_app::commands::update_check_status_from(&[]),
+        arm_app::commands::UpdateCheckStatus {
+            prompt_due: true,
+            enabled: false,
+        },
+        "no resolvable settings path at all"
+    );
+}
+
+#[test]
+fn an_answered_prompt_is_not_due_again_for_the_same_version() {
+    let (_tmp, candidates) = update_settings_candidates();
+    arm_app::commands::answer_update_prompt_to(&candidates, true).unwrap();
+    assert_eq!(
+        arm_app::commands::update_check_status_from(&candidates),
+        arm_app::commands::UpdateCheckStatus {
+            prompt_due: false,
+            enabled: true,
+        }
+    );
+
+    arm_app::commands::answer_update_prompt_to(&candidates, false).unwrap();
+    let read = arm_app::settings::read_settings(Some(&candidates[0]));
+    assert_eq!(read.update_check, Some(false));
+    assert_eq!(read.update_check_asked_version, Some(running_text()));
+    assert_eq!(
+        arm_app::commands::update_check_status_from(&candidates),
+        arm_app::commands::UpdateCheckStatus {
+            prompt_due: false,
+            enabled: false,
+        }
+    );
+}
+
+#[test]
+fn an_answer_asked_by_an_older_version_is_due_again() {
+    let (_tmp, candidates) = update_settings_candidates();
+    fs::write(
+        &candidates[0],
+        "{\"update_check\": true, \"update_check_asked_version\": \"0.0.1\"}",
+    )
+    .unwrap();
+    assert_eq!(
+        arm_app::commands::update_check_status_from(&candidates),
+        arm_app::commands::UpdateCheckStatus {
+            prompt_due: true,
+            enabled: true,
+        }
+    );
+}
+
+/// The answer and the version that asked are ONE patch, so no failure between two
+/// writes can leave an answer without its version (the prompt would ask again
+/// forever) or a version without its answer.
+#[test]
+fn the_prompt_answer_is_one_patch_holding_both_fields_and_nothing_else() {
+    assert_eq!(
+        arm_app::commands::update_prompt_answer(true),
+        arm_app::settings::SettingsPatch {
+            update_check: Some(true),
+            update_check_asked_version: Some(running_text()),
+            ..arm_app::settings::SettingsPatch::default()
+        }
+    );
+    assert_eq!(
+        arm_app::commands::update_prompt_answer(false).update_check,
+        Some(false)
+    );
+
+    let commands_rs =
+        fs::read_to_string(repo_root().join("crates/arm-app/src/commands.rs")).unwrap();
+    let body = commands_rs
+        .split_once("pub fn answer_update_prompt_to(")
+        .expect("answer_update_prompt_to must be declared in commands.rs")
+        .1
+        .split_once("\n}\n")
+        .unwrap()
+        .0;
+    assert_eq!(
+        body.matches("store_settings").count(),
+        1,
+        "the answer must be written with exactly one store: {body}"
+    );
+    assert!(body.contains("update_prompt_answer"), "{body}");
+}
+
+#[test]
+fn answering_the_prompt_keeps_every_other_setting() {
+    let (_tmp, candidates) = update_settings_candidates();
+    fs::write(&candidates[0], "{\"lang\": \"de\", \"theme\": \"dark\"}").unwrap();
+    arm_app::commands::answer_update_prompt_to(&candidates, true).unwrap();
+    let read = arm_app::settings::read_settings(Some(&candidates[0]));
+    assert_eq!(read.update_check, Some(true));
+    assert_eq!(read.lang.as_deref(), Some("de"));
+    assert_eq!(read.theme.as_deref(), Some("dark"));
+}
+
+/// Decision 9: a write the user asked for that fails is reported, never dropped.
+#[test]
+fn an_answer_that_cannot_be_written_is_an_error() {
+    assert!(arm_app::commands::answer_update_prompt_to(&[], true).is_err());
+}
+
+fn feed_must_not_be_fetched() -> Result<Vec<u8>, arm_app::update_check::FetchError> {
+    panic!("the check fetched without consent");
+}
+
+fn newer_feed() -> Result<Vec<u8>, arm_app::update_check::FetchError> {
+    Ok(br#"{"tag_name":"v99.0.0","draft":false,"prerelease":false}"#.to_vec())
+}
+
+/// Decision 2: Rust enforces the consent by re-reading the file, so a webview bug
+/// can never cause traffic.
+#[test]
+fn the_check_command_fetches_only_with_recorded_consent() {
+    let (_tmp, candidates) = update_settings_candidates();
+    assert_eq!(
+        arm_app::commands::check_for_update_from(&candidates, feed_must_not_be_fetched),
+        None,
+        "no settings file"
+    );
+    fs::write(&candidates[0], "{\"update_check\": false}").unwrap();
+    assert_eq!(
+        arm_app::commands::check_for_update_from(&candidates, feed_must_not_be_fetched),
+        None,
+        "declined"
+    );
+    fs::write(&candidates[0], "{\"update_check\": \"true\"}").unwrap();
+    assert_eq!(
+        arm_app::commands::check_for_update_from(&candidates, feed_must_not_be_fetched),
+        None,
+        "an unusable value is not consent"
+    );
+
+    fs::write(&candidates[0], "{\"update_check\": true}").unwrap();
+    assert_eq!(
+        arm_app::commands::check_for_update_from(&candidates, newer_feed),
+        Some("99.0.0".to_owned())
+    );
+    assert_eq!(
+        arm_app::commands::check_for_update_from(&candidates, || Err(
+            arm_app::update_check::FetchError::Timeout
+        )),
+        None,
+        "a failed fetch is silent"
+    );
+}
+
+#[test]
+fn the_update_check_status_is_mirrored_in_the_frontend_types() {
+    let status = arm_app::commands::UpdateCheckStatus {
+        prompt_due: true,
+        enabled: false,
+    };
+    let mut keys = std::collections::BTreeSet::new();
+    mirrored_keys(&serde_json::to_value(&status).unwrap(), &mut keys);
+    let ipc = fs::read_to_string(repo_root().join("ui/src/lib/ipc.ts")).unwrap();
+    let body = ipc
+        .split_once("export interface UpdateCheckStatus {")
+        .expect("ui/src/lib/ipc.ts must declare `UpdateCheckStatus`")
+        .1
+        .split_once('}')
+        .unwrap()
+        .0;
+    for key in &keys {
+        assert!(
+            body.contains(&format!("{key}:")),
+            "`UpdateCheckStatus` in ui/src/lib/ipc.ts declares no '{key}'"
+        );
+    }
+}
+
+/// The four command names are string literals in `ipc.ts` and functions here;
+/// nothing else holds them together, and a missing registration would make the
+/// frontend's silent failure path swallow it.
+#[test]
+fn the_update_check_commands_are_registered_and_invoked_by_name() {
+    let ipc = fs::read_to_string(repo_root().join("ui/src/lib/ipc.ts")).unwrap();
+    let main_rs = fs::read_to_string(repo_root().join("crates/arm-app/src/main.rs")).unwrap();
+    for command in [
+        "update_check_status",
+        "answer_update_prompt",
+        "check_for_update",
+        "open_release_page",
+    ] {
+        assert!(
+            ipc.contains(&format!("invoke('{command}'")),
+            "ui/src/lib/ipc.ts must invoke `{command}`"
+        );
+        assert!(
+            main_rs.contains(&format!("commands::{command},")),
+            "`{command}` must be registered in main.rs's generate_handler!"
+        );
+    }
+}
+
+/// The update-feed seam must not exist in the shipped build: there the check can
+/// only ever ask GitHub. Sibling of `e2e_file_override_is_compiled_out_of_the_default_build`.
+#[cfg(not(feature = "e2e-testing"))]
+#[test]
+fn the_update_feed_seam_is_compiled_out_of_the_default_build() {
+    // SAFETY: no other test in this binary reads or writes ARM_E2E_UPDATE_FEED.
+    unsafe { std::env::set_var("ARM_E2E_UPDATE_FEED", "/nonexistent/feed.json") };
+    let result = arm_app::commands::e2e_update_feed_override();
+    unsafe { std::env::remove_var("ARM_E2E_UPDATE_FEED") };
+    assert_eq!(result, None);
+    assert!(
+        arm_app::commands::release_page_opening_enabled(),
+        "the shipped build must really open the release page"
+    );
+}
+
+/// Under `e2e-testing` the check never touches the network: it reads the feed file,
+/// and with no feed named it fails, silently. One test, because both halves set the
+/// same process-global variable.
+#[cfg(feature = "e2e-testing")]
+#[test]
+fn under_the_e2e_feature_the_check_reads_the_feed_file_and_never_the_network() {
+    let tmp = tempfile::tempdir().unwrap();
+    let feed = tmp.path().join("feed.json");
+    fs::write(&feed, newer_feed().unwrap()).unwrap();
+
+    // SAFETY: no other test in this binary reads or writes ARM_E2E_UPDATE_FEED.
+    unsafe { std::env::remove_var("ARM_E2E_UPDATE_FEED") };
+    assert_eq!(arm_app::commands::e2e_update_feed_override(), None);
+    assert!(
+        arm_app::commands::update_fetch().is_err(),
+        "with no feed named the e2e build must fail, not go online"
+    );
+
+    unsafe { std::env::set_var("ARM_E2E_UPDATE_FEED", &feed) };
+    let named = arm_app::commands::e2e_update_feed_override();
+    let fetched = arm_app::commands::update_fetch();
+    unsafe { std::env::remove_var("ARM_E2E_UPDATE_FEED") };
+    assert_eq!(named, Some(feed.clone()));
+    assert_eq!(fetched, newer_feed());
+
+    assert!(
+        !arm_app::commands::release_page_opening_enabled(),
+        "the e2e build must never launch a browser"
+    );
+    assert!(arm_app::commands::open_release_page().is_ok());
+}

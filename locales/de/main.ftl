@@ -39,6 +39,19 @@ settings-close = Schließen
 # (rules/source/de/translation-tables/grundbegriffe.md:104), „Dokument“ ist die
 # App-weite Bezeichnung für eine gespeicherte Datei, unabhängig vom Charaktertyp.
 settings-default-saga-year-label = Jahr der Saga für neue Dokumente
+# M6.6: die optionale Update-Prüfung (Einwilligung in den Einstellungen).
+settings-update-check = Beim Start nach Updates suchen
+
+# M6.6: die Einwilligungsabfrage beim ersten Start (und beim ersten Start einer
+# neueren Version) und der Hinweis auf eine neuere Version. `$version` kommt als
+# Zeichenkette, damit Fluent keine Zahl formatiert.
+update-prompt-title = Nach Updates suchen?
+update-prompt-message = Bei jedem Start bei GitHub nachfragen, ob es eine neuere Version gibt. Es wird nichts heruntergeladen.
+update-prompt-enable = Beim Start suchen
+update-prompt-decline = Nicht suchen
+update-available = Version { $version } ist verfügbar.
+update-open-release-page = Release-Seite öffnen
+update-dismiss = Ausblenden
 
 type-label = Charaktertyp
 type-grog = Grog

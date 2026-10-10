@@ -8,9 +8,22 @@
 // (V38) so these ~12-15 fields cannot drift when one config is tuned and the
 // other is forgotten.
 
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { driverPorts } from './driver.js';
+
+/**
+ * The version of the app about to run, from `ui/package.json`. A Rust test
+ * holds it equal to `CARGO_PKG_VERSION`, which is what the update check's
+ * consent record is compared against (M6.6).
+ *
+ * @param {string} repoRoot absolute path to the repository root
+ * @returns {string}
+ */
+export function appVersion(repoRoot) {
+  return JSON.parse(fs.readFileSync(path.resolve(repoRoot, 'ui/package.json'), 'utf8')).version;
+}
 
 /**
  * How many spec files run at once.

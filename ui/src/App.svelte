@@ -31,6 +31,8 @@
   import ValidationPanel from './lib/components/ValidationPanel.svelte';
   import ErrorBanner from './lib/components/ErrorBanner.svelte';
   import DiscardPrompt from './lib/components/DiscardPrompt.svelte';
+  import UpdatePrompt from './lib/components/UpdatePrompt.svelte';
+  import UpdateNotice from './lib/components/UpdateNotice.svelte';
 
   type Tab =
     | 'characteristics'
@@ -437,10 +439,10 @@
   // `settingsOpen` joins the guard for the same reason: that dialog restores focus
   // itself, and letting its controls be recorded here would leave this effect
   // pointing at a control that no longer exists the next time a discard is
-  // confirmed.
+  // confirmed. The update-check prompt (M6.6) joins for the same reason.
   let lastFocusOutsideDialog: HTMLElement | null = null;
   function trackFocus(event: FocusEvent): void {
-    if (store.discardConfirmPending || store.settingsOpen) return;
+    if (store.discardConfirmPending || store.settingsOpen || store.updateCheck.promptOpen) return;
     if (event.target instanceof HTMLElement) lastFocusOutsideDialog = event.target;
   }
   $effect(() => {
@@ -478,10 +480,15 @@
      shell off would switch the prompt off with it and leave a confirmation nobody
      could answer — exactly the trade the comment above `<SettingsDialog />` states.
      It closes its own ring instead, at the window rather than at the dialog, which
-     buys the same containment without needing the shell inert (Sabine 2). -->
+     buys the same containment without needing the shell inert (Sabine 2).
+     The update-check consent prompt (M6.6) is modal like the settings dialog and
+     takes the same containment. -->
 <div
   class="app-shell"
-  inert={store.busy || store.discardConfirmPending || store.settingsOpen}
+  inert={store.busy ||
+    store.discardConfirmPending ||
+    store.settingsOpen ||
+    store.updateCheck.promptOpen}
   aria-busy={store.busy}
   data-testid="app-shell"
 >
@@ -519,6 +526,9 @@
       {#if store.view !== 'start'}
         <ErrorBanner />
       {/if}
+      <!-- M6.6: on every screen, since the check usually answers while the
+           start screen shows; inside the shell, so `inert` gates it. -->
+      <UpdateNotice />
     </div>
   </header>
 
@@ -710,3 +720,7 @@
      subtree could not be answered. It owns its own focus trap and its own focus
      restoration, so it needs nothing from the block above. -->
 <SettingsDialog />
+
+<!-- The update-check consent prompt (M6.6). Outside the shell for the same reason
+     as the two above; it owns its focus trap and its focus return. -->
+<UpdatePrompt />

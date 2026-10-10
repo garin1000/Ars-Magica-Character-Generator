@@ -194,6 +194,8 @@ function persisted(overrides: Partial<PersistedSettings> = {}): PersistedSetting
     default_saga_year: 1220,
     lang: null,
     theme: null,
+    update_check: null,
+    update_check_asked_version: null,
     validation_mode: null,
     ...overrides,
   };
@@ -6292,6 +6294,8 @@ describe('persisted settings', () => {
         default_saga_year: 1230,
         lang: 'de',
         theme: 'light',
+        update_check: null,
+        update_check_asked_version: null,
         validation_mode: 'advisory',
       });
 
@@ -6322,6 +6326,8 @@ describe('persisted settings', () => {
         default_saga_year: 1220,
         lang: 'fr',
         theme: 'purple',
+        update_check: null,
+        update_check_asked_version: null,
         validation_mode: null,
       });
 

@@ -23,6 +23,16 @@ tauri-build = { version = "2", features = [] }
 arm-rules = { path = "../arm-rules" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+# The update check (M6.6) compares the running version with the latest GitHub
+# release tag as semver; `semver` also rejects overlong and overflowing numbers.
+semver = "1"
+# The update check's one HTTPS GET, made from Rust and never from the webview
+# (decision 1, D90). Blocking, so it needs no async runtime of its own; it runs
+# inside `spawn_blocking`. Default features: rustls + gzip.
+ureq = "3"
+# Opens the fixed release-page URL in the user's browser. Chosen over
+# tauri-plugin-opener: no plugin, no capability, no unused zbus features.
+open = "5"
 # Caret ranges, not exact pins: `Cargo.lock` is committed, so the build is
 # already reproducible, and over-pinning here would add a second place to bump
 # on every upgrade for no gain. `Cargo.lock` currently resolves tauri 2.11.3.
@@ -54,6 +64,8 @@ tauri-plugin-dialog = "2"
 # Take exactly what tauri takes: nothing but what it already enables.
 muda = { version = "0.19", default-features = false }
 pretty_assertions = "1"
+# `tests/update_check.rs`: arbitrary bytes and tags must never panic the parser.
+proptest = { workspace = true }
 # Tauri's `MockRuntime` (`tauri::test`), for `tests/a3_mock_app_commands.rs`:
 # a `State<'_, AppState>` exists only inside a running app's managed state, so
 # the `#[tauri::command]` shims and the generic menu glue are reachable from a

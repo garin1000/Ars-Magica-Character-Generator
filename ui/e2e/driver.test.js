@@ -2,14 +2,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   allDriverPorts,
   driverPorts,
+  mergeWorkerSettings,
+  resetWorkerConfigHome,
+  seedUpdateCheckAnswer,
   waitForPort,
   workerConfigHome,
   workerIndexFromCid,
+  workerSettingsFile,
   workerSuffix,
 } from './driver.js';
 
@@ -170,5 +174,99 @@ describe('workerConfigHome', () => {
     const dir = workerConfigHome(repoRoot, {});
     expect(fs.existsSync(dir)).toBe(true);
     expect(dir.startsWith(path.resolve(repoRoot, 'tmp'))).toBe(true);
+  });
+});
+
+// M6.6: every launch of the app would otherwise open the update-check consent
+// prompt, whose modal makes the whole shell `inert` — so every spec except the
+// one about the prompt starts from a recorded "Don't check" answer. These
+// helpers write the worker's settings file, so each refuses any directory
+// outside the repo-local `tmp/`: a mistake must never reach the developer's
+// real settings.
+describe('worker settings helpers', () => {
+  const tauriConf = JSON.parse(
+    fs.readFileSync(path.resolve(repoRoot, 'crates/arm-app/tauri.conf.json'), 'utf8'),
+  );
+  const scratch = path.resolve(repoRoot, 'tmp/driver-test-settings');
+  // Paths that do not exist, so even a broken guard destroys nothing; the
+  // second is a sibling whose name merely starts with `tmp`.
+  const outsideTmp = [
+    path.resolve(repoRoot, 'ui/e2e/not-a-config-home'),
+    path.resolve(repoRoot, 'tmpx/e2e-config'),
+  ];
+
+  function stored() {
+    return JSON.parse(fs.readFileSync(workerSettingsFile(scratch), 'utf8'));
+  }
+
+  function plant(contents) {
+    fs.mkdirSync(path.dirname(workerSettingsFile(scratch)), { recursive: true });
+    fs.writeFileSync(workerSettingsFile(scratch), contents);
+  }
+
+  afterEach(() => {
+    for (const dir of [scratch, ...outsideTmp]) fs.rmSync(dir, { recursive: true, force: true });
+    fs.rmSync(path.resolve(repoRoot, 'tmpx'), { recursive: true, force: true });
+  });
+
+  it('names the file the app reads: <config home>/<tauri identifier>/settings.json', () => {
+    expect(workerSettingsFile(scratch)).toBe(
+      path.join(scratch, tauriConf.identifier, 'settings.json'),
+    );
+  });
+
+  it('seeds a "don\'t check" answer for the given version into a fresh directory', () => {
+    seedUpdateCheckAnswer(scratch, '1.2.3');
+    expect(stored()).toEqual({ update_check: false, update_check_asked_version: '1.2.3' });
+  });
+
+  it('keeps every other key already in the file', () => {
+    plant(JSON.stringify({ lang: 'de', default_saga_year: 1231 }));
+    seedUpdateCheckAnswer(scratch, '1.2.3');
+    expect(stored()).toEqual({
+      lang: 'de',
+      default_saga_year: 1231,
+      update_check: false,
+      update_check_asked_version: '1.2.3',
+    });
+  });
+
+  // The directories persist across runs, and the consent spec's own run leaves
+  // `update_check: true` behind in its worker's file.
+  it('overrides an earlier answer, so no seeded spec ever checks', () => {
+    plant(JSON.stringify({ update_check: true, update_check_asked_version: '0.0.1' }));
+    seedUpdateCheckAnswer(scratch, '1.2.3');
+    expect(stored()).toEqual({ update_check: false, update_check_asked_version: '1.2.3' });
+  });
+
+  it('replaces a file that is not a JSON object rather than failing the session', () => {
+    plant('{ not json');
+    seedUpdateCheckAnswer(scratch, '1.2.3');
+    expect(stored()).toEqual({ update_check: false, update_check_asked_version: '1.2.3' });
+  });
+
+  it('merges an arbitrary patch the same way', () => {
+    plant(JSON.stringify({ lang: 'de', update_check_asked_version: '1.2.3' }));
+    mergeWorkerSettings(scratch, { update_check_asked_version: '0.0.1' });
+    expect(stored()).toEqual({ lang: 'de', update_check_asked_version: '0.0.1' });
+  });
+
+  it.each(outsideTmp)('refuses to write settings under %s', (dir) => {
+    expect(() => seedUpdateCheckAnswer(dir, '1.2.3')).toThrow(/tmp/);
+    expect(() => mergeWorkerSettings(dir, { lang: 'de' })).toThrow(/tmp/);
+    expect(fs.existsSync(workerSettingsFile(dir))).toBe(false);
+  });
+
+  // The consent spec needs a genuine first start every time, retries included.
+  it('resets a config home to an empty, existing directory', () => {
+    seedUpdateCheckAnswer(scratch, '1.2.3');
+    resetWorkerConfigHome(scratch);
+    expect(fs.existsSync(scratch)).toBe(true);
+    expect(fs.readdirSync(scratch)).toEqual([]);
+  });
+
+  it.each(outsideTmp)('refuses to reset %s', (dir) => {
+    expect(() => resetWorkerConfigHome(dir)).toThrow(/tmp/);
+    expect(fs.existsSync(dir)).toBe(false);
   });
 });

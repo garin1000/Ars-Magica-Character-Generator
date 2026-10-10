@@ -198,8 +198,16 @@ describe('portable layout', () => {
 
     const backup = fs.existsSync(settingsPath) ? fs.readFileSync(settingsPath) : null;
     try {
+      // Merged into what is there, never a replacement: `wdio.portable.conf.js`
+      // seeded the update-check answer (M6.6) into this file, and dropping it
+      // would bring the consent prompt up on the reload below, leaving the
+      // shell `inert` under the click that follows.
+      const existing = backup === null ? {} : JSON.parse(backup.toString('utf8'));
       fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
-      fs.writeFileSync(settingsPath, `${JSON.stringify({ default_saga_year: 1231 })}\n`);
+      fs.writeFileSync(
+        settingsPath,
+        `${JSON.stringify({ ...existing, default_saga_year: 1231 })}\n`,
+      );
 
       await browser.execute(() => window.location.reload());
       await $('[data-testid="start-screen"]').waitForExist({ timeout: BOOT_TIMEOUT });

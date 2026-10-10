@@ -45,6 +45,7 @@ fn a_written_setting_reads_back() {
             default_saga_year: Some(1230),
             theme: Some("light".to_owned()),
             validation_mode: Some(ValidationMode::Advisory),
+            ..SettingsPatch::default()
         },
     )
     .unwrap();
@@ -74,6 +75,7 @@ fn writing_one_setting_preserves_every_other_setting() {
             default_saga_year: Some(1220),
             theme: Some("light".to_owned()),
             validation_mode: Some(ValidationMode::Silent),
+            ..SettingsPatch::default()
         },
     )
     .unwrap();
@@ -340,6 +342,8 @@ fn the_settings_file_is_canonical_json_a_human_can_edit() {
             lang: Some("de".to_owned()),
             default_saga_year: Some(1230),
             theme: Some("light".to_owned()),
+            update_check: Some(true),
+            update_check_asked_version: Some("0.4.0".to_owned()),
             validation_mode: Some(ValidationMode::Enforced),
         },
     )
@@ -357,6 +361,8 @@ fn the_settings_file_is_canonical_json_a_human_can_edit() {
         "\"default_saga_year\"",
         "\"lang\"",
         "\"theme\"",
+        "\"update_check\"",
+        "\"update_check_asked_version\"",
         "\"validation_mode\"",
     ]
     .iter()
@@ -409,4 +415,121 @@ fn candidate_paths_are_offered_in_order_without_touching_the_disk() {
         vec![exe_dir.join(settings::SETTINGS_FILE_NAME)]
     );
     assert!(settings::settings_candidates(None, None).is_empty());
+}
+
+/// M6.6: the update-check consent and the version that asked for it are stored
+/// together, so the prompt can ask again on the first start of a newer version.
+#[test]
+fn the_update_check_answer_reads_back_with_the_version_that_asked() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join(settings::SETTINGS_FILE_NAME);
+    settings::write_settings(&path, &theme("dark")).unwrap();
+
+    settings::write_settings(
+        &path,
+        &SettingsPatch {
+            update_check: Some(true),
+            update_check_asked_version: Some("0.4.0".to_owned()),
+            ..SettingsPatch::default()
+        },
+    )
+    .unwrap();
+
+    let read = settings::read_settings(Some(&path));
+    assert_eq!(read.update_check, Some(true));
+    assert_eq!(read.update_check_asked_version.as_deref(), Some("0.4.0"));
+    assert_eq!(
+        read.theme.as_deref(),
+        Some("dark"),
+        "the answer destroyed another setting"
+    );
+
+    // Changing the preference later touches only that key.
+    settings::write_settings(
+        &path,
+        &SettingsPatch {
+            update_check: Some(false),
+            ..SettingsPatch::default()
+        },
+    )
+    .unwrap();
+    let read = settings::read_settings(Some(&path));
+    assert_eq!(read.update_check, Some(false));
+    assert_eq!(read.update_check_asked_version.as_deref(), Some("0.4.0"));
+}
+
+/// The settings file is hand-editable: an unusable update-check value costs only
+/// its own key, and a never-answered consent reads as unset rather than as a no.
+#[test]
+fn an_unusable_update_check_value_loses_only_that_key() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join(settings::SETTINGS_FILE_NAME);
+    fs::write(
+        &path,
+        "{\"lang\": \"de\", \"update_check\": \"yes\", \
+         \"update_check_asked_version\": \"0.4.0\"}",
+    )
+    .unwrap();
+    let read = settings::read_settings(Some(&path));
+    assert_eq!(read.update_check, None);
+    assert_eq!(read.update_check_asked_version.as_deref(), Some("0.4.0"));
+    assert_eq!(read.lang.as_deref(), Some("de"));
+
+    fs::write(
+        &path,
+        "{\"update_check\": true, \"update_check_asked_version\": 42}",
+    )
+    .unwrap();
+    let read = settings::read_settings(Some(&path));
+    assert_eq!(read.update_check, Some(true));
+    assert_eq!(read.update_check_asked_version, None);
+}
+
+/// The text of the TypeScript interface `name` in `ui/src/lib/ipc.ts`.
+fn ipc_interface(name: &str) -> String {
+    let ipc = fs::read_to_string(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../ui/src/lib/ipc.ts"),
+    )
+    .unwrap();
+    let opening = format!("export interface {name} {{");
+    let body = ipc
+        .split_once(&opening)
+        .unwrap_or_else(|| panic!("ui/src/lib/ipc.ts declares no `{name}`"))
+        .1;
+    body.split_once('}')
+        .expect("the interface body must close")
+        .0
+        .to_owned()
+}
+
+/// `ipc.ts` mirrors the settings by hand, and TypeScript cannot notice a Rust
+/// field it lacks: the frontend would read `undefined` and never know. Every key a
+/// full `Settings` serializes must be declared in both `PersistedSettings` and
+/// `SettingsPatch`.
+#[test]
+fn every_settings_field_is_mirrored_in_the_frontend_types() {
+    let full = settings::Settings {
+        default_saga_year: 1220,
+        lang: Some("en".to_owned()),
+        theme: Some("dark".to_owned()),
+        update_check: Some(true),
+        update_check_asked_version: Some("0.4.0".to_owned()),
+        validation_mode: Some(ValidationMode::Enforced),
+    };
+    let value = serde_json::to_value(&full).unwrap();
+    let keys: Vec<&String> = value.as_object().unwrap().keys().collect();
+    assert!(
+        keys.iter().any(|key| key.as_str() == "update_check"),
+        "expected the full settings to serialize every field, got {keys:?}"
+    );
+
+    for interface in ["PersistedSettings", "SettingsPatch"] {
+        let body = ipc_interface(interface);
+        for key in &keys {
+            assert!(
+                body.contains(&format!("{key}:")) || body.contains(&format!("{key}?:")),
+                "ui/src/lib/ipc.ts `{interface}` declares no '{key}' property"
+            );
+        }
+    }
 }

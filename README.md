@@ -32,7 +32,9 @@ Three input modes cover the spectrum from hand-holding to power-user:
 - **Direct, validated** — enter choices freely with live rule checking.
 - **Direct, unchecked** — full manual control, validation suppressed.
 
-Everything runs locally. There is no server, no account, and no telemetry. Saves
+Everything runs locally. There is no server, no account, and no telemetry. The
+only network request is an opt-in update check, and it stays off until you agree to
+it. Saves
 are plain JSON that record your *choices* (plus the ruleset id and version), so
 they stay portable and diff-friendly.
 
@@ -144,6 +146,10 @@ File > Open to try the app out.
   equipment, the computed combat/Soak/Fatigue/Wound values, the magic possessions,
   and the aging record — in the language the app is running in. Exporting is not a
   save: it never touches your current file or its unsaved-changes state.
+- **Optional update check.** On first start, and again after an upgrade, the app
+  asks whether to check GitHub for a newer release at each start; Settings can
+  change the answer later. If one exists, a dismissible notice links to the
+  release page. Nothing is downloaded, and a failed check stays silent.
 
 ## Architecture
 
@@ -413,10 +419,8 @@ their fix rounds have since been completed. The current version is 0.4.0. See
 
 ### Next
 
-The next milestone is an **optional update check**. If the user agrees, the app
-asks GitHub whether a newer release exists and says so. Nothing is downloaded.
-The app asks for this preference on first start and again after each upgrade.
-After that comes a **character-sheet window**: an optional, read-only second window that renders a
+The optional update check (M6.6) has shipped. The next milestone, M7, is a
+**character-sheet window**: an optional, read-only second window that renders a
 formatted sheet and recomputes live as the character is edited in the main one. Which
 sections it shows will be driven by the character-type profile rather than a per-type
 ladder, and every value on it is already computed by the engine — the window only lays

@@ -21,7 +21,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { hasXvfbRun, preflightDisplay } from './display.js';
-import { allDriverPorts, startWorkerDriver, workerConfigHome } from './driver.js';
+import {
+  allDriverPorts,
+  seedUpdateCheckAnswer,
+  startWorkerDriver,
+  workerConfigHome,
+} from './driver.js';
 import { preflightDriverPorts } from './ports.js';
 import {
   killDriverTree,
@@ -32,7 +37,7 @@ import {
   unregisterDriverPid,
 } from './reap.js';
 import { portableApp, stagePortableApp } from './stage-portable.js';
-import { e2eLogDir, MAX_WORKERS, sharedWdioConfig } from './wdio.shared.conf.js';
+import { appVersion, e2eLogDir, MAX_WORKERS, sharedWdioConfig } from './wdio.shared.conf.js';
 
 // Same fix as wdio.conf.js: Xvfb has no DRI3, so Mesa's hardware probe fails
 // and falls back to swrast noisily. Pin llvmpipe up front instead — this
@@ -108,9 +113,16 @@ export const config = {
   // every run (docs/open-todos.md, "the e2e harness leaks its driver
   // processes"). A plain module-scope variable — the standard config's
   // `wdio.conf.js` pattern — sidesteps the object-identity question entirely.
+  //
+  // M6.6: seeded with a "Don't check" answer, so the update-check consent
+  // prompt never makes the shell `inert` here — and so this binary, built
+  // without `e2e-testing` and therefore without the feed seam, never goes
+  // online. There is no consent spec in this run.
   beforeSession: async (config, capabilities, specs, cid) => {
+    const configHome = workerConfigHome(repoRoot, process.env);
+    seedUpdateCheckAnswer(configHome, appVersion(repoRoot));
     tauriDriver = await startWorkerDriver(config, cid, {
-      XDG_CONFIG_HOME: workerConfigHome(repoRoot, process.env),
+      XDG_CONFIG_HOME: configHome,
     });
     currentCid = cid;
     registerDriverPid(pidRegistryDir(repoRoot), cid, tauriDriver.pid);

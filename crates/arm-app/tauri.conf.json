@@ -35,7 +35,7 @@
     "licenseFile": "../../LICENSE",
     "category": "Utility",
     "shortDescription": "Character and covenant generator for Ars Magica 5th Edition",
-    "longDescription": "A locally installed desktop generator for Ars Magica 5th Edition characters — grogs, companions, mythic companions and magi — as well as covenants, built on one shared rules engine. Offers a guided wizard, direct validated entry, and fully unchecked entry. Available in English and German. Everything runs locally: no server, no account, no telemetry. Saves are plain JSON recording your choices.",
+    "longDescription": "A locally installed desktop generator for Ars Magica 5th Edition characters — grogs, companions, mythic companions and magi — as well as covenants, built on one shared rules engine. Offers a guided wizard, direct validated entry, and fully unchecked entry. Available in English and German. Everything runs locally: no server, no account, no telemetry; the only network request is an opt-in update check. Saves are plain JSON recording your choices.",
     "resources": {
       "../../rules/core": "rules/core",
       "../../rules/i18n": "rules/i18n",

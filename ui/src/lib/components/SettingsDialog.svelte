@@ -4,6 +4,7 @@
   import ThemeSelector from './ThemeSelector.svelte';
   import ModeToggle from './ModeToggle.svelte';
   import DefaultSagaYearField from './DefaultSagaYearField.svelte';
+  import UpdateCheckToggle from './UpdateCheckToggle.svelte';
 
   // The app's preferences: language, palette, validation strictness, and — since C8 —
   // the saga year NEW documents start at, all persisted across restarts. Reachable
@@ -115,6 +116,8 @@
         <LanguageSelector />
         <ThemeSelector />
         <ModeToggle />
+        <!-- M6.6: the opt-in update check, an app preference like the three above. -->
+        <UpdateCheckToggle />
         <!-- Last, and deliberately the only field here that is about characters
              rather than about the app: it seeds new documents, and the saga year
              itself lives on each document (see DefaultSagaYearField's header). -->

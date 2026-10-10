@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { driverPorts, workerConfigHome, workerIndexFromCid } from './driver.js';
+import { driverPorts, workerConfigHome, workerIndexFromCid, workerSettingsFile } from './driver.js';
 import { pidRegistryDir } from './reap.js';
 import { config as portableConfig } from './wdio.portable.conf.js';
 import { config as standardConfig, e2eExportFile, e2eFile } from './wdio.conf.js';
@@ -119,12 +119,35 @@ describe('per-worker fixture isolation', () => {
 // `startWorkerDriver` rather than spawning tauri-driver on the fixed default
 // port and sleeping 2s. Verified against `spawn`'s actual call rather than by
 // reading source, per the plan's "confirm by reading, do not assume".
+const uiVersion = JSON.parse(
+  fs.readFileSync(path.resolve(repoRoot, 'ui/package.json'), 'utf8'),
+).version;
+const updateFeed = path.resolve(repoRoot, 'ui/e2e/fixtures/update-feed-newer.json');
+
+/** A spec path in the `file://` URL form wdio hands `beforeSession`. */
+function specUrl(basename) {
+  return `file://${path.resolve(repoRoot, 'ui/e2e/specs', basename)}`;
+}
+
+function plantSettings(home, settings) {
+  fs.mkdirSync(path.dirname(workerSettingsFile(home)), { recursive: true });
+  fs.writeFileSync(workerSettingsFile(home), JSON.stringify(settings));
+}
+
+function readSettings(home) {
+  return JSON.parse(fs.readFileSync(workerSettingsFile(home), 'utf8'));
+}
+
 describe.each([
   ['standard', () => standardConfig],
   ['portable', () => portableConfig],
 ])('%s config beforeSession', (name, getConfig) => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    fs.rmSync(workerSettingsFile(workerConfigHome(repoRoot, process.env)), { force: true });
   });
 
   it("spawns tauri-driver on this worker's own port pair, not the fixed default", async () => {
@@ -150,7 +173,50 @@ describe.each([
     expect(options.env.XDG_CONFIG_HOME).toBe(expectedHome);
   });
 
+  // M6.6: the update-check consent prompt makes the whole shell `inert`, so an
+  // ordinary spec must launch with the prompt already answered — "Don't check",
+  // for the version that is about to run — and must never be handed a feed.
+  it('seeds a "Don\'t check" answer before an ordinary spec, keeping other settings', async () => {
+    const config = getConfig();
+    const home = workerConfigHome(repoRoot, process.env);
+    plantSettings(home, { lang: 'de', update_check: true, update_check_asked_version: '0.0.1' });
+
+    await config.beforeSession(config, [{}], [specUrl('app-shell.e2e.js')], '0-9');
+
+    expect(readSettings(home)).toEqual({
+      lang: 'de',
+      update_check: false,
+      update_check_asked_version: uiVersion,
+    });
+    const [, , options] = spawn.mock.calls[0];
+    expect(options.env.ARM_E2E_UPDATE_FEED).toBeUndefined();
+  });
+
   if (name === 'standard') {
+    // The consent spec is the one exception: a genuine first start (its worker's
+    // config home emptied, so a retry starts over too), and the newer-release
+    // feed the `e2e-testing` build reads instead of GitHub.
+    it('gives the consent spec a first start and the newer-release feed', async () => {
+      const config = getConfig();
+      const home = workerConfigHome(repoRoot, process.env);
+      plantSettings(home, { update_check: false, update_check_asked_version: uiVersion });
+
+      await config.beforeSession(config, [{}], [specUrl('update-check.e2e.js')], '0-10');
+
+      expect(fs.readdirSync(home)).toEqual([]);
+      const [, , options] = spawn.mock.calls[0];
+      expect(options.env.ARM_E2E_UPDATE_FEED).toBe(updateFeed);
+      expect(options.env.XDG_CONFIG_HOME).toBe(home);
+    });
+
+    it('ships a feed announcing a release newer than any real one', () => {
+      expect(JSON.parse(fs.readFileSync(updateFeed, 'utf8'))).toEqual({
+        tag_name: 'v99.0.0',
+        draft: false,
+        prerelease: false,
+      });
+    });
+
     it('seams in the save/export fixtures for the app to inherit', async () => {
       const config = getConfig();
       await config.beforeSession(config, [{}], [], '0-7');

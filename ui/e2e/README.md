@@ -45,6 +45,18 @@ behind the `e2e-testing` Cargo feature and inert in the shipped binary
 
 Neither seam exists in the portable run, which builds without the feature.
 
+### The update-check consent prompt (M6.6)
+
+On a first start the app asks whether to check GitHub for updates, and that
+modal makes the whole shell `inert`. So both configs' `beforeSession` seed
+every worker's settings file with a "Don't check" answer for the running
+version (`driver.js`'s `seedUpdateCheckAnswer`), which also keeps the portable
+binary offline. The one exception is `update-check.e2e.js`: its config home is
+emptied for a genuine first start, and it gets `ARM_E2E_UPDATE_FEED`, a file
+(`fixtures/update-feed-newer.json`) that the `e2e-testing` build reads instead
+of the network. A spec that writes settings itself must merge into the file,
+never replace it.
+
 ### Keyboard accelerators cannot be pressed from a spec (C7)
 
 Since C7 every document shortcut is declared as its menu item's **accelerator**
@@ -149,6 +161,7 @@ e2e/
   display.test.js        # runs under `npm run test:unit`, NOT under wdio
   helpers.js             # shared spec harness — `startCharacter()`, `startWizard()`, …
   wizard-walk.js         # shared driver for the four per-type guided walks
+  fixtures/              # files the app reads through a seam (the update feed)
   specs/*.e2e.js         # the suite; wdio globs `specs/**/*.e2e.js`
   portable/*.e2e.js      # the portable smoke check; the standard glob cannot reach it
 ```
@@ -279,6 +292,9 @@ language/window state, a terminal describe), why it is ordered the way it is.
   parameters (Incompatible Arts, a Magical Focus, a spell marked within focus),
   a Mythic Companion's type choices, an illegal companion kept in Silent mode,
   and the German names on screen plus a German companion export.
+- `update-check.e2e.js` — the update-check consent prompt on a first start, a
+  decline, being asked again by a newer version, enabling it, the notice for a
+  newer release, and the Settings toggle (M6.6).
 
 Every spec requires the same display + release-build prerequisites: none of them
 can run without `WebKitWebDriver` and a display.
