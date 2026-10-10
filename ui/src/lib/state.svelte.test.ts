@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AgingApplication, AgingProjection, PersistedSettings } from './ipc';
@@ -9,6 +11,8 @@ import type {
   EntityTypeProfile,
   EffectiveScores,
   House,
+  LifeSection,
+  LifeStagePlan,
   LocalizedRuleset,
   PhaseRule,
   PointItem,
@@ -3701,6 +3705,287 @@ describe('the post-Gauntlet plan fields', () => {
       gauntlet_age: 40,
       post_gauntlet_lab_years: { two_seasons: 1, four_seasons: 1 },
       post_gauntlet_spell_levels: 120,
+    });
+  });
+});
+
+// --- life sections (phase 2, G3) --------------------------------------------
+
+/**
+ * The fold the engine makes when the sections are switched off
+ * (`life_stage.rs::LifeStagePlan::disable_life_sections`), as one shared fixture:
+ * `crates/arm-rules/tests/life_sections_fold.rs` proves the engine turns each
+ * `before` into its `after`, and the suite below proves the store does too.
+ */
+const lifeSectionsFold = JSON.parse(
+  readFileSync(
+    fileURLToPath(
+      new URL('../../../crates/arm-rules/tests/fixtures/life_sections_fold.json', import.meta.url),
+    ),
+    'utf-8',
+  ),
+) as { cases: { name: string; before: LifeStagePlan; after: LifeStagePlan }[] };
+
+describe('life sections (phase 2, G3)', () => {
+  beforeEach(async () => {
+    await store.setAbilityFunding('pool');
+    await store.setAbilityFunding('life_stages');
+    vi.mocked(ipc.validateEntity).mockClear();
+  });
+
+  /** Put `sections` on the plan, switched on. */
+  function withSections(sections: LifeSection[]): void {
+    store.entity.life_stages = { life_sections_enabled: true, life_sections: sections };
+  }
+
+  describe('setLifeSectionsEnabled', () => {
+    it('switches the sections on, keeping any already on file', () => {
+      store.entity.life_stages = { life_sections: [{ name: 'Youth', years: 5 }] };
+      store.setLifeSectionsEnabled(true);
+      expect(store.entity.life_stages).toEqual({
+        life_sections_enabled: true,
+        life_sections: [{ name: 'Youth', years: 5 }],
+      });
+    });
+
+    it('writes no key when switched off — off is the default the engine skips', () => {
+      store.setLifeSectionsEnabled(true);
+      store.setLifeSectionsEnabled(false);
+      expect(store.entity.life_stages).toEqual({});
+    });
+
+    it('has a shared fold fixture to check against', () => {
+      expect(lifeSectionsFold.cases.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it.each(lifeSectionsFold.cases)(
+      'folds exactly as the engine does when switched off: $name',
+      ({ before, after }) => {
+        store.entity.life_stages = structuredClone(before);
+        store.setLifeSectionsEnabled(false);
+        expect(store.entity.life_stages).toStrictEqual(after);
+      },
+    );
+
+    it('validates through the debounce', () => {
+      store.setLifeSectionsEnabled(true);
+      expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(200);
+      expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
+    });
+
+    it('is a no-op when no plan exists', async () => {
+      await store.setAbilityFunding('pool');
+      delete store.entity.life_stages;
+      store.setLifeSectionsEnabled(true);
+      expect('life_stages' in store.entity).toBe(false);
+    });
+  });
+
+  describe('addLifeSection', () => {
+    it('appends an unnamed section of no years, creating the list', () => {
+      store.addLifeSection();
+      expect(store.entity.life_stages?.life_sections).toEqual([{ name: '', years: 0 }]);
+    });
+
+    it('appends after the existing ones — the list is chronological', () => {
+      withSections([{ name: 'Youth', years: 5 }]);
+      store.addLifeSection();
+      expect(store.entity.life_stages?.life_sections).toEqual([
+        { name: 'Youth', years: 5 },
+        { name: '', years: 0 },
+      ]);
+    });
+
+    it('is a no-op when no plan exists', async () => {
+      await store.setAbilityFunding('pool');
+      delete store.entity.life_stages;
+      store.addLifeSection();
+      expect('life_stages' in store.entity).toBe(false);
+    });
+  });
+
+  describe('setLifeSectionName', () => {
+    it('stores the name as typed, spaces included', () => {
+      withSections([{ name: '', years: 5 }]);
+      store.setLifeSectionName(0, 'At the Abbey ');
+      expect(store.entity.life_stages?.life_sections?.[0]).toEqual({
+        name: 'At the Abbey ',
+        years: 5,
+      });
+    });
+
+    it('ignores an index outside the list', () => {
+      withSections([{ name: 'Youth', years: 5 }]);
+      store.setLifeSectionName(1, 'Ghost');
+      store.setLifeSectionName(-1, 'Ghost');
+      expect(store.entity.life_stages?.life_sections).toEqual([{ name: 'Youth', years: 5 }]);
+    });
+
+    it('validates through the debounce', () => {
+      withSections([{ name: '', years: 5 }]);
+      store.setLifeSectionName(0, 'Youth');
+      expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(200);
+      expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('setLifeSectionYears', () => {
+    it('stores the years', () => {
+      withSections([{ name: 'Youth', years: 0 }]);
+      store.setLifeSectionYears(0, 8);
+      expect(store.entity.life_stages?.life_sections?.[0].years).toBe(8);
+    });
+
+    it('reads a blank, negative or non-numeric count as 0 — the field is required', () => {
+      withSections([{ name: 'Youth', years: 5 }]);
+      store.setLifeSectionYears(0, null);
+      expect(store.entity.life_stages?.life_sections?.[0].years).toBe(0);
+      store.setLifeSectionYears(0, 5);
+      store.setLifeSectionYears(0, -3);
+      expect(store.entity.life_stages?.life_sections?.[0].years).toBe(0);
+      store.setLifeSectionYears(0, 5);
+      store.setLifeSectionYears(0, Number.NaN);
+      expect(store.entity.life_stages?.life_sections?.[0].years).toBe(0);
+    });
+
+    it('clamps to the u32 range the engine field is', () => {
+      withSections([{ name: 'Youth', years: 0 }]);
+      store.setLifeSectionYears(0, 9999999999);
+      expect(store.entity.life_stages?.life_sections?.[0].years).toBe(4294967295);
+      store.setLifeSectionYears(0, 2.7);
+      expect(store.entity.life_stages?.life_sections?.[0].years).toBe(2);
+    });
+
+    it('ignores an index outside the list', () => {
+      withSections([{ name: 'Youth', years: 5 }]);
+      store.setLifeSectionYears(3, 9);
+      expect(store.entity.life_stages?.life_sections).toEqual([{ name: 'Youth', years: 5 }]);
+    });
+  });
+
+  describe('moveLifeSection', () => {
+    const three = (): LifeSection[] => [
+      { name: 'A', years: 1 },
+      { name: 'B', years: 2, lab_years: { four_seasons: 1 } },
+      { name: 'C', years: 3 },
+    ];
+    const names = () => store.entity.life_stages?.life_sections?.map((s) => s.name);
+
+    it('moves a section up past its predecessor, lab years and all', () => {
+      withSections(three());
+      store.moveLifeSection(1, 'up');
+      expect(store.entity.life_stages?.life_sections).toEqual([
+        { name: 'B', years: 2, lab_years: { four_seasons: 1 } },
+        { name: 'A', years: 1 },
+        { name: 'C', years: 3 },
+      ]);
+    });
+
+    it('moves a section down past its successor', () => {
+      withSections(three());
+      store.moveLifeSection(1, 'down');
+      expect(names()).toEqual(['A', 'C', 'B']);
+    });
+
+    it('leaves the first section where it is when moved up, and the last when moved down', () => {
+      withSections(three());
+      store.moveLifeSection(0, 'up');
+      store.moveLifeSection(2, 'down');
+      expect(names()).toEqual(['A', 'B', 'C']);
+    });
+
+    it('validates through the debounce', () => {
+      withSections(three());
+      store.moveLifeSection(1, 'up');
+      expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(200);
+      expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('removeLifeSectionAt', () => {
+    it('removes that section only', () => {
+      withSections([
+        { name: 'A', years: 1 },
+        { name: 'B', years: 2 },
+      ]);
+      store.removeLifeSectionAt(0);
+      expect(store.entity.life_stages?.life_sections).toEqual([{ name: 'B', years: 2 }]);
+    });
+
+    it('drops the whole key with the last section — the engine writes no empty list', () => {
+      withSections([{ name: 'A', years: 1 }]);
+      store.removeLifeSectionAt(0);
+      expect(store.entity.life_stages).toEqual({ life_sections_enabled: true });
+    });
+
+    it('ignores an index outside the list', () => {
+      withSections([{ name: 'A', years: 1 }]);
+      store.removeLifeSectionAt(4);
+      expect(store.entity.life_stages?.life_sections).toEqual([{ name: 'A', years: 1 }]);
+    });
+  });
+
+  // One section's own lab years: the same four counts, written the same sparse way,
+  // as the plan-level ("Remaining") ones `setPostGauntletLabYears` writes.
+  describe('setLifeSectionLabYears', () => {
+    it('stores the years counted in one bucket of that section', () => {
+      withSections([
+        { name: 'A', years: 5 },
+        { name: 'B', years: 5 },
+      ]);
+      store.setLifeSectionLabYears(1, 'four_seasons', 2);
+      expect(store.entity.life_stages?.life_sections).toEqual([
+        { name: 'A', years: 5 },
+        { name: 'B', years: 5, lab_years: { four_seasons: 2 } },
+      ]);
+      // The plan level is a different span ("Remaining"), untouched.
+      expect(store.entity.life_stages?.post_gauntlet_lab_years).toBeUndefined();
+    });
+
+    it('writes each bucket beside the others, and deletes one for a blank, zero or bad count', () => {
+      withSections([{ name: 'A', years: 9 }]);
+      store.setLifeSectionLabYears(0, 'four_seasons', 3);
+      store.setLifeSectionLabYears(0, 'one_season', 1);
+      store.setLifeSectionLabYears(0, 'two_seasons', 2);
+      store.setLifeSectionLabYears(0, 'two_seasons', 0);
+      store.setLifeSectionLabYears(0, 'one_season', -1);
+      store.setLifeSectionLabYears(0, 'three_seasons', 1);
+      store.setLifeSectionLabYears(0, 'three_seasons', Number.NaN);
+      expect(store.entity.life_stages?.life_sections?.[0].lab_years).toEqual({ four_seasons: 3 });
+    });
+
+    it('drops the section`s lab-years key once its last bucket is cleared', () => {
+      withSections([{ name: 'A', years: 9 }]);
+      store.setLifeSectionLabYears(0, 'four_seasons', 3);
+      store.setLifeSectionLabYears(0, 'four_seasons', null);
+      expect(store.entity.life_stages?.life_sections).toStrictEqual([{ name: 'A', years: 9 }]);
+    });
+
+    it('clamps to the u32 range the engine field is', () => {
+      withSections([{ name: 'A', years: 9 }]);
+      store.setLifeSectionLabYears(0, 'three_seasons', 9999999999);
+      expect(store.entity.life_stages?.life_sections?.[0].lab_years?.three_seasons).toBe(
+        4294967295,
+      );
+      store.setLifeSectionLabYears(0, 'three_seasons', 2.7);
+      expect(store.entity.life_stages?.life_sections?.[0].lab_years?.three_seasons).toBe(2);
+    });
+
+    it('ignores an index outside the list', () => {
+      withSections([{ name: 'A', years: 9 }]);
+      store.setLifeSectionLabYears(1, 'four_seasons', 3);
+      expect(store.entity.life_stages?.life_sections).toEqual([{ name: 'A', years: 9 }]);
+    });
+
+    it('validates through the debounce', () => {
+      withSections([{ name: 'A', years: 9 }]);
+      store.setLifeSectionLabYears(0, 'four_seasons', 1);
+      expect(vi.mocked(ipc.validateEntity)).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(200);
+      expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
     });
   });
 });

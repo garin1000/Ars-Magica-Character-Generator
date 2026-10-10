@@ -13,16 +13,16 @@ use std::collections::BTreeMap;
 use arm_rules::{
     AbilityBonus, AbilityBonusSources, AbilityFloor, AbilityParameterOptions, ArtBonus,
     ArtBonusSources, Characteristic, CharacteristicBonus, Confidence, CreationPhase, Entity,
-    EntityTypeProfile, Grant, Id, LifeStageBudget, MagusMinimumAbility, MightScore, PointCeilings,
-    Realm, RealmAssociation, ReputationType, RestrictedXpPool, Ruleset, Selection, SpellCap,
-    SpellLevelCap, SupernaturalFreeSlots, ability_bonus_sources, ability_bonuses,
+    EntityTypeProfile, Grant, Id, LifeStageBudget, LifeTimeline, MagusMinimumAbility, MightScore,
+    PointCeilings, Realm, RealmAssociation, ReputationType, RestrictedXpPool, Ruleset, Selection,
+    SpellCap, SpellLevelCap, SupernaturalFreeSlots, ability_bonus_sources, ability_bonuses,
     ability_parameter_options, ability_score_floors, aging_schedule, aging_total,
     art_bonus_sources, art_bonuses, characteristic_aging_drops, characteristic_bonuses,
     characteristic_caps, characteristic_floors, characteristic_points_granted,
     checked_xp_allocation, compute_balance, confidence, decrepitude_score,
     effective_characteristics, effective_might, effective_point_ceilings, entity_grants,
     focus_points_budget, focus_points_used, is_hermetically_trained, item_has_realm_association,
-    item_level_budget, item_level_used, life_stage_spell_levels, longevity_bonus,
+    item_level_budget, item_level_used, life_stage_spell_levels, life_timeline, longevity_bonus,
     magus_minimum_abilities, phases_in_force, power_levels_budget, powers_used, reputation_grants,
     resolve_realm, size, spell_caps, spell_level_caps, spell_levels_base, spell_levels_bonus,
     spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
@@ -105,6 +105,12 @@ pub struct EffectiveScores {
     /// for a directly-entered character (where `xp_pool` is the authority). The
     /// guided flow shows this instead of an editable pool.
     pub life_stage: Option<LifeStageBudget>,
+    /// The character's life as chronological spans — each with what its years
+    /// earned and how much of that the purchases fill — or `None` when the life
+    /// sections are switched off, the character is funded from a flat pool, or
+    /// it has no life-stage budget. Display only ([`arm_rules::life_timeline`]),
+    /// read off the same allocation as the fields above.
+    pub life_timeline: Option<LifeTimeline>,
     /// The die-independent half of the character's aging: which rolls are owed,
     /// which are recorded, and every term of the AGING TOTAL except the die.
     /// `None` when the ruleset ships no aging rules at all — the same shape as
@@ -571,6 +577,7 @@ struct XpFields {
     total_supply: u32,
     restricted: Vec<RestrictedXpPool>,
     life_stage: Option<LifeStageBudget>,
+    life_timeline: Option<LifeTimeline>,
 }
 
 /// Audit finding K1 (round 2): this used to call the raw, now-`pub(crate)`
@@ -591,6 +598,9 @@ fn xp_fields(entity: &Entity, ruleset: &Ruleset) -> XpFields {
         .and_then(|rules| rules.budget(entity, ruleset));
     match checked_xp_allocation(entity, ruleset) {
         Ok(allocation) => XpFields {
+            // Read off this same allocation, never re-solved, so the timeline and
+            // the bar beside it can never disagree.
+            life_timeline: life_timeline(entity, ruleset, &allocation),
             total_demand: allocation.total_demand,
             general_used: allocation.general_used,
             general_pool: allocation.general_pool,
@@ -600,6 +610,7 @@ fn xp_fields(entity: &Entity, ruleset: &Ruleset) -> XpFields {
             restricted: allocation.restricted,
             life_stage,
         },
+        // Over the solve bound there is no allocation to fill a timeline from.
         Err(_) => XpFields {
             total_demand: 0,
             general_used: 0,
@@ -609,6 +620,7 @@ fn xp_fields(entity: &Entity, ruleset: &Ruleset) -> XpFields {
             total_supply: 0,
             restricted: Vec::new(),
             life_stage,
+            life_timeline: None,
         },
     }
 }
@@ -903,6 +915,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         xp_total_supply: xp.total_supply,
         restricted_xp_pools: xp.restricted,
         life_stage: xp.life_stage,
+        life_timeline: xp.life_timeline,
 
         aging: aging_readout(entity, ruleset),
 

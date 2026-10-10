@@ -83,6 +83,17 @@ fn fully_populated_entity() -> Entity {
             four_seasons: 4,
         },
         post_gauntlet_spell_levels: 5,
+        life_sections_enabled: true,
+        life_sections: vec![arm_rules::LifeSection {
+            name: "Test section".to_string(),
+            years: 6,
+            lab_years: arm_rules::LabYears {
+                one_season: 1,
+                two_seasons: 1,
+                three_seasons: 1,
+                four_seasons: 1,
+            },
+        }],
     });
 
     e.characteristics = BTreeMap::from([(Characteristic::Int, 3)]);

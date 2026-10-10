@@ -2318,6 +2318,90 @@ ul {
   font-size: var(--font-small);
 }
 
+/* The life-sections switch, dressed like the funding radios above it. */
+.life-stage-panel input[type='checkbox'] {
+  padding: 0;
+  border: none;
+  background: none;
+  accent-color: var(--accent);
+}
+
+/* The life-section editor: one compact wrapping row per section. Each row is a
+   fieldset only for its (screen-reader) legend, so it drops the panel's boxed
+   fieldset look; the nested lab-year group keeps it. */
+.life-sections {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+.life-section-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.life-stage-panel fieldset.life-section {
+  border: none;
+  padding: 0;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+}
+
+.life-section input[type='text'] {
+  width: 12rem;
+}
+
+/* The timeline: one segment per span, as wide as its years, its figures in words
+   beneath a thin fill bar (decoration; the text carries the numbers). */
+.life-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 2px;
+  font-size: var(--font-small);
+}
+
+.life-timeline-entry {
+  flex-basis: 0;
+  min-width: 6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.life-timeline-bar {
+  display: block;
+  height: 0.4rem;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.life-timeline-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.life-timeline-overrun {
+  font-size: var(--font-small);
+}
+
+.life-timeline-outside {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.75rem;
+}
+
 /* The Hermetic minimum Abilities a magus owes: a `<details>` whose summary is the
    one line the step shows by default, holding two short lists that open on demand
    (guided-creation-review-2026-08 #12). Auto-height, like the life-stage panel beside

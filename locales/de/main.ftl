@@ -380,6 +380,32 @@ life-stage-spell-levels-label = Zauberstufen
 # ihr `aria-describedby`-Ziel.
 life-stage-post-gauntlet-no-years-note = Noch keine Jahre als Magus, daher können Jahre mit Laborarbeit und Zauberstufen nichts aufnehmen.
 life-stage-post-gauntlet-summary = Jahre als Magus: { $years }; { $points } Punkte = { $xp } EP + Zauberstufen ({ $levels })
+# Benannte Abschnitte des Lebens (Phase 2). Die festen Abschnitte, geschlüsselt nach
+# dem `FixedSection`-Slug der Engine, heißen wie die Perioden der Basisregeln
+# (frühe Kindheit, späteres Leben, Lehrlingszeit) und wie die Blöcke der EP-Leiste.
+life-sections-label = Lebensphasen
+life-section-fixed-childhood = Frühe Kindheit
+life-section-fixed-later_life = Späteres Leben
+life-section-fixed-apprenticeship = Lehrlingszeit
+life-section-fixed-truncated_training = Abgebrochene Lehrlingszeit
+life-section-remaining = Übrige Jahre
+life-section-unnamed = Abschnitt { $n }
+life-section-name-label = Name
+life-section-years-label = Jahre
+life-section-move-up = { $section } nach oben verschieben
+life-section-move-down = { $section } nach unten verschieben
+life-section-move-up-glyph = ↑
+life-section-move-down-glyph = ↓
+life-section-add = Abschnitt hinzufügen
+life-section-lab-years-legend = { $section }: Jahre mit Laborarbeit
+# Der Lebenslauf: je Abschnitt Alter und gefüllt / erworben, als Text.
+life-timeline-label = Lebenslauf
+life-timeline-entry-xp = { $section } (Alter { $from }-{ $to }): { $filled } / { $xp } EP
+life-timeline-entry-xp-spells = { $section } (Alter { $from }-{ $to }): { $filled } / { $xp } EP, { $levelsFilled } / { $levels } Zauberstufen
+life-timeline-entry-points = { $section } (Alter { $from }-{ $to }): { $filled } EP + Zauberstufen ({ $levelsFilled }) / { $points } Punkte
+life-timeline-overrun = Die Abschnitte reichen { $years } Jahr(e) über das Alter des Charakters hinaus.
+life-timeline-outside-label = Erfahrung außerhalb der Jahre
+life-timeline-outside-chip = { $item }: { $used } / { $amount } EP
 # Notausgang für eine von Hand bearbeitete Datei: ein Charakter, der über seine
 # Lebensabschnitte finanziert wird, darf keinen eingetragenen Vorrat führen, und die
 # geführte Erstellung bietet kein Feld, um ihn zu berichtigen — dies leert ihn.
@@ -1516,6 +1542,7 @@ issue-life_stage_age_before_truncation = Alter { $age } ist zu jung, um { $min }
 issue-life_stage_gauntlet_age_after_age = Die Lehrlingsprüfung mit { $gauntlet_age } liegt für diesen Magus mit { $age } Jahren noch in der Zukunft; die Jahre als Magus werden ab der Lehrlingsprüfung gezählt.
 issue-life_stage_lab_seasons_out_of_range = Jahre mit Laborarbeit ({ $years_used }) sind mehr als die Jahre als Magus ({ $years }).
 issue-life_stage_lab_seasons_without_years = Eingetragene Jahre mit Laborarbeit: { $years_used }; dieser Charakter hat aber keine Jahre als Magus, in denen sie stattfinden könnten.
+issue-life_stage_section_lab_years_exceed_section = Abschnitt { $section }: Jahre mit Laborarbeit ({ $years_used }) sind mehr als die Jahre des Abschnitts ({ $years }).
 issue-life_stage_spell_level_split_exceeds_points = Die aus den Jahren als Magus genommenen Zauberstufen ({ $levels }) übersteigen, was diese Jahre gewähren: Sie sind { $points } Punkte wert, die zwischen Erfahrung und Zauberstufen aufzuteilen sind.
 issue-life_stage_native_language_unset = Wähle eine Muttersprache: der größte Erfahrungsblock der Kindheit kann für nichts anderes ausgegeben werden.
 issue-life_stage_native_language_missing_score = Kein Wert in { $language } gekauft, daher bleibt die Erfahrung der Kindheit für die Muttersprache unausgegeben.
@@ -1897,3 +1924,15 @@ export-items-hooks = Haken
 export-granted = Gewährt
 export-vf-realm-label = Sphäre
 export-xp-restricted = Eingeschränkte Erfahrungspunkte
+# G4: die Lebenslauf-Tabelle, nur bei eingeschalteten Lebensphasen. Ohne Argumente,
+# weil die Engine jede Zelle aus Wort und Zahl zusammensetzt: "Abschnitt 2",
+# "120 EP", "240 Punkte", "1 × 4 Quartale".
+export-life-col-section = Abschnitt
+export-life-col-ages = Alter
+export-life-col-earned = Erworben
+export-life-col-filled = Genutzt
+export-life-section-unnamed = Abschnitt
+export-life-unit-xp = EP
+export-life-unit-spell-levels = Zauberstufen
+export-life-unit-points = Punkte
+export-life-overrun = Jahre über das Alter des Charakters hinaus

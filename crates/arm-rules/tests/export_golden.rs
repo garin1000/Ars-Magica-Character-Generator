@@ -15,7 +15,10 @@
 use arm_rules::export::{LABEL_KEYS, character_markdown};
 use arm_rules::ruleset::{LocalizedRuleset, Ruleset, RulesetSources};
 use arm_rules::types::*;
-use arm_rules::{Characteristic, CrisisSeverity, parse_catalogue_names};
+use arm_rules::{
+    Characteristic, CrisisSeverity, LabYears, LifeSection, LifeStagePlan, NativeLanguage,
+    parse_catalogue_names,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The whole shipped ruleset, localized with the shipped English rules text.
@@ -789,4 +792,289 @@ fn an_unmerged_catalogued_parameter_falls_back_to_a_humanized_label() {
         !rendered.contains("language.nonexistent_test_language"),
         "no raw catalogue id, even on the fallback path:\n{rendered}"
     );
+}
+
+// --- G4: the life sections' table ---------------------------------------------
+//
+// Unlike the whole-document fixture above, these goldens pin the Life table's
+// real wording in both locales: its chrome is new, and a German column header
+// left in English is exactly what a key-as-label map cannot catch. Only the Life
+// section is compared, so copy tweaks elsewhere in the bundles cannot churn them.
+
+/// [`synthetic_labels`] with every argument-free one-line message of `ftl` that
+/// [`LABEL_KEYS`] declares resolved to its real text — the subset the app's own
+/// Fluent bundle would hand the exporter.
+fn locale_labels(ftl: &str) -> BTreeMap<String, String> {
+    let mut labels = synthetic_labels();
+    for line in ftl.lines() {
+        let Some((key, value)) = line.split_once(" = ") else {
+            continue;
+        };
+        if LABEL_KEYS.contains(&key) && !value.contains('{') {
+            labels.insert(key.to_string(), value.trim().to_string());
+        }
+    }
+    labels
+}
+
+fn english_labels() -> BTreeMap<String, String> {
+    locale_labels(include_str!("../../../locales/en/main.ftl"))
+}
+
+fn german_labels() -> BTreeMap<String, String> {
+    locale_labels(include_str!("../../../locales/de/main.ftl"))
+}
+
+/// The `## heading` section of `doc`, up to the next level-2 heading; empty when
+/// the document has no such section.
+fn h2_section(doc: &str, heading: &str) -> String {
+    let Some(start) = doc.find(&format!("\n## {heading}\n")) else {
+        return String::new();
+    };
+    let rest = &doc[start + 1..];
+    let end = rest[3..].find("\n## ").map_or(rest.len(), |at| at + 4);
+    rest[..end].to_string()
+}
+
+/// A character of `type_id` funded from its life stages, with the life sections
+/// switched on.
+fn life_character(type_id: &str, age: u32) -> Entity {
+    let mut e = Entity::new(
+        EntityKind::Character,
+        Id::new(type_id),
+        RulesetRef::new(Id::new("arm5-core"), "2024.1"),
+    );
+    e.ability_funding = AbilityFunding::LifeStages;
+    e.age = Some(age);
+    e.life_stages = Some(LifeStagePlan {
+        native_language: Some(NativeLanguage::from("Frankish")),
+        life_sections_enabled: true,
+        ..LifeStagePlan::default()
+    });
+    e
+}
+
+fn life_plan(e: &mut Entity) -> &mut LifeStagePlan {
+    e.life_stages.as_mut().expect("the fixture has a plan")
+}
+
+fn life_section(name: &str, years: u32, lab_years: LabYears) -> LifeSection {
+    LifeSection {
+        name: name.to_string(),
+        years,
+        lab_years,
+    }
+}
+
+/// An Ability at score 0 with `xp` banked: a spend of exactly `xp`.
+fn banked_ability(ability: &str, xp: u32) -> AbilityScore {
+    let mut row = AbilityScore::new(Id::new(ability), 0);
+    row.banked_xp = xp;
+    row
+}
+
+/// A companion of 30 whose three sections claim 35 of its 25 later-life years:
+/// one named with a `|`, one left unnamed, one clipped by the 10-year overrun.
+/// Warrior's 50 Martial experience is drawn from no span (an outside lump).
+fn life_companion() -> Entity {
+    let mut e = life_character("companion", 30);
+    e.selections = vec![Selection::new(Id::new("virtue.warrior"))];
+    life_plan(&mut e).life_sections = vec![
+        life_section("Squire | page", 5, LabYears::default()),
+        life_section("", 5, LabYears::default()),
+        life_section("Crusade", 25, LabYears::default()),
+    ];
+    e.ability_scores = vec![
+        banked_ability("ability.athletics", 30),
+        banked_ability("ability.ride", 150),
+        banked_ability("ability.single_weapon", 50),
+    ];
+    e.normalize();
+    e
+}
+
+/// Darius's shape (ArMDE:2554, :2556) at 36: eight years of study, a year of
+/// four lab seasons in a section named with a `|`, and two Remaining years with
+/// one and two lab seasons — 240 + 0 + 30 post-Gauntlet points (ArMDE:2539,
+/// :2550). 40 of them are levels of spells.
+fn life_magus() -> Entity {
+    let mut e = life_character("magus", 36);
+    let plan = life_plan(&mut e);
+    plan.life_sections = vec![
+        life_section("Study", 8, LabYears::default()),
+        life_section(
+            "Lab | Pisa",
+            1,
+            LabYears {
+                four_seasons: 1,
+                ..LabYears::default()
+            },
+        ),
+    ];
+    plan.post_gauntlet_lab_years = LabYears {
+        one_season: 1,
+        two_seasons: 1,
+        ..LabYears::default()
+    };
+    plan.post_gauntlet_spell_levels = 40;
+    e.ability_scores = vec![banked_ability("ability.ride", 40)];
+    e.art_scores = vec![{
+        let mut row = ArtScore::new(Id::new("art.creo"), 0);
+        row.banked_xp = 340;
+        row
+    }];
+    // 40 + 35 + 25 + 25 + 20 + 15 = 160 levels.
+    e.spells = [
+        "spell.black_whisper",
+        "spell.ball_of_abysmal_flame",
+        "spell.bane_of_the_decrepit_body",
+        "spell.blessing_of_childlike_bliss",
+        "spell.beast_of_minuscule_proportions",
+        "spell.beast_of_outlandish_size",
+    ]
+    .iter()
+    .map(|&id| SpellSelection::new(Id::new(id)))
+    .collect();
+    e.normalize();
+    e
+}
+
+fn life_table(
+    entity: &Entity,
+    ruleset: &LocalizedRuleset,
+    labels: &BTreeMap<String, String>,
+) -> String {
+    let rendered = character_markdown(entity, ruleset, labels)
+        .expect("every chrome key is declared and every id is real");
+    let heading = labels
+        .get("life-timeline-label")
+        .map_or("life-timeline-label", String::as_str);
+    h2_section(&rendered, heading)
+}
+
+#[test]
+fn a_companions_life_table_matches_the_english_golden() {
+    let expected = "\
+## Life timeline
+
+| Section | Ages | Years | Earned | Filled |
+| --- | --- | --- | --- | --- |
+| Early childhood | 0–5 | 5 | 120 XP | 30 XP |
+| Squire \\| page | 5–10 | 5 | 75 XP | 75 XP |
+| Section 2 | 10–15 | 5 | 75 XP | 75 XP |
+| Crusade | 15–30 | 15 | 225 XP | 0 XP |
+| Remaining | 30–30 | 0 | 0 XP | 0 XP |
+
+- **Years past the character's age**: 10
+- **Experience beyond the years**: Warrior 50 / 50 XP
+
+";
+    assert_eq!(
+        life_table(&life_companion(), &shipped_ruleset(), &english_labels()),
+        expected
+    );
+}
+
+#[test]
+fn a_companions_life_table_matches_the_german_golden() {
+    let expected = "\
+## Lebenslauf
+
+| Abschnitt | Alter | Jahre | Erworben | Genutzt |
+| --- | --- | --- | --- | --- |
+| Frühe Kindheit | 0–5 | 5 | 120 EP | 30 EP |
+| Squire \\| page | 5–10 | 5 | 75 EP | 75 EP |
+| Abschnitt 2 | 10–15 | 5 | 75 EP | 75 EP |
+| Crusade | 15–30 | 15 | 225 EP | 0 EP |
+| Übrige Jahre | 30–30 | 0 | 0 EP | 0 EP |
+
+- **Jahre über das Alter des Charakters hinaus**: 10
+- **Erfahrung außerhalb der Jahre**: Krieger 50 / 50 EP
+
+";
+    assert_eq!(
+        life_table(&life_companion(), &shipped_ruleset_de(), &german_labels()),
+        expected
+    );
+}
+
+/// A magus's table adds the lab-years column: each post-Gauntlet span's years
+/// counted by their lab seasons, the fixed spans blank.
+#[test]
+fn a_magus_life_table_matches_the_english_golden() {
+    let expected = "\
+## Life timeline
+
+| Section | Ages | Years | Earned | Filled | Years of lab work |
+| --- | --- | --- | --- | --- | --- |
+| Early childhood | 0–5 | 5 | 120 XP | 0 XP |  |
+| Later life | 5–10 | 5 | 75 XP | 40 XP |  |
+| Apprenticeship | 10–25 | 15 | 240 XP, 120 levels of spells | 240 XP, 120 levels of spells |  |
+| Study | 25–33 | 8 | 240 points | 100 XP, 40 levels of spells |  |
+| Lab \\| Pisa | 33–34 | 1 | 0 points | 0 XP, 0 levels of spells | 1 × 4 seasons |
+| Remaining | 34–36 | 2 | 30 points | 0 XP, 0 levels of spells | 1 × 1 season, 1 × 2 seasons |
+
+";
+    assert_eq!(
+        life_table(&life_magus(), &shipped_ruleset(), &english_labels()),
+        expected
+    );
+}
+
+#[test]
+fn a_magus_life_table_matches_the_german_golden() {
+    let expected = "\
+## Lebenslauf
+
+| Abschnitt | Alter | Jahre | Erworben | Genutzt | Jahre mit Laborarbeit |
+| --- | --- | --- | --- | --- | --- |
+| Frühe Kindheit | 0–5 | 5 | 120 EP | 0 EP |  |
+| Späteres Leben | 5–10 | 5 | 75 EP | 40 EP |  |
+| Lehrlingszeit | 10–25 | 15 | 240 EP, 120 Zauberstufen | 240 EP, 120 Zauberstufen |  |
+| Study | 25–33 | 8 | 240 Punkte | 100 EP, 40 Zauberstufen |  |
+| Lab \\| Pisa | 33–34 | 1 | 0 Punkte | 0 EP, 0 Zauberstufen | 1 × 4 Quartale |
+| Übrige Jahre | 34–36 | 2 | 30 Punkte | 0 EP, 0 Zauberstufen | 1 × 1 Quartal, 1 × 2 Quartale |
+
+";
+    assert_eq!(
+        life_table(&life_magus(), &shipped_ruleset_de(), &german_labels()),
+        expected
+    );
+}
+
+/// A `|` in a section's name is escaped like every other free text on the sheet,
+/// so the row keeps exactly its six cells.
+#[test]
+fn a_pipe_in_a_section_name_cannot_split_its_cell() {
+    let table = life_table(&life_magus(), &shipped_ruleset(), &english_labels());
+    let row = table
+        .lines()
+        .find(|line| line.contains("Pisa"))
+        .unwrap_or_default();
+    assert!(row.starts_with("| Lab \\| Pisa | 33–34 |"), "{table}");
+    assert_eq!(row.replace("\\|", "").matches('|').count(), 7, "{row}");
+}
+
+/// Switched off, the sections draw no table, and the sheet is byte-identical to
+/// the same character's with the sections folded away — the shape every export
+/// had before the sections existed.
+#[test]
+fn switched_off_life_sections_leave_the_export_byte_identical() {
+    let ruleset = shipped_ruleset();
+    let labels = english_labels();
+    let enabled = life_magus();
+    let mut disabled = enabled.clone();
+    life_plan(&mut disabled).life_sections_enabled = false;
+    let mut folded = enabled.clone();
+    life_plan(&mut folded).disable_life_sections();
+    folded.life_stages.as_mut().expect("plan").life_sections = Vec::new();
+
+    let render = |e: &Entity| character_markdown(e, &ruleset, &labels).expect("renders");
+    assert_ne!(
+        render(&enabled),
+        render(&disabled),
+        "switched on, the sections must add their table"
+    );
+    assert_eq!(life_table(&disabled, &ruleset, &labels), "");
+    assert_eq!(render(&disabled), render(&folded));
 }

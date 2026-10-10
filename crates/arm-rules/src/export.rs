@@ -79,6 +79,7 @@ use crate::types::{
 };
 use crate::validation::{compute_balance, effective_point_ceilings};
 
+mod life;
 mod magic;
 mod resolve;
 mod sections;
@@ -188,6 +189,15 @@ pub const LABEL_KEYS: &[&str] = &[
     "export-granted",
     "export-items-boons",
     "export-items-hooks",
+    "export-life-col-ages",
+    "export-life-col-earned",
+    "export-life-col-filled",
+    "export-life-col-section",
+    "export-life-overrun",
+    "export-life-section-unnamed",
+    "export-life-unit-points",
+    "export-life-unit-spell-levels",
+    "export-life-unit-xp",
     "export-spell-within-focus",
     "export-spell-within-potent-field",
     "export-untitled",
@@ -218,6 +228,19 @@ pub const LABEL_KEYS: &[&str] = &[
     "identity-sigil",
     "items-flaws-title",
     "items-virtues-title",
+    "life-section-fixed-apprenticeship",
+    "life-section-fixed-childhood",
+    "life-section-fixed-later_life",
+    "life-section-fixed-truncated_training",
+    "life-section-remaining",
+    "life-section-years-label",
+    "life-stage-lab-years-1-label",
+    "life-stage-lab-years-2-label",
+    "life-stage-lab-years-3-label",
+    "life-stage-lab-years-4-label",
+    "life-stage-lab-years-legend",
+    "life-timeline-label",
+    "life-timeline-outside-label",
     "living-conditions-label",
     "longevity-bonus-label",
     "longevity-focus-label",
@@ -342,6 +365,7 @@ pub fn character_markdown(
     doc.write_characteristics(&mut out);
     doc.write_virtues_flaws(&mut out);
     doc.write_abilities(&mut out);
+    doc.write_life(&mut out);
     doc.write_arts(&mut out);
     doc.write_spells(&mut out);
     doc.write_equipment(&mut out);
@@ -3352,6 +3376,12 @@ mod tests {
         }
         for block in crate::effective::LifeStageBlock::ALL {
             assert_declared(&format!("xp-pool-{block}"));
+        }
+        for section in crate::life_timeline::FixedSection::ALL {
+            assert_declared(&format!("life-section-fixed-{section}"));
+        }
+        for seasons in 1..=4 {
+            assert_declared(&format!("life-stage-lab-years-{seasons}-label"));
         }
     }
 

@@ -828,6 +828,31 @@ presumption of correctness.
 
 ---
 
+## D89 — optional life sections, a display-only timeline, and the Life table (Norbert, 2026-10-10)
+
+- Storage: `LifeStagePlan.life_sections_enabled` (default off, no key when off) and
+  `life_sections: Vec<LifeSection { name, years, lab_years }>`, chronological. Additive
+  `serde(default)` fields, no schema bump; inert in Pool mode. The plan-level buckets are "Remaining".
+- The charge reads `all_lab_years()`: plan level plus every section, saturating, switched-off
+  sections included (only a crafted save holds those). Switching off folds the sections' buckets
+  into the plan level (`disable_life_sections`); the charge is unchanged, names and years stay inert.
+- Validation: D88's years check over all buckets, plus each section's lab years ≤ its years
+  (`life_stage_section_lab_years_exceed_section`).
+- `life_timeline` is display only; the XP solve is untouched. Spans follow the book's periods
+  (ArMDE:2432). Grog/companion: Childhood → named sections → Remaining. Magus: Childhood →
+  later life → Apprenticeship → named sections → Remaining.
+  Redcap: the magus shape ("trained in a similar manner to magi", ArMDE:4919), its 15 years ending
+  at the default Gauntlet age 25. Abandoned Apprentice: pre-span → truncated training (ArMDE:5714)
+  → named sections. A training ending past the age is clamped to it; sections past the age are
+  clipped, the excess an `overrun_years` note.
+- Capacity: childhood = its pools' amounts, else the budget's 75 + 45 (ArMDE:2446); apprenticeship
+  240 XP and 120 levels apart (ArMDE:2503), Parens included; post-Gauntlet = years × 30 less the
+  span's own lab seasons (ArMDE:2539, :2550). Fill: own-pool spans show their `used`; general XP
+  plus normal-budget earmarks pour oldest first, then levels of spells (ArMDE:2539). Educated and
+  Warrior are `outside` lumps. Export: a Life table after the Abilities; switched off, byte-identical.
+
+---
+
 ## D88 — row 56: post-Gauntlet lab work is stored as year counts (Norbert, 2026-10-10)
 
 Supersedes D83.8's storage; its charging rule stands. Norbert chose "year counts".

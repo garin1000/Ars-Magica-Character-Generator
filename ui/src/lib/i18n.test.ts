@@ -1735,3 +1735,146 @@ describe('UI bundles, catalogue load notices at a single item (L3)', () => {
     expect(say(c.lang, c.key, c.args)).toBe(c.want);
   });
 });
+
+// G3: the life sections and the timeline. The fixed spans are named as the German
+// rulebook names the periods (Basisregeln.md:2282-2284, :2432 — frühe Kindheit,
+// späteres Leben, Lehrlingszeit), matching the XP bar's own block chips. Every key
+// is pinned in both locales with its arguments, so a dropped placeable or an English
+// word left in the German bundle fails here.
+describe('UI bundles, life sections and the timeline (G3)', () => {
+  const bundles = { en: buildBundle('en'), de: buildBundle('de') };
+  const say = (lang: 'en' | 'de', key: string, args?: Record<string, string>) =>
+    translate(bundles[lang], key, args).replace(/[⁦-⁩]/g, '');
+
+  const span = { section: 'Squire', from: '5', to: '10' };
+  const cases: {
+    key: string;
+    args?: Record<string, string>;
+    en: string;
+    de: string;
+  }[] = [
+    // The switch's label and the section list's accessible name alike.
+    // DE differs from the funding radio's "Lebensabschnitte": both sit in one panel.
+    { key: 'life-sections-label', en: 'Life sections', de: 'Lebensphasen' },
+    { key: 'life-section-fixed-childhood', en: 'Early childhood', de: 'Frühe Kindheit' },
+    { key: 'life-section-fixed-later_life', en: 'Later life', de: 'Späteres Leben' },
+    { key: 'life-section-fixed-apprenticeship', en: 'Apprenticeship', de: 'Lehrlingszeit' },
+    {
+      key: 'life-section-fixed-truncated_training',
+      en: 'Abandoned apprenticeship',
+      de: 'Abgebrochene Lehrlingszeit',
+    },
+    { key: 'life-section-remaining', en: 'Remaining', de: 'Übrige Jahre' },
+    { key: 'life-section-unnamed', args: { n: '3' }, en: 'Section 3', de: 'Abschnitt 3' },
+    { key: 'life-section-name-label', en: 'Name', de: 'Name' },
+    { key: 'life-section-years-label', en: 'Years', de: 'Jahre' },
+    {
+      key: 'life-section-move-up',
+      args: { section: 'Squire' },
+      en: 'Move Squire up',
+      de: 'Squire nach oben verschieben',
+    },
+    {
+      key: 'life-section-move-down',
+      args: { section: 'Squire' },
+      en: 'Move Squire down',
+      de: 'Squire nach unten verschieben',
+    },
+    // The move buttons' visible marks, keyed like every other glyph standing for a
+    // word (markup-glyph-keying.test.ts); the accessible names are the keys above.
+    { key: 'life-section-move-up-glyph', en: '↑', de: '↑' },
+    { key: 'life-section-move-down-glyph', en: '↓', de: '↓' },
+    { key: 'life-section-add', en: 'Add section', de: 'Abschnitt hinzufügen' },
+    {
+      key: 'life-section-lab-years-legend',
+      args: { section: 'Squire' },
+      en: 'Squire: years of lab work',
+      de: 'Squire: Jahre mit Laborarbeit',
+    },
+    { key: 'life-timeline-label', en: 'Life timeline', de: 'Lebenslauf' },
+    {
+      key: 'life-timeline-entry-xp',
+      args: { ...span, filled: '40', xp: '75' },
+      en: 'Squire (ages 5-10): 40 / 75 XP',
+      de: 'Squire (Alter 5-10): 40 / 75 EP',
+    },
+    {
+      key: 'life-timeline-entry-xp-spells',
+      args: { ...span, filled: '240', xp: '240', levelsFilled: '100', levels: '120' },
+      en: 'Squire (ages 5-10): 240 / 240 XP, 100 / 120 levels of spells',
+      de: 'Squire (Alter 5-10): 240 / 240 EP, 100 / 120 Zauberstufen',
+    },
+    {
+      key: 'life-timeline-entry-points',
+      args: { ...span, filled: '100', levelsFilled: '40', points: '240' },
+      en: 'Squire (ages 5-10): 100 XP + 40 level(s) of spells / 240 points',
+      de: 'Squire (Alter 5-10): 100 EP + Zauberstufen (40) / 240 Punkte',
+    },
+    {
+      key: 'life-timeline-overrun',
+      args: { years: '1' },
+      en: "The sections run 1 year(s) past the character's age.",
+      de: 'Die Abschnitte reichen 1 Jahr(e) über das Alter des Charakters hinaus.',
+    },
+    {
+      key: 'life-timeline-outside-label',
+      en: 'Experience beyond the years',
+      de: 'Erfahrung außerhalb der Jahre',
+    },
+    {
+      key: 'life-timeline-outside-chip',
+      args: { item: 'Educated', used: '20', amount: '50' },
+      en: 'Educated: 20 / 50 XP',
+      de: 'Educated: 20 / 50 EP',
+    },
+    // G1's per-section validation finding, read as the sentence the issue list shows.
+    {
+      key: 'issue-life_stage_section_lab_years_exceed_section',
+      args: { section: '2', years_used: '3', years: '1' },
+      en: "Section 2: 3 year(s) of lab work is more than the section's 1 year(s).",
+      de: 'Abschnitt 2: Jahre mit Laborarbeit (3) sind mehr als die Jahre des Abschnitts (1).',
+    },
+  ];
+
+  it.each(cases)('en/$key', (c) => {
+    expect(say('en', c.key, c.args)).toBe(c.en);
+  });
+
+  it.each(cases)('de/$key', (c) => {
+    expect(say('de', c.key, c.args)).toBe(c.de);
+  });
+});
+
+// G4: the exported sheet's Life table. The engine links no Fluent formatter, so every
+// key here is argument-free: the exporter composes "Section 2", "120 XP" and
+// "1 × 4 seasons" from a word and a number itself. "EP" and "Zauberstufen" follow
+// the German XP bar and timeline.
+describe('UI bundles, the exported Life table (G4)', () => {
+  const bundles = { en: buildBundle('en'), de: buildBundle('de') };
+  const say = (lang: 'en' | 'de', key: string) =>
+    translate(bundles[lang], key).replace(/[⁦-⁩]/g, '');
+
+  const cases: { key: string; en: string; de: string }[] = [
+    { key: 'export-life-col-section', en: 'Section', de: 'Abschnitt' },
+    { key: 'export-life-col-ages', en: 'Ages', de: 'Alter' },
+    { key: 'export-life-col-earned', en: 'Earned', de: 'Erworben' },
+    { key: 'export-life-col-filled', en: 'Filled', de: 'Genutzt' },
+    { key: 'export-life-section-unnamed', en: 'Section', de: 'Abschnitt' },
+    { key: 'export-life-unit-xp', en: 'XP', de: 'EP' },
+    { key: 'export-life-unit-spell-levels', en: 'levels of spells', de: 'Zauberstufen' },
+    { key: 'export-life-unit-points', en: 'points', de: 'Punkte' },
+    {
+      key: 'export-life-overrun',
+      en: "Years past the character's age",
+      de: 'Jahre über das Alter des Charakters hinaus',
+    },
+  ];
+
+  it.each(cases)('en/$key', (c) => {
+    expect(say('en', c.key)).toBe(c.en);
+  });
+
+  it.each(cases)('de/$key', (c) => {
+    expect(say('de', c.key)).toBe(c.de);
+  });
+});

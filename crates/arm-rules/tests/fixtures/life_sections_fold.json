@@ -1,0 +1,48 @@
+{
+  "cases": [
+    {
+      "name": "every section's lab years fold into the plan level; names and years stay",
+      "before": {
+        "gauntlet_age": 25,
+        "post_gauntlet_lab_years": { "one_season": 1, "four_seasons": 2 },
+        "life_sections_enabled": true,
+        "life_sections": [
+          { "name": "Travels", "years": 10, "lab_years": { "two_seasons": 2, "four_seasons": 1 } },
+          { "name": "", "years": 3 },
+          { "name": "Covenant", "years": 5, "lab_years": { "one_season": 4 } }
+        ]
+      },
+      "after": {
+        "gauntlet_age": 25,
+        "post_gauntlet_lab_years": { "one_season": 5, "two_seasons": 2, "four_seasons": 3 },
+        "life_sections": [
+          { "name": "Travels", "years": 10 },
+          { "name": "", "years": 3 },
+          { "name": "Covenant", "years": 5 }
+        ]
+      }
+    },
+    {
+      "name": "sections without lab work leave no lab-years key behind",
+      "before": {
+        "life_sections_enabled": true,
+        "life_sections": [{ "name": "Youth", "years": 5 }]
+      },
+      "after": {
+        "life_sections": [{ "name": "Youth", "years": 5 }]
+      }
+    },
+    {
+      "name": "a crafted bucket saturates at the u32 ceiling rather than overflowing",
+      "before": {
+        "post_gauntlet_lab_years": { "three_seasons": 4294967295 },
+        "life_sections_enabled": true,
+        "life_sections": [{ "name": "x", "years": 1, "lab_years": { "three_seasons": 5 } }]
+      },
+      "after": {
+        "post_gauntlet_lab_years": { "three_seasons": 4294967295 },
+        "life_sections": [{ "name": "x", "years": 1 }]
+      }
+    }
+  ]
+}

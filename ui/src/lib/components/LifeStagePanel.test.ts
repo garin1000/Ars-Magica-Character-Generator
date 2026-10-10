@@ -776,3 +776,121 @@ describe('LifeStagePanel native language as a list value (N4b)', () => {
     expect(element(body, 'native-language-input').open).toMatch(/value="German"/);
   });
 });
+
+describe('LifeStagePanel life sections (G3)', () => {
+  /** A guided magus against a ruleset carrying the post-apprenticeship block. */
+  function installGuidedMagus(plan: LifeStagePlan = {}): void {
+    installRuleset(lifeStageRules(), profile('magus', true));
+    resetEntity('magus');
+    installPlan(plan);
+  }
+
+  /** A one-entry timeline, enough for the panel to mount the bar. */
+  function setTimeline(): void {
+    store.effective = {
+      ...(store.effective ?? {}),
+      life_timeline: {
+        entries: [
+          {
+            kind: { kind: 'remaining' },
+            start_age: 5,
+            end_age: 35,
+            years: 30,
+            capacity: { kind: 'separate', xp: 450, spell_levels: 0 },
+            filled_xp: 0,
+            filled_spell_levels: 0,
+          },
+        ],
+        overrun_years: 0,
+        outside: [],
+      },
+    } as unknown as EffectiveScores;
+  }
+
+  function count(body: string, testid: string): number {
+    return body.match(new RegExp(`data-testid="${testid}"`, 'g'))?.length ?? 0;
+  }
+
+  it('offers the switch as a labelled checkbox, off by default', () => {
+    installPlan();
+    const body = html();
+    expect(has(body, 'life-sections-toggle')).toBe(true);
+    const toggle = element(body, 'life-sections-toggle').open;
+    expect(toggle).toMatch(/type="checkbox"/);
+    expect(toggle).not.toMatch(/checked/);
+    expect(body).toMatch(
+      /<label[^>]*>[\s\S]*?data-testid="life-sections-toggle"[\s\S]*?Life sections/,
+    );
+  });
+
+  it('checks the switch when the plan has the sections on', () => {
+    installPlan({ life_sections_enabled: true });
+    const body = html();
+    expect(has(body, 'life-sections-toggle')).toBe(true);
+    expect(element(body, 'life-sections-toggle').open).toMatch(/checked/);
+  });
+
+  it('offers no switch in pool mode', () => {
+    expect(has(html(), 'life-sections-toggle')).toBe(false);
+  });
+
+  it('shows neither the editor nor the timeline while the sections are off', () => {
+    installPlan({ life_sections: [{ name: 'Squire', years: 5 }] });
+    setTimeline();
+    const body = html();
+    expect(has(body, 'life-sections-list')).toBe(false);
+    expect(has(body, 'life-timeline')).toBe(false);
+  });
+
+  it('shows the editor and the timeline once they are on', () => {
+    installPlan({ life_sections_enabled: true, life_sections: [{ name: 'Squire', years: 5 }] });
+    setTimeline();
+    const body = html();
+    expect(has(body, 'life-sections-list')).toBe(true);
+    expect(has(body, 'life-section-0-name-input')).toBe(true);
+    expect(has(body, 'life-timeline')).toBe(true);
+  });
+
+  it('gives a companion’s sections no lab years — only a magus has years after a Gauntlet', () => {
+    installPlan({ life_sections_enabled: true, life_sections: [{ name: 'Squire', years: 5 }] });
+    const body = html();
+    expect(has(body, 'life-section-0-lab-years-1-input')).toBe(false);
+    expect(has(body, 'life-section-remaining')).toBe(false);
+  });
+
+  it('moves a magus’s plan-level lab years into the Remaining row, rendered once', () => {
+    installGuidedMagus({
+      life_sections_enabled: true,
+      life_sections: [{ name: 'Study', years: 8 }],
+      post_gauntlet_lab_years: { four_seasons: 1 },
+    });
+    setLifeStageBudget(magusBudget(34, { four_seasons: 1 }));
+    const body = html();
+    expect(has(body, 'life-section-0-lab-years-4-input')).toBe(true);
+    expect(count(body, 'life-stage-lab-years-4-input')).toBe(1);
+    const remaining = body.slice(body.indexOf('data-testid="life-section-remaining"'));
+    expect(remaining).toContain('data-testid="life-stage-lab-years-4-input"');
+    expect(element(body, 'life-stage-lab-years-4-input').open).toMatch(/value="1"/);
+  });
+
+  it('keeps the plan-level lab years in their usual place while the sections are off', () => {
+    installGuidedMagus({ life_sections: [{ name: 'Study', years: 8 }] });
+    const body = html();
+    expect(count(body, 'life-stage-lab-years-4-input')).toBe(1);
+    expect(has(body, 'life-section-remaining')).toBe(false);
+    expect(has(body, 'life-section-0-lab-years-4-input')).toBe(false);
+  });
+
+  it('closes a section’s lab years with the rest when the magus has no years past its Gauntlet', () => {
+    installGuidedMagus({
+      life_sections_enabled: true,
+      life_sections: [{ name: 'Study', years: 0 }],
+    });
+    setLifeStageBudget(magusBudget(25));
+    const body = html();
+    expect(has(body, 'life-section-0-lab-years-1-input')).toBe(true);
+    const open = element(body, 'life-section-0-lab-years-1-input').open;
+    expect(open).toMatch(/readonly/);
+    expect(open).toMatch(/aria-describedby="life-stage-post-gauntlet-no-years-note"/);
+  });
+});

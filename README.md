@@ -378,10 +378,16 @@ their fix rounds have since been completed. The current version is 0.4.0. See
   is free; the character keeps the split it chose, and the two halves show up where they
   are spent: the experience joins apprenticeship in the pool the Abilities and Arts steps
   draw on, the levels raise the spell budget above the 120 apprenticeship granted. Only
-  the choices are saved — one Gauntlet age, one season total, one split — so leaving the
-  Gauntlet age blank still means a magus fresh out of apprenticeship, exactly as before.
+  the choices are saved — one Gauntlet age, how many years held one to four lab seasons,
+  one split — so leaving the Gauntlet age blank still means a magus fresh out of
+  apprenticeship, exactly as before.
   A character over 35 is reminded that it owes its aging rolls, without being blocked
   from finishing.
+
+- **Life sections.** Optionally, a character's open years can be split into named
+  sections (a magus's lab years recorded per section), shown as a timeline of what
+  each span earned and what the character's purchases draw from it, and exported as
+  a Life table. A display aid only: the budget is the same with the sections on or off.
 
 - **Aging.** A character over 35 owes one aging roll for every year since the Winter
   after its thirty-fifth birthday, and the wizard's closing step before the review walks

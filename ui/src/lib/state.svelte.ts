@@ -60,7 +60,10 @@ import type {
   DerivedTotals,
   EffectiveScores,
   Entity,
+  LabYears,
   LabYearsBucket,
+  LifeSection,
+  LifeStagePlan,
   LoadoutState,
   LocalizedRuleset,
   LongevitySource,
@@ -112,6 +115,63 @@ export const SCHEMA_VERSION = 25;
  * `read_settings` or from the opened document; this is the value of last resort.
  */
 export const DEFAULT_SAGA_YEAR = 1220;
+
+/** The four lab-year counts, in `LabYears` field order. */
+const LAB_YEARS_BUCKETS: LabYearsBucket[] = [
+  'one_season',
+  'two_seasons',
+  'three_seasons',
+  'four_seasons',
+];
+
+/**
+ * `labYears` with one bucket set to `count`, or deleted for a blank, zero, negative
+ * or non-numeric count — the sparse shape the engine writes. `undefined` when no
+ * bucket is left (`LabYears::is_empty` writes no key).
+ */
+function withLabYearsCount(
+  labYears: LabYears | undefined,
+  bucket: LabYearsBucket,
+  count: number | null,
+): LabYears | undefined {
+  const edited = { ...labYears };
+  if (count != null && Number.isFinite(count) && count > 0) {
+    edited[bucket] = clampInt(count, 1, U32_MAX);
+  } else {
+    delete edited[bucket];
+  }
+  return Object.keys(edited).length > 0 ? edited : undefined;
+}
+
+/**
+ * Move every section's lab years into the plan-level counts, bucket by bucket,
+ * saturating at the u32 ceiling as the engine does, and clear them from the
+ * sections (`life_stage.rs::LifeStagePlan::disable_life_sections`).
+ */
+function foldLifeSectionLabYears(plan: LifeStagePlan): void {
+  const sections = plan.life_sections ?? [];
+  const total: LabYears = {};
+  for (const bucket of LAB_YEARS_BUCKETS) {
+    const sum = sections.reduce(
+      (acc, section) => acc + (section.lab_years?.[bucket] ?? 0),
+      plan.post_gauntlet_lab_years?.[bucket] ?? 0,
+    );
+    if (sum > 0) total[bucket] = Math.min(sum, U32_MAX);
+  }
+  if (Object.keys(total).length > 0) {
+    plan.post_gauntlet_lab_years = total;
+  } else {
+    delete plan.post_gauntlet_lab_years;
+  }
+  if (plan.life_sections) {
+    plan.life_sections = plan.life_sections.map(({ name, years }) => ({ name, years }));
+  }
+}
+
+/** Whether `index` names an element of `list`. */
+function isIndexIn(list: readonly unknown[], index: number): boolean {
+  return Number.isInteger(index) && index >= 0 && index < list.length;
+}
 
 /** Live filter/search state of the Virtue/Flaw picker (one per side). */
 export interface VfFilterState {
@@ -1402,13 +1462,8 @@ class AppStore {
   setPostGauntletLabYears(bucket: LabYearsBucket, count: number | null): void {
     const plan = this.entity.life_stages;
     if (!plan) return;
-    const labYears = { ...plan.post_gauntlet_lab_years };
-    if (count != null && Number.isFinite(count) && count > 0) {
-      labYears[bucket] = clampInt(count, 1, U32_MAX);
-    } else {
-      delete labYears[bucket];
-    }
-    if (Object.keys(labYears).length > 0) {
+    const labYears = withLabYearsCount(plan.post_gauntlet_lab_years, bucket, count);
+    if (labYears) {
       plan.post_gauntlet_lab_years = labYears;
     } else {
       delete plan.post_gauntlet_lab_years;
@@ -1423,6 +1478,110 @@ class AppStore {
    */
   setPostGauntletSpellLevels(levels: number | null): void {
     this.#setPlanCount('post_gauntlet_spell_levels', levels);
+  }
+
+  // --- life sections (phase 2) -------------------------------------------------
+  //
+  // Named spans of the character's life, oldest first. Every setter is a no-op
+  // without a plan (like {@link setGauntletAge}) and for an index outside the list,
+  // and validates through the debounce like the other plan fields.
+
+  /**
+   * Switch the life sections on or off. Off is the default and writes no key.
+   *
+   * Switching off makes exactly the engine's fold
+   * (`life_stage.rs::LifeStagePlan::disable_life_sections`): every section's lab years
+   * move into the plan-level ("Remaining") counts, so the charge is unchanged, while
+   * names and years stay on file for when the sections come back. The fold is
+   * mirrored here because every plan edit is a store mutation; the shared fixture
+   * `crates/arm-rules/tests/fixtures/life_sections_fold.json` holds both sides to
+   * the same result.
+   */
+  setLifeSectionsEnabled(enabled: boolean): void {
+    const plan = this.entity.life_stages;
+    if (!plan) return;
+    if (enabled) {
+      plan.life_sections_enabled = true;
+    } else {
+      foldLifeSectionLabYears(plan);
+      delete plan.life_sections_enabled;
+    }
+    this.#scheduleValidate();
+  }
+
+  /** Append an unnamed section of no years — the list is chronological. */
+  addLifeSection(): void {
+    const plan = this.entity.life_stages;
+    if (!plan) return;
+    plan.life_sections = [...(plan.life_sections ?? []), { name: '', years: 0 }];
+    this.#scheduleValidate();
+  }
+
+  /** Rename a section, storing the text as typed (blank shows "Section n"). */
+  setLifeSectionName(index: number, name: string): void {
+    this.#updateLifeSection(index, (section) => ({ ...section, name }));
+  }
+
+  /** Set a section's years; blank, negative or non-numeric is 0 (the field is required). */
+  setLifeSectionYears(index: number, years: number | null): void {
+    const value = years != null && Number.isFinite(years) && years > 0 ? years : 0;
+    this.#updateLifeSection(index, (section) => ({
+      ...section,
+      years: clampInt(value, 0, U32_MAX),
+    }));
+  }
+
+  /** Swap a section with its neighbour; the first cannot go up, nor the last down. */
+  moveLifeSection(index: number, direction: 'up' | 'down'): void {
+    const plan = this.entity.life_stages;
+    const sections = plan?.life_sections;
+    if (!plan || !sections) return;
+    const other = direction === 'up' ? index - 1 : index + 1;
+    if (!isIndexIn(sections, index) || !isIndexIn(sections, other)) return;
+    const moved = [...sections];
+    [moved[index], moved[other]] = [moved[other], moved[index]];
+    plan.life_sections = moved;
+    this.#scheduleValidate();
+  }
+
+  /** Remove a section; with the last one goes the key, as the engine writes none. */
+  removeLifeSectionAt(index: number): void {
+    const plan = this.entity.life_stages;
+    const sections = plan?.life_sections;
+    if (!plan || !sections || !isIndexIn(sections, index)) return;
+    const kept = sections.filter((_, i) => i !== index);
+    if (kept.length > 0) {
+      plan.life_sections = kept;
+    } else {
+      delete plan.life_sections;
+    }
+    this.#scheduleValidate();
+  }
+
+  /**
+   * Set (or clear) one of a section's own lab-year counts, written the same sparse
+   * way as {@link setPostGauntletLabYears}' plan-level ones.
+   */
+  setLifeSectionLabYears(index: number, bucket: LabYearsBucket, count: number | null): void {
+    this.#updateLifeSection(index, (section) => {
+      const edited: LifeSection = { ...section };
+      const labYears = withLabYearsCount(section.lab_years, bucket, count);
+      if (labYears) {
+        edited.lab_years = labYears;
+      } else {
+        delete edited.lab_years;
+      }
+      return edited;
+    });
+  }
+
+  /** Replace section `index` with `edit`'s result, if both plan and section exist. */
+  #updateLifeSection(index: number, edit: (section: LifeSection) => LifeSection): void {
+    const plan = this.entity.life_stages;
+    const sections = plan?.life_sections;
+    if (!plan || !sections || !isIndexIn(sections, index)) return;
+    plan.life_sections = sections.map((section, i) => (i === index ? edit(section) : section));
+    this.#scheduleValidate();
   }
 
   /**

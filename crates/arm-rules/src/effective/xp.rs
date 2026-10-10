@@ -416,6 +416,10 @@ struct FlowPool {
     amount: u32,
     eligibility: PoolEligibility,
     origin: XpPoolOrigin,
+    /// An earmark (`from_normal_budget: true`, D13/D0 § 2): carved out of the
+    /// general budget rather than added to it. Read only by the life timeline;
+    /// the solve itself never looks at it.
+    from_normal_budget: bool,
 }
 
 /// The instance childhood's native-language experience may be spent on: the
@@ -1285,6 +1289,7 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
                         origin: XpPoolOrigin::Item {
                             item: selection.item_ref.clone(),
                         },
+                        from_normal_budget: *from_normal_budget,
                     });
                 }
                 // D35: the grant's `amount` is `per_unit` times the value the
@@ -1323,6 +1328,7 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
                         origin: XpPoolOrigin::Item {
                             item: selection.item_ref.clone(),
                         },
+                        from_normal_budget: false,
                     });
                 }
                 // Every other effect grants nothing to a restricted Ability-XP
@@ -1355,6 +1361,7 @@ fn childhood_native_language_pool(
         origin: XpPoolOrigin::LifeStage {
             block: LifeStageBlock::ChildhoodNativeLanguage,
         },
+        from_normal_budget: false,
     })
 }
 
@@ -1381,6 +1388,7 @@ fn childhood_spread_pool(
         origin: XpPoolOrigin::LifeStage {
             block: LifeStageBlock::ChildhoodSpread,
         },
+        from_normal_budget: false,
     }
 }
 
@@ -1440,6 +1448,7 @@ fn magus_later_life_pool(
         origin: XpPoolOrigin::LifeStage {
             block: LifeStageBlock::LaterLife,
         },
+        from_normal_budget: false,
     })
 }
 
@@ -1455,6 +1464,7 @@ fn spell_mastery_flow_pool(entity: &Entity, ruleset: &Ruleset) -> Option<FlowPoo
         origin: XpPoolOrigin::LifeStage {
             block: LifeStageBlock::ChildhoodSpread,
         },
+        from_normal_budget: false,
     })
 }
 
@@ -1526,6 +1536,7 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
                 origin: XpPoolOrigin::LifeStage {
                     block: LifeStageBlock::ChildhoodSpread,
                 },
+                from_normal_budget: false,
             });
         } else {
             flow_pools.extend(childhood_native_language_pool(
@@ -1558,12 +1569,42 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
                 origin: XpPoolOrigin::LifeStage {
                     block: LifeStageBlock::Apprenticeship,
                 },
+                from_normal_budget: false,
             });
         }
     }
 
     flow_pools.extend(spell_mastery_flow_pool(entity, ruleset));
     flow_pools
+}
+
+/// For each pool of [`XpAllocation::restricted`], in the same order: whether it is
+/// an earmark carved out of the general budget (`from_normal_budget: true`, D13/D0
+/// § 2) rather than a grant added on top of it.
+///
+/// Read off the same [`build_flow_pools`] the solve uses, filtered exactly as
+/// [`assemble_restricted_pools`] filters it, so the two lists line up by
+/// construction. Display only (the life timeline); the solve never calls it.
+pub(crate) fn restricted_pools_from_normal_budget(entity: &Entity, ruleset: &Ruleset) -> Vec<bool> {
+    build_flow_pools(entity, ruleset)
+        .iter()
+        .filter(|pool| is_surfaced(pool))
+        .map(|pool| pool.from_normal_budget)
+        .collect()
+}
+
+/// Whether a replacement (Feral Upbringing, D40/D2) funds this character's
+/// childhood in place of the ordinary two pools — the same test
+/// [`build_flow_pools`] makes. Needed because the replacement pool carries the
+/// ordinary spread's origin, so the pools alone cannot tell the two apart.
+pub(crate) fn has_childhood_replacement(entity: &Entity, ruleset: &Ruleset) -> bool {
+    life_stage_replacement(entity, ruleset, LifeStageBlock::ChildhoodSpread).is_some()
+}
+
+/// Whether a pool is surfaced in [`XpAllocation::restricted`]: the ability-XP
+/// pools are, the Spell-Mastery pool is not.
+fn is_surfaced(pool: &FlowPool) -> bool {
+    matches!(pool.eligibility, PoolEligibility::Ability { .. })
 }
 
 /// Why [`checked_xp_allocation`] refused to run the flow solve: the entity's

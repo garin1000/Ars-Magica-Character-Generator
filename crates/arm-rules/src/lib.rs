@@ -41,8 +41,14 @@ pub mod life_stage;
 #[doc(inline)]
 pub use life_stage::{
     AbilityRequirement, AbilityRequirementKind, ApprenticeshipRules, ChildhoodRules, LabYears,
-    LaterLifeRules, LifeStageBudget, LifeStagePlan, LifeStageRules, MagusMinimumAbility,
-    NativeLanguage, PostApprenticeshipRules, magus_minimum_abilities,
+    LaterLifeRules, LifeSection, LifeStageBudget, LifeStagePlan, LifeStageRules,
+    MagusMinimumAbility, NativeLanguage, PostApprenticeshipRules, magus_minimum_abilities,
+};
+pub mod life_timeline;
+#[doc(inline)]
+pub use life_timeline::{
+    EntryCapacity, FixedSection, LifeTimeline, OutsideLump, TimelineEntry, TimelineEntryKind,
+    life_timeline,
 };
 pub mod migration;
 pub mod mythic_companion;

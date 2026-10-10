@@ -204,6 +204,7 @@ impl fmt::Display for IssueSeverity {
 /// | `life_stage_gauntlet_age_after_age` | error | experience | `gauntlet_age`, `age` |
 /// | `life_stage_lab_seasons_out_of_range` | error | experience | `years_used`, `years` |
 /// | `life_stage_lab_seasons_without_years` | error | experience | `years_used` |
+/// | `life_stage_section_lab_years_exceed_section` | error | experience | `section`, `years_used`, `years` |
 /// | `life_stage_spell_level_split_exceeds_points` | error | experience | `levels`, `points` |
 /// | `life_stage_native_language_unset` | error | experience | (none) |
 /// | `life_stage_native_language_missing_score` | warning | experience | `language` |
@@ -694,6 +695,12 @@ impl ValidationIssue {
     /// story. The same rule (ArMDE:2550) produces both.
     pub const CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS: &'static str =
         "life_stage_lab_seasons_without_years";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: one life section's lab
+    /// years ([`crate::life_stage::LabYears::years_used`]) count more years than
+    /// the section itself covers. `section` is the section's 1-based position.
+    /// Each lab year is one of the years it falls in (ArMDE:2550).
+    pub const CODE_LIFE_STAGE_SECTION_LAB_YEARS_EXCEED_SECTION: &'static str =
+        "life_stage_section_lab_years_exceed_section";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: more of a magus's yearly
     /// post-Gauntlet points are taken as levels of spells than those years granted.
     /// "Each point can be an experience point in an Art or Ability or one level of

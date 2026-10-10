@@ -27,7 +27,7 @@ const PREFIX = 'section-2-lab-years';
 const testids = [1, 2, 3, 4].map((n) => `${PREFIX}-${n}-input`);
 
 function html(
-  props: Partial<{ value: LabYears; readonly: boolean; describedBy: string }> = {},
+  props: Partial<{ value: LabYears; readonly: boolean; describedBy: string; legend: string }> = {},
 ): string {
   return render(LabYearsFields, {
     props: { value: undefined, testidPrefix: PREFIX, onchange: () => {}, ...props },
@@ -58,6 +58,14 @@ describe('LabYearsFields (row 56)', () => {
     const legend = /<legend[^>]*>([\s\S]*?)<\/legend>/i.exec(fieldset![0]);
     expect(legend![1].replace(/<[^>]*>/g, '').trim()).toBe('Years of lab work');
     for (const testid of testids) expect(fieldset![0]).toContain(`data-testid="${testid}"`);
+  });
+
+  // G3: one group per life section, so each needs a legend telling it apart from the
+  // others — a screen reader landing in one hears whose lab years these are.
+  it('takes the legend it is given, for one section’s own counts', () => {
+    const body = html({ legend: 'Squire: years of lab work' });
+    const legend = /<legend[^>]*>([\s\S]*?)<\/legend>/i.exec(body);
+    expect(legend![1].replace(/<[^>]*>/g, '').trim()).toBe('Squire: years of lab work');
   });
 
   it('shows each stored count in its own field, and an absent one as blank', () => {

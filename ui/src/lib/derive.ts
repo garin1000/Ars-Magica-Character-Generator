@@ -21,6 +21,7 @@ import type {
   Grant,
   GrantConstraint,
   ItemKind,
+  LifeSection,
   LifeStagePlan,
   LocalizedRuleset,
   Magnitude,
@@ -80,6 +81,19 @@ export const U32_MAX = 4294967295;
 
 /** A `store.t`-shaped translator, threaded in so search can index rendered labels. */
 export type Translate = (key: string, args?: Record<string, string>) => string;
+
+/**
+ * A named life section's label: its own name, or "Section n" (1-based) while the
+ * name is blank. Shared by the section editor and the timeline so both say the same.
+ */
+export function lifeSectionLabel(
+  section: LifeSection | undefined,
+  index: number,
+  t: Translate,
+): string {
+  const name = section?.name.trim() ?? '';
+  return name !== '' ? name : t('life-section-unnamed', { n: String(index + 1) });
+}
 
 /**
  * The Spells tab's Te/Fo group-header hover hint (N1): the grid row's plain

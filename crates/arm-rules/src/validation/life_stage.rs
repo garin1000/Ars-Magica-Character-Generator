@@ -42,6 +42,9 @@ use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 /// - `life_stage_lab_seasons_without_years`: years of lab work on a plan with no year
 ///   as a magus to work them in. The same rule (`ArMDE:2550`), reported separately
 ///   because there is no span for the years to fall in at all.
+/// - `life_stage_section_lab_years_exceed_section`: one life section's lab years
+///   count more years than the section covers (`ArMDE:2550`). Both lab-year checks
+///   count the sections' lab years whether or not the sections are switched on.
 /// - `life_stage_spell_level_split_exceeds_points`: more of the post-Gauntlet points
 ///   taken as levels of spells than the years granted (`ArMDE:2539`). Held to the points
 ///   by [`crate::life_stage::LifeStageRules::budget`]. Filed under `abilities`, the
@@ -329,8 +332,12 @@ fn validate_post_gauntlet_choices(
     // being zero: with no year as a magus the plan has no span to work in at all,
     // and a message reciting how many years the span holds names a cause that is
     // not the cause.
+    //
+    // The years counted are every lab year on the plan, the life sections' included
+    // (`LifeStagePlan::all_lab_years`), and each section is held to its own years too.
     if rules.post_apprenticeship.is_some() {
-        let years_used = plan.post_gauntlet_lab_years.years_used();
+        validate_life_section_lab_years(plan, issues);
+        let years_used = plan.all_lab_years().years_used();
         if years_used > budget.post_gauntlet_years {
             let years_used = years_used.to_string();
             issues.push(if budget.post_gauntlet_years == 0 {
@@ -383,6 +390,31 @@ fn validate_post_gauntlet_choices(
             ]),
             None,
         ));
+    }
+}
+
+/// Each life section's lab years are years *of that section*, so they may not
+/// count more years than it covers (`ArMDE:2550` charges a lab season against the
+/// year that holds it). One finding per offending section, naming its 1-based
+/// position, since a name may be empty.
+///
+/// Checked whether or not the sections are switched on: their lab years are
+/// charged either way (`LifeStagePlan::all_lab_years`).
+fn validate_life_section_lab_years(plan: &LifeStagePlan, issues: &mut Vec<ValidationIssue>) {
+    for (index, section) in plan.life_sections.iter().enumerate() {
+        let years_used = section.lab_years.years_used();
+        if years_used > section.years {
+            issues.push(ValidationIssue::error(
+                ValidationIssue::CODE_LIFE_STAGE_SECTION_LAB_YEARS_EXCEED_SECTION,
+                CreationPhase::Experience,
+                args([
+                    ("section", index.saturating_add(1).to_string()),
+                    ("years", section.years.to_string()),
+                    ("years_used", years_used.to_string()),
+                ]),
+                None,
+            ));
+        }
     }
 }
 
@@ -501,7 +533,7 @@ fn parameter_key(ability: &Id, ruleset: &Ruleset) -> String {
 #[cfg(test)]
 mod tests {
     use crate::childhood::ChildhoodRejection;
-    use crate::life_stage::{LabYears, LifeStagePlan};
+    use crate::life_stage::{LabYears, LifeSection, LifeStagePlan};
     use crate::types::{
         AbilityFunding, AbilityParameterValue, AbilityScore, Entity, EntityKind, Id, RulesetRef,
         Selection,
@@ -1202,6 +1234,210 @@ mod tests {
         assert!(
             !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_WITHOUT_YEARS.into()),
             "issues: {issues:?}"
+        );
+    }
+
+    // --- life sections (phase 2, G1) ----------------------------------------
+
+    /// A section named `name` covering `years`, with `lab_years` of lab work.
+    fn section(name: &str, years: u32, lab_years: LabYears) -> LifeSection {
+        LifeSection {
+            name: name.to_string(),
+            years,
+            lab_years,
+        }
+    }
+
+    /// `magus` with its plan's sections set to `sections` and the toggle to
+    /// `enabled`.
+    fn with_sections(mut magus: Entity, enabled: bool, sections: Vec<LifeSection>) -> Entity {
+        let plan = magus
+            .life_stages
+            .as_mut()
+            .expect("the fixture carries a plan");
+        plan.life_sections_enabled = enabled;
+        plan.life_sections = sections;
+        magus
+    }
+
+    /// How many issues `entity` raises under `code`.
+    fn count_of(entity: &Entity, code: &str) -> usize {
+        validate(entity, &rs())
+            .issues
+            .iter()
+            .filter(|i| i.code == code)
+            .count()
+    }
+
+    /// Every lab year is one of the post-Gauntlet years (`ArMDE:2550`), wherever it
+    /// is recorded: the plan level and every section together may not count more
+    /// years than the magus has lived since its Gauntlet.
+    #[test]
+    fn lab_years_in_every_section_count_toward_the_years_as_a_magus() {
+        let magus = with_sections(
+            out_of_apprenticeship(60, 25, full_lab_years(10), 0),
+            true,
+            vec![
+                section("Travels", 15, full_lab_years(15)),
+                section(
+                    "Covenant",
+                    15,
+                    LabYears {
+                        two_seasons: 15,
+                        ..LabYears::default()
+                    },
+                ),
+            ],
+        );
+        assert_eq!(
+            issue_args(
+                &magus,
+                ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE
+            ),
+            Some(expected_args(&[("years_used", "40"), ("years", "35")]))
+        );
+    }
+
+    /// A section's lab years are years *of that section*, so they may not count
+    /// more years than it covers. Exactly filling it is legal; one more is an error
+    /// naming the section by its 1-based position — even while the plan as a whole
+    /// is well inside its post-Gauntlet span.
+    #[test]
+    fn a_section_holding_more_lab_years_than_its_own_years_is_an_error() {
+        let filled = LabYears {
+            one_season: 1,
+            two_seasons: 1,
+            four_seasons: 1,
+            ..LabYears::default()
+        };
+        let magus = with_sections(
+            out_of_apprenticeship(60, 25, NO_LAB, 0),
+            true,
+            vec![
+                section("Filled exactly", 3, filled),
+                section("Overfilled", 1, full_lab_years(2)),
+            ],
+        );
+        let result = validate(&magus, &rs());
+        let section_issues: Vec<_> = result
+            .issues
+            .iter()
+            .filter(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_SECTION_LAB_YEARS_EXCEED_SECTION)
+            .collect();
+        assert_eq!(
+            section_issues
+                .iter()
+                .map(|i| (i.severity, i.phase, i.args.clone()))
+                .collect::<Vec<_>>(),
+            vec![(
+                IssueSeverity::Error,
+                CreationPhase::Experience,
+                expected_args(&[("section", "2"), ("years_used", "2"), ("years", "1")]),
+            )]
+        );
+        assert!(
+            !codes(&result)
+                .contains(&ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE.into()),
+            "5 lab years in 35 is in range: {:?}",
+            codes(&result)
+        );
+    }
+
+    /// The disabled-but-non-empty rule, validation side: lab years left in
+    /// switched-off sections (a crafted save — the toggle-off fold moves them) are
+    /// still charged, so they are still counted and still checked.
+    #[test]
+    fn lab_years_in_switched_off_sections_are_still_validated() {
+        let magus = with_sections(
+            out_of_apprenticeship(26, 25, NO_LAB, 0),
+            false,
+            vec![section("", 0, full_lab_years(2))],
+        );
+        assert_eq!(
+            issue_args(
+                &magus,
+                ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE
+            ),
+            Some(expected_args(&[("years_used", "2"), ("years", "1")]))
+        );
+        assert_eq!(
+            issue_args(
+                &magus,
+                ValidationIssue::CODE_LIFE_STAGE_SECTION_LAB_YEARS_EXCEED_SECTION
+            ),
+            Some(expected_args(&[
+                ("section", "1"),
+                ("years_used", "2"),
+                ("years", "0")
+            ]))
+        );
+    }
+
+    /// A save is untrusted input: a great many sections with buckets at
+    /// `u32::MAX` sum to a saturated `years_used` rather than overflowing or
+    /// panicking, and each section is still reported.
+    #[test]
+    fn section_lab_years_at_u32_max_saturate_and_are_reported() {
+        let crafted = LabYears {
+            one_season: u32::MAX,
+            two_seasons: u32::MAX,
+            three_seasons: u32::MAX,
+            four_seasons: u32::MAX,
+        };
+        let magus = with_sections(
+            out_of_apprenticeship(60, 25, NO_LAB, 0),
+            true,
+            vec![section("", 0, crafted); 10_000],
+        );
+        let saturated = u32::MAX.to_string();
+        assert_eq!(
+            issue_args(
+                &magus,
+                ValidationIssue::CODE_LIFE_STAGE_LAB_SEASONS_OUT_OF_RANGE
+            ),
+            Some(expected_args(&[
+                ("years_used", saturated.as_str()),
+                ("years", "35")
+            ]))
+        );
+        assert_eq!(
+            count_of(
+                &magus,
+                ValidationIssue::CODE_LIFE_STAGE_SECTION_LAB_YEARS_EXCEED_SECTION
+            ),
+            10_000
+        );
+    }
+
+    /// Under pool funding the plan is inert, sections included: no life-stage
+    /// finding at all, whatever the sections hold.
+    #[test]
+    fn life_sections_under_pool_funding_raise_no_life_stage_findings() {
+        let mut magus = with_sections(
+            out_of_apprenticeship(26, 25, NO_LAB, 0),
+            true,
+            vec![section("", 0, full_lab_years(u32::MAX)); 100],
+        );
+        magus.ability_funding = AbilityFunding::Pool;
+        let issues = codes(&validate(&magus, &rs()));
+        assert!(
+            !issues.iter().any(|c| c.starts_with("life_stage_")),
+            "issues: {issues:?}"
+        );
+    }
+
+    /// Lab years are read only in a magus's post-Gauntlet sections: a companion's
+    /// sections are a display aid alone, so lab years a crafted save put there
+    /// raise no section finding.
+    #[test]
+    fn a_companions_section_lab_years_raise_no_section_finding() {
+        let companion = with_sections(planned(30), true, vec![section("", 0, full_lab_years(5))]);
+        assert_eq!(
+            count_of(
+                &companion,
+                ValidationIssue::CODE_LIFE_STAGE_SECTION_LAB_YEARS_EXCEED_SECTION
+            ),
+            0
         );
     }
 

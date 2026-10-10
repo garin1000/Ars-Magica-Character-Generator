@@ -358,6 +358,32 @@ life-stage-spell-levels-label = Levels of spells
 # cannot state for themselves, and it is their `aria-describedby` target.
 life-stage-post-gauntlet-no-years-note = No years as a magus yet, so years of lab work and levels of spells can take nothing.
 life-stage-post-gauntlet-summary = Years as a magus: { $years }; { $points } points = { $xp } XP + { $levels } level(s) of spells
+# Named sections of the life (phase 2). The fixed spans, keyed by the engine's
+# `FixedSection` slug, are named like the rulebook's periods and the XP bar's
+# block chips.
+life-sections-label = Life sections
+life-section-fixed-childhood = Early childhood
+life-section-fixed-later_life = Later life
+life-section-fixed-apprenticeship = Apprenticeship
+life-section-fixed-truncated_training = Abandoned apprenticeship
+life-section-remaining = Remaining
+life-section-unnamed = Section { $n }
+life-section-name-label = Name
+life-section-years-label = Years
+life-section-move-up = Move { $section } up
+life-section-move-down = Move { $section } down
+life-section-move-up-glyph = ↑
+life-section-move-down-glyph = ↓
+life-section-add = Add section
+life-section-lab-years-legend = { $section }: years of lab work
+# The timeline: each span's ages and filled / earned figures, in words.
+life-timeline-label = Life timeline
+life-timeline-entry-xp = { $section } (ages { $from }-{ $to }): { $filled } / { $xp } XP
+life-timeline-entry-xp-spells = { $section } (ages { $from }-{ $to }): { $filled } / { $xp } XP, { $levelsFilled } / { $levels } levels of spells
+life-timeline-entry-points = { $section } (ages { $from }-{ $to }): { $filled } XP + { $levelsFilled } level(s) of spells / { $points } points
+life-timeline-overrun = The sections run { $years } year(s) past the character's age.
+life-timeline-outside-label = Experience beyond the years
+life-timeline-outside-chip = { $item }: { $used } / { $amount } XP
 # Escape hatch for a hand-edited save: a character funded by its life stages must
 # not also carry an entered pool, and guided mode offers no field to correct one,
 # so this empties it.
@@ -1435,6 +1461,7 @@ issue-life_stage_age_before_truncation = Age { $age } is too young to have compl
 issue-life_stage_gauntlet_age_after_age = The Gauntlet at { $gauntlet_age } is still ahead of this magus, who is { $age }; the years as a magus are counted forward from the Gauntlet.
 issue-life_stage_lab_seasons_out_of_range = { $years_used } year(s) of lab work is more than the { $years } year(s) as a magus.
 issue-life_stage_lab_seasons_without_years = { $years_used } year(s) of lab work recorded, but this character has no years as a magus to work them in.
+issue-life_stage_section_lab_years_exceed_section = Section { $section }: { $years_used } year(s) of lab work is more than the section's { $years } year(s).
 issue-life_stage_spell_level_split_exceeds_points = Taking { $levels } level(s) of spells out of the years as a magus is more than those years grant: they are worth { $points } points, to be divided between experience and levels of spells.
 issue-life_stage_native_language_unset = Choose a native language: childhood's largest block of experience can be spent on nothing else.
 issue-life_stage_native_language_missing_score = No { $language } score is bought, so childhood's native-language experience is unspent.
@@ -1805,3 +1832,17 @@ export-granted = Granted
 # associated with, appended to that row's text cell (e.g. "Realm: Faerie").
 export-vf-realm-label = Realm
 export-xp-restricted = Restricted experience
+# G4: the Life table, drawn when the life sections are switched on. Argument-free,
+# since the engine composes each cell from a word and a number: an unnamed section
+# is "Section 2", a span earns "120 XP" or "240 points", and its lab years read
+# "1 × 4 seasons". The heading, the fixed spans and the lab-season words reuse the
+# Life timeline's and the lab-years fields' keys.
+export-life-col-section = Section
+export-life-col-ages = Ages
+export-life-col-earned = Earned
+export-life-col-filled = Filled
+export-life-section-unnamed = Section
+export-life-unit-xp = XP
+export-life-unit-spell-levels = levels of spells
+export-life-unit-points = points
+export-life-overrun = Years past the character's age

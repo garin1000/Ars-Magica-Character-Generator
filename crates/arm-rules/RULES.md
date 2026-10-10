@@ -8456,12 +8456,14 @@ Abilities are bought with experience earned in blocks, not from one bank:
   after the Gauntlet would grant nothing back, so a magus would simply lose them. Both
   checks run from `validate_integrity`, so a cached ruleset returning through
   `Ruleset::from_serialized` is trusted no further than a freshly parsed one.
-- The arithmetic, in `LifeStageRules::budget` and `LifeStageRules::post_gauntlet_points`:
+- The arithmetic, in `LifeStageRules::budget`, `LifeStageRules::post_gauntlet_points` and
+  `PostApprenticeshipRules::points`:
 
   ```text
   gauntlet_age        = min(plan.gauntlet_age ?? age, age)     # magi only
   later_life_years    = gauntlet_age − childhood.years − apprenticeship.years
   post_gauntlet_years = age − gauntlet_age
+  lab_years           = plan.all_lab_years()   # plan level + every life section (D89)
   charged_seasons     = Σ over n in 1..4 of
                           lab_years[n seasons] × min(n, max_charged_lab_seasons_per_year)
                         # row 56 / D88: LabYears::charged_seasons
@@ -8671,6 +8673,60 @@ Abilities are bought with experience earned in blocks, not from one bank:
   `Ars Magica Definitive Edition Basisregeln.md:2213-2216` (heading `ArMDE:2444`, `ArMDE:2458`)
   plus the glossary's `Gauntlet → Lehrlingsprüfung`
   (`rules/source/de/translation-tables/grundbegriffe.md:57`).
+
+#### Life sections and the life timeline — a display aid over the same budget (D89)
+
+> Abilities represent a character's learned abilities. For grogs and companions they
+> are acquired in two blocks: early childhood, and later life. For magi, there are two
+> more periods to consider: apprenticeship, and life as a magus after that.
+
+> For every year, the magus gets 30 points. Each point can be an experience point in an
+> Art or Ability or one level of spell.
+
+- Source: `ArMDE:2432` (the periods the spans follow), `ArMDE:2446` (childhood),
+  `ArMDE:2460` (later life), `ArMDE:2503` (apprenticeship: 240 experience points and 120
+  levels of spells, two numbers), `ArMDE:2539` and `ArMDE:2550` (post-Gauntlet points and
+  lab seasons), `ArMDE:4919` (a Redcap is "trained in a similar manner to magi") and
+  `ArMDE:5714` (Abandoned Apprentice). Decision: `docs/vf-audit/decisions.md` D89.
+- Data: no new value. The player's choices live on `LifeStagePlan`:
+  `life_sections_enabled` (off by default; no key when off) and `life_sections`
+  (`LifeSection { name, years, lab_years }`, chronological), additive with no schema bump
+  and inert in Pool mode. The plan-level `post_gauntlet_lab_years` are the "Remaining" years.
+- **The charge sums every bucket.** `life_stage.rs::LifeStagePlan::all_lab_years` is the
+  plan level plus every section's `LabYears`, saturating, whether or not the sections are
+  switched on — only a crafted save holds lab years in switched-off sections, and dropping
+  them would hand out points the player never had. `LifeStageRules::post_gauntlet_points`
+  passes that total to `life_stage.rs::PostApprenticeshipRules::points`
+  (`years × points_per_year − charged_seasons × lab_season_cost`, saturating), and the
+  timeline prices each section with the same function. A year's cost depends only on its
+  season count (`ArMDE:2550`), so the sections' points sum to the unsplit figure.
+  `LifeStagePlan::disable_life_sections` folds every section's buckets into the plan level
+  when the sections are switched off, so the charge does not move.
+- **Per-section validation.** `life_stage_section_lab_years_exceed_section`
+  (`validation/life_stage.rs`) reports a section whose lab years
+  (`LabYears::years_used`) exceed its own years; D88's span-wide check reads
+  `all_lab_years`.
+- **The timeline is display only.** `life_timeline.rs::life_timeline` reads the budget and an
+  already-solved `XpAllocation` and feeds nothing back, so no figure the solve produces
+  moves. Spans, oldest first: Childhood (its pools' amounts, else the budget's 75 + 45,
+  `ArMDE:2446`); for a magus a fixed later life and the Apprenticeship (`ArMDE:2503`,
+  Skilled/Weak Parens included); for a Redcap the same shape (`ArMDE:4919`; Norbert
+  2026-10-10), its fifteen years ending at `default_gauntlet_age` since its budget names no
+  Gauntlet; for an Abandoned Apprentice a pre-span and the truncated training
+  (`ArMDE:5714`). Then the named sections and Remaining, for a magus each earning years × 30
+  less its own lab seasons (`ArMDE:2539`, :2550), otherwise years × the later-life rate
+  (`ArMDE:2460`). A training that would end past the age ends at it; sections past the age
+  are clipped, the excess reported as `overrun_years`.
+- **Fill.** A span its own pool funds shows that pool's `used`. The general pool's use plus
+  the earmarks of the normal budget (Church Upbringing) pour oldest first, capped by each
+  span's capacity; levels of spells pour after them, into the apprenticeship's levels and
+  the points the experience left (`ArMDE:2539`). Grants on top of the years (Educated,
+  Warrior) are shown beside the timeline as `outside` lumps.
+- **Export (G4).** `export/life.rs` writes a Life table after the Abilities — Section, Ages,
+  Years, Earned, Filled, plus a lab-years column for a magus — and one line each for the
+  overrun and the outside lumps. With the sections switched off nothing is written, so
+  the sheet is byte-identical to one written before they existed
+  (`export_golden.rs::switched_off_life_sections_leave_the_export_byte_identical`).
 
 #### Pre-apprenticeship experience buys Abilities only — never Arts (M6/6b4)
 

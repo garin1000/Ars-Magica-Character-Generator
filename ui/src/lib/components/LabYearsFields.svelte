@@ -24,11 +24,13 @@
     readonly?: boolean;
     /** The id of the note explaining a read-only state, if any. */
     describedBy?: string;
+    /** The group's legend; a life section names itself in it. */
+    legend?: string;
     /** One count edited; `null` for a blank field. */
     onchange: (bucket: LabYearsBucket, count: number | null) => void;
   }
 
-  let { value, testidPrefix, readonly = false, describedBy, onchange }: Props = $props();
+  let { value, testidPrefix, readonly = false, describedBy, legend, onchange }: Props = $props();
 
   // The four counts in the order of the seasons they stand for. A fixed taxonomy —
   // a year has four seasons — mirroring the engine's `LabYears` fields.
@@ -53,7 +55,7 @@
 </script>
 
 <fieldset class="lab-years">
-  <legend>{store.t('life-stage-lab-years-legend')}</legend>
+  <legend>{legend ?? store.t('life-stage-lab-years-legend')}</legend>
   {#each buckets as { seasons, bucket } (bucket)}
     <label class="field inline">
       <span>{store.t(`life-stage-lab-years-${seasons}-label`)}</span>

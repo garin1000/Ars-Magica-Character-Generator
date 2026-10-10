@@ -49,6 +49,7 @@ import {
   incompatibleRefs,
   invalidSelectionIds,
   isDisabled,
+  lifeSectionLabel,
   minLearnableLevel,
   movedAbilityParameterNotice,
   nonTakeableReason,
@@ -5874,5 +5875,20 @@ describe('language requirement messages (L2)', () => {
         parameter: 'Old Norse',
       }),
     ).toContain('Old Norse (Dead Language):');
+  });
+});
+
+// G3: one label for a named life section, shared by the editor and the timeline.
+describe('lifeSectionLabel', () => {
+  const t: Translate = (key, args) => `${key}:${args?.n ?? ''}`;
+
+  it('is the section’s own name', () => {
+    expect(lifeSectionLabel({ name: 'Squire', years: 5 }, 0, t)).toBe('Squire');
+  });
+
+  it('falls back to its 1-based position for a blank name', () => {
+    expect(lifeSectionLabel({ name: '', years: 5 }, 1, t)).toBe('life-section-unnamed:2');
+    expect(lifeSectionLabel({ name: '   ', years: 5 }, 2, t)).toBe('life-section-unnamed:3');
+    expect(lifeSectionLabel(undefined, 0, t)).toBe('life-section-unnamed:1');
   });
 });

@@ -17,7 +17,7 @@ use std::fmt;
 
 use crate::effective::selections_for_effects;
 use crate::ruleset::Ruleset;
-use crate::types::{AbilityFunding, Effect, Entity, Id, SelectionParamValue, is_zero};
+use crate::types::{AbilityFunding, Effect, Entity, Id, SelectionParamValue, is_false, is_zero};
 
 /// The life-stage experience rules, loaded from `rules/core/life_stages.json`.
 // No `Default`: every field is authored data with no meaningful zero (a childhood
@@ -466,6 +466,62 @@ pub struct LifeStagePlan {
     /// Ability or one level of spell" (ArMDE:2539). The rest are experience.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub post_gauntlet_spell_levels: u32,
+    /// Whether the player splits the character's life into named sections
+    /// ([`Self::life_sections`]). Off by default, and then no key is written.
+    ///
+    /// A display switch only: the engine reads the sections' lab years whatever
+    /// it says (see [`Self::all_lab_years`]).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub life_sections_enabled: bool,
+    /// Named spans of years, oldest first — mainly a display aid. Chronological,
+    /// so never sorted. A magus's sections also carry lab years, which are charged
+    /// like [`Self::post_gauntlet_lab_years`]; that field holds the "Remaining"
+    /// years outside every section. Additive (no schema bump): absent when empty.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub life_sections: Vec<LifeSection>,
+}
+
+/// One named span of a character's life: a display aid, plus — for a magus's
+/// post-Gauntlet years — the lab work done in it.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct LifeSection {
+    /// The player's name for the span; may be empty.
+    pub name: String,
+    /// How many years the span covers.
+    pub years: u32,
+    /// The lab years inside the span, counted like
+    /// [`LifeStagePlan::post_gauntlet_lab_years`]. Absent when empty.
+    #[serde(default, skip_serializing_if = "LabYears::is_empty")]
+    pub lab_years: LabYears,
+}
+
+impl LifeStagePlan {
+    /// Every lab year on the plan: the plan level ("Remaining") plus every
+    /// section's, bucket by bucket, saturating.
+    ///
+    /// Read whether or not the sections are switched on. Only a crafted save can
+    /// hold lab years in switched-off sections ([`Self::disable_life_sections`]
+    /// moves them), and dropping them would silently hand the magus points the
+    /// player never had — so they are charged and validated like any others.
+    pub fn all_lab_years(&self) -> LabYears {
+        self.life_sections
+            .iter()
+            .fold(self.post_gauntlet_lab_years, |total, section| {
+                total.saturating_add(section.lab_years)
+            })
+    }
+
+    /// Switches the life sections off without losing any lab work: every section's
+    /// lab years move into [`Self::post_gauntlet_lab_years`], and the names and
+    /// years stay on file for when the sections are switched back on. The charge
+    /// is unchanged, since it reads [`Self::all_lab_years`] either way.
+    pub fn disable_life_sections(&mut self) {
+        self.post_gauntlet_lab_years = self.all_lab_years();
+        for section in &mut self.life_sections {
+            section.lab_years = LabYears::default();
+        }
+        self.life_sections_enabled = false;
+    }
 }
 
 /// How many post-Gauntlet years held one, two, three or four lab seasons (row 56).
@@ -500,6 +556,17 @@ impl LabYears {
         self.counts_by_seasons()
             .into_iter()
             .fold(0u32, |used, (years, _)| used.saturating_add(years))
+    }
+
+    /// Both sets of counts together, bucket by bucket. Saturates rather than
+    /// overflowing on a crafted save.
+    pub fn saturating_add(self, other: Self) -> Self {
+        Self {
+            one_season: self.one_season.saturating_add(other.one_season),
+            two_seasons: self.two_seasons.saturating_add(other.two_seasons),
+            three_seasons: self.three_seasons.saturating_add(other.three_seasons),
+            four_seasons: self.four_seasons.saturating_add(other.four_seasons),
+        }
     }
 
     /// Each count paired with the lab seasons its years held.
@@ -940,7 +1007,10 @@ impl LifeStageRules {
     /// of 0 if three or four seasons are spent on lab work" (`ArMDE:2550`).
     ///
     /// Each lab year charges its seasons up to `max_charged_lab_seasons_per_year`
-    /// ([`LabYears::charged_seasons`]), which is that per-year minimum of 0.
+    /// ([`LabYears::charged_seasons`]), which is that per-year minimum of 0. The
+    /// lab years are the plan level's plus every life section's
+    /// ([`LifeStagePlan::all_lab_years`]): a year's cost depends only on its season
+    /// count, so splitting the counts among sections changes nothing.
     /// Everything saturates, so lab years beyond what the span holds cost no more
     /// than the span is worth rather than underflowing — a validator reports them.
     ///
@@ -949,15 +1019,23 @@ impl LifeStageRules {
     ///
     /// Source: ArMDE:2539, :2550.
     fn post_gauntlet_points(&self, plan: &LifeStagePlan, post_gauntlet_years: u32) -> u32 {
-        let Some(rules) = self.post_apprenticeship.as_ref() else {
-            return 0;
-        };
-        let charged = plan
-            .post_gauntlet_lab_years
-            .charged_seasons(rules.max_charged_lab_seasons_per_year);
-        post_gauntlet_years
-            .saturating_mul(rules.points_per_year)
-            .saturating_sub(charged.saturating_mul(rules.lab_season_cost))
+        self.post_apprenticeship.as_ref().map_or(0, |rules| {
+            rules.points(post_gauntlet_years, plan.all_lab_years())
+        })
+    }
+}
+
+impl PostApprenticeshipRules {
+    /// What `years` after the Gauntlet are worth with `lab_years` of lab work in
+    /// them: 30 points a year, less 10 per charged lab season (ArMDE:2539, :2550).
+    /// Saturates, so lab work beyond what the years hold costs no more than they
+    /// are worth. The whole span's figure and each life section's own come from
+    /// here alike.
+    pub(crate) fn points(&self, years: u32, lab_years: LabYears) -> u32 {
+        let charged = lab_years.charged_seasons(self.max_charged_lab_seasons_per_year);
+        years
+            .saturating_mul(self.points_per_year)
+            .saturating_sub(charged.saturating_mul(self.lab_season_cost))
     }
 }
 
@@ -1949,6 +2027,337 @@ mod tests {
         assert_eq!(
             serde_json::to_string(&LifeStagePlan::default()).unwrap(),
             "{}"
+        );
+    }
+
+    // --- life sections (phase 2, G1): storage, charge, toggle-off fold ---------
+
+    /// A section named `name` covering `years`, with `lab_years` of lab work.
+    fn section(name: &str, years: u32, lab_years: LabYears) -> LifeSection {
+        LifeSection {
+            name: name.to_string(),
+            years,
+            lab_years,
+        }
+    }
+
+    /// `magus` with its plan's sections set to `sections` and the toggle to
+    /// `enabled`.
+    fn with_sections(mut magus: Entity, enabled: bool, sections: Vec<LifeSection>) -> Entity {
+        let plan = magus
+            .life_stages
+            .as_mut()
+            .expect("the fixture carries a plan");
+        plan.life_sections_enabled = enabled;
+        plan.life_sections = sections;
+        magus
+    }
+
+    /// The post-Gauntlet points `magus` is worth under the apprenticeship fixture.
+    fn points_of(magus: &Entity) -> u32 {
+        rules_with_apprenticeship()
+            .budget(magus, &rate_ruleset())
+            .expect("a magus with a plan")
+            .post_gauntlet_points
+    }
+
+    /// The toggle is off and there are no sections unless the player made some, so
+    /// a plan that never used them writes neither key — every save written before
+    /// they existed stays byte-identical, and no schema bump is needed.
+    #[test]
+    fn unused_life_sections_write_no_key() {
+        assert_eq!(
+            serde_json::to_string(&LifeStagePlan::default()).unwrap(),
+            "{}"
+        );
+        let plan = LifeStagePlan {
+            gauntlet_age: Some(25),
+            ..LifeStagePlan::default()
+        };
+        assert_eq!(
+            serde_json::to_string(&plan).unwrap(),
+            r#"{"gauntlet_age":25}"#
+        );
+    }
+
+    /// A plan saved before sections existed reads them as off and empty, and
+    /// writes back exactly the bytes it was read from.
+    #[test]
+    fn a_plan_saved_without_life_sections_reads_as_off_and_re_saves_unchanged() {
+        let saved = r#"{"gauntlet_age":25,"post_gauntlet_lab_years":{"four_seasons":1}}"#;
+        let plan: LifeStagePlan = serde_json::from_str(saved).unwrap();
+        assert!(!plan.life_sections_enabled);
+        assert!(plan.life_sections.is_empty());
+        assert_eq!(serde_json::to_string(&plan).unwrap(), saved);
+    }
+
+    /// The whole entity, saved at the current schema with a plan and no sections,
+    /// re-saves byte for byte: the fields are additive and bump nothing.
+    #[test]
+    fn a_current_save_without_life_sections_re_saves_byte_for_byte() {
+        let magus = magus_with_lab_years(34, 25, full_lab_years(1));
+        let saved = serde_json::to_string_pretty(&magus).unwrap();
+        assert!(!saved.contains("life_section"), "{saved}");
+        let back: Entity = serde_json::from_str(&saved).unwrap();
+        assert_eq!(serde_json::to_string_pretty(&back).unwrap(), saved);
+        assert_eq!(SCHEMA_VERSION, 25, "life sections are additive");
+    }
+
+    /// Sections round-trip in the order the player gave them (they are
+    /// chronological, so never sorted), and a section with no lab work writes no
+    /// `lab_years` key.
+    #[test]
+    fn life_sections_round_trip_in_order_and_omit_empty_lab_years() {
+        let plan = LifeStagePlan {
+            life_sections_enabled: true,
+            life_sections: vec![
+                section("Wanderjahre", 8, LabYears::default()),
+                section(
+                    "",
+                    1,
+                    LabYears {
+                        four_seasons: 1,
+                        ..LabYears::default()
+                    },
+                ),
+            ],
+            ..LifeStagePlan::default()
+        };
+        let json = serde_json::to_string(&plan).unwrap();
+        assert_eq!(
+            json,
+            r#"{"life_sections_enabled":true,"life_sections":[{"name":"Wanderjahre","years":8},{"name":"","years":1,"lab_years":{"four_seasons":1}}]}"#
+        );
+        assert_eq!(serde_json::from_str::<LifeStagePlan>(&json).unwrap(), plan);
+    }
+
+    /// Switched off, the sections keep their names and years on file (the toggle
+    /// off fold clears only their lab years), so the flag alone is skipped.
+    #[test]
+    fn switched_off_sections_still_write_their_names_and_years() {
+        let plan = LifeStagePlan {
+            life_sections: vec![section("Youth", 5, LabYears::default())],
+            ..LifeStagePlan::default()
+        };
+        assert_eq!(
+            serde_json::to_string(&plan).unwrap(),
+            r#"{"life_sections":[{"name":"Youth","years":5}]}"#
+        );
+    }
+
+    /// Darius split into two sections — eight years "from 26 to 33" lumped
+    /// together (`ArMDE:2554`), then "the next year in the laboratory"
+    /// (`ArMDE:2556`) — is still worth 240: a section's lab years are charged
+    /// exactly as the plan-level ones are (`ArMDE:2550`).
+    #[test]
+    fn darius_split_into_two_sections_is_still_worth_240() {
+        let darius = with_sections(
+            magus_with_lab_years(34, 25, NO_LAB),
+            true,
+            vec![
+                section("Lumped years", 8, NO_LAB),
+                section("In the laboratory", 1, full_lab_years(1)),
+            ],
+        );
+        assert_eq!(points_of(&darius), 240);
+    }
+
+    /// The charge is additive across the plan level ("Remaining") and every
+    /// section: splitting the same year counts among sections changes nothing.
+    #[test]
+    fn section_lab_years_charge_exactly_as_the_merged_buckets_do() {
+        let merged = magus_with_lab_years(
+            60,
+            25,
+            LabYears {
+                one_season: 1,
+                two_seasons: 2,
+                three_seasons: 1,
+                four_seasons: 1,
+            },
+        );
+        let split = with_sections(
+            magus_with_lab_years(
+                60,
+                25,
+                LabYears {
+                    one_season: 1,
+                    ..LabYears::default()
+                },
+            ),
+            true,
+            vec![
+                section(
+                    "Travels",
+                    10,
+                    LabYears {
+                        two_seasons: 2,
+                        ..LabYears::default()
+                    },
+                ),
+                section(
+                    "Covenant",
+                    10,
+                    LabYears {
+                        three_seasons: 1,
+                        four_seasons: 1,
+                        ..LabYears::default()
+                    },
+                ),
+            ],
+        );
+        // 35 years × 30, less (1 + 4 + 3 + 3) charged seasons × 10.
+        assert_eq!(points_of(&merged), 940);
+        assert_eq!(points_of(&split), points_of(&merged));
+    }
+
+    /// **The disabled-but-non-empty rule.** Only a crafted save can hold lab years
+    /// in switched-off sections (the toggle-off fold moves them to the plan level),
+    /// and they are still charged: the flag is a display switch, so dropping them
+    /// would silently hand the magus points the player never had.
+    #[test]
+    fn switched_off_sections_still_charge_their_lab_years() {
+        let darius = with_sections(
+            magus_with_lab_years(34, 25, NO_LAB),
+            false,
+            vec![section("In the laboratory", 1, full_lab_years(1))],
+        );
+        assert_eq!(points_of(&darius), 240);
+    }
+
+    /// A save is untrusted input: sections whose buckets sit at `u32::MAX`, and a
+    /// great many of them, saturate the charge to 0 points rather than overflowing
+    /// or panicking.
+    #[test]
+    fn section_lab_years_at_u32_max_saturate_without_panicking() {
+        let crafted = LabYears {
+            one_season: u32::MAX,
+            two_seasons: u32::MAX,
+            three_seasons: u32::MAX,
+            four_seasons: u32::MAX,
+        };
+        let many = with_sections(
+            magus_with_lab_years(60, 25, NO_LAB),
+            true,
+            vec![section("", u32::MAX, crafted); 10_000],
+        );
+        assert_eq!(points_of(&many), 0);
+    }
+
+    /// Switching the sections off folds every section's lab years into the plan
+    /// level, bucket by bucket, and clears them; the names and years stay on file
+    /// and the flag goes false. The charge is the same before and after.
+    #[test]
+    fn disabling_life_sections_folds_their_lab_years_into_the_plan() {
+        let magus = with_sections(
+            magus_with_lab_years(
+                60,
+                25,
+                LabYears {
+                    one_season: 1,
+                    ..LabYears::default()
+                },
+            ),
+            true,
+            vec![
+                section("Youth", 5, full_lab_years(1)),
+                section(
+                    "Travels",
+                    3,
+                    LabYears {
+                        two_seasons: 2,
+                        ..LabYears::default()
+                    },
+                ),
+            ],
+        );
+        let before = points_of(&magus);
+
+        let mut folded = magus.clone();
+        folded
+            .life_stages
+            .as_mut()
+            .expect("the fixture carries a plan")
+            .disable_life_sections();
+        let plan = folded.life_stages.as_ref().expect("the plan survives");
+        assert!(!plan.life_sections_enabled);
+        assert_eq!(
+            plan.post_gauntlet_lab_years,
+            LabYears {
+                one_season: 1,
+                two_seasons: 2,
+                three_seasons: 0,
+                four_seasons: 1,
+            }
+        );
+        assert_eq!(
+            plan.life_sections,
+            vec![
+                section("Youth", 5, LabYears::default()),
+                section("Travels", 3, LabYears::default()),
+            ]
+        );
+        assert_eq!(points_of(&folded), before);
+        assert_eq!(before, 1050 - (1 + 4 + 3) * 10);
+    }
+
+    /// Off then on again: the names and years come back as they were, the lab
+    /// years stay at the plan level, and the charge never moves.
+    #[test]
+    fn life_sections_switched_off_and_on_keep_their_names_years_and_charge() {
+        let mut magus = with_sections(
+            magus_with_lab_years(34, 25, NO_LAB),
+            true,
+            vec![
+                section("Lumped years", 8, NO_LAB),
+                section("In the laboratory", 1, full_lab_years(1)),
+            ],
+        );
+        let plan = magus
+            .life_stages
+            .as_mut()
+            .expect("the fixture carries a plan");
+        plan.disable_life_sections();
+        plan.life_sections_enabled = true;
+        assert_eq!(
+            plan.life_sections,
+            vec![
+                section("Lumped years", 8, NO_LAB),
+                section("In the laboratory", 1, NO_LAB),
+            ]
+        );
+        assert_eq!(plan.post_gauntlet_lab_years, full_lab_years(1));
+        assert_eq!(points_of(&magus), 240);
+    }
+
+    /// The fold sums untrusted counts, so it saturates rather than overflowing.
+    #[test]
+    fn disabling_life_sections_at_u32_max_saturates_without_panicking() {
+        let mut plan = LifeStagePlan {
+            post_gauntlet_lab_years: full_lab_years(u32::MAX),
+            life_sections_enabled: true,
+            life_sections: vec![section("", 1, full_lab_years(u32::MAX)); 3],
+            ..LifeStagePlan::default()
+        };
+        plan.disable_life_sections();
+        assert_eq!(plan.post_gauntlet_lab_years, full_lab_years(u32::MAX));
+        assert!(plan.life_sections.iter().all(|s| s.lab_years.is_empty()));
+    }
+
+    /// Under pool funding the whole plan is inert, sections included: no budget,
+    /// and nothing panics on a crafted section list.
+    #[test]
+    fn pool_funding_leaves_life_sections_inert() {
+        let mut magus = with_sections(
+            magus_with_lab_years(60, 25, NO_LAB),
+            true,
+            vec![section("", u32::MAX, full_lab_years(u32::MAX)); 100],
+        );
+        magus.ability_funding = AbilityFunding::Pool;
+        assert!(
+            rules_with_apprenticeship()
+                .budget(&magus, &rate_ruleset())
+                .is_none()
         );
     }
 

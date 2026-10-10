@@ -961,6 +961,62 @@ export interface LifeStagePlan {
   // How many of the post-Gauntlet points the player took as levels of spells rather
   // than experience; the rest are experience. Omitted when zero.
   post_gauntlet_spell_levels?: number;
+  // Whether the life is split into named sections. Omitted when off (the default).
+  life_sections_enabled?: boolean;
+  // The named sections, oldest first (never sorted). `post_gauntlet_lab_years`
+  // holds the "Remaining" lab years outside them. Omitted when empty.
+  life_sections?: LifeSection[];
+}
+
+// One named span of a character's life — mirrors the engine's `LifeSection`. A
+// magus's sections also carry lab years, charged like the plan-level ones.
+export interface LifeSection {
+  name: string;
+  years: number;
+  // Omitted when every count is zero.
+  lab_years?: LabYears;
+}
+
+// The spans the rules fix — mirrors the engine's `FixedSection`.
+export type FixedSection = 'childhood' | 'later_life' | 'apprenticeship' | 'truncated_training';
+
+// Which span a timeline entry is — mirrors the engine's `TimelineEntryKind`.
+// `index` is the named section's position in `LifeStagePlan.life_sections`.
+export type TimelineEntryKind =
+  | { kind: 'fixed'; section: FixedSection }
+  | { kind: 'named'; index: number }
+  | { kind: 'remaining' };
+
+// What a span's years earned — mirrors the engine's `EntryCapacity`: experience and
+// levels of spells apart, or a magus's post-Gauntlet points shared between them.
+export type EntryCapacity =
+  | { kind: 'separate'; xp: number; spell_levels: number }
+  | { kind: 'shared'; points: number };
+
+// One span of the life timeline — mirrors the engine's `TimelineEntry`.
+export interface TimelineEntry {
+  kind: TimelineEntryKind;
+  start_age: number;
+  end_age: number;
+  years: number;
+  capacity: EntryCapacity;
+  filled_xp: number;
+  filled_spell_levels: number;
+}
+
+// A Virtue's or Flaw's experience grant that no span of years pays for.
+export interface OutsideLump {
+  item: string;
+  amount: number;
+  used: number;
+}
+
+// The character's life as spans, oldest first — mirrors the engine's `LifeTimeline`.
+export interface LifeTimeline {
+  entries: TimelineEntry[];
+  // Years the named sections claim beyond the years lived: a note, not an entry.
+  overrun_years: number;
+  outside: OutsideLump[];
 }
 
 // One row of the Living Conditions table (`rules/core/aging.json`): how a
@@ -1119,6 +1175,9 @@ export interface EffectiveScores {
   // The life-stage experience blocks, or null for a directly-entered character
   // (where `xp_pool` is the authority).
   life_stage: LifeStageBudget | null;
+  // The life as chronological spans, or null when the life sections are off, the
+  // character is pool-funded, or it has no life-stage budget. Display only.
+  life_timeline: LifeTimeline | null;
   // The die-independent half of the character's aging, or null when the ruleset
   // ships no aging rules at all.
   aging: AgingReadout | null;

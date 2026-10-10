@@ -2593,6 +2593,63 @@ fn effective_scores_surface_the_post_gauntlet_spell_levels_separately() {
     assert_eq!(fresh.spell_levels_budget, 120);
 }
 
+/// A companion of 35 built through its life stages, with its later life split into
+/// one named section of five years and life sections switched `enabled`.
+fn companion_with_a_life_section(enabled: bool) -> Entity {
+    let mut companion = Entity::new(
+        arm_rules::EntityKind::Character,
+        Id::new("companion"),
+        arm_rules::RulesetRef::new(Id::new(RULESET_ID), RULESET_VERSION),
+    );
+    companion.age = Some(35);
+    companion.ability_funding = arm_rules::AbilityFunding::LifeStages;
+    companion.life_stages = Some(arm_rules::LifeStagePlan {
+        life_sections_enabled: enabled,
+        life_sections: vec![arm_rules::LifeSection {
+            name: "Squire".to_string(),
+            years: 5,
+            lab_years: arm_rules::LabYears::default(),
+        }],
+        ..arm_rules::LifeStagePlan::default()
+    });
+    // Ride is no childhood Ability, so later life pays and the sections fill.
+    companion.ability_scores = vec![AbilityScore::new(Id::new("ability.ride"), 3)];
+    companion
+}
+
+/// G3: the life timeline reaches the frontend on the effective-scores payload, read
+/// off the same allocation as the XP bar's figures — so the UI draws it without
+/// solving anything itself, and it can never disagree with the bar beside it.
+#[test]
+fn effective_scores_carry_the_life_timeline_when_life_sections_are_on() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let companion = companion_with_a_life_section(true);
+    let allocation = arm_rules::checked_xp_allocation(&companion, &ruleset).unwrap();
+    let expected = arm_rules::life_timeline(&companion, &ruleset, &allocation);
+    assert!(
+        expected.is_some(),
+        "precondition: the engine draws a timeline"
+    );
+
+    assert_eq!(
+        effective_scores_loaded(&companion, &ruleset).life_timeline,
+        expected
+    );
+}
+
+/// Switched off (the default), there is no timeline to draw, and the payload says so
+/// rather than carrying one the UI would have to know to hide.
+#[test]
+fn effective_scores_carry_no_life_timeline_when_life_sections_are_off() {
+    let ruleset = load_ruleset_from_dir(&rules_dir(), "en").unwrap().ruleset;
+    let companion = companion_with_a_life_section(false);
+
+    assert_eq!(
+        effective_scores_loaded(&companion, &ruleset).life_timeline,
+        None
+    );
+}
+
 /// A companion built through its life stages, speaking `native_language` — the
 /// character a Sample Childhood package is applied to (childhood exists only in
 /// life-stage mode, and the package's native-language entry takes the plan's
@@ -3710,6 +3767,19 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
             four_seasons: 4,
         },
         post_gauntlet_spell_levels: 300,
+        // Life sections (phase 2), populated for the same reason: an off toggle,
+        // an empty list and an empty section `lab_years` all write no key.
+        life_sections_enabled: true,
+        life_sections: vec![arm_rules::LifeSection {
+            name: "Wanderjahre".to_string(),
+            years: 8,
+            lab_years: arm_rules::LabYears {
+                one_season: 1,
+                two_seasons: 2,
+                three_seasons: 3,
+                four_seasons: 4,
+            },
+        }],
     };
     let budget = arm_rules::LifeStageBudget {
         childhood_native_xp: 75,
@@ -3836,6 +3906,115 @@ fn every_life_stage_field_is_mirrored_in_the_frontend_types() {
         assert!(
             types.contains(&format!("{key}:")) || types.contains(&format!("{key}?:")),
             "ui/src/lib/types.ts declares no '{key}' property"
+        );
+    }
+}
+
+/// Every string a tagged enum writes under `tag_key`, recursively: the wire values
+/// of a `#[serde(tag = ...)]` discriminant or of a unit-variant field, which
+/// [`mirrored_keys`] cannot see because they are values, not keys.
+fn tag_values(
+    value: &serde_json::Value,
+    tag_key: &str,
+    into: &mut std::collections::BTreeSet<String>,
+) {
+    match value {
+        serde_json::Value::Object(map) => {
+            for (key, nested) in map {
+                if let (true, Some(text)) = (key == tag_key, nested.as_str()) {
+                    into.insert(text.to_string());
+                }
+                tag_values(nested, tag_key, into);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for item in items {
+                tag_values(item, tag_key, into);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// G3: the life timeline rides on `EffectiveScores.life_timeline`, and
+/// `ui/src/lib/types.ts` mirrors it **by hand** — a sibling of
+/// [`every_life_stage_field_is_mirrored_in_the_frontend_types`] for the same reason.
+/// Its kinds are tagged enums, so beside the field names the wire VALUES of every
+/// `kind` and `section` must appear as string literals in the TypeScript unions: a
+/// renamed variant would otherwise leave the timeline labelling nothing.
+///
+/// Every variant is populated on purpose — each fixed section, a named section,
+/// Remaining, both capacity shapes, and an outside lump — so each one's fields and
+/// tag reach the check.
+#[test]
+fn every_life_timeline_field_is_mirrored_in_the_frontend_types() {
+    use arm_rules::{
+        EntryCapacity, FixedSection, LifeTimeline, OutsideLump, TimelineEntry, TimelineEntryKind,
+    };
+    let entry = |kind: TimelineEntryKind, capacity: EntryCapacity| TimelineEntry {
+        kind,
+        start_age: 5,
+        end_age: 10,
+        years: 5,
+        capacity,
+        filled_xp: 75,
+        filled_spell_levels: 0,
+    };
+    let separate = EntryCapacity::Separate {
+        xp: 240,
+        spell_levels: 120,
+    };
+    let mut entries: Vec<TimelineEntry> = [
+        FixedSection::Childhood,
+        FixedSection::LaterLife,
+        FixedSection::Apprenticeship,
+        FixedSection::TruncatedTraining,
+    ]
+    .into_iter()
+    .map(|section| entry(TimelineEntryKind::Fixed { section }, separate))
+    .collect();
+    entries.push(entry(
+        TimelineEntryKind::Named { index: 0 },
+        EntryCapacity::Shared { points: 240 },
+    ));
+    entries.push(entry(TimelineEntryKind::Remaining, separate));
+    let timeline = LifeTimeline {
+        entries,
+        overrun_years: 3,
+        outside: vec![OutsideLump {
+            item: Id::new("virtue.educated"),
+            amount: 50,
+            used: 20,
+        }],
+    };
+    let payload = serde_json::to_value(&timeline).unwrap();
+
+    let mut keys = std::collections::BTreeSet::new();
+    mirrored_keys(&payload, &mut keys);
+    // A floor, so a collector that silently gathered nothing cannot look green.
+    assert!(
+        keys.len() >= 15,
+        "expected the timeline payload to carry at least 15 field names, got {keys:?}"
+    );
+    let types = fs::read_to_string(repo_root().join("ui/src/lib/types.ts")).unwrap();
+    for key in keys.iter().map(String::as_str).chain(["life_timeline"]) {
+        assert!(
+            types.contains(&format!("{key}:")) || types.contains(&format!("{key}?:")),
+            "ui/src/lib/types.ts declares no '{key}' property"
+        );
+    }
+
+    let mut tags = std::collections::BTreeSet::new();
+    tag_values(&payload, "kind", &mut tags);
+    tag_values(&payload, "section", &mut tags);
+    assert!(
+        tags.len() >= 9,
+        "expected 5 kind tags and 4 fixed sections, got {tags:?}"
+    );
+    for tag in &tags {
+        assert!(
+            types.contains(&format!("'{tag}'")),
+            "ui/src/lib/types.ts names no '{tag}' member of a timeline union"
         );
     }
 }

@@ -6,6 +6,8 @@
   import AgeFields from './AgeFields.svelte';
   import ChildhoodPackagePicker from './ChildhoodPackagePicker.svelte';
   import LabYearsFields from './LabYearsFields.svelte';
+  import LifeSections from './LifeSections.svelte';
+  import LifeTimeline from './LifeTimeline.svelte';
 
   // Where the character's experience comes from: one total the player enters, or
   // the experience its life stages earn.
@@ -50,6 +52,9 @@
   const postGauntlet = $derived(rules?.post_apprenticeship ?? null);
   const showPostGauntlet = $derived(isMagus && postGauntlet != null);
   const plan = $derived(store.entity.life_stages ?? null);
+  // The life split into named sections. While on, the plan-level lab years are the
+  // "Remaining" row's, so they move into the section editor rather than render twice.
+  const sectionsOn = $derived(plan?.life_sections_enabled ?? false);
   // What the engine reads a BLANK Gauntlet-age field as, so the placeholder states
   // it instead of contradicting it. The number is the ruleset's
   // (`apprenticeship.default_gauntlet_age` — "25 years old and just out of
@@ -157,13 +162,15 @@
               data-testid="life-stage-gauntlet-age-input"
             />
           </label>
-          <LabYearsFields
-            value={plan?.post_gauntlet_lab_years}
-            testidPrefix="life-stage-lab-years"
-            readonly={noPostGauntletYears}
-            describedBy={noYearsNoteId}
-            onchange={(bucket, years) => store.setPostGauntletLabYears(bucket, years)}
-          />
+          {#if !sectionsOn}
+            <LabYearsFields
+              value={plan?.post_gauntlet_lab_years}
+              testidPrefix="life-stage-lab-years"
+              readonly={noPostGauntletYears}
+              describedBy={noYearsNoteId}
+              onchange={(bucket, years) => store.setPostGauntletLabYears(bucket, years)}
+            />
+          {/if}
           <label class="field inline">
             <span>{store.t('life-stage-spell-levels-label')}</span>
             <input
@@ -203,6 +210,16 @@
             />
           {/if}
         </label>
+        <label class="field inline">
+          <input
+            type="checkbox"
+            checked={sectionsOn}
+            onchange={(event) =>
+              store.setLifeSectionsEnabled((event.currentTarget as HTMLInputElement).checked)}
+            data-testid="life-sections-toggle"
+          />
+          <span>{store.t('life-sections-label')}</span>
+        </label>
       </div>
       {#if showPostGauntlet}
         {#if noPostGauntletYears}
@@ -235,6 +252,14 @@
             })}
           </span>
         {/if}
+      {/if}
+      {#if sectionsOn}
+        <LifeSections
+          labYears={showPostGauntlet}
+          labYearsReadonly={noPostGauntletYears}
+          labYearsDescribedBy={noYearsNoteId}
+        />
+        <LifeTimeline />
       {/if}
       <!-- Childhood comes after the native language it is measured against: a
            package's native entry is bought in that language, and its own childhood
