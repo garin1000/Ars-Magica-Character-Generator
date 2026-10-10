@@ -149,5 +149,7 @@ deliberately and review the result as a diff.
 - A decision on code comments: `ArMDE:547` is the citation form `CLAUDE.md`
   mandates and four guards enforce. Anchors may suit data better than prose
   comments; do not change the comment convention unilaterally.
-- The re-sync itself. The German line-parity re-verification it used to owe is
-  now a test, so it re-verifies itself over whatever is swept. See open-todos P8.
+- ~~The re-sync itself.~~ **Done 2026-10-09 (P8, D85, D86).** Commits
+  `6955ee8a` (copy-in plus relocation of every catalogue range and bare citation)
+  and `e408fd4a` (the last hand-placed index citations). The procedure for the
+  next re-sync is in `CLAUDE.md` § "Rules source files".
