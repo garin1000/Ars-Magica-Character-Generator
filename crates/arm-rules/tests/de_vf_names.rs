@@ -211,7 +211,10 @@ const BOOK_ACRONYMS: &[&str] = &[
 #[derive(Debug, Clone)]
 struct TableRow {
     file: &'static str,
-    en: String,
+    /// [`match_key`] of the row's `Englisch (EN)` cell, computed once per row:
+    /// [`find_match`] compares it against every catalogue entry, so
+    /// recomputing it per (entry, row) pair cost seconds.
+    en_key: String,
     de: String,
     book_tag: Option<&'static str>,
 }
@@ -312,7 +315,7 @@ fn parse_file(file: &'static str, text: &str) -> Vec<TableRow> {
         if is_separator_row(&cells) {
             continue;
         }
-        let en = cells.first().copied().unwrap_or("").to_string();
+        let en = cells.first().copied().unwrap_or("");
         if en.is_empty() {
             continue;
         }
@@ -321,7 +324,7 @@ fn parse_file(file: &'static str, text: &str) -> Vec<TableRow> {
         let book_tag = section_tag.or_else(|| inline_tag(note));
         rows.push(TableRow {
             file,
-            en,
+            en_key: match_key(en),
             de,
             book_tag,
         });
@@ -667,8 +670,7 @@ fn find_match<'a>(en_name: &str, rows: &'a [TableRow]) -> Match<'a> {
         if row.book_tag.is_some() {
             continue;
         }
-        let row_key = match_key(&row.en);
-        if row_key != direct_key && row_key != literal_key {
+        if row.en_key != direct_key && row.en_key != literal_key {
             continue;
         }
         if row.file == "tugenden-fehler.md" {

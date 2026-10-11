@@ -6,6 +6,14 @@ license.workspace = true
 description = "Pure Ars Magica 5th Edition rules engine: types, parsing, validation, evaluation"
 repository.workspace = true
 homepage.workspace = true
+# The integration tests compile into the explicit `[[test]]` target below, not
+# one binary per `tests/*.rs` file; `tests/test_targets.rs` fails when a test
+# file is declared in no target root.
+autotests = false
+
+[[test]]
+name = "all"
+path = "tests/all.rs"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

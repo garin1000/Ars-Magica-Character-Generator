@@ -3,7 +3,7 @@
 //! Rust's `dev`/`test` profiles enable overflow checks by default regardless
 //! of this setting, so this test is only meaningful run against the
 //! **release** profile: `cargo test --workspace --release
-//! --test overflow_checks_profile`. Under `cargo test --workspace` (the
+//! --test all overflow_checks_profile::`. Under `cargo test --workspace` (the
 //! default dev profile) it passes trivially either way, because dev already
 //! checks overflow — that is precisely the gap K9 closed: dev panics, release
 //! silently wrapped. If a future change reverts or weakens the

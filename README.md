@@ -183,7 +183,7 @@ arm-char-gen/
 template from `crates/arm-rules/tests/fixtures/book_templates/` opened and saved
 by the app itself, and `crates/arm-app/tests/a2_shipped_examples.rs` fails when
 they drift. Regenerate with
-`cargo test -p arm-app --test a2_shipped_examples -- --ignored`.
+`cargo test --workspace --test app a2_shipped_examples:: -- --ignored`.
 
 The engine (`arm-rules`) has **no dependency on Tauri, the filesystem, or the
 UI**. It operates on in-memory data and is fully exercised with `cargo test`.
@@ -449,6 +449,9 @@ cargo test -p arm-rules
 
 # Entire Rust workspace
 cargo test --workspace
+
+# One integration-test file (each crate's tests/*.rs are modules of one target)
+cargo test --workspace --test all de_vf_names::
 
 # Lint (warnings treated as errors) and format check. `--all-targets` lints the
 # test crates too, so test code is held to the same bar as shipped code.

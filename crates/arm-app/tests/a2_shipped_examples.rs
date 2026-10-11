@@ -17,7 +17,7 @@
 //! When it fails because the engine or a template changed, run
 //!
 //! ```text
-//! cargo test -p arm-app --test a2_shipped_examples -- --ignored
+//! cargo test --workspace --test app a2_shipped_examples:: -- --ignored
 //! ```
 //!
 //! which rewrites `examples/rulebook/` from the templates, and commit the result.
@@ -168,7 +168,8 @@ fn assert_all_shipped(paths: &[(String, PathBuf)]) {
     assert!(
         missing.is_empty(),
         "these rulebook examples are not shipped in examples/rulebook/ (run `cargo test \
-         -p arm-app --test a2_shipped_examples -- --ignored` to generate them): {missing:?}"
+         --workspace --test app a2_shipped_examples:: -- --ignored` to generate them): \
+         {missing:?}"
     );
 }
 
@@ -207,7 +208,8 @@ fn every_book_template_ships_as_the_save_the_app_writes_for_it() {
     assert!(
         drifted.is_empty(),
         "these shipped examples no longer match their book template (regenerate with \
-         `cargo test -p arm-app --test a2_shipped_examples -- --ignored`): {drifted:#?}"
+         `cargo test --workspace --test app a2_shipped_examples:: -- --ignored`): \
+         {drifted:#?}"
     );
 
     // Only save files are counted, so a licence or notice file may sit beside
@@ -355,7 +357,7 @@ fn the_installers_ship_the_rulebook_examples_as_an_examples_folder() {
 /// run it on purpose when the drift guard above says the examples are stale,
 ///
 /// ```text
-/// cargo test -p arm-app --test a2_shipped_examples -- --ignored
+/// cargo test --workspace --test app a2_shipped_examples:: -- --ignored
 /// ```
 ///
 /// and commit what it writes. Removes every save file there first, so an example

@@ -6,6 +6,19 @@ license.workspace = true
 description = "Tauri desktop shell for the Ars Magica character generator"
 repository.workspace = true
 homepage.workspace = true
+# The integration tests compile into the explicit `[[test]]` targets below, not
+# one binary per `tests/*.rs` file; arm-rules' `tests/test_targets.rs` fails
+# when a test file is declared in no target root. `commands` is its own target
+# because it mutates process environment variables.
+autotests = false
+
+[[test]]
+name = "app"
+path = "tests/app.rs"
+
+[[test]]
+name = "commands"
+path = "tests/commands.rs"
 
 # Library holds the testable command logic; the binary is a thin launcher.
 [lib]

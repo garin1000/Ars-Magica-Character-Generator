@@ -552,6 +552,21 @@ cd ui && npm run test:e2e:reuse -- --spec ./e2e/specs/<file>.e2e.js
 cd ui && npm run test:e2e:portable
 ```
 
+### Rust integration-test targets
+
+Each crate compiles its `tests/*.rs` files as **modules of a few explicit
+targets**, not one binary per file: `crates/arm-rules/tests/all.rs` (target
+`all`), and in arm-app `tests/app.rs` (target `app`) plus `tests/commands.rs`
+on its own, because it mutates process env vars. Both manifests set
+`autotests = false`, so **a new test file must get a `mod` line in its crate's
+root**; `test_targets.rs` fails until it does. Run one file's tests by module
+path: `cargo test --workspace --test all de_vf_names::`, and an `#[ignore]`d
+writer with `cargo test --workspace --test all -- --ignored
+rulebook_citations::regenerate_citation_excerpts`. Prefer `--workspace` over
+`-p arm-rules`: the two resolve dependency features differently (tauri enables
+extra serde/syn features), so each keeps its own build of arm-rules and an
+engine edit is compiled twice when both are used.
+
 ### Frontend test environments — pick the right one
 
 `npm run test:unit` runs **two vitest projects**, declared in

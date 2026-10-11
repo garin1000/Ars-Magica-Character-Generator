@@ -196,7 +196,7 @@
 //! before Phase 2 wires it into the live corpus and generates the real
 //! snapshot — see Q7's recommendation to land T3 before the resync itself.
 
-mod citation_support;
+use crate::citation_support;
 
 use citation_support::{
     comment_blocks, relative, repo_root, rust_files, source_files_in, web_comment_blocks,
@@ -2490,8 +2490,8 @@ fn load_citation_excerpts_snapshot() -> BTreeMap<String, ExcerptSnapshotEntry> {
 ///
 /// `#[ignore]`d like its siblings in `rules_source_provenance.rs`
 /// (`regenerate_source_anchors`, `regenerate_blank_range_ends`) because it
-/// writes into the repository: `cargo test -p arm-rules --test
-/// rulebook_citations -- --ignored regenerate_citation_excerpts`. Its output
+/// writes into the repository: `cargo test --workspace --test all --
+/// --ignored rulebook_citations::regenerate_citation_excerpts`. Its output
 /// is then reviewed as a diff like any other change, and
 /// `every_citation_excerpt_matches_its_snapshot` is what proves the result
 /// stays correct afterwards.
@@ -2536,9 +2536,9 @@ fn regenerate_citation_excerpts() {
 /// signal P8-1/T2 captures. A count greater than one (the cited line itself
 /// always counts once) means no context this slice captures can resolve that
 /// passage on its own; P8-4's human-review pass needs to know this risk
-/// exists going in. Run deliberately: `cargo test -p arm-rules --test
-/// rulebook_citations -- --ignored --nocapture
-/// report_citation_excerpt_duplicates_even_with_full_context`.
+/// exists going in. Run deliberately: `cargo test --workspace --test all --
+/// --ignored --nocapture
+/// rulebook_citations::report_citation_excerpt_duplicates_even_with_full_context`.
 #[test]
 #[ignore = "diagnostic only; prints to stdout, run deliberately"]
 fn report_citation_excerpt_duplicates_even_with_full_context() {
@@ -3119,9 +3119,8 @@ fn render_relocation_map(rows: &[RelocationRow]) -> String {
 /// only `tmp/` is written — so safe to run repeatedly while reviewing.
 ///
 /// `#[ignore]`d like its siblings (`regenerate_source_relocations`,
-/// `regenerate_citation_excerpts`): `cargo test -p arm-rules --test
-/// rulebook_citations -- --ignored --nocapture
-/// build_p8_4_relocation_map`.
+/// `regenerate_citation_excerpts`): `cargo test --workspace --test all --
+/// --ignored --nocapture rulebook_citations::build_p8_4_relocation_map`.
 #[test]
 #[ignore = "writes tmp/p8-4-relocation-map.md; run deliberately — see tmp/p8-34-handover.md"]
 fn build_p8_4_relocation_map() {
@@ -3560,8 +3559,8 @@ fn p8_4_rewrite_files() -> Vec<PathBuf> {
 /// overrides too.
 ///
 /// `#[ignore]`d like every writer in this suite:
-/// `cargo test -p arm-rules --test rulebook_citations -- --ignored
-/// --nocapture apply_p8_4_citation_relocations`.
+/// `cargo test --workspace --test all -- --ignored --nocapture
+/// rulebook_citations::apply_p8_4_citation_relocations`.
 #[test]
 #[ignore = "rewrites citations across crates/*/src, crates/*/tests, RULES.md, ui/src, ui/e2e; \
             run deliberately — see tmp/p8-34-handover.md"]

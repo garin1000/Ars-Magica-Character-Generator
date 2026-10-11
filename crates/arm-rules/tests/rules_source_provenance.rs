@@ -126,11 +126,22 @@ fn collect_source_refs(core_file: &str, value: &Value, out: &mut Vec<FoundSource
     }
 }
 
+/// Each cited source file's lines, keyed by basename and read once per test:
+/// the citations name the same few multi-megabyte books over and over, so
+/// re-reading a book per citation cost seconds. A failed read keeps its
+/// message, so every citation of that file still reports it.
+type SourceLines = BTreeMap<String, Result<Vec<String>, String>>;
+
 /// Validates one [`FoundSourceRef`] against the actual Markdown file, pushing
 /// a descriptive message onto `errors` for every way it can be stale:
 /// malformed range, missing file, out-of-bounds range, or a range that
 /// brackets nothing but blank lines.
-fn validate_source_ref(source_dir: &Path, found: &FoundSourceRef, errors: &mut Vec<String>) {
+fn validate_source_ref(
+    source_dir: &Path,
+    found: &FoundSourceRef,
+    source_lines: &mut SourceLines,
+    errors: &mut Vec<String>,
+) {
     let FoundSourceRef {
         core_file,
         entry_label,
@@ -150,8 +161,13 @@ fn validate_source_ref(source_dir: &Path, found: &FoundSourceRef, errors: &mut V
     }
 
     let path = source_dir.join(source_file);
-    let content = match fs::read_to_string(&path) {
-        Ok(content) => content,
+    let read = source_lines.entry(source_file.clone()).or_insert_with(|| {
+        fs::read_to_string(&path)
+            .map(|content| content.lines().map(str::to_owned).collect())
+            .map_err(|e| e.to_string())
+    });
+    let lines = match read {
+        Ok(lines) => lines,
         Err(e) => {
             errors.push(format!(
                 "{core_file}: \"{entry_label}\" cites source file {source_file}, which could not \
@@ -161,7 +177,6 @@ fn validate_source_ref(source_dir: &Path, found: &FoundSourceRef, errors: &mut V
         }
     };
 
-    let lines: Vec<&str> = content.lines().collect();
     let total = lines.len() as i64;
     if *end > total {
         errors.push(format!(
@@ -231,9 +246,10 @@ fn every_core_source_citation_brackets_real_content_in_its_named_file() {
         all_refs.len()
     );
 
+    let mut source_lines = SourceLines::new();
     let mut errors = Vec::new();
     for found in &all_refs {
-        validate_source_ref(&source_dir, found, &mut errors);
+        validate_source_ref(&source_dir, found, &mut source_lines, &mut errors);
     }
 
     assert!(
@@ -1697,8 +1713,8 @@ const CATALOGUES_TO_SWEEP: &[(&str, usize)] = &[
 /// that catalogue's own level, in English and (via the line-parity invariant)
 /// in German, and rewrites both stores. It is `#[ignore]`d because it **writes
 /// into the repository**: `cargo test --workspace` must never mutate the tree,
-/// and running it is a deliberate act (`cargo test -p arm-rules --test
-/// rules_source_provenance -- --ignored regenerate_source_anchors`) whose output
+/// and running it is a deliberate act (`cargo test --workspace --test all --
+/// --ignored rules_source_provenance::regenerate_source_anchors`) whose output
 /// is then reviewed as a diff like any other change.
 ///
 /// An entry whose `lines[0]` does **not** land on a heading of the expected
@@ -2309,8 +2325,8 @@ fn no_source_range_ends_on_a_blank_line() {
 ///
 /// Writes into `rules/core/`, exactly like `regenerate_source_anchors` above
 /// and for the same reason, so it is `#[ignore]`d and run deliberately:
-/// `cargo test -p arm-rules --test rules_source_provenance -- --ignored
-/// regenerate_blank_range_ends`.
+/// `cargo test --workspace --test all -- --ignored
+/// rules_source_provenance::regenerate_blank_range_ends`.
 ///
 /// Rewrites line by line rather than reserializing, reusing
 /// `regenerate_source_anchors`'s block-joining technique so a `source` block

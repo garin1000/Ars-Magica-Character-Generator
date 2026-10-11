@@ -295,3 +295,47 @@ Gate sequence, warm, no source change (one run each; e2e at 6 workers):
   build was a 0.3 s no-op, including straight after a gate build.
 - **Reuse is now worth only ~1.5 s,** because the default path already costs
   about 1 s of build. It stays as a cheap opt-in.
+
+## 8. Phase 3 results (2026-10-11): Rust test build and run
+
+Changes:
+- **Three slow tests fixed** (test code only, same assertions):
+  `de_vf_names` computes each table row's match key once (13.7 s -> 0.18 s for
+  the file); `rules_source_provenance`'s range check reads each book once
+  (6.68 s -> 0.06 s); `source_citations`' symbol sweep reads each file once and
+  skips lines without the symbol (3.31 s -> 0.95 s).
+- **One test binary per crate, files unmoved.** `autotests = false`;
+  arm-rules has one target, `all` (`tests/all.rs`, a `mod` line per file);
+  arm-app has `app` (`tests/app.rs`) and `commands` (alone, since it sets env
+  vars). `test_targets.rs` fails when a test file is in no root, or in two.
+  One binary was enough: a code edit in one test file rebuilds it in ~5 s.
+  Run one file with `cargo test --workspace --test all de_vf_names::`.
+- **`[profile.dev] debug = "line-tables-only"`**, and no debug info for
+  dependencies. Backtraces keep file:line. `[profile.release]` is unchanged.
+
+| Measure | Before | After |
+|---|---|---|
+| cold `--no-run`, after `cargo clean -p arm-rules -p arm-app` | 14m36s (§3a era) | 55.5 s one binary; **43.3 s** + light debug |
+| full cold build, empty target dir | 3m35s (one binary, full debug) | **2m38s** |
+| arm-rules lib comment edit, `--workspace --no-run` | 3m21s; 9m40s | **19.0 s**; 19.0 s |
+| test-file code edit | 0.6 s (its own small binary) | 4.6 s |
+| arm-app `src` comment edit | 9.1 s; 24.5 s | **3.6 s**; 3.7 s |
+| `cargo test --workspace`, run phase | 47.0 s | **15.1 s** |
+| target dir after a clean full build | 5.5 GB | **2.7 GB** |
+| tests passed / ignored | 3,141 / 12 | 3,144 / 12 (+3 guard tests) |
+
+- **Noise.** Some runs stalled with the CPU idle: a lib edit once took 2m32s
+  with 40 s of CPU time, against 19 s otherwise. The CPU time is the stable
+  figure: about 3m20s per lib edit before, about 50 s after.
+- **`-p arm-rules` vs `--workspace` is a feature-unification split.** Inside
+  the workspace, tauri adds features to arm-rules' dependencies: serde and
+  serde_core get `alloc` and `rc`, serde_json gets `alloc` and `raw_value`
+  (`unbounded_depth` is only on the build-script copy), and memchr, once_cell
+  and bitflags differ too. The proc-macro stack differs as well (syn `full`,
+  proc-macro2 `span-locations`). So each form keeps its own arm-rules build.
+  Both builds stay cached, so a switch without an edit costs nothing (0.2 s).
+  After an engine edit, the second form rebuilds arm-rules again, ~17 s.
+  Making the two equal would take a workspace-hack: about eight pinned
+  dependencies, including host-side syn features that follow tauri's macro
+  crates. That is not small and would break silently on tauri upgrades, so it
+  was not done. Use `--workspace` everywhere.

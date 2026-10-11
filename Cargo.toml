@@ -14,6 +14,16 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 proptest = "1"
 
+# Lighter debug info for builds and tests (not `release`, which ships). Line
+# tables keep file:line in panic messages and backtraces, and dropping the
+# dependencies' debug info entirely shrinks every link and `target/debug`. To
+# step through a dependency in a debugger, raise `debug` here locally.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
 # K9: Rust defaults `overflow-checks = false` in the release profile, so an
 # integer overflow panics under `cargo test` (dev profile, checks on by
 # default) but silently wraps in the shipped binary. This codebase is

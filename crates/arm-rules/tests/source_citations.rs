@@ -46,12 +46,12 @@
 //! is invisible by construction, the same deliberate boundary
 //! `rulebook_citations.rs` draws.
 
-mod citation_support;
+use crate::citation_support;
 
 use citation_support::{
     comment_blocks, relative, repo_root, rust_files, source_files_in, web_comment_blocks,
 };
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::PathBuf;
 
@@ -510,6 +510,7 @@ fn every_source_symbol_citation_resolves_to_a_declaration() {
         citations.len()
     );
 
+    let mut contents: BTreeMap<&PathBuf, String> = BTreeMap::new();
     let mut errors = Vec::new();
     for (path, line, citation) in &citations {
         let SymbolCitation {
@@ -526,11 +527,18 @@ fn every_source_symbol_citation_resolves_to_a_declaration() {
             ));
             continue;
         }
+        // Each file is read once, however often it is cited, and only a line
+        // that contains the symbol at all can declare it — both cuts keep this
+        // sweep from re-reading and re-scanning the same large files per
+        // citation, which made it the slowest test in the crate.
         let resolved = candidates.iter().any(|candidate| {
-            fs::read_to_string(candidate)
-                .unwrap_or_default()
+            contents
+                .entry(*candidate)
+                .or_insert_with(|| fs::read_to_string(candidate).unwrap_or_default())
                 .lines()
-                .any(|source_line| declares(source_line, symbol))
+                .any(|source_line| {
+                    source_line.contains(symbol.as_str()) && declares(source_line, symbol)
+                })
         });
         if !resolved {
             let where_looked: Vec<String> = candidates.iter().map(|c| relative(c)).collect();
