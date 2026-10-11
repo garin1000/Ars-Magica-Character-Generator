@@ -20,8 +20,15 @@ function sourceForLang(lang: Lang): string {
   return entry[1];
 }
 
+const bundles = new Map<Lang, FluentBundle>();
+
 /**
- * Builds a Fluent bundle for the given language.
+ * Returns the Fluent bundle for the given language, built on first use.
+ *
+ * Built once per language: parsing a whole `.ftl` is costly, and a bundle is
+ * never mutated after it is built. Under Svelte's server build the store's
+ * `$derived` is not memoized, so without this cache every SSR-rendered
+ * `store.t()` call reparsed the file.
  *
  * Bidi isolation is off: every shipped locale is left-to-right, so the
  * U+2068/U+2069 marks Fluent would wrap around each placeable buy nothing, and
@@ -29,8 +36,11 @@ function sourceForLang(lang: Lang): string {
  * A future right-to-left locale would have to revisit this.
  */
 export function buildBundle(lang: Lang): FluentBundle {
+  const cached = bundles.get(lang);
+  if (cached) return cached;
   const bundle = new FluentBundle(lang, { useIsolating: false });
   bundle.addResource(new FluentResource(sourceForLang(lang)));
+  bundles.set(lang, bundle);
   return bundle;
 }
 

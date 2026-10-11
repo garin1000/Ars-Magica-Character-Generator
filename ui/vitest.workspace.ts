@@ -49,6 +49,14 @@ export default defineWorkspace([
     test: {
       name: 'client',
       environment: 'happy-dom',
+      // `vmThreads` reuses a worker and its happy-dom set-up across files, each
+      // file still in a fresh vm context with its own module graph and mocks.
+      // It cut the suite from ~21.7 s to ~17.4 s (docs/test-performance-2026-09.md
+      // §9). Caveat: objects made by Node's own globals (`structuredClone`, `fs`)
+      // come from another realm, so `toStrictEqual` sees a different prototype.
+      // That is why `ssr` stays on the default `forks` pool: three
+      // `state.svelte.test.ts` cases failed under a vm pool for exactly that reason.
+      pool: 'vmThreads',
       include: ['src/**/*.client.test.ts'],
       exclude: ['node_modules/', 'dist/', 'e2e/specs/'],
     },

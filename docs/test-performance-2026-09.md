@@ -339,3 +339,46 @@ Changes:
   dependencies, including host-side syn features that follow tauri's macro
   crates. That is not small and would break silently on tauri upgrades, so it
   was not done. Use `--workspace` everywhere.
+
+## 9. Phase 4 results (2026-10-11): vitest
+
+`npm run test:unit`, three runs each. The phase figures are summed across workers.
+
+| Measure | Before | After |
+|---|---|---|
+| wall (Duration) | 29.04 / 28.92 s | **17.30 / 17.41 / 17.49 s** |
+| tests phase | 66.4 s | 16.5 s |
+| collect phase | 62 s | 97 s (more workers in parallel, see below) |
+| environment phase | 19.6 s | 4.3 s |
+| files / tests | 133 / 2,807 | 133 / 2,808 (+1, the TDD test below) |
+| slowest files | App.client 5.7 s, VirtueFlawTab 4.9, WizardStep 4.8, App 4.7, WizardShell 3.0 | App.client 1.8, wdio.conf 1.75, prereq-text 0.7, AbilityTab.client 0.6, state 0.5 |
+
+The e2e-harness tests had already dropped out of the top list (wdio.conf.test.js
+~0.95 s) before this phase.
+
+Kept:
+- **One Fluent bundle per language** (`i18n.ts::buildBundle`, TDD). Under
+  Svelte's server build a `$derived` created outside a render is not memoized,
+  so the store's `#bundle` reparsed the 114 KB `main.ftl` on **every**
+  `store.t()` call in an SSR test, about 100 ms per render. This took the tests
+  phase from 66 s to 20 s and the wall from 29 s to 22.3 s. The client build was
+  never affected.
+- **`client` project on `vmThreads`.** It took the wall from 21.7 s to 17.4 s.
+  About 1.2 s of that comes from a second pool running beside `forks`, because
+  vitest sizes every pool to cpus-1; a plain `threads` client pool gave 20.45 s.
+  The rest comes from reusing the happy-dom set-up (environment 19 s -> 4 s).
+- **`deps.optimizer` (ssr + web)**: 18.43 s -> 17.45 s with the vm pool, and
+  21.66 s against 22.27 s without it.
+- **App.client.test.ts polls `vi.waitFor` every 1 ms** instead of 50 ms. The
+  condition and the 1 s timeout are unchanged. The file went from 4.7 s to 1.0 s
+  of tests; there was no wall gain, because the `ssr` pool is the critical path.
+
+Rejected:
+- **`pool: 'threads'` for both projects**: 22.80 s against 22.27 s.
+- **`isolate: false`**: a run hung for over 300 s and was stopped. Without
+  isolation vitest skips `mocker.reset()` and `resetModules` between files, and
+  90 files use `vi.mock`.
+- **`vmThreads` for `ssr`**: 15.8 s, but 3 `toStrictEqual` failures in
+  `state.svelte.test.ts`. `structuredClone` returns main-realm objects. Making it
+  pass would mean weakening assertions.
+- **More forks** (10 or 12): 17.25 / 17.38 s. The run is CPU-bound.

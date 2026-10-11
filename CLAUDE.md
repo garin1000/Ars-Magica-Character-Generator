@@ -613,7 +613,9 @@ loudly instead of effects silently never running. Keep it.
 
 Writing a client test: `mount()` from `svelte`, then `flushSync()` to run the
 scheduled effects before asserting, and `unmount()` afterwards. `happy-dom` is a
-devDependency; it ships in nothing.
+devDependency; it ships in nothing. The `client` project runs in a `vmThreads` vm
+context, so a `toStrictEqual` against an object from Node's own globals
+(`structuredClone`, `fs`) fails on its foreign prototype; use `toEqual` there.
 
 E2E tests drive the **real release binary** — the only layer that exercises the
 shipped production binary through real IPC + bundled rules resources, so run it

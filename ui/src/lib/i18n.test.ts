@@ -69,6 +69,18 @@ function messageVariables(src: string): Map<string, Set<string>> {
   return vars;
 }
 
+// Under Svelte's server build a `$derived` created outside a render is not
+// memoized, so the store's `#bundle` (state.svelte.ts) re-ran `buildBundle` on
+// every `store.t()` call in an SSR test, reparsing the whole `.ftl` each time.
+// A bundle is never mutated after it is built, so one per language suffices.
+describe('buildBundle', () => {
+  it('parses each language once and hands back the same bundle', () => {
+    expect(buildBundle('en')).toBe(buildBundle('en'));
+    expect(buildBundle('de')).toBe(buildBundle('de'));
+    expect(buildBundle('de')).not.toBe(buildBundle('en'));
+  });
+});
+
 describe('German UI bundle', () => {
   it('builds the real German Fluent bundle and resolves known keys to German', () => {
     const de = buildBundle('de');

@@ -133,6 +133,14 @@ let target: HTMLElement;
 let app: Record<string, unknown> | undefined;
 
 /**
+ * `vi.waitFor` options for a state that settles within a few microtasks (every
+ * IPC call here is a resolved mock). The default 50 ms poll made every test sleep
+ * ~50 ms for nothing; polling each millisecond keeps the condition and the 1 s
+ * timeout and only drops the idle wait.
+ */
+const SETTLE_POLL = { interval: 1 } as const;
+
+/**
  * Mount the real app root into the DOM, run its initial effects, and wait for
  * the async `init()` that `onMount` kicks off to settle — `init()` is what seeds
  * the clean dirty-baseline, so asserting before it lands reads a transient state.
@@ -151,7 +159,7 @@ async function mountApp(): Promise<void> {
   await vi.waitFor(() => {
     flushSync();
     expect(store.dirty).toBe(false);
-  });
+  }, SETTLE_POLL);
 }
 
 /** The `dirty` argument of the most recent `update_close_guard` call. */
@@ -257,7 +265,7 @@ describe('the unsaved-changes guard is mirrored to the backend', () => {
     vi.mocked(ipc.updateCloseGuard).mockReset().mockRejectedValue(failure);
 
     await mountApp();
-    await vi.waitFor(() => expect(store.error).toEqual(failure));
+    await vi.waitFor(() => expect(store.error).toEqual(failure), SETTLE_POLL);
   });
 });
 
@@ -297,7 +305,7 @@ async function awaitInAppPrompt(): Promise<void> {
   await vi.waitFor(() => {
     flushSync();
     expect(store.discardPromptOpen).toBe(true);
-  });
+  }, SETTLE_POLL);
 }
 
 /**
@@ -311,7 +319,7 @@ async function awaitConfirmationSettled(): Promise<void> {
   await vi.waitFor(() => {
     flushSync();
     expect(store.discardConfirmPending).toBe(false);
-  });
+  }, SETTLE_POLL);
 }
 
 describe('focus restoration around the discard-changes prompt (S1/S4)', () => {
@@ -610,11 +618,14 @@ describe('tablist keyboard navigation (S7/S4)', () => {
     expect(details.getAttribute('aria-selected')).toBe('false');
     // Roving tabindex: only the active tab stays in the page's Tab order.
     expect(details.tabIndex).toBe(-1);
-    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-characteristics'));
+    await vi.waitFor(
+      () => expect(document.activeElement?.id).toBe('tab-characteristics'),
+      SETTLE_POLL,
+    );
 
     pressTabKey('ArrowLeft');
     expect(details.getAttribute('aria-selected')).toBe('true');
-    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-details'));
+    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-details'), SETTLE_POLL);
   });
 
   it('jumps to the first/last tab with Home/End', async () => {
@@ -646,15 +657,18 @@ describe('tablist keyboard navigation (S7/S4)', () => {
     flushSync();
 
     pressTabKey('ArrowRight');
-    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-characteristics'));
+    await vi.waitFor(
+      () => expect(document.activeElement?.id).toBe('tab-characteristics'),
+      SETTLE_POLL,
+    );
 
     pressTabKey('End');
     expect(document.getElementById('tab-totals')?.getAttribute('aria-selected')).toBe('true');
-    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-totals'));
+    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-totals'), SETTLE_POLL);
 
     pressTabKey('Home');
     expect(document.getElementById('tab-details')?.getAttribute('aria-selected')).toBe('true');
-    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-details'));
+    await vi.waitFor(() => expect(document.activeElement?.id).toBe('tab-details'), SETTLE_POLL);
   });
 });
 
@@ -1136,7 +1150,7 @@ describe('the native application menu', () => {
 
     chooseMenuItem('menu.open');
 
-    await vi.waitFor(() => expect(ipc.loadEntity).toHaveBeenCalled());
+    await vi.waitFor(() => expect(ipc.loadEntity).toHaveBeenCalled(), SETTLE_POLL);
   });
 
   it('obeys the same gate the keyboard shortcuts obey', async () => {
@@ -1202,14 +1216,14 @@ describe('the native application menu', () => {
 
     await mountApp();
 
-    await vi.waitFor(() => expect(store.error).toEqual(failure));
+    await vi.waitFor(() => expect(store.error).toEqual(failure), SETTLE_POLL);
   });
 
   it('unsubscribes from menu events when the app goes away', async () => {
     const unlisten = vi.fn();
     vi.mocked(ipc.onMenuAction).mockResolvedValue(unlisten);
     await mountApp();
-    await vi.waitFor(() => expect(ipc.onMenuAction).toHaveBeenCalled());
+    await vi.waitFor(() => expect(ipc.onMenuAction).toHaveBeenCalled(), SETTLE_POLL);
 
     unmount(app!);
     app = undefined;

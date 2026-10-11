@@ -32,8 +32,14 @@ import { defineConfig } from 'vitest/config';
 // The project writes plain CSS with nothing to transform, and these tests assert
 // on rendered markup, never on styles; `vite.config.ts` keeps the full
 // preprocessor for the real build.
+//
+// `deps.optimizer` pre-bundles the inlined dependencies (svelte's runtime above
+// all), so each test file fetches a few bundles over vite-node's RPC instead of
+// hundreds of small modules. Measured 2026-10-11: about 1 s off a ~18 s run
+// (docs/test-performance-2026-09.md §9).
 export default defineConfig({
   plugins: [svelte({ configFile: false, preprocess: vitePreprocess({ style: false }) })],
+  test: { deps: { optimizer: { ssr: { enabled: true }, web: { enabled: true } } } },
   // NOTE: the `browser` resolve condition that client tests need is set per
   // project in `vitest.workspace.ts`, never here. Setting it globally resolves
   // the whole `svelte` package to its client build, and then any component using
