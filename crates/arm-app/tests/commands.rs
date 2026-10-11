@@ -5405,11 +5405,14 @@ fn the_update_feed_seam_is_compiled_out_of_the_default_build() {
 #[cfg(feature = "e2e-testing")]
 #[test]
 fn under_the_e2e_feature_the_check_reads_the_feed_file_and_never_the_network() {
+    let _env = UPDATE_SEAM_ENV
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let tmp = tempfile::tempdir().unwrap();
     let feed = tmp.path().join("feed.json");
     fs::write(&feed, newer_feed().unwrap()).unwrap();
 
-    // SAFETY: no other test in this binary reads or writes ARM_E2E_UPDATE_FEED.
+    // SAFETY: every test touching the update seams' variables holds UPDATE_SEAM_ENV.
     unsafe { std::env::remove_var("ARM_E2E_UPDATE_FEED") };
     assert_eq!(arm_app::commands::e2e_update_feed_override(), None);
     assert!(
@@ -5429,4 +5432,58 @@ fn under_the_e2e_feature_the_check_reads_the_feed_file_and_never_the_network() {
         "the e2e build must never launch a browser"
     );
     assert!(arm_app::commands::open_release_page().is_ok());
+}
+
+/// The update seams' two variables are process-global, and `update_fetch` reads
+/// both, so the e2e-feature tests that set either take turns.
+#[cfg(feature = "e2e-testing")]
+static UPDATE_SEAM_ENV: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+/// The stall seam must not exist in the shipped build: there nothing may hold the
+/// check back on purpose. Sibling of `the_update_feed_seam_is_compiled_out_of_the_default_build`.
+#[cfg(not(feature = "e2e-testing"))]
+#[test]
+fn the_update_stall_seam_is_compiled_out_of_the_default_build() {
+    // SAFETY: no other test in this binary reads or writes ARM_E2E_UPDATE_STALL_MS.
+    unsafe { std::env::set_var("ARM_E2E_UPDATE_STALL_MS", "60000") };
+    let stall = arm_app::commands::e2e_update_stall();
+    unsafe { std::env::remove_var("ARM_E2E_UPDATE_STALL_MS") };
+    assert_eq!(stall, None);
+}
+
+/// Under `e2e-testing`, `ARM_E2E_UPDATE_STALL_MS` holds the fetch back that many
+/// milliseconds before it reads the feed — the stand-in for a network that drops
+/// packets until the timeout, which the e2e specs use to prove the app stays
+/// usable, and quits promptly, while a check hangs. Anything but a whole number of
+/// milliseconds means no stall.
+#[cfg(feature = "e2e-testing")]
+#[test]
+fn under_the_e2e_feature_a_numeric_stall_holds_the_fetch_back() {
+    use std::time::{Duration, Instant};
+    let _env = UPDATE_SEAM_ENV
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+
+    // SAFETY: every test touching the update seams' variables holds UPDATE_SEAM_ENV.
+    unsafe { std::env::remove_var("ARM_E2E_UPDATE_STALL_MS") };
+    assert_eq!(arm_app::commands::e2e_update_stall(), None, "unset");
+
+    for malformed in ["", "abc", "-5", "1.5", " 250", "250ms"] {
+        unsafe { std::env::set_var("ARM_E2E_UPDATE_STALL_MS", malformed) };
+        let stall = arm_app::commands::e2e_update_stall();
+        assert_eq!(stall, None, "{malformed:?} must mean no stall");
+    }
+
+    unsafe { std::env::set_var("ARM_E2E_UPDATE_STALL_MS", "250") };
+    let stall = arm_app::commands::e2e_update_stall();
+    let started = Instant::now();
+    let _ = arm_app::commands::update_fetch();
+    let fetch_took = started.elapsed();
+    unsafe { std::env::remove_var("ARM_E2E_UPDATE_STALL_MS") };
+
+    assert_eq!(stall, Some(Duration::from_millis(250)));
+    assert!(
+        fetch_took >= Duration::from_millis(250),
+        "the fetch must wait out the stall, took {fetch_took:?}"
+    );
 }

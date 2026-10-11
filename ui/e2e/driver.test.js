@@ -239,6 +239,17 @@ describe('worker settings helpers', () => {
     expect(stored()).toEqual({ update_check: false, update_check_asked_version: '1.2.3' });
   });
 
+  // The stall specs need the check to run at launch, with no prompt in the way.
+  it('seeds a "check" answer when asked to, overriding an earlier "don\'t check"', () => {
+    plant(JSON.stringify({ lang: 'de', update_check: false, update_check_asked_version: '0.0.1' }));
+    seedUpdateCheckAnswer(scratch, '1.2.3', true);
+    expect(stored()).toEqual({
+      lang: 'de',
+      update_check: true,
+      update_check_asked_version: '1.2.3',
+    });
+  });
+
   it('replaces a file that is not a JSON object rather than failing the session', () => {
     plant('{ not json');
     seedUpdateCheckAnswer(scratch, '1.2.3');

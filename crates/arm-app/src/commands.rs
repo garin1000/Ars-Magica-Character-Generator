@@ -638,10 +638,38 @@ pub fn e2e_update_feed_override() -> Option<std::path::PathBuf> {
     None
 }
 
+/// E2E seam: how long the e2e build's fetch holds back before it reads the feed,
+/// standing in for a network that drops packets until the timeout. The e2e specs
+/// use it to prove the app stays usable, and quits promptly, while a check hangs.
+/// Same gate as [`E2E_UPDATE_FEED_ENV`]; both halves are proved in
+/// `tests/commands.rs`.
+#[cfg(feature = "e2e-testing")]
+const E2E_UPDATE_STALL_ENV: &str = "ARM_E2E_UPDATE_STALL_MS";
+
+/// The `ARM_E2E_UPDATE_STALL_MS` hold, when the `e2e-testing` feature is built
+/// in. Anything but a whole number of milliseconds means no hold.
+#[cfg(feature = "e2e-testing")]
+pub fn e2e_update_stall() -> Option<std::time::Duration> {
+    let millis = std::env::var(E2E_UPDATE_STALL_ENV)
+        .ok()?
+        .parse::<u64>()
+        .ok()?;
+    Some(std::time::Duration::from_millis(millis))
+}
+
+/// Always `None`: the shipped build never holds the check back on purpose.
+#[cfg(not(feature = "e2e-testing"))]
+pub fn e2e_update_stall() -> Option<std::time::Duration> {
+    None
+}
+
 /// The e2e build's fetch: the feed file, or a (silent) failure when none is
-/// named. Never the network.
+/// named, after the [`e2e_update_stall`] hold if one is set. Never the network.
 #[cfg(feature = "e2e-testing")]
 pub fn update_fetch() -> Result<Vec<u8>, update_check::FetchError> {
+    if let Some(hold) = e2e_update_stall() {
+        std::thread::sleep(hold);
+    }
     let feed = e2e_update_feed_override().ok_or_else(|| {
         update_check::FetchError::Transport(format!("{E2E_UPDATE_FEED_ENV} is not set"))
     })?;

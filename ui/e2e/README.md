@@ -51,10 +51,13 @@ On a first start the app asks whether to check GitHub for updates, and that
 modal makes the whole shell `inert`. So both configs' `beforeSession` seed
 every worker's settings file with a "Don't check" answer for the running
 version (`driver.js`'s `seedUpdateCheckAnswer`), which also keeps the portable
-binary offline. The one exception is `update-check.e2e.js`: its config home is
-emptied for a genuine first start, and it gets `ARM_E2E_UPDATE_FEED`, a file
-(`fixtures/update-feed-newer.json`) that the `e2e-testing` build reads instead
-of the network. A spec that writes settings itself must merge into the file,
+binary offline. The exceptions are the update-check specs, listed in
+`wdio.conf.js`'s `SPEC_UPDATE_SETUPS`. All of them get `ARM_E2E_UPDATE_FEED`, a
+file (`fixtures/update-feed-newer.json`) that the `e2e-testing` build reads
+instead of the network. `update-check.e2e.js` gets an emptied config home for a
+genuine first start. The two stall specs get "Check" already answered plus
+`ARM_E2E_UPDATE_STALL_MS`, a hold before the feed is read that stands in for a
+hanging network. A spec that writes settings itself must merge into the file,
 never replace it.
 
 ### Keyboard accelerators cannot be pressed from a spec (C7)
@@ -229,7 +232,8 @@ of ordering constraint recur across those merges:
   and `grog-wizard-aging.e2e.js`'s `RunEvent::ExitRequested bridge — unsaved
 changes` each end the app process or leave a native dialog WebDriver cannot
   dismiss, so each is the final describe of its file and nothing may run after
-  it in the same worker.
+  it in the same worker. So are the quit describes of the two update-check
+  stall specs, which is why there are two of them.
 - **Session-scoped state (language, window size) must be restored**, either by
   the describe's own `after` hook or by being the file's terminal describe, so
   the describes after it are not silently affected. See each merged file's own
@@ -295,6 +299,12 @@ language/window state, a terminal describe), why it is ordered the way it is.
 - `update-check.e2e.js` — the update-check consent prompt on a first start, a
   decline, being asked again by a newer version, enabling it, the notice for a
   newer release, and the Settings toggle (M6.6).
+- `update-check-stall.e2e.js` — while a check hangs (a 60 s hold), real work
+  completes before the check answers, and a clean quit ends the app within 5 s
+  (terminal).
+- `update-check-stall-dirty-quit.e2e.js` — while a check hangs (a 20 s hold),
+  the unsaved-changes guard still holds a quit, and the notice still arrives
+  behind the guard's dialog (terminal).
 
 Every spec requires the same display + release-build prerequisites: none of them
 can run without `WebKitWebDriver` and a display.

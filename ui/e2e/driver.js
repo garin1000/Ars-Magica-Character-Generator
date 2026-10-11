@@ -214,15 +214,17 @@ export function mergeWorkerSettings(configHome, patch) {
 }
 
 /**
- * Record a "Don't check" answer to the update-check consent prompt (M6.6) for
- * `version`, so the app launches without the prompt and never checks. Every
- * spec but the consent spec starts this way; see `e2e/README.md`.
+ * Record an answer to the update-check consent prompt (M6.6) for `version`, so
+ * the app launches without the prompt. "Don't check" by default, so it never
+ * checks — how every spec but the update-check ones starts; see `e2e/README.md`.
+ * The stall specs pass `enabled` to have the check run at launch.
  *
  * @param {string} configHome a {@link workerConfigHome} directory under `tmp/`
  * @param {string} version the running app's version (`ui/package.json`)
+ * @param {boolean} [enabled] the answer: `true` for "Check"
  */
-export function seedUpdateCheckAnswer(configHome, version) {
-  mergeWorkerSettings(configHome, { update_check: false, update_check_asked_version: version });
+export function seedUpdateCheckAnswer(configHome, version, enabled = false) {
+  mergeWorkerSettings(configHome, { update_check: enabled, update_check_asked_version: version });
 }
 
 /**

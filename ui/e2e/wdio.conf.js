@@ -38,8 +38,38 @@ import {
 } from './reap.js';
 import { appVersion, e2eLogDir, MAX_WORKERS, sharedWdioConfig } from './wdio.shared.conf.js';
 
-// The one spec that must see the update-check consent prompt (see beforeSession).
-const UPDATE_CONSENT_SPEC = 'update-check.e2e.js';
+/**
+ * How each update-check spec meets the check (M6.6), by spec basename. A spec
+ * not listed launches with "Don't check" already answered, so it never sees the
+ * prompt and never checks. Every listed spec gets {@link UPDATE_FEED}.
+ *
+ * - `firstStart`: an emptied config home, so the consent prompt shows (retries
+ *   included).
+ * - `enabled`: "Check" already answered for the running version, so the check
+ *   runs at launch with no prompt in the way.
+ * - `stallMs`: `ARM_E2E_UPDATE_STALL_MS`, how long the e2e build holds the check
+ *   before it reads the feed (`commands.rs::e2e_update_stall`). Exported so the
+ *   specs measure against the very hold the app was given.
+ */
+export const SPEC_UPDATE_SETUPS = {
+  'update-check.e2e.js': { firstStart: true },
+  // Long, because this file quits while the check still hangs.
+  'update-check-stall.e2e.js': { enabled: true, stallMs: 60000 },
+  // Shorter, because this file waits the hold out.
+  'update-check-stall-dirty-quit.e2e.js': { enabled: true, stallMs: 20000 },
+};
+
+/**
+ * The setup for the spec a session runs, or `undefined` for an ordinary spec.
+ *
+ * @param {string[]} specs the `file://` URLs wdio hands `beforeSession`
+ */
+function updateSetupFor(specs) {
+  const name = Object.keys(SPEC_UPDATE_SETUPS).find((basename) =>
+    specs.some((spec) => spec.endsWith(`/${basename}`)),
+  );
+  return name === undefined ? undefined : SPEC_UPDATE_SETUPS[name];
+}
 
 // Xvfb offers no DRI3 extension and no GPU, so Mesa's EGL hardware probe fails
 // and falls back to swrast on its own — noisy (`libEGL warning: DRI3 ...`) and
@@ -55,6 +85,10 @@ process.env.GALLIUM_DRIVER = 'llvmpipe';
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(dirname, '../..');
 const application = path.resolve(repoRoot, 'target/release/arm-app');
+
+// The file the `e2e-testing` build reads instead of GitHub's latest-release
+// response (`ARM_E2E_UPDATE_FEED`): a release newer than any real one.
+const UPDATE_FEED = path.resolve(dirname, 'fixtures/update-feed-newer.json');
 
 // Per-worker save/load target, so the flow stays deterministic and headless
 // while two concurrent workers no longer round-trip the same file. Specs
@@ -167,17 +201,23 @@ export const config = {
   //
   // M6.6: the update-check consent prompt makes the shell `inert` on a first
   // start, so every spec launches with a "Don't check" answer already on file —
-  // except the consent spec, which gets an emptied config home (a real first
-  // start, retries included) and `ARM_E2E_UPDATE_FEED`, the file the
-  // `e2e-testing` build reads instead of GitHub.
+  // except the update-check specs, which `SPEC_UPDATE_SETUPS` describes: the
+  // consent spec gets an emptied config home (a real first start, retries
+  // included), the stall specs a "Check" answer and a hold, and all of them
+  // `ARM_E2E_UPDATE_FEED`, the file the `e2e-testing` build reads instead of
+  // GitHub.
   beforeSession: async (config, capabilities, specs, cid) => {
     const configHome = workerConfigHome(repoRoot, process.env);
+    const updateSetup = updateSetupFor(specs);
     const updateEnv = {};
-    if (specs.some((spec) => spec.endsWith(`/${UPDATE_CONSENT_SPEC}`))) {
+    if (updateSetup?.firstStart) {
       resetWorkerConfigHome(configHome);
-      updateEnv.ARM_E2E_UPDATE_FEED = path.resolve(dirname, 'fixtures/update-feed-newer.json');
     } else {
-      seedUpdateCheckAnswer(configHome, appVersion(repoRoot));
+      seedUpdateCheckAnswer(configHome, appVersion(repoRoot), updateSetup?.enabled === true);
+    }
+    if (updateSetup) updateEnv.ARM_E2E_UPDATE_FEED = UPDATE_FEED;
+    if (updateSetup?.stallMs !== undefined) {
+      updateEnv.ARM_E2E_UPDATE_STALL_MS = String(updateSetup.stallMs);
     }
     tauriDriver = await startWorkerDriver(config, cid, {
       ARM_E2E_FILE: e2eFile,

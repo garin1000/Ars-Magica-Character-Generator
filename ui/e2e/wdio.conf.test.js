@@ -10,7 +10,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { driverPorts, workerConfigHome, workerIndexFromCid, workerSettingsFile } from './driver.js';
 import { pidRegistryDir } from './reap.js';
 import { config as portableConfig } from './wdio.portable.conf.js';
-import { config as standardConfig, e2eExportFile, e2eFile } from './wdio.conf.js';
+import {
+  config as standardConfig,
+  e2eExportFile,
+  e2eFile,
+  SPEC_UPDATE_SETUPS,
+} from './wdio.conf.js';
 
 // A fixed, recognizable stand-in pid — `registerDriverPid`/`killDriverTree`
 // need a real number to write a registry filename and to assert the kill
@@ -124,6 +129,15 @@ const uiVersion = JSON.parse(
 ).version;
 const updateFeed = path.resolve(repoRoot, 'ui/e2e/fixtures/update-feed-newer.json');
 
+// The shipped check's whole-request timeout
+// (`crates/arm-app/src/update_check.rs::FetchLimits::production`). A stall spec's
+// hold must outlast it, or it would not stand in for a check that hangs.
+const PRODUCTION_TIMEOUT_MS = 10000;
+
+// The specs that hold the check back to prove the app stays usable, and quits
+// promptly, while it hangs.
+const STALL_SPECS = ['update-check-stall.e2e.js', 'update-check-stall-dirty-quit.e2e.js'];
+
 /** A spec path in the `file://` URL form wdio hands `beforeSession`. */
 function specUrl(basename) {
   return `file://${path.resolve(repoRoot, 'ui/e2e/specs', basename)}`;
@@ -190,6 +204,7 @@ describe.each([
     });
     const [, , options] = spawn.mock.calls[0];
     expect(options.env.ARM_E2E_UPDATE_FEED).toBeUndefined();
+    expect(options.env.ARM_E2E_UPDATE_STALL_MS).toBeUndefined();
   });
 
   if (name === 'standard') {
@@ -206,8 +221,38 @@ describe.each([
       expect(fs.readdirSync(home)).toEqual([]);
       const [, , options] = spawn.mock.calls[0];
       expect(options.env.ARM_E2E_UPDATE_FEED).toBe(updateFeed);
+      expect(options.env.ARM_E2E_UPDATE_STALL_MS).toBeUndefined();
       expect(options.env.XDG_CONFIG_HOME).toBe(home);
     });
+
+    // The stall specs: the check must run at launch with no prompt in the way
+    // ("Check" already answered for the running version), read the newer-release
+    // feed, and be held back longer than the shipped timeout before it reads it —
+    // by exactly the hold the spec itself measures against.
+    it.each(STALL_SPECS)(
+      'gives %s an enabled check, the feed, and a hold past the production timeout',
+      async (spec) => {
+        const config = getConfig();
+        const home = workerConfigHome(repoRoot, process.env);
+        plantSettings(home, {
+          lang: 'de',
+          update_check: false,
+          update_check_asked_version: '0.0.1',
+        });
+
+        await config.beforeSession(config, [{}], [specUrl(spec)], '0-13');
+
+        expect(readSettings(home)).toEqual({
+          lang: 'de',
+          update_check: true,
+          update_check_asked_version: uiVersion,
+        });
+        const [, , options] = spawn.mock.calls[0];
+        expect(options.env.ARM_E2E_UPDATE_FEED).toBe(updateFeed);
+        expect(options.env.ARM_E2E_UPDATE_STALL_MS).toBe(String(SPEC_UPDATE_SETUPS[spec].stallMs));
+        expect(Number(options.env.ARM_E2E_UPDATE_STALL_MS)).toBeGreaterThan(PRODUCTION_TIMEOUT_MS);
+      },
+    );
 
     it('ships a feed announcing a release newer than any real one', () => {
       expect(JSON.parse(fs.readFileSync(updateFeed, 'utf8'))).toEqual({
