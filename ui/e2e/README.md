@@ -18,12 +18,17 @@ verify true Tauri IPC, the bundled rules resources, and the save/load flow.
 cd ui
 npm run test:e2e            # builds the release binary, then runs the suite
 npm run test:e2e:portable   # the portable-layout smoke check (see below)
+npm run test:e2e:reuse -- --spec ./e2e/specs/app-shell.e2e.js   # fast local rerun
 ```
 
 One command, both environments — no `xvfb-run` wrapper.
 
-`wdio.conf.js` builds `arm-app` in release, spawns `tauri-driver`, and launches
-the app. Native file dialogs can't be automated over WebDriver, so the app
+`wdio.conf.js` builds `arm-app` in release with `--features e2e-testing` into
+its **own cargo target dir**, `target/e2e`, copies `rules/` beside
+`target/e2e/release/arm-app`, spawns `tauri-driver`, and launches that binary.
+The gate's plain `target/release/arm-app` is never overwritten with the test
+seams, and each of the two builds stays a cargo no-op while its inputs are
+unchanged. The first e2e run builds every dependency once (about 7 min). Native file dialogs can't be automated over WebDriver, so the app
 honors the `ARM_E2E_FILE` environment seam (set by the config) to save/load a
 fixed temp path instead of opening a dialog. See
 `crates/arm-app/src/commands.rs`.
@@ -59,6 +64,30 @@ Neither seam exists in the portable run, which builds without the feature.
   affected (`docs/test-performance-2026-09.md` §3).
 - **`ARM_E2E_WORKERS`** sets how many spec files run at once. The default is 6
   (`wdio.shared.conf.js`). Anything but a positive integer is refused.
+- **`ARM_E2E_REUSE_BUILD=1`** (or `npm run test:e2e:reuse`, which needs no
+  environment prefix) skips the cargo build entirely and prints a loud
+  `REUSING` line. That happens only when the binary's size and mtime, the
+  content of `crates/**` + `Cargo.toml` + `Cargo.lock`, and `ui/dist` all still
+  match what the last successful e2e build recorded, and the frontend is current.
+  Otherwise it builds as usual. Anything but `1` or unset is refused. The gate
+  never uses it.
+
+### What the build skips
+
+- **`npm run build` leaves an unchanged `ui/dist` untouched.** Vite writes into
+  `tmp/vite-dist`, and `sync-dist.js` mirrors only the changed files into
+  `ui/dist` and deletes stale ones. arm-app embeds `ui/dist`, so new mtimes
+  alone used to force a ~40 s recompile on every build.
+- **The frontend stamp.** `build-freshness.js` (`begin`/`commit` around the
+  build, stamps in `tmp/build-stamps/`) records content hashes of Vite's inputs
+  and of `ui/dist`. It writes them only for a production build, and only if no
+  input changed while the build ran. While they still match, the e2e build skips
+  its frontend build.
+- **One `--config` per target dir.** tauri-cli hands `--config` to cargo as
+  `TAURI_CONFIG`, and tauri-build reruns whenever that changes. So the e2e build
+  always passes the same override, removing `beforeBuildCommand` and running
+  `npm run build` itself when needed. The portable build runs exactly the gate's
+  `cargo tauri build --no-bundle`, whose `target/release` it shares.
 
 ### The update-check consent prompt (M6.6)
 
@@ -111,8 +140,8 @@ in `crates/arm-app/tests/menu.rs`, against muda's own parser, because
 
 ## The portable-layout smoke check
 
-`npm run test:e2e` runs the binary from `target/release`, where Tauri takes it for
-a dev build and `BaseDirectory::Resource` already resolves to the executable's own
+`npm run test:e2e` runs the binary from `target/e2e/release`, where Tauri takes it
+for a dev build and `BaseDirectory::Resource` already resolves to the executable's own
 directory. A **portable** build — the archives `build-linux.sh` and `build-win.sh`
 produce, the folder on a USB stick — sits outside `target/`, where Resource
 resolves to `/usr/lib/<name>` instead; there the app only starts because
@@ -173,8 +202,11 @@ unit-tested in `display.test.js`, which runs under `npm run test:unit`.
 ```
 e2e/
   wdio.conf.js           # the runner: build, display preflight, tauri-driver, the ARM_E2E_* seams
+  wdio.reuse.conf.js     # the standard run with ARM_E2E_REUSE_BUILD on (npm run test:e2e:reuse)
   wdio.portable.conf.js  # the portable-layout run: build, stage outside target/, drive that copy
   stage-portable.js      # stages binary + rules/ into the gitignored tmp/portable/
+  build-freshness.js     # frontend stamp + e2e reuse decision; also `npm run build`'s begin/commit
+  sync-dist.js           # `npm run build`: mirrors tmp/vite-dist into ui/dist, changed files only
   display.js             # display preflight (pure; unit-tested by display.test.js)
   display.test.js        # runs under `npm run test:unit`, NOT under wdio
   helpers.js             # shared spec harness — `startCharacter()`, `startWizard()`, …

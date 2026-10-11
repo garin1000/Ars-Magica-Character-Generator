@@ -18,6 +18,16 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import {
+  e2eApplication,
+  e2eBuildReusable,
+  e2eTargetDir,
+  frontendIsFresh,
+  NO_BEFORE_BUILD_COMMAND,
+  reuseRequested,
+  rustInputsFingerprint,
+  writeE2eBuildStamp,
+} from './build-freshness.js';
 import { hasXvfbRun, preflightDisplay } from './display.js';
 import {
   allDriverPorts,
@@ -84,7 +94,10 @@ process.env.GALLIUM_DRIVER = 'llvmpipe';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(dirname, '../..');
-const application = path.resolve(repoRoot, 'target/release/arm-app');
+// The `e2e-testing` build lives in its own cargo target dir (`target/e2e`), so
+// it never overwrites the plain `target/release/arm-app` the gate builds, and
+// each of the two stays a cargo no-op while its own inputs are unchanged.
+const application = e2eApplication(repoRoot);
 
 // The file the `e2e-testing` build reads instead of GitHub's latest-release
 // response (`ARM_E2E_UPDATE_FEED`): a release newer than any real one.
@@ -134,6 +147,106 @@ export const SPECS_LONGEST_FIRST = [
   'update-check-stall.e2e.js',
 ].map((name) => path.resolve(dirname, 'specs', name));
 
+/**
+ * The launcher's preparation: display and port preflight, then the e2e binary
+ * (built, or with `reuse` the last build when it is still current), then the
+ * rules beside it.
+ *
+ * It builds the PRODUCTION binary (embedded frontend assets, no dev server).
+ * `cargo tauri build` runs in production mode and skips installers with
+ * --no-bundle; a plain `cargo build` would run the app in dev mode (loading the
+ * Vite dev URL). The binary lives under target/ (a cargo output dir, marked by
+ * its `.cargo-lock`), so `BaseDirectory::Resource` resolves to the exe dir and
+ * finds `target/e2e/release/rules`. NOTE: this is NOT the portable path — a
+ * binary shipped outside target/ resolves Resource to /usr/lib/<name> and
+ * relies on load_ruleset's exe-dir fallback (see commands.rs).
+ *
+ * The display check runs first, and runs here rather than in a session hook:
+ * onPrepare is the launcher process, the last point at which `DISPLAY` still
+ * reflects the real environment — every worker below it is already inside
+ * WebdriverIO's `xvfb-run` wrapper when headless.
+ *
+ * @param {{ reuse: boolean }} options `reuse` skips cargo when the last e2e
+ *   build is still current (`build-freshness.js`). Never used by the gate.
+ */
+export async function prepareRun({ reuse }) {
+  const problem = preflightDisplay(process.env, { xvfbRunAvailable: hasXvfbRun() });
+  if (problem) throw new Error(problem);
+
+  // Refuses immediately, naming the port, if a stale driver from a previous
+  // run is still holding one of the ports this run's workers would bind —
+  // instead of this run connecting to it and hanging the full ~120s
+  // session-creation timeout before an inscrutable `WebDriverError: timeout`
+  // (docs/open-todos.md, "the e2e harness leaks its driver processes").
+  const portProblem = await preflightDriverPorts(allDriverPorts(MAX_WORKERS));
+  if (portProblem) throw new Error(portProblem);
+
+  // The preflight above just proved every one of this run's ports is free,
+  // which means any driver a *previous* run's pid registry still names is
+  // already dead (whether cleanly reaped or a genuine orphan) — so it is
+  // safe to discard stale bookkeeping here rather than ever attempting to
+  // signal a pid that might since have been reused by an unrelated process.
+  fs.rmSync(pidRegistryDir(repoRoot), { recursive: true, force: true });
+
+  if (reuse && e2eBuildReusable(repoRoot)) {
+    console.log(
+      `*** ARM_E2E_REUSE_BUILD: REUSING ${path.relative(repoRoot, application)} from the last e2e build, NO cargo build ran (never for the gate) ***`,
+    );
+  } else {
+    buildE2eBinary();
+  }
+
+  const destRules = path.resolve(path.dirname(application), 'rules');
+  for (const sub of ['core', 'i18n']) {
+    fs.cpSync(path.resolve(repoRoot, 'rules', sub), path.resolve(destRules, sub), {
+      recursive: true,
+    });
+  }
+}
+
+/**
+ * `--features e2e-testing` is what compiles in the ARM_E2E_FILE /
+ * ARM_E2E_EXPORT_FILE seams this suite relies on (see beforeSession). They are
+ * off by default (crates/arm-app/Cargo.toml, K5/VA5 security review fix) so a
+ * plain release build never carries them — this is the one build step allowed
+ * to turn them on, and it builds into `target/e2e` so its binary never takes
+ * the place of the plain one.
+ */
+function buildE2eBinary() {
+  // `@wdio/cli` sets NODE_ENV=test in this launcher, and Vite keeps an
+  // inherited NODE_ENV, so without this the binary embeds a development
+  // frontend instead of the one that ships.
+  const env = { ...process.env, NODE_ENV: 'production' };
+
+  // The frontend build is the same `npm run build` tauri's beforeBuildCommand
+  // runs, but run here, so cargo's `--config` below never varies (see
+  // `NO_BEFORE_BUILD_COMMAND`) — and skipped when `ui/dist` is already current.
+  if (frontendIsFresh(repoRoot)) {
+    console.log('e2e build: ui/dist is the current production frontend; skipping its build');
+  } else {
+    const frontend = spawnSync('npm', ['run', 'build'], {
+      cwd: path.resolve(repoRoot, 'ui'),
+      stdio: 'inherit',
+      env,
+      shell: process.platform === 'win32',
+    });
+    if (frontend.status !== 0) throw new Error('frontend build failed');
+  }
+
+  const rustBefore = rustInputsFingerprint(repoRoot);
+  const build = spawnSync(
+    'cargo',
+    ['tauri', 'build', '--no-bundle', '--features', 'e2e-testing', ...NO_BEFORE_BUILD_COMMAND],
+    {
+      cwd: path.resolve(repoRoot, 'crates/arm-app'),
+      stdio: 'inherit',
+      env: { ...env, CARGO_TARGET_DIR: e2eTargetDir(repoRoot) },
+    },
+  );
+  if (build.status !== 0) throw new Error('cargo tauri build failed');
+  writeE2eBuildStamp(repoRoot, rustBefore);
+}
+
 let tauriDriver;
 // `afterSession` is not handed `cid` (only `beforeSession` is — see
 // `@wdio/runner`'s `afterSessionArgs`), so it is tracked here alongside the
@@ -152,64 +265,9 @@ export const config = {
   // invisible to `git status` and shared with every other project on the box.
   outputDir: e2eLogDir(repoRoot),
 
-  // Build the PRODUCTION binary (embedded frontend assets, no dev server), then
-  // stage the rules resources beside it. `cargo tauri build` runs in production
-  // mode and skips installers with --no-bundle; a plain `cargo build` would run
-  // the app in dev mode (loading the Vite dev URL). Here the binary lives under
-  // target/ (a cargo output dir), so `BaseDirectory::Resource` resolves to the
-  // exe dir and finds `target/release/rules`. NOTE: this is NOT the portable
-  // path — a binary shipped outside target/ resolves Resource to /usr/lib/<name>
-  // and relies on load_ruleset's exe-dir fallback (see commands.rs).
-  //
-  // The display check runs first, and runs *here* rather than in a session hook:
-  // onPrepare is the launcher process, the last point at which `DISPLAY` still
-  // reflects the real environment — every worker below it is already inside
-  // WebdriverIO's `xvfb-run` wrapper when headless.
-  onPrepare: async () => {
-    const problem = preflightDisplay(process.env, { xvfbRunAvailable: hasXvfbRun() });
-    if (problem) throw new Error(problem);
-
-    // Refuses immediately, naming the port, if a stale driver from a previous
-    // run is still holding one of the ports this run's workers would bind —
-    // instead of this run connecting to it and hanging the full ~120s
-    // session-creation timeout before an inscrutable `WebDriverError: timeout`
-    // (docs/open-todos.md, "the e2e harness leaks its driver processes").
-    const portProblem = await preflightDriverPorts(allDriverPorts(MAX_WORKERS));
-    if (portProblem) throw new Error(portProblem);
-
-    // The preflight above just proved every one of this run's ports is free,
-    // which means any driver a *previous* run's pid registry still names is
-    // already dead (whether cleanly reaped or a genuine orphan) — so it is
-    // safe to discard stale bookkeeping here rather than ever attempting to
-    // signal a pid that might since have been reused by an unrelated process.
-    fs.rmSync(pidRegistryDir(repoRoot), { recursive: true, force: true });
-
-    // `--features e2e-testing` is what compiles in the ARM_E2E_FILE /
-    // ARM_E2E_EXPORT_FILE seams this same suite relies on below (see
-    // beforeSession). They are off by default (crates/arm-app/Cargo.toml,
-    // K5/VA5 security review fix) so a plain release build never carries
-    // them — this is the one build step allowed to turn them on.
-    const build = spawnSync(
-      'cargo',
-      ['tauri', 'build', '--no-bundle', '--features', 'e2e-testing'],
-      {
-        cwd: path.resolve(repoRoot, 'crates/arm-app'),
-        stdio: 'inherit',
-        // `@wdio/cli` sets NODE_ENV=test in this launcher, and Vite keeps an
-        // inherited NODE_ENV, so without this the binary embeds a development
-        // frontend instead of the one that ships.
-        env: { ...process.env, NODE_ENV: 'production' },
-      },
-    );
-    if (build.status !== 0) throw new Error('cargo tauri build failed');
-
-    const destRules = path.resolve(repoRoot, 'target/release/rules');
-    for (const sub of ['core', 'i18n']) {
-      fs.cpSync(path.resolve(repoRoot, 'rules', sub), path.resolve(destRules, sub), {
-        recursive: true,
-      });
-    }
-  },
+  // `ARM_E2E_REUSE_BUILD=1` (or `npm run test:e2e:reuse`) may skip the build;
+  // see `prepareRun`. A value other than 1 or unset is refused.
+  onPrepare: async () => prepareRun({ reuse: reuseRequested(process.env) }),
 
   // tauri-driver bridges WebDriver to the platform webdriver. The spawned app
   // inherits ARM_E2E_FILE and ARM_E2E_EXPORT_FILE so save/load and the Markdown

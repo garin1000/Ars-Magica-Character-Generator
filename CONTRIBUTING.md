@@ -103,7 +103,7 @@ that has not been gated locally will be sent back, so please run all of it:
 cargo test --workspace
 cargo clippy --workspace -- -D warnings
 cargo fmt --check
-cd ui && npm run test:unit && npm run lint && npm run format:check && cd ..
+cd ui && npm run test:unit && npm run lint && cd ..
 
 # The authoritative step. `cargo test` and vitest do NOT type-check the frontend
 # or build the production app, so type errors and production-only breakage slip

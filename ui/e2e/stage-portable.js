@@ -48,6 +48,12 @@ export const portableApp = path.resolve(portableDir, 'arm-app');
  */
 export function stagePortableApp({ build = true } = {}) {
   if (build) {
+    // Exactly the gate's command, so it shares the gate's `target/release`
+    // without recompiling arm-app. No `--config`: tauri-cli passes it to cargo
+    // as TAURI_CONFIG, which tauri-build reruns on, so a different one here
+    // would recompile arm-app now and again at the gate's next build. The
+    // frontend build in it rewrites nothing in `ui/dist` when nothing changed
+    // (`sync-dist.js`), so cargo is a no-op after a gate build.
     const result = spawnSync('cargo', ['tauri', 'build', '--no-bundle'], {
       cwd: path.resolve(repoRoot, 'crates/arm-app'),
       stdio: 'inherit',

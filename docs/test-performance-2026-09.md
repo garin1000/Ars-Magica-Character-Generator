@@ -191,15 +191,15 @@ session per spec file, so it is the same thing as consolidation.
 
 ## 5. Operational cautions
 
-- **Never start an e2e run while another is going.** Fixed port 4444, and
-  `onPrepare` rewrites `target/release`.
-- **`target/release` may carry the e2e seams.** `ui/e2e/wdio.conf.js` builds
-  with `--features e2e-testing`, so after any e2e run the local binary has the
-  `ARM_E2E_FILE` / `ARM_E2E_EXPORT_FILE` seams compiled in. Rebuild clean before
-  manual testing. This does **not** affect releases: `.github/workflows/release.yml`
+- **Never start an e2e run while another is going.** The driver ports are
+  shared, and `onPrepare` rewrites `target/e2e` (since Phase 2, §7).
+- **~~`target/release` may carry the e2e seams.~~ Resolved 2026-10-11 (§7).**
+  The `--features e2e-testing` build now goes into its own cargo target dir,
+  `target/e2e`, and the suite runs `target/e2e/release/arm-app`. The plain
+  `target/release/arm-app` is only ever written by plain builds (the gate, the
+  portable staging). Releases were never affected: `.github/workflows/release.yml`
   builds from a fresh checkout with a plain `cargo tauri build`, and the feature
-  is off by default (`crates/arm-app/Cargo.toml:51-52`) — verified 2026-09-10
-  against the v0.3.0 release path.
+  is off by default (`crates/arm-app/Cargo.toml:51-52`), verified 2026-09-10.
 - **Raw data survives.** `tmp/e2e-logs/` holds 169 logs including the full
   2026-09-09 43-spec run, so the numbers above are re-derivable. Caveat:
   `app-quit-bridge-clean.e2e-0-0.log` was overwritten by single-spec
@@ -241,3 +241,57 @@ Changes, all in `ui/e2e/`:
 - **The dirty-quit hold stays at 20 s.** Its first `it` ends 1.9–3.8s after
   session start (4–8 workers). 8 s would leave only a 2.1–2.8× margin, under
   the 3× required, and the spec is not on the critical path.
+
+## 7. Phase 2 results (2026-10-11): stop rebuilding what's already built
+
+Changes (`ui/e2e/`, `ui/package.json`):
+- **`npm run build` no longer churns `ui/dist`.** Vite writes into `tmp/vite-dist`,
+  and `sync-dist.js` mirrors only the changed files into `ui/dist`, deleting stale
+  ones. So an unchanged frontend leaves every mtime alone, and cargo no longer
+  recompiles arm-app (§3a (d)). Checked: same hashed names and bytes as a plain
+  `vite build`, `diff -r` identical.
+- **The e2e build has its own target dir, `target/e2e`** (`CARGO_TARGET_DIR`;
+  tauri-cli honours it). Rules are copied beside `target/e2e/release/arm-app`.
+  Resource still resolves to the exe dir there, since tauri keys on `.cargo-lock`.
+  After an e2e run the plain binary has 0 `ARM_E2E_FILE` strings and the e2e
+  binary has 1. The cost is a one-time cold build of 7m13s, and 1.3 GB on disk.
+- **Frontend stamp** (`build-freshness.js`, `tmp/build-stamps/`). `npm run build`
+  records content hashes of Vite's inputs and of `ui/dist`, but only for a
+  production build, and only if the inputs did not change while it ran. When
+  they still match, the e2e build skips its own `npm run build`. A stamp IO
+  failure only warns, because `npm run build` is the release `beforeBuildCommand`.
+- **TAURI_CONFIG trap.** tauri-cli passes `--config` to cargo as `TAURI_CONFIG`,
+  and tauri-build reruns on any change to it (`rerun-if-env-changed`), which costs
+  an arm-app recompile (~45 s). So a target dir must always see the same
+  `--config`:
+  - the e2e build always removes `beforeBuildCommand` and runs the frontend
+    itself, when it is stale;
+  - the portable build runs exactly the gate's command.
+- **`ARM_E2E_REUSE_BUILD=1` / `npm run test:e2e:reuse`** skips cargo when the
+  binary, the Rust inputs and the frontend still match the last e2e build. It is
+  opt-in, prints a loud line, and is never used by the gate.
+- **Lint** caches eslint and prettier in `tmp/lint-cache/`. `format:check` was
+  dropped from the documented gate, because `lint` already runs `prettier --check`.
+  CI still runs both; that was left as it is.
+
+Gate sequence, warm, no source change (one run each; e2e at 6 workers):
+
+| Step | Before | After |
+|---|---|---|
+| `cargo tauri build --no-bundle` | 55–58 s (arm-app recompiled) | **14.4 s** (frontend 14 s, cargo 0.28 s) |
+| `npm run test:e2e` | 3:12 (build ~57 s) | **2:23** (build ~1 s, cargo 0.28 s) |
+| `npm run test:e2e:portable` | ~61 s (build 56 s) | **26 s** (frontend ~14 s, cargo 0.28 s) |
+| one-spec rerun (`--spec update-check`) | ~70 s | **16 s**; 14.8 s with reuse |
+| `npm run lint` | 18 s | 18.8 s cold cache, **1.8–2.0 s** warm |
+
+- **A comment edit in `ui/src`.** The gate rebuilt the frontend. The bundle was
+  byte-identical, so `ui/dist` stayed untouched and cargo was a no-op, and the
+  stamp moved to the new inputs. e2e and portable then took the same times as
+  above.
+- **The e2e build after a revert, with no gate build in between.** The stamp was
+  stale, so e2e ran `npm run build` itself: 34 s against 16 s for the one-spec rerun.
+- **One unexplained recompile.** The first warm e2e build after the cold one
+  recompiled arm-app once (37 s), though no input was newer. Every later e2e
+  build was a 0.3 s no-op, including straight after a gate build.
+- **Reuse is now worth only ~1.5 s,** because the default path already costs
+  about 1 s of build. It stays as a cheap opt-in.

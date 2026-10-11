@@ -11,16 +11,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "svelte-check --tsconfig ./tsconfig.json && vite build",
+    "build": "node e2e/build-freshness.js begin && svelte-check --tsconfig ./tsconfig.json && vite build --outDir ../tmp/vite-dist --emptyOutDir && node e2e/sync-dist.js && node e2e/build-freshness.js commit",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "lint": "eslint . && prettier --check .",
+    "lint": "eslint . --cache --cache-location ../tmp/lint-cache/eslint.json && prettier --check . --cache --cache-location ../tmp/lint-cache/prettier.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "wdio run ./e2e/wdio.conf.js",
+    "test:e2e:reuse": "wdio run ./e2e/wdio.reuse.conf.js",
     "test:e2e:portable": "wdio run ./e2e/wdio.portable.conf.js"
   },
   "devDependencies": {

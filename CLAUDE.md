@@ -530,8 +530,8 @@ cd ui && npm run dev
 # Frontend type-check (svelte-check) — vitest does NOT type-check
 cd ui && npm run check
 
-# Frontend lint/format
-cd ui && npm run lint && npm run format:check
+# Frontend lint/format — `lint` is eslint + `prettier --check`, both cached in tmp/lint-cache/
+cd ui && npm run lint
 
 # Frontend unit tests (both projects — see "Frontend test environments" below)
 cd ui && npm run test:unit
@@ -541,6 +541,10 @@ cargo tauri dev
 
 # E2E tests (wdio + tauri-driver, drives the REAL release binary)
 cd ui && npm run test:e2e
+
+# Local fast rerun only, never the gate: reuses the last e2e build when it is
+# still current (ARM_E2E_REUSE_BUILD; see ui/e2e/README.md)
+cd ui && npm run test:e2e:reuse -- --spec ./e2e/specs/<file>.e2e.js
 
 # Portable-layout smoke check: stages the binary + rules/ outside target/ and
 # proves the app boots and loads its ruleset there. Separate run, not part of the
@@ -600,9 +604,11 @@ E2E tests drive the **real release binary** — the only layer that exercises th
 shipped production binary through real IPC + bundled rules resources, so run it
 when a change touches the app's runtime behavior. (Machine-specific setup —
 installed tool paths, display availability — lives in the gitignored
-`CLAUDE.local.md`, imported at the end of this file.) The standard suite runs from
-`target/release`, where `BaseDirectory::Resource` already resolves to the exe dir,
-so it does **not** cover the **portable** layout — where Resource points at a
+`CLAUDE.local.md`, imported at the end of this file.) The standard suite builds
+with `--features e2e-testing` into its own cargo target dir and runs
+`target/e2e/release/arm-app`, so the gate's plain `target/release/arm-app` never
+carries the test seams. Under `target/`, `BaseDirectory::Resource` already
+resolves to the exe dir, so the suite does **not** cover the **portable** layout — where Resource points at a
 system path that does not exist and only `load_ruleset`'s exe-dir fallback finds
 the rules (see `crates/arm-app/src/commands.rs`). `npm run test:e2e:portable`
 (`ui/e2e/wdio.portable.conf.js` + `stage-portable.js`) stages the binary and
@@ -623,7 +629,8 @@ cargo test --workspace
 # below it.
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --check
-cd ui && npm run test:unit && npm run lint && npm run format:check && cd ..
+# `lint` already runs `prettier --check .`, so `format:check` is not a separate step.
+cd ui && npm run test:unit && npm run lint && cd ..
 
 # FULL RELEASE APP COMPILE — non-negotiable final gate.
 # Runs the frontend build (svelte-check type-check + vite) via beforeBuildCommand
@@ -631,6 +638,8 @@ cd ui && npm run test:unit && npm run lint && npm run format:check && cd ..
 # (vitest) do NOT type-check the frontend or build the production app, so type
 # errors and production-only breakage slip past every other gate — only this
 # command catches them. This is what `./arm-char-gen.sh` runs to launch.
+# `npm run build` writes Vite's output to tmp/vite-dist and mirrors only changed
+# files into ui/dist, so an unchanged frontend no longer forces arm-app to recompile.
 cargo tauri build --no-bundle
 ```
 

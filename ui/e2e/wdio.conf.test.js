@@ -8,6 +8,12 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  e2eBuildReusable,
+  frontendIsFresh,
+  rustInputsFingerprint,
+  writeE2eBuildStamp,
+} from './build-freshness.js';
+import {
   allDriverPorts,
   driverPorts,
   workerConfigHome,
@@ -23,6 +29,7 @@ import {
   e2eFile,
   SPEC_UPDATE_SETUPS,
 } from './wdio.conf.js';
+import { config as reuseConfig } from './wdio.reuse.conf.js';
 
 // A fixed, recognizable stand-in pid — `registerDriverPid`/`killDriverTree`
 // need a real number to write a registry filename and to assert the kill
@@ -46,6 +53,16 @@ vi.mock('node:child_process', () => ({
 // every port would read as occupied, so the preflight reports them all free.
 vi.mock('./ports.js', () => ({
   preflightDriverPorts: vi.fn(async () => null),
+}));
+// The build-freshness decisions are unit-tested in `build-freshness.test.js`;
+// here they are fixed per test, so the configs' wiring can be checked without
+// hashing the real repository or writing the real stamps.
+vi.mock('./build-freshness.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  frontendIsFresh: vi.fn(() => false),
+  e2eBuildReusable: vi.fn(() => false),
+  rustInputsFingerprint: vi.fn(() => 'rust-fingerprint'),
+  writeE2eBuildStamp: vi.fn(),
 }));
 vi.mock('node:net', () => ({
   default: {
@@ -440,13 +457,16 @@ describe.each([
   ['standard', () => standardConfig],
   ['portable', () => portableConfig],
 ])('%s config onPrepare', (_name, getConfig) => {
+  // A current frontend, so the cargo build is the one spawn (see "frontend build").
   beforeEach(() => {
     vi.clearAllMocks();
     spawnSync.mockReturnValue({ status: 1 });
+    frontendIsFresh.mockReturnValue(true);
   });
 
   afterEach(() => {
     spawnSync.mockReset();
+    frontendIsFresh.mockReturnValue(false);
   });
 
   it('builds the release binary with a production frontend', async () => {
@@ -464,6 +484,227 @@ describe.each([
     await expect(config.onPrepare()).rejects.toThrow();
 
     expect(preflightDriverPorts).toHaveBeenCalledWith(allDriverPorts(config.maxInstances));
+  });
+});
+
+/** The `--config` override a build spawn carries, parsed, or `undefined`. */
+function configOverride(args) {
+  const at = args.indexOf('--config');
+  return at === -1 ? undefined : JSON.parse(args[at + 1]);
+}
+
+// tauri-cli hands `--config` to cargo as the TAURI_CONFIG env var, and
+// tauri-build reruns on any change to it (`cargo:rerun-if-env-changed`), which
+// recompiles arm-app (~45 s). So a target dir must see the SAME `--config` on
+// every build. The e2e build, alone in `target/e2e`, always removes
+// `beforeBuildCommand` (a JSON merge-patch `null`) and runs the production
+// frontend build itself, only when `ui/dist` is not current
+// (`build-freshness.js`). The portable build shares `target/release` with the
+// gate's plain `cargo tauri build`, so it must build exactly like the gate.
+describe('standard config frontend build', () => {
+  let log;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    spawnSync.mockReturnValue({ status: 0 });
+    log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(fs, 'cpSync').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    spawnSync.mockReset();
+    frontendIsFresh.mockReturnValue(false);
+    log.mockRestore();
+    fs.cpSync.mockRestore();
+  });
+
+  function cargoCalls() {
+    return spawnSync.mock.calls.filter(([command]) => command === 'cargo');
+  }
+
+  function npmCalls() {
+    return spawnSync.mock.calls.filter(([command]) => command === 'npm');
+  }
+
+  it('always removes beforeBuildCommand, so TAURI_CONFIG never changes in target/e2e', async () => {
+    frontendIsFresh.mockReturnValue(false);
+    await standardConfig.onPrepare();
+    frontendIsFresh.mockReturnValue(true);
+    await standardConfig.onPrepare();
+
+    const overrides = cargoCalls().map(([, args]) => configOverride(args));
+    expect(overrides).toEqual([
+      { build: { beforeBuildCommand: null } },
+      { build: { beforeBuildCommand: null } },
+    ]);
+  });
+
+  it('builds the production frontend first when ui/dist is not current', async () => {
+    frontendIsFresh.mockReturnValue(false);
+    await standardConfig.onPrepare();
+
+    expect(npmCalls()).toHaveLength(1);
+    const [, args, options] = npmCalls()[0];
+    expect(args).toEqual(['run', 'build']);
+    expect(options.cwd).toBe(path.resolve(repoRoot, 'ui'));
+    expect(options.env.NODE_ENV).toBe('production');
+    expect(spawnSync.mock.calls.map(([command]) => command)).toEqual(['npm', 'cargo']);
+  });
+
+  it('skips the frontend build when ui/dist is current, saying so', async () => {
+    frontendIsFresh.mockReturnValue(true);
+    await standardConfig.onPrepare();
+
+    expect(npmCalls()).toHaveLength(0);
+    expect(log).toHaveBeenCalledWith(expect.stringMatching(/frontend/i));
+  });
+
+  it('stops before cargo when the frontend build fails', async () => {
+    frontendIsFresh.mockReturnValue(false);
+    spawnSync.mockReturnValue({ status: 1 });
+    await expect(standardConfig.onPrepare()).rejects.toThrow(/frontend build failed/);
+
+    expect(cargoCalls()).toHaveLength(0);
+  });
+});
+
+describe('portable config frontend build', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    spawnSync.mockReturnValue({ status: 1 });
+  });
+
+  afterEach(() => {
+    spawnSync.mockReset();
+    frontendIsFresh.mockReturnValue(false);
+  });
+
+  it.each([false, true])(
+    'builds exactly like the gate, with no --config (frontend current: %s)',
+    async (fresh) => {
+      frontendIsFresh.mockReturnValue(fresh);
+      await expect(portableConfig.onPrepare()).rejects.toThrow(/cargo tauri build failed/);
+
+      expect(spawnSync).toHaveBeenCalledTimes(1);
+      const [command, args] = spawnSync.mock.calls[0];
+      expect([command, ...args]).toEqual(['cargo', 'tauri', 'build', '--no-bundle']);
+    },
+  );
+});
+
+// The `e2e-testing` binary gets its own cargo target dir, so it never
+// overwrites the plain `target/release/arm-app` the gate built — the seams
+// hazard of docs/test-performance-2026-09.md §5 — and each of the two stays a
+// cargo no-op while its inputs are unchanged.
+describe('standard config e2e build', () => {
+  const e2eRelease = path.resolve(repoRoot, 'target/e2e/release');
+  const originalReuse = process.env.ARM_E2E_REUSE_BUILD;
+  let cpSync;
+  let log;
+
+  // A current frontend, so the cargo build is the one spawn (see "frontend build").
+  beforeEach(() => {
+    vi.clearAllMocks();
+    spawnSync.mockReturnValue({ status: 0 });
+    frontendIsFresh.mockReturnValue(true);
+    cpSync = vi.spyOn(fs, 'cpSync').mockImplementation(() => {});
+    log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    delete process.env.ARM_E2E_REUSE_BUILD;
+  });
+
+  afterEach(() => {
+    spawnSync.mockReset();
+    frontendIsFresh.mockReturnValue(false);
+    e2eBuildReusable.mockReturnValue(false);
+    cpSync.mockRestore();
+    log.mockRestore();
+    if (originalReuse === undefined) delete process.env.ARM_E2E_REUSE_BUILD;
+    else process.env.ARM_E2E_REUSE_BUILD = originalReuse;
+  });
+
+  function rulesCopyDestinations() {
+    return cpSync.mock.calls.map(([, dest]) => dest);
+  }
+
+  it('drives the binary in target/e2e/release', () => {
+    expect(standardConfig.capabilities[0]['tauri:options'].application).toBe(
+      path.resolve(e2eRelease, 'arm-app'),
+    );
+  });
+
+  it('builds the e2e-testing binary into target/e2e with a production frontend', async () => {
+    await standardConfig.onPrepare();
+
+    expect(spawnSync).toHaveBeenCalledTimes(1);
+    const [, args, options] = spawnSync.mock.calls[0];
+    expect(args).toEqual(expect.arrayContaining(['--features', 'e2e-testing']));
+    expect(options.env.CARGO_TARGET_DIR).toBe(path.resolve(repoRoot, 'target/e2e'));
+    expect(options.env.NODE_ENV).toBe('production');
+  });
+
+  it('copies rules/core and rules/i18n beside the e2e binary', async () => {
+    await standardConfig.onPrepare();
+
+    expect(rulesCopyDestinations()).toEqual([
+      path.resolve(e2eRelease, 'rules/core'),
+      path.resolve(e2eRelease, 'rules/i18n'),
+    ]);
+  });
+
+  // The Rust inputs are fingerprinted before cargo starts, so an edit made
+  // while it compiles is never stamped as built.
+  it('records a successful build for a later reuse', async () => {
+    await standardConfig.onPrepare();
+
+    expect(writeE2eBuildStamp).toHaveBeenCalledWith(repoRoot, 'rust-fingerprint');
+    expect(rustInputsFingerprint.mock.invocationCallOrder[0]).toBeLessThan(
+      spawnSync.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('records nothing for a failed build', async () => {
+    spawnSync.mockReturnValue({ status: 1 });
+    await expect(standardConfig.onPrepare()).rejects.toThrow(/cargo tauri build failed/);
+
+    expect(writeE2eBuildStamp).not.toHaveBeenCalled();
+  });
+
+  // Opt-in only, and only while the last e2e build is still current.
+  it('skips cargo only with ARM_E2E_REUSE_BUILD=1 and a current build', async () => {
+    e2eBuildReusable.mockReturnValue(true);
+    await standardConfig.onPrepare();
+    expect(spawnSync).toHaveBeenCalledTimes(1);
+
+    process.env.ARM_E2E_REUSE_BUILD = '1';
+    e2eBuildReusable.mockReturnValue(false);
+    await standardConfig.onPrepare();
+    expect(spawnSync).toHaveBeenCalledTimes(2);
+
+    e2eBuildReusable.mockReturnValue(true);
+    await standardConfig.onPrepare();
+    expect(spawnSync).toHaveBeenCalledTimes(2);
+  });
+
+  it('says loudly that it reused the binary, and still stages the rules', async () => {
+    process.env.ARM_E2E_REUSE_BUILD = '1';
+    e2eBuildReusable.mockReturnValue(true);
+    await standardConfig.onPrepare();
+
+    expect(log).toHaveBeenCalledWith(expect.stringMatching(/ARM_E2E_REUSE_BUILD/));
+    expect(rulesCopyDestinations()).toEqual([
+      path.resolve(e2eRelease, 'rules/core'),
+      path.resolve(e2eRelease, 'rules/i18n'),
+    ]);
+  });
+
+  // `npm run test:e2e:reuse`: the same suite, reuse on, with no environment
+  // prefix needed — so it works from any shell and from an agent.
+  it('has a reuse config that reuses a current build without the variable', async () => {
+    expect(reuseConfig.specs).toEqual(standardConfig.specs);
+    e2eBuildReusable.mockReturnValue(true);
+    await reuseConfig.onPrepare();
+
+    expect(spawnSync).not.toHaveBeenCalled();
   });
 });
 

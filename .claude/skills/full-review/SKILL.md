@@ -197,7 +197,8 @@ which bypass this machinery completely. To stay inside it, every agent MUST:
   (`cd:*` + `npm run:*`) so the whole line auto-approves, and using the absolute path makes
   it independent of the current working directory. Do NOT rely on a bare `cd ui` from an
   earlier call persisting, and do NOT use `npm --prefix ui run …` (not allowlisted). Run
-  `npm run check`, `npm run test:unit`, `npm run lint`, `npm run format:check` this way.
+  `npm run check`, `npm run test:unit`, `npm run lint` this way (`lint` already runs
+  `prettier --check`, so `format:check` is not a separate step).
 - File reads inside the repo and under the session scratchpad/`tmp/` need no approval —
   use the **Read** tool for them (see the `cat`/`head`/`tail` rule above); do not read
   unrelated out-of-repo paths.
@@ -291,8 +292,8 @@ Prompt context (paste PROJECT_CONTEXT below + this):
 > If ui/ exists, also run its type-check, tests, lint, and format — each as a
 > `cd <repo>/ui && npm run <script>` compound (see Command hygiene), e.g.
 > `cd <repo>/ui && npm run check` (with `<repo>` as the absolute repository root),
-> then `npm run test:unit`,
-> `npm run lint`, `npm run format:check`.
+> then `npm run test:unit` and
+> `npm run lint` (which already runs `prettier --check`).
 > `npm run check` (svelte-check) is MANDATORY: vitest does NOT type-check, so TS
 > type errors (including in test files) pass `test:unit` yet break the build.
 > If ui/ does not exist, skip — do NOT report it.
@@ -355,8 +356,8 @@ Run a verification agent (or bash commands directly) to confirm:
 3. `cargo fmt --check` — clean
 4. `cargo tarpaulin | tail -3` — production-code coverage percentage (scope and
    options come from `tarpaulin.toml`; see the QA reviewer above)
-5. If ui/ exists: `cd <repo>/ui && npm run check`, then `npm run test:unit`,
-   `npm run lint`, `npm run format:check` — each a `cd <repo>/ui && npm run <script>`
+5. If ui/ exists: `cd <repo>/ui && npm run check`, then `npm run test:unit` and
+   `npm run lint` (eslint + `prettier --check`) — each a `cd <repo>/ui && npm run <script>`
    compound (see Command hygiene) — all clean
 6. **FULL RELEASE APP COMPILE (mandatory): `cargo tauri build --no-bundle`** — must
    succeed. This is the only gate that type-checks the frontend and builds the
