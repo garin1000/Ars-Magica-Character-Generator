@@ -230,7 +230,7 @@ describe('guided wizard: magus', () => {
   // House Tytalus grants one fixed free Minor Virtue (Self-Confident) and leaves no
   // specialisation choice open, so the House step is a single select — the point
   // here is that the step is reachable and its choice sticks, not the grant
-  // machinery, which `magus-editor.e2e.js`'s `hermetic houses` describe drives in
+  // machinery, which `magus-arts-houses.e2e.js`'s `hermetic houses` describe drives in
   // full.
   const HOUSE = 'house.tytalus';
 

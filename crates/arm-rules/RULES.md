@@ -742,7 +742,7 @@ domain }`). `ParameterPicker.svelte` renders a **dropdown** for every domain exc
   `entity.selections` index, so the same row under two headings would delete each
   other and make one selection read as two against the point budget. That
   heading always agrees with the row's first category badge, which renders the
-  same resolution and which `ui/e2e/specs/magus-editor.e2e.js`'s "lists a
+  same resolution and which `ui/e2e/specs/magus-arts-houses.e2e.js`'s "lists a
   granted Virtue under its own category heading, inline with the bought rows"
   asserts.
 - **Permitting is ANY, and forbidding is EVERY — the two are mirrors**

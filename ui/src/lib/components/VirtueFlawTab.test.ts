@@ -345,7 +345,7 @@ describe('VirtueFlawTab offers a dual-category item under every heading', () => 
 // permitted or forbidden). The badge row therefore shows one `category-<id>`
 // badge per category in force, in the descriptor's own order, so the FIRST
 // badge names the category the Selected row's heading uses, which is what
-// `magus-editor.e2e.js` compares that heading against. The narrowed case, where
+// `magus-arts-houses.e2e.js` compares that heading against. The narrowed case, where
 // a `taken_as` reading was chosen, is asserted in its own block below.
 describe('VirtueFlawTab badges every category an item carries', () => {
   /** The `.badge.type` texts of the Virtues selection column, in document order. */
@@ -372,7 +372,7 @@ describe('VirtueFlawTab badges every category an item carries', () => {
 
   // A Selected row sits under ONE heading — with no reading chosen, the
   // descriptor's first-listed category, the same one its first badge names,
-  // which is the invariant magus-editor.e2e.js asserts.
+  // which is the invariant magus-arts-houses.e2e.js asserts.
   it('puts a dual-category row under the heading its first badge names', () => {
     resetEntity([{ ref: 'virtue.sufi' }]);
     expect(columnOutline(html())).toEqual(['# Social Status', 'Sufi']);
@@ -477,7 +477,7 @@ describe('VirtueFlawTab shows the category a dual item was taken as', () => {
     resetEntity([{ ref: 'virtue.sufi', params: { taken_as: 'supernatural' } }]);
     const body = html();
     expect(columnOutline(body)).toEqual(['# Supernatural', 'Sufi']);
-    // The invariant `magus-editor.e2e.js` asserts: heading === first badge.
+    // The invariant `magus-arts-houses.e2e.js` asserts: heading === first badge.
     expect(typeBadges(body)[0]).toBe('Supernatural');
   });
 

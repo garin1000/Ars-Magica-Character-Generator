@@ -336,7 +336,7 @@
 
      Either way a SELECTED row sits under exactly one heading (it is removed by
      its entity index) and that heading is this list's first entry — the same one
-     the FIRST badge names, which is what magus-editor.e2e.js compares the two
+     the FIRST badge names, which is what magus-arts-houses.e2e.js compares the two
      against. The Available picker has no selection to narrow against and lists a
      dual-category item under both headings. -->
 {#snippet nameWrap(ref: string, params: Record<string, string> | undefined, granted = false)}

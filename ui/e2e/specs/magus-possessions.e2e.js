@@ -9,7 +9,7 @@
 //
 // `markdown export`'s German-locale test restores `en` in its own body before
 // the end of the file, following the pattern already used at
-// `magus-editor.e2e.js` (ex-`arts.e2e.js`) and `wizard-flow.e2e.js`
+// `magus-arts-houses.e2e.js` (ex-`arts.e2e.js`) and `wizard-flow.e2e.js`
 // (ex-`tab-area.e2e.js`).
 
 import { $, $$, browser, expect } from '@wdio/globals';

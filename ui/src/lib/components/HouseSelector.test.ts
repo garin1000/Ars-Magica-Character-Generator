@@ -149,7 +149,7 @@ describe('HouseSelector grant selects (S11/S12)', () => {
 // G12 (full-audit test-adequacy): HouseSelector had no test file beyond the
 // S11/S12 a11y fix above — its three grant kinds (fixed/choice/open) and the
 // empty/no-house state were exercised only via the slow e2e layer
-// (`magus-editor.e2e.js`'s `hermetic houses`). These assert the same branches at
+// (`magus-arts-houses.e2e.js`'s `hermetic houses`). These assert the same branches at
 // the fast SSR layer.
 describe('HouseSelector grant kinds and selection state', () => {
   it('shows no-house-selected empty state when the entity has no house', () => {
@@ -211,7 +211,7 @@ describe('HouseSelector grant kinds and selection state', () => {
 
 // max_total slice: the open-grant menu must not re-offer an item already at
 // its total ceiling — the engine's `too_many_selections` validator would
-// reject the pick the instant it landed. Mirrors `magus-editor.e2e.js`'s
+// reject the pick the instant it landed. Mirrors `magus-arts-houses.e2e.js`'s
 // `hermetic houses` Ex Miscellanea case ("adds an open grant on top of the bought
 // budget — Ex Miscellanea"; an item with ZERO copies must stay offered), which the
 // second test below guards directly.

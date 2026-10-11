@@ -26,14 +26,20 @@ export function appVersion(repoRoot) {
 }
 
 /**
- * How many spec files run at once.
+ * How many spec files run at once, unless `ARM_E2E_WORKERS` says otherwise.
  *
- * Each spec file gets its own WebDriver session — its own app launch and
- * teardown — and that launch is ~30s of the ~40s cycle, so the suite's wall
- * clock is almost entirely startup. The launches are independent (every spec
- * drives a fresh app from the start screen), so concurrency is the lever that
- * actually scales, and four is a deliberate middle: each worker carries a full
- * WebKit process, and the machine this runs on has 8 cores.
+ * Every spec drives a fresh app from the start screen, so the files are
+ * independent and concurrency is the lever that scales. Measured on the 8-core
+ * dev box (2026-10-11, docs/test-performance-2026-09.md): 4 workers 2:44, 6
+ * 2:15, 8 2:09 for the test phase. 8 was not chosen: its first confirmation
+ * run needed a retry (an interactability flake under load), and past 6 the
+ * longest spec, not the worker count, sets the floor. On a smaller machine,
+ * lower it with the variable.
+ */
+const DEFAULT_WORKERS = 6;
+
+/**
+ * The run's worker count.
  *
  * This is only safe because every shared resource a second worker could
  * collide on has been given a per-worker identity — the tauri-driver and
@@ -43,7 +49,24 @@ export function appVersion(repoRoot) {
 // Exported so each config's `onPrepare` can hand the same number to
 // `allDriverPorts` (`driver.js`) for the port preflight — it must check every
 // port this run's workers might actually bind, not just worker 0's.
-export const MAX_WORKERS = 4;
+export const MAX_WORKERS = workerCount(process.env);
+
+/**
+ * The worker count: `ARM_E2E_WORKERS` when set to a positive integer, the
+ * default when unset or empty. Anything else throws, so a typo never runs the
+ * suite at some other count unnoticed.
+ *
+ * @param {Record<string, string | undefined>} env
+ * @returns {number}
+ */
+function workerCount(env) {
+  const value = env.ARM_E2E_WORKERS;
+  if (value === undefined || value === '') return DEFAULT_WORKERS;
+  if (!/^[1-9]\d*$/.test(value)) {
+    throw new Error(`ARM_E2E_WORKERS must be a positive integer, got ${JSON.stringify(value)}`);
+  }
+  return Number(value);
+}
 
 /**
  * The fields both wdio configs share verbatim, plus the one `capabilities`

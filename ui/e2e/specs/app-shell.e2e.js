@@ -18,7 +18,7 @@
 //     it on its own — harmless as a standalone process, but every describe below
 //     it in this shared session would otherwise render in German. Its own
 //     `after` hook restores `en`, the same pattern used by
-//     `magus-editor.e2e.js` (ex-`arts.e2e.js`), `wizard-flow.e2e.js`
+//     `magus-arts-houses.e2e.js` (ex-`arts.e2e.js`), `wizard-flow.e2e.js`
 //     (ex-`tab-area.e2e.js`), and `magus-possessions.e2e.js`
 //     (ex-`export-markdown.e2e.js`).
 //
@@ -301,7 +301,7 @@ describe('German localization', () => {
 
   // This spec switches the whole app to German and does not restore it on its
   // own line, unlike the other language-switching specs in this suite (compare
-  // `magus-editor.e2e.js`'s ex-`arts.e2e.js` block). A dedicated `after` hook
+  // `magus-arts-houses.e2e.js`'s ex-`arts.e2e.js` block). A dedicated `after` hook
   // restores `en` here instead, so every describe below this one in the shared
   // session still starts in English.
   //

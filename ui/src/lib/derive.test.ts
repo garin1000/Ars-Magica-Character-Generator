@@ -4540,7 +4540,7 @@ describe('eligibleForConstraint', () => {
   // item already at its `max_total` ceiling — the engine's
   // `too_many_selections` validator would reject it the instant it were picked.
   // Only a genuinely AT-cap ref is dropped; an item with zero copies (or under
-  // its cap) stays offered, exactly as `magus-editor.e2e.js`'s `hermetic houses`
+  // its cap) stays offered, exactly as `magus-arts-houses.e2e.js`'s `hermetic houses`
   // Ex Miscellanea case needs (a character holding zero Puissant Art copies must
   // still see it).
   it('drops an item whose ref is in atCapRefs, and keeps everything else', () => {

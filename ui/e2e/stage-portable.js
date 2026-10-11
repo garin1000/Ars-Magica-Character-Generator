@@ -51,6 +51,9 @@ export function stagePortableApp({ build = true } = {}) {
     const result = spawnSync('cargo', ['tauri', 'build', '--no-bundle'], {
       cwd: path.resolve(repoRoot, 'crates/arm-app'),
       stdio: 'inherit',
+      // Under wdio this runs with NODE_ENV=test, which Vite would keep: force
+      // the production frontend that ships (see wdio.conf.js's onPrepare).
+      env: { ...process.env, NODE_ENV: 'production' },
     });
     if (result.status !== 0) throw new Error('cargo tauri build failed');
   }

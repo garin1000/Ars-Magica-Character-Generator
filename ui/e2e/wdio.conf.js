@@ -109,6 +109,31 @@ export const e2eExportFile = path.resolve(
   `arm-e2e-character${workerSuffix(process.env)}.md`,
 );
 
+/**
+ * Every spec file, longest first, so the long ones do not start last and leave
+ * workers idle at the end. A new spec must be added here: `wdio.conf.test.js`
+ * fails while this list and the files under `specs/` differ.
+ */
+// Order: measured durations after the bus fix (2026-10-11, 6 and 8 workers), longest first.
+export const SPECS_LONGEST_FIRST = [
+  'companion-editor.e2e.js',
+  'wizard-flow.e2e.js',
+  'magus-editor.e2e.js',
+  'magus-possessions.e2e.js',
+  'wizard-walks.e2e.js',
+  'save-load-fidelity.e2e.js',
+  'magus-arts-houses.e2e.js',
+  'd81-features.e2e.js',
+  'grog-wizard-aging.e2e.js',
+  'app-shell.e2e.js',
+  'life-stage-childhood.e2e.js',
+  'magus-post-gauntlet.e2e.js',
+  'update-check-stall-dirty-quit.e2e.js',
+  'magus-apprenticeship.e2e.js',
+  'update-check.e2e.js',
+  'update-check-stall.e2e.js',
+].map((name) => path.resolve(dirname, 'specs', name));
+
 let tauriDriver;
 // `afterSession` is not handed `cid` (only `beforeSession` is — see
 // `@wdio/runner`'s `afterSessionArgs`), so it is tracked here alongside the
@@ -117,7 +142,7 @@ let currentCid;
 
 export const config = {
   ...sharedWdioConfig(application),
-  specs: [path.resolve(dirname, 'specs/**/*.e2e.js')],
+  specs: SPECS_LONGEST_FIRST,
 
   // Keep the full launcher + worker logs of a run. A suite this expensive should
   // never have to be re-run just to re-read output that scrolled past, so wdio
@@ -170,6 +195,10 @@ export const config = {
       {
         cwd: path.resolve(repoRoot, 'crates/arm-app'),
         stdio: 'inherit',
+        // `@wdio/cli` sets NODE_ENV=test in this launcher, and Vite keeps an
+        // inherited NODE_ENV, so without this the binary embeds a development
+        // frontend instead of the one that ships.
+        env: { ...process.env, NODE_ENV: 'production' },
       },
     );
     if (build.status !== 0) throw new Error('cargo tauri build failed');

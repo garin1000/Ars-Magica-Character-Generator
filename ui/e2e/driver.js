@@ -239,6 +239,15 @@ export function resetWorkerConfigHome(configHome) {
 }
 
 /**
+ * A session bus address with no socket behind it, so every bus client in the
+ * app fails at once. tao reads the colour scheme from the desktop portal with a
+ * blocking 5 s call, repeated per window; headless, the user bus's portal never
+ * answers and each launch stalled ~30 s (docs/test-performance-2026-09.md §3).
+ * Harness-only: a normal desktop launch gets a prompt answer.
+ */
+const UNREACHABLE_SESSION_BUS = 'unix:path=/nonexistent-arm-e2e-session-bus';
+
+/**
  * Spawns this worker's tauri-driver, points the config at it, and resolves once
  * it is actually listening.
  *
@@ -259,7 +268,7 @@ export async function startWorkerDriver(config, cid, extraEnv = {}) {
     ['--port', String(port), '--native-port', String(nativePort)],
     {
       stdio: [null, process.stdout, process.stderr],
-      env: { ...process.env, ...extraEnv },
+      env: { ...process.env, DBUS_SESSION_BUS_ADDRESS: UNREACHABLE_SESSION_BUS, ...extraEnv },
       // Makes tauri-driver the leader of its own process group (POSIX
       // `setsid`) rather than sharing this worker's group. WebKitWebDriver,
       // which tauri-driver spawns as its own child, inherits that new group

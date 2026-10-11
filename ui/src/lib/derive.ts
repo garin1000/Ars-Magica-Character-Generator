@@ -1311,7 +1311,7 @@ export interface SelectionGroup {
  * was chosen does the descriptor's own order break the tie, because it is then the
  * only ordering the data carries. Either way the heading agrees with the row's
  * FIRST category badge, which renders the same resolution (the invariant
- * `magus-editor.e2e.js` asserts).
+ * `magus-arts-houses.e2e.js` asserts).
  */
 export function groupSelectionsByCategory(
   localized: LocalizedRuleset,

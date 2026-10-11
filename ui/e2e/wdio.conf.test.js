@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -7,7 +7,14 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { driverPorts, workerConfigHome, workerIndexFromCid, workerSettingsFile } from './driver.js';
+import {
+  allDriverPorts,
+  driverPorts,
+  workerConfigHome,
+  workerIndexFromCid,
+  workerSettingsFile,
+} from './driver.js';
+import { preflightDriverPorts } from './ports.js';
 import { pidRegistryDir } from './reap.js';
 import { config as portableConfig } from './wdio.portable.conf.js';
 import {
@@ -28,9 +35,17 @@ const MOCK_DRIVER_PID = 987654;
 // resolves immediately instead of polling a port nothing is listening on.
 // `vi.mock` is hoisted above these imports by vitest regardless of where it
 // is written, so `spawn` above is already the mocked function.
+// `execFileSync` is `display.js`'s `which xvfb-run` probe; a no-op answers
+// "found", so `onPrepare`'s display preflight passes on a box without a display.
 vi.mock('node:child_process', () => ({
   spawn: vi.fn(() => ({ kill: vi.fn(), pid: MOCK_DRIVER_PID })),
   spawnSync: vi.fn(),
+  execFileSync: vi.fn(),
+}));
+// `onPrepare` probes the driver ports before it builds; with `node:net` mocked
+// every port would read as occupied, so the preflight reports them all free.
+vi.mock('./ports.js', () => ({
+  preflightDriverPorts: vi.fn(async () => null),
 }));
 vi.mock('node:net', () => ({
   default: {
@@ -185,6 +200,42 @@ describe.each([
     const [, , options] = spawn.mock.calls[0];
     const expectedHome = workerConfigHome(repoRoot, process.env);
     expect(options.env.XDG_CONFIG_HOME).toBe(expectedHome);
+  });
+
+  // tao reads the colour scheme from the desktop portal over the session bus,
+  // blocking up to 5 s per call; headless, the user bus's portal never answers
+  // and every launch stalled ~30 s (docs/test-performance-2026-09.md §3). An
+  // address with no socket behind it makes every bus client fail at once.
+  describe('session bus', () => {
+    const inheritedBus = process.env.DBUS_SESSION_BUS_ADDRESS;
+
+    afterEach(() => {
+      if (inheritedBus === undefined) delete process.env.DBUS_SESSION_BUS_ADDRESS;
+      else process.env.DBUS_SESSION_BUS_ADDRESS = inheritedBus;
+    });
+
+    function spawnedBusAddress() {
+      const [, , options] = spawn.mock.calls[0];
+      return options.env.DBUS_SESSION_BUS_ADDRESS;
+    }
+
+    it('overrides an inherited session bus address', async () => {
+      process.env.DBUS_SESSION_BUS_ADDRESS = 'unix:path=/inherited-user-bus';
+      const config = getConfig();
+      await config.beforeSession(config, [{}], [], '0-14');
+
+      expect(spawnedBusAddress()).not.toBe('unix:path=/inherited-user-bus');
+    });
+
+    it('points the app at a unix socket that does not exist', async () => {
+      delete process.env.DBUS_SESSION_BUS_ADDRESS;
+      const config = getConfig();
+      await config.beforeSession(config, [{}], [], '0-15');
+
+      const address = spawnedBusAddress();
+      expect(address).toEqual(expect.stringMatching(/^unix:path=\//));
+      expect(fs.existsSync(address.slice('unix:path='.length))).toBe(false);
+    });
   });
 
   // M6.6: the update-check consent prompt makes the whole shell `inert`, so an
@@ -377,6 +428,114 @@ describe.each([
     expect(killSpy).not.toHaveBeenCalledWith(-2002, 'SIGTERM');
     expect(fs.readdirSync(dir)).toEqual(['0-2-2002']);
     killSpy.mockRestore();
+  });
+});
+
+// `@wdio/cli` sets `NODE_ENV=test` in the launcher when it is unset, `onPrepare`
+// runs there, and Vite keeps an inherited `NODE_ENV` — so a build that merely
+// inherits the launcher's env embeds a development frontend, not the one that
+// ships (docs/test-performance-2026-09.md §3a). vitest sets the same `test`.
+// The spawn is made to fail so the hook stops right after it, before staging.
+describe.each([
+  ['standard', () => standardConfig],
+  ['portable', () => portableConfig],
+])('%s config onPrepare', (_name, getConfig) => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    spawnSync.mockReturnValue({ status: 1 });
+  });
+
+  afterEach(() => {
+    spawnSync.mockReset();
+  });
+
+  it('builds the release binary with a production frontend', async () => {
+    await expect(getConfig().onPrepare()).rejects.toThrow(/cargo tauri build failed/);
+
+    expect(spawnSync).toHaveBeenCalledTimes(1);
+    const [command, args, options] = spawnSync.mock.calls[0];
+    expect([command, ...args.slice(0, 2)]).toEqual(['cargo', 'tauri', 'build']);
+    expect(options.env?.NODE_ENV).toBe('production');
+    expect(options.env?.PATH).toBe(process.env.PATH);
+  });
+
+  it("checks the ports of exactly the run's worker count", async () => {
+    const config = getConfig();
+    await expect(config.onPrepare()).rejects.toThrow();
+
+    expect(preflightDriverPorts).toHaveBeenCalledWith(allDriverPorts(config.maxInstances));
+  });
+});
+
+// `ARM_E2E_WORKERS` overrides how many spec files run at once. The configs read
+// it when they load, so each case loads them afresh.
+describe('ARM_E2E_WORKERS', () => {
+  const original = process.env.ARM_E2E_WORKERS;
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.ARM_E2E_WORKERS;
+    else process.env.ARM_E2E_WORKERS = original;
+    vi.resetModules();
+  });
+
+  async function loadConfigsWith(value) {
+    vi.resetModules();
+    if (value === undefined) delete process.env.ARM_E2E_WORKERS;
+    else process.env.ARM_E2E_WORKERS = value;
+    const childProcess = await import('node:child_process');
+    const ports = await import('./ports.js');
+    const standard = (await import('./wdio.conf.js')).config;
+    const portable = (await import('./wdio.portable.conf.js')).config;
+    return { childProcess, ports, configs: [standard, portable] };
+  }
+
+  it('sets the worker count of both configs, on the capability too', async () => {
+    const { configs } = await loadConfigsWith('6');
+    for (const config of configs) {
+      expect(config.maxInstances).toBe(6);
+      expect(config.capabilities[0].maxInstances).toBe(6);
+    }
+  });
+
+  it('has the port preflight check every port the overridden count binds', async () => {
+    const { childProcess, ports, configs } = await loadConfigsWith('7');
+    childProcess.spawnSync.mockReturnValue({ status: 1 });
+    for (const config of configs) {
+      ports.preflightDriverPorts.mockClear();
+      await expect(config.onPrepare()).rejects.toThrow();
+      expect(ports.preflightDriverPorts).toHaveBeenCalledWith(allDriverPorts(7));
+    }
+  });
+
+  it('keeps the default when unset or empty', async () => {
+    const unset = (await loadConfigsWith(undefined)).configs[0].maxInstances;
+    const empty = (await loadConfigsWith('')).configs[0].maxInstances;
+    expect(unset).toBeGreaterThan(1);
+    expect(empty).toBe(unset);
+  });
+
+  // A typo must not silently fall back to some other count.
+  it.each(['0', '-2', 'six', '2.5', '4x'])('refuses %j with a message naming it', async (value) => {
+    await expect(loadConfigsWith(value).then(() => 'loaded')).rejects.toThrow(/ARM_E2E_WORKERS/);
+  });
+});
+
+// The standard config lists its specs explicitly, longest first, so the long
+// ones do not start last and leave workers idle at the end. A glob could never
+// drop a new spec; a list can, so the list is held to the files on disk.
+describe('standard config spec list', () => {
+  const specsDir = path.resolve(repoRoot, 'ui/e2e/specs');
+  const onDisk = fs
+    .readdirSync(specsDir, { recursive: true })
+    .filter((name) => name.endsWith('.e2e.js'))
+    .map((name) => path.resolve(specsDir, name));
+
+  it('names every spec file on disk, and nothing else', () => {
+    expect([...standardConfig.specs].sort()).toEqual([...onDisk].sort());
+  });
+
+  it('names no spec file twice', () => {
+    expect(new Set(standardConfig.specs).size).toBe(standardConfig.specs.length);
   });
 });
 

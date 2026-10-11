@@ -45,6 +45,21 @@ behind the `e2e-testing` Cargo feature and inert in the shipped binary
 
 Neither seam exists in the portable run, which builds without the feature.
 
+### What the harness sets in the environment
+
+- **`NODE_ENV=production` for the build.** `@wdio/cli` sets `NODE_ENV=test` in
+  the launcher, and Vite keeps an inherited `NODE_ENV`. So both configs' builds
+  (`onPrepare`, `stage-portable.js`) force `production`, or the binary would
+  embed a development frontend instead of the shipped one.
+- **An unreachable session bus for the app.** `driver.js::startWorkerDriver`
+  sets `DBUS_SESSION_BUS_ADDRESS` to a socket that does not exist. tao reads the
+  colour scheme from the desktop portal with a blocking 5 s call, several times
+  per launch. Headless, the user bus's portal never answers, and every session
+  stalled ~30 s before its first command. A normal desktop launch is not
+  affected (`docs/test-performance-2026-09.md` §3).
+- **`ARM_E2E_WORKERS`** sets how many spec files run at once. The default is 6
+  (`wdio.shared.conf.js`). Anything but a positive integer is refused.
+
 ### The update-check consent prompt (M6.6)
 
 On a first start the app asks whether to check GitHub for updates, and that
@@ -120,8 +135,8 @@ own slug (so `rules/i18n` arrived too), and that no error banner is up. Everythi
 the app does _after_ its ruleset loads is the standard suite's job.
 
 It is deliberately **not** part of `npm run test:e2e`: it needs the staging step,
-and its specs live outside `specs/` so the standard config's glob cannot reach
-them.
+and its specs live outside `specs/`, where the standard config's list does not
+look.
 
 ## Headful and headless
 
@@ -165,8 +180,8 @@ e2e/
   helpers.js             # shared spec harness — `startCharacter()`, `startWizard()`, …
   wizard-walk.js         # shared driver for the four per-type guided walks
   fixtures/              # files the app reads through a seam (the update feed)
-  specs/*.e2e.js         # the suite; wdio globs `specs/**/*.e2e.js`
-  portable/*.e2e.js      # the portable smoke check; the standard glob cannot reach it
+  specs/*.e2e.js         # the suite; listed in `wdio.conf.js`'s SPECS_LONGEST_FIRST
+  portable/*.e2e.js      # the portable smoke check; not in the standard list
 ```
 
 Non-spec harness modules live at the `e2e/` root, never under `specs/`. They must
@@ -177,7 +192,7 @@ and anything importing `@wdio/globals` cannot resolve there. That is why
 
 ## Every spec builds its own character
 
-The suite runs up to four spec files **in parallel** (`maxInstances`,
+The suite runs several spec files **in parallel** (`maxInstances`,
 `wdio.shared.conf.js`), and since M6a the app boots on a startup choice screen
 where a character's **type is fixed at creation** — there is no type selector to
 switch, and creating a character discards whatever was being edited. So a spec
@@ -204,9 +219,16 @@ the validation mode carry over, so a spec that depends on either must set it its
 
 ## Spec ordering
 
-wdio globs `specs/**/*.e2e.js` and hands the files out to up to four workers
-(`maxInstances`, `wdio.shared.conf.js`) in parallel; which file lands on which
-worker, and in what order, is scheduling detail. Each worker spawns its own
+`wdio.conf.js` lists the spec files explicitly in `SPECS_LONGEST_FIRST`, longest
+first by measured duration, so the long ones do not start last and leave
+workers idle at the end. wdio hands them out in that order to up to
+`maxInstances` workers (`wdio.shared.conf.js`, `ARM_E2E_WORKERS`). Which file
+lands on which worker is scheduling detail.
+
+**A new spec file must be added to that list**, at the position its measured
+duration earns. `wdio.conf.test.js` fails while the list and the files under
+`specs/` differ, so a forgotten entry is caught by `npm run test:unit` rather
+than silently skipped. Each worker spawns its own
 `tauri-driver` on its own port pair and its own app instance
 (`driver.js`'s per-worker isolation, milestone A1), so every spec file gets a
 **freshly launched app** in its own WebDriver session regardless of when it
@@ -259,10 +281,13 @@ language/window state, a terminal describe), why it is ordered the way it is.
   variants, mechanical Virtue/Flaw effects, mutual exclusion, warping-owed fills,
   the core tabbed edit/save/reload flow, per-character fields, and the
   `window.close()` bridge for a dirty document (terminal).
-- `magus-editor.e2e.js` — magus-only editor surfaces: Hermetic Arts, Hermetic
-  Houses, the selected-list frame's scroll containment, the Totals tab's
-  duplicate-key regression guard, repeated parameterized Virtues, Mythic
-  Companion types, and per-type profile budgets/category rules.
+- `magus-editor.e2e.js` — editor surfaces: the selected-list frame's scroll
+  containment, the Totals tab's duplicate-key regression guard, repeated
+  parameterized Virtues, the max_total copy cap, Mythic Companion types, and
+  per-type profile budgets/category rules.
+- `magus-arts-houses.e2e.js` — a magus's Hermetic Arts and Hermetic Houses.
+  Split out of `magus-editor.e2e.js` (2026-10-11), which had become the one
+  spec every other worker waited on.
 - `magus-possessions.e2e.js` — a magus's possessions: Spells, the familiar
   statblock, the talisman item, the Longevity Ritual, and the Markdown
   character-sheet export.
