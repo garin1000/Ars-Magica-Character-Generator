@@ -237,7 +237,7 @@
       <div class="aging-actions">
         <button
           type="button"
-          disabled={!canApply}
+          disabled={!canApply || store.agingBusy}
           onclick={() => store.applyAgingRoll()}
           data-testid="aging-apply"
         >
@@ -245,6 +245,7 @@
         </button>
         <button
           type="button"
+          disabled={store.agingBusy}
           onclick={() => store.clearAgingDraft()}
           data-testid="aging-calculator-clear"
         >

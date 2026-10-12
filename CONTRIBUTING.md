@@ -53,11 +53,12 @@ Every rule in this project is backed by the source text, never by recollection.
 - Take the rule from the authoritative Markdown in `rules/source/<lang>/`.
   **English is the source of truth** — IDs derive from the English text, so a
   book with no English source here cannot introduce new IDs.
-- Cite the **source file basename plus an inclusive line range** at the
-  implementation site, e.g.
-  `// Source: Ars Magica - Definitive Edition (Core Rules).md:2774`. A bare line
-  number is meaningless without the book. Verify the range against the actual
-  file — do not trust remembered numbers.
+- Cite the **book's acronym plus an inclusive line range** at the
+  implementation site, e.g. `// Source: ArMDE:2774` (the core rules) or
+  `HoH:TL:1234` (Houses of Hermes — True Lineages). See CLAUDE.md for the full
+  acronym table. A bare line number is meaningless without the book, and the
+  full basename is never the right spelling — the acronym is. Verify the range
+  against the actual file — do not trust remembered numbers.
 - Record the rule in [`crates/arm-rules/RULES.md`](crates/arm-rules/RULES.md),
   the traceability map, in the same change. JSON carries no comments, so RULES.md
   is where provenance lives for values encoded as data.
@@ -101,7 +102,7 @@ that has not been gated locally will be sent back, so please run all of it:
 
 ```bash
 cargo test --workspace
-cargo clippy --workspace -- -D warnings
+cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --check
 cd ui && npm run test:unit && npm run lint && cd ..
 

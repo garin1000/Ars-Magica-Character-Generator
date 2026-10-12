@@ -35,7 +35,10 @@ impl<'a> Doc<'a> {
         // the one key family LABEL_KEYS does not enumerate (see its docs).
         parts.push(self.label(&format!("type-{}", self.entity.type_id)));
         if let Some(house) = &self.entity.house {
-            parts.push(pair(&self.label("house-label"), &self.name(house)));
+            parts.push(pair(
+                &self.label("house-label"),
+                &escape_cell(&self.name(house)),
+            ));
         }
         if let Some(age) = self.entity.age {
             parts.push(pair(&self.label("age-label"), &age.to_string()));

@@ -160,6 +160,7 @@ const uiVersion = JSON.parse(
   fs.readFileSync(path.resolve(repoRoot, 'ui/package.json'), 'utf8'),
 ).version;
 const updateFeed = path.resolve(repoRoot, 'ui/e2e/fixtures/update-feed-newer.json');
+const invalidFeed = path.resolve(repoRoot, 'ui/e2e/fixtures/update-feed-invalid.json');
 
 // The shipped check's whole-request timeout
 // (`crates/arm-app/src/update_check.rs::FetchLimits::production`). A stall spec's
@@ -321,6 +322,43 @@ describe.each([
         expect(Number(options.env.ARM_E2E_UPDATE_STALL_MS)).toBeGreaterThan(PRODUCTION_TIMEOUT_MS);
       },
     );
+
+    // E6 (full-audit round 1): a spec proving a malformed feed stays silent must
+    // get its own feed file, named by `feed` in `SPEC_UPDATE_SETUPS`, rather than
+    // the newer-release one every other update-check spec shares — and no stall,
+    // since this spec measures an absence that would otherwise be ambiguous with
+    // "still checking".
+    it('gives the invalid-feed spec an enabled check and its own malformed feed', async () => {
+      const config = getConfig();
+      const home = workerConfigHome(repoRoot, process.env);
+      plantSettings(home, {
+        update_check: false,
+        update_check_asked_version: '0.0.1',
+      });
+
+      await config.beforeSession(
+        config,
+        [{}],
+        [specUrl('update-check-invalid-feed.e2e.js')],
+        '0-16',
+      );
+
+      expect(readSettings(home)).toEqual({
+        update_check: true,
+        update_check_asked_version: uiVersion,
+      });
+      const [, , options] = spawn.mock.calls[0];
+      expect(options.env.ARM_E2E_UPDATE_FEED).toBe(invalidFeed);
+      expect(options.env.ARM_E2E_UPDATE_STALL_MS).toBeUndefined();
+    });
+
+    it('ships an invalid feed whose tag_name is not a semver release tag', () => {
+      expect(JSON.parse(fs.readFileSync(invalidFeed, 'utf8'))).toEqual({
+        tag_name: 'not-a-version',
+        draft: false,
+        prerelease: false,
+      });
+    });
 
     it('ships a feed announcing a release newer than any real one', () => {
       expect(JSON.parse(fs.readFileSync(updateFeed, 'utf8'))).toEqual({

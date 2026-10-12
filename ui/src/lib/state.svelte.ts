@@ -394,6 +394,11 @@ class AppStore {
     this.#childhoodWorkflow.rejections = rejections;
   }
 
+  /** @see ChildhoodWorkflow.busy */
+  get childhoodApplyBusy(): boolean {
+    return this.#childhoodWorkflow.busy;
+  }
+
   /**
    * The aging roll draft/preview/apply/revert workflow, extracted to
    * {@link AgingWorkflow} (VA6). It owns the draft/preview/notes/rejections
@@ -448,6 +453,11 @@ class AppStore {
   /** @see AgingWorkflow.year */
   get agingYear(): number | null {
     return this.#agingWorkflow.year;
+  }
+
+  /** @see AgingWorkflow.busy */
+  get agingBusy(): boolean {
+    return this.#agingWorkflow.busy;
   }
 
   /**
@@ -549,6 +559,14 @@ class AppStore {
     effective: () => this.effective,
     scheduleValidate: () => this.#scheduleValidate(),
   });
+
+  /** Selection rows currently awaiting their `unlink_ability_parameters` round
+   *  trip, by object identity (G2/G3, full-audit round 1) — `removeSelectionAt`
+   *  and `setParamAt` key on this, not on the index passed in, which can go
+   *  stale the moment any OTHER selection is spliced out while this await is
+   *  still in flight. Also doubles as the re-entrancy guard for a double-click
+   *  on the same row. */
+  #linkedSelectionOpsInFlight = new Set<Selection>();
 
   #spellWorkflow = new SpellWorkflow({
     entity: () => this.entity,
@@ -1190,13 +1208,35 @@ class AppStore {
    * no-op when nothing is linked to `ref`, so this check is a latency
    * optimization, not a second copy of the engine's own decision.
    *
+   * G2 (full-audit round 1): `index` is only safe to use BEFORE the await —
+   * another row splicing itself out (an earlier row's own concurrent remove
+   * resolving first) shifts every later index, and a double-click re-enters
+   * this method on the SAME row before its first call ever resolves. Both are
+   * fixed the same way: the row is resolved by object identity, never by the
+   * captured index, once the await returns — and
+   * {@link AppStore.#linkedSelectionOpsInFlight} makes the second case a
+   * straight no-op rather than a second round trip.
+   *
    * @see SelectionWorkflow.removeAt
    */
   async removeSelectionAt(index: number): Promise<void> {
-    const ref = this.entity.selections?.[index]?.ref;
-    if (ref && this.#isLinkSource(ref)) {
-      const updated = await ipc.unlinkAbilityParameters(this.entity, ref);
-      this.entity.ability_scores = updated.ability_scores;
+    const row = this.entity.selections?.[index];
+    const ref = row?.ref;
+    if (row && ref && this.#isLinkSource(ref)) {
+      if (this.#linkedSelectionOpsInFlight.has(row)) return;
+      this.#linkedSelectionOpsInFlight.add(row);
+      try {
+        const updated = await ipc.unlinkAbilityParameters(this.entity, ref);
+        this.entity.ability_scores = updated.ability_scores;
+      } finally {
+        this.#linkedSelectionOpsInFlight.delete(row);
+      }
+      // Re-resolve by identity: a sibling removal may have shifted `index`
+      // out from under this row while the above was in flight.
+      const current = (this.entity.selections ?? []).indexOf(row);
+      if (current === -1) return; // already gone by some other path
+      this.#selectionWorkflow.removeAt(current);
+      return;
     }
     this.#selectionWorkflow.removeAt(index);
   }
@@ -1224,13 +1264,30 @@ class AppStore {
    * rename) must keep a live link tracking the NEW value (D59 point 2), never
    * freeze it to the old one.
    *
+   * G3 (full-audit round 1): same stale-index hazard as
+   * {@link removeSelectionAt} (G2) — a concurrent removal of an earlier row
+   * can shift `index` out from under this await before it returns. Fixed the
+   * same way: resolve the row by identity afterward, guarded by the shared
+   * {@link AppStore.#linkedSelectionOpsInFlight} in-flight set.
+   *
    * @see SelectionWorkflow.setParamAt
    */
   async setParamAt(index: number, key: string, value: string): Promise<void> {
-    const ref = this.entity.selections?.[index]?.ref;
-    if (ref && value.trim() === '' && this.#isLinkSource(ref)) {
-      const updated = await ipc.unlinkAbilityParameters(this.entity, ref);
-      this.entity.ability_scores = updated.ability_scores;
+    const row = this.entity.selections?.[index];
+    const ref = row?.ref;
+    if (row && ref && value.trim() === '' && this.#isLinkSource(ref)) {
+      if (this.#linkedSelectionOpsInFlight.has(row)) return;
+      this.#linkedSelectionOpsInFlight.add(row);
+      try {
+        const updated = await ipc.unlinkAbilityParameters(this.entity, ref);
+        this.entity.ability_scores = updated.ability_scores;
+      } finally {
+        this.#linkedSelectionOpsInFlight.delete(row);
+      }
+      const current = (this.entity.selections ?? []).indexOf(row);
+      if (current === -1) return;
+      this.#selectionWorkflow.setParamAt(current, key, value);
+      return;
     }
     this.#selectionWorkflow.setParamAt(index, key, value);
   }

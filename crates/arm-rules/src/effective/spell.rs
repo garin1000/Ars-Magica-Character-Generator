@@ -938,11 +938,15 @@ pub fn effective_spell_mastery(sel: &SpellSelection, entity: &Entity, ruleset: &
 /// Total spell levels the entity's chosen spells consume. Unresolved General
 /// spells (no chosen level) and unknown spells contribute 0.
 pub fn spell_levels_used(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    // Row 58 (`docs/open-todos.md`): `saturating_add`, not `.sum()` — a
+    // crafted save's `spells` is an uncapped `Vec`, and `[profile.release]
+    // overflow-checks = true` (root `Cargo.toml`, K9) turns a plain `.sum()`
+    // overflow into a process abort instead of a wrapped total.
     entity
         .spells
         .iter()
         .filter_map(|s| resolved_spell_level(s, ruleset))
-        .sum()
+        .fold(0u32, u32::saturating_add)
 }
 
 // --- Incompatible Arts (D81.8) ----------------------------------------------

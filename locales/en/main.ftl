@@ -356,9 +356,6 @@ xp-pool-block-after-gauntlet = After the Gauntlet ({ $years ->
        *[other] { $levels } spell levels
     }
 xp-pool-block-after-gauntlet-tooltip = { $years } × { $rate } - { $lab } for lab work = { $points } points
-# Age is repeated inside the panel because later life is measured in years, so it
-# is edited here as well as on the Details tab.
-life-stage-age-label = Age
 life-stage-gauntlet-age-label = Gauntlet age
 # Row 56: post-Gauntlet lab work as a count of years per number of lab seasons.
 life-stage-lab-years-legend = Years of lab work
@@ -453,7 +450,6 @@ xp-unit-abbr = XP
 ability-specialty-label = Specialty
 # Heading for the rulebook's list of example specialties shown in the picker.
 ability-specialties-label = Specialties
-ability-add = Add ability
 # Named per row ($name is the ability's own display name), so a screen reader
 # tabbing a long Abilities list hears which score each stepper adjusts instead
 # of an identical bare "Raise"/"Lower" on every row.
@@ -466,7 +462,6 @@ art-type-form = Forms
 # X10b: the number input for the "Z" of the book's own "X (Z)" notation
 # (ArMDE:1179) — XP already banked toward the next score.
 art-banked-xp-label = Banked XP
-art-add = Add Art
 # Named per row ($name is the Art's own display name) — same reasoning as
 # ability-increment/-decrement above.
 art-increment = Raise { $name }
@@ -545,8 +540,6 @@ spell-group-cap-separator = {" · "}
 # Accessible label for the inline level field on a chosen General spell (its
 # level is not fixed by the catalogue, so it is edited per row).
 spell-general-level-label = General level
-spell-add = Add spell
-spell-none = — Select a spell —
 # The spell-levels budget bar, laid out like the XP summary: the label, the used
 # figure over the whole unconditional side, then Available, the base and any V/F
 # bonus.
@@ -923,7 +916,7 @@ familiar-might-clear = Remove Magic Might
 familiar-might-empty = No Magic Might entered.
 familiar-characteristics-note = The beast's own scores — not bought from the magus's Characteristic points.
 familiar-powers-label = Invested Powers
-familiar-bond-note = The bond grants both partners the Minor Virtue True Friend and the Personality Trait Loyal (partner) +3. A familiar lacking human intelligence gains it at Intelligence -3. These are not applied automatically.
+familiar-bond-note = Not applied automatically — add the Minor Virtue True Friend and the Personality Trait Loyal (partner) +3 to both partners yourself (Intelligence -3 for a familiar lacking human intelligence).
 # Talisman: the magus's personal enchanted item. Its capacity is engine-derived
 # guidance (highest Technique + highest Form, in pawns of Vim vis) and is never
 # recomputed here; the instilled effects are charged against no budget.
@@ -1584,9 +1577,6 @@ issue-shield_with_two_handed_weapon = A shield cannot be used with a two-handed 
 
 # Equipment (weapons / shields / armor). Combat totals, Soak, and Encumbrance
 # are computed in a later slice; this surface only records the carried items.
-weapon-kind-melee = Melee
-weapon-kind-missile = Missile
-weapon-kind-thrown = Thrown
 equipment-group-weapons = Weapons
 equipment-group-shields = Shields
 equipment-group-armor = Armor

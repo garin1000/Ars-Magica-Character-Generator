@@ -256,7 +256,7 @@ tab-house-specialisation = Haus
 tab-mythic-type = Typ
 tab-supernatural = Übernatürlich
 tab-spells = Zauber
-tab-possessions = Magische Gegenstände
+tab-possessions = Verzauberte Gegenstände
 tab-equipment = Ausrüstung
 tab-details = Details
 # Gemeinsame EP-Übersicht (Fertigkeiten + Künste). Eine Zeile: das Label, der
@@ -376,9 +376,6 @@ xp-pool-block-after-gauntlet = Nach der Lehrlingsprüfung ({ $years ->
        *[other] { $levels } Zauberstufen
     }
 xp-pool-block-after-gauntlet-tooltip = { $years } × { $rate } - { $lab } für Laborarbeit = { $points } Punkte
-# Das Alter wird im Bereich wiederholt, weil das spätere Leben in Jahren gemessen
-# wird — es wird hier ebenso bearbeitet wie im Details-Reiter.
-life-stage-age-label = Alter
 life-stage-gauntlet-age-label = Alter bei der Lehrlingsprüfung
 # Zeile 56: Laborarbeit nach der Lehrlingsprüfung als Zahl der Jahre je Anzahl
 # Laborquartale. „Quartal“ ist die Spielzeiteinheit (grundbegriffe.md).
@@ -481,7 +478,6 @@ xp-unit-abbr = EP
 ability-specialty-label = Spezialisierung
 # Überschrift für die im Auswahlbereich gezeigten Beispiel-Spezialisierungen.
 ability-specialties-label = Spezialisierungen
-ability-add = Fertigkeit hinzufügen
 # Je Zeile benannt ($name ist der Anzeigename der Fertigkeit), damit eine
 # Sprachausgabe in einer langen Fertigkeiten-Liste nicht auf jeder Zeile
 # dasselbe bloße "Erhöhen"/"Verringern" vorliest.
@@ -494,7 +490,6 @@ art-type-form = Formen
 # X10b: Eingabefeld für das „Z“ der buchtypischen Notation „X (Z)“
 # (ArMDE:1179) — bereits angespartes EP für den nächsten Wert.
 art-banked-xp-label = Angesparte EP
-art-add = Kunst hinzufügen
 # Je Zeile benannt ($name ist der Anzeigename der Kunst) — dieselbe Begründung
 # wie bei ability-increment/-decrement oben.
 art-increment = { $name } erhöhen
@@ -567,8 +562,6 @@ spell-group-cap-within-potent-field = im Bereich der Potenten Magie: { $cap }
 spell-group-cap-within-focus-and-potent-field = im Magischen Fokus und im Bereich der Potenten Magie: { $cap }
 spell-group-cap-separator = {" · "}
 spell-general-level-label = Stufe (General)
-spell-add = Zauber hinzufügen
-spell-none = — Zauber wählen —
 spell-levels-pool = Zauberstufen
 spell-levels-available = Verfügbar: { $available }
 # Der Grundwert als eigener Eintrag, denn er ist NICHT MEHR der Nenner neben dem
@@ -869,7 +862,7 @@ reputation-type-local = Lokal
 reputation-type-ecclesiastical = Kirchlich
 reputation-type-hermetic = Hermetisch
 reputation-type-academic = Akademisch
-# Tab "Magische Gegenstände" (Magi): Aura, Artefakte, Vertrautenbindung, Talisman
+# Tab "Verzauberte Gegenstände" (Magi): Aura, Artefakte, Vertrautenbindung, Talisman
 # und das Langlebigkeitsritual. Das genutzte/verbleibende Artefaktbudget stammt aus
 # der Engine, wird hier nie neu berechnet.
 aura-label = Angenommene Labor-/Konventaura
@@ -957,7 +950,7 @@ familiar-might-clear = Magische Macht entfernen
 familiar-might-empty = Keine Magische Macht eingetragen.
 familiar-characteristics-note = Die eigenen Werte des Tieres — sie werden nicht aus den Eigenschaftspunkten des Magus bezahlt.
 familiar-powers-label = Investierte Kräfte
-familiar-bond-note = Die Bindung verleiht beiden Partnern die Kleine Tugend Wahrer Freund und die Persönlichkeitseigenschaft Loyal (Partner) +3. Ein Vertrauter ohne menschliche Intelligenz erhält sie mit Intelligenz -3. Dies wird nicht automatisch angewendet.
+familiar-bond-note = Wird nicht automatisch eingetragen — trage beiden Partnern selbst die Kleine Tugend Wahrer Freund und die Persönlichkeitseigenschaft Loyal (Partner) +3 ein (Intelligenz -3 bei einem Vertrauten ohne menschliche Intelligenz).
 # Talisman: das persönliche Zaubergerät des Magus. Seine Kapazität stammt als
 # Richtwert aus der Engine (höchste Technik + höchste Form, in Bauern Vim-Vis) und
 # wird hier nie neu berechnet; die eingebetteten Effekte belasten kein Budget.
@@ -1669,9 +1662,6 @@ issue-shield_with_two_handed_weapon = Ein Schild kann nicht mit einer zweihändi
 # Ausrüstung (Waffen / Schilde / Rüstungen). Kampfwerte, Absorption und Belastung
 # werden in einem späteren Schritt berechnet; diese Oberfläche erfasst nur die
 # getragenen Gegenstände.
-weapon-kind-melee = Nahkampf
-weapon-kind-missile = Fernkampf
-weapon-kind-thrown = Wurf
 equipment-group-weapons = Waffen
 equipment-group-shields = Schilde
 equipment-group-armor = Rüstungen

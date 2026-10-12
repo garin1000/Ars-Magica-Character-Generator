@@ -67,12 +67,16 @@ fn burden_for_load(load: u32) -> i32 {
 ///
 /// Source: ArMDE:17180-17200.
 pub fn encumbrance(entity: &Entity, ruleset: &Ruleset) -> EncumbranceTotal {
+    // K3 (round 1 full audit, 2026-10-12): `saturating_add`, not `.sum()` — a
+    // crafted save's `equipment` is an uncapped `Vec`, and `[profile.release]
+    // overflow-checks = true` (root `Cargo.toml`, K9) turns a plain `.sum()`
+    // overflow into a process abort instead of a wrapped total.
     let load: u32 = entity
         .equipment
         .iter()
         .filter(|slot| slot.loadout == LoadoutState::Wielded)
         .map(|slot| equipment_load(ruleset, &slot.item))
-        .sum();
+        .fold(0u32, u32::saturating_add);
     let burden = burden_for_load(load);
     let strength = characteristic(entity, ruleset, Characteristic::Str);
     let total = (burden - strength.max(0)).max(0);

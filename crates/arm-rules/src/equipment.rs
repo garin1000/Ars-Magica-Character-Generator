@@ -36,8 +36,11 @@ use serde::{Deserialize, Serialize};
 use crate::types::{Id, SourceRef};
 
 /// Which weapon table a [`Weapon`] comes from, and how it reaches its target.
-/// A fixed rules taxonomy, so an enum; its label lives in Fluent
-/// (`weapon-kind-<scalar>`), never rendered as the raw slug.
+/// A fixed rules taxonomy, so an enum. Nothing currently surfaces a `Weapon`'s
+/// `WeaponKind` in the UI or the Markdown export (see [`WeaponKind::ALL`]), so
+/// there is no Fluent label for it yet; wiring one in must add a
+/// `weapon-kind-<scalar>` key to both locales rather than rendering the raw
+/// slug.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WeaponKind {

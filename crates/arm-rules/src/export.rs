@@ -1149,6 +1149,112 @@ mod tests {
         assert_eq!(escape_cell("Bjornaer of Crintera"), "Bjornaer of Crintera");
     }
 
+    // --- escape_cell gaps (K1/K2, round 1 full audit 2026-10-12) -----------
+
+    /// A ruleset with no catalogue data at all, so these two tests supply only
+    /// the one i18n entry each actually exercises, rather than reusing the
+    /// shared `ruleset()` fixture (whose `house.bonisagus`/`crisis.*` names are
+    /// relied on verbatim by dozens of other tests in this module).
+    fn minimal_ruleset_with_i18n(i18n: &str) -> LocalizedRuleset {
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "arm5-core",
+            version: "2024.1",
+            point_items: "[]",
+            type_profiles: "[]",
+            abilities: None,
+            arts: None,
+            houses: None,
+            mythic_types: None,
+            spells: None,
+            spell_mastery_abilities: None,
+            equipment: None,
+            characteristics: None,
+            life_stages: None,
+            childhoods: None,
+            aging: None,
+            parameter_catalogues: None,
+        })
+        .unwrap();
+        LocalizedRuleset::new(rs, i18n).unwrap()
+    }
+
+    /// K1: `write_title`'s subtitle splices a House's display name in with no
+    /// `escape_cell`, unlike every sibling interpolation in this module — a
+    /// House name (rules-i18n text, a named CLAUDE.md trust boundary)
+    /// containing a pipe or a newline would otherwise break the exported
+    /// document's line structure.
+    #[test]
+    fn k1_house_name_is_escaped_in_the_title_subtitle() {
+        let localized = minimal_ruleset_with_i18n(
+            r#"{"house.overflow_test": {"name": "Flambeau | Evil\nHouse"}}"#,
+        );
+
+        let mut e = magus();
+        e.name = "Test Magus".to_string();
+        e.house = Some(Id::new("house.overflow_test"));
+
+        let mut labels = BTreeMap::new();
+        labels.insert("type-magus".to_string(), "Magus".to_string());
+        labels.insert("house-label".to_string(), "House".to_string());
+
+        let doc = Doc {
+            entity: &e,
+            ruleset: &localized,
+            labels: &labels,
+            missing: RefCell::new(BTreeSet::new()),
+        };
+        let mut out = String::new();
+        doc.write_title(&mut out);
+
+        assert_eq!(
+            out, "# Test Magus\n\n*Magus · House: Flambeau \\| Evil House*\n\n",
+            "the House name must be escaped like every other name in the document: {out:?}"
+        );
+    }
+
+    /// K2: `aging_log_crisis` splices a Crisis row's display name in with no
+    /// `escape_cell`, while its sibling field two lines above in
+    /// `aging_log_entry` (the `effect` text) IS escaped — the same trust
+    /// boundary and the same risk as K1.
+    #[test]
+    fn k2_crisis_row_name_is_escaped_in_the_aging_log() {
+        let localized = minimal_ruleset_with_i18n(
+            r#"{"crisis.overflow_test": {"name": "Bedridden | A Week\nIn Bed"}}"#,
+        );
+
+        let mut e = magus();
+        e.aging_log = vec![AgingLogEntry {
+            crisis: true,
+            crisis_row: Some(Id::new("crisis.overflow_test")),
+            ..AgingLogEntry::default()
+        }];
+
+        let mut labels = BTreeMap::new();
+        labels.insert("aging-label".to_string(), "Aging".to_string());
+        labels.insert("aging-log-heading".to_string(), "Aging Log".to_string());
+        labels.insert("crisis-label".to_string(), "Crisis".to_string());
+
+        let doc = Doc {
+            entity: &e,
+            ruleset: &localized,
+            labels: &labels,
+            missing: RefCell::new(BTreeSet::new()),
+        };
+        let mut out = String::new();
+        doc.write_annotations(&mut out);
+
+        assert!(
+            out.contains("Bedridden \\| A Week In Bed"),
+            "the Crisis row name must come out escaped, matching aging_log_entry's own \
+             effect field two lines above: {out:?}"
+        );
+        assert!(
+            !out.contains("A Week\nIn Bed"),
+            "an embedded newline in the Crisis row name must not reach the document \
+             unescaped: {out:?}"
+        );
+    }
+
     // --- signed -----------------------------------------------------------
 
     #[test]

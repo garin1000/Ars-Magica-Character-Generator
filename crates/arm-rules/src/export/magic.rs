@@ -364,12 +364,12 @@ impl<'a> Doc<'a> {
         let named = match entry.crisis_severity {
             Some(severity) => format!(
                 "{} ({})",
-                self.name(row),
+                escape_cell(&self.name(row)),
                 self.label(&format!("crisis-severity-{severity}"))
             ),
             // A bedridden row carries no severity: a week in bed is time, not an
             // illness, so there is no rank to print.
-            None => self.name(row),
+            None => escape_cell(&self.name(row)),
         };
         let mut parts = vec![pair(&self.label("crisis-label"), &named)];
         if let Some(die) = entry.crisis_die {

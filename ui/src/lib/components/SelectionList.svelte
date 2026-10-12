@@ -74,7 +74,13 @@
     {:else}
       {#each col.groups as group (group.key)}
         {#if group.header}
-          <h3 class="category">{group.header}</h3>
+          <!-- A constant testid, never `group.key` (the raw category id): a
+               spec locates the one heading belonging to a given group by its
+               DOM position (the `<ul>` right after it), the same way it finds
+               the group at all — embedding the slug here would leak it into
+               the DOM, which `VirtueFlawTab.test.ts`'s "renders no raw
+               category slug" guards against. -->
+          <h3 class="category" data-testid="category-heading">{group.header}</h3>
         {/if}
         <ul class={group.listClass ?? 'selection-list'} data-testid={group.ulTestid}>
           {#each group.rows as r (r.key)}

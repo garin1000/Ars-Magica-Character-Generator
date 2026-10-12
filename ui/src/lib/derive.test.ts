@@ -1771,6 +1771,26 @@ describe('spellMasteryXpSpent', () => {
     expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [1, 1])).toBe(30);
   });
 
+  it("charges floor(den*(T-1)/num)+1, not ceil(T*den/num) — the engine's actual formula (G1, F-547)", () => {
+    // `effective/xp.rs::charged_cost`'s own doc comment identifies `ceil` as the
+    // WRONG formula it was fixed away from (V/F-audit F-547), and gives this exact
+    // counter-example: a table value of 140 (e.g. mastery score 7 on the Specialist
+    // template) under a 3/2 Affinity ratio. The two formulas disagree whenever
+    // `tableXp*den mod num` falls strictly between 0 and `den` — which 140 does:
+    // ceil(140*2/3) = ceil(93.33) = 94 (the bug this mirror carried), while the
+    // engine's actual floor(2*(140-1)/3)+1 = floor(92.67)+1 = 93.
+    const bigTable = [{ score: 7, total_xp: 140 }];
+    expect(spellMasteryXpSpent(bigTable, [{ mastery: 7 }], 0, [3, 2])).toBe(93);
+
+    // A degenerate zero table value stays free under either formula.
+    expect(spellMasteryXpSpent([{ score: 1, total_xp: 0 }], [{ mastery: 1 }], 0, [3, 2])).toBe(0);
+
+    // At T=55 the two formulas happen to agree (37) — exactly why the existing
+    // fixture table (5/15/30) never caught this: none of ITS values land where the
+    // formulas diverge, same as this one doesn't at 55.
+    expect(spellMasteryXpSpent([{ score: 1, total_xp: 55 }], [{ mastery: 1 }], 0, [3, 2])).toBe(37);
+  });
+
   it('fails safe on a degenerate ratio, on BOTH terms, exactly as the engine does', () => {
     // Klaus (round 3). `effective/xp.rs::charged_cost` takes the Affinity only
     // when `num != 0 && den != 0` and charges the full table otherwise —

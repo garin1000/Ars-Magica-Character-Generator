@@ -66,6 +66,16 @@ export class ChildhoodWorkflow {
   draft = $state<ChildhoodDraft>(defaultChildhoodDraft());
 
   /**
+   * Whether a drafted package is currently being applied — guards {@link apply}
+   * against a double-click firing two concurrent `applyChildhoodPackage` round
+   * trips (G4, full-audit round 1): `apply()` replaces the WHOLE entity from a
+   * snapshot taken before the await, so a second concurrent call would overwrite
+   * the first's (and any interim edit's) result with a value computed from an
+   * older snapshot. Mirrors `file-operations.svelte.ts::FileOperations.busy`.
+   */
+  busy = $state(false);
+
+  /**
    * Why the last attempt to take a Sample Childhood package was refused, for the
    * picker to render beside the offending slots. Empty when there is nothing to say.
    *
@@ -172,10 +182,14 @@ export class ChildhoodWorkflow {
    * `dirty` needs no help, since it derives from the entity snapshot. On `rejected`
    * the entity is left exactly as it was and the findings land in {@link rejections}
    * for the picker to show against the offending slots.
+   *
+   * A no-op while a previous call is still in flight (see {@link busy}) — a
+   * second concurrent apply must never fire a second round trip.
    */
   async apply(): Promise<void> {
     const packageId = this.draft.packageId;
-    if (!packageId) return;
+    if (!packageId || this.busy) return;
+    this.busy = true;
     this.rejections = [];
     try {
       const outcome = await ipc.applyChildhoodPackage(
@@ -191,6 +205,8 @@ export class ChildhoodWorkflow {
       await this.#host.revalidate();
     } catch (e) {
       this.#host.setError(e as AppError);
+    } finally {
+      this.busy = false;
     }
   }
 }

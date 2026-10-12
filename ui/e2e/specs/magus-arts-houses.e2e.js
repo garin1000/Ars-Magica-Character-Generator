@@ -270,7 +270,10 @@ describe('hermetic houses', () => {
     // Read the group the granted row actually sits in. `closest('ul')` plus a walk
     // back over the previous siblings is the only way to tell "under this heading"
     // from "after this heading": the bug was precisely a row rendering in a list
-    // that had no heading of its own.
+    // that had no heading of its own. The heading itself is found by its stable
+    // `data-testid` (`SelectionList.svelte`'s `category-heading`, E8 full-audit
+    // round 1), not by tag name, so a markup refactor that keeps the testid
+    // cannot silently break this walk.
     const group = await browser.waitUntil(
       async () => {
         const info = await browser.execute(() => {
@@ -285,7 +288,7 @@ describe('hermetic houses', () => {
             // A preceding <ul> means this list has no heading of its own — the
             // header-less group that #9 removed.
             if (node.tagName === 'UL') break;
-            if (node.tagName === 'H3') {
+            if (node.getAttribute('data-testid') === 'category-heading') {
               heading = node.textContent.trim();
               break;
             }

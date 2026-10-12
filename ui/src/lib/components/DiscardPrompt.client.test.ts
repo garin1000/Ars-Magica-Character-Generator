@@ -148,3 +148,64 @@ describe('DiscardPrompt focus management (E1)', () => {
     expect(store.entity.name).toBe('a dirtying edit');
   });
 });
+
+// S1 (tmp/full-audit/review-round-1b-sabine.md) + E1 follow-up (round 2): the
+// modal has Escape-to-cancel and initial-focus-on-Cancel, but no Tab-cycling
+// focus trap — unlike its three siblings (ConfirmPrompt, SettingsDialog,
+// UpdatePrompt), which all implement the identical real trap.
+// `SettingsDialog.svelte`'s own comment says DiscardPrompt is "contained only
+// by accident" via `App.svelte`'s `inert` on the shell, which keeps Tab from
+// LEAVING the shell but does nothing to make Tab LOOP between Cancel/Discard
+// once the ring's last control is reached. Mirrors
+// `SettingsDialog.client.test.ts`'s three focus-trap tests (that dialog is the
+// right template, not `ConfirmPrompt`'s: both render OUTSIDE the app shell
+// with the shell `inert`, so the trap is a local `onkeydown`, never a
+// `svelte:window` listener).
+describe('DiscardPrompt focus trap (S1/E1)', () => {
+  function cancelButton(): HTMLButtonElement {
+    return target.querySelector<HTMLButtonElement>('[data-testid="discard-cancel"]')!;
+  }
+
+  function discardButton(): HTMLButtonElement {
+    return target.querySelector<HTMLButtonElement>('[data-testid="discard-confirm"]')!;
+  }
+
+  function press(key: string, shiftKey = false): KeyboardEvent {
+    const event = new KeyboardEvent('keydown', { key, shiftKey, bubbles: true, cancelable: true });
+    document.activeElement?.dispatchEvent(event);
+    flushSync();
+    return event;
+  }
+
+  beforeEach(async () => {
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(DiscardPrompt, { target });
+    flushSync();
+    await openPrompt();
+  });
+
+  it('wraps Tab from the last control back to the first', () => {
+    discardButton().focus();
+    press('Tab');
+
+    expect(document.activeElement).toBe(cancelButton());
+  });
+
+  it('wraps Shift+Tab from the first control back to the last', () => {
+    cancelButton().focus();
+    press('Tab', true);
+
+    expect(document.activeElement).toBe(discardButton());
+  });
+
+  it('leaves a Tab that is not at either end of the ring to the browser', () => {
+    // The trap closes only the two ENDS of the ring. Calling `preventDefault` on
+    // every Tab would mean reimplementing the browser's own focus order, which is
+    // how a trap starts skipping controls it does not know about.
+    cancelButton().focus();
+    const event = press('Tab');
+
+    expect(event.defaultPrevented).toBe(false);
+  });
+});

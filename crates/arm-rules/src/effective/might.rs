@@ -31,12 +31,17 @@ pub fn effective_might(entity: &Entity, ruleset: &Ruleset) -> Option<MightScore>
         .map(|m| m.realm)
         .or_else(|| grants.first().map(|(realm, _)| *realm))?;
     let base = entity.might.map(|m| m.score).unwrap_or(0);
+    // K5 (round 1 full audit, 2026-10-12): `saturating_add`, not `.sum()`/`+` —
+    // a crafted save's granting selections are an uncapped `Vec`, and
+    // `[profile.release] overflow-checks = true` (root `Cargo.toml`, K9) turns
+    // a plain overflow into a process abort before the `u8::try_from(...)
+    // .unwrap_or(u8::MAX)` fallback below ever gets a chance to run.
     let granted: u32 = grants
         .iter()
         .filter(|(r, _)| *r == realm)
         .map(|(_, s)| u32::from(*s))
-        .sum();
-    let score = u8::try_from(u32::from(base) + granted).unwrap_or(u8::MAX);
+        .fold(0u32, u32::saturating_add);
+    let score = u8::try_from(u32::from(base).saturating_add(granted)).unwrap_or(u8::MAX);
     Some(MightScore { realm, score })
 }
 
@@ -47,7 +52,9 @@ pub fn true_faith(entity: &Entity, ruleset: &Ruleset) -> u8 {
     let mut score = 0u32;
     for_each_effect!(entity, ruleset, |_selection, effect| {
         if let Effect::TrueFaithGrant { score: s } = effect {
-            score += u32::from(*s);
+            // K5 (round 1 full audit, 2026-10-12): `saturating_add`, not `+=` —
+            // see `effective_might`'s identical note just above.
+            score = score.saturating_add(u32::from(*s));
         }
     });
     u8::try_from(score).unwrap_or(u8::MAX)

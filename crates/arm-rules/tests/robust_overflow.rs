@@ -13,14 +13,34 @@
 //! F2 (an absurd `age` materialising one schedule row per year) is a product
 //! decision, not a mechanical fix, and is analysed in `tmp/ovf-handover.md`
 //! instead of tested here. F6 is out of scope.
+//!
+//! The `k3`/`k4`/`k5`/`row58` tests below are a second, later batch: K3-K6 and
+//! E3/E5 of the 2026-10-12 full-audit round 1, plus the already-tracked
+//! `docs/open-todos.md` row 58 — five more bare `.sum()`/`+=` folds over
+//! `Entity`-supplied, caller-uncapped collections, found by the same "no
+//! `saturating_add`" pattern as F5 above. `effective/xp.rs::general_pool_and_bonus`'s
+//! `earmarked: u32 = ...sum()` (the fifth site K6/E3 named) is deliberately NOT
+//! tested here: `capped_earmark_amounts` caps every pushed term at
+//! `amount.min(remaining)` and shrinks `remaining` by exactly that amount each
+//! iteration (`remaining = remaining.saturating_sub(effective)`), so by
+//! induction the running total can never exceed the loop's own starting
+//! `remaining` — itself a `u32` already built with `saturating_add`
+//! (`pre_earmark_general_xp`). The sum is mathematically bounded by a value
+//! that already fits in `u32`, so it cannot overflow no matter how many
+//! earmark effects a crafted save carries. Confirmed by reading
+//! `capped_earmark_amounts` and `pre_earmark_general_xp` (`effective/xp.rs`) in
+//! full — writing a test that claims to turn this red would be dishonest.
+
+use std::collections::BTreeMap;
 
 use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::validation::validate;
 use arm_rules::{
-    aging_total, checked_xp_allocation, crisis_total, derived_totals,
-    familiar_invested_power_levels, focus_points_used, item_level_used, powers_used,
-    resolve_outcome, restricted_xp_pools, warping_points_total,
+    Characteristic, aging_total, checked_xp_allocation, crisis_total, derived_totals,
+    effective_might, encumbrance, familiar_invested_power_levels, focus_points_used,
+    item_level_used, powers_used, resolve_outcome, restricted_xp_pools, spell_levels_used,
+    true_faith, warping_points_total,
 };
 
 /// The shipped core ruleset — same set of files `x10bc_banked_xp_and_within_focus.rs`
@@ -283,4 +303,211 @@ fn f5_maxed_familiar_powers_saturate_the_invested_levels_without_panicking() {
         ..Familiar::default()
     };
     assert_eq!(familiar_invested_power_levels(&familiar), u32::MAX);
+}
+
+// --- K3-K5, row 58: four more sums over `u8`-bounded, save-controlled terms -
+//
+// Unlike F5's `u16`-bounded rows above, each term these four sites sum is
+// bounded by `u8::MAX` (a Load, an aging-log Characteristic point, a
+// Might/True-Faith/spell-level grant), so crossing `u32::MAX` needs
+// `ceil(2^32 / 255) == 16_843_010` rows rather than F5's 65_538:
+// `16_843_009 * 255 == u32::MAX` exactly, so one more row pushes the sum past
+// it. Reachable only from a hand-edited save — the UI has no way to equip the
+// same slot, grant the same Virtue, or learn the same spell millions of times
+// over — but `Entity::equipment`/`selections`/`spells` are all plain `Vec`s
+// with no length cap at deserialization.
+
+const ROWS_PAST_U32_OVER_U8_MAX: usize = 16_843_010;
+
+/// A ruleset with one `armor.overflow_test` item at Load 255 (`u8::MAX`) — the
+/// real core catalogue's heaviest armour tops out at 7
+/// (`armor.metal_scale_full`), which would need over 600 million equipped
+/// rows to reach the same total as 255 does at this row count.
+fn overflow_equipment_ruleset() -> Ruleset {
+    Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: "[]",
+        type_profiles: "[]",
+        abilities: None,
+        arts: None,
+        houses: None,
+        mythic_types: None,
+        spells: None,
+        spell_mastery_abilities: None,
+        equipment: Some(
+            r#"{"weapons":[],"shields":[],"armor":[
+                {"id":"armor.overflow_test","protection":0,"load":255}
+            ]}"#,
+        ),
+        characteristics: None,
+        life_stages: None,
+        childhoods: None,
+        aging: None,
+        parameter_catalogues: None,
+    })
+    .expect("minimal one-armor ruleset loads")
+}
+
+/// K3: `derived/combat.rs::encumbrance`'s Load sum.
+#[test]
+fn k3_maxed_wielded_equipment_saturates_encumbrance_load_without_panicking() {
+    let ruleset = overflow_equipment_ruleset();
+    let mut e = entity("grog");
+    e.equipment = vec![
+        EquipmentSlot {
+            item: Id::new("armor.overflow_test"),
+            loadout: LoadoutState::Wielded,
+            specialization_applies: false,
+        };
+        ROWS_PAST_U32_OVER_U8_MAX
+    ];
+
+    let total = encumbrance(&e, &ruleset);
+    assert_eq!(
+        total.load,
+        u32::MAX,
+        "the Load sum saturates rather than overflowing"
+    );
+}
+
+/// `ceil(2^32 / (8 * u8::MAX))`: the fewest aging-log entries, each already
+/// carrying the maximum point award at every one of the eight Characteristics
+/// (`8 * 255 == 2040` per entry), whose summed points cross `u32::MAX`.
+/// `2_105_376 * 2040 == 4_294_967_040`, 256 short of `u32::MAX + 1`, so one
+/// more row is enough.
+const ROWS_PAST_U32_OVER_EIGHT_CHARACTERISTICS: usize = 2_105_377;
+
+/// K4: `aging.rs::decrepitude_points_as_of`'s `later` sum — reached only
+/// through its one public caller, [`crisis_total`] (ArMDE:16696's "Increase
+/// the character's Decrepitude first, and then roll on the Crisis Table").
+/// Age 60 (less than every logged 61) makes every crafted entry count as
+/// "later" and so feed the overflowing sum.
+#[test]
+fn k4_maxed_aging_log_saturates_decrepitude_points_as_of_without_panicking() {
+    let ruleset = full_ruleset();
+    let mut e = entity("companion");
+    e.age = Some(60);
+    let mut points = BTreeMap::new();
+    for characteristic in Characteristic::ALL {
+        points.insert(characteristic, u8::MAX);
+    }
+    e.aging_log = vec![
+        AgingLogEntry {
+            age: Some(61),
+            points: points.clone(),
+            ..AgingLogEntry::default()
+        };
+        ROWS_PAST_U32_OVER_EIGHT_CHARACTERISTICS
+    ];
+
+    let total = crisis_total(&e, &ruleset, 60, 0).expect("the core ruleset ships a crisis");
+    assert_eq!(
+        total.decrepitude_score, 0,
+        "a later-points sum saturated at u32::MAX subtracts down to 0 (saturating_sub), \
+         never underflows or panics"
+    );
+}
+
+/// A ruleset with two Virtues whose effects grant the maximum single-item
+/// amount (`u8::MAX` = 255) of Might and True Faith respectively — the real
+/// core catalogue's largest Might grant is Demonic Blood's 5
+/// (`virtue.demonic_blood`) and its only True Faith grant is 1
+/// (`virtue.true_faith`), either of which would need well over a billion
+/// selections to reach the same total as 255 does at this row count.
+fn overflow_grants_ruleset() -> Ruleset {
+    Ruleset::from_sources(RulesetSources {
+        id: "arm5-core",
+        version: "2024.1",
+        point_items: r#"[
+            {
+                "id": "virtue.overflow_might",
+                "kind": "virtue", "classification": "creation_effect",
+                "magnitude": "minor", "categories": ["supernatural"],
+                "entity_kinds": ["character"],
+                "effects": [{ "type": "might_grant", "realm": "infernal", "score": 255 }]
+            },
+            {
+                "id": "virtue.overflow_true_faith",
+                "kind": "virtue", "classification": "creation_effect",
+                "magnitude": "major", "categories": ["general"],
+                "entity_kinds": ["character"],
+                "effects": [{ "type": "true_faith_grant", "score": 255 }]
+            },
+            {
+                "id": "flaw.overflow_personality_filler",
+                "kind": "flaw", "classification": "narrative",
+                "magnitude": "minor", "categories": ["personality"],
+                "entity_kinds": ["character"]
+            }
+        ]"#,
+        type_profiles: "[]",
+        abilities: None,
+        arts: None,
+        houses: None,
+        mythic_types: None,
+        spells: None,
+        spell_mastery_abilities: None,
+        equipment: None,
+        characteristics: None,
+        life_stages: None,
+        childhoods: None,
+        aging: None,
+        parameter_catalogues: None,
+    })
+    .expect("minimal two-virtue ruleset loads")
+}
+
+/// K5: `effective/might.rs::effective_might`'s `granted` sum (and the plain
+/// `base + granted` add that follows it — both must survive a saturated
+/// `granted`, since `.sum()` panicking before the final `u8::try_from(...)
+/// .unwrap_or(u8::MAX)` fallback is exactly the bug: the fallback never gets a
+/// chance to run).
+#[test]
+fn k5_maxed_might_grants_saturate_effective_might_without_panicking() {
+    let ruleset = overflow_grants_ruleset();
+    let mut e = entity("companion");
+    e.selections =
+        vec![Selection::new(Id::new("virtue.overflow_might")); ROWS_PAST_U32_OVER_U8_MAX];
+
+    let might = effective_might(&e, &ruleset).expect("a MightGrant establishes a Realm");
+    assert_eq!(
+        might.score,
+        u8::MAX,
+        "an overflowing granted sum clamps the Might Score at u8::MAX"
+    );
+}
+
+/// K5: `effective/might.rs::true_faith`'s running `score +=` accumulator.
+#[test]
+fn k5_maxed_true_faith_grants_saturate_true_faith_without_panicking() {
+    let ruleset = overflow_grants_ruleset();
+    let mut e = entity("companion");
+    e.selections =
+        vec![Selection::new(Id::new("virtue.overflow_true_faith")); ROWS_PAST_U32_OVER_U8_MAX];
+
+    assert_eq!(
+        true_faith(&e, &ruleset),
+        u8::MAX,
+        "an overflowing granted sum clamps True Faith at u8::MAX"
+    );
+}
+
+/// Row 58 (`docs/open-todos.md`): `effective/spell.rs::spell_levels_used`'s
+/// sum. `spell.aegis_of_the_hearth` is a General spell in the shipped core
+/// catalogue (no fixed `level`), so the per-character chosen level — clamped
+/// to `u8::MAX` here — is what `resolved_spell_level` sums.
+#[test]
+fn row58_maxed_general_spell_levels_saturate_spell_levels_used_without_panicking() {
+    let ruleset = full_ruleset();
+    let mut e = entity("magus");
+    let mut sel = SpellSelection::new(Id::new("spell.aegis_of_the_hearth"));
+    sel.level = Some(u8::MAX);
+    e.spells = vec![sel; ROWS_PAST_U32_OVER_U8_MAX];
+
+    assert_eq!(
+        spell_levels_used(&e, &ruleset),
+        u32::MAX,
+        "the level sum saturates rather than overflowing"
+    );
 }

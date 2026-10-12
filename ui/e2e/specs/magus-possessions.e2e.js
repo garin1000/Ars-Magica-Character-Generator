@@ -1106,7 +1106,7 @@ describe('markdown export', () => {
   // The last section a character with no aging annotations emits, so its presence
   // means the write has fully landed rather than merely started.
   const EN_LAST_SECTION = '## Magic Items';
-  const DE_LAST_SECTION = '## Magische Gegenstände';
+  const DE_LAST_SECTION = '## Verzauberte Gegenstände';
 
   // The language control moved into the settings dialog in C4, so the spec-local
   // wrapper is now the shared helper — which opens the dialog, chooses, waits for

@@ -460,9 +460,8 @@ cargo fmt --check
 
 # Frontend
 cd ui && npm run dev          # dev server
-cd ui && npm run lint         # eslint + prettier
-cd ui && npm run test:unit     # vitest
-cd ui && npm run format:check  # prettier
+cd ui && npm run lint         # eslint + prettier --check (no separate format:check step)
+cd ui && npm run test:unit    # vitest
 
 # Real-binary E2E. Needs tauri-driver and webkit2gtk-driver. Runs headful on a
 # desktop and headless via xvfb-run where there is no display (ssh, CI) — same

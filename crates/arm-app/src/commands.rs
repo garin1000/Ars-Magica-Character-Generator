@@ -1242,16 +1242,11 @@ pub async fn load_entity(
     app: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<Option<OpenedDocument>, AppError> {
-    // `load_entity_from_path` (owned by `ruleset_io.rs`) does its own
-    // `NotLoaded` check on the `Option`, so only the lock-acquisition half of
-    // the pair applies here (mirrors `export_markdown_to_path` above).
-    let guard = ruleset_guard(&state);
-    let ruleset = guard.as_ref().map(|localized| &localized.ruleset);
-    let catalogue_names_guard = state
-        .catalogue_names
-        .read()
-        .expect("catalogue names lock poisoned");
-
+    // The destination is resolved BEFORE the ruleset lock is taken, mirroring
+    // `export_markdown` just above: a native dialog blocks until the user
+    // dismisses it, and holding the read guard across it would stall a
+    // concurrent language switch (`load_ruleset` wants the write guard) for
+    // exactly as long as the dialog stays open (Gerda G1 / Erika E4).
     let path = match e2e_file_override() {
         Some(path) => path,
         None => {
@@ -1280,6 +1275,19 @@ pub async fn load_entity(
     // it is the one the user has configured for new documents — read here, because
     // `arm-rules` has no filesystem and cannot.
     let default_saga_year = read_settings(app).default_saga_year;
+
+    // `load_entity_from_path` (owned by `ruleset_io.rs`) does its own
+    // `NotLoaded` check on the `Option`, so only the lock-acquisition half of
+    // the pair applies here (mirrors `export_markdown_to_path` above). Taken
+    // only now that the path is known, so neither lock is held across the
+    // dialog above.
+    let guard = ruleset_guard(&state);
+    let ruleset = guard.as_ref().map(|localized| &localized.ruleset);
+    let catalogue_names_guard = state
+        .catalogue_names
+        .read()
+        .expect("catalogue names lock poisoned");
+
     let loaded = ruleset_io::load_entity_from_path(
         &path,
         default_saga_year,

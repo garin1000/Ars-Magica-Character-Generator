@@ -2,7 +2,13 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { AgingApplication, AgingProjection, PersistedSettings } from './ipc';
+import type {
+  AgingApplication,
+  AgingProjection,
+  AgingReversion,
+  ChildhoodApplication,
+  PersistedSettings,
+} from './ipc';
 import type {
   Ability,
   AgingLogEntry,
@@ -4358,6 +4364,37 @@ describe('applyChildhoodPackage', () => {
   });
 });
 
+describe('applyChildhoodPackage — concurrent calls do not stack (G4)', () => {
+  beforeEach(() => {
+    installChildhoods();
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.error = null;
+    vi.mocked(ipc.applyChildhoodPackage).mockReset();
+  });
+
+  it('a second apply while the first is still in flight is a no-op', async () => {
+    // Nothing here blocks an edit to the live entity during the round trip, and
+    // `apply()` replaces the WHOLE entity on return — so a second concurrent call
+    // (a double-click on Apply, since nothing disables the button while pending)
+    // must not spend a second engine round trip at all.
+    let finishFirst: (value: ChildhoodApplication) => void = () => {};
+    vi.mocked(ipc.applyChildhoodPackage).mockImplementationOnce(
+      () =>
+        new Promise<ChildhoodApplication>((resolve) => {
+          finishFirst = resolve;
+        }),
+    );
+
+    const first = store.applyChildhoodPackage();
+    const second = store.applyChildhoodPackage();
+
+    finishFirst({ status: 'applied', entity: store.entity });
+    await Promise.all([first, second]);
+
+    expect(vi.mocked(ipc.applyChildhoodPackage)).toHaveBeenCalledTimes(1);
+  });
+});
+
 // --- Art actions ------------------------------------------------------------
 
 describe('art actions', () => {
@@ -4911,6 +4948,95 @@ describe('removeSelectionAt calls unlink_ability_parameters before removing (CV7
   });
 });
 
+describe('removeSelectionAt — concurrent calls resolve by identity, not a stale index (G2)', () => {
+  beforeEach(() => {
+    vi.mocked(ipc.unlinkAbilityParameters).mockClear();
+    store.entity.selections = [{ ref: 'virtue.a' }, { ref: 'virtue.b' }, { ref: 'virtue.c' }];
+    store.effective = {
+      ability_parameter_options: [
+        {
+          ability: 'ability.x',
+          catalogued: [],
+          linked: [
+            { item: 'virtue.a', param: 'p', resolved: 'A' },
+            { item: 'virtue.b', param: 'p', resolved: 'B' },
+          ],
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+  });
+
+  it("removes the row the caller targeted even when an earlier row's call resolves first", async () => {
+    // index 1 ('virtue.b') is slow to resolve — stays pending until finishB() runs.
+    let finishB: (value: Entity) => void = () => {};
+    vi.mocked(ipc.unlinkAbilityParameters)
+      .mockImplementationOnce(
+        () =>
+          new Promise<Entity>((resolve) => {
+            finishB = resolve;
+          }),
+      )
+      // index 0 ('virtue.a')'s call: resolves on the very next microtask.
+      .mockImplementationOnce((entity: Entity) => Promise.resolve(entity));
+
+    const removeB = store.removeSelectionAt(1);
+    const removeA = store.removeSelectionAt(0);
+    await removeA;
+
+    // 'virtue.a' finished first and spliced itself out before 'virtue.b''s call
+    // ever resolves — entity.selections has already shifted under the still-
+    // pending removeB call's captured index (1).
+    expect(store.entity.selections!.map((s) => s.ref)).toEqual(['virtue.b', 'virtue.c']);
+
+    finishB(store.entity);
+    await removeB;
+
+    // removeB was asked to remove 'virtue.b' by identity. A stale captured index
+    // (1) now names 'virtue.c' instead — the wrong row — and leaves the actually
+    // targeted 'virtue.b' behind.
+    expect(store.entity.selections!.map((s) => s.ref)).toEqual(['virtue.c']);
+  });
+});
+
+describe('removeSelectionAt — a second click on the same row is ignored while the first is in flight (G2)', () => {
+  beforeEach(() => {
+    vi.mocked(ipc.unlinkAbilityParameters).mockClear();
+    store.entity.selections = [{ ref: 'virtue.a' }, { ref: 'virtue.b' }];
+    store.effective = {
+      ability_parameter_options: [
+        {
+          ability: 'ability.x',
+          catalogued: [],
+          linked: [{ item: 'virtue.a', param: 'p', resolved: 'A' }],
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+  });
+
+  it('removes exactly one row for a double-click on the same remove button', async () => {
+    let finishFirst: (value: Entity) => void = () => {};
+    vi.mocked(ipc.unlinkAbilityParameters).mockImplementationOnce(
+      () =>
+        new Promise<Entity>((resolve) => {
+          finishFirst = resolve;
+        }),
+    );
+
+    const first = store.removeSelectionAt(0);
+    const second = store.removeSelectionAt(0);
+
+    finishFirst(store.entity);
+    await Promise.all([first, second]);
+
+    expect(store.entity.selections!.map((s) => s.ref)).toEqual(['virtue.b']);
+    // A re-entrant click on a row already being removed must not spend a second
+    // round trip at all.
+    expect(vi.mocked(ipc.unlinkAbilityParameters)).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('setParamAt calls unlink_ability_parameters when clearing a Bound source to empty (CV7, design § 5.5)', () => {
   beforeEach(() => {
     vi.mocked(ipc.unlinkAbilityParameters).mockClear();
@@ -4968,6 +5094,57 @@ describe('setParamAt calls unlink_ability_parameters when clearing a Bound sourc
   it('does not call it for a non-empty edit — a live link must keep tracking a rename', async () => {
     await store.setParamAt(0, 'guild', "Smiths' Guild of Fenster");
     expect(ipc.unlinkAbilityParameters).not.toHaveBeenCalled();
+  });
+});
+
+describe('setParamAt — a concurrent removal does not write the clear onto a shifted row (G3)', () => {
+  beforeEach(() => {
+    vi.mocked(ipc.unlinkAbilityParameters).mockClear();
+    store.entity.selections = [
+      { ref: 'virtue.a' },
+      { ref: 'virtue.b', params: { guild: 'Old Guild' } },
+      { ref: 'virtue.c' },
+    ];
+    store.effective = {
+      ability_parameter_options: [
+        {
+          ability: 'ability.x',
+          catalogued: [],
+          linked: [{ item: 'virtue.b', param: 'guild', resolved: 'Old Guild' }],
+          hint: false,
+        },
+      ],
+    } as unknown as EffectiveScores;
+  });
+
+  it("clears the targeted row's own param, not whatever shifted into its captured index", async () => {
+    // Clearing row 1 ('virtue.b') is a link source, so it goes through the
+    // unlink-await — and stays pending until finishClear() runs below.
+    let finishClear: (value: Entity) => void = () => {};
+    vi.mocked(ipc.unlinkAbilityParameters).mockImplementationOnce(
+      () =>
+        new Promise<Entity>((resolve) => {
+          finishClear = resolve;
+        }),
+    );
+
+    const clearB = store.setParamAt(1, 'guild', '');
+    // While that await is still out, row 0 ('virtue.a') — not a link source, so
+    // no await at all — is removed synchronously, shifting every later row left.
+    store.removeSelectionAt(0);
+
+    expect(store.entity.selections!.map((s) => s.ref)).toEqual(['virtue.b', 'virtue.c']);
+
+    finishClear(store.entity);
+    await clearB;
+
+    // The clear was meant for 'virtue.b'. A stale captured index (1) now names
+    // 'virtue.c' instead, writing the cleared param onto the wrong row and
+    // leaving 'virtue.b' with its old value.
+    expect(store.entity.selections).toEqual([
+      { ref: 'virtue.b', params: { guild: '' } },
+      { ref: 'virtue.c' },
+    ]);
   });
 });
 
@@ -5985,6 +6162,42 @@ describe('the aging roll draft', () => {
   });
 });
 
+describe('applyAgingRoll — concurrent calls do not stack (G5)', () => {
+  beforeEach(() => {
+    store.clearAgingDraft();
+    vi.mocked(ipc.agingApply).mockReset();
+    store.setAgingYear(40);
+    store.setAgingDie(9);
+  });
+
+  it('a second apply while the first is still in flight is a no-op', async () => {
+    // `apply()` replaces the WHOLE entity from an awaited IPC result, with no
+    // in-flight guard — `AgingRollCalculator.svelte`'s Apply button is gated only
+    // on `canApply`, which does not change synchronously on click, so nothing
+    // stops a double-click from firing two concurrent `agingApply` calls.
+    let finishFirst: (value: AgingApplication) => void = () => {};
+    vi.mocked(ipc.agingApply).mockImplementationOnce(
+      () =>
+        new Promise<AgingApplication>((resolve) => {
+          finishFirst = resolve;
+        }),
+    );
+
+    const first = store.applyAgingRoll();
+    const second = store.applyAgingRoll();
+
+    finishFirst({
+      status: 'applied',
+      entity: $state.snapshot(store.entity),
+      total: { total: 13 },
+      outcome: { total: 13, crisis: false },
+    } as unknown as AgingApplication);
+    await Promise.all([first, second]);
+
+    expect(vi.mocked(ipc.agingApply)).toHaveBeenCalledTimes(1);
+  });
+});
+
 // --- the aging log's remove button (manual-testing-findings #23) ------------
 
 describe('the aging log’s remove button', () => {
@@ -6117,6 +6330,58 @@ describe('the aging log’s remove button', () => {
     expect(store.error).toEqual({ kind: 'io' });
     expect(store.entity.aging_log).toEqual([recorded(40, 1220)]);
     expect(store.entity.aging_points).toEqual({ sta: 1 });
+  });
+});
+
+describe('revertAgingRoll — concurrent calls do not stack (G6)', () => {
+  function recorded(age: number, year: number): AgingLogEntry {
+    return {
+      year,
+      age,
+      effect: '',
+      die: 9,
+      total: 13,
+      points: { sta: 1 },
+      apparent_age_increased: true,
+    };
+  }
+
+  beforeEach(() => {
+    store.clearAgingDraft();
+    store.error = null;
+    vi.mocked(ipc.agingRevert).mockReset();
+    store.entity.aging_points = { sta: 1 };
+    store.entity.apparent_age = 41;
+    store.entity.aging_log = [recorded(40, 1220)];
+  });
+
+  it('a second take-back of the same year while the first is still in flight is a no-op', async () => {
+    // Same whole-entity-replace-from-stale-snapshot pattern as apply() (G5), shared
+    // across the same workflow instance — the aging log's "×" button has no
+    // in-flight guard either.
+    let finishFirst: (value: AgingReversion) => void = () => {};
+    vi.mocked(ipc.agingRevert).mockImplementationOnce(
+      () =>
+        new Promise<AgingReversion>((resolve) => {
+          finishFirst = resolve;
+        }),
+    );
+
+    const first = store.revertAgingRoll(40);
+    const second = store.revertAgingRoll(40);
+
+    finishFirst({
+      status: 'reverted',
+      entity: {
+        ...($state.snapshot(store.entity) as Entity),
+        aging_points: {},
+        apparent_age: null,
+        aging_log: [],
+      },
+    });
+    await Promise.all([first, second]);
+
+    expect(vi.mocked(ipc.agingRevert)).toHaveBeenCalledTimes(1);
   });
 });
 

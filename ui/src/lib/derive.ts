@@ -1633,27 +1633,33 @@ export function spellMasteryXpSpent(
 
 /**
  * What an advancement total actually costs under an Affinity: a score "counts as
- * `num`/`den` of itself", so it is charged `ceil(table * den / num)`. The exact
- * mirror of the engine's `effective/xp.rs::charged_cost`, including its guard on
- * a degenerate ratio — nonsense data must not price a spend, and charging the
- * full cost is the conservative reading.
+ * `num`/`den` of itself", so it is charged `floor(den*(table-1)/num) + 1`. The
+ * exact mirror of the engine's `effective/xp.rs::charged_cost`, including its
+ * guard on a degenerate ratio — nonsense data must not price a spend, and
+ * charging the full cost is the conservative reading.
  *
- * BOTH terms are guarded, because the engine guards both (Klaus, round 3). A
- * zero numerator would divide by zero; a zero numerator is not the only nonsense
- * ratio, though, and a zero DENOMINATOR is the worse one — it divides cleanly and
- * prices the whole spend at nothing, so the bar would have read 0 XP where the
- * engine read the full table. Round 3 also closed the gap upstream: a zero term
- * in either position is now rejected at ruleset load, across every ratio-bearing
+ * NOT `ceil(table * den / num)` (G1, full-audit round 1, V/F-audit F-547): that
+ * was this mirror's formula until the engine's own doc comment — which names
+ * `ceil` as the WRONG formula it was fixed away from — gave the counter-example
+ * that exposed it. The two disagree whenever `table*den mod num` falls strictly
+ * between 0 and `den`; see `derive.test.ts`'s regression at table=140, ratio
+ * 3/2 (ceil gives 94, the correct charge is 93).
+ *
+ * ALL THREE terms are guarded, because the engine guards all three (Klaus,
+ * round 3, plus `table_xp != 0` so `(table_xp - 1)` never goes negative). A
+ * zero numerator would divide by zero; a zero DENOMINATOR divides cleanly and
+ * would price the whole spend at nothing, so the bar would have read 0 XP
+ * where the engine read the full table. Round 3 closed the gap upstream: a
+ * zero ratio term is now rejected at ruleset load, across every ratio-bearing
  * effect, so no loadable ruleset reaches this branch. It stays anyway — this
- * function's contract is "the exact mirror", and a mirror that guards half of
- * what its counterpart guards is precisely the drift that contract exists to
- * prevent.
+ * function's contract is "the exact mirror", and a mirror that guards less than
+ * its counterpart does is precisely the drift that contract exists to prevent.
  */
 function chargedCost(tableXp: number, affinity: [number, number] | null): number {
   if (!affinity) return tableXp;
   const [num, den] = affinity;
-  if (num === 0 || den === 0) return tableXp;
-  return Math.ceil((tableXp * den) / num);
+  if (num === 0 || den === 0 || tableXp === 0) return tableXp;
+  return Math.floor((den * (tableXp - 1)) / num) + 1;
 }
 
 /**

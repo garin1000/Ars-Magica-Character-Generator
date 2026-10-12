@@ -31,6 +31,7 @@ vi.mock('../ipc', () => ({
   agingRevert: vi.fn(),
 }));
 
+import * as ipc from '../ipc';
 import { SCHEMA_VERSION, defaultAgingDraft, store, type AgingDraft } from '../state.svelte';
 import AgingRollCalculator from './AgingRollCalculator.svelte';
 
@@ -316,6 +317,35 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     body = html();
     expect(open(body, 'aging-apply')).not.toContain('disabled');
     expect(text(body, 'aging-distribute-remaining')).toContain('5');
+  });
+
+  it('disables Apply and Clear while a previous apply is still in flight (G5, full-audit round 1)', () => {
+    // apply() replaces the WHOLE entity from a snapshot taken before the await;
+    // `canApply` does not change synchronously on click, so nothing used to stop
+    // a double-click from firing a second concurrent `agingApply` call. The
+    // buttons must reflect the workflow's own busy flag.
+    let settle: () => void = () => {};
+    vi.mocked(ipc.agingApply).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          settle = () =>
+            resolve({
+              status: 'applied',
+              entity: store.entity,
+              total: total(),
+              outcome: outcome(),
+            });
+        }),
+    );
+    store.agingDraft = draft({ die: 9 });
+    setPreview(total({ die: 9 }), outcome({ awards: [] }));
+    void store.applyAgingRoll();
+
+    const body = html();
+
+    expect(open(body, 'aging-apply')).toContain('disabled');
+    expect(open(body, 'aging-calculator-clear')).toContain('disabled');
+    settle();
   });
 
   // manual-testing-findings #21 removed the "this roll is a Crisis, place the points

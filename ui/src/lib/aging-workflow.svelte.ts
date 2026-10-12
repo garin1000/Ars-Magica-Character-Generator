@@ -123,6 +123,17 @@ export class AgingWorkflow {
   rejections = $state<ValidationIssue[]>([]);
 
   /**
+   * Whether {@link apply} or {@link revert} is currently out on its engine round
+   * trip — shared between the two (G5/G6, full-audit round 1) since both replace
+   * the WHOLE entity from a snapshot taken before the await, via this one
+   * workflow instance. A double-click on Apply, or on the aging log's "×"
+   * take-back button, must not fire a second concurrent call that overwrites the
+   * first's (and any interim edit's) result with data computed from an older
+   * snapshot. Mirrors `file-operations.svelte.ts::FileOperations.busy`.
+   */
+  busy = $state(false);
+
+  /**
    * The owed year the calculator is on: the player's own pick, or the first year
    * the aging log does not yet record.
    *
@@ -267,11 +278,15 @@ export class AgingWorkflow {
    * the draft is spent, so the calculator moves on to the next owed year; `dirty`
    * needs no help, since it derives from the entity snapshot. On refusal the
    * character is untouched and the findings land in {@link rejections}.
+   *
+   * A no-op while {@link busy} — shared with {@link revert} — so a double-click
+   * (or an apply racing a take-back) never fires a second round trip.
    */
   async apply(): Promise<void> {
     const { die, distribution, crisisDie } = this.draft;
     const year = this.year;
-    if (year == null || die == null) return;
+    if (year == null || die == null || this.busy) return;
+    this.busy = true;
     this.rejections = [];
     this.notes = [];
     try {
@@ -295,6 +310,8 @@ export class AgingWorkflow {
       await this.#host.revalidate();
     } catch (e) {
       this.#host.setError(e as AppError);
+    } finally {
+      this.busy = false;
     }
   }
 
@@ -302,8 +319,13 @@ export class AgingWorkflow {
    * Take one recorded year back off, exactly — a pre-play catch-up of 25 rolls
    * with no undo would not be shippable. The engine subtracts precisely the points
    * the log entry recorded and removes the entry.
+   *
+   * A no-op while {@link busy} — shared with {@link apply} — so a double-click on
+   * the take-back button never fires a second round trip.
    */
   async revert(age: number): Promise<void> {
+    if (this.busy) return;
+    this.busy = true;
     this.rejections = [];
     // The year is going away, so what it had to say goes with it.
     this.notes = [];
@@ -317,6 +339,8 @@ export class AgingWorkflow {
       await this.#host.revalidate();
     } catch (e) {
       this.#host.setError(e as AppError);
+    } finally {
+      this.busy = false;
     }
   }
 

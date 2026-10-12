@@ -30,6 +30,7 @@ vi.mock('../ipc', () => ({
   agingRevert: vi.fn(),
 }));
 
+import * as ipc from '../ipc';
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import AgingRecordPanel from './AgingRecordPanel.svelte';
 
@@ -323,6 +324,29 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
     expect(label('aging-log-remove-1').replace(/[⁨⁩]/g, '')).toBe(
       store.t('remove-item', { name: 'A hard winter' }).replace(/[⁨⁩]/g, ''),
     );
+  });
+
+  it('disables the take-back button while a previous revert is still in flight (G6, full-audit round 1)', () => {
+    // revert() replaces the WHOLE entity from a snapshot taken before the await,
+    // with no in-flight guard — a double-click on × fired a second concurrent
+    // `agingRevert` call that could overwrite the first's result. The button must
+    // reflect the shared aging-workflow busy flag.
+    store.entity.aging_log = [
+      { year: 1220, age: 40, effect: '', die: 9, total: 13, points: { sta: 1 } },
+    ];
+    let settle: () => void = () => {};
+    vi.mocked(ipc.agingRevert).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          settle = () => resolve({ status: 'reverted', entity: store.entity });
+        }),
+    );
+    void store.removeAgingLogEntryAt(0);
+
+    const opening = new RegExp('<button[^>]*data-testid="aging-log-remove-0"[^>]*>').exec(html());
+    expect(opening).not.toBeNull();
+    expect(opening![0]).toMatch(/disabled/);
+    settle();
   });
 
   // guided-creation-review-2026-08 #27: the engine records the whole roll — the die,

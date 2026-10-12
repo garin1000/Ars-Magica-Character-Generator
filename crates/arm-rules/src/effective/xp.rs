@@ -1759,6 +1759,16 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
 /// [`capped_earmark_amounts`] is the ONE place the cap itself is computed.
 fn general_pool_and_bonus(entity: &Entity, ruleset: &Ruleset) -> (u32, i64) {
     let pre_earmark_general = pre_earmark_general_xp(entity, ruleset);
+    // K6 (round 1 full audit, 2026-10-12): this `.sum()` does NOT need
+    // `saturating_add`, unlike its K3-K5/row-58 siblings. `capped_earmark_amounts`
+    // caps every pushed term at `amount.min(remaining)` and shrinks `remaining`
+    // by exactly that amount each iteration, so by induction the running total
+    // can never exceed the loop's own starting `remaining` — itself a `u32`
+    // already built with `saturating_add` (`pre_earmark_general_xp`). The sum
+    // is mathematically bounded by a value that already fits in `u32`, so it
+    // cannot overflow no matter how many earmark effects a crafted save
+    // carries (verified in `crates/arm-rules/tests/robust_overflow.rs`'s
+    // module doc comment, which is why no test was added here).
     let earmarked: u32 = capped_earmark_amounts(entity, ruleset).into_iter().sum();
     let base_general = pre_earmark_general.saturating_sub(earmarked);
     let general_bonus = general_xp_bonus(entity, ruleset);

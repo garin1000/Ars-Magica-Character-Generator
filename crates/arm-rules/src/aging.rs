@@ -806,13 +806,17 @@ fn clamp_to_i32(value: i64) -> i32 {
 ///
 /// Source: ArMDE:16696, :16694.
 fn decrepitude_points_as_of(entity: &Entity, age: u32) -> u32 {
+    // K4 (round 1 full audit, 2026-10-12): `saturating_add`, not `.sum()` — a
+    // crafted save's `aging_log` is an uncapped `Vec`, and `[profile.release]
+    // overflow-checks = true` (root `Cargo.toml`, K9) turns a plain `.sum()`
+    // overflow into a process abort instead of a wrapped total.
     let later: u32 = entity
         .aging_log
         .iter()
         .filter(|entry| entry.age.is_some_and(|logged| logged > age))
         .flat_map(|entry| entry.points.values())
         .map(|points| u32::from(*points))
-        .sum();
+        .fold(0u32, u32::saturating_add);
     decrepitude_points_total(entity).saturating_sub(later)
 }
 

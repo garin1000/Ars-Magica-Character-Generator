@@ -28,6 +28,7 @@ vi.mock('../ipc', () => ({
   applyChildhoodPackage: vi.fn(),
 }));
 
+import * as ipc from '../ipc';
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import ChildhoodPackagePicker from './ChildhoodPackagePicker.svelte';
 
@@ -397,6 +398,27 @@ describe('ChildhoodPackagePicker apply (slice 6b3b)', () => {
     const body = html();
     expect(open(body, 'childhood-apply')).not.toMatch(/disabled/);
     expect(has(body, 'childhood-apply-reason')).toBe(false);
+  });
+
+  it('disables Apply while a previous apply is still in flight (G4, full-audit round 1)', () => {
+    // apply() replaces the WHOLE entity from a snapshot taken before the await;
+    // nothing used to stop a double-click from firing a second concurrent round
+    // trip that overwrites the first's result. The button must reflect the
+    // workflow's own busy flag, not just `blockingFault`.
+    let settle: () => void = () => {};
+    vi.mocked(ipc.applyChildhoodPackage).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          settle = () => resolve({ status: 'applied', entity: store.entity });
+        }),
+    );
+    store.setChildhoodDraftPackage('childhood.athletic');
+    void store.applyChildhoodPackage();
+
+    const body = html();
+
+    expect(open(body, 'childhood-apply')).toMatch(/disabled/);
+    settle();
   });
 });
 

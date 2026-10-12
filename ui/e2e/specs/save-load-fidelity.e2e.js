@@ -654,3 +654,49 @@ describe('German locale: a full companion sheet and its export', () => {
     expect(md).not.toMatch(RAW_ID);
   });
 });
+
+// ---------------------------------------------------------------------------
+// 5. A corrupt save file through the real Open path (E7, full-audit round 1).
+//
+// Every round trip above reopens a file this suite itself just wrote. None of
+// them exercises the one input surface CLAUDE.md names as the actual trust
+// boundary: "the file the user opens". This describe writes non-JSON to the
+// ARM_E2E_FILE seam and drives the real startup-screen Open button, so the
+// assertion is against the shipped Rust deserialize-failure path
+// (`AppError::Serialize`, `ruleset_io.rs::load_entity_from_path`), not just
+// `StartScreen.test.ts`'s SSR-level rendering of a synthetic `store.error`.
+// ---------------------------------------------------------------------------
+describe('a corrupt save file through the real Open path', () => {
+  it('surfaces a rejection and leaves the app responsive', async () => {
+    // A known clean starting point: New must reach the startup screen with no
+    // discard prompt, exactly like `reopenSavedFile` above.
+    await startCharacter('grog');
+    await runDocumentAction('new');
+    await browser.waitUntil(
+      async () => (await $(START_SCREEN).isExisting()) || (await $(DISCARD_PROMPT).isExisting()),
+      { timeout: STEP_TIMEOUT, timeoutMsg: 'New neither reached the startup screen nor prompted' },
+    );
+    expect(await $(DISCARD_PROMPT).isExisting()).toBe(false);
+
+    fs.writeFileSync(e2eFile, 'this is not json {{{');
+
+    const open = await $(START_OPEN);
+    await open.waitForClickable({ timeout: STEP_TIMEOUT });
+    await open.click();
+
+    const error = await $('[data-testid="start-error"]');
+    await error.waitForExist({ timeout: STEP_TIMEOUT });
+    expect(await error.getAttribute('role')).toBe('alert');
+    expect((await error.getProperty('textContent')).length).toBeGreaterThan(0);
+
+    // No crash and no silent replacement: still the startup screen, nothing
+    // half-loaded behind it.
+    expect(await $(START_SCREEN).isExisting()).toBe(true);
+    expect(await $(TAB_BAR).isExisting()).toBe(false);
+
+    // The app stays fully usable — Open's failure left no stale busy/lock state
+    // behind, so an ordinary create still reaches the editor.
+    fs.unlinkSync(e2eFile);
+    await startCharacter('grog');
+  });
+});

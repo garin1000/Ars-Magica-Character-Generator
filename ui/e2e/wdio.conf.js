@@ -51,7 +51,8 @@ import { appVersion, e2eLogDir, MAX_WORKERS, sharedWdioConfig } from './wdio.sha
 /**
  * How each update-check spec meets the check (M6.6), by spec basename. A spec
  * not listed launches with "Don't check" already answered, so it never sees the
- * prompt and never checks. Every listed spec gets {@link UPDATE_FEED}.
+ * prompt and never checks. Every listed spec gets a feed file (see
+ * {@link feedPathFor}), {@link UPDATE_FEED} unless it names its own.
  *
  * - `firstStart`: an emptied config home, so the consent prompt shows (retries
  *   included).
@@ -60,6 +61,10 @@ import { appVersion, e2eLogDir, MAX_WORKERS, sharedWdioConfig } from './wdio.sha
  * - `stallMs`: `ARM_E2E_UPDATE_STALL_MS`, how long the e2e build holds the check
  *   before it reads the feed (`commands.rs::e2e_update_stall`). Exported so the
  *   specs measure against the very hold the app was given.
+ * - `feed`: a basename under `fixtures/` to read instead of
+ *   `update-feed-newer.json` — e.g. a `tag_name` that fails strict semver, so a
+ *   spec can prove the failure stays silent end-to-end (CLAUDE.md's update-check
+ *   guarantee) rather than only in `update_check.rs`'s unit tests.
  */
 export const SPEC_UPDATE_SETUPS = {
   'update-check.e2e.js': { firstStart: true },
@@ -67,6 +72,9 @@ export const SPEC_UPDATE_SETUPS = {
   'update-check-stall.e2e.js': { enabled: true, stallMs: 60000 },
   // Shorter, because this file waits the hold out.
   'update-check-stall-dirty-quit.e2e.js': { enabled: true, stallMs: 20000 },
+  // A tag_name strict semver parsing rejects; no stall, so the check resolves
+  // (silently) well before the spec's absence window elapses.
+  'update-check-invalid-feed.e2e.js': { enabled: true, feed: 'update-feed-invalid.json' },
 };
 
 /**
@@ -102,6 +110,11 @@ const application = e2eApplication(repoRoot);
 // The file the `e2e-testing` build reads instead of GitHub's latest-release
 // response (`ARM_E2E_UPDATE_FEED`): a release newer than any real one.
 const UPDATE_FEED = path.resolve(dirname, 'fixtures/update-feed-newer.json');
+
+/** The feed file a spec's setup names, or {@link UPDATE_FEED} by default. */
+function feedPathFor(setup) {
+  return setup.feed === undefined ? UPDATE_FEED : path.resolve(dirname, 'fixtures', setup.feed);
+}
 
 // Per-worker save/load target, so the flow stays deterministic and headless
 // while two concurrent workers no longer round-trip the same file. Specs
@@ -145,6 +158,7 @@ export const SPECS_LONGEST_FIRST = [
   'magus-apprenticeship.e2e.js',
   'update-check.e2e.js',
   'update-check-stall.e2e.js',
+  'update-check-invalid-feed.e2e.js',
 ].map((name) => path.resolve(dirname, 'specs', name));
 
 /**
@@ -302,7 +316,7 @@ export const config = {
     } else {
       seedUpdateCheckAnswer(configHome, appVersion(repoRoot), updateSetup?.enabled === true);
     }
-    if (updateSetup) updateEnv.ARM_E2E_UPDATE_FEED = UPDATE_FEED;
+    if (updateSetup) updateEnv.ARM_E2E_UPDATE_FEED = feedPathFor(updateSetup);
     if (updateSetup?.stallMs !== undefined) {
       updateEnv.ARM_E2E_UPDATE_STALL_MS = String(updateSetup.stallMs);
     }

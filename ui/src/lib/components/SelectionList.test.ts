@@ -126,7 +126,7 @@ describe('SelectionList group headers', () => {
         groups: [{ key: 'g', header: 'General', rows: [{ key: 'x', item: 'x' }] }],
       },
     ]);
-    expect(body).toContain('<h3 class="category">General</h3>');
+    expect(body).toContain('<h3 class="category" data-testid="category-heading">General</h3>');
   });
 
   it('renders no h3 for a header-less group', () => {
@@ -144,7 +144,7 @@ describe('SelectionList group headers', () => {
         ],
       },
     ]);
-    expect(body).toContain('<h3 class="category">Weapons</h3>');
+    expect(body).toContain('<h3 class="category" data-testid="category-heading">Weapons</h3>');
     expect((body.match(/<h3/g) ?? []).length).toBe(1);
   });
 

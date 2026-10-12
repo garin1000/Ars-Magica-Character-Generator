@@ -139,7 +139,7 @@ function columnOutline(body: string): string[] {
   const column = virtueColumn(body);
   const out: string[] = [];
   for (const m of column.matchAll(
-    /<h3 class="category">([\s\S]*?)<\/h3>|<span class="item-name">([\s\S]*?)<\/span>/g,
+    /<h3 class="category"[^>]*>([\s\S]*?)<\/h3>|<span class="item-name">([\s\S]*?)<\/span>/g,
   )) {
     if (m[1] !== undefined) out.push(`# ${m[1].replace(/<[^>]*>/g, '').trim()}`);
     else
@@ -179,7 +179,7 @@ function listsWithHeaders(body: string): { header: string | null }[] {
   const column = virtueColumn(body);
   const lists: { header: string | null }[] = [];
   let pendingHeader: string | null = null;
-  for (const m of column.matchAll(/<h3 class="category">([\s\S]*?)<\/h3>|<ul\b/g)) {
+  for (const m of column.matchAll(/<h3 class="category"[^>]*>([\s\S]*?)<\/h3>|<ul\b/g)) {
     if (m[1] !== undefined) pendingHeader = m[1].replace(/<[^>]*>/g, '').trim();
     else {
       lists.push({ header: pendingHeader });

@@ -23,17 +23,52 @@
   // `discardPromptOpen` since the button only exists (and `bind:this` only
   // fires) while the modal is rendered.
   let cancelButton = $state<HTMLButtonElement | null>(null);
+  let dialog = $state<HTMLDivElement | null>(null);
   $effect(() => {
     if (store.discardPromptOpen) cancelButton?.focus();
   });
 
+  /** This dialog's own focusable controls, in tab order — identical selector to
+   *  `ConfirmPrompt.svelte`/`SettingsDialog.svelte`. */
+  function focusable(): HTMLElement[] {
+    if (!dialog) return [];
+    return [
+      ...dialog.querySelectorAll<HTMLElement>('select, button, input, textarea, a[href]'),
+    ].filter((element) => !element.hasAttribute('disabled') && element.tabIndex !== -1);
+  }
+
+  // A REAL focus trap (S1/E1, full-audit round 1) — lifted from
+  // SettingsDialog.svelte, which is the right template here: like that dialog,
+  // this one renders OUTSIDE the app shell while `App.svelte` marks the shell
+  // `inert`, so a local `onkeydown` is enough (no `svelte:window` listener is
+  // needed the way ConfirmPrompt's is, since that one renders INSIDE the live
+  // shell). `inert` only keeps Tab from LEAVING the shell; it does nothing to
+  // make Tab LOOP between Cancel/Discard once the ring's last control is
+  // reached, which is the gap this closes.
+  //
+  // Only the two ENDS of the ring are handled. Calling `preventDefault` on every
+  // Tab would mean reimplementing the browser's own focus order by hand, which
+  // is how a trap starts skipping controls it does not know about.
+  //
   // Escape always cancels, never discards — the destructive choice must never
   // be reachable as a side effect of dismissing the dialog.
   function onKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
       event.preventDefault();
       store.resolveDiscardPrompt(false);
+      return;
     }
+    if (event.key !== 'Tab') return;
+    const controls = focusable();
+    if (controls.length === 0) return;
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    const active = document.activeElement;
+    const inside = active instanceof HTMLElement && dialog?.contains(active) === true;
+    const leaving = event.shiftKey ? active === first : active === last;
+    if (!leaving && inside) return;
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
   }
 </script>
 
@@ -41,6 +76,7 @@
   <div class="modal-backdrop" role="presentation" data-testid="discard-prompt">
     <div
       class="modal"
+      bind:this={dialog}
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="discard-title"
