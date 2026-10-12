@@ -362,6 +362,9 @@ language/window state, a terminal describe), why it is ordered the way it is.
 - `update-check-stall-dirty-quit.e2e.js` — while a check hangs (a 20 s hold),
   the unsaved-changes guard still holds a quit, and the notice still arrives
   behind the guard's dialog (terminal).
+- `update-check-invalid-feed.e2e.js` — a malformed feed (`tag_name` that fails
+  strict semver) never shows a notice, not even transiently, and the app stays
+  usable and keeps the stored consent answer.
 
 Every spec requires the same display + release-build prerequisites: none of them
 can run without `WebKitWebDriver` and a display.

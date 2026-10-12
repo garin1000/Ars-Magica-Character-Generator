@@ -203,6 +203,7 @@
               ? store.t('remove-item', { name: entry.effect })
               : store.t('aging-revert', { age: String(entry.age) })}
             disabled={store.agingBusy}
+            aria-busy={store.agingBusy}
             onclick={() => store.removeAgingLogEntryAt(i)}
             data-testid="aging-log-remove-{i}"
           >

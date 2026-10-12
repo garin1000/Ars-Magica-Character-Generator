@@ -1716,6 +1716,20 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
     }
 }
 
+/// The slice of [`xp_allocation`]'s `total_demand` that Spell Mastery spends
+/// contribute: every mastered spell's charged cost (post-floor, post-Affinity),
+/// summed. Built from the SAME [`build_spends`] call `xp_allocation` itself
+/// uses — not a second, independent formula — so this can never drift from the
+/// allocation's own total the way a hand-written TypeScript mirror could (V2,
+/// full-audit round 2: `ui/src/lib/derive.ts`'s now-deleted
+/// `spellMasteryXpSpent`/`chargedCost` duplicated exactly this computation).
+pub fn spell_mastery_xp_used(entity: &Entity, ruleset: &Ruleset) -> u32 {
+    build_spends(entity, ruleset)
+        .iter()
+        .filter(|spend| matches!(spend.kind, SpendKind::Mastery))
+        .fold(0u32, |sum, spend| sum.saturating_add(spend.cost))
+}
+
 /// The general pool size (spendable on any Ability, Art, or Mastery) and the
 /// signed [`Effect::GeneralXp`] contribution folded into it — sub-check 1 of
 /// [`xp_allocation`], extracted (pure code motion, no behavior change) so the
@@ -2000,6 +2014,10 @@ fn two_phase_max_flow(
         FlowGraphLayout::SINK,
         cap,
     ));
+    // Invariant: the source->general residual only ever shrinks from its
+    // initial value `general_pool` (Edmonds-Karp augments along forward edges,
+    // never above their starting capacity), so this can never underflow.
+    debug_assert!(cap[FlowGraphLayout::SOURCE][FlowGraphLayout::GENERAL] <= general_pool);
     let general_used = general_pool - cap[FlowGraphLayout::SOURCE][FlowGraphLayout::GENERAL];
     (total, general_used)
 }
@@ -2021,6 +2039,10 @@ fn assemble_restricted_pools(
             ..
         } = &pool.eligibility
         {
+            // Invariant: same as `two_phase_max_flow`'s — a pool's source
+            // residual only ever shrinks from its initial `pool.amount`, so
+            // this can never underflow.
+            debug_assert!(cap[FlowGraphLayout::SOURCE][layout.pool_node(i)] <= pool.amount);
             restricted.push(RestrictedXpPool {
                 amount: pool.amount,
                 used: pool.amount - cap[FlowGraphLayout::SOURCE][layout.pool_node(i)],

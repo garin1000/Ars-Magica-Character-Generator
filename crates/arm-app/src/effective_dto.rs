@@ -25,9 +25,8 @@ use arm_rules::{
     item_level_budget, item_level_used, life_stage_spell_levels, life_timeline, longevity_bonus,
     magus_minimum_abilities, phases_in_force, power_levels_budget, powers_used, reputation_grants,
     resolve_realm, size, spell_caps, spell_level_caps, spell_levels_base, spell_levels_bonus,
-    spell_levels_budget, spell_levels_used, spell_mastery_advancement_affinity,
-    spell_mastery_floor, spell_mastery_xp, supernatural_free_slots, true_faith, warping,
-    warping_owed_grants,
+    spell_levels_budget, spell_levels_used, spell_mastery_floor, spell_mastery_xp,
+    spell_mastery_xp_used, supernatural_free_slots, true_faith, warping, warping_owed_grants,
 };
 use serde::Serialize;
 
@@ -259,16 +258,14 @@ pub struct EffectiveScores {
     pub spell_mastery_xp: u32,
     /// Mastery-score floor every known spell gets (Flawless Magic → 1); 0 = none.
     pub spell_mastery_floor: u8,
-    /// The Affinity applying to every Spell-Mastery Advancement Total, as the
-    /// authored `[num, den]` pair ("counts as num/den of itself"; Flawless Magic
-    /// → `[2, 1]`, halving the XP each mastery point costs); `None` when no
-    /// grant reduces the cost. The *ratio* crosses, not a "doubled" flag,
-    /// because it is rules data: the engine prices any pair through
-    /// `effective/xp.rs::charged_cost`, so the UI must be able to charge the
-    /// same reduced cost for any pair the catalogue authors — a new Virtue with
-    /// a different Affinity has to stay the data-only change the "catalogue size
-    /// is data, never code" invariant promises.
-    pub spell_mastery_advancement_affinity: Option<[u8; 2]>,
+    /// The XP already charged against the Spell-Mastery pool: the sum of every
+    /// mastered spell's charged cost (post-floor, post-Affinity) —
+    /// engine-authoritative, so `SpellBudgetBar.svelte` stops recomputing it
+    /// itself (V2, full-audit round 2: `derive.ts`'s now-deleted
+    /// `spellMasteryXpSpent`/`chargedCost` were a second, hand-maintained
+    /// mirror of this exact figure, the same defect class as
+    /// [`Self::characteristic_points_used`]'s VA1/GF1/GD4).
+    pub spell_mastery_xp_used: u32,
     /// The supernatural being's effective Might Score + Realm (base + same-Realm
     /// Virtue grants), or `None` for an ordinary character. Engine-authoritative.
     pub might: Option<MightScore>,
@@ -839,15 +836,14 @@ fn decrepitude_faith_item_fields(entity: &Entity, ruleset: &Ruleset) -> Decrepit
 struct SpellMasteryFields {
     xp: u32,
     floor: u8,
-    advancement_affinity: Option<[u8; 2]>,
+    used: u32,
 }
 
 fn spell_mastery_fields(entity: &Entity, ruleset: &Ruleset) -> SpellMasteryFields {
     SpellMasteryFields {
         xp: spell_mastery_xp(entity, ruleset),
         floor: spell_mastery_floor(entity, ruleset),
-        advancement_affinity: spell_mastery_advancement_affinity(entity, ruleset)
-            .map(|(num, den)| [num, den]),
+        used: spell_mastery_xp_used(entity, ruleset),
     }
 }
 
@@ -959,7 +955,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
 
         spell_mastery_xp: mastery.xp,
         spell_mastery_floor: mastery.floor,
-        spell_mastery_advancement_affinity: mastery.advancement_affinity,
+        spell_mastery_xp_used: mastery.used,
 
         might: might_power.might,
         power_levels_budget: might_power.power_levels_budget,
@@ -979,66 +975,72 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
 #[cfg(test)]
 mod tests {
     use super::*;
-    use arm_rules::Effect;
-    use std::fs;
     use std::path::{Path, PathBuf};
 
-    use crate::ruleset_io::{load_catalogue_names_from_dir, load_ruleset_from_dir};
+    use crate::ruleset_io::load_ruleset_from_dir;
 
     /// The repository root — `crates/arm-app` is two levels below it.
     fn repo_root() -> PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
     }
 
-    /// The Spell Mastery Advancement Affinity is authored rules data: an
-    /// arbitrary "counts as `num`/`den` of itself" ratio on
-    /// [`Effect::GrantsSpellMastery`], which the engine prices through the
-    /// general `effective/xp.rs::charged_cost`. The IPC boundary must carry that
-    /// ratio rather than a "is there one at all" boolean — collapsing it leaves
-    /// the frontend re-expanding the number as a literal, so a Virtue authoring
-    /// any other ratio would be a data-only change that silently produces a
-    /// wrong total on screen (full-audit round 2, V2).
-    ///
-    /// The expectation is read back out of the shipped catalogue rather than
-    /// written as a literal, so this asserts "whatever ratio the data authors
-    /// arrives intact" and never pins the catalogue to one value.
+    /// V2 (full-audit round 2): the mastery pool's "used" total must reach the
+    /// frontend on `EffectiveScores` itself, so `SpellBudgetBar.svelte` can stop
+    /// re-deriving it via `derive.ts`'s now-deleted `spellMasteryXpSpent`/
+    /// `chargedCost` — a second, hand-maintained implementation of
+    /// `effective/xp.rs`'s mastery spend (the same defect class as
+    /// `characteristic_points_used`, VA1/GF1/GD4). Pinned to the identical
+    /// worked example as
+    /// `effective.rs::flawless_magic_floors_first_mastery_free_and_halves_the_rest`
+    /// (mastery 1 == the free floor; mastery 3 costs table(3)-table(1)=25,
+    /// halved by the doubling Affinity to 13) via a minimal fixture ruleset,
+    /// mirroring `effective_scores_loaded_degrades_the_xp_fields_over_the_solve_bound`'s
+    /// shape above.
     #[test]
-    fn the_mastery_affinity_reaches_the_frontend_as_the_authored_ratio() {
-        let localized = load_ruleset_from_dir(&repo_root().join("rules"), "en").unwrap();
-        let names =
-            load_catalogue_names_from_dir(&repo_root().join("rules"), &localized.ruleset).unwrap();
-        let json = fs::read_to_string(repo_root().join("examples/magus_sample.json")).unwrap();
-        let mut entity: Entity = arm_rules::load_entity_migrating(
-            &json,
-            arm_rules::DEFAULT_SAGA_YEAR,
-            &localized.ruleset,
-            &names,
-        )
-        .unwrap()
-        .entity;
-        let granting = Id::new("virtue.flawless_magic");
-        entity.selections.push(Selection::new(granting.clone()));
+    fn effective_scores_surfaces_the_mastery_xp_used_total() {
+        use arm_rules::{EntityKind, RulesetRef, RulesetSources, SpellSelection};
 
-        let authored = localized
-            .ruleset
-            .item(&granting)
-            .expect("the shipped catalogue must still carry the mastery-granting Virtue")
-            .effects
-            .iter()
-            .find_map(|effect| match effect {
-                Effect::GrantsSpellMastery {
-                    advancement_num,
-                    advancement_den,
-                    ..
-                } => Some([*advancement_num, *advancement_den]),
-                _ => None,
-            })
-            .expect("virtue.flawless_magic must still grant Spell Mastery");
+        const ITEMS: &str = r#"[
+          { "id": "flaw.filler", "kind": "flaw", "classification": "narrative",
+            "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] },
+          { "id": "virtue.flawless_magic", "kind": "virtue", "classification": "narrative",
+            "magnitude": "major", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "grants_spell_mastery", "score": 1, "advancement_num": 2, "advancement_den": 1 }] }
+        ]"#;
+        const TYPES: &str = r#"[
+          { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "permitted_categories": ["general", "personality"], "creation_phases": [] }
+        ]"#;
+        const ABILITIES: &str = r#"{
+          "advancement": [{ "score": 1, "total_xp": 5 }, { "score": 3, "total_xp": 30 }],
+          "abilities": []
+        }"#;
+        let rs = Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            abilities: Some(ABILITIES),
+            ..RulesetSources::default()
+        })
+        .unwrap();
 
+        let mut e = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        e.selections = vec![Selection::new(Id::new("virtue.flawless_magic"))];
+        let mut mastered_a = SpellSelection::new(Id::new("spell.a"));
+        mastered_a.mastery = Some(1);
+        let mut mastered_b = SpellSelection::new(Id::new("spell.b"));
+        mastered_b.mastery = Some(3);
+        e.spells = vec![mastered_a, mastered_b];
+
+        let scores = effective_scores_loaded(&e, &rs);
         assert_eq!(
-            spell_mastery_fields(&entity, &localized.ruleset).advancement_affinity,
-            Some(authored),
-            "the DTO must carry the authored (num, den), not a boolean"
+            scores.spell_mastery_xp_used, 13,
+            "EffectiveScores must carry the engine's own mastery-spend total"
         );
     }
 

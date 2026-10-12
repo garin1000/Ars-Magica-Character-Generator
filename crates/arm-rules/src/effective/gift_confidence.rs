@@ -90,7 +90,9 @@ pub fn item_level_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
     for_each_effect!(entity, ruleset, |_selection, effect| {
         if let Effect::ItemLevelBudget { amount } = effect {
-            total += u32::from(*amount);
+            // Saturating: enough stacked grants on a crafted save overflow `u32`
+            // (a panic in release, which has overflow checks on).
+            total = total.saturating_add(u32::from(*amount));
         }
     });
     total
@@ -116,7 +118,9 @@ pub fn power_levels_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
     for_each_effect!(entity, ruleset, |_selection, effect| {
         if let Effect::PowerLevels { amount } = effect {
-            total += u32::from(*amount);
+            // Saturating: enough stacked grants on a crafted save overflow `u32`
+            // (a panic in release, which has overflow checks on).
+            total = total.saturating_add(u32::from(*amount));
         }
     });
     total
@@ -128,7 +132,9 @@ pub fn focus_points_budget(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
     for_each_effect!(entity, ruleset, |_selection, effect| {
         if let Effect::FocusPoints { amount } = effect {
-            total += u32::from(*amount);
+            // Saturating: enough stacked grants on a crafted save overflow `u32`
+            // (a panic in release, which has overflow checks on).
+            total = total.saturating_add(u32::from(*amount));
         }
     });
     total

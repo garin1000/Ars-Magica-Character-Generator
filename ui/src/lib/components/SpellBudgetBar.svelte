@@ -1,13 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { commitStored } from '../actions';
-  import {
-    formatSigned,
-    maxAbilityScore,
-    spellLevelAllocation,
-    spellMasteryXpSpent,
-    U32_MAX,
-  } from '../derive';
+  import { formatSigned, maxAbilityScore, spellLevelAllocation, U32_MAX } from '../derive';
   import BudgetBonusChip from './BudgetBonusChip.svelte';
 
   // Whether the base is READ-ONLY at this mount. The guided wizard passes `true`;
@@ -68,15 +62,15 @@
   // ratio (Flawless Magic [2, 1], halving each mastery point's XP).
   const masteryXp = $derived(store.effective?.spell_mastery_xp ?? 0);
   const masteryFloor = $derived(store.effective?.spell_mastery_floor ?? 0);
-  const masteryAffinity = $derived(store.effective?.spell_mastery_advancement_affinity ?? null);
   // The Mastery Ability rises like an Ability, so it is priced from the Ability
   // advancement table (data, not a hardcoded mechanic — same path as abilities).
   const advancement = $derived(store.ruleset?.ruleset.advancement ?? []);
-  // Charged like the engine: only mastery above the free floor, reduced by
-  // whatever Affinity ratio the grant authors.
-  const masteryUsed = $derived(
-    spellMasteryXpSpent(advancement, store.entity.spells ?? [], masteryFloor, masteryAffinity),
-  );
+  // Engine-authoritative (V2, full-audit round 2): the mastery spend total used
+  // to be recomputed here via `spellMasteryXpSpent`/`chargedCost`, a second,
+  // hand-maintained mirror of `effective/xp.rs`'s mastery spend — the same
+  // defect class as `characteristic_points_used` (VA1/GF1/GD4), and the one
+  // that caused round 1's G1 wrong-total bug. Read off the store instead.
+  const masteryUsed = $derived(store.effective?.spell_mastery_xp_used ?? 0);
   // Referenced so the mastery read-out only claims a pool the table can price.
   const masteryMax = $derived(maxAbilityScore(advancement));
 

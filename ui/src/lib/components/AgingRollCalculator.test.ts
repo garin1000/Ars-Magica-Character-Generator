@@ -348,6 +348,37 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     settle();
   });
 
+  it('announces the busy state on Apply and Clear via aria-busy (S7, full-audit round 2)', () => {
+    // `disabled` (G5) silences the buttons for assistive tech, but gives no
+    // explicit signal that work is in flight rather than merely unavailable.
+    let settle: () => void = () => {};
+    vi.mocked(ipc.agingApply).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          settle = () =>
+            resolve({
+              status: 'applied',
+              entity: store.entity,
+              total: total(),
+              outcome: outcome(),
+            });
+        }),
+    );
+    store.agingDraft = draft({ die: 9 });
+    setPreview(total({ die: 9 }), outcome({ awards: [] }));
+
+    let body = html();
+    expect(open(body, 'aging-apply')).not.toMatch(/aria-busy="true"/);
+    expect(open(body, 'aging-calculator-clear')).not.toMatch(/aria-busy="true"/);
+
+    void store.applyAgingRoll();
+    body = html();
+    expect(open(body, 'aging-apply')).toMatch(/aria-busy="true"/);
+    expect(open(body, 'aging-calculator-clear')).toMatch(/aria-busy="true"/);
+
+    settle();
+  });
+
   // manual-testing-findings #21 removed the "this roll is a Crisis, place the points
   // first" paragraph; the Crisis panel appearing IS the statement, so what still has
   // to hold is that a Crisis brings its die and a plain roll brings neither.

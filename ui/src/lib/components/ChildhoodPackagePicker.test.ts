@@ -420,6 +420,28 @@ describe('ChildhoodPackagePicker apply (slice 6b3b)', () => {
     expect(open(body, 'childhood-apply')).toMatch(/disabled/);
     settle();
   });
+
+  it('announces the busy state on Apply via aria-busy (S7, full-audit round 2)', () => {
+    // `disabled` (G4) silences the button for assistive tech, but gives no
+    // explicit signal that an apply is in flight rather than merely unavailable.
+    let settle: () => void = () => {};
+    vi.mocked(ipc.applyChildhoodPackage).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          settle = () => resolve({ status: 'applied', entity: store.entity });
+        }),
+    );
+    store.setChildhoodDraftPackage('childhood.athletic');
+
+    let body = html();
+    expect(open(body, 'childhood-apply')).not.toMatch(/aria-busy="true"/);
+
+    void store.applyChildhoodPackage();
+    body = html();
+    expect(open(body, 'childhood-apply')).toMatch(/aria-busy="true"/);
+
+    settle();
+  });
 });
 
 describe('ChildhoodPackagePicker record vs draft (slice 6b3b)', () => {

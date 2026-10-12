@@ -1282,12 +1282,11 @@ export interface EffectiveScores {
   spell_mastery_xp: number;
   // Mastery-score floor every known spell gets (Flawless Magic 1); 0 = none.
   spell_mastery_floor: number;
-  // The Affinity on every Spell-Mastery Advancement Total, as the authored
-  // [num, den] pair ("counts as num/den of itself"; Flawless Magic [2, 1], which
-  // halves each mastery point's XP cost); null when no grant reduces the cost.
-  // The ratio crosses rather than a "doubled" flag so the mastery accounting
-  // matches the engine's charge for ANY pair the catalogue authors.
-  spell_mastery_advancement_affinity: [number, number] | null;
+  // The XP already charged against the Spell-Mastery pool: the sum of every
+  // mastered spell's charged cost (post-floor, post-Affinity). Engine-authoritative
+  // (V2, full-audit round 2) — SpellBudgetBar.svelte reads this instead of
+  // recomputing it from the advancement table and entity spells.
+  spell_mastery_xp_used: number;
   // The being's effective Might Score + Realm (base + same-Realm grants), or null
   // for an ordinary character. Engine-authoritative; never recomputed in JS.
   might: MightScore | null;

@@ -580,10 +580,12 @@ impl Ruleset {
     ///
     /// *Affinities* say experience "counts as `num/den` of itself", so the XP
     /// charged is `ceil(table · den / num)` (`effective/xp.rs::charged_cost`).
-    /// A **zero denominator** makes that product 0 and the charge 0 — every score
-    /// under the Affinity free — and it is caught nowhere downstream:
-    /// `charged_cost` guards only the numerator, and `grants_spell_mastery`'s own
-    /// `advancement_num > advancement_den` test admits `(1, 0)` because `1 > 0`.
+    /// A **zero denominator** would make that product 0 and the charge 0 — every
+    /// score under the Affinity free. `charged_cost` itself now guards both
+    /// terms (`num != 0 && den != 0 && table_xp != 0`), so this check is defence
+    /// in depth, not the only thing catching it — but `grants_spell_mastery`'s own
+    /// `advancement_num > advancement_den` test still admits `(1, 0)` because
+    /// `1 > 0`, so an unvalidated ruleset could still reach that guarded arm.
     /// A **zero numerator** is treated as "no Affinity", which is safe but is not
     /// what the author wrote.
     ///

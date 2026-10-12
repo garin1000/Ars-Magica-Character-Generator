@@ -333,7 +333,9 @@ pub(crate) fn lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
             if let Effect::LabTotalMod { amount, scope, .. } = effect
                 && *scope != LabTotalModScope::WithinPotentFieldOnly
             {
-                total += i32::from(*amount);
+                // Saturating: enough stacked grants on a crafted save overflow
+                // `i32` (a panic in release, which has overflow checks on).
+                total = total.saturating_add(i32::from(*amount));
             }
         }
     }
@@ -791,7 +793,9 @@ pub fn spell_mastery_xp(entity: &Entity, ruleset: &Ruleset) -> u32 {
         };
         for effect in &item.effects {
             if let Effect::SpellMasteryXp { amount } = effect {
-                total += u32::from(*amount);
+                // Saturating: enough stacked grants on a crafted save overflow
+                // `u32` (a panic in release, which has overflow checks on).
+                total = total.saturating_add(u32::from(*amount));
             }
         }
     }

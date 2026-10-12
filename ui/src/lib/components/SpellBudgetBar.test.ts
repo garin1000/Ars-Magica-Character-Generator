@@ -268,15 +268,23 @@ describe('SpellBudgetBar semantic overspend attribute (mirrors XpBar, GF2)', () 
   });
 
   it('marks the mastery read-out with a semantic data-overspent attribute when mastery XP is overspent', () => {
-    // Mastery score 2 costs table(2) = 15 against a 10-point pool.
-    setEffective(30, 120, { spell_mastery_xp: 10 } as Partial<EffectiveScores>);
+    // Mastery score 2 costs table(2) = 15 against a 10-point pool. V2 (full-audit
+    // round 2): the engine now supplies the charged total directly rather than the
+    // bar recomputing it from the advancement table + entity spells.
+    setEffective(30, 120, {
+      spell_mastery_xp: 10,
+      spell_mastery_xp_used: 15,
+    } as Partial<EffectiveScores>);
     store.entity.spells = [{ spell: 'spell.a', mastery: 2 }];
     const { open } = element(html(), 'spell-mastery-info');
     expect(open).toMatch(/data-overspent="true"/);
   });
 
   it('reports data-overspent="false" on the mastery read-out when within its pool', () => {
-    setEffective(30, 120, { spell_mastery_xp: 50 } as Partial<EffectiveScores>);
+    setEffective(30, 120, {
+      spell_mastery_xp: 50,
+      spell_mastery_xp_used: 15,
+    } as Partial<EffectiveScores>);
     store.entity.spells = [{ spell: 'spell.a', mastery: 2 }];
     const { open } = element(html(), 'spell-mastery-info');
     expect(open).toMatch(/data-overspent="false"/);
@@ -370,5 +378,29 @@ describe('SpellBudgetBar mastery read-out', () => {
   it('omits the mastery read-out when there is no pool and no floor', () => {
     setEffective(30, 120);
     expect(() => element(html(), 'spell-mastery-info')).toThrow();
+  });
+});
+
+// V2 (full-audit round 2): the bar used to recompute the mastery spend itself
+// via `derive.ts`'s now-deleted `spellMasteryXpSpent`/`chargedCost` — a second,
+// hand-maintained mirror of `effective/xp.rs`'s mastery spend, the same defect class that caused
+// round 1's G1 bug (a wrong on-screen total the engine itself priced correctly).
+// The fix surfaces the engine's own total as `EffectiveScores.spell_mastery_xp_used`
+// (the same shape as `characteristic_points_used`), and the bar must read THAT
+// value rather than deriving its own from the advancement table + entity spells.
+describe('SpellBudgetBar mastery used reads the engine total (A2, full-audit round 2)', () => {
+  it('reads spell_mastery_xp_used from the store instead of recomputing it in TS', () => {
+    // Mastery score 2 against the installed advancement table (score 2 = 15 XP)
+    // would recompute to 15 under the old TS mirror with no floor/affinity. The
+    // engine figure is deliberately different (42) so the two cannot agree by
+    // coincidence: only a fix that reads the store field renders 42.
+    setEffective(30, 120, {
+      spell_mastery_xp: 50,
+      spell_mastery_xp_used: 42,
+    } as Partial<EffectiveScores>);
+    store.entity.spells = [{ spell: 'spell.a', mastery: 2 }];
+    const { text } = element(html(), 'spell-mastery-info');
+    expect(text).toContain('42');
+    expect(text).not.toContain('15');
   });
 });

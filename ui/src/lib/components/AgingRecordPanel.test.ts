@@ -349,6 +349,32 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
     settle();
   });
 
+  it('announces the busy state on the take-back button via aria-busy (S7, full-audit round 2)', () => {
+    // `disabled` (G6) silences the button for assistive tech, but gives no
+    // explicit signal that a revert is in flight rather than merely unavailable.
+    store.entity.aging_log = [
+      { year: 1220, age: 40, effect: '', die: 9, total: 13, points: { sta: 1 } },
+    ];
+    let settle: () => void = () => {};
+    vi.mocked(ipc.agingRevert).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          settle = () => resolve({ status: 'reverted', entity: store.entity });
+        }),
+    );
+
+    let opening = new RegExp('<button[^>]*data-testid="aging-log-remove-0"[^>]*>').exec(html());
+    expect(opening).not.toBeNull();
+    expect(opening![0]).not.toMatch(/aria-busy="true"/);
+
+    void store.removeAgingLogEntryAt(0);
+    opening = new RegExp('<button[^>]*data-testid="aging-log-remove-0"[^>]*>').exec(html());
+    expect(opening).not.toBeNull();
+    expect(opening![0]).toMatch(/aria-busy="true"/);
+
+    settle();
+  });
+
   // guided-creation-review-2026-08 #27: the engine records the whole roll — the die,
   // the total, the points it awarded and whether the apparent age advanced — and the
   // row showed none of it, leaving the player to write by hand what the roll had just

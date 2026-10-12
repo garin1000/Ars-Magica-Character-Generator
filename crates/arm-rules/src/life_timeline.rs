@@ -326,7 +326,10 @@ impl Layout {
     }
 
     fn open_span_years(&self) -> u32 {
-        self.life_end - self.training_end
+        // Saturating like `training_start`'s own clamp above: `training_end` is
+        // clamped to `life_end` at construction, but saturating keeps this safe
+        // even if that invariant is ever violated, rather than panicking.
+        self.life_end.saturating_sub(self.training_end)
     }
 }
 

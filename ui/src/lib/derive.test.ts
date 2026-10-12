@@ -16,7 +16,6 @@ import {
   phaseSelectedItemIds,
   wizardPhases,
   effectiveSpellMastery,
-  spellMasteryXpSpent,
   artAbbreviation,
   artLabel,
   childhoodEntryPreview,
@@ -1715,155 +1714,22 @@ describe('groupByCategory', () => {
 // `commands.rs::effective_scores_surface_the_characteristic_points_used` — one
 // implementation, so there is nothing left to drift.
 
-// --- spellMasteryXpSpent() / effectiveSpellMastery() ------------------------
+// --- effectiveSpellMastery() -------------------------------------------------
 
-// GD4 (round-2 audit): spellMasteryXpSpent() re-implements the mastery-spend
-// leg of the engine's crates/arm-rules/src/effective/xp.rs::build_spends as a
-// second, independent implementation (see the function's own "KNOWN DRIFT
-// RISK" doc comment above its definition in derive.ts). The advancement table
-// below (1->5, 2->15, 3->30) is the EXACT fixture
-// crates/arm-rules/src/effective.rs's xp_ruleset() test helper uses, so the
-// "mirrors effective.rs::..." test names below are literal, checkable claims,
-// not just prose.
-describe('spellMasteryXpSpent', () => {
-  const advancement = [
-    { score: 1, total_xp: 5 },
-    { score: 2, total_xp: 15 },
-    { score: 3, total_xp: 30 },
-  ];
-
-  it('sums the mastery-Ability XP across every known spell', () => {
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }, { mastery: 2 }])).toBe(45);
-  });
-
-  it('treats unmastered spells (0/null/undefined) as no XP', () => {
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 0 }, { mastery: null }, {}])).toBe(0);
-  });
-
-  it('surfaces over-pool spending (used exceeds a 50-XP pool)', () => {
-    // Two spells at mastery 3 cost 60 XP > the single Mastered Spells pool of 50.
-    const used = spellMasteryXpSpent(advancement, [{ mastery: 3 }, { mastery: 3 }]);
-    expect(used).toBe(60);
-    expect(used > 50).toBe(true);
-  });
-
-  it('charges only above the granted floor (Flawless Magic first point free)', () => {
-    // Floor 1: mastery 1 == floor is free; mastery 3 costs table(3) - table(1) = 25.
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 1 }, { mastery: 3 }], 1)).toBe(25);
-  });
-
-  it('halves the charge above the floor when advancement is doubled', () => {
-    // Flawless Magic doubles advancement totals ([2, 1]): (30 - 5) charged as
-    // ceil(25 * 1 / 2) = 13.
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 1 }, { mastery: 3 }], 1, [2, 1])).toBe(13);
-    // Doubling with no floor: ceil(30 / 2) = 15.
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [2, 1])).toBe(15);
-  });
-
-  it('charges any authored Affinity ratio, not just 2/1', () => {
-    // V2 (full-audit round 2): the Affinity is authored rules data, priced by
-    // the engine's general `effective/xp.rs::charged_cost` as
-    // ceil(payable * den / num). A 3/2 grant ("counts as 3/2 of itself") charges
-    // ceil(30 * 2 / 3) = 20 for a mastery-3 spell with no floor — a hardcoded
-    // halving would say 15, which is the engine disagreeing with the bar.
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [3, 2])).toBe(20);
-    // And the identity ratio charges the full table cost.
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [1, 1])).toBe(30);
-  });
-
-  it("charges floor(den*(T-1)/num)+1, not ceil(T*den/num) — the engine's actual formula (G1, F-547)", () => {
-    // `effective/xp.rs::charged_cost`'s own doc comment identifies `ceil` as the
-    // WRONG formula it was fixed away from (V/F-audit F-547), and gives this exact
-    // counter-example: a table value of 140 (e.g. mastery score 7 on the Specialist
-    // template) under a 3/2 Affinity ratio. The two formulas disagree whenever
-    // `tableXp*den mod num` falls strictly between 0 and `den` — which 140 does:
-    // ceil(140*2/3) = ceil(93.33) = 94 (the bug this mirror carried), while the
-    // engine's actual floor(2*(140-1)/3)+1 = floor(92.67)+1 = 93.
-    const bigTable = [{ score: 7, total_xp: 140 }];
-    expect(spellMasteryXpSpent(bigTable, [{ mastery: 7 }], 0, [3, 2])).toBe(93);
-
-    // A degenerate zero table value stays free under either formula.
-    expect(spellMasteryXpSpent([{ score: 1, total_xp: 0 }], [{ mastery: 1 }], 0, [3, 2])).toBe(0);
-
-    // At T=55 the two formulas happen to agree (37) — exactly why the existing
-    // fixture table (5/15/30) never caught this: none of ITS values land where the
-    // formulas diverge, same as this one doesn't at 55.
-    expect(spellMasteryXpSpent([{ score: 1, total_xp: 55 }], [{ mastery: 1 }], 0, [3, 2])).toBe(37);
-  });
-
-  it('fails safe on a degenerate ratio, on BOTH terms, exactly as the engine does', () => {
-    // Klaus (round 3). `effective/xp.rs::charged_cost` takes the Affinity only
-    // when `num != 0 && den != 0` and charges the full table otherwise —
-    // nonsense data must not price a spend, and the full cost is the
-    // conservative reading. This mirror guarded the numerator alone, so a zero
-    // DENOMINATOR fell through to the arithmetic and made the spend FREE: the
-    // bar would have shown 0 XP where the engine showed 30.
-    //
-    // Round 3's engine half now rejects a zero term in either position at
-    // ruleset load, so no shipped ruleset can reach this — the divergence is
-    // closed at the data gate and this is the contract-matching layer behind it.
-    // A mirror that guards half of what it mirrors is the drift itself.
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [2, 0])).toBe(30);
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [0, 2])).toBe(30);
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [0, 0])).toBe(30);
-  });
-
-  it('mirrors effective.rs::flawless_magic_floors_first_mastery_free_and_halves_the_rest', () => {
-    // The Rust test's own worked example, verbatim: Flawless Magic (floor 1,
-    // doubled advancement) on two spells mastered at 1 and 3. Mastery 1 ==
-    // the floor is free; mastery 3 costs table(3) - table(1) = 25, doubled ->
-    // ceil(25/2) = 13. The Rust test asserts `alloc.total_demand == 13` for
-    // this exact input; this is the TS side of the same claim.
-    expect(spellMasteryXpSpent(advancement, [{ mastery: 1 }, { mastery: 3 }], 1, [2, 1])).toBe(13);
-  });
-});
-
-describe('spellMasteryXpSpent — prices whatever ratio the shipped data authors (V2)', () => {
-  // This describe block REPLACES the round-1 "2:1-only" tripwire, which pinned
-  // the shipped catalogue to a 2/1 ratio because `spellMasteryXpSpent` could
-  // only price that one. That tripwire was the wrong shape once the ratio
-  // crosses the IPC boundary intact: it turned "add a Virtue with a 3/2 mastery
-  // Affinity" — a data-only change under the "catalogue size is data, never
-  // code" invariant — into a red test that could only be greened by editing
-  // TypeScript. The real data is still read, but to exercise the function
-  // against it rather than to constrain it.
-  const advancement = [
-    { score: 1, total_xp: 5 },
-    { score: 2, total_xp: 15 },
-    { score: 3, total_xp: 30 },
-  ];
-
-  it('charges every shipped GrantsSpellMastery ratio the way the engine does', () => {
-    const catalogue = JSON.parse(
-      readFileSync(
-        fileURLToPath(new URL('../../../rules/core/virtues_flaws.json', import.meta.url)),
-        'utf-8',
-      ),
-    ) as {
-      id: string;
-      effects?: { type: string; advancement_num?: number; advancement_den?: number }[];
-    }[];
-    const reducingGrants = catalogue
-      .flatMap((item) => item.effects ?? [])
-      .filter((e) => e.type === 'grants_spell_mastery')
-      .filter((e) => (e.advancement_num ?? 1) > (e.advancement_den ?? 1));
-    // Sanity check that this test is exercising real data, not vacuously
-    // passing because the catalogue carries no such grant at all — Flawless
-    // Magic must still be there.
-    expect(reducingGrants.length).toBeGreaterThan(0);
-    for (const grant of reducingGrants) {
-      const num = grant.advancement_num ?? 1;
-      const den = grant.advancement_den ?? 1;
-      // The engine's own `effective/xp.rs::charged_cost`, spelled out here so
-      // the comparison is against the rule rather than against this function's
-      // own arithmetic: table(3) = 30, no floor.
-      expect(spellMasteryXpSpent(advancement, [{ mastery: 3 }], 0, [num, den])).toBe(
-        Math.ceil((30 * den) / num),
-      );
-    }
-  });
-});
-
+// V2 (full-audit round 2): `spellMasteryXpSpent`/`chargedCost` — the mastery-spend
+// TS mirror these tests used to cover — are gone. They duplicated the engine's
+// `effective/xp.rs::build_spends`/`charged_cost` (the "KNOWN DRIFT RISK" GD4
+// flagged, and the same defect class as `characteristic_points_used`,
+// VA1/GF1/GD4), and caused round 1's G1 wrong-total bug. The fix surfaces the
+// engine's own total as `EffectiveScores.spell_mastery_xp_used`
+// (`effective/xp.rs::spell_mastery_xp_used`, `effective_dto.rs::spell_mastery_fields`),
+// which `SpellBudgetBar.svelte` now reads directly — see
+// `effective.rs::spell_mastery_xp_used_matches_the_flawless_magic_worked_example`/
+// `..._applies_the_affinity_reduction_at_t140` and
+// `effective_dto.rs::effective_scores_surfaces_the_mastery_xp_used_total` for
+// the worked examples this file used to pin on the TS side, and
+// `SpellBudgetBar.test.ts`'s "mastery used reads the engine total" case for the
+// component-level proof that it no longer recomputes its own copy.
 describe('effectiveSpellMastery', () => {
   it('takes the granted floor when it beats the bought mastery', () => {
     expect(effectiveSpellMastery(0, 1)).toBe(1);

@@ -238,6 +238,7 @@
         <button
           type="button"
           disabled={!canApply || store.agingBusy}
+          aria-busy={store.agingBusy}
           onclick={() => store.applyAgingRoll()}
           data-testid="aging-apply"
         >
@@ -246,6 +247,7 @@
         <button
           type="button"
           disabled={store.agingBusy}
+          aria-busy={store.agingBusy}
           onclick={() => store.clearAgingDraft()}
           data-testid="aging-calculator-clear"
         >

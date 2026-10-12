@@ -1209,7 +1209,7 @@ reason: a category condition would license itself.
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :421) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :436) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2361`), encoded as a `Prereq` on the relevant
   items.
@@ -1294,15 +1294,15 @@ reason: a category condition would license itself.
   data row itself is B2/D41's, not B1's; no shipped cap sets `min` yet.
 - **Load-time integrity**: `Prereq::HasCategory`/`Effect::ForbidsItemCategory`'s
   category must be declared by at least one point item
-  (`ruleset/integrity.rs::category_declared_by_some_item`, :2412, shared by
-  `validate_prereq_refs` :2289 and `validate_effect_refs` :2827) —
+  (`ruleset/integrity.rs::category_declared_by_some_item`, :2414, shared by
+  `validate_prereq_refs` :2291 and `validate_effect_refs` :2829) —
   deliberately NOT the same as `validate_type_profile_refs`'s documented
   non-check of a type profile's category fields (those name a legitimately
   forward-declared category with no item yet; these sit on an item's own
   prerequisites/effects and claim the catalogue as it stands). Every
   `ForbidsAbilities` ability id must resolve. `CategoryCap.min > max` is
   rejected as unsatisfiable, and `min_hard` with `min` absent is rejected as
-  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :836).
+  meaningless (`ruleset/integrity.rs::validate_category_cap_floors`, :838).
 - Fluent: `issue-category_forbidden_by_effect` (args `$item`/`$category`/`$other`),
   `issue-ability_forbidden_by_effect` (args `$ability`/`$other`) — both locales.
 - Tests: `crates/arm-rules/tests/b1_category_and_ability_prohibitions.rs`
@@ -3978,12 +3978,17 @@ naming a `LifeStageBlock` (`ChildhoodSpread` or `Apprenticeship`), consumed in
   existing `validate_xp_pool` → `CODE_NOT_ENOUGH_XP` (its `pool` arg is now
   `allocation.max_flow`, the total all pools can fund, so `spent − pool == shortfall`
   stays accurate). `Effect::GrantsSpellMastery { score, .. }` → `spell_mastery_floor`
-  (max grant); `effective_spell_mastery(sel)` = `max(bought, floor)`. The UI mirrors
-  the same floor + Affinity charge in `derive.ts::spellMasteryXpSpent`, driven by
-  `EffectiveScores.spell_mastery_{xp,floor}` and `spell_mastery_advancement_affinity`
-  — the authored `[num, den]` pair, not a "doubled" flag, so the UI charges the same
-  reduced cost for any ratio the catalogue authors (full-audit round 2, V2);
-  the SpellPicker mastery spinner shows for every magus (buyable from the general
+  (max grant); `effective_spell_mastery(sel)` = `max(bought, floor)`. The charged
+  mastery total itself is surfaced directly, not mirrored: `effective/xp.rs::spell_mastery_xp_used`
+  sums the `SpendKind::Mastery` spends `build_spends` already built for
+  `xp_allocation` (no second formula), `effective_dto.rs::spell_mastery_fields`
+  carries it onto `EffectiveScores.spell_mastery_xp_used`, and
+  `SpellBudgetBar.svelte` reads that field straight from `store.effective` —
+  replacing `derive.ts`'s now-deleted `spellMasteryXpSpent`/`chargedCost` TS
+  mirror, which used to re-derive the same floor + Affinity charge by hand and caused
+  full-audit round 1's G1 wrong-total bug (full-audit round 2, V2). The Affinity
+  no longer crosses the IPC boundary at all: with the total engine-authoritative,
+  nothing downstream needs the ratio. The SpellPicker mastery spinner shows for every magus (buyable from the general
   pool). "You may take this Virtue multiple times" (`ArMDE:4545`) states no ceiling, so
   `virtue.mastered_spells` carries `max_per_target: 255` — see *Selection
   multiplicity* above. (It formerly sat at the default 1, which blocked the repeat.)

@@ -43,10 +43,18 @@ export const portableApp = path.resolve(portableDir, 'arm-app');
  * Build the production binary and stage the portable layout, replacing whatever
  * was there before.
  *
- * @param {{ build?: boolean }} [options] pass `{ build: false }` to stage an
- *   already-built `target/release/arm-app` without recompiling
+ * @param {{ build?: boolean, repoRoot?: string, portableDir?: string }} [options]
+ *   pass `{ build: false }` to stage an already-built `target/release/arm-app`
+ *   without recompiling. `repoRoot`/`portableDir` default to this module's own
+ *   paths — every real caller (`wdio.portable.conf.js`) leaves them unset — and
+ *   exist only so a test can stage into an isolated fixture tree instead of the
+ *   real repo (E9, full-audit round 2).
  */
-export function stagePortableApp({ build = true } = {}) {
+export function stagePortableApp({
+  build = true,
+  repoRoot: root = repoRoot,
+  portableDir: destDir = portableDir,
+} = {}) {
   if (build) {
     // Exactly the gate's command, so it shares the gate's `target/release`
     // without recompiling arm-app. No `--config`: tauri-cli passes it to cargo
@@ -55,7 +63,7 @@ export function stagePortableApp({ build = true } = {}) {
     // frontend build in it rewrites nothing in `ui/dist` when nothing changed
     // (`sync-dist.js`), so cargo is a no-op after a gate build.
     const result = spawnSync('cargo', ['tauri', 'build', '--no-bundle'], {
-      cwd: path.resolve(repoRoot, 'crates/arm-app'),
+      cwd: path.resolve(root, 'crates/arm-app'),
       stdio: 'inherit',
       // Under wdio this runs with NODE_ENV=test, which Vite would keep: force
       // the production frontend that ships (see wdio.conf.js's onPrepare).
@@ -64,34 +72,32 @@ export function stagePortableApp({ build = true } = {}) {
     if (result.status !== 0) throw new Error('cargo tauri build failed');
   }
 
-  const binary = path.resolve(repoRoot, 'target/release/arm-app');
+  const binary = path.resolve(root, 'target/release/arm-app');
   if (!fs.existsSync(binary)) {
     throw new Error(`no release binary at ${binary}; run \`cargo tauri build --no-bundle\` first`);
   }
 
   // A stale staging would hide a rules file that stopped shipping, so start clean.
-  fs.rmSync(portableDir, { recursive: true, force: true });
-  fs.mkdirSync(portableDir, { recursive: true });
+  fs.rmSync(destDir, { recursive: true, force: true });
+  fs.mkdirSync(destDir, { recursive: true });
 
-  fs.copyFileSync(binary, portableApp);
-  fs.chmodSync(portableApp, 0o755);
+  const staged = path.resolve(destDir, 'arm-app');
+  fs.copyFileSync(binary, staged);
+  fs.chmodSync(staged, 0o755);
 
   for (const sub of ['core', 'i18n']) {
-    fs.cpSync(path.resolve(repoRoot, 'rules', sub), path.resolve(portableDir, 'rules', sub), {
+    fs.cpSync(path.resolve(root, 'rules', sub), path.resolve(destDir, 'rules', sub), {
       recursive: true,
     });
   }
   // Attribution travels with the data it describes, exactly as build-linux.sh
   // arranges it for a shipped archive.
-  fs.copyFileSync(
-    path.resolve(repoRoot, 'rules/NOTICE.md'),
-    path.resolve(portableDir, 'rules/NOTICE.md'),
-  );
+  fs.copyFileSync(path.resolve(root, 'rules/NOTICE.md'), path.resolve(destDir, 'rules/NOTICE.md'));
   // The rulebook's example characters (A2), beside `rules/` as `examples/`,
   // exactly as build-linux.sh's `stage_examples` arranges them.
-  fs.cpSync(path.resolve(repoRoot, 'examples/rulebook'), path.resolve(portableDir, 'examples'), {
+  fs.cpSync(path.resolve(root, 'examples/rulebook'), path.resolve(destDir, 'examples'), {
     recursive: true,
   });
 
-  return portableApp;
+  return staged;
 }

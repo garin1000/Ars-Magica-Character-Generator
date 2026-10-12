@@ -1731,6 +1731,12 @@ mod tests {
             "effects": [{ "type": "grants_spell_mastery", "score": 1, "advancement_num": 2, "advancement_den": 1 }]
           },
           {
+            "id": "virtue.mastery_affinity_three_two",
+            "kind": "virtue", "classification": "narrative", "magnitude": "major", "categories": ["hermetic"],
+            "entity_kinds": ["character"],
+            "effects": [{ "type": "grants_spell_mastery", "score": 0, "advancement_num": 3, "advancement_den": 2 }]
+          },
+          {
             "id": "virtue.linguist",
             "kind": "virtue", "classification": "narrative", "magnitude": "minor", "categories": ["general"],
             "entity_kinds": ["character"],
@@ -1804,11 +1810,16 @@ mod tests {
           }
         ]"#;
         // Ability table: 5·n·(n+1)/2 (5× the Art triangular). Art table: n·(n+1)/2.
+        // Rows 6-7 (105, 140) added for the row-47/G5-adjacent A2 mastery Affinity
+        // test (full-audit round 2, V2): 140 is the book's own Specialist-template
+        // Single Weapon 7 worked example (`charged_cost_is_the_smallest_charge_...`
+        // above), reused here against the full entity+ruleset Mastery flow.
         let abilities = r#"{
           "advancement": [
             { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
             { "score": 3, "total_xp": 30 }, { "score": 4, "total_xp": 50 },
-            { "score": 5, "total_xp": 75 }
+            { "score": 5, "total_xp": 75 }, { "score": 6, "total_xp": 105 },
+            { "score": 7, "total_xp": 140 }
           ],
           "abilities": [
             { "id": "ability.latin", "category": "academic" },
@@ -2218,6 +2229,40 @@ mod tests {
         e.spells = vec![mastered("spell.a", 1), mastered("spell.b", 3)];
         let alloc = xp_allocation(&e, &rs);
         assert_eq!(alloc.total_demand, 13);
+    }
+
+    /// V2 (full-audit round 2): `ui/src/lib/derive.ts`'s now-deleted
+    /// `spellMasteryXpSpent`/`chargedCost` used to hand-mirror this exact
+    /// computation in TypeScript — fixed by surfacing the mastery pool's
+    /// "used" total on `EffectiveScores` instead. This pins the engine-side
+    /// function the DTO layer reads from, against the SAME worked example as
+    /// `flawless_magic_floors_first_mastery_free_and_halves_the_rest`
+    /// directly above: total demand across every mastered spell equals 13,
+    /// with nothing else drawing from the mastery pool.
+    #[test]
+    fn spell_mastery_xp_used_matches_the_flawless_magic_worked_example() {
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.flawless_magic")]);
+        e.xp_pool = 100;
+        e.spells = vec![mastered("spell.a", 1), mastered("spell.b", 3)];
+        assert_eq!(spell_mastery_xp_used(&e, &rs), 13);
+    }
+
+    /// V2, continued: the Affinity-reduction leg of the same function, pinned to
+    /// the identical row-47/F-547 worked example as
+    /// `charged_cost_is_the_smallest_charge_that_reaches_the_table_cost` above
+    /// (the book's own Specialist-template Single Weapon 7: table cost T=140
+    /// under Affinity 3/2 must cost 93, not the `ceil`-based 94 that overcharged
+    /// before that fix) — but exercised through the full entity+ruleset Mastery
+    /// flow this time, not the bare `charged_cost` call, since that is the path
+    /// `derive.ts`'s mirror actually duplicates.
+    #[test]
+    fn spell_mastery_xp_used_applies_the_affinity_reduction_at_t140() {
+        let rs = xp_ruleset();
+        let mut e = xp_entity(vec![sel("virtue.mastery_affinity_three_two")]);
+        e.xp_pool = 1000;
+        e.spells = vec![mastered("spell.a", 7)];
+        assert_eq!(spell_mastery_xp_used(&e, &rs), 93);
     }
 
     #[test]

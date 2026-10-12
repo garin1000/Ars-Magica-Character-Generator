@@ -221,6 +221,7 @@
         <button
           type="button"
           disabled={!!blockingFault || store.childhoodApplyBusy}
+          aria-busy={store.childhoodApplyBusy}
           aria-describedby={blockingFault ? APPLY_REASON_ID : undefined}
           onclick={() => store.applyChildhoodPackage()}
           data-testid="childhood-apply"

@@ -124,7 +124,22 @@ fn prereq_resolution_phase(prereq: &Prereq) -> CreationPhase {
             CreationPhase::Abilities
         }
         Prereq::ArtMin { .. } | Prereq::AnyArtMin { .. } => CreationPhase::Arts,
-        _ => CreationPhase::VirtuesFlaws,
+        // Every other leaf resolves in VirtuesFlaws, same phase as the item's own
+        // selection — listed explicitly (not a wildcard `_`) so a new `Prereq`
+        // variant is a compile error here until it is given a phase, matching the
+        // same discipline `effective.rs`'s `irrelevant_effect_variants!` macro
+        // enforces for `Effect`.
+        Prereq::Has(_)
+        | Prereq::House(_)
+        | Prereq::HermeticallyTrained
+        | Prereq::OrderMember
+        | Prereq::IsCompanion
+        | Prereq::IsGrog
+        | Prereq::HasCategory(_)
+        | Prereq::AgeMin(_)
+        | Prereq::HasCategoryAtMagnitude { .. }
+        | Prereq::CharacterType(_)
+        | Prereq::CharacteristicMin { .. } => CreationPhase::VirtuesFlaws,
     }
 }
 

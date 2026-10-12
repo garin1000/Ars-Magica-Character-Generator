@@ -100,8 +100,8 @@ pub use effective::{
     reputation_grants, resolve_realm, resolved_spell_level, restricted_xp_pools, size, spell_caps,
     spell_level_cap, spell_level_caps, spell_levels_base, spell_levels_bonus, spell_levels_budget,
     spell_levels_used, spell_mastery_advancement_affinity, spell_mastery_floor, spell_mastery_xp,
-    supernatural_free_slots, true_faith, unlink_ability_parameters, warping, warping_owed,
-    warping_owed_grants, warping_points_total, warping_score,
+    spell_mastery_xp_used, supernatural_free_slots, true_faith, unlink_ability_parameters, warping,
+    warping_owed, warping_owed_grants, warping_points_total, warping_score,
 };
 pub use equipment::{Armor, Shield, Weapon, WeaponKind};
 pub use export::{LABEL_KEYS, character_markdown};

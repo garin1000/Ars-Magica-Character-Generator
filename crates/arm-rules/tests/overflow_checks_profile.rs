@@ -41,17 +41,25 @@ const ROOT_CARGO_TOML: &str = include_str!("../../../Cargo.toml");
 /// section does not need one (the same reasoning already governs the other
 /// text-based source guards in this crate, e.g. `rulebook_citations.rs`).
 ///
-/// Finds the `[profile.release]` header, takes everything up to the next `[`
-/// header (or end of file), and looks for an `overflow-checks = true` line
-/// inside that slice — so a `true` sitting under a DIFFERENT profile is
+/// Finds the `[profile.release]` header **line** (trimmed equality, not a
+/// whole-file substring search — G5, full-audit round 2: a comment mentioning
+/// the literal bracketed phrase `[profile.release]` before the real header
+/// used to make a `str::split` on that substring return the wrong segment),
+/// then scans forward from the line after it until the next `[`-prefixed
+/// header line (or end of file), looking for an `overflow-checks = true` line
+/// inside that span — so a `true` sitting under a DIFFERENT profile is
 /// correctly not counted.
 fn release_profile_has_overflow_checks(cargo_toml: &str) -> bool {
-    let Some(after_header) = cargo_toml.split("[profile.release]").nth(1) else {
+    let mut lines = cargo_toml.lines();
+    if lines
+        .by_ref()
+        .find(|l| l.trim() == "[profile.release]")
+        .is_none()
+    {
         return false;
-    };
-    let block = after_header.split("\n[").next().unwrap_or(after_header);
-    block
-        .lines()
+    }
+    lines
+        .take_while(|l| !l.trim_start().starts_with('['))
         .any(|line| line.trim() == "overflow-checks = true")
 }
 
@@ -90,6 +98,36 @@ fn overflow_checks_under_a_different_profile_does_not_count() {
     assert!(
         !release_profile_has_overflow_checks(OVERFLOW_CHECKS_TRUE_UNDER_A_DIFFERENT_PROFILE),
         "overflow-checks under [profile.dev] must not satisfy the [profile.release] check"
+    );
+}
+
+/// G5 (full-audit round 2, Gerda-C): `release_profile_has_overflow_checks` finds
+/// the real header by splitting the WHOLE file on the literal substring
+/// `"[profile.release]"` and taking segment index 1 — so a comment mentioning
+/// that exact bracketed phrase BEFORE the real header (this repo's own source
+/// comments already do this, e.g. this file's module doc comment above) makes
+/// `.nth(1)` return the text between the comment's occurrence and the real
+/// header instead of the real header's own block, and the key inside the real
+/// `[profile.release]` table is never seen.
+const OVERFLOW_CHECKS_WITH_A_LEADING_COMMENT_MENTIONING_THE_HEADER: &str = r#"
+# See [profile.release] below for the overflow-checks setting.
+
+[profile.dev]
+debug = true
+
+[profile.release]
+overflow-checks = true
+lto = true
+"#;
+
+#[test]
+fn a_leading_comment_mentioning_the_header_does_not_hide_the_real_one() {
+    assert!(
+        release_profile_has_overflow_checks(
+            OVERFLOW_CHECKS_WITH_A_LEADING_COMMENT_MENTIONING_THE_HEADER
+        ),
+        "a comment line containing the literal '[profile.release]' before the real \
+         header must not make the checker miss the real table's overflow-checks = true"
     );
 }
 

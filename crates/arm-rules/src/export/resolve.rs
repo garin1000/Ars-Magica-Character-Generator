@@ -326,7 +326,7 @@ impl<'a> Doc<'a> {
         if keys.is_empty() || keys.iter().any(|key| values.contains_key(key)) {
             return None;
         }
-        Some(escape_cell(unfilled).to_string())
+        Some(escape_cell(unfilled))
     }
 
     /// A parameter value's own localized template, with its chosen (sibling)
