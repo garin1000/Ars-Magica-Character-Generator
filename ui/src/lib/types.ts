@@ -2084,8 +2084,9 @@ export interface LongevityRitual {
   focus?: string;
 }
 
-// Which weapon table a Weapon comes from (rendered via Fluent `weapon-kind-<id>`,
-// never as a raw slug). Thrown and missile weapons carry a Range.
+// Which weapon table a Weapon comes from. Not displayed yet, so it has no Fluent
+// label; showing it must add `weapon-kind-<id>` keys rather than render the raw
+// slug. Thrown and missile weapons carry a Range.
 export type WeaponKind = 'melee' | 'missile' | 'thrown';
 
 // A catalogue weapon. Attack/Damage/min-Strength are absent for the n/a cells

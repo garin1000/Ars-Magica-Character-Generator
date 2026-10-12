@@ -1656,7 +1656,10 @@ pub enum Effect {
     /// named by the selection's `params[param]` count as `counts_as_num /
     /// counts_as_den` of themselves (Affinity = 3/2, "increased by one half,
     /// rounded up"), so the XP *charged* against the pool for a bought score is
-    /// `ceil(table_xp · counts_as_den / counts_as_num)`. A rational (two `u8`s),
+    /// the smallest charge that reaches the table cost,
+    /// `floor((table_xp − 1) · counts_as_den / counts_as_num) + 1`
+    /// (`effective/xp.rs::charged_cost`; not `ceil(table_xp · den / num)`, which
+    /// overcharges by one XP at e.g. T=140, 3/2). A rational (two `u8`s),
     /// not a float, so [`Effect`] keeps deriving `Eq`. The age-cap exemption the
     /// same Virtue grants is read off the presence of this effect (Phase 6).
     ///

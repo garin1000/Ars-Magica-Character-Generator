@@ -3276,10 +3276,11 @@ mod tests {
         })
     }
 
-    /// An Affinity is a ratio of the cost, so a zero denominator prices the
-    /// advancement at nothing: `charged_cost` (`effective/xp.rs`) multiplies the
-    /// table cost by the denominator, and `ceil(table·0/num)` is 0. Reject it at
-    /// load, naming the item, exactly as a zero share denominator is rejected.
+    /// An Affinity is a ratio of the cost, so a zero denominator would price the
+    /// advancement at almost nothing: `charged_cost` (`effective/xp.rs`) scales
+    /// the table cost by the denominator. It guards that case itself, but the
+    /// data is still wrong, so reject it at load, naming the item, exactly as a
+    /// zero share denominator is rejected.
     #[test]
     fn an_affinity_with_a_zero_denominator_fails_the_load_naming_the_item() {
         let err = load_with_effect(

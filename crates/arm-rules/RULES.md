@@ -3971,7 +3971,7 @@ naming a `LifeStageBlock` (`ChildhoodSpread` or `Apprenticeship`), consumed in
   score ≤ floor costs 0 — exactly as a granted Supernatural-Ability floor does; the
   **doubling** is applied through `charged_cost` with the Affinity from
   `spell_mastery_advancement_affinity` (Flawless → `(2,1)`), so `mastery 3` under
-  Flawless costs `ceil((table(3) − table(1)) / 2) = ceil(25/2) = 13`. Eligibility:
+  Flawless costs `floor((25 − 1) · 1 / 2) + 1 = 13` (table(3) − table(1) = 25). Eligibility:
   a `PoolEligibility::Mastery` pool (the summed `SpellMasteryXp`) funds only Mastery
   spends, the ability-restricted pools (`PoolEligibility::Ability`) never do, and
   neither funds the other's spends (`pool_covers`). Overspend surfaces through the

@@ -579,9 +579,10 @@ impl Ruleset {
     /// shared one:
     ///
     /// *Affinities* say experience "counts as `num/den` of itself", so the XP
-    /// charged is `ceil(table · den / num)` (`effective/xp.rs::charged_cost`).
-    /// A **zero denominator** would make that product 0 and the charge 0 — every
-    /// score under the Affinity free. `charged_cost` itself now guards both
+    /// charged is `floor((table − 1) · den / num) + 1`
+    /// (`effective/xp.rs::charged_cost`). A **zero denominator** would collapse
+    /// that to a charge of 1 XP whatever the table says — every score under the
+    /// Affinity all but free. `charged_cost` itself now guards both
     /// terms (`num != 0 && den != 0 && table_xp != 0`), so this check is defence
     /// in depth, not the only thing catching it — but `grants_spell_mastery`'s own
     /// `advancement_num > advancement_den` test still admits `(1, 0)` because

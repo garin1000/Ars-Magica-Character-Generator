@@ -6583,7 +6583,7 @@ mod tests {
         bare.xp_pool = 10;
         bare.art_scores = creo5.clone();
         assert!(codes(&validate(&bare, &rs)).contains(&"not_enough_xp".to_string()));
-        // With Affinity with Creo, the charged cost drops to ceil(15·2/3)=10 → fits.
+        // With Affinity with Creo, the charged cost drops to floor(14·2/3)+1=10 → fits.
         let mut affined = make_entity(
             "companion",
             vec![Selection::with_params(
