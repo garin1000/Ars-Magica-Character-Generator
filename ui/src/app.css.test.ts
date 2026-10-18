@@ -824,6 +824,25 @@ describe('app.css', () => {
     expect(appCss).not.toContain('spell-mastery-block');
   });
 
+  // manual-testing-findings #12: `.spell-list li` is `align-items: flex-start`
+  // (deliberately — see its own comment), which places each row control at the
+  // row's TOP edge. `.item-name`'s `line-height: 1.9rem` centres its text within
+  // that height, so a sibling with no matching line box/height sits with its text
+  // flush at the top instead — visibly higher than the spell name. Both the
+  // Casting Total badge and the General spell's level input need the same
+  // 1.9rem figure to put their text at the same vertical spot as the name's.
+  it('puts the Casting Total badge on the same baseline as the spell name', () => {
+    const block = /^\.casting-total-badge\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block).not.toBeNull();
+    expect(block![1]).toMatch(/line-height:\s*1\.9rem;/);
+  });
+
+  it('puts the General spell level input on the same baseline as the spell name', () => {
+    const block = /^\.spell-general-level-input\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block).not.toBeNull();
+    expect(block![1]).toMatch(/height:\s*1\.9rem;/);
+  });
+
   // guided-creation-review-2026-08 #27: the panel is mounted as a direct child of the
   // editor's `.tab-panel` (which centres its children) and, in the wizard, inside
   // `.vf-tab` (which is `width: 100%` and stretches them). Centring the panel ITSELF

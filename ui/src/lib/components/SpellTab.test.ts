@@ -192,6 +192,27 @@ describe('SpellTab selected-row layout', () => {
       body.indexOf(`data-testid="spell-mastery-abilities-${SPELL}-0"`),
     );
   });
+
+  // manual-testing-findings #12: the General spell's level input carries a
+  // dedicated class so app.css can height-match it to the spell name's line
+  // box (see app.css.test.ts for the actual CSS assertion — SSR renders no
+  // layout, so this only pins the class hook).
+  it('marks the General spell level input with its baseline-alignment class', () => {
+    const GENERAL = 'spell.test_general';
+    store.ruleset!.ruleset.spells![GENERAL] = {
+      id: GENERAL,
+      technique: 'art.creo',
+      form: 'art.animal',
+    } as unknown as NonNullable<LocalizedRuleset['ruleset']['spells']>[string];
+    store.ruleset!.i18n[GENERAL] = { name: 'Test General Spell' };
+    store.entity.spells = [{ spell: GENERAL, level: 5 }];
+    const body = html();
+    const open = /<input[^>]*data-testid="spell-level-input-spell\.test_general-0"[^>]*>/.exec(
+      body,
+    );
+    expect(open).not.toBeNull();
+    expect(open![0]).toContain('class="spell-general-level-input"');
+  });
 });
 
 // --- 6b8c: who owns the budget bar ------------------------------------------

@@ -645,6 +645,7 @@
                 {#if isGeneral(chosen.spell)}
                   <input
                     type="number"
+                    class="spell-general-level-input"
                     min={minLevelForChosen(chosen.spell)}
                     max="255"
                     step="1"

@@ -1794,6 +1794,17 @@ ul {
   color: var(--accent);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  /* manual-testing-findings #12: matches `.item-name`'s line-height so
+     `.spell-list li`'s `align-items: flex-start` puts both texts at the same
+     vertical spot — without it the badge's shorter natural line box sits flush
+     at the row's top, visibly higher than the spell name. */
+  line-height: 1.9rem;
+}
+
+/* The General spell's level input, inline after the name (#12): height-matched
+   to the same 1.9rem for the same reason as the badge above. */
+.spell-general-level-input {
+  height: 1.9rem;
 }
 
 /* The within-focus checkbox's own spacing; `.checkbox.inline` on the same
