@@ -896,7 +896,7 @@ fn life_companion() -> Entity {
 /// Darius's shape (ArMDE:2556, :2558) at 36: eight years of study, a year of
 /// four lab seasons in a section named with a `|`, and two Remaining years with
 /// one and two lab seasons — 240 + 0 + 30 post-Gauntlet points (ArMDE:2541,
-/// :2550). 40 of them are levels of spells.
+/// :2552). 40 of them are levels of spells.
 fn life_magus() -> Entity {
     let mut e = life_character("magus", 36);
     let plan = life_plan(&mut e);

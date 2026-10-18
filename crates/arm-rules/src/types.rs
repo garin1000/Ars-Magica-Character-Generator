@@ -98,7 +98,7 @@ impl fmt::Display for EntityKind {
 ///
 /// Source: ArMDE:2844 ("Major Virtues
 /// cost three points ... Minor Virtues and Flaws cost and grant ... one point");
-/// :2209; Free virtues at :2886-2896.
+/// :2279; Free virtues at :2956-2966.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Magnitude {
@@ -2123,7 +2123,7 @@ pub enum Effect {
     /// no-op for effective scores, validation, and referential checks.
     ///
     /// Source: ArMDE:4549-4552 (Virtue),
-    /// :10410 (lesser-enchantment Lab-Total-≥-2×level rule).
+    /// :10484 (lesser-enchantment Lab-Total-≥-2×level rule).
     MasterpieceItem,
     /// Grants a derived True Faith Score (base 0, summed across grants). True
     /// Faith is a special score with its own rules, not a Supernatural Ability.
@@ -5059,7 +5059,7 @@ pub struct SpellSelection {
     /// mastery-XP pool (Mastered Spells). `None`/0 = unmastered. The effective
     /// mastery is `max(this, granted floor)` — Flawless Magic floors every spell
     /// at 1. Source: ArMDE:4544-4547,
-    /// :3887-3889.
+    /// :3960-3963.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mastery: Option<u8>,
     /// The chosen value for a parameterized spell (the target `(Form)` of a
@@ -6288,7 +6288,7 @@ fn default_saga_year() -> i32 {
 /// give ("can be rated in power on a scale from 1 to 10").
 ///
 /// Source: ArMDE:17469 (rating scale),
-/// :17404-17409 (Realm Interaction Table, the ×5 Divine-on-Infernal entry).
+/// :17481-17488 (Realm Interaction Table, the ×5 Divine-on-Infernal entry).
 ///
 /// Enforced in two places. [`Entity::normalize`] clamps the stored value
 /// (self-healing, the same treatment [`MAX_CORD_SCORE`] gets from

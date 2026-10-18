@@ -770,7 +770,7 @@ impl InPlayMods {
     /// The residual Casting-Score penalty for casting a `form` spell with no
     /// gestures: Deft Form waives it, else the −5 base plus Subtle Magic reduction,
     /// clamped at 0. Source: ArMDE:9319,
-    /// :5073-5076, :3645-3648.
+    /// :5146-5149, :3718-3721.
     fn residual_gesture_penalty(&self, form: &Id) -> i32 {
         if self.deft_forms.contains(form) {
             return 0;
@@ -2134,7 +2134,7 @@ mod tests {
     /// The bonding level is "25 plus the familiar's Magic Might plus 5 times its
     /// Size", and a negative Size **reduces** it — the book's own worked example:
     /// Size -2 and Magic Might 10 bind as a level 25 enchantment (ArMDE:10898,
-    /// :10828).
+    /// :10902).
     #[test]
     fn familiar_binding_level_folds_in_a_negative_size() {
         let book_example = Familiar {
@@ -3202,7 +3202,7 @@ mod tests {
     }
 
     /// A grog combat line with a weapon and a shield combined (ArMDE:16737-16749,
-    /// :16656).
+    /// :16735).
     #[test]
     fn combat_line_combines_weapon_and_shield() {
         let rs = ruleset();
@@ -3473,7 +3473,7 @@ mod tests {
     }
 
     /// Soak with Tough (+3) and a Bronze cord, plus worn armor (ArMDE:16745,
-    /// :5145-5147, :10840-10844).
+    /// :5218-5220, :10918).
     #[test]
     fn soak_with_tough_and_bronze_cord() {
         let rs = ruleset();

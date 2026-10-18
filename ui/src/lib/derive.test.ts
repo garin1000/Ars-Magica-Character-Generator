@@ -1703,8 +1703,8 @@ describe('groupByCategory', () => {
   // (`VirtueFlawTab.categoriesFor`), so a category that no item happens to list
   // first must still produce a heading — otherwise it would be unreachable in the
   // filter even though items carry it. Suppressed Gift is
-  // "*Major, Hermetic, Story*" (Core Rules :5301 under "### Hermetic, Major",
-  // :5369 under "### Story, Major").
+  // "*Major, Hermetic, Story*" (ArMDE:5374 under "### Hermetic, Major",
+  // :5442 under "### Story, Major").
   it('creates a heading for a category no item lists first', () => {
     const ruleset = makeRuleset([
       item({ id: 'flaw.suppressed_gift', kind: 'flaw', categories: ['hermetic', 'story'] }),

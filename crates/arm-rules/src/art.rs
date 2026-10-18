@@ -25,7 +25,7 @@ use crate::types::{Id, SourceRef};
 /// The two classes of Hermetic Art.
 ///
 /// Source: ArMDE:8919-8971 (Techniques),
-/// :8899-8982 (Forms).
+/// :8973-9055 (Forms).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ArtType {

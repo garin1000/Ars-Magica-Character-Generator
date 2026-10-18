@@ -39,8 +39,8 @@ pub struct CharacteristicBonus {
 /// `CharacteristicMax` narrows it, and only downward (`.min`).
 ///
 /// Source: ArMDE:2416-2424 (the table),
-/// :4105 (the +3 cap on the bought score), :3987-3989 (Great grants the point),
-/// :6919-6922 (Uninspirational lowers it).
+/// :4178 (the +3 cap on the bought score), :4060-4062 (Great grants the point),
+/// :6992-6995 (Uninspirational lowers it).
 pub fn characteristic_cap(
     ruleset: &Ruleset,
     entity: &Entity,
@@ -88,7 +88,7 @@ fn lowest_actual_score_limit(
 /// than opening headroom to sell into.
 ///
 /// Source: ArMDE:2416-2424 (the table),
-/// :6598-6600 (Poor lowers the score).
+/// :6671-6673 (Poor lowers the score).
 pub fn characteristic_floor(ruleset: &Ruleset, _characteristic: Characteristic) -> i32 {
     ruleset
         .characteristic_rules()
@@ -136,7 +136,7 @@ pub fn characteristic_points_granted(entity: &Entity, ruleset: &Ruleset) -> i32 
 /// (Large +1, Giant Blood +2, Small Frame -1, Dwarf -2), summed across
 /// selections. Size is not a bought Characteristic — it has no cost and no buy
 /// cap. Source: ArMDE:4048-4051,
-/// :4229-4231, :5996-5998, :6767-6769.
+/// :4302-4305, :6069-6072, :6840-6843.
 pub fn size(entity: &Entity, ruleset: &Ruleset) -> i32 {
     let mut total = 0;
     for_each_effect!(entity, ruleset, |_selection, effect| {

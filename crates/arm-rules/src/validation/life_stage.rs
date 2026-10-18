@@ -64,7 +64,7 @@ use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 /// [`crate::life_stage::LifeStageRules::budget`], not a finding.
 ///
 /// Source: ArMDE:2434, :2448, :2462, :2505,
-/// :2284, :2539, :2550.
+/// :2284, :2541, :2552.
 pub(crate) fn validate_life_stage_plan(
     entity: &Entity,
     ruleset: &Ruleset,

@@ -10,9 +10,9 @@ use super::*;
 ///
 /// Lab Total = Int + Magic Theory + Technique + Form + Aura + flat LabTotalMod;
 /// within a Magical Focus the lower applicable Art is added again; a Deficient Art
-/// halves the whole cell. Source: ArMDE:10350-10352 (Lab Total shape), :4151-4154
-/// (Inventive Genius, the flat `LabTotalMod`), :4399-4422 (focus doubling),
-/// :5909-5915 (Deficient halving).
+/// halves the whole cell. Source: ArMDE:10350-10352 (Lab Total shape), :4224-4227
+/// (Inventive Genius, the flat `LabTotalMod`), :4472-4495 (focus doubling),
+/// :5982-5988 (Deficient halving).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LabTotal {
     /// Technique Art id of this cell.
@@ -327,7 +327,7 @@ pub(super) fn best_lab_total_by(
 
 /// The Masterpiece lesser-item cap, or `None` when the magus lacks the Virtue.
 /// Source: ArMDE:4549-4552 (Virtue),
-/// :10410 (lesser-enchantment cap), :7060-7063 (Weak Enchanter halving applies
+/// :10484 (lesser-enchantment cap), :7133-7136 (Weak Enchanter halving applies
 /// here too, since designing the item is creating an enchanted item).
 /// `totals` is the caller's already-built Lab-Total grid (see
 /// `derived.rs::derived_totals`). Taking it rather than rebuilding it matters:

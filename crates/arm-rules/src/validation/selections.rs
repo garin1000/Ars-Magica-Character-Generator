@@ -314,8 +314,8 @@ pub(crate) fn validate_forbidden_categories(
         // For a single-category item "every" is identical to "any", so this
         // loosens nothing else in the catalogue.
         // Source: ArMDE:6876-6877
-        // (Suppressed Gift's descriptor), :6809 (a companion's Flaw), :5079 and
-        // :5083 (Sufi "either as a Minor Social Status Virtue or a Minor
+        // (Suppressed Gift's descriptor), :6882 (a companion's Flaw), :5152 and
+        // :5156 (Sufi "either as a Minor Social Status Virtue or a Minor
         // Supernatural Virtue").
         //
         // Taken-as aware, via the same `categories_for` resolution the

@@ -2561,7 +2561,7 @@ mod tests {
         // Warped by Magic grants 5 Warping Points; the score is DERIVED by
         // inverting the advancement curve (5 points → Warping Score 1) — the
         // effect carries no stored score at all (D77.3). ArMDE:7092-7094,
-        // :16464-16475.
+        // :16543-16554.
         let rs = xp_ruleset();
         assert_eq!(
             warping(&xp_entity(vec![]), &rs),

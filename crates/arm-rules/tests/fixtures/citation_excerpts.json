@@ -14,11 +14,6 @@
     "next_line": "As part of this process, the magus may add details that enhance the Shape and Ma",
     "heading": "### Verditius — Verditius Magic"
   },
-  "ArMDE:10162": {
-    "excerpt": "A Verditius naturally reinforces Verditius Runes as part of the enchantment proc",
-    "next_line": "Verditius magi need casting tools to cast Formulaic or Ritual spells. They make ",
-    "heading": "### Verditius — Verditius Magic"
-  },
   "ArMDE:10164": {
     "excerpt": "Verditius magi need casting tools to cast Formulaic or Ritual spells. They make ",
     "next_line": "#### Hubris",
@@ -113,16 +108,6 @@
     "excerpt": "If the Lab Totals for the different activities are different, due to requisites,",
     "next_line": "If you perform arcane experimentation (page 274), you add a single simple die + ",
     "heading": "## Multiple Laboratory Activities"
-  },
-  "ArMDE:10828": {
-    "excerpt": "Nevertheless, there are times when magi receive help in their laboratory work, e",
-    "next_line": "Thus, when two magi cooperate, one must always be the primary researcher and one",
-    "heading": "## Help in the Laboratory"
-  },
-  "ArMDE:10840-10844": {
-    "excerpt": "## Familiars",
-    "next_line": "Protective of their secrets and suspicious of any who might hold power over them",
-    "heading": "## Distractions from Lab Work"
   },
   "ArMDE:10840-10966": {
     "excerpt": "## Familiars",
@@ -1269,16 +1254,6 @@
     "next_line": "Soak: +0 (Stamina)",
     "heading": "#### The Priest"
   },
-  "ArMDE:15791-15794": {
-    "excerpt": "#### LEVEL 30",
-    "next_line": "##### Sense of the Lingering Magic",
-    "heading": "##### Piercing the Faerie Veil"
-  },
-  "ArMDE:15801-15804": {
-    "excerpt": "R: Per, D: Conc, T: Vision<br>",
-    "next_line": "You can see spells as \"auras\" around things and people. The color of the aura in",
-    "heading": "##### Sight of the Active Magics"
-  },
   "ArMDE:1581": {
     "excerpt": "Soak: +0 (Stamina)",
     "next_line": "Fatigue Levels: OK, 0, -1, -3, -5, Unconscious",
@@ -1288,11 +1263,6 @@
     "excerpt": "Fatigue Levels: OK, 0, -1, -3, -5, Unconscious",
     "next_line": "Wound Penalties: -1 (1-5), -3 (6-10), -5 (11-15), Incapacitated (16-20)",
     "heading": "#### The Priest"
-  },
-  "ArMDE:15843-15846": {
-    "excerpt": "> If the magus casting the Muto Vim spell is the same person activating a magica",
-    "next_line": ">",
-    "heading": "### Muto Vim Guidelines"
   },
   "ArMDE:15855": {
     "excerpt": "##### Mirror of Opposition (form)",
@@ -1444,11 +1414,6 @@
     "next_line": "Confidence Score: 1 (3)",
     "heading": "#### The Witch"
   },
-  "ArMDE:16464-16475": {
-    "excerpt": "## Changing Reputations",
-    "next_line": "A character gains a Reputation, with a score of 1, by doing something noteworthy",
-    "heading": "### Animal Ken"
-  },
   "ArMDE:1653": {
     "excerpt": "- Dodging: Init +0, Atk n/a, Def +0, Dam n/a",
     "next_line": "Soak: +0 (Stamina)",
@@ -1479,20 +1444,10 @@
     "next_line": "### Gaining Warping Points",
     "heading": "### Warping and Non-Humans"
   },
-  "ArMDE:16577": {
-    "excerpt": "#### Living in Strong Auras",
-    "next_line": "Auras of over five points have an effect on anyone living within them, reflected",
-    "heading": "### Gaining Warping Points"
-  },
   "ArMDE:16579": {
     "excerpt": "Auras of over five points have an effect on anyone living within them, reflected",
     "next_line": "A character is 'always within' an aura if she lives, works, and sleeps there. Oc",
     "heading": "#### Living in Strong Auras"
-  },
-  "ArMDE:16597-16611": {
-    "excerpt": "Anyone subjected to a powerful supernatural effect gains a Warping Point, unless",
-    "next_line": "#### Constant Supernatural Effects",
-    "heading": "#### Powerful Supernatural Effects"
   },
   "ArMDE:1661": {
     "excerpt": "Abilities: Area Lore 3 (medicinal herbs), Artes Liberales 1 (astronomy), Athleti",
@@ -1504,25 +1459,10 @@
     "next_line": "| Constant Effects            | Designed For/Cast By Subject | Not Designed For ",
     "heading": "#### Constant Supernatural Effects"
   },
-  "ArMDE:16617": {
-    "excerpt": "| Brief Effect, Low Power     | 0                            | 0                ",
-    "next_line": "| Brief Effect, High Power    | 0                            | 1                ",
-    "heading": "#### Constant Supernatural Effects"
-  },
-  "ArMDE:16624-16634": {
-    "excerpt": "When a character botches the roll to invoke a supernatural effect (for example, ",
-    "next_line": "### Effects of Warping",
-    "heading": "#### Supernatural Botches"
-  },
   "ArMDE:16626-16640": {
     "excerpt": "### Effects of Warping",
     "next_line": "The effects of warping depend on a character's Warping Score, the nature of the ",
     "heading": "#### Supernatural Botches"
-  },
-  "ArMDE:16628": {
-    "excerpt": "The effects of warping depend on a character's Warping Score, the nature of the ",
-    "next_line": "Hermetic magi are made more prone to Wizard's Twilight by their Warping Score. T",
-    "heading": "### Effects of Warping"
   },
   "ArMDE:16630": {
     "excerpt": "Hermetic magi are made more prone to Wizard's Twilight by their Warping Score. T",
@@ -1552,11 +1492,6 @@
   "ArMDE:16632-16640": {
     "excerpt": "Mundane characters gain a Minor Flaw when they reach a Warping Score of one. Not",
     "next_line": "This Minor Flaw should reflect the predominant source of the Warping Points. If ",
-    "heading": "### Effects of Warping"
-  },
-  "ArMDE:16634": {
-    "excerpt": "This Minor Flaw should reflect the predominant source of the Warping Points. If ",
-    "next_line": "When the Warping Score reaches 3, the character gains a second Minor Flaw.",
     "heading": "### Effects of Warping"
   },
   "ArMDE:16636": {
@@ -1954,6 +1889,11 @@
     "next_line": "| ----------- | ----------------------------------------------------------------",
     "heading": "## Aging"
   },
+  "ArMDE:16703-16713": {
+    "excerpt": "| Crisis Roll | Result                                                          ",
+    "next_line": "| ----------- | ----------------------------------------------------------------",
+    "heading": "## Aging"
+  },
   "ArMDE:16704": {
     "excerpt": "| ----------- | ----------------------------------------------------------------",
     "next_line": "| 8 or less   | Bedridden for a week                                            ",
@@ -2329,11 +2269,6 @@
     "next_line": "Personality Traits: Brave –1, Driven +3, Studious +2",
     "heading": "#### Bonisagus"
   },
-  "ArMDE:17404-17409": {
-    "excerpt": "| Molten Lead   | +9           |",
-    "next_line": "| Molten Iron   | +12          |",
-    "heading": "#### Heat and Corrosion Table"
-  },
   "ArMDE:1741-1748": {
     "excerpt": "",
     "next_line": "Reputations: None.",
@@ -2358,6 +2293,11 @@
     "excerpt": "Soak: 0",
     "next_line": "Fatigue Levels: OK, 0, -1, -3, -5, Unconscious",
     "heading": "#### Bonisagus"
+  },
+  "ArMDE:17481-17488": {
+    "excerpt": "#### Realm Interaction Table",
+    "next_line": "| Aura     | Magic Power  | Divine Power | Faerie Power | Infernal Power |",
+    "heading": "### Realm Interaction"
   },
   "ArMDE:1752-1801": {
     "excerpt": "",
@@ -3754,11 +3694,6 @@
     "next_line": "If you want to generate a magus who is some time out of apprenticeship, the rule",
     "heading": "#### Magus Only — After Apprenticeship"
   },
-  "ArMDE:2539": {
-    "excerpt": "If you want to generate a magus who is some time out of apprenticeship, the rule",
-    "next_line": "For every year, the magus gets 30 points. Each point can be an experience point ",
-    "heading": "#### Magus Only — After Apprenticeship"
-  },
   "ArMDE:2541": {
     "excerpt": "For every year, the magus gets 30 points. Each point can be an experience point ",
     "next_line": "Of course, you may not want your experienced magus to have spent all his time st",
@@ -3802,11 +3737,6 @@
   "ArMDE:2558": {
     "excerpt": "> Niall then decides that Darius will spend the next year in the laboratory, so ",
     "next_line": ">",
-    "heading": "#### Magus Only — After Apprenticeship"
-  },
-  "ArMDE:2564": {
-    "excerpt": "Older magi can learn spells more quickly than these guidelines suggest. You may ",
-    "next_line": "Remember that you should also make aging rolls for the character each year from ",
     "heading": "#### Magus Only — After Apprenticeship"
   },
   "ArMDE:2566": {
@@ -4919,11 +4849,6 @@
     "next_line": "*Minor, Social Status*<br>",
     "heading": "#### Clear Thinker"
   },
-  "ArMDE:3645-3648": {
-    "excerpt": "*Minor, Social Status*<br>",
-    "next_line": "You are a member of the literate class and are either a professional scribe, acc",
-    "heading": "#### Clerk"
-  },
   "ArMDE:3646": {
     "excerpt": "You are a member of the literate class and are either a professional scribe, acc",
     "next_line": "#### Command Animals",
@@ -5414,11 +5339,6 @@
     "next_line": "*Satyr Blood:* The satyrs are notoriously lecherous. You get a +1 bonus to Commu",
     "heading": "#### Faerie Blood"
   },
-  "ArMDE:3887-3889": {
-    "excerpt": "",
-    "next_line": "*Sidhe Blood:* You are descended from one of the noble fay who rule the lands of",
-    "heading": "#### Faerie Blood"
-  },
   "ArMDE:3888": {
     "excerpt": "*Sidhe Blood:* You are descended from one of the noble fay who rule the lands of",
     "next_line": "*Spinnen Blood:* A character who has Spinnen Blood can convert his or her own bo",
@@ -5560,6 +5480,11 @@
     "heading": "#### Fida'i"
   },
   "ArMDE:3960-3962": {
+    "excerpt": "#### Flawless Magic",
+    "next_line": "*Major, Hermetic*<br>",
+    "heading": "#### Finding Hidden Loot"
+  },
+  "ArMDE:3960-3963": {
     "excerpt": "#### Flawless Magic",
     "next_line": "*Major, Hermetic*<br>",
     "heading": "#### Finding Hidden Loot"
@@ -6049,11 +5974,6 @@
     "next_line": "*Minor, General*<br>",
     "heading": "#### Inventive Genius"
   },
-  "ArMDE:4229-4231": {
-    "excerpt": "*Minor, General*<br>",
-    "next_line": "The character is capable of turning his hand to almost anything. He suffers no a",
-    "heading": "#### Jack-of-All-Trades"
-  },
   "ArMDE:4230": {
     "excerpt": "The character is capable of turning his hand to almost anything. He suffers no a",
     "next_line": "#### Journeyman",
@@ -6110,6 +6030,11 @@
     "heading": "### Markdown Version Quick Convenience Links"
   },
   "ArMDE:4302-4304": {
+    "excerpt": "#### Large",
+    "next_line": "*Minor, General*<br>",
+    "heading": "#### Landed Noble"
+  },
+  "ArMDE:4302-4305": {
     "excerpt": "#### Large",
     "next_line": "*Minor, General*<br>",
     "heading": "#### Landed Noble"
@@ -6689,11 +6614,6 @@
     "next_line": "It is the action or words of the practice that are the focus of this Virtue, not",
     "heading": "#### Performance Magic"
   },
-  "ArMDE:474": {
-    "excerpt": "**The Church:** All Christians, whether priests or not. Also used in this book t",
-    "next_line": "**companion:** A game term, not used by characters, referring to central charact",
-    "heading": "## Glossary"
-  },
   "ArMDE:4749": {
     "excerpt": "> **Physical:** Athletics, Brawl, Chirurgy, Hunt, Legerdemain, Ride, Stealth, Sw",
     "next_line": ">",
@@ -6817,11 +6737,6 @@
   "ArMDE:4822-4824": {
     "excerpt": "",
     "next_line": "A maga with Potent Magic may also invent new Potent spells within the field of h",
-    "heading": "#### Potent Magic"
-  },
-  "ArMDE:4842-4850": {
-    "excerpt": ">",
-    "next_line": "> Potency applies only to Formulaic spells — Spontaneous Magic allows Ceremoni",
     "heading": "#### Potent Magic"
   },
   "ArMDE:4855-4860": {
@@ -7219,11 +7134,6 @@
     "next_line": "#### Spell Improvisation",
     "heading": "#### Special Circumstances"
   },
-  "ArMDE:5073-5076": {
-    "excerpt": "You are able to perform magic better in certain uncommon situations (such as dur",
-    "next_line": "#### Spell Improvisation",
-    "heading": "#### Special Circumstances"
-  },
   "ArMDE:5075-5078": {
     "excerpt": "#### Spell Improvisation",
     "next_line": "*Minor, Hermetic*<br>",
@@ -7347,11 +7257,6 @@
   "ArMDE:5131-5144": {
     "excerpt": "When given the opportunity to study an Art from books or raw vis in the presence",
     "next_line": "> #### Study Bonus Examples",
-    "heading": "#### Study Bonus"
-  },
-  "ArMDE:5145-5147": {
-    "excerpt": "",
-    "next_line": "#### Subtle Magic",
     "heading": "#### Study Bonus"
   },
   "ArMDE:5146-5149": {
@@ -8389,11 +8294,6 @@
     "next_line": "*Minor, Hermetic*<br>",
     "heading": "#### Deficient Technique"
   },
-  "ArMDE:5996-5998": {
-    "excerpt": "You believe wholeheartedly in something that just isn't so.",
-    "next_line": "Examples include that you are a magus (if you are not), that you are the Pope's ",
-    "heading": "#### Delusion"
-  },
   "ArMDE:5998": {
     "excerpt": "",
     "next_line": "#### Demonic Familiar",
@@ -8490,6 +8390,11 @@
     "heading": "#### Driven"
   },
   "ArMDE:6069-6071": {
+    "excerpt": "#### Dwarf",
+    "next_line": "*Major, General*<br>",
+    "heading": "#### Dutybound"
+  },
+  "ArMDE:6069-6072": {
     "excerpt": "#### Dwarf",
     "next_line": "*Major, General*<br>",
     "heading": "#### Dutybound"
@@ -9514,11 +9419,6 @@
     "next_line": "*Major, Hermetic*<br>",
     "heading": "#### Restricted Power"
   },
-  "ArMDE:6767-6769": {
-    "excerpt": "",
-    "next_line": "#### Rigid Magic",
-    "heading": "#### Restriction"
-  },
   "ArMDE:6768-6771": {
     "excerpt": "#### Rigid Magic",
     "next_line": "*Major, Hermetic*<br>",
@@ -9645,6 +9545,11 @@
     "heading": "#### Slow Power"
   },
   "ArMDE:6840-6842": {
+    "excerpt": "#### Small Frame",
+    "next_line": "*Minor, General*<br>",
+    "heading": "#### Slow Reflexes"
+  },
+  "ArMDE:6840-6843": {
     "excerpt": "#### Small Frame",
     "next_line": "*Minor, General*<br>",
     "heading": "#### Slow Reflexes"

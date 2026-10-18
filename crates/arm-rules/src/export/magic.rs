@@ -295,7 +295,7 @@ impl<'a> Doc<'a> {
     /// term of every future aging total — "AGING TOTAL: Stress die (no botch) +
     /// age/10 (round up) - Living Conditions modifier"
     /// (ArMDE:16646-16648, table at
-    /// :16581-16594) — so a sheet that dropped them would read as data loss. The
+    /// :16660-16673) — so a sheet that dropped them would read as data loss. The
     /// resolved modifier is deliberately *not* printed: it is derived from these ids
     /// and the character's Virtues and Flaws, and the sheet records choices.
     fn write_living_conditions(&self, out: &mut String) {

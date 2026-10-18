@@ -1291,7 +1291,7 @@ impl Ruleset {
     ///   stated on [`Ruleset::aging`].
     ///
     /// Source: ArMDE:16646, :16654,
-    /// :16577, :16597-16611.
+    /// :16656, :16676-16690.
     fn validate_aging_rules(&self, errors: &mut Vec<String>) {
         let Some(aging) = self.aging.as_ref() else {
             return;
@@ -1514,7 +1514,7 @@ impl Ruleset {
     ///   time rather than from a ruleset that will not load at all.
     ///
     /// Source: ArMDE:16696,
-    /// :16624-16634, :16638.
+    /// :16703-16713, :16717.
     fn validate_crisis_rules(&self, errors: &mut Vec<String>) {
         let Some(aging) = self.aging.as_ref() else {
             return;

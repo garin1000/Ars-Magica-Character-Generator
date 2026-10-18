@@ -25,8 +25,8 @@
 //! genuine +0, distinct from Dodge's absent one).
 //!
 //! Source: ArMDE — Armor Table
-//! :16944-16949, Melee Weapon Statistics :16959-16986, Missile Weapon Statistics
-//! :17005-17011. Display names live in `rules/i18n/<lang>/equipment.json`, keyed
+//! :17023-17028, Melee Weapon Statistics :17038-17065, Missile Weapon Statistics
+//! :17084-17090. Display names live in `rules/i18n/<lang>/equipment.json`, keyed
 //! by `id`.
 
 use std::fmt;

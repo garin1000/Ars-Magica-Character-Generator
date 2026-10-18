@@ -599,7 +599,7 @@ impl ValidationIssue {
     /// names a supernatural power the being does not hold. Restricted Power, Slow
     /// Power and Variable Power each modify "one of the character's supernatural
     /// powers" (ArMDE:6762, :6834,
-    /// :5278), so a name matching no `Entity::powers` entry restricts nothing.
+    /// :5274), so a name matching no `Entity::powers` entry restricts nothing.
     ///
     /// The free-text sibling of [`Self::CODE_PARAM_TARGET_NOT_POSSESSED`]: same
     /// idea, different registry. It gets a code of its own because the remedy is
@@ -8333,7 +8333,7 @@ mod tests {
         // An `enumerated` domain IS its list: the book prints Folk Magic's four
         // spell categories as a closed set ("must be one of the following four
         // options", ArMDE:3982, listed
-        // :3911-3917), so a declared id resolves and anything else raises
+        // :3984-3990), so a declared id resolves and anything else raises
         // `unknown_param_value` exactly as an unknown Art id would.
         let items = r#"[
           { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative", "magnitude": "major", "categories": ["personality"], "entity_kinds": ["character"] },

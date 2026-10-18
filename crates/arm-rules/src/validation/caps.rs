@@ -16,9 +16,9 @@ use super::*;
 ///
 /// Source: grogs may take no Major Virtues or Flaws (the `max_major_*` count
 /// caps) at ArMDE:2894-2900; ≤5 Minor
-/// Flaws (central) at :2774, grogs ≤3 at :1009; ≤1 Major Personality Flaw at
-/// :2820; ≤2 Personality Flaws (soft) at :2820/:2976; ≤1 Story Flaw (soft) at
-/// :2818, grogs none at :1009. See RULES.md.
+/// Flaws (central) at :2844, grogs ≤3 at :2894; ≤1 Major Personality Flaw at
+/// :2890; ≤2 Personality Flaws (soft) at :2890/:3046; ≤1 Story Flaw (soft) at
+/// :2888, grogs none at :2896. See RULES.md.
 pub(crate) fn validate_caps(
     entity: &Entity,
     ruleset: &Ruleset,

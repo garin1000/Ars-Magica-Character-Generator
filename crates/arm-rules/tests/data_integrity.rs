@@ -1037,9 +1037,9 @@ fn core_rules_virtues_cite_the_core_rules_file() {
 /// `*Minor, General*` (ArMDE:6917), so it must NOT be flagged.
 ///
 /// Source: ArMDE:3068-3070 (the cap),
-/// and the descriptor lines :3650 (Demonic Blood, "*Major, Supernatural,
-/// Tainted*"), :6856 (Tragic Life, "*Major, Story, Tainted*"), :3411, :3427,
-/// :6840, :6844.
+/// and the descriptor lines :3723 (Demonic Blood, "*Major, Supernatural,
+/// Tainted*"), :6929 (Tragic Life, "*Major, Story, Tainted*"), :3484, :3500,
+/// :6913, :6917.
 #[test]
 fn core_rules_tainted_virtues_carry_the_tainted_flag() {
     let rs = load_full_ruleset();
@@ -1523,7 +1523,7 @@ fn german_i18n_covers_all_spells() {
 /// Technique/Form (the parameter is display + identity only), and the whole
 /// shipped catalogue still passes load-time referential integrity.
 /// Source: ArMDE:15855-15858,
-/// :15791-15794, :15801-15804, :15843-15846.
+/// :15870-15873, :15880-15883, :15922-15925.
 #[test]
 fn parametrized_vim_spells_declare_a_form_parameter() {
     let rs = load_ruleset_with_spells();
@@ -3658,7 +3658,7 @@ fn full_magus_derived_totals_are_populated_and_consistent() {
 
     // Non-goal guard: the level-15 instilled effect is charged against NOTHING. The
     // item-level budget belongs to the Redcap-only Virtues (ArMDE:4420-4422,
-    // :4842-4850), and a Redcap "may not take The Gift" (ArMDE:4923), so it can never
+    // :4915-4923), and a Redcap "may not take The Gift" (ArMDE:4923), so it can never
     // fund a magus's talisman. This magus has no such Virtue, so both figures are 0
     // even though he owns a talisman holding 15 levels of effect.
     assert_eq!(
@@ -4580,7 +4580,7 @@ fn the_shipped_crisis_table_answers_a_total_end_to_end() {
 /// for byte.
 ///
 /// Source: ArMDE:16681, :16698, :16700,
-/// :16628, :16634.
+/// :16707, :16713.
 #[test]
 fn a_shipped_crisis_year_is_written_into_the_character_and_reverts_exactly() {
     let rs = load_full_ruleset();

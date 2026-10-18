@@ -524,7 +524,7 @@ const X3B_FLAWS: &[(&str, Gate)] = &[
         Gate::Trained,
         // ArMDE:5796-5799 mentions "House Verditius" only to explain that
         // casting tools are a Verditius-specific mechanic (ArMDE:835,
-        // :10162) — background, not an eligibility clause, unlike Consumed
+        // :10164) — background, not an eligibility clause, unlike Consumed
         // Casting Tools' explicit "may only be taken by Verditius magi"
         // three entries later (ArMDE:5914). BORDERLINE — see report.
     ),

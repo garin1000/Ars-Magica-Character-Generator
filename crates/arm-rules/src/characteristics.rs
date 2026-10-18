@@ -114,7 +114,7 @@ pub struct CharacteristicCost {
 /// state has no business in the rules data (open-todos row 44).
 ///
 /// Source: ArMDE:2410-2424 (table),
-/// :4105 (the "+3 unless Great Characteristic" base cap).
+/// :4178 (the "+3 unless Great Characteristic" base cap).
 ///
 /// [`Effect::CharacteristicScoreDeltaParam`]: crate::types::Effect::CharacteristicScoreDeltaParam
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

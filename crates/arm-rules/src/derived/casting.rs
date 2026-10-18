@@ -709,7 +709,7 @@ pub fn magic_resistance(entity: &Entity, ruleset: &Ruleset) -> Vec<MagicResistan
         };
         // Flawed Parma Magica halves the PARMA contribution against the Form its
         // copy names, and nothing else: the Flaw's subject is the Parma, while
-        // :9396 puts the rest of the resistance on the Form scores, so it cannot
+        // :9464 puts the rest of the resistance on the Form scores, so it cannot
         // touch `form_bonus`. Source: ArMDE:6215-6218, :9470.
         let parma_for_form = if mods.halved_parma_forms.contains(&form) {
             halve(parma_mr)

@@ -117,7 +117,7 @@ impl AgingRules {
     /// seasons, so a year either owes a roll or it does not.
     ///
     /// Source: ArMDE:16644, :2302,
-    /// :2564.
+    /// :2566.
     pub fn first_roll_age(&self) -> u32 {
         self.start_age.saturating_add(1)
     }
@@ -448,7 +448,7 @@ pub fn aging_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Op
                 // survival one. `crisis_heavy_wound` is not a number anywhere.
                 //
                 // Source: ArMDE:4603,
-                // :16636.
+                // :16715.
                 AgingEffect::NoAging
                 | AgingEffect::NoApparentAging
                 | AgingEffect::Decrepitude
@@ -677,7 +677,7 @@ fn suppresses_apparent_aging(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// unpriceable rather than silently costed at 0.
 ///
 /// Source: ArMDE:16681, :16690,
-/// :16617.
+/// :16696.
 fn points_to_next_decrepitude_level(entity: &Entity, ruleset: &Ruleset) -> Option<u32> {
     let accrued = decrepitude_points_total(entity);
     let next_score = decrepitude_score(entity, ruleset).checked_add(1)?;
@@ -758,7 +758,7 @@ pub struct CrisisTotal {
 /// Table — the engine never invents a table the ruleset does not carry.
 ///
 /// Source: ArMDE:16698, :16700,
-/// :16636, :474.
+/// :16715, :542.
 pub fn crisis_total(entity: &Entity, ruleset: &Ruleset, age: u32, die: i32) -> Option<CrisisTotal> {
     let rules = ruleset.aging()?;
     // A ruleset with no Crisis Table has no crisis to total, exactly as one with

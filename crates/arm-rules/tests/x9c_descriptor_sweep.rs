@@ -356,10 +356,10 @@ fn pagan_minor_en_de_name_and_summary_match_pagan_verbatim() {
 
 /// D78.3/D25: a short "known source errata" note in `crates/arm-rules/RULES.md`
 /// listing the four index omissions (`virtue.lupus_the_wolf` ArMDE:4409,
-/// `virtue.minor_enchantments` :4604, `virtue.turb_trained` :5251,
-/// `flaw.true_love_minor` :6943/:6948), the three index disagreements
-/// (`flaw.bound_to_role_role` :5807 vs :5607, `flaw.broken_vessel` :5825 vs
-/// :5608, `flaw.weak_personality` :7148 vs :5568 — D25's original finding)
+/// `virtue.minor_enchantments` :4606, `virtue.turb_trained` :5253,
+/// `flaw.true_love_minor` :6945/:6950), the three index disagreements
+/// (`flaw.bound_to_role_role` :5809 vs :5609, `flaw.broken_vessel` :5827 vs
+/// :5610, `flaw.weak_personality` :7150 vs :5570 — D25's original finding)
 /// and the stray Folk Magic entry in the Flaw index (ArMDE:3220 vs the Virtue
 /// heading ArMDE:3980) — each with both citations and the side taken (D25: the
 /// descriptor always wins; the index is never a data source). P8-3 (2026-10-09):

@@ -9,10 +9,10 @@
 //! its own comment says otherwise.
 //!
 //! Source: ArMDE:12383-12387 (`### Requisites`, the base min rule),
-//! :12311 (several requisites / Deficient Art as a requisite), :4403
+//! :12385 (several requisites / Deficient Art as a requisite), :4476
 //! (Major Magical Focus — "the lowest applicable score may be one of the
-//! requisites"), :3737 (Elemental Magic — primary elemental Form wins over
-//! an elemental requisite even if lower), :4820 (Puissant Art — compare
+//! requisites"), :3810 (Elemental Magic — primary elemental Form wins over
+//! an elemental requisite even if lower), :4893 (Puissant Art — compare
 //! bonus-inclusive scores).
 
 use arm_rules::derived::spell_casting_total;

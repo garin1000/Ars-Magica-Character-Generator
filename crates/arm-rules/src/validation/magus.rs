@@ -611,13 +611,15 @@ fn validate_spell_parameter(
 /// is one number that can drift.
 ///
 /// Source: ArMDE:12353-12369,
-/// :12285 ("Formulaic and Spontaneous spells may not have a level greater
+/// :12359 ("Formulaic and Spontaneous spells may not have a level greater
 /// than 50" — the exact non-Ritual ceiling this checks). An earlier
 /// version of this comment cited :12283 (the Year-duration restriction,
 /// unrelated), then a later pass "corrected" it to :12291 (a discretionary
 /// note that spectacular effects "will normally be over level 50, and thus
 /// Rituals anyway" — a design rationale, not the numeric rule itself).
-/// :12285 is the line that actually states the "> 50" ceiling.
+/// :12359 is the line that actually states the "> 50" ceiling (manual-testing-findings
+/// row 61: the P8/2026-10-18 re-syncs shifted this to 12359; the number
+/// above was stale at :12285 until this repair pass).
 fn validate_spell_ritual_legality(
     sel: &SpellSelection,
     spell: &crate::spell::Spell,

@@ -37,9 +37,9 @@
 //! target the fixed enums have no slot for — `rules/core/spells.json` omits
 //! the field entirely for those five spells rather than inventing a value,
 //! confirmed against the book at each one: `spell.wind_at_the_back`
-//! ArMDE:13393, `spell.the_bountiful_feast` :13918, `spell.trackless_step`
-//! :15506, `spell.the_earth_split_asunder` :15569, `spell.watching_ward`
-//! :15919). `normalize_duration`/`normalize_target` reproduce that mapping.
+//! ArMDE:13393, `spell.the_bountiful_feast` :13994, `spell.trackless_step`
+//! :15585, `spell.the_earth_split_asunder` :15648, `spell.watching_ward`
+//! :15998). `normalize_duration`/`normalize_target` reproduce that mapping.
 //! One spell, Mists of Change (ArMDE:13708), states a combined
 //! "D: Sun & Year" — `normalize_duration` reads this as Year (the token that
 //! actually appears in the RDT chart and the one the data already carries),

@@ -1513,7 +1513,7 @@ mod tests {
     }
 
     // --- Ritual creation-legality (5d). Source: ArMDE:12353-12369, :12129,
-    //     :12077, :12039/:12115. ---
+    //     :12151, :12113/:12189. ---
 
     #[test]
     fn ritual_spell_below_level_20_is_rejected() {

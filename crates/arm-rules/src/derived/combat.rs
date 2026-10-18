@@ -310,7 +310,7 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
 /// The specialty is a per-weapon alignment the player asserts — the engine never
 /// matches specialty text to weapon names — so a flagged slot with a real specialty
 /// grants the bonus. Source: ArMDE:7195 (Single Weapon longsword example),
-/// :7139 ("Add +1 when using an Ability's specialization").
+/// :7212 ("Add +1 when using an Ability's specialization").
 fn specialization_bonus(
     entity: &Entity,
     _ruleset: &Ruleset,
