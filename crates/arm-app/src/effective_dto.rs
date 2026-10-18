@@ -15,8 +15,8 @@ use arm_rules::{
     ArtBonusSources, Characteristic, CharacteristicBonus, Confidence, CreationPhase, Entity,
     EntityTypeProfile, Grant, Id, LifeStageBudget, LifeTimeline, MagusMinimumAbility, MightScore,
     PointCeilings, Realm, RealmAssociation, ReputationType, RestrictedXpPool, Ruleset, Selection,
-    SpellCap, SpellLevelCap, SupernaturalFreeSlots, ability_bonus_sources, ability_bonuses,
-    ability_parameter_options, ability_score_floors, aging_schedule, aging_total,
+    SpellCap, SpellLevelCap, SupernaturalFreeSlots, VfAddBlockReason, ability_bonus_sources,
+    ability_bonuses, ability_parameter_options, ability_score_floors, aging_schedule, aging_total,
     art_bonus_sources, art_bonuses, characteristic_aging_drops, characteristic_bonuses,
     characteristic_caps, characteristic_floors, characteristic_points_granted,
     checked_xp_allocation, compute_balance, confidence, decrepitude_score,
@@ -26,7 +26,8 @@ use arm_rules::{
     magus_minimum_abilities, phases_in_force, power_levels_budget, powers_used, reputation_grants,
     resolve_realm, size, spell_caps, spell_level_caps, spell_levels_base, spell_levels_bonus,
     spell_levels_budget, spell_levels_used, spell_mastery_floor, spell_mastery_xp,
-    spell_mastery_xp_used, supernatural_free_slots, true_faith, warping, warping_owed_grants,
+    spell_mastery_xp_used, supernatural_free_slots, true_faith, vf_add_verdicts, warping,
+    warping_owed_grants,
 };
 use serde::Serialize;
 
@@ -316,6 +317,13 @@ pub struct EffectiveScores {
     /// whether the book states it outright or the item would otherwise default
     /// through the plain chain. Empty for an entity holding none.
     pub granted_realm_associations: Vec<ResolvedRealmEntry>,
+    /// Every catalogue Virtue/Flaw this entity may not yet add, with why —
+    /// absent means legal to add. The picker's one engine verdict behind the
+    /// Add button's Enforced-mode gate (manual-test findings #2/#19: Brutal
+    /// Artist offered to everyone, Hermetic items offered to a Gift-less
+    /// companion); the frontend must not re-derive this from category/
+    /// prerequisite data itself.
+    pub vf_add_blocked: BTreeMap<Id, VfAddBlockReason>,
 }
 
 /// One selection's resolved D42 realm, for the V/F row. `fixed` is `true`
@@ -969,6 +977,8 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
 
         realm_associations: realm_associations_for_ui(entity, ruleset),
         granted_realm_associations,
+
+        vf_add_blocked: vf_add_verdicts(entity, ruleset),
     }
 }
 

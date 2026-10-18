@@ -1203,7 +1203,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2938-2947` (The Gift),
   `ArMDE:2928` (magi must take The Gift + Hermetic Magus status), `ArMDE:2363` and
   `ArMDE:4140-4142` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:2012).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:2113).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1272,7 +1272,7 @@ reason: a category condition would license itself.
   character as of saga-start only) can express.
 - **All three forbid effects are consumed by one grant-aware validator**:
   `validation/selections.rs::validate_category_effect_prohibitions`
-  (:274). Grant-aware on both sides (D2): the forbidding item's effect applies
+  (:375). Grant-aware on both sides (D2): the forbidding item's effect applies
   bought or granted, and the forbidden target (an Ability held via
   `entity.ability_scores` or an `AbilityScoreGrant`/`AbilityScoreGrantParam`
   floor, or another V/F selection) is read the same way — closing the F-466
@@ -1778,7 +1778,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2884`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :909) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :1010) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4889`) and "Great twice per Characteristic" (`ArMDE:4062`). Effect
@@ -6729,6 +6729,13 @@ reclassified here — the same shape X3a already used for
 `virtue.side_effect`/`virtue.tethered_magic`; reclassifying each from its own
 passage is X2's routed work.
 
+The picker now refuses to offer a House-gated item (and every category-gated
+one) before the player even tries, via `` `selections.rs::vf_add_verdicts` ``
+(manual-test findings #2/#19,
+`docs/manual-testing-findings-2026-10-18.md`) — it reads this file's own
+`prerequisites` and the type profile's `permitted_categories`/
+`forbidden_categories`, never a UI copy of either rule.
+
 ### D69/X7b-e — row 42 compute verdicts (2026-09-29)
 
 Eight `docs/open-todos.md` row-42 entries move from `uncomputed_rule`-with-no-
@@ -11394,11 +11401,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1241),
-  `validate_forbidden_traits` (:1262))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1342),
+  `validate_forbidden_traits` (:1363))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:619),
-  `validate_parameters` (:1462), `validate_duplicate_selections` (:909))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:720),
+  `validate_parameters` (:1563), `validate_duplicate_selections` (:1010))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

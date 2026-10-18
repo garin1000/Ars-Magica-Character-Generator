@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import {
+    addBlockedRefs,
     atMaxTotalRefs,
     describePrereq,
     displayName,
@@ -147,6 +148,15 @@
       : new Set<string>(),
   );
 
+  // Manual-test findings #2/#19: items the engine's own
+  // `vf_add_verdicts` already knows are illegal to add for this entity right
+  // now (a profile category gate, or the item's own hard prerequisite) — read
+  // straight off the DTO, never re-derived here. Gated by `ValidationMode`
+  // exactly like `blocked` above, for the same reason: advisory/silent leave
+  // the pick open and let the engine's `category_not_permitted`/
+  // `prereq_not_met` issues report the violation once added instead.
+  const addBlocked = $derived(addBlockedRefs(store.effective?.vf_add_blocked, store.mode));
+
   // Tooltip from the item's localized rules text (full description if present,
   // else the short summary), plus what the item requires when it carries a
   // prerequisite (I1) — its hedged tree labelled "Normally requires". A no-op
@@ -194,13 +204,22 @@
       );
     }
     const blocker = blocked.get(itemId);
+    if (blocker && store.ruleset) {
+      return withReason(
+        tip(itemId),
+        store.t('vf-blocked-incompatible', {
+          other: displayName(store.ruleset, blocker, undefined, hint),
+        }),
+      );
+    }
+    const addBlockReason = addBlocked.get(itemId);
     return withReason(
       tip(itemId),
-      blocker && store.ruleset
-        ? store.t('vf-blocked-incompatible', {
-            other: displayName(store.ruleset, blocker, undefined, hint),
-          })
-        : undefined,
+      addBlockReason === 'forbidden_category'
+        ? store.t('vf-blocked-forbidden-category')
+        : addBlockReason === 'prereq_not_met'
+          ? store.t('vf-blocked-prereq-not-met')
+          : undefined,
     );
   }
 
@@ -382,7 +401,8 @@
             !!it.mythic_status ||
             (!repeatable(it) && selectedRefs.has(it.id)) ||
             atCap.has(it.id) ||
-            blocked.has(it.id)}
+            blocked.has(it.id) ||
+            addBlocked.has(it.id)}
           tip={(it: PointItem) => sourceTip(it.id)}
         >
           {#snippet filters()}

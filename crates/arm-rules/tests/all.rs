@@ -108,6 +108,7 @@ mod spell_stat_line;
 mod t2_art_parameterized_names;
 mod test_targets;
 mod uncomputed_clauses;
+mod vf_add_verdicts;
 mod vf_descriptor_line;
 mod vf_magnitude_brackets;
 mod vf_summary_facts;

@@ -94,6 +94,107 @@ pub fn phases_in_force(entity: &Entity, ruleset: &Ruleset) -> Vec<CreationPhase>
         .collect()
 }
 
+/// Why the picker refuses to offer the Add button on a catalogue item the
+/// entity has not yet selected — the engine's one verdict behind that
+/// button's Enforced-mode gate (manual-test findings #2/#19,
+/// `docs/manual-testing-findings-2026-10-18.md`): a profile-level category
+/// gate the item's own categories cannot clear, or the item's own hard
+/// prerequisite definitely unmet.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VfAddBlockReason {
+    /// Neither [`validate_permitted_categories`] nor
+    /// [`validate_forbidden_categories`] would let this item through for the
+    /// categories it is in-force for right now — evaluated here with the
+    /// *same* in-force resolution those two validators apply to a selection
+    /// already made, just run before the selection exists.
+    ForbiddenCategory,
+    /// The item's own [`PointItem::prerequisites`] resolves to a definite
+    /// [`Tri::False`] against this entity. A [`Tri::Unknown`] outcome is
+    /// deliberately never reported here — the player may still attempt the
+    /// item, exactly as [`validate_prerequisites`] raises `prereq_not_met`
+    /// only on a definite False, never on Unknown.
+    PrereqNotMet,
+}
+
+/// Every catalogue Virtue/Flaw this entity may not yet add, with why — an
+/// item's absence from the map means it is legal to add right now. This is
+/// the picker's one engine verdict behind the Add button's Enforced-mode gate
+/// (manual-test findings #2/#19): Brutal Artist offered to everyone regardless
+/// of House, and every Hermetic entry offered to a Gift-less companion even
+/// though the profile forbids the `hermetic` category for one. The frontend
+/// must read this map rather than re-deriving a category or prerequisite rule
+/// of its own, on the same "one evaluation path" discipline the rest of this
+/// module already keeps.
+///
+/// Built the same way [`phases_in_force`] builds its own one-shot
+/// [`PrereqCtx`] — this is not a call into the full [`crate::validation::validate`]
+/// pipeline, since the item being judged has no selection on the entity yet to
+/// validate; it judges the item's descriptor against the entity's CURRENT
+/// state instead.
+///
+/// Returns an empty map when `entity.type_id` resolves to no profile — there
+/// is no declared rule to resolve any item's legality against.
+pub fn vf_add_verdicts(entity: &Entity, ruleset: &Ruleset) -> BTreeMap<Id, VfAddBlockReason> {
+    let Some(profile) = ruleset.type_profiles.get(&entity.type_id) else {
+        return BTreeMap::new();
+    };
+
+    let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+    let granted = crate::effective::entity_grants(entity, ruleset);
+    let ctx = PrereqCtx::build(entity, ruleset, Some(profile), &selected_ids, &granted);
+
+    // Empty declared list means "no restriction", exactly as
+    // `validate_permitted_categories`/`validate_forbidden_categories` treat it —
+    // the test stays on the DECLARED list, not the in-force one, for the same
+    // reason those two validators do.
+    let permitted: Option<BTreeSet<&str>> = (!profile.permitted_categories.is_empty())
+        .then(|| categories_in_force(&profile.permitted_categories, &ctx));
+    let forbidden: Option<BTreeSet<&str>> = (!profile.forbidden_categories.is_empty())
+        .then(|| categories_in_force(&profile.forbidden_categories, &ctx));
+
+    let mut blocked = BTreeMap::new();
+    for item in ruleset.point_items.values() {
+        if !matches!(item.kind, ItemKind::Virtue | ItemKind::Flaw) {
+            continue;
+        }
+        // The profile's own Gift is governed solely by `validate_gift_policy`;
+        // exempt it here for the identical reason `validate_permitted_categories`
+        // does — it is contradictory for a profile to mandate the trait via
+        // `gift_policy` yet reject its category (The Gift is `special`).
+        if profile.gift_id.as_ref() == Some(&item.id) {
+            continue;
+        }
+
+        // No selection exists yet, so there is no `taken_as` choice to narrow
+        // against — the full descriptor's category list is what the player
+        // would be offered.
+        let in_force = item.categories_for(&BTreeMap::new());
+
+        if let Some(permitted) = permitted.as_ref()
+            && !in_force.iter().any(|c| permitted.contains(c.as_str()))
+        {
+            blocked.insert(item.id.clone(), VfAddBlockReason::ForbiddenCategory);
+            continue;
+        }
+        if let Some(forbidden) = forbidden.as_ref()
+            && in_force.iter().all(|c| forbidden.contains(c.as_str()))
+        {
+            blocked.insert(item.id.clone(), VfAddBlockReason::ForbiddenCategory);
+            continue;
+        }
+
+        if let Some(prereq) = &item.prerequisites {
+            let (outcome, _) = ctx.evaluate_for_item(prereq, &item.id);
+            if outcome == Tri::False {
+                blocked.insert(item.id.clone(), VfAddBlockReason::PrereqNotMet);
+            }
+        }
+    }
+
+    blocked
+}
+
 pub(crate) fn validate_permitted_categories(
     entity: &Entity,
     ruleset: &Ruleset,

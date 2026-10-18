@@ -644,6 +644,54 @@ describe('VirtueFlawTab enforces max_total on the Available list', () => {
   });
 });
 
+// Manual-test findings #2/#19: the engine's own `vf_add_verdicts` already
+// knows, before the player even tries, that an item is illegal to add for
+// this entity (a profile category gate, or the item's own hard prerequisite).
+// The Available list reads this straight off `EffectiveScores.vf_add_blocked`
+// rather than re-deriving either rule.
+describe('VirtueFlawTab disables an Add button the engine already refuses (#2/#19)', () => {
+  function setAddBlocked(blocked: Record<string, 'forbidden_category' | 'prereq_not_met'>): void {
+    store.effective = {
+      granted_selections: [],
+      vf_add_blocked: blocked,
+    } as unknown as EffectiveScores;
+  }
+
+  /** The Available list's `add-virtue.heartbeast` button's opening tag. */
+  function addRow(body: string): string {
+    return /<button[^>]*data-testid="add-virtue\.heartbeast"[^>]*>/.exec(body)![0];
+  }
+
+  it('disables the row for a forbidden_category verdict', () => {
+    resetEntity([]);
+    setAddBlocked({ 'virtue.heartbeast': 'forbidden_category' });
+    expect(addRow(html())).toContain('aria-disabled="true"');
+  });
+
+  it('disables the row for a prereq_not_met verdict', () => {
+    resetEntity([]);
+    setAddBlocked({ 'virtue.heartbeast': 'prereq_not_met' });
+    expect(addRow(html())).toContain('aria-disabled="true"');
+  });
+
+  it('leaves the row enabled when the engine reports no block', () => {
+    resetEntity([]);
+    setAddBlocked({});
+    expect(addRow(html())).toContain('aria-disabled="false"');
+  });
+
+  it('stops blocking in advisory mode, unlike the unconditional max_total/mythic legs', () => {
+    resetEntity([]);
+    setAddBlocked({ 'virtue.heartbeast': 'forbidden_category' });
+    store.mode = 'advisory';
+    try {
+      expect(addRow(html())).toContain('aria-disabled="false"');
+    } finally {
+      store.mode = 'enforced';
+    }
+  });
+});
+
 // R6/D83.7 (Norbert, 2026-10-03): a Mythic Companion's status Virtue is held only
 // as the grant of the type that defines it, so the Available list never offers it
 // for purchase — in any mode, like the max_total leg. Which items those are is

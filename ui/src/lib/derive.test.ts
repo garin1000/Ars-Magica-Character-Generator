@@ -22,6 +22,7 @@ import {
   childhoodSlotFault,
   childhoodSlots,
   combatRowLabel,
+  addBlockedRefs,
   atMaxTotalRefs,
   blockedSameItemValues,
   canonicalizeMultiRefValue,
@@ -718,6 +719,29 @@ describe('incompatibleRefs', () => {
     expect(blocked.get('flaw.small_frame')).toBe('flaw.dwarf');
     expect(blocked.get('virtue.large')).toBe('flaw.dwarf');
     expect(blocked.get('virtue.brave')).toBeUndefined();
+  });
+});
+
+describe('addBlockedRefs', () => {
+  const addBlocked = {
+    'flaw.brutal_artist': 'prereq_not_met' as const,
+    'virtue.puissant_art': 'forbidden_category' as const,
+  };
+
+  it('passes the engine verdicts through unchanged in enforced mode', () => {
+    const blocked = addBlockedRefs(addBlocked, 'enforced');
+    expect(blocked.get('flaw.brutal_artist')).toBe('prereq_not_met');
+    expect(blocked.get('virtue.puissant_art')).toBe('forbidden_category');
+    expect(blocked.size).toBe(2);
+  });
+
+  it('is empty in advisory and silent mode, where violations only get reported', () => {
+    expect(addBlockedRefs(addBlocked, 'advisory').size).toBe(0);
+    expect(addBlockedRefs(addBlocked, 'silent').size).toBe(0);
+  });
+
+  it('is empty when the DTO has not loaded yet (undefined)', () => {
+    expect(addBlockedRefs(undefined, 'enforced').size).toBe(0);
   });
 });
 

@@ -7,6 +7,10 @@ export type ItemKind = 'virtue' | 'flaw' | 'boon' | 'hook';
 export type EntityKind = 'character' | 'covenant';
 export type ValidationMode = 'enforced' | 'advisory' | 'silent';
 export type IssueSeverity = 'error' | 'warning';
+// Mirrors `arm_rules::validation::VfAddBlockReason` — why the picker's Add
+// button refuses a catalogue Virtue/Flaw the entity has not yet selected
+// (manual-test findings #2/#19).
+export type VfAddBlockReason = 'forbidden_category' | 'prereq_not_met';
 
 // A phase of character creation (`CreationPhase`). Two things speak it: the
 // character type's ordered `creation_phases`, which the guided wizard walks, and
@@ -1326,6 +1330,11 @@ export interface EffectiveScores {
   // stable `entity.selections` index for the player to attach an override
   // control to. Empty for an entity holding none.
   granted_realm_associations: ResolvedRealmEntry[];
+  // Manual-test findings #2/#19: every catalogue Virtue/Flaw this entity may
+  // not yet add, keyed by item id, with why — absent means legal to add. The
+  // picker's one engine verdict behind the Add button's Enforced-mode gate;
+  // the frontend must not re-derive a category or prerequisite rule itself.
+  vf_add_blocked?: Record<string, VfAddBlockReason>;
 }
 
 // One selection's resolved D42 realm association. `fixed` means the book

@@ -176,6 +176,17 @@ vf-blocked-max-total = Maximum of { $max } already reached
 # as the grant of the type that defines it, chosen on the Type step (D83.7).
 vf-blocked-mythic-status = Comes only with its Mythic Companion type, chosen on the Type step
 
+# Reason shown on a Virtue/Flaw the enforced mode greys out because the
+# character type's profile forbids every category this item carries right now
+# (e.g. a Hermetic Virtue for a companion without The Gift, manual-test
+# finding #19).
+vf-blocked-forbidden-category = Not permitted for this character type
+
+# Reason shown on a Virtue/Flaw the enforced mode greys out because its own
+# prerequisite is definitely unmet right now (e.g. Brutal Artist outside House
+# Jerbiton, manual-test finding #2).
+vf-blocked-prereq-not-met = Does not meet a requirement
+
 # Filter/search controls for long selectable lists.
 filter-search-placeholder = Search…
 filter-magnitude-all = All levels

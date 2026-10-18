@@ -186,6 +186,18 @@ vf-blocked-max-total = Maximum von { $max } bereits erreicht
 # Schritt „Typ“ gewählt wird (D83.7).
 vf-blocked-mythic-status = Nur mit dem Typ des Mythischen Gefährten erhältlich, gewählt im Schritt „Typ“
 
+# Grund, der bei einer im erzwingenden Modus ausgegrauten Tugend/einem Fehler
+# angezeigt wird, weil das Profil des Charaktertyps derzeit jede Kategorie
+# dieser Auswahl verbietet (z. B. eine hermetische Tugend bei einem Gefährten
+# ohne die Gabe, Befund #19 des manuellen Tests).
+vf-blocked-forbidden-category = Für diesen Charaktertyp nicht erlaubt
+
+# Grund, der bei einer im erzwingenden Modus ausgegrauten Tugend/einem Fehler
+# angezeigt wird, weil ihre eigene Voraussetzung derzeit eindeutig nicht erfüllt
+# ist (z. B. Brutaler Künstler außerhalb von Haus Jerbiton, Befund #2 des
+# manuellen Tests).
+vf-blocked-prereq-not-met = Erfüllt eine Voraussetzung nicht
+
 # Filter-/Suchsteuerung für lange Auswahllisten.
 filter-search-placeholder = Suchen…
 filter-magnitude-all = Alle Stufen

@@ -42,6 +42,7 @@ import type {
   ValidationIssue,
   ValidationMode,
   ValidationResult,
+  VfAddBlockReason,
 } from './types';
 import { REALMS } from './types';
 import type { TooltipContent } from './actions';
@@ -1453,6 +1454,29 @@ export function incompatibleRefs(
     }
   }
   return blocked;
+}
+
+/**
+ * Catalogue Virtue/Flaw ids the Add button must refuse right now, with why —
+ * a dumb passthrough of `EffectiveScores.vf_add_blocked`, never a
+ * re-implementation of the category/prerequisite rule behind it (manual-test
+ * findings #2/#19: Brutal Artist offered to everyone, every Hermetic entry
+ * offered to a Gift-less companion). Only `enforced` mode blocks, the same
+ * mode gate `incompatibleRefs` applies — `advisory`/`silent` leave every
+ * option takeable and let the engine's `prereq_not_met`/
+ * `category_not_permitted` issues report the violation instead once added.
+ *
+ * `addBlocked` is `undefined` whenever the ruleset/entity has not finished
+ * loading yet (no `EffectiveScores` to read), which is as good as "nothing
+ * blocked" — there is nothing wrong to show before there is anything to show
+ * at all.
+ */
+export function addBlockedRefs(
+  addBlocked: Record<string, VfAddBlockReason> | undefined,
+  mode: ValidationMode,
+): Map<string, VfAddBlockReason> {
+  if (mode !== 'enforced' || !addBlocked) return new Map();
+  return new Map(Object.entries(addBlocked));
 }
 
 /**
