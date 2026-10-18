@@ -107,10 +107,15 @@ referential-integrity + serde validation is the trust gate. **English is the
 source of truth** — IDs are derived from the English source; other languages
 only fill i18n text against IDs that already exist.
 
+**Scope: Core Rules only.** The app implements mechanics from the Core Rules
+(`ArMDE`) alone. The other books are carried as source text and line-parallel
+translations, not as rules to implement; onboarding one is a separate decision.
+
 Current English sources (`rules/source/en/`):
 
 ```
 Ars Magica - Definitive Edition (Core Rules).md
+Ars Magica 5e - Guardians of the Forests - The Rhine Tribunal.md
 Ars Magica 5e - Houses of Hermes - Mystery Cults.md
 Ars Magica 5e - Houses of Hermes - Societates.md
 Ars Magica 5e - Houses of Hermes - True Lineages.md
@@ -133,14 +138,14 @@ Ars Magica 5e - Häuser des Hermes - Societates.md       # ↔ Houses of Hermes 
 Ars Magica 5e - Häuser des Hermes - Wahre Linien.md     # ↔ Houses of Hermes - True Lineages
 Ars Magica 5e - Magie - Heckenzauber (Überarbeitet).md  # ↔ Magic - Hedge Magic (Revised)
 Ars Magica 5e - Sphären der Macht - Magie.md            # ↔ Realms of Power - Magic
-Ars Magica 5e - Wächter des Waldes - Das Rhein-Tribunal.md  # Rhine Tribunal — no English source in repo
+Ars Magica 5e - Sphären der Macht - Feenwelt.md         # ↔ Realms of Power - Faerie
+Ars Magica 5e - Sphären der Macht - Das Göttliche (Überarbeitet).md  # ↔ Realms of Power - The Divine (Revised)
+Ars Magica 5e - Sphären der Macht - Das Infernale.md    # ↔ Realms of Power - The Infernal
+Ars Magica 5e - Wächter des Waldes - Das Rhein-Tribunal.md  # ↔ Guardians of the Forests - The Rhine Tribunal
 ```
 
-Not yet available in German: Realms of Power — Faerie, The Divine, The
-Infernal. Conversely, the Rhine Tribunal book has no English counterpart here.
-Because English is the source of truth for IDs, German-only books cannot
-introduce new IDs; they only supply i18n text against existing English-derived
-IDs (or wait until the English source is added).
+Every book is now a line-parallel EN/DE pair (added 2026-10-18). English stays
+the source of truth for IDs.
 
 ### German translation tables
 
@@ -416,14 +421,11 @@ relevant surface MUST preserve them and keep their tests green.
 
 - **Rules backed by source, never memory.** Every rule implemented in code or
   encoded as data MUST be taken from the authoritative Markdown in
-  `rules/source/<lang>/` (English is the source of truth). This applies to
-  *every* sourcebook, not just the core rules — e.g. hedge-wizard mechanics come
-  from *Hedge Magic (Revised)*, House mysteries from *Houses of Hermes — Mystery
-  Cults*. Implementing a rule from training-data recollection is prohibited: if
-  the passage is not in the source files, the rule is not implemented until the
-  source is added. A rule from a book with no English source in
-  `rules/source/en/` yet (e.g. the Rhine Tribunal book) cannot be implemented,
-  because English is the source of truth for IDs.
+  `rules/source/<lang>/` (English is the source of truth). The project is **Core
+  Rules only** (see "Rules source files"); a mechanic from another book is
+  implemented only after Norbert decides to onboard that book. Implementing a
+  rule from training-data recollection is prohibited: if the passage is not in
+  the source files, the rule is not implemented.
 - **Cite the source at the implementation site, by acronym.** When implementing a
   mechanic in Rust, add a comment citing the book's **acronym** + inclusive line
   range — the acronym identifies which book, e.g. `// Source: ArMDE:2774`, or a
