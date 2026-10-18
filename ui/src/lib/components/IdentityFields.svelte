@@ -27,6 +27,30 @@
     const raw = (event.currentTarget as HTMLSelectElement).value;
     store.setConceptRealm(raw === '' ? null : (raw as Realm));
   }
+
+  // manual-testing-findings #18: Sigil and Parens used to show for every
+  // character. Sigil is a magus's own thing ("recurrent mark or quirk in a
+  // magus's spell", ArMDE:12453) — gated on the TYPE PROFILE's own
+  // `hermetically_trained` flag (never the entity-level union, which also
+  // reads true for an Abandoned Apprentice trained by selection rather than
+  // by profile — Sigil is narrower than that). Parens is broader: any
+  // Hermetically trained character (the entity-level union,
+  // `DerivedTotals.hermetically_trained`) OR a Redcap — `virtue.redcap`/
+  // `virtue.lone_redcap` never set `ConfersHermeticTraining` (they fund
+  // apprenticeship via `replaces_life_stage_xp` instead), so the entity-level
+  // union reads false for a Redcap and the Virtue is checked directly
+  // ("trained in a similar manner to magi", ArMDE:4919). Never a hardcoded
+  // type id, so a future type gains either field purely by data. UI-only: a
+  // value stored before the gate closed stays on the entity untouched.
+  const profile = $derived(store.ruleset?.ruleset.type_profiles[store.entity.type_id]);
+  const isMagusShaped = $derived(profile?.hermetically_trained ?? false);
+  const isRedcap = $derived(
+    (store.entity.selections ?? []).some(
+      (s) => s.ref === 'virtue.redcap' || s.ref === 'virtue.lone_redcap',
+    ),
+  );
+  const showSigil = $derived(isMagusShaped);
+  const showParens = $derived((store.derived?.hermetically_trained ?? false) || isRedcap);
 </script>
 
 <!-- The character's concept and identity fields. Extracted from CharacterDetails
@@ -79,14 +103,16 @@
       {/each}
     </select>
   </label>
-  <label class="field">
-    <span>{store.t('identity-sigil')}</span>
-    <input
-      value={store.entity.sigil ?? ''}
-      oninput={(e) => store.setIdentity('sigil', (e.currentTarget as HTMLInputElement).value)}
-      data-testid="identity-sigil"
-    />
-  </label>
+  {#if showSigil}
+    <label class="field">
+      <span>{store.t('identity-sigil')}</span>
+      <input
+        value={store.entity.sigil ?? ''}
+        oninput={(e) => store.setIdentity('sigil', (e.currentTarget as HTMLInputElement).value)}
+        data-testid="identity-sigil"
+      />
+    </label>
+  {/if}
   <label class="field">
     <span>{store.t('identity-covenant')}</span>
     <input
@@ -96,12 +122,14 @@
       data-testid="identity-covenant"
     />
   </label>
-  <label class="field">
-    <span>{store.t('identity-parens')}</span>
-    <input
-      value={store.entity.parens ?? ''}
-      oninput={(e) => store.setIdentity('parens', (e.currentTarget as HTMLInputElement).value)}
-      data-testid="identity-parens"
-    />
-  </label>
+  {#if showParens}
+    <label class="field">
+      <span>{store.t('identity-parens')}</span>
+      <input
+        value={store.entity.parens ?? ''}
+        oninput={(e) => store.setIdentity('parens', (e.currentTarget as HTMLInputElement).value)}
+        data-testid="identity-parens"
+      />
+    </label>
+  {/if}
 </div>

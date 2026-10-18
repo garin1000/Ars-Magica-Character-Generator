@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Entity, LocalizedRuleset } from '../types';
+import type { DerivedTotals, Entity, EntityTypeProfile, LocalizedRuleset } from '../types';
 
 import { SCHEMA_VERSION, store } from '../state.svelte';
 import IdentityFields from './IdentityFields.svelte';
 
-function installRuleset(): void {
+function installRuleset(profiles: Record<string, EntityTypeProfile> = {}): void {
   store.ruleset = {
     ruleset: {
       id: 'test',
       version: '1',
       point_items: {},
-      type_profiles: {},
+      type_profiles: profiles,
       abilities: {},
       magnitude_points: { free: 0, minor: 1, major: 3 },
       ability_category_order: ['general'],
@@ -20,6 +20,17 @@ function installRuleset(): void {
     },
     i18n: {},
   } as unknown as LocalizedRuleset;
+}
+
+/** A magus-shaped profile, `hermetically_trained` set at the PROFILE level —
+ * the shape manual-testing-findings #18 gates the Wizard's Sigil on. */
+function magusProfile(): EntityTypeProfile {
+  return {
+    id: 'magus',
+    budget: { virtue_points: 10, flaw_points: 10 },
+    hermetically_trained: true,
+    creation_phases: [],
+  };
 }
 
 function resetEntity(): void {
@@ -40,6 +51,8 @@ function resetEntity(): void {
     reputations: [],
   };
   store.effective = null;
+  // #18's gating tests set this directly; reset so no test leaks into the next.
+  store.derived = null;
 }
 
 function html(): string {
@@ -62,6 +75,11 @@ function textareaValueOf(body: string, testid: string): string {
   return match[1];
 }
 
+/** Whether an element carrying `data-testid` exists in the rendered markup at all. */
+function has(body: string, testid: string): boolean {
+  return body.includes(`data-testid="${testid}"`);
+}
+
 beforeEach(() => {
   store.lang = 'en';
   installRuleset();
@@ -80,9 +98,12 @@ describe('IdentityFields reflects stored entity values', () => {
     const body = html();
     expect(textareaValueOf(body, 'identity-concept')).toBe('');
     expect(valueOf(body, 'identity-gender')).toBe('');
-    expect(valueOf(body, 'identity-sigil')).toBe('');
     expect(valueOf(body, 'identity-covenant')).toBe('');
-    expect(valueOf(body, 'identity-parens')).toBe('');
+    // #18: a companion with no Hermetic training is neither magus-shaped nor
+    // a Redcap, so neither field is offered at all — see the gating describe
+    // block below.
+    expect(has(body, 'identity-sigil')).toBe(false);
+    expect(has(body, 'identity-parens')).toBe(false);
   });
 
   it('reads the concept text back from the entity', () => {
@@ -92,16 +113,12 @@ describe('IdentityFields reflects stored entity values', () => {
     );
   });
 
-  it('reads gender, sigil, covenant and parens back from the entity', () => {
+  it('reads gender and covenant back from the entity', () => {
     store.entity.gender = 'She/her';
-    store.entity.sigil = 'A cold wind that smells of ash';
     store.entity.covenant_name = 'Fengheld';
-    store.entity.parens = 'Magister Bonisagus';
     const body = html();
     expect(valueOf(body, 'identity-gender')).toBe('She/her');
-    expect(valueOf(body, 'identity-sigil')).toBe('A cold wind that smells of ash');
     expect(valueOf(body, 'identity-covenant')).toBe('Fengheld');
-    expect(valueOf(body, 'identity-parens')).toBe('Magister Bonisagus');
   });
 
   it('renders an empty birth-year field when none is set, never the literal "null"', () => {
@@ -163,5 +180,77 @@ describe('IdentityFields concept realm', () => {
       body,
     )![0];
     expect(select).toMatch(/<option value="faerie" selected/);
+  });
+});
+
+// manual-testing-findings #18: Sigil and Parens used to show for every
+// character, companions and grogs included. Sigil is a magus's own thing
+// ("recurrent mark or quirk in a magus's spell", ArMDE:12453) — gated on the
+// TYPE PROFILE's own `hermetically_trained` flag, never the entity-level
+// union, so an Abandoned Apprentice (hermetically trained by selection, not
+// by profile) still does not see it. Parens is broader — any Hermetically
+// trained character, which is the entity-level union, OR a Redcap: Redcap's
+// own effects (`replaces_life_stage_xp`) never set `ConfersHermeticTraining`,
+// so the entity-level union reads false for a Redcap and the virtue must be
+// checked directly ("trained in a similar manner to magi", ArMDE:4919).
+describe('IdentityFields sigil/parens gating (#18)', () => {
+  it('hides both fields for an untrained companion', () => {
+    installRuleset({});
+    const body = html();
+    expect(has(body, 'identity-sigil')).toBe(false);
+    expect(has(body, 'identity-parens')).toBe(false);
+  });
+
+  it('shows both fields for a magus-shaped profile', () => {
+    installRuleset({ magus: magusProfile() });
+    store.entity.type_id = 'magus';
+    // A real magus's engine-derived `hermetically_trained` union is true
+    // because the PROFILE itself declares it; the test fixture sets both,
+    // exactly as the real app's `derivedTotals()` round trip would.
+    store.derived = { hermetically_trained: true } as unknown as DerivedTotals;
+    const body = html();
+    expect(has(body, 'identity-sigil')).toBe(true);
+    expect(has(body, 'identity-parens')).toBe(true);
+  });
+
+  it('hides Sigil but shows Parens for an entity hermetically trained by selection, not by profile (Abandoned Apprentice)', () => {
+    installRuleset({});
+    store.derived = { hermetically_trained: true } as unknown as DerivedTotals;
+    const body = html();
+    expect(has(body, 'identity-sigil')).toBe(false);
+    expect(has(body, 'identity-parens')).toBe(true);
+  });
+
+  it('shows Parens but not Sigil for a companion holding virtue.redcap', () => {
+    installRuleset({});
+    store.entity.selections = [{ ref: 'virtue.redcap' }];
+    const body = html();
+    expect(has(body, 'identity-sigil')).toBe(false);
+    expect(has(body, 'identity-parens')).toBe(true);
+  });
+
+  it('shows Parens for a companion holding virtue.lone_redcap', () => {
+    installRuleset({});
+    store.entity.selections = [{ ref: 'virtue.lone_redcap' }];
+    expect(has(html(), 'identity-parens')).toBe(true);
+  });
+
+  it('keeps a stored value on an entity that no longer qualifies, hidden but not dropped', () => {
+    installRuleset({ magus: magusProfile() });
+    store.entity.type_id = 'magus';
+    store.entity.sigil = 'A cold wind that smells of ash';
+    store.entity.parens = 'Magister Bonisagus';
+    html();
+    expect(has(html(), 'identity-sigil')).toBe(true);
+
+    // The type changes away from magus — no selections to re-derive training
+    // from, so both fields are gated off — but the stored strings survive on
+    // the entity untouched (CLAUDE.md: saves store choices, never drops data).
+    store.entity.type_id = 'companion';
+    const body = html();
+    expect(has(body, 'identity-sigil')).toBe(false);
+    expect(has(body, 'identity-parens')).toBe(false);
+    expect(store.entity.sigil).toBe('A cold wind that smells of ash');
+    expect(store.entity.parens).toBe('Magister Bonisagus');
   });
 });
