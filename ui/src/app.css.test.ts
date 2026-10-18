@@ -843,6 +843,18 @@ describe('app.css', () => {
     expect(block![1]).toMatch(/height:\s*1\.9rem;/);
   });
 
+  // manual-testing-findings #15: the per-Characteristic Aging Points inputs sit
+  // in a `.field.inline` label inside a flex row (`.aging-distribute-list li`),
+  // and the global `input[type='number'] { width: 4.5rem }` is only a flex-basis
+  // unless something stops the item shrinking — so a narrow row squeezed the
+  // input down to its spinner arrows, with no room left for the digits. A
+  // dedicated rule floors the width and turns shrinking off.
+  it('keeps the Aging Points distribution inputs wide enough to show their value', () => {
+    const block = /^\.aging-distribute-list input\[type='number'\]\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block).not.toBeNull();
+    expect(block![1]).toMatch(/flex-shrink:\s*0;/);
+  });
+
   // guided-creation-review-2026-08 #27: the panel is mounted as a direct child of the
   // editor's `.tab-panel` (which centres its children) and, in the wizard, inside
   // `.vf-tab` (which is `width: 100%` and stretches them). Centring the panel ITSELF

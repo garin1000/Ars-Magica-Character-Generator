@@ -2067,6 +2067,18 @@ ul {
   display: contents;
 }
 
+/* manual-testing-findings #15: the DIFFERENT per-Characteristic list —
+   `AgingRollCalculator`'s "distribute these newly earned Aging Points" step,
+   not the always-shown totals above. Its rows are plain `.field.inline`
+   labels in a wrapping flex row, and the global `input[type='number']`
+   4.5rem width is only a flex-basis: with nothing stopping it shrinking, a
+   narrow row squeezed the input down to its spinner arrows, hiding the typed
+   value. `flex-shrink: 0` keeps the number inputs — never radio buttons, since
+   several points may need to land across several Characteristics. */
+.aging-distribute-list input[type='number'] {
+  flex-shrink: 0;
+}
+
 /* The Living Conditions checklist, flowed into as many readable columns as the
    stage's width allows (manual-testing-findings-2026-09-03 #24/#25). It is a dozen
    single-line rows, and stacked in one column it was the tallest thing between the
