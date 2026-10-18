@@ -155,6 +155,17 @@ describe('LongevityPanel hint (engine-authoritative suggestion)', () => {
     expect(text.toLowerCase()).toContain('aging bonus');
   });
 
+  // manual-testing-findings #14: "aging bonus +1 (Creo Corpus Lab Total 4)
+  // halved" read as if +1 came first and the Lab Total still needed halving
+  // afterwards. The Lab Total leads the sentence now, with the bonus it buys
+  // stated after it, so the steps read in the order they actually happen.
+  it('states the Lab Total before the bonus it buys, so the steps read in order (#14)', () => {
+    store.addLongevityRitual('self_made');
+    setDerived('self_made', 0, false, { lab_total: 35, suggested_bonus: 7, halved: false });
+    const { text } = element(html(), 'longevity-hint');
+    expect(text.indexOf('35')).toBeLessThan(text.indexOf('+7'));
+  });
+
   it('marks the hint as halved when the engine flags a halving', () => {
     store.addLongevityRitual('self_made');
     setDerived('self_made', 0, false, { lab_total: 17, suggested_bonus: 4, halved: true });

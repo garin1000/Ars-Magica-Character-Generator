@@ -971,10 +971,15 @@ longevity-remove = Remove Longevity Ritual
 # entered, never derived. Distinguishes an unfilled field from a deliberate 0.
 longevity-not-entered = Not entered
 # The live suggestion beside the input: what a ritual made now would be worth.
-# { $bonus } is already signed; { $total } is today's Creo Corpus Lab Total. The
-# quantity is named ("aging bonus") because it is the STORED magnitude to type into
-# the field — the totals panel shows the same number as an aging-roll modifier (-7).
-longevity-hint = A ritual made now: aging bonus { $bonus } (Creo Corpus Lab Total { $total })
+# { $bonus } is already signed; { $total } is today's Creo Corpus Lab Total,
+# AFTER any halving (see longevity-hint-halved below) — never a pre-halving
+# figure, which the engine does not expose. The quantity is named ("aging
+# bonus") because it is the STORED magnitude to type into the field — the
+# totals panel shows the same number as an aging-roll modifier (-7). The Lab
+# Total leads the sentence, with the bonus it buys stated after it
+# (manual-testing-findings #14): the old "bonus (Lab Total) halved" order read
+# as if the halving applied after the bonus was already computed.
+longevity-hint = A ritual made now: Creo Corpus Lab Total { $total } → aging bonus { $bonus }
 longevity-hint-halved = halved
 longevity-focus-label = Focus
 longevity-focus-placeholder = How the ritual culminates

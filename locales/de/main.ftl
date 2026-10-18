@@ -1008,10 +1008,15 @@ longevity-remove = Langlebigkeitsritual entfernen
 # leeres Feld von einer bewusst eingetragenen 0.
 longevity-not-entered = Nicht eingetragen
 # Der Hinweis neben dem Eingabefeld: Was ein jetzt erschaffenes Ritual wert wäre.
-# { $bonus } ist bereits vorzeichenbehaftet; { $total } ist die heutige Laborsumme.
-# Die Größe wird benannt („Alterungsbonus“), denn es ist der gespeicherte Wert für
+# { $bonus } ist bereits vorzeichenbehaftet; { $total } ist die heutige
+# Laborsumme, BEREITS halbiert, falls zutreffend (siehe longevity-hint-halved
+# unten) — nie ein Wert vor der Halbierung, den die Engine nicht liefert. Die
+# Größe wird benannt („Alterungsbonus“), denn es ist der gespeicherte Wert für
 # das Eingabefeld — die Gesamtwerte-Ansicht zeigt dieselbe Zahl als Modifikator.
-longevity-hint = Ein jetzt erschaffenes Ritual: Alterungsbonus { $bonus } (Creo Corpus-Laborsumme { $total })
+# Die Laborsumme steht vor dem Bonus, den sie ergibt (manual-testing-findings
+# #14): die alte Reihenfolge „Bonus (Laborsumme) halbiert“ las sich, als gälte
+# die Halbierung erst nach der Berechnung des Bonus.
+longevity-hint = Ein jetzt erschaffenes Ritual: Creo Corpus-Laborsumme { $total } → Alterungsbonus { $bonus }
 longevity-hint-halved = halbiert
 longevity-focus-label = Fokus
 longevity-focus-placeholder = Worin das Ritual gipfelt
