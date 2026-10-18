@@ -4504,7 +4504,10 @@ migration code; `load_entity_migrating` is untouched). Bumped `SCHEMA_VERSION`
   of what age has done to the character, distinct from the aging log's per-year
   one-liners below, so the UI renders it as a multi-line field like its analogue
   `Entity.warping_effect` (guided-creation-review-2026-08 #26). Source:
-  `ArMDE:16642-16656` (## Aging).
+  `ArMDE:16696` (the "**Decrepitude:**" paragraph — "extremely frail", "bedridden
+  and will die within a few months"; manual-testing-findings #17 caught the prior
+  `ArMDE:16642-16656` citation here, the general "## Aging" intro, which never
+  mentions Decrepitude at all).
 - **Aging log** — `Entity.aging_log: Vec<AgingLogEntry>` (skip-if-empty). `year`
   is the **first** field so the derived `Ord` sorts the log chronologically via
   `Entity::normalize()`. Shipped in D2 as `{ year: i32, effect: String }` — per-year

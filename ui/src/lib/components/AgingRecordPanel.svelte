@@ -270,7 +270,11 @@
     </div>
 
     <!-- The cumulative overall aging/decrepitude narrative, which grows over a
-       character's life (ArMDE:16642-16656) — distinct from the aging log's
+       character's life (manual-testing-findings #17: the comment used to cite
+       ArMDE:16642-16656, the general "## Aging" intro/formula, which never
+       mentions Decrepitude at all; the actual narrative source is the
+       "**Decrepitude:**" paragraph, ArMDE:16696 — "extremely frail", "bedridden
+       and will die within a few months") — distinct from the aging log's
        per-year one-liners above. A textarea for the same reason `warping_effect` is
        one in CharacterDetails: it is the same kind of field, and the two must not
        offer different controls for the same kind of writing. -->
