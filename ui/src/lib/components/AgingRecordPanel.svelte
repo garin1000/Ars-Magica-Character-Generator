@@ -5,7 +5,8 @@
   import { CHARACTERISTICS, type AgingLogEntry, type Characteristic } from '../types';
 
   const apparentAge = $derived(store.entity.apparent_age ?? null);
-  // Decrepitude is derived by the engine from the sum of aging points; hidden at 0.
+  // Decrepitude is derived by the engine from the sum of aging points; always
+  // shown, 0 included (manual-testing-findings #17).
   const decrepitude = $derived(store.effective?.decrepitude_score ?? 0);
   const decrepitudeEffect = $derived(store.entity.decrepitude_effect ?? '');
   const agingPoints = $derived(store.entity.aging_points ?? {});
@@ -258,14 +259,15 @@
       </label>
     </div>
 
-    {#if decrepitude > 0}
-      <div class="detail-field">
-        <span class="detail-label">{store.t('decrepitude-label')}</span>
-        <span data-testid="decrepitude-readout">
-          {store.t('decrepitude-readout', { score: String(decrepitude) })}
-        </span>
-      </div>
-    {/if}
+    <!-- manual-testing-findings #17: always shown, 0 included — it mirrors the
+         official character sheet's Decrepitude box, which always carries a
+         number (Norbert, 2026-10-18), not a rulebook rule. -->
+    <div class="detail-field">
+      <span class="detail-label">{store.t('decrepitude-label')}</span>
+      <span data-testid="decrepitude-readout">
+        {store.t('decrepitude-readout', { score: String(decrepitude) })}
+      </span>
+    </div>
 
     <!-- The cumulative overall aging/decrepitude narrative, which grows over a
        character's life (ArMDE:16642-16656) — distinct from the aging log's

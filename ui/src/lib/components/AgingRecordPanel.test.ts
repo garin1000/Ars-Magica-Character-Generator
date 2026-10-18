@@ -231,8 +231,11 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
     const body = html();
     expect(has(body, 'aging-log-empty')).toBe(true);
     expect(has(body, 'aging-log-year-0')).toBe(false);
-    // Decrepitude is hidden at 0 — a score of zero is not a state to report.
-    expect(has(body, 'decrepitude-readout')).toBe(false);
+    // manual-testing-findings #17: Decrepitude is ALWAYS shown, 0 included — it
+    // mirrors the official character sheet's Decrepitude box, which always has a
+    // number in it.
+    expect(has(body, 'decrepitude-readout')).toBe(true);
+    expect(text(body, 'decrepitude-readout')).toContain('0');
   });
 
   it('reads a resolved Crisis back off the log entry that recorded it', () => {
