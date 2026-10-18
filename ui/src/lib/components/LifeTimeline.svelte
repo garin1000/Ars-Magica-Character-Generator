@@ -8,6 +8,13 @@
   // figures in words. The fill bar is decoration only. Every number is the engine's.
 
   const timeline = $derived(store.effective?.life_timeline ?? null);
+  // manual-testing-findings #9: the engine always drafts a Remaining span, even
+  // with no years left in it (`life_timeline.rs::open_span_drafts`), so a
+  // character whose sections use up the whole span would otherwise show an
+  // empty "Remaining (ages N-N): 0 / 0 XP" entry. Drop it once it holds nothing.
+  const visibleEntries = $derived(
+    (timeline?.entries ?? []).filter((e) => !(e.kind.kind === 'remaining' && e.years < 1)),
+  );
   // The chips name their Virtue or Flaw from the catalogue, never by its id.
   const ruleset = $derived(store.ruleset);
   const sections = $derived(store.entity.life_stages?.life_sections ?? []);
@@ -65,7 +72,7 @@
       aria-label={store.t('life-timeline-label')}
       data-testid="life-timeline"
     >
-      {#each timeline.entries as entry, i (i)}
+      {#each visibleEntries as entry, i (i)}
         <li
           class="life-timeline-entry"
           style="flex-grow: {Math.max(entry.years, 1)}"

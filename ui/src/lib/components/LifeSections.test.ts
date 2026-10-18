@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
-import type { Entity, LifeSection, LifeStagePlan } from '../types';
+import type { EffectiveScores, Entity, LifeSection, LifeStagePlan } from '../types';
 
 // G3: the life-section editor — one row per named section (name, years, move up,
 // move down, remove), an add button, and for a magus each section's own lab years
@@ -44,6 +44,13 @@ function resetEntity(plan: LifeStagePlan): void {
     spells: [],
     age: 40,
   };
+}
+
+/** The engine's post-Gauntlet year count, the only field the Remaining gate reads. */
+function setPostGauntletYears(years: number): void {
+  store.effective = {
+    life_stage: { post_gauntlet_years: years },
+  } as unknown as EffectiveScores;
 }
 
 /** Two sections, the second unnamed so its placeholder label shows. */
@@ -94,6 +101,7 @@ function legend(markup: string): string {
 beforeEach(() => {
   store.lang = 'en';
   resetEntity({ life_sections_enabled: true, life_sections: sections() });
+  store.effective = null;
 });
 
 describe('LifeSections editor rows (G3)', () => {
@@ -206,6 +214,38 @@ describe('LifeSections lab years (G3)', () => {
       expect(open).toMatch(/readonly/);
       expect(open).toMatch(/aria-describedby="why"/);
     }
+  });
+});
+
+describe('LifeSections Remaining row with no years left (#9)', () => {
+  it('hides the Remaining row once the sections use up every post-Gauntlet year', () => {
+    resetEntity({
+      life_sections_enabled: true,
+      // The two sections (5 + 10 = 15 years) claim the whole post-Gauntlet span.
+      life_sections: sections(),
+      post_gauntlet_lab_years: { one_season: 3 },
+    });
+    setPostGauntletYears(15);
+    const body = html({ labYears: true });
+    expect(has(body, 'life-section-remaining')).toBe(false);
+  });
+
+  it('keeps the Remaining row while at least one year is left', () => {
+    resetEntity({
+      life_sections_enabled: true,
+      life_sections: sections(),
+      post_gauntlet_lab_years: { one_season: 3 },
+    });
+    setPostGauntletYears(16);
+    const body = html({ labYears: true });
+    expect(has(body, 'life-section-remaining')).toBe(true);
+  });
+
+  it('keeps the Remaining row while the engine has not sent a budget yet', () => {
+    // No budget is "not computed yet", not "no years" — the same convention
+    // `LifeStagePanel`'s no-years gate uses.
+    const body = html({ labYears: true });
+    expect(has(body, 'life-section-remaining')).toBe(true);
   });
 });
 

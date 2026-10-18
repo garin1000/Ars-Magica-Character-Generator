@@ -25,6 +25,18 @@
   const sections = $derived(plan?.life_sections ?? []);
   const t: Translate = (key, args) => store.t(key, args);
 
+  // manual-testing-findings #9: the Remaining row holds the post-Gauntlet years
+  // no named section claims. Once the sections use up the whole span there is
+  // nothing left to show it for. `null` means "the engine has not sent a budget
+  // yet", not "no years" — same convention `LifeStagePanel`'s no-years gate
+  // uses — so the row stays up optimistically until the engine says otherwise.
+  const postGauntletYears = $derived(store.effective?.life_stage?.post_gauntlet_years ?? null);
+  const claimedYears = $derived(sections.reduce((sum, s) => sum + (s.years ?? 0), 0));
+  const remainingYears = $derived(
+    postGauntletYears == null ? null : Math.max(0, postGauntletYears - claimedYears),
+  );
+  const showRemaining = $derived(labYears && (remainingYears == null || remainingYears >= 1));
+
   function label(section: LifeSection, index: number): string {
     return lifeSectionLabel(section, index, t);
   }
@@ -112,7 +124,7 @@
       </li>
     {/each}
   </ol>
-  {#if labYears}
+  {#if showRemaining}
     <div class="life-section-remaining" data-testid="life-section-remaining">
       <LabYearsFields
         value={plan?.post_gauntlet_lab_years}

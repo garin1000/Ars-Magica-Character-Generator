@@ -239,6 +239,32 @@ describe('LifeTimeline (G3)', () => {
   });
 });
 
+describe('LifeTimeline Remaining span with no years left (#9)', () => {
+  it('hides a Remaining span that carries no years at all', () => {
+    install({
+      entries: [
+        entry(fixed('childhood'), [0, 5], xpOnly(120), 30),
+        entry(named(0), [5, 20], xpOnly(225), 200),
+        entry(remaining, [20, 20], xpOnly(0), 0),
+      ],
+      overrun_years: 0,
+      outside: [],
+    });
+    const body = html();
+    expect(has(body, 'life-timeline-entry-0')).toBe(true);
+    expect(has(body, 'life-timeline-entry-1')).toBe(true);
+    // The empty Remaining span is dropped, not just visually — a screen reader
+    // must not be told about a span that holds nothing.
+    expect(has(body, 'life-timeline-entry-2')).toBe(false);
+  });
+
+  it('keeps a Remaining span that still holds at least one year', () => {
+    install(companionTimeline(), squire);
+    // companionTimeline's Remaining entry runs ages 20-35, i.e. 15 years.
+    expect(has(html(), 'life-timeline-entry-3')).toBe(true);
+  });
+});
+
 describe('LifeTimeline notes (G3)', () => {
   it('announces sections that run past the character’s age', () => {
     install(companionTimeline(3), squire);
