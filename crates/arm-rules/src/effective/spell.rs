@@ -244,7 +244,7 @@ fn sum_signed_effect(
 /// profile's `spell_levels` (120 for a magus; 0 for a type with no profile).
 /// Factored so the effective payload and the validator select the base
 /// identically and can never diverge (Issue 11).
-// Source: ArMDE:2283-2284, :2503
+// Source: ArMDE:2285-2286, :2505
 pub fn spell_levels_base(entity: &Entity, profile: Option<&EntityTypeProfile>) -> u32 {
     entity
         .spell_levels_override
@@ -253,12 +253,12 @@ pub fn spell_levels_base(entity: &Entity, profile: Option<&EntityTypeProfile>) -
 
 /// The levels of spells a magus took out of its years past the Gauntlet — the
 /// player's chosen slice of "30 points per year", where "Each point can be an
-/// experience point in an Art or Ability or **one level of spell**" (`ArMDE:2539`).
+/// experience point in an Art or Ability or **one level of spell**" (`ArMDE:2541`).
 ///
 /// 0 for a character with no life-stage plan, and for a ruleset shipping no
 /// `post_apprenticeship` block — the rate is data, so with no block there is
 /// nothing to grant.
-// Source: ArMDE:2284, :2539.
+// Source: ArMDE:2286, :2541.
 pub fn life_stage_spell_levels(entity: &Entity, ruleset: &Ruleset) -> u32 {
     ruleset
         .life_stages()
@@ -278,9 +278,9 @@ pub fn life_stage_spell_levels(entity: &Entity, ruleset: &Ruleset) -> u32 {
 /// years bought ([`life_stage_spell_levels`]), clamped at 0.
 ///
 /// The post-Gauntlet term is **additive, not a second budget.** Apprenticeship's
-/// "120 levels of spells" (`ArMDE:2503`) are the type profile's `spell_levels` and are
+/// "120 levels of spells" (`ArMDE:2505`) are the type profile's `spell_levels` and are
 /// what `base` selects; these are the player's chosen slice of the fungible "30
-/// points per year" (`ArMDE:2539`), which is also why `post_gauntlet_xp` and
+/// points per year" (`ArMDE:2541`), which is also why `post_gauntlet_xp` and
 /// `post_gauntlet_spell_levels` always sum to `post_gauntlet_points`.
 ///
 /// Folded in **here**, in the one selector both `validate_spells` and the
@@ -291,7 +291,7 @@ pub fn life_stage_spell_levels(entity: &Entity, ruleset: &Ruleset) -> u32 {
 /// the post-Gauntlet levels stay on top of it. Deliberate: the override is the flat
 /// flow's escape hatch, and it is not made exclusive with a life-stage plan the way
 /// [`Entity::xp_pool`] is.
-// Source: ArMDE:2284, :2503, :2539.
+// Source: ArMDE:2286, :2505, :2541.
 pub fn spell_levels_budget(base: u32, entity: &Entity, ruleset: &Ruleset) -> u32 {
     clamp_to_u32(
         i64::from(base)
@@ -382,7 +382,7 @@ pub(crate) fn has_potent_magic(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// because of `SpellRange`'s declaration order, and that is not something this
 /// rule may rely on.
 ///
-/// Source: ArMDE:6810.
+/// Source: ArMDE:6812.
 pub(crate) fn range_beyond_touch(range: SpellRange) -> bool {
     matches!(
         range,
@@ -437,7 +437,7 @@ pub(crate) fn has_magical_focus(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// here. [`SpellMarks::default`] is "neither" — the unmarked cap.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct SpellMarks {
-    /// Mirrors `SpellSelection::within_focus` (ArMDE:4474's doubling).
+    /// Mirrors `SpellSelection::within_focus` (ArMDE:4476's doubling).
     pub within_focus: bool,
     /// Mirrors `SpellSelection::within_potent_field` (D83.3's bonus).
     pub within_potent_field: bool,
@@ -453,32 +453,32 @@ impl From<&SpellSelection> for SpellMarks {
 }
 
 /// The maximum level a magus may learn of a spell of the given Technique/Form:
-/// the sum of Technique, Form, Intelligence, Magic Theory and 3 (ArMDE:2533),
+/// the sum of Technique, Form, Intelligence, Magic Theory and 3 (ArMDE:2535),
 /// using effective Art/Ability scores, **folded with `requisites`** the same
-/// way the Casting Total is (ArMDE:12381-12385, X11b — see below), **doubled**
-/// by the lowest folded score when `marks.within_focus` is set (ArMDE:4474),
+/// way the Casting Total is (ArMDE:12383-12387, X11b — see below), **doubled**
+/// by the lowest folded score when `marks.within_focus` is set (ArMDE:4476),
 /// **halved** if either Art or any requisite is deficient, plus the flat
 /// [`lab_total_mod`] term (D1, `docs/vf-audit/decisions.md`), plus Potent
 /// Magic's bonus when `marks.within_potent_field` is set and Potent Magic is held
-/// (D83.3, ArMDE:4813-4819 — the larger bonus, never the sum), and **halved
+/// (D83.3, ArMDE:4815-4821 — the larger bonus, never the sum), and **halved
 /// again** if `range_beyond_touch` is set and the character holds Short-Ranged
 /// Magic (D28). Returns an `i64` (small or negative for a beginning magus).
 /// Single source of truth: both the validation cap and the UI-surfaced cap
 /// read this, so the two can never diverge.
 ///
-/// **Requisite folding (X11b, D81.5).** `ArMDE:2533`'s own second sentence —
+/// **Requisite folding (X11b, D81.5).** `ArMDE:2535`'s own second sentence —
 /// "If the spell has requisites (see page 311), they apply to this total as
 /// well" — and its closing sentence, which calls the cap itself "the
 /// appropriate Lab Total", bring in exactly the same lesser-of-requisite-and-
 /// primary rule the Casting Total already folds (`b5ee82a`, X11):
 /// `derived/casting.rs::fold_requisite` is reused here verbatim, not
-/// duplicated, so a Puissant Art bonus (ArMDE:4891), several requisites of one
-/// class folding to their group's lowest (ArMDE:12383), and the Elemental
-/// Magic exception (ArMDE:3808, "you use the primary Form to calculate totals,
+/// duplicated, so a Puissant Art bonus (ArMDE:4893), several requisites of one
+/// class folding to their group's lowest (ArMDE:12385), and the Elemental
+/// Magic exception (ArMDE:3810, "you use the primary Form to calculate totals,
 /// even if the requisite is lower" — generic "totals" wording, so it governs
 /// this Lab-Total-shaped cap too) all behave identically on both totals. A
 /// requisite Art that is itself Deficient halves the cap even when it does not
-/// numerically bind the fold (ArMDE:12383's closing sentence) — `deficient`
+/// numerically bind the fold (ArMDE:12385's closing sentence) — `deficient`
 /// below checks `requisites` for exactly this reason, reading the same
 /// [`deficient_arts`] fold the Casting Total's `InPlayMods::deficient` does, so
 /// the two can never disagree about which Arts are deficient. The grid
@@ -486,7 +486,7 @@ impl From<&SpellSelection> for SpellMarks {
 /// so it passes `requisites: &[]` — a no-op fold, exactly like
 /// `derived/casting.rs::casting_totals` does for the same reason.
 ///
-/// **Magical Focus doubling (ArMDE:4474, X11b).** "If a spell has requisites,
+/// **Magical Focus doubling (ArMDE:4476, X11b).** "If a spell has requisites,
 /// the lowest applicable score may be one of the requisites, rather than one
 /// of the primary Arts" — since `within_focus` adds the lower of the two
 /// *already-folded* scores, a requisite that won the fold is automatically
@@ -510,16 +510,16 @@ impl From<&SpellSelection> for SpellMarks {
 ///
 /// **Order of operations**, from the passages: the flat D1 term, the
 /// within-focus double and the within-Potent-field bonus all sum into `base` first (they are part of what the
-/// Lab Total *is* — `ArMDE:2533`'s closing sentence, and `ArMDE:4474`'s own
+/// Lab Total *is* — `ArMDE:2535`'s closing sentence, and `ArMDE:4476`'s own
 /// worked example adds the doubled Art alongside the rest before anything else
 /// applies), then the two conditional halvings apply. The halving is not a
-/// separate rule but the same sentence: `ArMDE:2533` ends "This is the
+/// separate rule but the same sentence: `ArMDE:2535` ends "This is the
 /// appropriate Lab Total, assuming an aura modifier of +3, and thus any Virtues
 /// and Flaws your character has apply to this total if they would apply to a
 /// Lab Total in play", and a Deficiency halves every Lab Total its Art is added
-/// to (`ArMDE:5982, :5986`) while Short-Ranged Magic halves it "when designing
+/// to (`ArMDE:5984, :5988`) while Short-Ranged Magic halves it "when designing
 /// an effect or spell that has a range greater than Touch, including Eye"
-/// (`ArMDE:6810`). Nothing in either passage orders the two conditional
+/// (`ArMDE:6812`). Nothing in either passage orders the two conditional
 /// halvings relative to each other, and — like the Deficient/Difficult-Longevity
 /// stack in `derived/lab.rs::creo_corpus_lab_total` — the order between them is
 /// provably immaterial: both are a plain `div_euclid(_, 2)`, and floor division
@@ -528,7 +528,7 @@ impl From<&SpellSelection> for SpellMarks {
 /// through the same [`arts_deficient`] predicate [`crate::derived::InPlayMods::deficient`]
 /// applies to its own cached set, so the creation-time cap and the in-play Lab
 /// Totals can never disagree about which Arts are deficient.
-// Source: ArMDE:2533, :12381-12385, :3808, :4474, :4813-4819, :4891, :5982, :5986, :615, :6810
+// Source: ArMDE:2535, :12383-12387, :3810, :4476, :4815-4821, :4893, :5984, :5988, :615, :6812
 pub fn spell_level_cap(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -560,7 +560,7 @@ pub fn spell_level_cap(
         requisites,
         elemental_forms.as_ref(),
     ));
-    // The cap IS the Lab Total at aura +3 (ArMDE:2533), so it reads the same
+    // The cap IS the Lab Total at aura +3 (ArMDE:2535), so it reads the same
     // effective Intelligence the Lab Total does — after aging drops and free
     // deltas such as Great (Intelligence) — not the bought score.
     let int = i64::from(effective_characteristic_after_aging(
@@ -587,7 +587,7 @@ pub fn spell_level_cap(
     // and only while a Potent Magic carrier is still held (same stale-marker
     // rule as the focus doubling above). The larger bonus, never the sum —
     // "only one Potent Magic Virtue applies to any single activity"
-    // (ArMDE:4813) — through the same fold the in-play Lab Total reads.
+    // (ArMDE:4815) — through the same fold the in-play Lab Total reads.
     if marks.within_potent_field && has_potent_magic(entity, ruleset) {
         base += i64::from(crate::derived::in_play_lab_total_mod_within_potent_field(
             entity, ruleset,
@@ -628,7 +628,7 @@ pub struct SpellLevelCap {
     /// The maximum learnable level for this Te/Fo/range-class combination (may
     /// be negative for a beginning magus).
     pub cap: i64,
-    /// The cap with the Magical Focus marker (ArMDE:4474), present only when
+    /// The cap with the Magical Focus marker (ArMDE:4476), present only when
     /// the entity holds a Magical Focus — same shape as
     /// [`SpellCap::within_focus_cap`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -708,7 +708,7 @@ pub struct SpellCap {
     /// The maximum learnable level for this spell, requisites folded, no
     /// Magical Focus doubling (may be negative for a beginning magus).
     pub cap: i64,
-    /// The same cap WITH the Magical Focus doubling (ArMDE:4474) applied,
+    /// The same cap WITH the Magical Focus doubling (ArMDE:4476) applied,
     /// present only when the entity holds a Magical Focus at all — the
     /// picker's "add within focus" action offers itself only then. `None` for
     /// an entity with no Magical Focus Virtue, same shape as
@@ -716,7 +716,7 @@ pub struct SpellCap {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub within_focus_cap: Option<i64>,
     /// The cap with the spell marked within the Potent Magic field (D83.3,
-    /// ArMDE:4817-4819), present only when the entity holds Potent Magic at
+    /// ArMDE:4819-4821), present only when the entity holds Potent Magic at
     /// all — the plain [`Self::cap`] never includes that bonus. Same shape as
     /// [`Self::within_focus_cap`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -784,7 +784,7 @@ pub fn resolved_spell_level(sel: &SpellSelection, ruleset: &Ruleset) -> Option<u
 
 /// The character's Spell-Mastery XP pool: the sum of every
 /// [`Effect::SpellMasteryXp`] (Mastered Spells +50, stackable). A restricted pool
-/// spent only on per-spell Spell Mastery Abilities. Source: ArMDE:4542-4545.
+/// spent only on per-spell Spell Mastery Abilities. Source: ArMDE:4544-4547.
 pub fn spell_mastery_xp(entity: &Entity, ruleset: &Ruleset) -> u32 {
     let mut total = 0u32;
     for selection in selections_for_effects(entity, ruleset).iter() {
@@ -804,7 +804,7 @@ pub fn spell_mastery_xp(entity: &Entity, ruleset: &Ruleset) -> u32 {
 
 /// The mastery-score floor every known spell receives from
 /// [`Effect::GrantsSpellMastery`] (Flawless Magic → 1). The highest floor wins.
-/// Source: ArMDE:3958-3960.
+/// Source: ArMDE:3960-3962.
 pub fn spell_mastery_floor(entity: &Entity, ruleset: &Ruleset) -> u8 {
     let mut floor = 0u8;
     for selection in selections_for_effects(entity, ruleset).iter() {
@@ -824,7 +824,7 @@ pub fn spell_mastery_floor(entity: &Entity, ruleset: &Ruleset) -> u8 {
 /// an Affinity "counts as num/den of itself" ([`Effect::GrantsSpellMastery`]'s
 /// doubling: Flawless Magic → `(2, 1)`, halving the XP charged). `None` when no
 /// grant reduces the cost. The most generous multiplier wins, like any Affinity.
-/// Source: ArMDE:3960.
+/// Source: ArMDE:3962.
 pub fn spell_mastery_advancement_affinity(entity: &Entity, ruleset: &Ruleset) -> Option<(u8, u8)> {
     let selections = selections_for_effects(entity, ruleset);
     let found = selections.iter().flat_map(|selection| {
@@ -958,7 +958,7 @@ pub fn spell_levels_used(entity: &Entity, ruleset: &Ruleset) -> u32 {
 /// The set of `(Technique, Form)` pairs barred by every held copy of an item
 /// declaring [`crate::types::PointItem::unordered_param_groups`] — today only
 /// `flaw.incompatible_arts`, but driven entirely by that data field, not by
-/// this item's id (ArMDE:6361-6363, "unable to use two combinations of
+/// this item's id (ArMDE:6363-6365, "unable to use two combinations of
 /// Techniques and Forms"). Each group's named values are resolved against
 /// THIS selection's own `params` and placed by which key's
 /// [`ParameterDomain`] is `Technique` vs `Form` — not by position in the
@@ -1007,9 +1007,9 @@ pub(crate) fn barred_combinations(
 
 /// Whether `spell` draws on any pair in `barred` — either directly, as its
 /// primary Technique+Form, or "even if one or both are requisites"
-/// (ArMDE:6363): the cross product of `{primary technique} ∪ {Technique-class
+/// (ArMDE:6365): the cross product of `{primary technique} ∪ {Technique-class
 /// requisites}` × `{primary form} ∪ {Form-class requisites}`
-/// (ArMDE:12381-12383, "Sometimes a spell has a requisite for both its
+/// (ArMDE:12383-12385, "Sometimes a spell has a requisite for both its
 /// Technique and Form" — the same reading `derived/casting.rs::fold_requisite`
 /// already applies to the numeric Casting Total).
 pub(crate) fn spell_touches_barred_combination(

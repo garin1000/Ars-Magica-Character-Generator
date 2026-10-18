@@ -105,7 +105,7 @@ function companionTimeline(overrun_years = 0, outside: Wire[] = []): Wire {
   };
 }
 
-/** Darius (ArMDE:2554, :2556): the magus shape, with a shared post-Gauntlet span. */
+/** Darius (ArMDE:2556, :2558): the magus shape, with a shared post-Gauntlet span. */
 function magusTimeline(): Wire {
   return {
     entries: [

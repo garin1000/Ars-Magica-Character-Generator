@@ -1,7 +1,7 @@
 //! X7c (`docs/vf-audit/phase-2-plan.md` row X7c) — row 46 residue
 //! (`docs/open-todos.md` row 46; `corrections.md` § 8 row 12e): consumer-tracing
 //! the computed (`creation_effect`/`in_play_effect`) entries in the V/F audit's
-//! batches **B01–B11** (`ArMDE:3433-6002`), the span the sign-check instruction
+//! batches **B01–B11** (`ArMDE:3435-6004`), the span the sign-check instruction
 //! did NOT yet cover (it entered the briefs only at B12). Excludes every entry
 //! X7b-d (`tmp/x7bd-verdicts.md`) and X7b-e (`tmp/x7be-verdicts.md`) already
 //! traced, and anything the D4/row-49 conditional-Lab-Total-modifier class or
@@ -70,13 +70,13 @@ fn load_ruleset() -> Ruleset {
     .unwrap()
 }
 
-/// `virtue.educated_vernacular` (ArMDE:3798-3800): "gains 50 additional
+/// `virtue.educated_vernacular` (ArMDE:3800-3802): "gains 50 additional
 /// experience points, which must be spent on Academic Abilities, Bargain, the
 /// Organization Lore **of the character's company**, Profession Merchant, or
 /// the language of trade in the company's region." The Organization Lore
 /// target is the character's OWN company only — the same "link the Ability to
 /// a parameter on the granting Virtue" shape `virtue.craft_guild_training`
-/// (ArMDE:3684-3687) already implements correctly for its own "guild" param
+/// (ArMDE:3686-3689) already implements correctly for its own "guild" param
 /// (`{"ability":"ability.organization_lore","instance":{"param":"guild"}}` in
 /// `instances`, never in the unscoped `abilities` list).
 ///
@@ -105,7 +105,7 @@ fn educated_vernacular_restricts_organization_lore_to_the_characters_own_company
 
     assert!(
         !unscoped_organization_lore,
-        "ArMDE:3798-3800 restricts the Organization Lore target to \
+        "ArMDE:3800-3802 restricts the Organization Lore target to \
          'the character's company' only, not any organization; Educated \
          (Vernacular) must not list ability.organization_lore in the \
          UNSCOPED `abilities` list (which funds any instance) — it must be a \
@@ -116,11 +116,11 @@ fn educated_vernacular_restricts_organization_lore_to_the_characters_own_company
 }
 
 // ---------------------------------------------------------------------------
-// Part 2 (`ArMDE:4000-4891`, entries 61-120 of the 180-entry post-exclusion
+// Part 2 (`ArMDE:4002-4893`, entries 61-120 of the 180-entry post-exclusion
 // list) — see `tmp/x7c-verdicts.md` for the full per-entry table.
 // ---------------------------------------------------------------------------
 
-/// `virtue.inventive_genius` (ArMDE:4222-4225): "You get +3 to your Lab Total
+/// `virtue.inventive_genius` (ArMDE:4224-4227): "You get +3 to your Lab Total
 /// if you are not using a Laboratory Text or being taught. **If you
 /// experiment, you get +6.**" D4/X7a already rules the +3's "not using a Lab
 /// Text/not being taught" condition holds by default in a creation Lab
@@ -155,7 +155,7 @@ fn inventive_genius_states_its_experimentation_bonus_in_both_locales() {
     );
 }
 
-/// `virtue.magian_lineage_minor`/`_major` (ArMDE:4410-4417): Minor grants "a
+/// `virtue.magian_lineage_minor`/`_major` (ArMDE:4412-4419): Minor grants "a
 /// -1 bonus to Aging rolls **and a +3 bonus to resist the effects of
 /// disease**"; Major includes the Minor's benefits in addition to its own
 /// three-Ability connected-XP clause. Both shipped entries carry only
@@ -188,7 +188,7 @@ fn magian_lineage_states_its_disease_resistance_bonus_in_both_locales() {
     }
 }
 
-/// `virtue.physician_of_salerno` (ArMDE:4803-4806): "he carries the
+/// `virtue.physician_of_salerno` (ArMDE:4805-4808): "he carries the
 /// reputation of the school **with him** (granting a Reputation of Physician
 /// of Salerno 2)" — a reputation that travels WITH the character is
 /// precisely the one shape `ReputationType::Local` ("known to those who live
@@ -220,7 +220,7 @@ fn physician_of_salerno_reputation_kind_is_player_chosen_not_pinned_local() {
 
     assert!(
         !pinned_local,
-        "ArMDE:4803-4806, Q-55 (settled 2026-09-22): the granted Reputation \
+        "ArMDE:4805-4808, Q-55 (settled 2026-09-22): the granted Reputation \
          travels with the character, so `local` is positively wrong and the \
          kind must be the player-chosen wildcard (`None`), not pinned to any \
          `ReputationType` — least of all `Local`. Shipped effects were: {:?}",
@@ -229,14 +229,14 @@ fn physician_of_salerno_reputation_kind_is_player_chosen_not_pinned_local() {
 }
 
 // ---------------------------------------------------------------------------
-// Part 3 (`ArMDE:4893-6002`, entries 121-180 of the 180-entry post-exclusion
+// Part 3 (`ArMDE:4895-6004`, entries 121-180 of the 180-entry post-exclusion
 // list) — see `tmp/x7c-verdicts.md` for the full per-entry table.
 // ---------------------------------------------------------------------------
 
-/// `flaw.age_quickly` (ArMDE:5730-5733): "you age twice as fast as normal
+/// `flaw.age_quickly` (ArMDE:5732-5735): "you age twice as fast as normal
 /// people... your effective age... increases two years for every year that
 /// passes, and you make two aging rolls each year." `flaw.baneful_circumstances`
-/// (ArMDE:5758-5761): "the character cannot recover Fatigue, heal wounds, or
+/// (ArMDE:5760-5763): "the character cannot recover Fatigue, heal wounds, or
 /// recover Might [under stated conditions], and if... the character has spent
 /// more than half of his time subject to these conditions, he must make an
 /// additional Aging roll."
@@ -259,7 +259,7 @@ fn age_quickly_and_baneful_circumstances_state_their_mechanic_in_both_locales() 
         let de = displayed_text(DE_VF, id);
         assert!(
             en.to_lowercase().contains("aging roll") || en.to_lowercase().contains("two years"),
-            "{id}: the aging-roll mechanic (ArMDE:5732 / :5689) is not stated \
+            "{id}: the aging-roll mechanic (ArMDE:5734 / :5689) is not stated \
              in the English displayed text: {en:?}"
         );
         assert!(
@@ -270,7 +270,7 @@ fn age_quickly_and_baneful_circumstances_state_their_mechanic_in_both_locales() 
     }
 }
 
-/// `virtue.strong_faerie_blood` (ArMDE:5103-5118): "First, you have natural
+/// `virtue.strong_faerie_blood` (ArMDE:5105-5120): "First, you have natural
 /// longevity. You start making aging rolls at the age of fifty, rather than
 /// the normal 35, and get -3 to Aging Rolls". The `-3` half ships correctly
 /// (`aging_mod kind:aging_roll amount:-3`), but the "starts rolling at 50, not
@@ -286,17 +286,17 @@ fn strong_faerie_blood_states_its_delayed_aging_onset_in_both_locales() {
     let de = displayed_text(DE_VF, "virtue.strong_faerie_blood");
     assert!(
         en.contains('5') && en.to_lowercase().contains("aging"),
-        "ArMDE:5107: aging rolls start at 50 instead of 35; English displayed \
+        "ArMDE:5109: aging rolls start at 50 instead of 35; English displayed \
          text does not state it: {en:?}"
     );
     assert!(
         de.contains('5') && de.to_lowercase().contains("alter"),
-        "ArMDE:5107 (DE): aging rolls start at 50 instead of 35; German \
+        "ArMDE:5109 (DE): aging rolls start at 50 instead of 35; German \
          displayed text does not state it: {de:?}"
     );
 }
 
-/// `flaw.creative_block` (ArMDE:5944-5947): "You take a -3 penalty to all Lab
+/// `flaw.creative_block` (ArMDE:5946-5949): "You take a -3 penalty to all Lab
 /// Totals unless you are using a Laboratory Text or being taught. **If you
 /// experiment, roll twice as many dice on the experimentation table.**" The
 /// first clause ships correctly (`lab_total_mod amount:-3`, D4-consistent —

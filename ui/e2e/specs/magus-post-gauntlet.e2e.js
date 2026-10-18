@@ -5,10 +5,10 @@
 //
 // The arithmetic is the rulebook's: "For every year, the magus gets 30 points … Each
 // point can be an experience point in an Art or Ability or one level of spell"
-// (ArMDE:2539), and "For each season that
+// (ArMDE:2541), and "For each season that
 // your magus spends working on a lab project, the character loses 10 points from the
 // yearly 30 experience points, to a minimum of 0 if three or four seasons are spent on
-// lab work" (`ArMDE:2550`). For this magus:
+// lab work" (`ArMDE:2552`). For this magus:
 //
 //   later life    (25 - 5 - 15) x 15 = 75   — unchanged by the years that followed
 //   post-Gauntlet 60 - 25 = 35 years  = 35 x 30 = 1050 points
@@ -125,7 +125,7 @@ describe('a magus past its Gauntlet', () => {
     // was removed outright by manual-testing-findings #21, so the claim it made in
     // words is now made by the FIELDS and the read-out: the inputs the points come
     // from are offered, and the engine's own post-Gauntlet summary prices them at 30 a
-    // year (`ArMDE:2539`) — asserted with real numbers by the next test.
+    // year (`ArMDE:2541`) — asserted with real numbers by the next test.
     expect(await $(GAUNTLET_NOTE).isExisting()).toBe(false);
     for (const field of [
       GAUNTLET_AGE_INPUT,
@@ -172,7 +172,7 @@ describe('a magus past its Gauntlet', () => {
 
     // Each year of lab work is one of the 35 years as a magus, so 200 years of four
     // seasons (201 with the year of one) is not a plan — and since a year of four
-    // charges no more than a year of three (`ArMDE:2550`), the extra years would read
+    // charges no more than a year of three (`ArMDE:2552`), the extra years would read
     // as a bargain unless it is said out loud.
     await replaceValue(await $(LAB_YEARS_4_INPUT), '200');
     await browser.waitUntil(
@@ -217,7 +217,7 @@ describe('a magus past its Gauntlet', () => {
     });
     expect(await textOf(SUMMARY)).toContain('300 level(s) of spells');
     // (Those 650 join the general pool — the block that may buy Arts as well as
-    // Abilities, `ArMDE:2503`, `ArMDE:2539` — which the XP bar reads as 240 + 650 on the
+    // Abilities, `ArMDE:2505`, `ArMDE:2541` — which the XP bar reads as 240 + 650 on the
     // Abilities step below.)
 
     // A split larger than the points there are to divide. Reported on THIS step, which
@@ -291,7 +291,7 @@ describe('a magus past its Gauntlet', () => {
 
     // Under life-stage funding the pools are derived, so the editable field is gone.
     expect(await $(XP_POOL_INPUT).isExisting()).toBe(false);
-    // 240 of apprenticeship plus the 650 the split left as experience (`ArMDE:2503`, `ArMDE:2539`).
+    // 240 of apprenticeship plus the 650 the split left as experience (`ArMDE:2505`, `ArMDE:2541`).
     await browser.waitUntil(async () => (await textOf(XP_POOL_TOTAL)) === '890', {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'the post-Gauntlet experience should join apprenticeship in the general pool',
@@ -305,7 +305,7 @@ describe('a magus past its Gauntlet', () => {
     expect(bar).toContain('300');
 
     // THE 6b4 REGRESSION LOCK, read off the bar's own blocks. Later life stops where
-    // apprenticeship begins (`ArMDE:2282`), and apprenticeship is the fifteen years ending
+    // apprenticeship begins (`ArMDE:2284`), and apprenticeship is the fifteen years ending
     // at the GAUNTLET — so this magus lived (25 - 5 - 15) = 5 later-life years worth
     // 75, exactly as it did standing at its Gauntlet. Reading its own age instead
     // would grant 40 years and 600.
@@ -313,7 +313,7 @@ describe('a magus past its Gauntlet', () => {
     // Apprenticeship is a fixed block, untouched by the years that followed it.
     expect(await textOf(APPRENTICESHIP)).toContain('240');
 
-    // Parma Magica, Magic Theory and Latin at 1 (`ArMDE:2505`) are errors on THIS step for
+    // Parma Magica, Magic Theory and Latin at 1 (`ArMDE:2507`) are errors on THIS step for
     // every magus, so they are bought here — both because the flow cannot leave the
     // step until they are and because the steps beyond it are what the tests below are
     // about. (Before Slice 2 they had to be bought early, so that a "Next is disabled"
@@ -358,7 +358,7 @@ describe('a magus past its Gauntlet', () => {
     const available = Number(/-?\d+/.exec(await textOf(SPELL_LEVELS_AVAILABLE))[0]);
     expect(420 - used).toBe(available);
 
-    // #19: and the base is READ-ONLY at this mount — a fixed rules grant (`ArMDE:2283`)
+    // #19: and the base is READ-ONLY at this mount — a fixed rules grant (`ArMDE:2285`)
     // shown as plain text, not a disabled control assistive tech would announce.
     expect(await textOf(SPELL_LEVELS_BASE)).toBe('120');
     expect(await $(SPELL_LEVELS_BASE).getTagName()).toBe('span');
@@ -368,7 +368,7 @@ describe('a magus past its Gauntlet', () => {
     await advanceWizardTo('aging');
 
     // "a character over the age of 35 must make aging rolls … before the game begins"
-    // (`ArMDE:2300`) — which a 60-year-old magus plainly has not. The finding belongs to
+    // (`ArMDE:2302`) — which a 60-year-old magus plainly has not. The finding belongs to
     // the AGING phase, whose step is where the age is typed and the rolls are made,
     // so it is counted EXACTLY here: outside Review only the docked panel is mounted
     // and it is filtered to the current phase, which is what makes one the proof.

@@ -6,24 +6,24 @@
 //! Two independent rulebook sources are read and cross-checked:
 //!
 //! 1. The trailing `(<Category>)` parenthetical "the Ability List"
-//!    (ArMDE:7341-7860) prints at the end of each entry's own passage
-//!    (ArMDE:7343: "The type of the Ability is given in parentheses at the
+//!    (ArMDE:7343-7862) prints at the end of each entry's own passage
+//!    (ArMDE:7345: "The type of the Ability is given in parentheses at the
 //!    end of its description."). Scanned over the entry's own
 //!    `source.lines[0]..=lines[1]` range (the same heading-to-next-heading
 //!    span the data already cites), not just the line right after the
 //!    heading — unlike a Virtue/Flaw descriptor, this line sits at the END of
 //!    a (sometimes multi-paragraph, sometimes table-bearing) passage, not
 //!    directly under the heading.
-//! 2. The "Abilities by Type" summary list (ArMDE:7248-7340), which groups
+//! 2. The "Abilities by Type" summary list (ArMDE:7250-7342), which groups
 //!    every Ability's `(#anchor)` link under one of five `#### <Category>
 //!    Abilities` headings.
 //!
 //! Three entries — Embitterment, Summon Animals, Whistle Up The Wind
-//! (ArMDE:7515-7516, :7824-7825, :7855-7856) — are stub passages that only
+//! (ArMDE:7517-7518, :7826-7827, :7857-7858) — are stub passages that only
 //! cross-reference the Hermetic Magic chapter and carry no trailing
 //! parenthetical at all, so source 1 is silent for them and source 2 (which
 //! lists all three under Supernatural Abilities) is what settles their
-//! category. Conversely Music (ArMDE:7726-7728, own passage ends
+//! category. Conversely Music (ArMDE:7728-7730, own passage ends
 //! "(General)") is missing from the General Abilities summary list entirely
 //! — a book omission source 2 cannot see — so source 1 settles it instead.
 //! The two sources are therefore mutual fallbacks: an entry seen by only one
@@ -31,7 +31,7 @@
 //! by neither is a genuine parser gap, not a silent skip.
 //!
 //! `requires_training` comes from a third, independent place: whether the
-//! entry's own `####` heading line ends in a literal `\*` (ArMDE:7199:
+//! entry's own `####` heading line ends in a literal `\*` (ArMDE:7201:
 //! asterisked Abilities cannot be used without at least one experience
 //! point). This does not depend on either category source.
 //!
@@ -141,7 +141,7 @@ fn own_descriptor_category(text: &str, start: usize, end: usize) -> Option<&'sta
 /// Whether the entry's own `####` heading line (`source.lines[0]`) ends in a
 /// literal `\*` — the book's own asterisk marker for an Ability that
 /// "cannot even attempt rolls on an asterisked Ability without at least one
-/// experience point in it" (ArMDE:4228, the Jack of All Trades Virtue
+/// experience point in it" (ArMDE:4230, the Jack of All Trades Virtue
 /// spelling out the rule this flag gates). `None` means `heading_line` is not
 /// actually a `#### ` heading line at all — a parser-gap failure, surfaced
 /// rather than defaulted.
@@ -153,8 +153,8 @@ fn heading_requires_training(text: &str, heading_line: usize) -> Option<bool> {
         .then(|| trimmed.ends_with("\\*"))
 }
 
-/// Parses the "Abilities by Type" summary list (ArMDE:7246 "## Abilities by
-/// Type" through just before ArMDE:7341 "## Ability List"): five `####
+/// Parses the "Abilities by Type" summary list (ArMDE:7248 "## Abilities by
+/// Type" through just before ArMDE:7343 "## Ability List"): five `####
 /// <Category> Abilities` headings, each followed by `[<Label>](#<anchor>)<br>`
 /// lines. Returns anchor -> category slug. Used only as a fallback for the
 /// few entries whose own passage carries no trailing category parenthetical
@@ -354,7 +354,7 @@ fn ruled_exceptions_still_mismatch() {
 fn check_rejects_synthetic_wrong_entries() {
     let summary = summary_list_categories(EN_CORE_RULES);
 
-    // Wrong category: Animal Handling (ArMDE:7345-7347) is really General.
+    // Wrong category: Animal Handling (ArMDE:7347-7349) is really General.
     let wrong_category = Entry {
         id: "ability.animal_handling".to_string(),
         category: "arcane".to_string(),
@@ -368,7 +368,7 @@ fn check_rejects_synthetic_wrong_entries() {
         "a deliberately wrong category must be rejected"
     );
 
-    // Wrong requires_training: Animal Ken (ArMDE:7349-7351) really requires
+    // Wrong requires_training: Animal Ken (ArMDE:7351-7353) really requires
     // training (its heading carries the book's own `\*`).
     let wrong_training = Entry {
         id: "ability.animal_ken".to_string(),
@@ -384,7 +384,7 @@ fn check_rejects_synthetic_wrong_entries() {
     );
 
     // No descriptor in its own range AND absent from the summary list.
-    // Embitterment's real range (ArMDE:7515-7516) genuinely carries no
+    // Embitterment's real range (ArMDE:7517-7518) genuinely carries no
     // trailing category parenthetical — but its real anchor ("embitterment-1")
     // IS in the summary list, so a bogus anchor is substituted to make the
     // summary-list lookup miss too, landing in check()'s (None, None) branch.

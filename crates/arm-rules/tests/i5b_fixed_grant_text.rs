@@ -1,8 +1,8 @@
 //! I5b: a grant's fixed free-text parameter value is translatable text, so it
 //! may not sit in a language-neutral mechanics file as English words.
 //!
-//! House Tremere grants "Minor Magical Focus (certamen)" (ArMDE:2349 `####
-//! Hermetic Houses Summary`; also ArMDE:2132 `#### Tremere`), which the German
+//! House Tremere grants "Minor Magical Focus (certamen)" (ArMDE:2351 `####
+//! Hermetic Houses Summary`; also ArMDE:2134 `#### Tremere`), which the German
 //! book prints as "Kleiner Magischer Fokus (Certamen)" (its same line). The
 //! focus is a `text`-domain parameter, so a value typed into `rules/core/` was
 //! shown as typed in both locales — lowercase in German, where Certamen is a
@@ -283,7 +283,7 @@ fn every_fixed_grant_text_value_has_text_in_every_shipped_locale() {
 }
 
 /// The words themselves, as each book prints them: "Minor Magical Focus
-/// (certamen)." (ArMDE:2349) and "Kleiner Magischer Fokus (Certamen)." (the
+/// (certamen)." (ArMDE:2351) and "Kleiner Magischer Fokus (Certamen)." (the
 /// German book, same line). Certamen is kept untranslated, Latin, and a German
 /// noun is capitalised (`grundbegriffe.md`, Certamen row).
 #[test]

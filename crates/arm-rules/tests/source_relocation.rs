@@ -734,7 +734,7 @@ fn old_boundary_self_check_passes_when_the_formula_already_matches_history() {
 }
 
 /// The real-world case the sweep's first identity run discovered beyond the
-/// two known guard-exemption lists: `flaw.wrathful_*` (ArMDE:7177-7179)
+/// two known guard-exemption lists: `flaw.wrathful_*` (ArMDE:7179-7181)
 /// stops at its own last body line, but the generic formula would walk past
 /// a horizontal rule and an unrelated blockquoted flavour-text paragraph
 /// (the Chapter 5 break's own decoration) to reach the next real heading —
@@ -789,7 +789,7 @@ fn relocate_anchor(old_text: &str, new_text: &str, anchor: &str, level: usize) -
 /// passage, not a tool guessing from similarity. Confirmed by reading the new
 /// file at the passage's own body text, not the stale heading:
 /// - `virtue.bard` (`#rard`) — an OCR fix; the heading now reads "Bard"
-///   (ArMDE:3547), anchor `bard`.
+///   (ArMDE:3549), anchor `bard`.
 /// - `spell.sense_the_feet_that_tread_the_earth`
 ///   (`#sense-the-feet-that-thread-the-earth`) — reworded "Thread" ->
 ///   "Tread" (same file, line 15411), anchor

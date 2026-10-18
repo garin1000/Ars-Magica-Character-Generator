@@ -1,12 +1,12 @@
 //! X9b (`docs/vf-audit/corrections.md` F-16, `docs/vf-audit/phase-2-plan.md`
-//! row X9b) — `virtue.rard` is a scanno: ArMDE:3547 prints the heading
-//! `#### Rard`, but the book's own index (`ArMDE:24372`, `| Bard (Virtue) |
+//! row X9b) — `virtue.rard` is a scanno: ArMDE:3549 prints the heading
+//! `#### Rard`, but the book's own index (`ArMDE:24374`, `| Bard (Virtue) |
 //! [71](#bard) |`) and `rules/source/de/translation-tables/tugenden-fehler.md:243`
 //! (`| Bard | Barde | ... |`) both read "Bard". The English `name` is wrong
 //! and so is the **id**: `virtue.rard` must become `virtue.bard`.
 //!
 //! `source.anchor` does **NOT** change — it stays `"rard"` because the
-//! *heading itself* is still spelled `#### Rard` (confirmed: ArMDE:3547), and
+//! *heading itself* is still spelled `#### Rard` (confirmed: ArMDE:3549), and
 //! Guard A (`rules_source_provenance.rs`) compares the anchor against the
 //! heading, not the corrected name. Name and id track the truth; the anchor
 //! tracks the book. The German heading has no scanno (`Ars Magica Definitive
@@ -26,7 +26,7 @@
 //! true against the pre-resync book and is kept as the historical record of
 //! why the anchor was deliberately left alone at the time — but the re-sync
 //! landed exactly the OCR fix the book's own index already implied: the
-//! heading now reads `#### Bard` (confirmed: ArMDE:3547). The anchor changes WITH it,
+//! heading now reads `#### Bard` (confirmed: ArMDE:3549). The anchor changes WITH it,
 //! per `source_relocation.rs`'s documented `ANCHOR_OVERRIDES` —
 //! `virtue_bard_keeps_the_rard_anchor_because_the_heading_still_misspells_it`
 //! (below) is renamed and its assertions updated accordingly.
@@ -165,8 +165,8 @@ fn virtue_bard_exists_with_correct_en_and_de_names() {
     assert_eq!(
         en.display_name(&new_id),
         Some("Bard"),
-        "the English name is the scanno \"Rard\" today (ArMDE:3547); the book's \
-         own index (ArMDE:24372) reads \"Bard\""
+        "the English name is the scanno \"Rard\" today (ArMDE:3549); the book's \
+         own index (ArMDE:24374) reads \"Bard\""
     );
 
     let de = LocalizedRuleset::new(shipped_ruleset(), DE_VF).expect("DE i18n loads");
@@ -179,7 +179,7 @@ fn virtue_bard_exists_with_correct_en_and_de_names() {
 }
 
 /// P8-3 (2026-10-09): upstream's re-sync fixed the OCR scanno this test's own
-/// name documents — the heading now reads `#### Bard` (ArMDE:3547),
+/// name documents — the heading now reads `#### Bard` (ArMDE:3549),
 /// confirmed by reading the new file directly, not assumed. The anchor
 /// therefore changes WITH the heading this time (Guard A still compares the
 /// anchor against the heading, not the corrected name — that rule is
@@ -205,7 +205,7 @@ fn virtue_bard_now_matches_the_bard_anchor_because_upstream_fixed_the_heading() 
     );
     assert_eq!(
         source.lines,
-        LineRange::new(3547, 3549),
+        LineRange::new(3549, 3551),
         "the cited range moved with the resync, to the entry's new position"
     );
     assert_eq!(

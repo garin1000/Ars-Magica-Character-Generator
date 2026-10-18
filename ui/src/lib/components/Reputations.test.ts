@@ -133,7 +133,7 @@ describe('Reputations grant gating', () => {
 
   it('pre-fills an unfilled ranged grant with its minimum level (Outsider, D11/Q5)', () => {
     // Outsider grants Local 1, max_score 3 ("a bad Reputation of level 1 to
-    // 3", ArMDE:6625). Nothing is stored yet, so the level control must show
+    // 3", ArMDE:6627). Nothing is stored yet, so the level control must show
     // the grant's own score — the minimum of the range — not some other
     // figure. A ranged grant's attribution line omits the level (it says only
     // "from { $source }") since the level control renders it instead — see

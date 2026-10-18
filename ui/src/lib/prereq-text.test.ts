@@ -226,7 +226,7 @@ describe('describePrereq — compounds', () => {
 });
 
 describe('describePrereq — shipped entries', () => {
-  // ArMDE:6601: "Characters with The Gift may take this Flaw only if they have
+  // ArMDE:6603: "Characters with The Gift may take this Flaw only if they have
   // the Gentle Gift" — data: none-of(The Gift) OR Gentle Gift.
   it('names what Offensive to (Beings) requires', () => {
     const tree = (lang: Lang) =>

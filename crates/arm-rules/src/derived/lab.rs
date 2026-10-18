@@ -10,7 +10,7 @@ use super::*;
 ///
 /// Lab Total = Int + Magic Theory + Technique + Form + Aura + flat LabTotalMod;
 /// within a Magical Focus the lower applicable Art is added again; a Deficient Art
-/// halves the whole cell. Source: ArMDE:10348-10350 (Lab Total shape), :4151-4154
+/// halves the whole cell. Source: ArMDE:10350-10352 (Lab Total shape), :4151-4154
 /// (Inventive Genius, the flat `LabTotalMod`), :4399-4422 (focus doubling),
 /// :5909-5915 (Deficient halving).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -38,7 +38,7 @@ pub struct LabTotal {
     pub within_potent_field: Option<i32>,
     /// Whether a Deficient Art halved this cell.
     pub deficient: bool,
-    /// `total`, halved again for Weak Enchanter (ArMDE:7131-7134: "Halve your Lab Total whenever you
+    /// `total`, halved again for Weak Enchanter (ArMDE:7133-7136: "Halve your Lab Total whenever you
     /// create or investigate an enchanted item. If you have a Deficiency that
     /// counts as part of the Lab Total, apply the Deficiency first and then
     /// halve the remaining total"). Equal to `total` for anyone without the
@@ -49,12 +49,12 @@ pub struct LabTotal {
     pub enchanting: i32,
     /// Whether this cell's `(Technique, Form)` pair is one of a held Incompatible
     /// Arts Flaw's two combinations (D81.8, `docs/vf-audit/decisions.md`;
-    /// ArMDE:6361-6363).
+    /// ArMDE:6363-6365).
     pub unusable: bool,
 }
 
 /// Lab Totals for every `(Technique, Form)` pair — the 5×10 grid. Source:
-/// ArMDE:10348-10350.
+/// ArMDE:10350-10352.
 pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
     let mods = in_play_mods(entity, ruleset);
     let intelligence = characteristic(entity, ruleset, Characteristic::Int);
@@ -80,7 +80,7 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
                 Addend::new("lab_mod", mods.lab_mod),
             ];
             // Lab Total, not Casting Total: requisite folding stays an M4
-            // approximation here (ArMDE:2533/:10350/:10746 — see RULES.md and
+            // approximation here (ArMDE:2535/:10350/:10746 — see RULES.md and
             // `tmp/requisites-handover.md` §5), so no requisites are threaded
             // through at all.
             let deficient = mods.deficient(&technique, &form, &[]);
@@ -131,8 +131,8 @@ pub fn lab_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<LabTotal> {
 /// stored value.
 ///
 /// "+1 bonus for every five points or fraction of Creo Corpus Lab Total"
-/// (ArMDE:10734). Shown beside the entered-bonus input so a player who is creating
-/// the ritual now (or reinventing it after an aging crisis, ArMDE:10740, :10742) can
+/// (ArMDE:10736). Shown beside the entered-bonus input so a player who is creating
+/// the ritual now (or reinventing it after an aging crisis, ArMDE:10742, :10744) can
 /// read off the number the rules give them. It moves whenever Creo, Corpus,
 /// Intelligence, Magic Theory or the aura move — which is exactly why the *stored*
 /// bonus must not be derived from it.
@@ -150,11 +150,11 @@ pub struct LongevityHint {
 ///
 /// `bonus` is what the player entered, for **both** sources — the ritual is a past
 /// event whose bonus was fixed by the Lab Total of the season it was made
-/// (ArMDE:10734, :10742), so nothing here is derived. `entered` distinguishes an
+/// (ArMDE:10736, :10744), so nothing here is derived. `entered` distinguishes an
 /// unfilled field from a deliberate 0. `hint` carries the live suggestion for a
 /// self-made ritual only. The Bronze cord adds "to rolls to resist aging"
-/// (ArMDE:10916) and is noted separately, since it is not part of the ritual; it goes
-/// through [`bronze_cord_bonus`], so it can never exceed the +5 maximum (ArMDE:10908)
+/// (ArMDE:10918) and is noted separately, since it is not part of the ritual; it goes
+/// through [`bronze_cord_bonus`], so it can never exceed the +5 maximum (ArMDE:10910)
 /// or disagree with the Soak and cord-cost read-outs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LongevityBonus {
@@ -166,9 +166,9 @@ pub struct LongevityBonus {
     pub entered: bool,
     /// The Bronze-cord bonus, noted here and **not** summed into `bonus`.
     ///
-    /// The cord applies "to rolls to resist aging" (ArMDE:10916), and the roll that
+    /// The cord applies "to rolls to resist aging" (ArMDE:10918), and the roll that
     /// referent names is the **crisis survival** roll — an aging roll itself is not
-    /// passed or failed, and ArMDE:16713 keeps the two roll families apart. So this
+    /// passed or failed, and ArMDE:16715 keeps the two roll families apart. So this
     /// line is informational on the ritual panel; the cord reaches a total through
     /// [`bronze_cord_bonus`] on the crisis-survival read-out, not here.
     pub bronze_cord: i32,
@@ -178,13 +178,13 @@ pub struct LongevityBonus {
 }
 
 /// The Longevity Ritual read-out, or `None` when the magus has no ritual. Source:
-/// ArMDE:10734 (formula), :10668 + :10670 (the bonus is fixed at creation and only a
+/// ArMDE:10736 (formula), :10668 + :10670 (the bonus is fixed at creation and only a
 /// reinvention takes advantage of raised Arts), :10844 (Bronze cord).
 pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBonus> {
     let ritual = entity.longevity_ritual.as_ref()?;
     let bronze = bronze_cord_bonus(entity);
     // A hint only makes sense for a ritual this magus makes: an external one came
-    // from another magus's Lab Total, which this sheet does not know (ArMDE:10744).
+    // from another magus's Lab Total, which this sheet does not know (ArMDE:10746).
     let hint = match ritual.source {
         LongevitySource::SelfMade => {
             let (lab_total, halved) = creo_corpus_lab_total(entity, ruleset);
@@ -208,14 +208,14 @@ pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBo
 /// The Creo Corpus Lab Total and whether it was halved.
 ///
 /// "Your basic Lab Total is: Technique + Form + Intelligence + Magic Theory + Aura
-/// Modifier" (ArMDE:10348-10350) plus any flat Lab-Total modifier. The Aura Modifier
+/// Modifier" (ArMDE:10350-10352) plus any flat Lab-Total modifier. The Aura Modifier
 /// is a plain addend with no floor and no gate: a zero aura is simply "the absence
-/// of aura, so powers used there function without hindrance" (ArMDE:17735).
+/// of aura, so powers used there function without hindrance" (ArMDE:17737).
 ///
 /// Two halvings can apply. A Deficient Creo or Corpus halves "almost all totals
-/// (including … Lab Totals) to which a particular Form is added" (ArMDE:5980-5986),
+/// (including … Lab Totals) to which a particular Form is added" (ArMDE:5982-5988),
 /// and Difficult Longevity Ritual makes anyone "creating a Longevity Ritual for you
-/// … halve their Lab Total" (ArMDE:6033-6035). **That the two compound is an
+/// … halve their Lab Total" (ArMDE:6035-6037). **That the two compound is an
 /// inference**: each Flaw halves the Lab Total and neither carves out the other, but
 /// no passage states the interaction. The order is immaterial — the two are the
 /// same operation, and [`halve`] floors (ArMDE:615), so halving twice is
@@ -239,7 +239,7 @@ fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> (i32, bool) {
         mods.lab_mod,
     ]);
     // Lab Total, not Casting Total: requisite folding stays an M4
-    // approximation here (ArMDE:2533/:10350/:10746) — no requisites threaded
+    // approximation here (ArMDE:2535/:10350/:10746) — no requisites threaded
     // through.
     let deficient = mods.deficient(&Id::new(ID_CREO), &Id::new(ID_CORPUS), &[]);
     let difficult = mods.halvings.contains(&HalvableTotal::LabLongevity);
@@ -254,7 +254,7 @@ fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> (i32, bool) {
 }
 
 /// The bonus a Creo Corpus Lab Total buys: "+1 bonus for every five points or
-/// fraction" (ArMDE:10734), i.e. `ceil(lab_total / 5)`. A non-positive Lab Total buys
+/// fraction" (ArMDE:10736), i.e. `ceil(lab_total / 5)`. A non-positive Lab Total buys
 /// nothing — there is no fraction of five points below one point.
 fn suggested_longevity_bonus(lab_total: i32) -> i32 {
     if lab_total <= 0 {
@@ -270,13 +270,13 @@ fn suggested_longevity_bonus(lab_total: i32) -> i32 {
 ///
 /// The Masterpiece Virtue lets the magus keep one *lesser enchanted item* he
 /// designed "based on his Lab Totals at character generation, following the
-/// regular rules for construction of such a device" (ArMDE:4547-4550). The
+/// regular rules for construction of such a device" (ArMDE:4549-4552). The
 /// regular lesser-enchantment rule caps a single-season instillation at
 /// `Lab Total ≥ 2 × effect level`, i.e. the effect level may not exceed
-/// `Lab Total ÷ 2` (ArMDE:10482). Vis costs are ignored (the parens provided
+/// `Lab Total ÷ 2` (ArMDE:10484). Vis costs are ignored (the parens provided
 /// them), so the only bound the engine can honestly compute is that Lab-Total
 /// cap. Designing this item *is* creating an enchanted item, so a Weak
-/// Enchanter's halved `enchanting` figure (ArMDE:7131-7134) is "the regular rules for construction of such a
+/// Enchanter's halved `enchanting` figure (ArMDE:7133-7136) is "the regular rules for construction of such a
 /// device" for that magus — this cap is built from `enchanting`, not the plain
 /// `total`, and the two are equal for anyone without the Flaw. The best base
 /// `(Technique, Form)` cell is used — the magus is free to pick the
@@ -297,7 +297,7 @@ pub struct MasterpieceCap {
     /// doubling) — Weak Enchanter-halved when that Flaw applies, equal to the
     /// plain Lab Total otherwise.
     pub lab_total: i32,
-    /// The maximum lesser-enchantment effect level: `lab_total ÷ 2` (ArMDE:10482).
+    /// The maximum lesser-enchantment effect level: `lab_total ÷ 2` (ArMDE:10484).
     pub cap: i32,
 }
 
@@ -326,7 +326,7 @@ pub(super) fn best_lab_total_by(
 }
 
 /// The Masterpiece lesser-item cap, or `None` when the magus lacks the Virtue.
-/// Source: ArMDE:4547-4550 (Virtue),
+/// Source: ArMDE:4549-4552 (Virtue),
 /// :10410 (lesser-enchantment cap), :7060-7063 (Weak Enchanter halving applies
 /// here too, since designing the item is creating an enchanted item).
 /// `totals` is the caller's already-built Lab-Total grid (see

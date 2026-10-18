@@ -76,7 +76,7 @@ fn issue_codes(result: &ValidationResult) -> Vec<&str> {
 // rather than by constructing `Prereq::IsGrog` in test code.
 // ---------------------------------------------------------------------------
 
-/// D68.9: "Grogs may not take this Virtue" (ArMDE:5210). Live gap today — no
+/// D68.9: "Grogs may not take this Virtue" (ArMDE:5212). Live gap today — no
 /// `prerequisites` on `virtue.temporal_influence` at all.
 #[test]
 fn grog_is_refused_temporal_influence() {
@@ -85,13 +85,13 @@ fn grog_is_refused_temporal_influence() {
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"prereq_not_met"),
-        "ArMDE:5210 'Grogs may not take this Virtue' — a grog taking Temporal \
+        "ArMDE:5212 'Grogs may not take this Virtue' — a grog taking Temporal \
          Influence must be refused, got: {:?}",
         issue_codes(&result)
     );
 }
 
-/// D68.9: "This Flaw may only be taken by grogs" (ArMDE:5818). A companion
+/// D68.9: "This Flaw may only be taken by grogs" (ArMDE:5820). A companion
 /// must be refused; a grog stays legal.
 #[test]
 fn companion_is_refused_bound_to_role() {
@@ -107,7 +107,7 @@ fn companion_is_refused_bound_to_role() {
     let companion_result = validate(&companion, &rs);
     assert!(
         issue_codes(&companion_result).contains(&"prereq_not_met"),
-        "ArMDE:5818 'may only be taken by grogs' — a companion taking Bound \
+        "ArMDE:5820 'may only be taken by grogs' — a companion taking Bound \
          to Role must be refused, got: {:?}",
         issue_codes(&companion_result)
     );
@@ -128,7 +128,7 @@ fn companion_is_refused_bound_to_role() {
     );
 }
 
-/// D68.9: "Grogs may not take this Flaw" (ArMDE:6619).
+/// D68.9: "Grogs may not take this Flaw" (ArMDE:6621).
 #[test]
 fn grog_is_refused_outlaw_leader() {
     let rs = load_ruleset();
@@ -136,13 +136,13 @@ fn grog_is_refused_outlaw_leader() {
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"prereq_not_met"),
-        "ArMDE:6619 'Grogs may not take this Flaw' — a grog taking Outlaw \
+        "ArMDE:6621 'Grogs may not take this Flaw' — a grog taking Outlaw \
          Leader must be refused, got: {:?}",
         issue_codes(&result)
     );
 }
 
-/// F-24/D38: "Magi and Grogs may not take this Virtue" (ArMDE:3588) — only
+/// F-24/D38: "Magi and Grogs may not take this Virtue" (ArMDE:3590) — only
 /// companions (and mythic companions) may. This is exactly `IsCompanion`,
 /// already built (E1) — the gap here is purely that `virtue.blood_of_the_nephilim`
 /// carries no `prerequisites` yet.
@@ -154,7 +154,7 @@ fn blood_of_the_nephilim_is_refused_to_magus_and_grog_but_legal_for_companion() 
     let magus_result = validate(&magus, &rs);
     assert!(
         issue_codes(&magus_result).contains(&"prereq_not_met"),
-        "ArMDE:3588 'Magi... may not take this Virtue' — a magus must be \
+        "ArMDE:3590 'Magi... may not take this Virtue' — a magus must be \
          refused, got: {:?}",
         issue_codes(&magus_result)
     );
@@ -163,7 +163,7 @@ fn blood_of_the_nephilim_is_refused_to_magus_and_grog_but_legal_for_companion() 
     let grog_result = validate(&grog, &rs);
     assert!(
         issue_codes(&grog_result).contains(&"prereq_not_met"),
-        "ArMDE:3588 '...and Grogs may not take this Virtue' — a grog must be \
+        "ArMDE:3590 '...and Grogs may not take this Virtue' — a grog must be \
          refused, got: {:?}",
         issue_codes(&grog_result)
     );
@@ -182,7 +182,7 @@ fn blood_of_the_nephilim_is_refused_to_magus_and_grog_but_legal_for_companion() 
 // where the passage names the Order, a House, or the Gauntlet).
 // ---------------------------------------------------------------------------
 
-/// F-532: "only applicable to magi" (ArMDE:6922-6925, the Gauntlet is named
+/// F-532: "only applicable to magi" (ArMDE:6924-6927, the Gauntlet is named
 /// one sentence earlier) → `Prereq::OrderMember`.
 #[test]
 fn tormenting_master_requires_order_membership() {
@@ -191,7 +191,7 @@ fn tormenting_master_requires_order_membership() {
     let companion_result = validate(&companion, &rs);
     assert!(
         issue_codes(&companion_result).contains(&"prereq_not_met"),
-        "ArMDE:6922-6925 'only applicable to magi' — a companion must be \
+        "ArMDE:6924-6927 'only applicable to magi' — a companion must be \
          refused, got: {:?}",
         issue_codes(&companion_result)
     );
@@ -228,13 +228,13 @@ fn vendetta_house_half_stays_advisory_and_magus_half_becomes_a_hard_gate() {
     let companion_result = validate(&companion, &rs);
     assert!(
         issue_codes(&companion_result).contains(&"prereq_not_met"),
-        "ArMDE:7026-7029 restricts Vendetta to magi (unhedged) — a companion \
+        "ArMDE:7028-7031 restricts Vendetta to magi (unhedged) — a companion \
          must be refused, got: {:?}",
         issue_codes(&companion_result)
     );
 }
 
-/// F-448: "You must be a Redcap or magus to take this Flaw" (ArMDE:6321) —
+/// F-448: "You must be a Redcap or magus to take this Flaw" (ArMDE:6323) —
 /// `any[has(virtue.redcap), has(virtue.lone_redcap), order_member]`.
 #[test]
 fn hermetic_patron_requires_redcap_or_magus() {
@@ -244,7 +244,7 @@ fn hermetic_patron_requires_redcap_or_magus() {
     let bare_result = validate(&bare_companion, &rs);
     assert!(
         issue_codes(&bare_result).contains(&"prereq_not_met"),
-        "ArMDE:6321 'You must be a Redcap or magus' — a companion with \
+        "ArMDE:6323 'You must be a Redcap or magus' — a companion with \
          neither must be refused, got: {:?}",
         issue_codes(&bare_result)
     );
@@ -276,7 +276,7 @@ fn hermetic_patron_requires_redcap_or_magus() {
 // ---------------------------------------------------------------------------
 
 /// F-502: "a Social Status Virtue dictating his place within the university"
-/// (ArMDE:6744) — a non-university Social Status must not satisfy this.
+/// (ArMDE:6746) — a non-university Social Status must not satisfy this.
 #[test]
 fn rector_without_a_university_status_is_refused_and_with_one_is_legal() {
     let rs = load_ruleset();
@@ -288,7 +288,7 @@ fn rector_without_a_university_status_is_refused_and_with_one_is_legal() {
     let non_university_result = validate(&non_university, &rs);
     assert!(
         issue_codes(&non_university_result).contains(&"prereq_not_met"),
-        "ArMDE:6744 names a status 'within the university' specifically — a \
+        "ArMDE:6746 names a status 'within the university' specifically — a \
          non-university Social Status (Merchant) must not satisfy it, got: {:?}",
         issue_codes(&non_university_result)
     );
@@ -297,13 +297,13 @@ fn rector_without_a_university_status_is_refused_and_with_one_is_legal() {
     let university_result = validate(&university, &rs);
     assert!(
         !issue_codes(&university_result).contains(&"prereq_not_met"),
-        "Beadle (ArMDE:3551-3554, 'employed by a university') must satisfy \
+        "Beadle (ArMDE:3553-3556, 'employed by a university') must satisfy \
          Rector's requirement, got: {:?}",
         issue_codes(&university_result)
     );
 }
 
-/// D41: "must select a separate guild Social Status Virtue" (ArMDE:4512) — a
+/// D41: "must select a separate guild Social Status Virtue" (ArMDE:4514) — a
 /// non-guild Social Status must not satisfy this.
 #[test]
 fn male_guild_sponsor_without_a_guild_status_is_refused_and_with_one_is_legal() {
@@ -316,7 +316,7 @@ fn male_guild_sponsor_without_a_guild_status_is_refused_and_with_one_is_legal() 
     let non_guild_result = validate(&non_guild, &rs);
     assert!(
         issue_codes(&non_guild_result).contains(&"prereq_not_met"),
-        "ArMDE:4512 names a SEPARATE GUILD Social Status specifically — a \
+        "ArMDE:4514 names a SEPARATE GUILD Social Status specifically — a \
          non-guild Social Status (Merchant) must not satisfy it, got: {:?}",
         issue_codes(&non_guild_result)
     );
@@ -341,7 +341,7 @@ fn male_guild_sponsor_without_a_guild_status_is_refused_and_with_one_is_legal() 
 // Group D — D51's four worked instances.
 // ---------------------------------------------------------------------------
 
-/// D51 row 1 ("also have" → prerequisite): ArMDE:4593 "All known members of
+/// D51 row 1 ("also have" → prerequisite): ArMDE:4595 "All known members of
 /// the Mercurian lineage also have the Minor Flaw Ceremonial Spontaneous
 /// Magic."
 #[test]
@@ -352,7 +352,7 @@ fn mercurian_magic_requires_ceremonial_spontaneous_magic() {
     let without_result = validate(&without_flaw, &rs);
     assert!(
         issue_codes(&without_result).contains(&"prereq_not_met"),
-        "ArMDE:4593 — Mercurian Magic without Ceremonial Spontaneous Magic \
+        "ArMDE:4595 — Mercurian Magic without Ceremonial Spontaneous Magic \
          must be refused, got: {:?}",
         issue_codes(&without_result)
     );
@@ -374,7 +374,7 @@ fn mercurian_magic_requires_ceremonial_spontaneous_magic() {
 }
 
 /// D51 row 3 ("can only be bought if... also has the Leprosy Flaw" →
-/// prerequisite): ArMDE:4320-4323. The House Tytalus gate is ALREADY landed
+/// prerequisite): ArMDE:4322-4325. The House Tytalus gate is ALREADY landed
 /// (X3) — SANITY, must not regress.
 #[test]
 fn leper_magus_requires_leprosy() {
@@ -445,9 +445,9 @@ fn leper_magus_grants_life_boost_via_grants_selection() {
     );
 }
 
-/// D68.11: Mythic Blood's hereditary Minor Personality Flaw (ArMDE:4659,
+/// D68.11: Mythic Blood's hereditary Minor Personality Flaw (ArMDE:4661,
 /// "both at no extra cost") is an OPEN grant — no fixed id — that costs no
-/// points but counts toward the Personality caps (ArMDE:2888).
+/// points but counts toward the Personality caps (ArMDE:2890).
 #[test]
 fn mythic_blood_open_flaw_grant_counts_toward_personality_cap() {
     let rs = load_ruleset();
@@ -467,13 +467,13 @@ fn mythic_blood_open_flaw_grant_counts_toward_personality_cap() {
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"too_many_personality_flaws"),
-        "ArMDE:2888/:4588 — Mythic Blood's granted hereditary Minor \
+        "ArMDE:2890/:4588 — Mythic Blood's granted hereditary Minor \
          Personality Flaw must count toward the Personality cap, got: {:?}",
         issue_codes(&result)
     );
 }
 
-/// SANITY, correcting `tmp/x3-scope.md`'s "not a question" note: ArMDE:4476
+/// SANITY, correcting `tmp/x3-scope.md`'s "not a question" note: ArMDE:4478
 /// "only one Magical Focus... regardless of the source" is ALREADY enforced
 /// today, and by the more general mechanism — `validate_magical_focus` counts
 /// `Effect::MagicalFocus` across every bought+granted selection, and Mythic
@@ -494,7 +494,7 @@ fn mythic_blood_and_a_standalone_magical_focus_already_trip_the_one_focus_rule()
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"multiple_magical_foci"),
-        "ArMDE:4476 'only one Magical Focus... regardless of the source' — \
+        "ArMDE:4478 'only one Magical Focus... regardless of the source' — \
          Mythic Blood + a standalone Magical Focus Virtue must already trip \
          validate_magical_focus's count>1 check, got: {:?}",
         issue_codes(&result)
@@ -522,7 +522,7 @@ fn plagued_by_supernatural_entity_has_no_effects_to_copy() {
 
 // ---------------------------------------------------------------------------
 // Group E — F-270/F-283: add the Educated (Hebrew) prerequisite (the heading
-// exists at ArMDE:3794 and the entry is already in the catalogue, X1).
+// exists at ArMDE:3796 and the entry is already in the catalogue, X1).
 // ---------------------------------------------------------------------------
 
 #[test]
@@ -533,7 +533,7 @@ fn shamash_requires_educated_hebrew() {
     let without_result = validate(&without, &rs);
     assert!(
         issue_codes(&without_result).contains(&"prereq_not_met"),
-        "ArMDE:5015 'the character must have the Educated (Hebrew) Virtue' — \
+        "ArMDE:5017 'the character must have the Educated (Hebrew) Virtue' — \
          Shamash without it must be refused, got: {:?}",
         issue_codes(&without_result)
     );
@@ -558,7 +558,7 @@ fn sofer_requires_educated_hebrew() {
     let without_result = validate(&without, &rs);
     assert!(
         issue_codes(&without_result).contains(&"prereq_not_met"),
-        "ArMDE:5067 'the character must have the Educated (Hebrew) Virtue' — \
+        "ArMDE:5069 'the character must have the Educated (Hebrew) Virtue' — \
          Sofer without it must be refused, got: {:?}",
         issue_codes(&without_result)
     );

@@ -44,10 +44,10 @@ import { e2eFile } from '../wdio.conf.js';
 // the buy cap — and Puissant Ability (+2) shows as an "effective" badge on its
 // target ability.
 //
-// The rule is `ArMDE:4060`: "You may raise any Characteristic that already has a
+// The rule is `ArMDE:4062`: "You may raise any Characteristic that already has a
 // score of at least +3 by one point, to no more than +5." The verb is active on
-// the Virtue's part, exactly like Giant Blood's free +1 (`ArMDE:4048`), and the
-// printed point-buy table (`ArMDE:2414-2422`) stops at +-3 and prints no cost for
+// the Virtue's part, exactly like Giant Blood's free +1 (`ArMDE:4050`), and the
+// printed point-buy table (`ArMDE:2416-2424`) stops at +-3 and prints no cost for
 // +4 or +5 — so there is no price at which a player could buy that point. The
 // bought score therefore stays capped at +3 and the +4 arrives as a granted bonus,
 // rendered through the same effective-score badge Giant Blood already uses.
@@ -293,7 +293,7 @@ describe('Ability parameter picker (CV7): choosing a catalogued value', () => {
 describe('validation errors', () => {
   it('shows a localized, error-severity issue for a forbidden-category selection', async () => {
     // A fresh companion already carries exactly one issue: the mandatory Social
-    // Status floor (D41, ArMDE:2884) — the same shape as a fresh magus already
+    // Status floor (D41, ArMDE:2886) — the same shape as a fresh magus already
     // showing a missing required-trait error. So "before any other selection"
     // means exactly one issue, matched by its code (never by English text), not
     // zero — a `no-issues` empty state would be wrong now, not a defect.
@@ -579,7 +579,7 @@ describe('phase-3 virtue/flaw effects', () => {
 // magnitude pair of the same Flaw (Ambitious).
 describe('mutually exclusive Virtues/Flaws', () => {
   const INCOMPATIBLE_ISSUE = '[data-testid="issue-list"] li[data-code="incompatible"]';
-  // D41/ArMDE:2884's mandatory floor — present on every fresh companion, so a
+  // D41/ArMDE:2886's mandatory floor — present on every fresh companion, so a
   // "clean sheet" below means this ONE issue alone, not an empty list.
   const SOCIAL_STATUS_FLOOR_ISSUE =
     '[data-testid="issue-list"] li[data-code="too_few_social_status_virtues"]';
@@ -657,7 +657,7 @@ describe('mutually exclusive Virtues/Flaws', () => {
 
   it('greys out the Major variant of an already selected Minor Flaw', async () => {
     // Outsider's two magnitudes exclude each other: the book gives them as
-    // alternative circumstances (ArMDE:6625, :6627; D69.4). Unsourced twins
+    // alternative circumstances (ArMDE:6627, :6629; D69.4). Unsourced twins
     // such as Ambitious may now be taken together (D68.8), so they no longer
     // exercise this path.
     await (await addButton('flaw.outsider_minor')).click();
@@ -672,7 +672,7 @@ describe('mutually exclusive Virtues/Flaws', () => {
 });
 
 // End-to-end (Issue E): the off-budget Virtues/Flaws a character owes from its
-// Warping Score ("Effects of Warping", ArMDE:16624-16638). A warped non-magus
+// Warping Score ("Effects of Warping", ArMDE:16626-16640). A warped non-magus
 // surfaces one picker per owed slot on the Details tab; a magus (exempt — Twilight
 // instead) never shows the section, even at the same Warping Score.
 //
@@ -717,7 +717,7 @@ describe('warping-owed Virtues/Flaws', () => {
     await $(DETAILS_TAB).click();
 
     // 75 Warping Points → Warping Score 5 → owes 2 Minor Flaws + 1 supernatural
-    // Minor Virtue (ArMDE:16630-16636), in two labelled groups.
+    // Minor Virtue (ArMDE:16632-16638), in two labelled groups.
     await $(WARPING_POINTS).waitForExist({ timeout: 10000 });
     await replaceValue(await $(WARPING_POINTS), '75');
     await $(MINOR_FLAW_GROUP).waitForExist({ timeout: 10000 });
@@ -961,7 +961,7 @@ describe('character details', () => {
 
     // Infamous grants a player-chosen-type Reputation at level 4 (D11/Q5,
     // F-450: the passage names no audience — "a level 4 bad Reputation",
-    // ArMDE:6383 — so the grant is a wildcard, exactly like Famous, rather
+    // ArMDE:6385 — so the grant is a wildcard, exactly like Famous, rather
     // than the hardcoded Local it shipped with before this fix). Findings
     // 29/30: the grant IS the row — there is no add button to press (pressing
     // it twice used to make two identical rows) — so the type picker exists

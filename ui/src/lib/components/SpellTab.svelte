@@ -391,7 +391,7 @@
   // D81.8: whether the known spell at row `index` touches one of a held
   // Incompatible Arts Flaw's two barred combinations — as its primary Arts or
   // only through a requisite ("even if one or both are requisites",
-  // ArMDE:6363). A plain index lookup into the engine's own computation
+  // ArMDE:6365). A plain index lookup into the engine's own computation
   // (`DerivedTotals.spell_casting_unusable`), index-aligned with
   // `spell_casting_totals` and `entity.spells` for the same reason that field
   // is. The Casting Total figure stays visible beside this marker (unlike the
@@ -659,7 +659,7 @@
                   />
                 {/if}
                 <!-- Spell Mastery is an Ability every magus may buy from the general
-                   apprenticeship pool (ArMDE:9590), so the spinner shows whenever the
+                   apprenticeship pool (ArMDE:9592), so the spinner shows whenever the
                    advancement table can price it — not only with Mastered Spells /
                    Flawless Magic. This picker is already magus-and-Spells-tab-only. -->
                 {#if masteryMax > 0}
@@ -711,7 +711,7 @@
                   ×
                 </button>
                 <!-- Spell Mastery special abilities: one may be chosen per effective
-                   mastery level (ArMDE:9596-9598). The add-picker hides once the
+                   mastery level (ArMDE:9598-9600). The add-picker hides once the
                    count reaches the effective mastery; a non-repeatable ability
                    already chosen is disabled in the list, a repeatable one
                    (Precise/Quick/Quiet Casting) stays selectable again.

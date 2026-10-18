@@ -9,7 +9,7 @@
 //! `uncomputed_clauses.rs` require it.
 //!
 //! **Amended by X1/D43** (`docs/vf-audit/decisions.md`): Berserk separately
-//! gained a PERMANENT, unconditional `ability_authorization` — ArMDE:3571-3574
+//! gained a PERMANENT, unconditional `ability_authorization` — ArMDE:3573-3576
 //! "You may learn Martial Abilities at character creation" is not the
 //! conditional "while berserk" figure F2 deleted, so it is not affected by
 //! this file's ruling and survives. Per D46 (classification follows what IS
@@ -59,7 +59,7 @@ fn full_ruleset() -> Ruleset {
 /// precedent (`flaw.corrupted_spells`) is delete + reclassify, not surface.
 ///
 /// Amended by X1/D43: Berserk's OTHER, unconditional grant — "You may learn
-/// Martial Abilities at character creation" (ArMDE:3571-3574) — is not the
+/// Martial Abilities at character creation" (ArMDE:3573-3576) — is not the
 /// conditional combat figure this test is about, so it is untouched by F2 and
 /// keeps the entry `creation_effect` per D46 (classification follows what IS
 /// computed).

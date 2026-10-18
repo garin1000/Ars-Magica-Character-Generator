@@ -294,7 +294,7 @@ impl<'a> Doc<'a> {
     /// They are a **stored choice** ([`Entity::living_conditions`]) and a standing
     /// term of every future aging total — "AGING TOTAL: Stress die (no botch) +
     /// age/10 (round up) - Living Conditions modifier"
-    /// (ArMDE:16644-16646, table at
+    /// (ArMDE:16646-16648, table at
     /// :16581-16594) — so a sheet that dropped them would read as data loss. The
     /// resolved modifier is deliberately *not* printed: it is derived from these ids
     /// and the character's Virtues and Flaws, and the sheet records choices.
@@ -322,7 +322,7 @@ impl<'a> Doc<'a> {
     /// A resolved year may leave the free text empty and let the structured fields
     /// speak, and a hand-written entry carries no die at all, so each part is
     /// included only when it is there.
-    /// Source: ArMDE:16644-16646, :16698.
+    /// Source: ArMDE:16646-16648, :16700.
     fn aging_log_entry(&self, entry: &AgingLogEntry) -> String {
         let mut parts: Vec<String> = Vec::new();
         let effect = escape_cell(&entry.effect);
@@ -352,7 +352,7 @@ impl<'a> Doc<'a> {
     /// reaches the sheet as a slug; the severity is a Rust taxonomy and goes through
     /// `crisis-severity-<slug>`, which [`LABEL_KEYS`] declares.
     ///
-    /// Source: ArMDE:16696-16709.
+    /// Source: ArMDE:16698-16711.
     fn aging_log_crisis(&self, entry: &AgingLogEntry) -> Vec<String> {
         if !entry.crisis {
             return Vec::new();
@@ -413,13 +413,13 @@ impl<'a> Doc<'a> {
     /// The being's OWN supernatural powers: name, level, and the Penetration
     /// bought with levels out of the same budget ("You may also spend levels
     /// one-for-one to give the power Penetration",
-    /// ArMDE:4090). Three columns rather
+    /// ArMDE:4092). Three columns rather
     /// than the shared two, so the table reconciles with the power-levels budget
-    /// the app charged — otherwise the book's own worked example (`ArMDE:4092`) would
+    /// the app charged — otherwise the book's own worked example (`ArMDE:4094`) would
     /// print 80 levels of powers against a budget of 100.
     ///
     /// The familiar's invested powers keep [`Self::leveled_rows`]: they are
-    /// charged against no budget at all (`ArMDE:10938`) and no surface sets their
+    /// charged against no budget at all (`ArMDE:10940`) and no surface sets their
     /// Penetration, so a third column there would be a row of zeros implying a
     /// field that does not exist.
     fn power_rows(&self, powers: &[SupernaturalPower]) -> LeveledTable {
@@ -444,8 +444,8 @@ impl<'a> Doc<'a> {
 
     /// The character's Focus Powers: the maximum level of effect, the Penetration
     /// bought from the same point pool, and the two figures the rulebook derives
-    /// from that level — Initiative (`ArMDE:3970`) and the Fatigue cost of
-    /// activating it (`ArMDE:3972`).
+    /// from that level — Initiative (`ArMDE:3972`) and the Fatigue cost of
+    /// activating it (`ArMDE:3974`).
     ///
     /// Its OWN table rather than three more columns on [`Self::power_rows`],
     /// because the level column holds a different quantity: an ordinary power's
@@ -469,7 +469,7 @@ impl<'a> Doc<'a> {
                         line.max_level.to_string(),
                         line.penetration.to_string(),
                         line.initiative.to_string(),
-                        // Above level 75 the book states no cost (`ArMDE:3972`), so
+                        // Above level 75 the book states no cost (`ArMDE:3974`), so
                         // the cell says "unstated" through a label rather than
                         // printing a band nothing sourced.
                         match line.fatigue_levels {

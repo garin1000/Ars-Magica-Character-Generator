@@ -5,16 +5,16 @@
 //! its Level, and any Art requisites. Level is either a fixed multiple of five or
 //! **General** — a General spell is learned at a per-character chosen level, and
 //! two General versions at different levels are different spells
-//! (ArMDE:12421-12425). The character's
+//! (ArMDE:12423-12427). The character's
 //! chosen spells and (for General
 //! spells) their learned levels live on the [`Entity`](crate::types::Entity) as
 //! [`SpellSelection`](crate::types::SpellSelection)s; the catalogue here is
 //! language-neutral mechanics, with names/descriptions in `rules/i18n`.
 //!
 //! Spells consume the magus's *spell-levels budget* (120 out of apprenticeship,
-//! ArMDE:2283-2284, 2435, plus whatever
+//! ArMDE:2285-2286, 2435, plus whatever
 //! the magus took as levels out of its
-//! years past the Gauntlet, `ArMDE:2539`), a currency distinct from the shared
+//! years past the Gauntlet, `ArMDE:2541`), a currency distinct from the shared
 //! Ability/Art XP pool. Enforcement lives in [`crate::validation`].
 
 use std::fmt;
@@ -27,7 +27,7 @@ use crate::types::{Id, ParameterDef, SourceRef};
 /// most-difficult, matching the RDT chart. Its label lives in Fluent
 /// (`spell-range-<scalar>`), never rendered as the raw slug.
 ///
-/// Source: ArMDE:12073-12099.
+/// Source: ArMDE:12075-12101.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SpellRange {
@@ -75,9 +75,9 @@ impl fmt::Display for SpellRange {
 }
 
 /// A spell's Duration — how long the effect lasts. Year Duration forces a Ritual
-/// (ArMDE:12127).
+/// (ArMDE:12129).
 ///
-/// Source: ArMDE:12073-12127.
+/// Source: ArMDE:12075-12129.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SpellDuration {
@@ -114,11 +114,11 @@ impl fmt::Display for SpellDuration {
 /// A spell's Target — what the effect can affect: objects (Individual, Part,
 /// Group), containers (Circle, Room, Structure, Boundary), and magical senses
 /// (Taste, Touch, Smell, Hearing, Vision). Boundary forces a Ritual
-/// (ArMDE:12149); Vision, though
+/// (ArMDE:12151); Vision, though
 /// equally difficult, does not
-/// (ArMDE:12171).
+/// (ArMDE:12173).
 ///
-/// Source: ArMDE:12073-12171.
+/// Source: ArMDE:12075-12173.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SpellTarget {
@@ -173,7 +173,7 @@ impl fmt::Display for SpellTarget {
 /// `derived_magnitude_points` in `ruleset.rs` for the sibling pattern this
 /// follows) so the UI never re-hardcodes the floor.
 ///
-/// Source: ArMDE:12365 ("Ritual
+/// Source: ArMDE:12367 ("Ritual
 /// spells are always at least level 20, even if the level calculation would
 /// make them lower.").
 pub const RITUAL_MIN_LEVEL: u8 = 20;
@@ -198,7 +198,7 @@ pub struct Spell {
     pub requisites: Vec<Id>,
     /// Whether this spell is a Ritual: longer to cast, requires vis, floored at
     /// [`RITUAL_MIN_LEVEL`]
-    /// (ArMDE:12365).
+    /// (ArMDE:12367).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub ritual: bool,
     /// The spell's Range. `None` in the seed data until the full catalogue (5d)
@@ -212,7 +212,7 @@ pub struct Spell {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub target: Option<SpellTarget>,
     /// True when a Momentary Creo spell creates a lasting thing — which, per
-    /// ArMDE:12111/:12115, forces the
+    /// ArMDE:12113/:12115, forces the
     /// spell to be a Ritual.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub creates_lasting: bool,
@@ -222,7 +222,7 @@ pub struct Spell {
     /// chosen value is **display + identity only** and does NOT change the spell's
     /// own Technique/Form — those stay the catalogue Vim Arts. Empty for ordinary
     /// spells, so existing catalogue entries are unaffected.
-    /// Source: ArMDE:15868-15871
+    /// Source: ArMDE:15870-15873
     /// ("There are ten versions of this spell, one for each Hermetic Form").
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub parameters: Vec<ParameterDef>,
@@ -320,7 +320,7 @@ mod tests {
     }
 
     /// A spell carrying full Range/Duration/Target + ritual flag round-trips.
-    /// Source (RDT chart): ArMDE:12073-12081.
+    /// Source (RDT chart): ArMDE:12075-12083.
     #[test]
     fn spell_with_rdt_and_ritual_roundtrips() {
         let json = r#"{

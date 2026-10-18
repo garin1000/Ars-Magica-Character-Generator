@@ -96,7 +96,7 @@ fn issue_codes(result: &ValidationResult) -> Vec<&str> {
 /// unselectable by every buildable character type, exactly like
 /// `virtue.domestic_animal`'s own F-556 remedy). X5a's gate
 /// (`prerequisites: {kind: none, value: [is_grog, is_companion,
-/// order_member]}`, ArMDE:3944-3947) covers grog, companion, magus AND
+/// order_member]}`, ArMDE:3946-3949) covers grog, companion, magus AND
 /// mythic_companion (`is_companion` is true for both), since none of the four
 /// shipped types are animals. Once Ferocity can never be legally selected at
 /// all, the ORIGINAL arithmetic assertion (compute `confidence()` directly on
@@ -112,7 +112,7 @@ fn f89_ferocity_does_not_double_the_companion_profiles_own_confidence_base() {
         let result = validate(&e, &rs);
         assert!(
             issue_codes(&result).contains(&"prereq_not_met"),
-            "ArMDE:3944-3947 — Ferocity is animals-only (Q-11/D58); a \
+            "ArMDE:3946-3949 — Ferocity is animals-only (Q-11/D58); a \
              {type_id} taking it must be refused, got: {:?}",
             issue_codes(&result)
         );
@@ -121,9 +121,9 @@ fn f89_ferocity_does_not_double_the_companion_profiles_own_confidence_base() {
 
 /// F-256 — `virtue.relic`/`virtue.powerful_relic` ship `true_faith_grant`,
 /// which `effective::true_faith` sums straight into the CHARACTER's own True
-/// Faith Score. ArMDE:17684 is explicit: "Only by possessing the True Faith
+/// Faith Score. ArMDE:17686 is explicit: "Only by possessing the True Faith
 /// Major Virtue may a character have a True Faith score." A relic's score
-/// belongs to the relic (ArMDE:17700), not its bearer. This is no longer only
+/// belongs to the relic (ArMDE:17702), not its bearer. This is no longer only
 /// a display defect: `derived::magic_resistance`'s Q12 fix reads
 /// `true_faith() * 10` as a floor, so a Relic-holder today gets a bogus Magic
 /// Resistance floor too, on top of a bogus displayed True Faith Score.
@@ -136,7 +136,7 @@ fn f256_relic_does_not_grant_the_character_a_true_faith_score() {
         true_faith(&e, &rs),
         0,
         "only virtue.true_faith may give a character a True Faith SCORE \
-         (ArMDE:17684); virtue.relic states a score for the RELIC, not its \
+         (ArMDE:17686); virtue.relic states a score for the RELIC, not its \
          bearer"
     );
 }
@@ -162,14 +162,14 @@ fn f306_self_confident_does_not_give_a_grog_a_confidence_score() {
     );
     assert_eq!(
         c.points, 0,
-        "grogs don't have Confidence Points (ArMDE:2590); got {}",
+        "grogs don't have Confidence Points (ArMDE:2592); got {}",
         c.points
     );
 }
 
 /// F-449 — `flaw.low_tolerance`'s `fatigue_penalty` delta (-1) is folded
 /// uniformly over all five Fatigue tiers by `derived::fatigue_levels`, but
-/// ArMDE:17206 states only Weary/Tired/Dazed carry a penalty at all — Fresh
+/// ArMDE:17208 states only Weary/Tired/Dazed carry a penalty at all — Fresh
 /// and Winded are not "reduced Fatigue levels" in any reading. Today's engine
 /// invents a standing -1 on Fresh and Winded that no passage grants.
 #[test]
@@ -189,13 +189,13 @@ fn f449_low_tolerance_does_not_penalize_fresh_or_winded() {
 
     assert_eq!(
         fresh.penalty, 0,
-        "ArMDE:17206 gives Fresh no penalty at all; Low Tolerance must not \
+        "ArMDE:17208 gives Fresh no penalty at all; Low Tolerance must not \
          invent one, got {}",
         fresh.penalty
     );
     assert_eq!(
         winded.penalty, 0,
-        "ArMDE:17206 gives Winded no penalty at all; Low Tolerance must not \
+        "ArMDE:17208 gives Winded no penalty at all; Low Tolerance must not \
          invent one, got {}",
         winded.penalty
     );
@@ -203,7 +203,7 @@ fn f449_low_tolerance_does_not_penalize_fresh_or_winded() {
 
 /// F-462 — `flaw.missing_eye` ships one unscoped `combat_mod { amount: -1,
 /// target: attack }`, so `derived::combat_totals` folds it onto EVERY
-/// equipped weapon's Attack line. ArMDE:6507 states two different amounts for
+/// equipped weapon's Attack line. ArMDE:6509 states two different amounts for
 /// two different weapon classes: -3 on missile/spell-targeting rolls, -1 in
 /// melee. `Effect::CombatMod`'s `weapon` field (already used by `flaw.lame`,
 /// per `corrections.md` F-462) is exactly the scoping mechanism this needs.
@@ -235,7 +235,7 @@ fn f462_missing_eye_applies_the_stated_ranged_penalty_not_the_melee_one() {
     let delta = bow.attack.unwrap() - baseline.attack.unwrap();
     assert_eq!(
         delta, -3,
-        "ArMDE:6507 gives Missing Eye a -3 on missile Attack rolls; the \
+        "ArMDE:6509 gives Missing Eye a -3 on missile Attack rolls; the \
          shipped unscoped -1 effect yields a delta of {delta} instead"
     );
 }
@@ -243,7 +243,7 @@ fn f462_missing_eye_applies_the_stated_ranged_penalty_not_the_melee_one() {
 // --- § 3.10 — missing effects the engine can already express --------------
 
 /// F-21 — `virtue.blood_of_the_nephilim`'s -5 Aging Roll modifier
-/// (ArMDE:3588) is `AgingEffect::AgingRoll`'s exact shape (Faerie Blood's -1
+/// (ArMDE:3590) is `AgingEffect::AgingRoll`'s exact shape (Faerie Blood's -1
 /// is the shipped precedent), and the entry carries no `aging_mod` at all
 /// today.
 #[test]
@@ -254,14 +254,14 @@ fn f21_blood_of_the_nephilim_applies_its_stated_aging_roll_penalty() {
     let total = aging_total(&e, &rs, 40, 5).expect("the shipped ruleset carries aging rules");
     assert_eq!(
         total.trait_modifier, -5,
-        "ArMDE:3588 gives Blood of the Nephilim a -5 Aging Roll modifier; \
+        "ArMDE:3590 gives Blood of the Nephilim a -5 Aging Roll modifier; \
          got a trait_modifier of {}",
         total.trait_modifier
     );
 }
 
 /// F-49 — `virtue.demonic_blood` states, clause for clause, the engine's own
-/// `no_apparent_aging`/`no_aging` pair (ArMDE:3730; `virtue.unaging` already
+/// `no_apparent_aging`/`no_aging` pair (ArMDE:3732; `virtue.unaging` already
 /// ships exactly this pair). Today the entry carries neither, so a Demonic
 /// Blooded character's apparent age advances exactly like an unmodified
 /// character's — which the book flatly denies.
@@ -273,7 +273,7 @@ fn f49_demonic_blood_suppresses_apparent_aging() {
     let outcome = resolve_outcome(&e, &rs, 20).expect("the shipped ruleset carries aging rules");
     assert!(
         !outcome.apparent_age_increases,
-        "ArMDE:3730 ('she does not show the effects of aging') must suppress \
+        "ArMDE:3732 ('she does not show the effects of aging') must suppress \
          the apparent-age increase at every total; a total of 20 still \
          reports apparent_age_increases = true"
     );
@@ -283,7 +283,7 @@ fn f49_demonic_blood_suppresses_apparent_aging() {
 // Spontaneous Magic prerequisite is a `Prereq`/character-creation-order
 // concern owned by X5's slice, not this one. Test removed here.
 
-/// F-463 — `flaw.magical_air` (ArMDE:6455) states outright "You may not take
+/// F-463 — `flaw.magical_air` (ArMDE:6457) states outright "You may not take
 /// this Flaw if you actually do have The Gift", but no `incompatible_with`
 /// or `prerequisites` names it (or is named by it), and no profile blocks
 /// the pairing — so today a magus (who always holds The Gift as a bought
@@ -304,14 +304,14 @@ fn f463_magical_air_is_incompatible_with_the_gift() {
     let result = validate(&e, &rs);
     assert!(
         issue_codes(&result).contains(&"incompatible"),
-        "ArMDE:6455 forbids Magical Air on a Gifted character outright; \
+        "ArMDE:6457 forbids Magical Air on a Gifted character outright; \
          validate() issues were: {:?}",
         issue_codes(&result)
     );
 }
 
 /// F-208 — `virtue.nephilim`'s free Strong Angelic Heritage grant
-/// (ArMDE:4667) is a fixed, single-item, free grant — `Effect::GrantsSelection`'s
+/// (ArMDE:4669) is a fixed, single-item, free grant — `Effect::GrantsSelection`'s
 /// exact shape, already carried by the sibling Mythic Companion Virtues
 /// `virtue.faerie_doctor`/`virtue.spirit_votary`. `virtue.nephilim` carries no
 /// effects at all, so an entity holding the Virtue in its own selections never
@@ -329,7 +329,7 @@ fn f208_nephilim_grants_strong_angelic_heritage() {
         grants
             .iter()
             .any(|g| g.item_ref == Id::new("virtue.strong_angelic_heritage")),
-        "ArMDE:4667 grants Strong Angelic Heritage free with Nephilim; \
+        "ArMDE:4669 grants Strong Angelic Heritage free with Nephilim; \
          entity_grants() returned: {:?}",
         grants
             .iter()
@@ -338,7 +338,7 @@ fn f208_nephilim_grants_strong_angelic_heritage() {
     );
 }
 
-/// F-243/F-342 (second half) — `virtue.redcap`'s passage (ArMDE:4919) states
+/// F-243/F-342 (second half) — `virtue.redcap`'s passage (ArMDE:4921) states
 /// "In addition, you have the Well-Traveled Virtue (page 116) at no cost",
 /// the identical fixed-single-item-free-grant shape `virtue.lone_redcap`
 /// already carries for the same Virtue. `virtue.redcap` carries no
@@ -354,7 +354,7 @@ fn f243_redcap_grants_well_traveled() {
         grants
             .iter()
             .any(|g| g.item_ref == Id::new("virtue.well_traveled")),
-        "ArMDE:4919 grants Well-Traveled free with Redcap; entity_grants() \
+        "ArMDE:4921 grants Well-Traveled free with Redcap; entity_grants() \
          returned: {:?}",
         grants
             .iter()
@@ -364,7 +364,7 @@ fn f243_redcap_grants_well_traveled() {
 }
 
 /// F-249 — `virtue.ripper`'s two named powers (PeAn(He) 25, PeAn 45 —
-/// ArMDE:4939) total 70 levels, exactly `Effect::PowerLevels`'s shape
+/// ArMDE:4941) total 70 levels, exactly `Effect::PowerLevels`'s shape
 /// (`virtue.personal_power`/`virtue.ritual_power` already carry it for
 /// player-designed powers). The entry grants no `power_levels`, so
 /// `validation::might::validate_powers` charges the entity's 70 recorded
@@ -390,7 +390,7 @@ fn f249_ripper_funds_its_own_seventy_levels_of_power() {
     let result = validate(&e, &rs);
     assert!(
         !issue_codes(&result).contains(&"over_power_levels"),
-        "ArMDE:4939 describes a Ripper's two powers (70 levels total) as a \
+        "ArMDE:4941 describes a Ripper's two powers (70 levels total) as a \
          legal, book-defined build; budget is {}, validate() issues were: \
          {:?}",
         power_levels_budget(&e, &rs),
@@ -398,7 +398,7 @@ fn f249_ripper_funds_its_own_seventy_levels_of_power() {
     );
 }
 
-/// F-406 — `flaw.a_deal_with_the_devil` (ArMDE:5976-5979) states "This Flaw
+/// F-406 — `flaw.a_deal_with_the_devil` (ArMDE:5978-5981) states "This Flaw
 /// includes the effects of Plagued By Supernatural Entity", the same
 /// "includes the effects of the X Virtue/Flaw" idiom the catalogue encodes
 /// four other times (`virtue.rosh_beth_din`, `virtue.templar_commander`,
@@ -414,7 +414,7 @@ fn f406_a_deal_with_the_devil_includes_plagued_by_supernatural_entity() {
         grants
             .iter()
             .any(|g| g.item_ref == Id::new("flaw.plagued_by_supernatural_entity")),
-        "ArMDE:5976-5979 states A Deal with the Devil includes Plagued By \
+        "ArMDE:5978-5981 states A Deal with the Devil includes Plagued By \
          Supernatural Entity's effects; entity_grants() returned: {:?}",
         grants
             .iter()
@@ -427,7 +427,7 @@ fn f406_a_deal_with_the_devil_includes_plagued_by_supernatural_entity() {
 // + grants_reputation effects already shipped via X7b-e; this test is already
 // green and redundant. Test removed here.
 
-/// F-205 — `virtue.mythic_blood` (ArMDE:4659) states a free hereditary Minor
+/// F-205 — `virtue.mythic_blood` (ArMDE:4661) states a free hereditary Minor
 /// Personality Flaw "at no extra cost" alongside the Minor Magical Focus the
 /// entry already delivers. The grant is *open* (any Minor Personality Flaw),
 /// which `Effect::GrantsSelection`'s fixed-id set structurally cannot express
@@ -449,14 +449,14 @@ fn f205_mythic_blood_states_its_free_personality_flaw_in_both_locales() {
             text.to_lowercase().contains("personality") || text.contains("Persönlichkeits");
         assert!(
             mentions_personality_flaw,
-            "{lang}/virtue.mythic_blood: ArMDE:4659's free hereditary Minor \
+            "{lang}/virtue.mythic_blood: ArMDE:4661's free hereditary Minor \
              Personality Flaw must reach the player as text (D3/D67); \
              displayed text was: {text:?}"
         );
     }
 }
 
-/// F-77 — `virtue.faerie_raised_magic` (ArMDE:3910) states "This Virtue also
+/// F-77 — `virtue.faerie_raised_magic` (ArMDE:3912) states "This Virtue also
 /// includes the Virtue Spell Improvisation", but the shipped entry carries
 /// only its own `special_casting_mod { kind: faerie_raised }` — never the
 /// second kind (`spell_improvisation`) the cross-reference entitles it to.
@@ -483,14 +483,14 @@ fn f77_faerie_raised_magic_also_carries_spell_improvisation() {
 
     assert!(
         carries_spell_improvisation || grants_it,
-        "ArMDE:3910 entitles Faerie-Raised Magic to Spell Improvisation's \
+        "ArMDE:3912 entitles Faerie-Raised Magic to Spell Improvisation's \
          effect as well as its own; shipped effects were: {:?}",
         item.effects
     );
 }
 
 /// D4 (`decisions.md`) — `virtue.potent_magic_major`/`_minor`'s `lab_total_mod`
-/// applies only "within the chosen [Magical] focus" (ArMDE:4811-4852), which
+/// applies only "within the chosen [Magical] focus" (ArMDE:4813-4854), which
 /// `derived::lab_totals` already has a field for (`LabTotal::within_focus`,
 /// gated on `mods.has_focus`) — but the ruling is that the flat bonus must
 /// land THERE ONLY, never in the ordinary `total`. Today `lab_mod` folds every
@@ -502,9 +502,9 @@ fn f77_faerie_raised_magic_also_carries_spell_improvisation() {
 /// explicitly in this slice's collection brief).
 ///
 /// **D79 correction**: "within the chosen [Magical] focus" was D4's own
-/// reading of ArMDE:4813's "much as in a Magical Focus" — which turned out to
+/// reading of ArMDE:4815's "much as in a Magical Focus" — which turned out to
 /// describe the SHAPE of Potent Magic's field (narrow/wide, like a Minor/Major
-/// Focus), not its gate. D79 re-reads ArMDE:4811-4819 and separates the two:
+/// Focus), not its gate. D79 re-reads ArMDE:4813-4821 and separates the two:
 /// Potent Magic's bonus now lands in its OWN `within_potent_field` figure,
 /// gated on holding Potent Magic itself, never in `within_focus` (gated on
 /// holding a Magical Focus) — a character could hold either Virtue without
@@ -513,7 +513,7 @@ fn f77_faerie_raised_magic_also_carries_spell_improvisation() {
 /// into the wrong figure (both held). This test is renamed and rewritten to
 /// pin the corrected behavior; `crates/arm-rules/tests/d79_potent_magic.rs`
 /// covers the rest of D79 (the Casting Total mirror, the per-spell marker, the
-/// ArMDE:4813 one-Virtue-applies bound).
+/// ArMDE:4815 one-Virtue-applies bound).
 #[test]
 fn d79_potent_magic_lab_bonus_applies_only_within_its_own_field_not_the_focus() {
     let rs = load_ruleset();
@@ -541,7 +541,7 @@ fn d79_potent_magic_lab_bonus_applies_only_within_its_own_field_not_the_focus() 
 
     assert_eq!(
         potent_cell.total, baseline_cell.total,
-        "ArMDE:4811-4852 gives Potent Magic's +6 only within its own field; \
+        "ArMDE:4813-4854 gives Potent Magic's +6 only within its own field; \
          the ordinary Lab Total (outside that field) must be unaffected. \
          baseline total {}, with Potent Magic {}",
         baseline_cell.total, potent_cell.total

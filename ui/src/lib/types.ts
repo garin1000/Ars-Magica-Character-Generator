@@ -40,7 +40,7 @@ export type ParamType =
   | { number: { min: number; max: number } }
   // D9 part 3 (C5a, `docs/vf-audit/design-c0-parameter-model.md` § 8): an
   // open-ended SET of ids (the three Corrupted entries: "you can choose to
-  // have it affect multiple Abilities", ArMDE:5922 et al.). Type-level parity
+  // have it affect multiple Abilities", ArMDE:5924 et al.). Type-level parity
   // only in this slice — no picker control exists yet (C5b's job).
   | 'multi_ref';
 export type ParameterDomain =
@@ -54,12 +54,12 @@ export type ParameterDomain =
   // Value is one of the declaring item's OWN `categories` — records which
   // single reading of a multi-category Virtue/Flaw was chosen (Sufi, "either
   // as a Minor Social Status Virtue or a Minor Supernatural Virtue",
-  // ArMDE:5154). Same shape as
+  // ArMDE:5156). Same shape as
   // `enumerated` (the domain IS `values`), but the picker labels options
   // through `category-<id>` rather than `displayName`.
   | 'category'
   // Value is one of the four Realms as `realm.<slug>` — Folk Magic's magic "is
-  // aligned to" one of them (ArMDE:3980). A closed engine taxonomy, so the
+  // aligned to" one of them (ArMDE:3982). A closed engine taxonomy, so the
   // menu is `REALMS` and the
   // labels come from the `realm-<id>` Fluent family, never from rules i18n
   // (a bare realm slug has no entry there) and never from a declared list.
@@ -72,7 +72,7 @@ export type ParameterDomain =
   | 'number'
   // C5a: a spell id, resolved against the OWNING character's OWN learned
   // spells (`Entity.spells`), never the ruleset's whole spell catalogue —
-  // Corrupted Spells (ArMDE:5930-5934). In practice only ever paired with
+  // Corrupted Spells (ArMDE:5932-5936). In practice only ever paired with
   // `multi_ref`.
   | 'spell'
   // X6a/e5: one of the closed 5-member AbilityCategory enum, as
@@ -92,16 +92,16 @@ export interface ParameterDef {
   values?: string[];
   // Groups of values of which at most ONE may be named across all copies of the
   // declaring item — Folk Magic's "a character cannot have access to both the
-  // Divine and Infernal Realms" (ArMDE:3990). Enforced by the engine
+  // Divine and Infernal Realms" (ArMDE:3992). Enforced by the engine
   // (`exclusive_param_values`); which values exclude each other is data, so no
   // id is named in the frontend either.
   at_most_one_of?: string[][];
   // How many of the item's copies may name one and the same value for THIS key.
   // Necessary (Realm) Aura for (Ability) is taken "once for any particular
-  // Ability" (ArMDE:6553), a cap the whole-tuple `max_per_target` cannot state.
+  // Ability" (ArMDE:6555), a cap the whole-tuple `max_per_target` cannot state.
   // D10: omitted means the engine's default of 1 (once); an entry that
   // legitimately repeats one value carries an explicit 255 (Folk Magic's
-  // `realm` axis, ArMDE:3990). Enforced by the engine
+  // `realm` axis, ArMDE:3992). Enforced by the engine
   // (`too_many_for_param_value`); like `at_most_one_of`, the picker does not
   // pre-empt it — the finding names the key and the value.
   max_per_value?: number;
@@ -115,7 +115,7 @@ export interface ParameterDef {
   // A one-id whitelist, additive to `require_categories`: a value resolves if
   // EITHER test passes. False Power's target is `require_categories:
   // ['supernatural']` plus `allow_ids: ['virtue.diedne_magic',
-  // 'virtue.the_gift']` — the two Virtues ArMDE:6153 names outright but whose
+  // 'virtue.the_gift']` — the two Virtues ArMDE:6155 names outright but whose
   // OWN category ('hermetic', 'special') the domain does not otherwise reach.
   // Absent on every other domain, where the engine rejects it at load (D34).
   allow_ids?: string[];
@@ -132,13 +132,13 @@ export interface ParameterDef {
   // The `item` the value names must be one the character HOLDS — bought or
   // granted, the engine's grants-inclusive `present_ids`. False Power is taken
   // "once for each appropriate Supernatural Virtue that the character
-  // possesses" (ArMDE:6167), and the same flag makes each held Virtue
+  // possesses" (ArMDE:6169), and the same flag makes each held Virtue
   // claimable once. Absent on every other domain, where the engine rejects it
   // at load.
   require_possessed?: boolean;
   // The `item` the value names may not be Tainted: "this Flaw cannot apply to
   // Supernatural Virtues that are affiliated to the Infernal realm in the first
-  // place" (ArMDE:6167).
+  // place" (ArMDE:6169).
   forbid_tainted?: boolean;
   // Narrows the `item` domain by DESCRIPTION rather than category: a value
   // resolves only if the named item does NOT satisfy this predicate (D33,
@@ -188,7 +188,7 @@ export type AbilityRef = string | { ability: string; instance?: ParamValue; gate
 export interface ConditionalIncompatibility {
   gate: ParamGate;
   forbids: string[];
-  // The same-copy twin of `forbids` (RC review-C item 2, ArMDE:7104): while
+  // The same-copy twin of `forbids` (RC review-C item 2, ArMDE:7106): while
   // `gate` holds for the declaring selection, an OTHER selection of the SAME
   // item whose own value of `gate.param` equals one of these is also
   // forbidden — "Weak Sight is incompatible with Sensitive Sight", two copies
@@ -201,7 +201,7 @@ export interface ConditionalIncompatibility {
 // One entry of `PointItem.same_choice_exclusions` (D69.6): the declaring item
 // may not be held alongside a selection of `other` that resolves `other_param`
 // to the SAME target this item resolves to — "You may not take Student of
-// (Realm) and Puissant Ability for the same Lore" (ArMDE:5125). The target is
+// (Realm) and Puissant Ability for the same Lore" (ArMDE:5127). The target is
 // either `fixed_target` (set regardless of this item's own parameters), or —
 // when `this_param` is set — this item's OWN `this_param` value mapped
 // through `via`. Exactly one of `this_param`/`fixed_target` is ever set.
@@ -265,7 +265,7 @@ export type Effect =
       // X6a/e5: names a `multi_ref`/`ability`-domain parameter on the SAME
       // item whose resolved set is a further eligibility source, unioned with
       // `abilities`/`categories` (Restricted Learning's five player-named
-      // Abilities, ArMDE:6756).
+      // Abilities, ArMDE:6758).
       abilities_param?: string;
       // D13: this grant earmarks part of the GENERAL pool rather than adding
       // to it — `false` (the default, omitted from the JSON) preserves every
@@ -290,10 +290,10 @@ export type Effect =
   | { type: 'warping_grant'; points: number }
   // D69.1: Raised from the Dead's parameterized sibling of `warping_grant` —
   // `base_points` unconditionally, plus one per unit named by the OWNING
-  // selection's `params[param]` (ArMDE:6717-6720).
+  // selection's `params[param]` (ArMDE:6719-6722).
   | { type: 'warping_grant_param'; param: string; base_points: number }
   | { type: 'true_faith_grant'; score: number }
-  // F-256: a Relic's own True Faith Score (ArMDE:17684), not the bearer's.
+  // F-256: a Relic's own True Faith Score (ArMDE:17686), not the bearer's.
   // Surfaced-only — nothing here renders it directly.
   | { type: 'relic_true_faith'; score: number }
   | { type: 'item_level_budget'; amount: number }
@@ -306,7 +306,7 @@ export type Effect =
     }
   | { type: 'grants_selection'; items: string[] }
   // D68.11: an id-less category-cap count (Mythic Blood's hereditary
-  // Personality Flaw, ArMDE:4659) — no real point item, so nothing for a
+  // Personality Flaw, ArMDE:4661) — no real point item, so nothing for a
   // picker to render; read only by the derived category-cap counts.
   | { type: 'grants_category_count'; category: string; magnitude: Magnitude; item_kind: ItemKind }
   | { type: 'size_delta'; amount: number }
@@ -369,8 +369,8 @@ export type Effect =
       gate?: ParamGate;
     }
   // `weapon` scopes the modifier to one weapon's combat line, for a rule that
-  // singles a weapon out — Lame's -3 applies to Dodge (`ArMDE:6403`), which is a
-  // Brawling Weapons row rather than an Ability (`ArMDE:17036`), so the scope is
+  // singles a weapon out — Lame's -3 applies to Dodge (`ArMDE:6405`), which is a
+  // Brawling Weapons row rather than an Ability (`ArMDE:17038`), so the scope is
   // per-weapon. Absent means the modifier applies to every line.
   | { type: 'combat_mod'; amount: number; target: CombatStat; weapon?: string }
   | { type: 'health_mod'; track: HealthTrack; amount: number }
@@ -432,7 +432,7 @@ export type Effect =
   // for every Ability — a creation-time constraint the engine's age-cap
   // resolution point folds in; nothing here renders it directly.
   | { type: 'waives_ability_age_cap' }
-  // X6a/e6 (Savantism, ArMDE:6776-6777): the Ability named by the OWNING
+  // X6a/e6 (Savantism, ArMDE:6778-6779): the Ability named by the OWNING
   // selection's `params[param]` caps at `max` INSTEAD OF the age-band figure.
   | { type: 'ability_score_cap_override_param'; param: string; max: number }
   // Savantism's sibling clause: every OTHER Ability (all but the one named by
@@ -445,7 +445,7 @@ export type Effect =
   | { type: 'forbids_ability_category'; category: string }
   // X6a/e5: the parameter-relative sibling — the forbidden category is named
   // by the OWNING selection's own `params[param]` rather than fixed by the
-  // item (Ability Block, ArMDE:5722-5725).
+  // item (Ability Block, ArMDE:5724-5727).
   | { type: 'forbids_ability_category_param'; param: string }
   | { type: 'forbids_item_category'; category: string }
   | { type: 'forbids_abilities'; abilities: string[] }
@@ -629,7 +629,7 @@ export interface PointItem {
   // D42/D70/D74: how this entry's realm association resolves beyond the plain
   // override/concept/Magic chain. Omitted for every Supernatural entry the
   // book leaves free, and for a Tainted entry (which resolves Infernal from
-  // `tainted` alone, ArMDE:3068, never storing the same fact twice).
+  // `tainted` alone, ArMDE:3070, never storing the same fact twice).
   realm_association?: RealmAssociation;
   // Entity kinds this item may be selected for. Omitted when empty, which the
   // engine reads as "any kind".
@@ -673,7 +673,7 @@ export interface PointItem {
   // Mirrors the engine's `PointItem::unordered_param_groups`
   // (`crates/arm-rules/src/types.rs`).
   unordered_param_groups?: string[][];
-  // D81.14: an entry Merinita's conditional Warping Point (ArMDE:2348) reads
+  // D81.14: an entry Merinita's conditional Warping Point (ArMDE:2350) reads
   // as "faerie-related" without carrying a Faerie realm association (Faerie
   // Friend, Faerie Upbringing, Susceptibility to Faerie Power). Omitted when
   // false. No frontend reader: the Warping Point is computed engine-side.
@@ -755,7 +755,7 @@ export interface SpellLevelCap {
 // spells sharing a Te/Fo pair but different requisites can report different
 // caps — the per-spell cap the picker greys a spell BY. Mirrors the engine's
 // `SpellCap`. `within_focus_cap` is the same cap with the Magical Focus
-// doubling (ArMDE:4474) applied, present only when the entity holds a
+// doubling (ArMDE:4476) applied, present only when the entity holds a
 // Magical Focus at all; the picker's "add within focus" action offers
 // itself only when a candidate level fits `within_focus_cap` but not `cap` —
 // the engine cannot match a spell to a player's free-text focus itself, so
@@ -1240,8 +1240,8 @@ export interface EffectiveScores {
   // stays the Te/Fo-keyed grid, a requisite-free baseline figure). Empty for
   // a non-magus, exactly like `spell_level_caps`. Engine-authoritative.
   spell_caps: SpellCap[];
-  // The Hermetic minimum-Ability checklist: what the Order demands (ArMDE:2505) and
-  // what the rulebook recommends (ArMDE:2519-2529), each with the character's bought
+  // The Hermetic minimum-Ability checklist: what the Order demands (ArMDE:2507) and
+  // what the rulebook recommends (ArMDE:2521-2531), each with the character's bought
   // score and whether it suffices. Empty for a non-magus, exactly like
   // `spell_level_caps` — admission to the Order is a magus's concern alone.
   // Engine-authoritative: the same reading the magus_minimum_ability /
@@ -1374,7 +1374,7 @@ export interface LabTotal {
   // field (`crates/arm-rules/src/derived/lab.rs`).
   enchanting: number;
   // D81.8: whether this cell's `(Technique, Form)` pair is one of a held
-  // Incompatible Arts Flaw's two barred combinations (ArMDE:6361-6363). The
+  // Incompatible Arts Flaw's two barred combinations (ArMDE:6363-6365). The
   // numeric totals above are still computed and must NOT be read as 0 when
   // this is true — 0 is a legitimate Lab Total and would be indistinguishable
   // from this. Mirrors the Rust `LabTotal.unusable` field.
@@ -1437,7 +1437,7 @@ export interface CastingTotal {
   non_standard: NonStandardCasting;
   deficient: boolean;
   // D81.8: whether this cell's `(Technique, Form)` pair is one of a held
-  // Incompatible Arts Flaw's two barred combinations (ArMDE:6361-6363), same
+  // Incompatible Arts Flaw's two barred combinations (ArMDE:6363-6365), same
   // reasoning as `LabTotal.unusable`. A requisite spell may still be unusable
   // through this cell without the cell itself being flagged — see
   // `DerivedTotals.spell_casting_unusable`, which the per-spell figure reads
@@ -1571,9 +1571,9 @@ export interface FamiliarReadout {
 }
 
 // One Focus Power's derived figures. Display-only: the magnitude of the maximum
-// level of effect (ArMDE:9169), the Initiative it gives (Quickness − that
-// magnitude, ArMDE:3970), and the Fatigue levels activating it costs — null above
-// level 75, where the rulebook states no cost (ArMDE:3972).
+// level of effect (ArMDE:9171), the Initiative it gives (Quickness − that
+// magnitude, ArMDE:3972), and the Fatigue levels activating it costs — null above
+// level 75, where the rulebook states no cost (ArMDE:3974).
 export interface FocusPowerLine {
   name: string;
   max_level: number;
@@ -1629,7 +1629,7 @@ export interface DerivedTotals {
   // D81.8: whether each known spell touches one of a held Incompatible Arts
   // Flaw's two barred `(Technique, Form)` combinations — as its primary Arts
   // or only through a requisite ("even if one or both are requisites",
-  // ArMDE:6363). Index-aligned with `spell_casting_totals` and
+  // ArMDE:6365). Index-aligned with `spell_casting_totals` and
   // `entity.spells`, for the same reason that field is; a parallel `Vec`
   // rather than widening `spell_casting_totals`'s element, so every existing
   // reader of that field stays untouched. Mirrors the Rust
@@ -1661,7 +1661,7 @@ export interface DerivedTotals {
 // the row can say WHY it is there. `max_score` is the upper bound of a stated
 // range (D11/Q5) — absent (undefined) means the score is exact. Outsider is
 // the one grant in the catalogue that states a range ("a bad Reputation of
-// level 1 to 3", ArMDE:6625).
+// level 1 to 3", ArMDE:6627).
 export interface ReputationGrant {
   source: string;
   kind: ReputationType | null;
@@ -1683,7 +1683,7 @@ export interface CategoryCap {
 // One entry on a profile's `permitted_categories` / `forbidden_categories`
 // list. Mirrors the engine's untagged `CategoryRule`: a bare slug is
 // unconditional, and the object form applies only while `when` holds
-// (`ArMDE:2908` — a companion may take Hermetic Virtues and Flaws "unless you have
+// (`ArMDE:2910` — a companion may take Hermetic Virtues and Flaws "unless you have
 // The Gift"). Enforcement lives entirely in the engine; the frontend never
 // re-implements the resolution, and never renders either the slug or the
 // condition as a label.
@@ -1761,7 +1761,7 @@ export interface EntityTypeProfile {
   // `hermetic`). Omitted from JSON when empty, so optional here.
   gift_categories?: string[];
   // The V/F categories whose Flaws satisfy the "at least one Hermetic Flaw"
-  // guideline (`ArMDE:2928`); `hermetic` on the magus profile only. A separate field
+  // guideline (`ArMDE:2930`); `hermetic` on the magus profile only. A separate field
   // from `gift_categories` on purpose — "is this character Gifted?" and "does
   // this Flaw count as Hermetic?" are different questions with, for the two
   // Beings Flaws, different answers. No frontend code reads either field today;
@@ -1891,13 +1891,13 @@ export interface SpellSelection {
   // this may hold duplicates. Absent/empty when none are chosen.
   mastery_abilities?: string[];
   // X10c: the player's own claim that this known spell falls within the
-  // character's Magical Focus (ArMDE:4470-4493) — free-text `focus` can't
+  // character's Magical Focus (ArMDE:4472-4495) — free-text `focus` can't
   // supply this (MAG8's capability gap). Absent/false = not claimed. Feeds
   // `derived/casting.rs::spell_casting_total`'s selector; harmless if the
   // character holds no Focus.
   within_focus?: boolean;
   // D79: the player's own claim that this known spell falls within the
-  // character's Potent Magic field (ArMDE:4811-4819) — same shape as
+  // character's Potent Magic field (ArMDE:4813-4821) — same shape as
   // `within_focus` and independent of it, since the two free-text themes
   // need not coincide. Absent/false = not claimed. Harmless if the character
   // holds no Potent Magic Virtue.
@@ -1951,7 +1951,7 @@ export interface MightScore {
 // A supernatural power a Might-being holds. `level` is charged against the
 // power-levels budget the being's Might Virtues grant (like a device vs item level).
 // `penetration` is charged against the SAME budget — levels are spent on it
-// one-for-one (ArMDE:4090) — and is absent from the save when unspent.
+// one-for-one (ArMDE:4092) — and is absent from the save when unspent.
 export interface SupernaturalPower {
   name: string;
   level: number;
@@ -1959,7 +1959,7 @@ export interface SupernaturalPower {
 }
 
 // A Focus Power, bought from the Focus Power Virtue's own 25-point pool: 2 points
-// per point of `max_level`, 1 per point of `penetration` (ArMDE:3970). Deliberately
+// per point of `max_level`, 1 per point of `penetration` (ArMDE:3972). Deliberately
 // NOT a SupernaturalPower — `max_level` is the *maximum level of effect* the
 // character may create, a ceiling, where a SupernaturalPower's `level` is a level
 // that was spent out of the level budget. `penetration` is absent when unspent.
@@ -2139,7 +2139,7 @@ export interface EquipmentSlot {
   item: string;
   loadout?: LoadoutState; // omitted = 'stowed'
   // Whether this weapon's combat Ability specialization applies to it, granting
-  // +1 to the weapon's Attack and Defense (ArMDE:7193, :7210). Additive/optional.
+  // +1 to the weapon's Attack and Defense (ArMDE:7195, :7212). Additive/optional.
   specialization_applies?: boolean;
 }
 
@@ -2626,7 +2626,7 @@ export interface Entity {
   // power-levels budget its Might Virtues grant. Omitted when empty.
   powers?: SupernaturalPower[];
   // The character's Focus Powers, charged against the separate Focus Power point
-  // pool (ArMDE:3970). Omitted when empty.
+  // pool (ArMDE:3972). Omitted when empty.
   focus_powers?: FocusPower[];
   // Whether the character is currently fighting mounted (K3): derived combat
   // totals add a second, mounted line per weapon that is not a body attack,

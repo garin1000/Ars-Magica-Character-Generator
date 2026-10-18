@@ -46,7 +46,7 @@ struct DescriptionCase {
 
 const DESCRIPTIONS: &[DescriptionCase] = &[
     // WRONG: she cannot tell holy from unholy, only that something is one or
-    // the other (ArMDE:7807, second sentence; the German book agrees at the
+    // the other (ArMDE:7809, second sentence; the German book agrees at the
     // same line).
     DescriptionCase {
         id: "ability.sense_passions",
@@ -59,7 +59,7 @@ const DESCRIPTIONS: &[DescriptionCase] = &[
              oder einer falschen Macht verbunden.",
     },
     // MISMATCH: the target rolls Perception + Awareness, not Awareness alone
-    // (ArMDE:7679, fourth sentence; the German book at the same line and
+    // (ArMDE:7681, fourth sentence; the German book at the same line and
     // sentence).
     DescriptionCase {
         id: "ability.legerdemain",
@@ -78,13 +78,13 @@ struct SpecialtyCase {
 }
 
 const SPECIALTIES: &[SpecialtyCase] = &[
-    // ArMDE:7497, and the German book at the same line.
+    // ArMDE:7499, and the German book at the same line.
     SpecialtyCase {
         id: "ability.curse_throwing",
         en: &["diseases", "faerie curses", "livestock"],
         de: &["Krankheiten", "Feenflüche", "Vieh"],
     },
-    // ArMDE:7513, and the German book at the same line.
+    // ArMDE:7515, and the German book at the same line.
     SpecialtyCase {
         id: "ability.dowsing",
         en: &[
@@ -96,13 +96,13 @@ const SPECIALTIES: &[SpecialtyCase] = &[
             "Suche an einem bestimmten Ort",
         ],
     },
-    // ArMDE:10009, and the German book at the same line.
+    // ArMDE:10011, and the German book at the same line.
     SpecialtyCase {
         id: "ability.enigmatic_wisdom",
         en: &["interpreting signs", "explaining the Enigma", "Twilight"],
         de: &["Zeichen deuten", "das Enigma erklären", "Zwielicht"],
     },
-    // ArMDE:10075, and the German book at the same line.
+    // ArMDE:10077, and the German book at the same line.
     SpecialtyCase {
         id: "ability.faerie_magic",
         en: &[
@@ -120,8 +120,8 @@ const SPECIALTIES: &[SpecialtyCase] = &[
             "Kunde",
         ],
     },
-    // The book prints none: neither the Ability entry (ArMDE:7573-7574) nor
-    // the Heartbeast mystery (ArMDE:9958-9970) lists any.
+    // The book prints none: neither the Ability entry (ArMDE:7575-7576) nor
+    // the Heartbeast mystery (ArMDE:9960-9972) lists any.
     SpecialtyCase {
         id: "ability.heartbeast",
         en: &[],

@@ -122,7 +122,7 @@ impl Ruleset {
         self.catalogue_names.get(value).map_or(&[], Vec::as_slice)
     }
 
-    /// The age → maximum-Ability-score band table (ArMDE:2434-2442). Empty when the
+    /// The age → maximum-Ability-score band table (ArMDE:2436-2444). Empty when the
     /// ruleset ships no age caps.
     pub fn age_ability_caps(&self) -> &AgeAbilityCaps {
         &self.age_ability_caps
@@ -304,12 +304,12 @@ impl Ruleset {
     }
 
     /// Ability categories that may only be bought with a permitting Virtue
-    /// (ArMDE:2383). Empty for a ruleset that gates none.
+    /// (ArMDE:2385). Empty for a ruleset that gates none.
     pub fn categories_requiring_virtue(&self) -> &BTreeSet<AbilityCategory> {
         &self.categories_requiring_virtue
     }
 
-    /// The scholarly-language expectation for Academic Abilities (ArMDE:7222), if the
+    /// The scholarly-language expectation for Academic Abilities (ArMDE:7224), if the
     /// ruleset states one.
     pub fn scholarly_language_requirement(&self) -> Option<&ScholarlyLanguageRequirement> {
         self.scholarly_language.as_ref()

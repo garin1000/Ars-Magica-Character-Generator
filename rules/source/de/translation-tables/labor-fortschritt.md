@@ -38,7 +38,7 @@
 | Golden Cord | Goldene Kordel | |
 | Silver Cord | Silberne Kordel | |
 | Bronze Cord | Bronzene Kordel | |
-| Deformed (Laboratory Flaw) | Verformt | Laborfehler: Teil der Struktur abgesunken/verzerrt (ArMDE:11808). **Kein** Charakterfehler – dafür *Disfigured* = Entstellt |
+| Deformed (Laboratory Flaw) | Verformt | Laborfehler: Teil der Struktur abgesunken/verzerrt (ArMDE:11810). **Kein** Charakterfehler – dafür *Disfigured* = Entstellt |
 
 ---
 

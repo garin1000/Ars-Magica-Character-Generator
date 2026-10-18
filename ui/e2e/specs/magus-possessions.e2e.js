@@ -234,7 +234,7 @@ describe('spells', () => {
   });
 
   // Slice 6b8c: the OTHER half of the same Virtue. "You gain an additional 60
-  // experience points and 30 spell levels during apprenticeship" (`ArMDE:5037`) — the
+  // experience points and 30 spell levels during apprenticeship" (`ArMDE:5039`) — the
   // engine has always granted the 60, but the XP bar charged the spend against the
   // typed pool alone, so this legal magus read a negative Available with no error
   // anywhere. Real-binary arithmetic, because only the live payload carries the
@@ -419,7 +419,7 @@ describe('spells', () => {
 // are all enterable; the totals panel's bonding level folds the negative Size in;
 // the cord points follow the 5/15/30/50/75 curve; NO validation issue appears (the
 // guidance-only contract, end to end); and NO power-levels budget bar is rendered
-// (ArMDE:10938 — there is no limit). Then the whole statblock round-trips through
+// (ArMDE:10940 — there is no limit). Then the whole statblock round-trips through
 // save + Open.
 describe('familiar', () => {
   const VF_TAB = '[data-testid="tab-virtues_flaws"]';
@@ -492,7 +492,7 @@ describe('familiar', () => {
 
     await set('familiar-name', 'Corvus');
     await set('familiar-animal', 'raven');
-    // A raven is Size -4 (ArMDE:17906-17933). The rendered value must carry the
+    // A raven is Size -4 (ArMDE:17908-17935). The rendered value must carry the
     // ASCII hyphen-minus, never the mathematical minus U+2212.
     await set('familiar-size', '-4');
     const size = await $('[data-testid="familiar-size"]');
@@ -505,7 +505,7 @@ describe('familiar', () => {
     await $('[data-testid="familiar-might-realm"]').selectByAttribute('value', 'magic');
     await set('familiar-might-score', '10');
 
-    // Human intelligence at Int -3, gained from the bond (ArMDE:10926).
+    // Human intelligence at Int -3, gained from the bond (ArMDE:10928).
     await set('familiar-char-int', '-3');
     expect(await $('[data-testid="familiar-char-int"]').getValue()).toBe('-3');
 
@@ -516,7 +516,7 @@ describe('familiar', () => {
     for (let i = 0; i < 3; i++) await inc.click();
     expect(clean(await $('[data-testid="familiar-personality-value-0"]').getText())).toBe('+3');
 
-    // Cords 3 / 2 / 1 → 30 + 15 + 5 = 50 points off the curve (ArMDE:10908).
+    // Cords 3 / 2 / 1 → 30 + 15 + 5 = 50 points off the curve (ArMDE:10910).
     await set('familiar-cord-gold', '3');
     await set('familiar-cord-silver', '2');
     await set('familiar-cord-bronze', '1');
@@ -527,7 +527,7 @@ describe('familiar', () => {
     await set('familiar-power-level-0', '20');
 
     // NO budget bar for the invested powers: the character's own powers get a
-    // `power-levels-used` read-out, but ArMDE:10938 sets no limit on what may be
+    // `power-levels-used` read-out, but ArMDE:10940 sets no limit on what may be
     // invested in a familiar, so a bar here would invent one. The absent bar is the
     // whole statement — manual-testing-findings #21 removed the sentence too.
     expect(await $('[data-testid="power-levels-used"]').isExisting()).toBe(false);

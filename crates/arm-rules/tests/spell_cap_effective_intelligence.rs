@@ -1,13 +1,13 @@
 //! F6 (`tmp/ftl-rules-audit.md`): the spell-level cap must read the EFFECTIVE
 //! Intelligence, the same score the Lab Total reads.
 //!
-//! ArMDE:2533: "The highest level spell you can learn is equal to Technique +
+//! ArMDE:2535: "The highest level spell you can learn is equal to Technique +
 //! Form + Intelligence + Magic Theory +3 … This is the appropriate Lab Total,
 //! assuming an aura modifier of +3". The Lab Total (`derived/lab.rs::lab_totals`)
 //! reads Intelligence after aging drops and free Characteristic deltas
 //! (`effective_characteristic_after_aging`); Great (Characteristic) raises the
-//! score itself (ArMDE:4060), and the book's own Bonisagus template prints
-//! "Int +5" for bought +3 with "Great Intelligence (x2)" (ArMDE:1724, :1736).
+//! score itself (ArMDE:4062), and the book's own Bonisagus template prints
+//! "Int +5" for bought +3 with "Great Intelligence (x2)" (ArMDE:1726, :1738).
 //! Every test runs against the real shipped ruleset.
 
 use arm_rules::characteristics::Characteristic;
@@ -98,7 +98,7 @@ fn great_intelligence_raises_the_spell_level_cap_as_it_raises_the_lab_total() {
     assert_eq!(
         effective_characteristic_after_aging(&e, &rs, Characteristic::Int),
         4,
-        "precondition: Great (Intelligence) on a bought +3 is an effective +4 (ArMDE:4060)"
+        "precondition: Great (Intelligence) on a bought +3 is an effective +4 (ArMDE:4062)"
     );
     let lab_cell = lab_totals(&e, &rs)
         .into_iter()
@@ -113,7 +113,7 @@ fn great_intelligence_raises_the_spell_level_cap_as_it_raises_the_lab_total() {
     assert_eq!(
         creo_ignem_cap(&e, &rs),
         17,
-        "ArMDE:2533: the cap IS the Lab Total at aura +3, so it must read the \
+        "ArMDE:2535: the cap IS the Lab Total at aura +3, so it must read the \
          effective Intelligence (+4), not the bought +3"
     );
     let grid_row = spell_level_caps(&e, &rs)
@@ -134,7 +134,7 @@ fn great_intelligence_raises_the_spell_level_cap_as_it_raises_the_lab_total() {
 fn an_aging_drop_in_intelligence_lowers_the_spell_level_cap() {
     let rs = full_ruleset();
     let mut e = creo_ignem_magus(0);
-    // One aging point on a score of 0 exceeds it: one drop, to -1 (ArMDE:16656).
+    // One aging point on a score of 0 exceeds it: one drop, to -1 (ArMDE:16658).
     e.aging_points.insert(Characteristic::Int, 1);
 
     assert_eq!(
@@ -146,7 +146,7 @@ fn an_aging_drop_in_intelligence_lowers_the_spell_level_cap() {
     assert_eq!(
         creo_ignem_cap(&e, &rs),
         12,
-        "ArMDE:2533: an aged magus's Lab Total uses his aged Intelligence, so must the cap"
+        "ArMDE:2535: an aged magus's Lab Total uses his aged Intelligence, so must the cap"
     );
 }
 
@@ -166,7 +166,7 @@ fn the_books_bonisagus_template_gets_both_great_intelligence_points_in_its_cap()
     assert_eq!(
         effective_characteristic_after_aging(&bonisagus, &rs, Characteristic::Int),
         5,
-        "precondition: the template prints Int +5 (ArMDE:1724)"
+        "precondition: the template prints Int +5 (ArMDE:1726)"
     );
 
     let mut without_great_int = bonisagus.clone();
@@ -188,7 +188,7 @@ fn the_books_bonisagus_template_gets_both_great_intelligence_points_in_its_cap()
     assert_eq!(
         creo_auram(&bonisagus) - creo_auram(&without_great_int),
         2,
-        "Great Intelligence (x2) raises Int +3 to +5 (ArMDE:1724, :1736), and the \
-         cap is the Lab Total (ArMDE:2533), so the two Virtues must be worth 2 levels"
+        "Great Intelligence (x2) raises Int +3 to +5 (ArMDE:1726, :1738), and the \
+         cap is the Lab Total (ArMDE:2535), so the two Virtues must be worth 2 levels"
     );
 }

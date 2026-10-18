@@ -45,7 +45,7 @@ describe('guided wizard: grog', () => {
     // 3 + 3 + 1 = the ruleset's 7 starting Characteristic points, spent exactly.
     characteristics: { int: 2, sta: 2, per: 1 },
     flaws: ['flaw.disfigured'],
-    // B2/D41 (ArMDE:2884): every character must take one Social Status —
+    // B2/D41 (ArMDE:2886): every character must take one Social Status —
     // free, so the balance comment above still holds.
     virtues: ['virtue.covenfolk', 'virtue.keen_vision'],
     xpPool: '75',
@@ -111,7 +111,7 @@ describe('guided wizard: companion', () => {
     concept: 'A physician who travels with the covenant and asks too many questions.',
     characteristics: { int: 2, sta: 2, per: 1 },
     flaws: ['flaw.disfigured'],
-    // B2/D41 (ArMDE:2884): every character must take one Social Status —
+    // B2/D41 (ArMDE:2886): every character must take one Social Status —
     // free, so the balance comment above still holds.
     virtues: ['virtue.keen_vision', 'virtue.wanderer'],
     xpPool: '120',
@@ -169,7 +169,7 @@ describe('guided wizard: mythic companion', () => {
     mythicType: MYTHIC_TYPE,
     characteristics: { int: 2, sta: 2, per: 1 },
     flaws: ['flaw.disfigured'],
-    // B2/D41 (ArMDE:2884): every character must take one Social Status —
+    // B2/D41 (ArMDE:2886): every character must take one Social Status —
     // free, so the balance comment above still holds.
     virtues: ['virtue.keen_vision', 'virtue.wanderer'],
     xpPool: '120',
@@ -219,7 +219,7 @@ describe('guided wizard: mythic companion', () => {
 // (placed before Virtues & Flaws, because its free Minor Virtue lands in that
 // budget), Arts, and Spells. It is also the only type the Order holds to minimum
 // Abilities — Parma Magica 1, Magic Theory 1 and a dead language 1 are blocking
-// findings for every magus (ArMDE:2505) — so the Abilities step here has
+// findings for every magus (ArMDE:2507) — so the Abilities step here has
 // to settle a real error rather than merely record a choice.
 //
 // `wizard-flow.e2e.js`'s `wizard` describe already drives a magus through the
@@ -235,7 +235,7 @@ describe('guided wizard: magus', () => {
   const HOUSE = 'house.tytalus';
 
   // Creo 3 + Corpus 3, with Int +2 and Magic Theory 1, puts the Te+Fo+Int+MT+3 cap
-  // (ArMDE:2533) at 12 — enough for Bind Wound, a level 10 Creo Corpus spell
+  // (ArMDE:2535) at 12 — enough for Bind Wound, a level 10 Creo Corpus spell
   // and not a ritual. The 120 spell levels a magus starts with cover it many times.
   const SPELL = 'spell.bind_wound';
 

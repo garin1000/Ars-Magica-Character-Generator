@@ -1,18 +1,18 @@
 {
   "abilities": [
-    { "id": "spell_mastery_ability.adaptive_casting", "source": { "anchor": "adaptive-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9600, 9602] } },
-    { "id": "spell_mastery_ability.ceremonial_casting", "forbidden_for_ritual": true, "source": { "anchor": "ceremonial-casting-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9604, 9608] } },
-    { "id": "spell_mastery_ability.fast_casting", "forbidden_for_ritual": true, "source": { "anchor": "fast-casting-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9610, 9612] } },
-    { "id": "spell_mastery_ability.imperturbable_casting", "source": { "anchor": "imperturbable-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9614, 9616] } },
-    { "id": "spell_mastery_ability.magic_resistance", "source": { "anchor": "magic-resistance-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9618, 9620] } },
-    { "id": "spell_mastery_ability.multiple_casting", "source": { "anchor": "multiple-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9622, 9632] } },
-    { "id": "spell_mastery_ability.obfuscated_casting", "source": { "anchor": "obfuscated-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9634, 9636] } },
-    { "id": "spell_mastery_ability.penetration", "source": { "anchor": "penetration-2", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9638, 9640] } },
-    { "id": "spell_mastery_ability.precise_casting", "repeatable": true, "source": { "anchor": "precise-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9642, 9644] } },
-    { "id": "spell_mastery_ability.quick_casting", "repeatable": true, "forbidden_for_ritual": true, "source": { "anchor": "quick-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9646, 9648] } },
-    { "id": "spell_mastery_ability.quiet_casting", "repeatable": true, "max_count": 2, "source": { "anchor": "quiet-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9650, 9652] } },
-    { "id": "spell_mastery_ability.rebuttal", "source": { "anchor": "rebuttal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9654, 9656] } },
-    { "id": "spell_mastery_ability.still_casting", "source": { "anchor": "still-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9658, 9660] } },
-    { "id": "spell_mastery_ability.unravelling", "source": { "anchor": "unravelling", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9662, 9664] } }
+    { "id": "spell_mastery_ability.adaptive_casting", "source": { "anchor": "adaptive-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9602, 9604] } },
+    { "id": "spell_mastery_ability.ceremonial_casting", "forbidden_for_ritual": true, "source": { "anchor": "ceremonial-casting-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9606, 9610] } },
+    { "id": "spell_mastery_ability.fast_casting", "forbidden_for_ritual": true, "source": { "anchor": "fast-casting-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9612, 9614] } },
+    { "id": "spell_mastery_ability.imperturbable_casting", "source": { "anchor": "imperturbable-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9616, 9618] } },
+    { "id": "spell_mastery_ability.magic_resistance", "source": { "anchor": "magic-resistance-1", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9620, 9622] } },
+    { "id": "spell_mastery_ability.multiple_casting", "source": { "anchor": "multiple-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9624, 9634] } },
+    { "id": "spell_mastery_ability.obfuscated_casting", "source": { "anchor": "obfuscated-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9636, 9638] } },
+    { "id": "spell_mastery_ability.penetration", "source": { "anchor": "penetration-2", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9640, 9642] } },
+    { "id": "spell_mastery_ability.precise_casting", "repeatable": true, "source": { "anchor": "precise-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9644, 9646] } },
+    { "id": "spell_mastery_ability.quick_casting", "repeatable": true, "forbidden_for_ritual": true, "source": { "anchor": "quick-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9648, 9650] } },
+    { "id": "spell_mastery_ability.quiet_casting", "repeatable": true, "max_count": 2, "source": { "anchor": "quiet-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9652, 9654] } },
+    { "id": "spell_mastery_ability.rebuttal", "source": { "anchor": "rebuttal", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9656, 9658] } },
+    { "id": "spell_mastery_ability.still_casting", "source": { "anchor": "still-casting", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9660, 9662] } },
+    { "id": "spell_mastery_ability.unravelling", "source": { "anchor": "unravelling", "file": "Ars Magica - Definitive Edition (Core Rules).md", "lines": [9664, 9666] } }
   ]
 }

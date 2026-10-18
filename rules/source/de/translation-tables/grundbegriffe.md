@@ -349,10 +349,10 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Prone to Chance | Risikofreudig | Kleiner Prüfungsfehler; Magus muss stets experimentieren |
 | Averse to Risk | Risikoscheu | Kleiner Prüfungsfehler; Magus darf nie experimentieren |
 | Vulcanalia | Vulcanalia | Römisches Fest am 23. August; Eigenname |
-| Hobbled | Humpelnd | Kleiner Allgemeiner Fehler; wie Grundregelwerk-Überschrift (ArMDE:6331). Freigabe 2026-10-03: vorher „Verkrüppelt“, kollidierte mit *Crippled* |
-| Crippled | Verkrüppelt | Großer Allgemeiner Fehler (ArMDE:5948); nicht mit *Hobbled* = Humpelnd verwechseln |
+| Hobbled | Humpelnd | Kleiner Allgemeiner Fehler; wie Grundregelwerk-Überschrift (ArMDE:6333). Freigabe 2026-10-03: vorher „Verkrüppelt“, kollidierte mit *Crippled* |
+| Crippled | Verkrüppelt | Großer Allgemeiner Fehler (ArMDE:5950); nicht mit *Hobbled* = Humpelnd verwechseln |
 | Confraternity Member | Bruderschaftsmitglied | Kleiner Geschichte-Fehler |
-| Primogeniture Lineage | Primogenitur-Abstammungslinie | Kleiner Hermetischer Fehler. **Im Grundregelwerk heißt der Fehler „Erstgeburts-Abstammung" (ArMDE:6705)**, und diese Form wird im Generator ausgeliefert. |
+| Primogeniture Lineage | Primogenitur-Abstammungslinie | Kleiner Hermetischer Fehler. **Im Grundregelwerk heißt der Fehler „Erstgeburts-Abstammung" (ArMDE:6707)**, und diese Form wird im Generator ausgeliefert. |
 | Covet Device | Gegenstandsgier | Persönlichkeitszug; zwanghafte Bindung an abgestimmten Gegenstand |
 | Craft Automata | Automatenkunst | Große Hermetische Tugend / Fertigkeit |
 
@@ -369,7 +369,7 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Perpetuity | Beständigkeit | Mysterientugend |
 | Independent Study | Eigenständiges Studium | Kleine Allgemeine Tugend |
 | Alluring to (Beings) | Anziehend für (Wesen) | Kleine Allgemeine Tugend |
-| Vulnerable Magic | Anfällige Magie | Großer Hermetischer Fehler (ArMDE:7076) |
+| Vulnerable Magic | Anfällige Magie | Großer Hermetischer Fehler (ArMDE:7078) |
 | Binding the Gift | Bindung der Gabe | Kleines Hausmysterium; Feenvertrauter |
 | Wayfarers | Weltengänger | Merinita-Gesellschaft; Arkadien-Experten |
 | Keepers of the Thousand Tales | Hüter der Tausend Geschichten | Merinita-Gesellschaft |
@@ -434,7 +434,7 @@ Dort stehen die vollständigen Umrechnungsfaktoren (Längen, Flächen, Volumina,
 | Council of Four | Rat der Vier | Regierungsgremium des Hauses |
 | Warding (Ability) | Schutzkreismagie | Beschleunigte Fertigkeit der Columbae |
 | Ring/Circle Magic | Ring/Kreis-Magie | Kleine Hermetische Tugend (Columbae) |
-| Vulnerable to Folk Tradition | Anfällig für Volksüberlieferungen | Kleiner Hermetischer Fehler (ArMDE:7082) |
+| Vulnerable to Folk Tradition | Anfällig für Volksüberlieferungen | Kleiner Hermetischer Fehler (ArMDE:7084) |
 | Control Fertility | Fruchtbarkeit beherrschen | Übernatürliche Fertigkeit |
 | Hermetic Haruspexes | Hermetische Haruspexe | Ex-Misc.-Tradition; Sg. Haruspex |
 | Karaites / Karaite Magic | Karäer / Karäische Magie | Ex-Misc.-Tradition |

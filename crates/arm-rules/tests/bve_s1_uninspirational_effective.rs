@@ -1,10 +1,10 @@
 //! bve S1 (`tmp/bve-sweep.md`): Uninspirational caps the character's EFFECTIVE
 //! Presence and Communication, not only the bought score.
 //!
-//! ArMDE:6992: "His Presence and Communication may not be greater than 0."
+//! ArMDE:6994: "His Presence and Communication may not be greater than 0."
 //! The character's Presence is the score he plays with — bought plus every
-//! free delta (Sidhe Faerie Blood's "+1 to your Presence", ArMDE:3886; Magical
-//! Blood's Magic Human "+1 to one Characteristic", ArMDE:4438). Today
+//! free delta (Sidhe Faerie Blood's "+1 to your Presence", ArMDE:3888; Magical
+//! Blood's Magic Human "+1 to one Characteristic", ArMDE:4440). Today
 //! `validation/scores.rs::validate_characteristic_within_cap_and_floor`
 //! compares only the bought score, and `validate_characteristics` visits only
 //! keys present in `entity.characteristics`; the UI deletes a Characteristic's
@@ -97,18 +97,18 @@ fn sidhe_blood_on_an_unbought_presence_breaks_uninspirationals_cap() {
     // the free +1 = -1), which this test must not forbid.
     assert!(
         characteristic_cap(&rs, &e, Characteristic::Pre) <= 0,
-        "precondition: Uninspirational lowers the Presence cap to 0 or below (ArMDE:6992)"
+        "precondition: Uninspirational lowers the Presence cap to 0 or below (ArMDE:6994)"
     );
     assert_eq!(
         effective_characteristic_score(&e, &rs, Characteristic::Pre),
         1,
-        "precondition: Sidhe Blood adds +1 Presence (ArMDE:3886)"
+        "precondition: Sidhe Blood adds +1 Presence (ArMDE:3888)"
     );
 
     assert_eq!(
         above_cap_issues(&e, &rs, Characteristic::Pre),
         1,
-        "ArMDE:6992: 'His Presence and Communication may not be greater than 0' — \
+        "ArMDE:6994: 'His Presence and Communication may not be greater than 0' — \
          an effective Presence of +1 must raise characteristic_above_cap"
     );
 }
@@ -128,18 +128,18 @@ fn magic_human_blood_on_an_unbought_communication_breaks_uninspirationals_cap() 
     assert_eq!(
         effective_characteristic_score(&e, &rs, Characteristic::Com),
         1,
-        "precondition: Magic Human raises Communication by 1 (ArMDE:4438)"
+        "precondition: Magic Human raises Communication by 1 (ArMDE:4440)"
     );
 
     assert_eq!(
         above_cap_issues(&e, &rs, Characteristic::Com),
         1,
-        "ArMDE:6992: an effective Communication of +1 must raise characteristic_above_cap"
+        "ArMDE:6994: an effective Communication of +1 must raise characteristic_above_cap"
     );
 }
 
 /// The mirror case: Monstrous Blood's Magic Human "must decrease one of his
-/// Characteristics by 1" (ArMDE:6533) on Presence, bought +1 — the effective
+/// Characteristics by 1" (ArMDE:6535) on Presence, bought +1 — the effective
 /// Presence is 0, which Uninspirational allows, yet the bought +1 is flagged
 /// today because the cap is compared with the bought score.
 #[test]
@@ -160,12 +160,12 @@ fn monstrous_blood_lets_a_bought_presence_of_one_sit_at_an_effective_zero() {
     assert_eq!(
         effective_characteristic_score(&e, &rs, Characteristic::Pre),
         0,
-        "precondition: bought +1 minus Monstrous Blood's 1 is an effective 0 (ArMDE:6533)"
+        "precondition: bought +1 minus Monstrous Blood's 1 is an effective 0 (ArMDE:6535)"
     );
     assert_eq!(
         above_cap_issues(&e, &rs, Characteristic::Pre),
         0,
-        "ArMDE:6992: an effective Presence of 0 is not greater than 0"
+        "ArMDE:6994: an effective Presence of 0 is not greater than 0"
     );
 }
 
@@ -185,7 +185,7 @@ fn buying_presence_down_to_offset_sidhe_blood_satisfies_uninspirational() {
     assert_eq!(
         above_cap_issues(&e, &rs, Characteristic::Pre),
         0,
-        "an effective Presence of 0 is not greater than 0 (ArMDE:6992)"
+        "an effective Presence of 0 is not greater than 0 (ArMDE:6994)"
     );
 }
 

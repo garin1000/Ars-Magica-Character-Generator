@@ -60,20 +60,20 @@ use crate::types::{
     MagicResistanceEffect, SelectionParamValue, SpecialCasting, SpellSelection,
 };
 
-// --- Non-standard-casting penalty constants (ArMDE:9315-9317) -----------
+// --- Non-standard-casting penalty constants (ArMDE:9317-9319) -----------
 
 /// Casting-Score penalty for casting with **no voice** at all (the "None" Words
-/// row). Source: ArMDE:9317.
+/// row). Source: ArMDE:9319.
 const NO_VOICE_PENALTY: i32 = -10;
 /// Casting-Score penalty for casting with **no gestures** at all (the "None"
-/// Gestures row). Source: ArMDE:9317.
+/// Gestures row). Source: ArMDE:9319.
 const NO_GESTURE_PENALTY: i32 = -5;
 /// The no-voice-penalty reduction one casting of Quiet Magic grants (soft voice →
 /// no penalty, no voice → −5, i.e. +5; a second casting eliminates it). Source:
-/// ArMDE:4893-4897.
+/// ArMDE:4895-4899.
 const QUIET_MAGIC_VOICE_REDUCTION: i32 = 5;
 /// The no-gesture-penalty reduction Subtle Magic grants (no gestures → no
-/// penalty, i.e. +5). Source: ArMDE:5144-5147.
+/// penalty, i.e. +5). Source: ArMDE:5146-5149.
 const SUBTLE_MAGIC_GESTURE_REDUCTION: i32 = 5;
 
 /// A single labelled term in a breakdown. `label` is a **stable slug id**
@@ -173,7 +173,7 @@ struct InPlayMods {
     /// folded separately from `casting_mods` because they apply only within
     /// the maga's own Potent Magic field (D79), never unconditionally. Read
     /// by `potent_casting_mod_for`, which takes the MAX matching amount
-    /// rather than summing — ArMDE:4813: "only one Potent Magic Virtue
+    /// rather than summing — ArMDE:4815: "only one Potent Magic Virtue
     /// applies to any single activity".
     casting_mods_within_potent_field: Vec<(i32, CastingScope)>,
     /// Flat Lab-Total modifier (Inventive Genius +3, summed).
@@ -184,13 +184,13 @@ struct InPlayMods {
     /// `within_focus` (D4 originally folded it into the latter; D79
     /// separates them, since the Potent Magic field and a Magical Focus
     /// descriptor need not coincide). The MAX, not the sum, across carriers —
-    /// same ArMDE:4813 bound as `casting_mods_within_potent_field`.
+    /// same ArMDE:4815 bound as `casting_mods_within_potent_field`.
     lab_mod_within_potent_field: i32,
     /// The deficient Technique/Form Art ids (Deficient Art halves totals adding one).
     deficient_arts: BTreeSet<Id>,
     /// The pooled elemental Form ids from [`Effect::ElementalMagic`], `None`
     /// for an entity without the Virtue. Read only by
-    /// `derived/casting.rs::fold_requisite` (ArMDE:3808: a Form requisite
+    /// `derived/casting.rs::fold_requisite` (ArMDE:3810: a Form requisite
     /// never reduces an elemental primary Form when both are pooled here) —
     /// Elemental Magic names only Forms, never Techniques.
     elemental_forms: Option<BTreeSet<Id>>,
@@ -289,7 +289,7 @@ fn in_play_lab_total_mod(entity: &Entity, ruleset: &Ruleset) -> i32 {
 /// reaches `within_focus` either — only `within_potent_field`
 /// (`derived/lab.rs::lab_totals`). Reads
 /// [`LabTotalModScope::WithinPotentFieldOnly`] off the data rather than an id
-/// list. **MAX, not sum**, across carriers: ArMDE:4813, "a maga may have more
+/// list. **MAX, not sum**, across carriers: ArMDE:4815, "a maga may have more
 /// than one area of Potent Magic, although only one Potent Magic Virtue
 /// applies to any single activity" — two Potent Magic Virtues must not stack.
 /// Before D79 this same amount was folded into `within_focus`
@@ -327,7 +327,7 @@ pub(crate) fn in_play_lab_total_mod_within_potent_field(entity: &Entity, ruleset
 fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
     // Deficiencies are folded by `effective/art.rs::deficient_arts` rather than in
     // the match below, because the creation-time per-spell level cap needs the same
-    // set: `ArMDE:2533` makes that cap a Lab Total, so a Deficiency halves it too.
+    // set: `ArMDE:2535` makes that cap a Lab Total, so a Deficiency halves it too.
     // One fold, so the in-play totals and the cap can never disagree about which
     // Arts are deficient. `lab_mod` is folded by `in_play_lab_total_mod` (D4,
     // X7a) — a *different* fold from `effective/spell.rs::lab_total_mod` (D1),
@@ -366,7 +366,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
             match effect {
                 Effect::MagicalFocus { .. } => m.has_focus = true,
                 Effect::MasterpieceItem => m.has_masterpiece = true,
-                // ArMDE:3808 (Elemental Magic): the pooled elemental Forms,
+                // ArMDE:3810 (Elemental Magic): the pooled elemental Forms,
                 // read here (rather than re-walking selections a second time)
                 // so `derived/casting.rs::fold_requisite` can except a Form
                 // requisite from the fold when both it and the spell's primary
@@ -464,7 +464,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 // selection's own params. A copy that names no Form applies to
                 // none — `missing_param` asks for the choice rather than this
                 // guessing one.
-                // Source: ArMDE:6417-6420 (Limited Magic Resistance, "one of your
+                // Source: ArMDE:6419-6422 (Limited Magic Resistance, "one of your
                 // Form scores"), :6142-6145 (Flawed Parma, "against a certain
                 // Form").
                 //
@@ -472,7 +472,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                 // susceptibilities, the conditional Penetration waiver) cannot be
                 // folded into that flat figure at all, so they are surfaced
                 // labelled rather than silently dropped.
-                // Source: ArMDE:6890-6897
+                // Source: ArMDE:6892-6899
                 // (the two realm susceptibilities that do halve MR), :3579-3596
                 // (Commanding Aura) & :4998-5001 (Special Circumstances) for
                 // aura_bonus, :7068-7070 (Weak Magic Resistance).
@@ -623,7 +623,7 @@ fn in_play_mods(entity: &Entity, ruleset: &Ruleset) -> InPlayMods {
                     }
                 }
                 // D69/X7b-e row 42: Lingering Injury's category-wide penalty,
-                // multiplied by 1 + Decrepitude Score (ArMDE:6421-6423). The
+                // multiplied by 1 + Decrepitude Score (ArMDE:6423-6425). The
                 // aggravated (-3) alternative stays text (no aggravation
                 // tracking exists on `Entity`).
                 Effect::DecrepitudeScaledRollMod { amount } => {
@@ -733,7 +733,7 @@ impl InPlayMods {
     }
 
     /// The Potent-Magic-field Casting-Total modifier applying to `cast` — the
-    /// MAX matching amount, not the sum (ArMDE:4813, D79: "only one Potent
+    /// MAX matching amount, not the sum (ArMDE:4815, D79: "only one Potent
     /// Magic Virtue applies to any single activity"), `0` if the character
     /// holds none. Mirrors [`Self::casting_mod_for`]'s scope matching exactly;
     /// only the fold differs.
@@ -747,7 +747,7 @@ impl InPlayMods {
     }
 
     /// Whether a `(technique, form)` pair's totals are halved by a Deficient
-    /// Art — either primary Art, or (ArMDE:12383, closing sentence: "any
+    /// Art — either primary Art, or (ArMDE:12385, closing sentence: "any
     /// Deficiencies you have with an Art apply when you use that Art as a
     /// requisite") any of `requisites`, regardless of whether that requisite
     /// numerically binds in [`fold_requisite`]. Empty `requisites` (the grid,
@@ -759,7 +759,7 @@ impl InPlayMods {
     /// The residual Casting-Score penalty for casting a `form` spell with no voice:
     /// Deft Form waives it entirely, else the −10 base plus Quiet Magic reduction,
     /// clamped so a Virtue can never turn it into a bonus. Source:
-    /// ArMDE:9317, :4893-4897, :3716-3719.
+    /// ArMDE:9319, :4895-4899, :3718-3721.
     fn residual_voice_penalty(&self, form: &Id) -> i32 {
         if self.deft_forms.contains(form) {
             return 0;
@@ -769,7 +769,7 @@ impl InPlayMods {
 
     /// The residual Casting-Score penalty for casting a `form` spell with no
     /// gestures: Deft Form waives it, else the −5 base plus Subtle Magic reduction,
-    /// clamped at 0. Source: ArMDE:9317,
+    /// clamped at 0. Source: ArMDE:9319,
     /// :5073-5076, :3645-3648.
     fn residual_gesture_penalty(&self, form: &Id) -> i32 {
         if self.deft_forms.contains(form) {
@@ -779,7 +779,7 @@ impl InPlayMods {
     }
 }
 
-/// The four ways a casting total is derived (ArMDE:9167-9217). One breakdown yields
+/// The four ways a casting total is derived (ArMDE:9169-9219). One breakdown yields
 /// all four; the scope filter and post-divisor differ.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum CastType {
@@ -860,7 +860,7 @@ pub use lab::{
 /// "The strength of each of these cords is rated from 0 to +5 … a strength of +1
 /// requires 5 points, a score of +2 requires 15 points, a score of +3 requires 30
 /// points, a score of +4 requires 50 points, and a score of +5 (the maximum)
-/// requires 75 points" (ArMDE:10908).
+/// requires 75 points" (ArMDE:10910).
 ///
 /// A fixed five-entry rule curve, so it is a `const` here rather than ruleset data
 /// — the same call as [`LOAD_TABLE`] for Encumbrance. RULES.md is its provenance
@@ -868,7 +868,7 @@ pub use lab::{
 const CORD_COST_TABLE: [u32; 6] = [0, 5, 15, 30, 50, 75];
 
 /// The rules-legal score of a stored cord value, clamped to the +5 maximum
-/// (ArMDE:10908).
+/// (ArMDE:10910).
 ///
 /// **Every** consumer of a cord score routes through this, so the read-outs cannot
 /// disagree. `Familiar`'s cord fields are plain `u8`, and a hand-edited or legacy save
@@ -890,12 +890,12 @@ fn cord_score(raw: u8) -> u8 {
 /// "**The Bronze Cord:** You can apply your bronze cord score as a bonus to Soak
 /// rolls and totals, to healing rolls, to rolls to withstand deprivation …, and to
 /// rolls to resist aging."
-/// (Source: ArMDE:10916)
+/// (Source: ArMDE:10918)
 ///
 /// The one entity-level accessor for that score, shared by every total the cord
 /// feeds: [`soak`], the aging-resistance note on [`longevity_bonus`], and the
 /// crisis-survival read-out. It goes **through** [`cord_score`], so the +5 maximum
-/// (`ArMDE:10908`) keeps its single home there and cannot be bypassed by adding a
+/// (`ArMDE:10910`) keeps its single home there and cannot be bypassed by adding a
 /// consumer here. [`cord_points_spent`] deliberately stays on [`cord_score`]: it
 /// prices all three cords of a `Familiar` and has no bronze-only, entity-level
 /// form.
@@ -1011,7 +1011,7 @@ pub struct SurfacedModifier {
 }
 
 /// Every surfaced-only modifier the character carries, for the read-out list.
-/// Source: ArMDE:3493-3496 (Apt
+/// Source: ArMDE:3495-3498 (Apt
 /// Student), :5187-5190 (Unaging), :3645-3682 (non-standard casting).
 pub fn surfaced_modifiers(entity: &Entity, ruleset: &Ruleset) -> Vec<SurfacedModifier> {
     let mut m = in_play_mods(entity, ruleset);
@@ -1066,7 +1066,7 @@ pub struct DerivedTotals {
     pub spell_casting_totals: Vec<Option<i32>>,
     /// Whether each known spell is unusable because it touches (as its primary
     /// Technique/Form or as a requisite — "even if one or both are requisites",
-    /// ArMDE:6363) one of a held Incompatible Arts Flaw's two forbidden
+    /// ArMDE:6365) one of a held Incompatible Arts Flaw's two forbidden
     /// combinations (D81.8). Index-aligned with [`Self::spell_casting_totals`]
     /// and `entity.spells`, for the same reason that field is. A parallel `Vec`
     /// rather than widening [`Self::spell_casting_totals`]'s element to a small
@@ -1093,7 +1093,7 @@ pub struct DerivedTotals {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub familiar: Option<FamiliarReadout>,
     /// One line per entered Focus Power — magnitude, Initiative and Fatigue cost
-    /// (`ArMDE:3970`, `ArMDE:3972`). Empty for a character with none, and open to every
+    /// (`ArMDE:3972`, `ArMDE:3974`). Empty for a character with none, and open to every
     /// character type, since Focus Power is a Supernatural Virtue rather than a
     /// Hermetic one.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1506,7 +1506,7 @@ mod tests {
 
     /// A self-made ritual's bonus is the *stored* one, passed straight through: the
     /// number was frozen by the Lab Total of the season the ritual was made
-    /// (ArMDE:10742), so the engine must not overwrite it with today's derivation.
+    /// (ArMDE:10744), so the engine must not overwrite it with today's derivation.
     #[test]
     fn self_made_longevity_passes_through_entered_bonus() {
         let rs = ruleset();
@@ -1521,7 +1521,7 @@ mod tests {
     }
 
     /// An External ritual passes the entered bonus through and gets **no** hint —
-    /// its bonus came from another magus's Lab Total (ArMDE:10744), which this
+    /// its bonus came from another magus's Lab Total (ArMDE:10746), which this
     /// character sheet does not know.
     #[test]
     fn external_longevity_passes_through_entered_bonus() {
@@ -1548,8 +1548,8 @@ mod tests {
     }
 
     /// The hint: "+1 bonus for every five points or fraction of Creo Corpus Lab
-    /// Total" (ArMDE:10734) — 35 → ceil(35/5) = 7, matching the book's worked
-    /// example (ArMDE:2556, :2641).
+    /// Total" (ArMDE:10736) — 35 → ceil(35/5) = 7, matching the book's worked
+    /// example (ArMDE:2558, :2643).
     #[test]
     fn self_made_longevity_hint_is_lab_total_over_five_rounded_up() {
         let rs = ruleset();
@@ -1565,8 +1565,8 @@ mod tests {
     }
 
     /// A zero aura does not suppress the hint. The Lab Total takes the Aura
-    /// Modifier as a plain addend (ArMDE:10348-10350), and no aura simply means no
-    /// hindrance (ArMDE:17735) — 30 → ceil(30/5) = 6.
+    /// Modifier as a plain addend (ArMDE:10350-10352), and no aura simply means no
+    /// hindrance (ArMDE:17737) — 30 → ceil(30/5) = 6.
     #[test]
     fn longevity_hint_survives_a_zero_aura() {
         let rs = ruleset();
@@ -1582,7 +1582,7 @@ mod tests {
     }
 
     /// A negative aura is a plain addend too, lowering the Lab Total: 35 − 5 − 3 =
-    /// 27 → ceil(27/5) = 6 (ArMDE:10348-10350).
+    /// 27 → ceil(27/5) = 6 (ArMDE:10350-10352).
     #[test]
     fn negative_aura_lowers_the_longevity_hint() {
         let rs = ruleset();
@@ -1620,7 +1620,7 @@ mod tests {
         );
     }
 
-    /// Deficient Creo halves the Lab Total the hint reads (ArMDE:5980-5986):
+    /// Deficient Creo halves the Lab Total the hint reads (ArMDE:5982-5988):
     /// 35 → 17 → ceil(17/5) = 4, flagged `halved`.
     #[test]
     fn deficient_creo_halves_the_longevity_hint() {
@@ -1641,7 +1641,7 @@ mod tests {
     }
 
     /// Difficult Longevity Ritual: "Anyone (including yourself) creating a Longevity
-    /// Ritual for you must halve their Lab Total" (ArMDE:6033-6035) — 35 → 17 → 4.
+    /// Ritual for you must halve their Lab Total" (ArMDE:6035-6037) — 35 → 17 → 4.
     #[test]
     fn difficult_longevity_ritual_halves_the_hint() {
         let rs = ruleset();
@@ -1681,7 +1681,7 @@ mod tests {
     }
 
     /// A non-positive Lab Total suggests no bonus at all — "every five points" has
-    /// no meaning below one point (ArMDE:10734).
+    /// no meaning below one point (ArMDE:10736).
     #[test]
     fn non_positive_longevity_lab_total_suggests_no_bonus() {
         let rs = ruleset();
@@ -1698,7 +1698,7 @@ mod tests {
     }
 
     /// Masterpiece: the best (Technique, Form) Lab Total bounds the lesser
-    /// enchanted item the magus could make — level ≤ Lab Total ÷ 2 (ArMDE:10482).
+    /// enchanted item the magus could make — level ≤ Lab Total ÷ 2 (ArMDE:10484).
     /// Int 3 + Magic Theory 4 + Creo 10 + Corpus 13 + Aura 5 = 35 → cap 17.
     #[test]
     fn masterpiece_cap_is_best_lab_total_halved() {
@@ -1731,10 +1731,10 @@ mod tests {
     }
 
     /// A Weak Enchanter designing his Masterpiece item is still "creating" an
-    /// enchanted item (ArMDE:4547-4550:
+    /// enchanted item (ArMDE:4549-4552:
     /// the item is designed "following the regular rules for construction of such
     /// a device"), so the cap must derive from the halved `enchanting` figure
-    /// (ArMDE:7131-7134), not the un-halved `total` — otherwise the cap is double what
+    /// (ArMDE:7133-7136), not the un-halved `total` — otherwise the cap is double what
     /// the rules allow. Same figures as `masterpiece_cap_is_best_lab_total_halved`
     /// (total 35) but with Weak Enchanter added: enchanting = halve(35) = 17, so
     /// the reported lab_total is 17 and the cap is halve(17) = 8, not 35 / 17.
@@ -1761,7 +1761,7 @@ mod tests {
     }
 
     /// A magus with a talisman: its capacity in pawns of Vim vis is his highest
-    /// Technique + his highest Form (ArMDE:10691). Creo 10 / Perdo 4 and Corpus 12 /
+    /// Technique + his highest Form (ArMDE:10693). Creo 10 / Perdo 4 and Corpus 12 /
     /// Ignem 8 → Creo + Corpus = 22, with both contributing scores surfaced so the
     /// UI needs no arithmetic.
     #[test]
@@ -1804,7 +1804,7 @@ mod tests {
     }
 
     /// The capacity reads the per-Art **effective scores**, not the best Lab Total
-    /// pair: it "depends on the power of the magus" (ArMDE:10691), and a Deficient
+    /// pair: it "depends on the power of the magus" (ArMDE:10693), and a Deficient
     /// Technique halves *totals*, never the Art score itself. Discriminating: with
     /// Deficient Creo the best Lab Total moves to Perdo, while the capacity stays on
     /// Creo + Corpus.
@@ -2017,7 +2017,7 @@ mod tests {
 
     /// Cord scores are bought off a fixed 5-entry curve — +1 costs 5, +2 15, +3 30,
     /// +4 50, +5 75 — and the read-out is the **total** across all three cords
-    /// (ArMDE:10908).
+    /// (ArMDE:10910).
     #[test]
     fn cord_points_spent_follows_the_cord_cost_curve() {
         let mut f = Familiar::default();
@@ -2034,7 +2034,7 @@ mod tests {
         assert_eq!(cord_points_spent(&f), 225, "3 x 75, the maximum cords");
     }
 
-    /// A cord score above the curve's top (+5 is the maximum, ArMDE:10908) is
+    /// A cord score above the curve's top (+5 is the maximum, ArMDE:10910) is
     /// **clamped**, not indexed: the cord fields are `u8`, so a hand-edited or legacy
     /// save can carry any value up to 255, and a raw index would panic inside the
     /// derived-totals command and take the whole read-out panel down.
@@ -2049,7 +2049,7 @@ mod tests {
         assert_eq!(cord_points_spent(&f), 150, "both clamp to +5 = 75 each");
     }
 
-    /// The +5 cord maximum (ArMDE:10908) is enforced in **one** place, so every
+    /// The +5 cord maximum (ArMDE:10910) is enforced in **one** place, so every
     /// consumer of a cord score reports the same number. A hand-edited save
     /// carrying `cord_bronze: 255` must not read as "75 points spent" on the
     /// familiar panel while Soak and the Longevity Bronze-cord note both claim
@@ -2084,7 +2084,7 @@ mod tests {
     }
 
     /// The three **entity-level** Bronze-cord read-outs all clamp at the same +5
-    /// maximum (ArMDE:10908), because they share one accessor
+    /// maximum (ArMDE:10910), because they share one accessor
     /// ([`bronze_cord_bonus`]) which itself routes through [`cord_score`]. The
     /// clamp must not be bypassable by any single path: a hand-edited save
     /// carrying `cord_bronze: 255` reads +5 through the accessor, +5 in Soak, and
@@ -2133,7 +2133,7 @@ mod tests {
 
     /// The bonding level is "25 plus the familiar's Magic Might plus 5 times its
     /// Size", and a negative Size **reduces** it — the book's own worked example:
-    /// Size -2 and Magic Might 10 bind as a level 25 enchantment (ArMDE:10896,
+    /// Size -2 and Magic Might 10 bind as a level 25 enchantment (ArMDE:10898,
     /// :10828).
     #[test]
     fn familiar_binding_level_folds_in_a_negative_size() {
@@ -2164,11 +2164,11 @@ mod tests {
     }
 
     /// A Focus Power's Initiative is "the character's Quickness – the maximum
-    /// magnitude of the effect" (ArMDE:3970), and a magnitude "is equal to the
-    /// level divided by five, rounded up" (`ArMDE:9169`) — the only sourced
+    /// magnitude of the effect" (ArMDE:3972), and a magnitude "is equal to the
+    /// level divided by five, rounded up" (`ArMDE:9171`) — the only sourced
     /// level→magnitude rule the book gives. Activation costs "one Fatigue level …
     /// for an effect of level 25 or lower, two Fatigue levels … if the effect has a
-    /// level of 26 to 50, and three for 51 to 75" (`ArMDE:3972`); the book stops at
+    /// level of 26 to 50, and three for 51 to 75" (`ArMDE:3974`); the book stops at
     /// 75, so above it the cost is unstated rather than extrapolated.
     #[test]
     fn focus_power_lines_derive_magnitude_initiative_and_fatigue() {
@@ -2279,7 +2279,7 @@ mod tests {
 
     /// Bond-invested power levels are summed for information only: "there is no
     /// limit to the number of powers which may be invested in a familiar"
-    /// (ArMDE:10938), so there is no budget to compare against and no issue to
+    /// (ArMDE:10940), so there is no budget to compare against and no issue to
     /// raise.
     #[test]
     fn familiar_invested_power_levels_sums_with_no_budget() {
@@ -2293,9 +2293,9 @@ mod tests {
         assert_eq!(familiar_invested_power_levels(&f), 40);
     }
 
-    /// The bonding Lab Total is the ordinary Lab Total shape (ArMDE:10898), so the
+    /// The bonding Lab Total is the ordinary Lab Total shape (ArMDE:10900), so the
     /// best `(Technique, Form)` cell of the existing grid is taken — and unlike
-    /// Masterpiece, a **focus** may apply here (`ArMDE:10890`), so the best cell's
+    /// Masterpiece, a **focus** may apply here (`ArMDE:10892`), so the best cell's
     /// within-focus figure is surfaced as a separate conditional number.
     #[test]
     fn familiar_readout_takes_the_best_lab_total_and_surfaces_the_focus() {
@@ -2404,7 +2404,7 @@ mod tests {
     }
 
     /// A casting total with Encumbrance and a Magical Focus: base vs within-focus,
-    /// plus Method Caster's +3 formulaic (ArMDE:9161, :4595-4598, :4470-4493).
+    /// plus Method Caster's +3 formulaic (ArMDE:9163, :4597-4600, :4472-4495).
     #[test]
     fn casting_total_with_encumbrance_and_focus() {
         let rs = ruleset();
@@ -2638,7 +2638,7 @@ mod tests {
         assert_eq!(cell.ritual, 30);
     }
 
-    /// A Deficient Technique halves every casting total using it (ArMDE:5984-5986).
+    /// A Deficient Technique halves every casting total using it (ArMDE:5986-5988).
     #[test]
     fn deficient_technique_halves_casting_total() {
         let rs = ruleset();
@@ -2664,7 +2664,7 @@ mod tests {
     }
 
     /// With no relevant Virtue, casting with no voice takes −10 and with no
-    /// gestures −5 off the Formulaic total (ArMDE:9315-9317); combined −15.
+    /// gestures −5 off the Formulaic total (ArMDE:9317-9319); combined −15.
     ///
     /// The three figures are written out **absolutely** rather than as
     /// `formulaic - N`. A relative assertion here is invariant under any
@@ -2801,11 +2801,11 @@ mod tests {
     }
 
     /// The Words/Gestures modifier is a penalty **to the Casting Score**
-    /// (ArMDE:9308: "Increased subtlety gives a penalty to the casting score";
-    /// ArMDE:9319 repeats it), and a Deficient Art halves the *total* that
-    /// score feeds (ArMDE:5982: "Almost all totals (including Casting Totals
+    /// (ArMDE:9310: "Increased subtlety gives a penalty to the casting score";
+    /// ArMDE:9321 repeats it), and a Deficient Art halves the *total* that
+    /// score feeds (ArMDE:5984: "Almost all totals (including Casting Totals
     /// and Lab Totals …) to which a particular Form is added are halved";
-    /// ArMDE:9175 makes the Casting Total = Casting Score + die). So the
+    /// ArMDE:9177 makes the Casting Total = Casting Score + die). So the
     /// penalty is **inside** the halving: `halve(score + penalty)`, never
     /// `halve(score) + penalty`.
     ///
@@ -2853,7 +2853,7 @@ mod tests {
     }
 
     /// Quiet Magic cuts the no-voice penalty to −5; a second casting eliminates it
-    /// (the residual clamps at 0). ArMDE:4893-4897.
+    /// (the residual clamps at 0). ArMDE:4895-4899.
     #[test]
     fn quiet_magic_reduces_then_eliminates_voice_penalty() {
         let rs = ruleset();
@@ -2878,7 +2878,7 @@ mod tests {
     }
 
     /// Subtle Magic removes the no-gesture penalty; voice is untouched.
-    /// ArMDE:5144-5147.
+    /// ArMDE:5146-5149.
     #[test]
     fn subtle_magic_removes_gesture_penalty() {
         let rs = ruleset();
@@ -2892,7 +2892,7 @@ mod tests {
     }
 
     /// Deft Form waives both penalties, but only for spells in that Form.
-    /// ArMDE:3716-3719.
+    /// ArMDE:3718-3721.
     #[test]
     fn deft_form_waives_both_penalties_in_that_form_only() {
         let rs = ruleset();
@@ -2915,7 +2915,7 @@ mod tests {
         assert_eq!(corpus.non_standard.gesture_penalty, -5);
     }
 
-    /// Per-Form Magic Resistance = Form + 5 × Parma (ArMDE:9462-9470).
+    /// Per-Form Magic Resistance = Form + 5 × Parma (ArMDE:9464-9472).
     #[test]
     fn magic_resistance_is_form_plus_five_parma() {
         let rs = ruleset();
@@ -2936,9 +2936,9 @@ mod tests {
 
     /// Flawed Parma Magica halves the **Parma contribution alone**, and only
     /// against the Form its own selection names: the Flaw's subject is "Your
-    /// Parma Magica" (ArMDE:6215), and :9396 puts the Form half of the
+    /// Parma Magica" (ArMDE:6217), and :9396 puts the Form half of the
     /// resistance on the Form scores rather than on the Parma, so a defective
-    /// Parma cannot reduce it. Source: ArMDE:6213-6216, :9462, :9468, :9470.
+    /// Parma cannot reduce it. Source: ArMDE:6215-6218, :9464, :9470, :9472.
     #[test]
     fn flawed_parma_halves_only_the_parma_contribution_against_its_own_form() {
         let rs = ruleset();
@@ -2973,9 +2973,9 @@ mod tests {
 
     /// The halving is on the *Parma* contribution, so it never halves a
     /// Might-being's blanket Might base. Might and Parma do not stack and the
-    /// higher of the two is the base (RoP:M:1370; ArMDE:2695) — a defective
+    /// higher of the two is the base (RoP:M:1370; ArMDE:2697) — a defective
     /// Parma lowers only the Parma side of that comparison.
-    /// Source: ArMDE:6213-6216.
+    /// Source: ArMDE:6215-6218.
     #[test]
     fn flawed_parma_never_halves_a_might_base() {
         let rs = ruleset();
@@ -3004,7 +3004,7 @@ mod tests {
 
     /// A supernatural being's Magic Resistance equals its Might Score, blanket
     /// across every Form; it does not stack with Parma — the higher is used
-    /// (RoP:M:1370; ArMDE:2695).
+    /// (RoP:M:1370; ArMDE:2697).
     #[test]
     fn might_being_magic_resistance_is_might_score() {
         let rs = ruleset();
@@ -3021,7 +3021,7 @@ mod tests {
         assert!(ignem.addends.iter().any(|a| a.label == "might"));
     }
 
-    /// Might and Parma do not stack: the base uses whichever is higher (ArMDE:2695).
+    /// Might and Parma do not stack: the base uses whichever is higher (ArMDE:2697).
     #[test]
     fn might_does_not_stack_with_parma_uses_higher() {
         let rs = ruleset();
@@ -3039,8 +3039,8 @@ mod tests {
 
     /// A True Faith Score is a Magic Resistance **floor across every Form**:
     /// "A character with a True Faith Score gains Magic Resistance equal to this
-    /// score multiplied by ten" (ArMDE:17688), and "these totals do not stack …
-    /// you simply use the higher total" (ArMDE:2695) — so it competes with, not
+    /// score multiplied by ten" (ArMDE:17690), and "these totals do not stack …
+    /// you simply use the higher total" (ArMDE:2697) — so it competes with, not
     /// adds to, a weak Form's ordinary total (D37, F-329).
     #[test]
     fn true_faith_floors_a_weak_forms_magic_resistance() {
@@ -3060,7 +3060,7 @@ mod tests {
     }
 
     /// The floor never suppresses a stronger ordinary total — it is a `max`, not
-    /// a replacement (D37, ArMDE:2695 "the higher total").
+    /// a replacement (D37, ArMDE:2697 "the higher total").
     #[test]
     fn true_faith_does_not_lower_a_strong_forms_magic_resistance() {
         let rs = ruleset();
@@ -3078,7 +3078,7 @@ mod tests {
     /// The floor is a separate source from Parma, so it is untouched by a Flaw
     /// that reduces only the Parma/Form side — it can override that reduction
     /// on the very Form the Flaw names (D37: True Faith competes with the WHOLE
-    /// per-Form total, ArMDE:2695).
+    /// per-Form total, ArMDE:2697).
     #[test]
     fn true_faith_floor_overrides_a_flawed_parma_reduction() {
         let rs = ruleset();
@@ -3110,7 +3110,7 @@ mod tests {
     }
 
     /// Per-known-spell penetration = Casting Total − Level + Penetration score;
-    /// Weak Magic halves after subtracting level (ArMDE:9231-9233, :7135-7138).
+    /// Weak Magic halves after subtracting level (ArMDE:9233-9235, :7137-7140).
     #[test]
     fn penetration_per_spell_and_weak_magic() {
         let rs = ruleset();
@@ -3169,7 +3169,7 @@ mod tests {
     /// A parameterized meta-magic Vim spell's Casting Total and Penetration use
     /// its catalogue Vim Arts (MuVi), NOT the chosen target-Form parameter, and
     /// the Penetration line carries the chosen parameter so two instances of the
-    /// one spell id are distinct. Source: ArMDE:15868-15871 (the (Form) is
+    /// one spell id are distinct. Source: ArMDE:15870-15873 (the (Form) is
     /// the target spell's Form; these are MuVi spells).
     #[test]
     fn parametrized_spell_penetration_uses_vim_not_param_form() {
@@ -3201,7 +3201,7 @@ mod tests {
         assert_eq!(pen[0].parameter, Some("art.ignem".to_string()));
     }
 
-    /// A grog combat line with a weapon and a shield combined (ArMDE:16735-16747,
+    /// A grog combat line with a weapon and a shield combined (ArMDE:16737-16749,
     /// :16656).
     #[test]
     fn combat_line_combines_weapon_and_shield() {
@@ -3248,7 +3248,7 @@ mod tests {
         assert_eq!(bare.defense, 6);
         assert_eq!(bare.damage, Some(9));
         assert!(bare.shields.is_empty());
-        // The shield still weighs on Encumbrance in both lines (ArMDE:17184).
+        // The shield still weighs on Encumbrance in both lines (ArMDE:17186).
         assert_eq!(encumbrance(&e, &rs).total, 0);
     }
 
@@ -3276,7 +3276,7 @@ mod tests {
 
     /// K5 (`docs/vf-audit/design-f0-book-template-engine.md` § 2a): a
     /// `Carried` weapon yields a Combat row but contributes no Load — the
-    /// Knight's own carried great sword (ArMDE:1538-1539), fixed by
+    /// Knight's own carried great sword (ArMDE:1540-1541), fixed by
     /// `combat.rs::combat_totals`'s `!= Stowed` row-emission filter, which
     /// excludes only Stowed gear and leaves Wielded's existing behavior
     /// unchanged.
@@ -3339,7 +3339,7 @@ mod tests {
 
     /// Issue B: a two-handed weapon wielded with a shield gets NO shield
     /// Init/Attack/Defense modifiers, but the shield still adds to Load /
-    /// Encumbrance (ArMDE:7566, :17184).
+    /// Encumbrance (ArMDE:7568, :17186).
     #[test]
     fn two_handed_weapon_ignores_shield_mods() {
         let rs = ruleset();
@@ -3381,7 +3381,7 @@ mod tests {
 
     /// Issue C: with the weapon's Ability carrying a specialty and the slot's
     /// `specialization_applies` toggled on, Attack and Defense gain +1; Damage and
-    /// Initiative (which do not use the Ability) are unchanged (ArMDE:7193, :7210).
+    /// Initiative (which do not use the Ability) are unchanged (ArMDE:7195, :7212).
     #[test]
     fn specialization_adds_one_to_attack_and_defense_only() {
         let rs = ruleset();
@@ -3429,7 +3429,7 @@ mod tests {
 
     /// Issue A: with all Load coming from combat gear (weapons + armor), the
     /// Encumbrance penalty is exempt from Attack/Defense but still hits Initiative
-    /// (ArMDE:17182, :16735).
+    /// (ArMDE:17184, :16737).
     ///
     /// This replaces a companion test that called the private `combat_gear_is_majority`
     /// helper with hand-written `(7, 10)` / `(3, 10)` pairs. Those argument pairs
@@ -3472,7 +3472,7 @@ mod tests {
         assert_eq!(l.defense, 6);
     }
 
-    /// Soak with Tough (+3) and a Bronze cord, plus worn armor (ArMDE:16743,
+    /// Soak with Tough (+3) and a Bronze cord, plus worn armor (ArMDE:16745,
     /// :5145-5147, :10840-10844).
     #[test]
     fn soak_with_tough_and_bronze_cord() {
@@ -3496,7 +3496,7 @@ mod tests {
     }
 
     /// Encumbrance from a hand-set Load: armor Load 1 → Burden 1; Str 0 → Enc 1
-    /// (ArMDE:17180-17200).
+    /// (ArMDE:17182-17202).
     #[test]
     fn encumbrance_from_load_table() {
         let rs = ruleset();
@@ -3517,11 +3517,11 @@ mod tests {
     /// the character nothing.
     ///
     /// The rule says to total "the Load that a character is carrying"
-    /// (ArMDE:17184) and never defines carried-but-stowed, so the book's own
+    /// (ArMDE:17186) and never defines carried-but-stowed, so the book's own
     /// worked characters are the tie-breaker. The Knight template
-    /// (ArMDE:1515-1554) lists four items — full chain mail, long sword, heater
+    /// (ArMDE:1517-1556) lists four items — full chain mail, long sword, heater
     /// shield **and** a great sword — and prints "Encumbrance: 2 (3)"
-    /// (ArMDE:1552). Burden 3 is Load 6-9, so the printed figure counts the
+    /// (ArMDE:1554). Burden 3 is Load 6-9, so the printed figure counts the
     /// wielded set only: long sword 1 + heater 2 + chain 6 = 9. Totalling all
     /// four gives 11, which is Burden 4. The reading is confirmed by his *other*
     /// loadout landing on the same Burden — great sword 2 + chain 6 = 8, also
@@ -3556,7 +3556,7 @@ mod tests {
     // (the stub), so every "twin present" lookup below panics until it lands.
 
     /// "A mounted character adds his Ride score, to a maximum of +3, to his
-    /// Attack and Defense Totals" (ArMDE:16916). Ride 5 caps at +3; Initiative
+    /// Attack and Defense Totals" (ArMDE:16918). Ride 5 caps at +3; Initiative
     /// and Damage are untouched.
     #[test]
     fn mounted_twin_adds_ride_capped_at_three_to_attack_and_defense() {
@@ -3577,7 +3577,7 @@ mod tests {
         let twin = lines
             .iter()
             .find(|l| l.weapon.as_str() == "weapon.long_sword" && l.mounted)
-            .expect("mounted twin present — Ride 5 caps at +3 (ArMDE:16916)");
+            .expect("mounted twin present — Ride 5 caps at +3 (ArMDE:16918)");
         assert_eq!(twin.attack, base.attack.map(|a| a + 3));
         assert_eq!(twin.defense, base.defense + 3);
         assert_eq!(twin.initiative, base.initiative, "Initiative is untouched");
@@ -3611,7 +3611,7 @@ mod tests {
 
     /// D66: the mounted twin is gated on `Weapon::body_attack` alone. Dodge
     /// (a body attack) must get no mounted twin, reproducing the Knight's own
-    /// template (no mounted Fist row, ArMDE:1535-1540).
+    /// template (no mounted Fist row, ArMDE:1537-1542).
     #[test]
     fn body_attack_weapon_gets_no_mounted_twin() {
         let rs = ruleset();
@@ -3652,7 +3652,7 @@ mod tests {
         );
     }
 
-    /// Wound ranges for Size 0 and Size +1 (ArMDE:17244-17257).
+    /// Wound ranges for Size 0 and Size +1 (ArMDE:17246-17259).
     #[test]
     fn wound_ranges_scale_with_size() {
         let rs = ruleset();
@@ -3675,7 +3675,7 @@ mod tests {
         assert_eq!(medium.penalty, Some(-3));
     }
 
-    /// Size +1 widens every band by the unit growth (ArMDE:17244-17257).
+    /// Size +1 widens every band by the unit growth (ArMDE:17246-17259).
     #[test]
     fn wound_ranges_size_plus_one() {
         // Directly exercise the band formula at Size +1 (u = 6).
@@ -3688,7 +3688,7 @@ mod tests {
     }
 
     /// Enduring Constitution reduces wound and fatigue penalty magnitudes
-    /// (ArMDE:3822-3825).
+    /// (ArMDE:3824-3827).
     #[test]
     fn enduring_constitution_reduces_penalties() {
         let rs = ruleset();
@@ -3729,7 +3729,7 @@ mod tests {
     }
 
     /// Decrepitude (17 aging points → 2) and Warping (15 points → 2) are reused
-    /// from `effective.rs`, not reimplemented (ArMDE:16694, :16541-16552).
+    /// from `effective.rs`, not reimplemented (ArMDE:16696, :16543-16554).
     #[test]
     fn decrepitude_and_warping_reuse_effective() {
         let rs = ruleset();
@@ -3813,7 +3813,7 @@ mod tests {
     }
 
     /// Inventive Genius folds a flat +3 into the Lab-Total `lab_mod` addend of
-    /// every cell (ArMDE:4222-4225).
+    /// every cell (ArMDE:4224-4227).
     #[test]
     fn lab_total_mod_adds_to_every_cell() {
         let rs = ruleset();
@@ -3937,7 +3937,7 @@ mod tests {
     /// Weak Enchanter (GD3, round 2): "Halve your Lab Total whenever you
     /// create or investigate an enchanted item. If you have a Deficiency that
     /// counts as part of the Lab Total, apply the Deficiency first and then
-    /// halve the remaining total" (ArMDE:7131-7134). `HalvableTotal::LabEnchanting` was asserted by
+    /// halve the remaining total" (ArMDE:7133-7136). `HalvableTotal::LabEnchanting` was asserted by
     /// ruleset data and folded into `InPlayMods.halvings` but nothing ever
     /// consumed it, so the Flaw had no mechanical effect at all. `LabTotal`
     /// gains an `enchanting` field: the ordinary (Deficient-halved) `total`,
@@ -4028,7 +4028,7 @@ mod tests {
 
     /// A weapon-scoped CombatMod replaces the same item's unscoped figure on that
     /// weapon's line alone. Lame reads "-3 on Dodge, and -1 on other combat
-    /// scores" (ArMDE:6403): the Dodge line takes -3, not -1 and not -4, while
+    /// scores" (ArMDE:6405): the Dodge line takes -3, not -1 and not -4, while
     /// every other weapon's line takes -1.
     #[test]
     fn weapon_scoped_combat_mod_replaces_general_on_that_weapon_only() {
@@ -4069,9 +4069,9 @@ mod tests {
 
     /// Limited Magic Resistance (a MagicResistanceMod NoFormBonus) drops the Form
     /// contribution of the **one** Form its selection names — "You gain no bonus
-    /// from *one of* your Form scores" (ArMDE:6419) — leaving resistance from
+    /// from *one of* your Form scores" (ArMDE:6421) — leaving resistance from
     /// Parma alone against that Form and every other Form untouched.
-    /// Source: ArMDE:6417-6420.
+    /// Source: ArMDE:6419-6422.
     #[test]
     fn limited_magic_resistance_drops_the_form_bonus_of_its_own_form_only() {
         let rs = ruleset();
@@ -4137,7 +4137,7 @@ mod tests {
     /// surfaced labelled with amount 0, not silently dropped. Only NoFormBonus is
     /// folded into the flat per-Form MR number; the realm-conditional variants are
     /// listed, because "against faerie effects" is a scope the flat figure cannot
-    /// carry. Source: ArMDE:6890-6897.
+    /// carry. Source: ArMDE:6892-6899.
     /// D45: also names its source (`flaw.susceptibility_to_faerie_power`).
     #[test]
     fn susceptibility_magic_resistance_is_surfaced() {
@@ -4154,7 +4154,7 @@ mod tests {
     }
 
     /// An AbilityRollModParam (Academic Concentration) is surfaced with the free-text
-    /// subject as its detail and the bonus as its amount (ArMDE:3433-3438). D45:
+    /// subject as its detail and the bonus as its amount (ArMDE:3435-3440). D45:
     /// also names its source, so two Academic Concentrations on different
     /// subjects each say which one they are.
     #[test]
@@ -4210,8 +4210,8 @@ mod tests {
 
     /// Weak Spontaneous Magic (GD2, round 2): "You may not exert yourself when
     /// casting spontaneous magic, so you always divide your Casting Score by
-    /// five" (ArMDE:7155-7157, not
-    /// `ArMDE:7131-7134` — that range is Weak Enchanter, a different Flaw
+    /// five" (ArMDE:7157-7159, not
+    /// `ArMDE:7133-7136` — that range is Weak Enchanter, a different Flaw
     /// entirely). The Flaw does not add a second halving on top of the normal
     /// ÷2 fatiguing rate (that would silently produce ÷4, a rate that appears
     /// nowhere in the rules) — it removes the fatiguing (exert-yourself)
@@ -4270,7 +4270,7 @@ mod tests {
     }
 
     /// The per-spell penetration path halves the casting score for a Deficient Art
-    /// (`formulaic_casting_score`, ArMDE:5984-5986).
+    /// (`formulaic_casting_score`, ArMDE:5986-5988).
     #[test]
     fn deficient_art_halves_penetration_casting_score() {
         let rs = ruleset();
@@ -4342,7 +4342,7 @@ mod tests {
 
     /// A surfaced-only health-roll track (Long-Winded → fatigue_roll +3) is listed
     /// under family "health_roll", and does not perturb the folded Fatigue
-    /// penalties (ArMDE:17204-17206).
+    /// penalties (ArMDE:17206-17208).
     ///
     /// D45 deliberately does NOT extend to `HealthRoll`: unlike the other five
     /// families, which push one row per producing selection directly inside

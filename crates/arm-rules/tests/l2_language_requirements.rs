@@ -3,13 +3,13 @@
 //!
 //! 1. **The magus minimum is Latin, not any Dead Language.** "Magi must have the
 //!    following minimum Abilities: Parma Magica 1, Magic Theory 1, Latin 1"
-//!    (ArMDE:2505), and the recommendation is "Latin 4" (ArMDE:2519-2523). The
+//!    (ArMDE:2507), and the recommendation is "Latin 4" (ArMDE:2521-2525). The
 //!    requirement names the catalogue value `language.latin`, so Hebrew or Gothic
 //!    no longer satisfies it.
 //! 2. **The Academic requirement names its four languages.** "learning an Academic
 //!    Knowledge normally requires a Latin, Greek, Hebrew, or Arabic score of at
-//!    least 3" (ArMDE:7222); "Arabic, Greek and Hebrew fill similar functions,
-//!    although of these only Hebrew is a dead language" (ArMDE:7504). So Latin or
+//!    least 3" (ArMDE:7224); "Arabic, Greek and Hebrew fill similar functions,
+//!    although of these only Hebrew is a dead language" (ArMDE:7506). So Latin or
 //!    Hebrew as a Dead Language, or Greek or Arabic as a Living Language, at 3.
 //! 3. **Typed text.** Norbert's decision on finding 8: typed text that equals a
 //!    catalogue name (case-insensitive) counts as that language, anything else does
@@ -159,7 +159,7 @@ fn issue_codes(entity: &Entity, ruleset: &Ruleset) -> Vec<String> {
 // --- 1. The magus minimum is Latin -----------------------------------------------
 
 /// Both Latin rows of the shipped data name the catalogue value, not just the
-/// Ability: "Latin 1" (ArMDE:2505) and the recommended "Latin 4" (ArMDE:2523).
+/// Ability: "Latin 1" (ArMDE:2507) and the recommended "Latin 4" (ArMDE:2525).
 #[test]
 fn the_shipped_latin_minimum_and_recommendation_name_language_latin() {
     let rs = full_ruleset();
@@ -181,7 +181,7 @@ fn the_shipped_latin_minimum_and_recommendation_name_language_latin() {
                 Some("language.latin".to_string())
             ),
         ],
-        "ArMDE:2505 demands Latin 1 and ArMDE:2523 recommends Latin 4, by name"
+        "ArMDE:2507 demands Latin 1 and ArMDE:2525 recommends Latin 4, by name"
     );
 }
 
@@ -289,7 +289,7 @@ fn without_catalogue_names_typed_text_is_no_catalogue_value() {
 }
 
 /// A requirement naming a value outside its Ability's own catalogue is a broken
-/// rules file: Arabic is a Living Language (ArMDE:7504), so "Dead Language:
+/// rules file: Arabic is a Living Language (ArMDE:7506), so "Dead Language:
 /// Arabic" can never be bought, and the load must fail naming the value.
 #[test]
 fn a_minimum_naming_a_value_outside_its_abilitys_catalogue_fails_to_load() {
@@ -326,8 +326,8 @@ fn academic_warnings(entity: &Entity, ruleset: &Ruleset) -> usize {
         .count()
 }
 
-/// Greek and Arabic are not dead languages (ArMDE:7504), so they are bought as
-/// Living Language — and at 3 they satisfy ArMDE:7222 (ruling F5).
+/// Greek and Arabic are not dead languages (ArMDE:7506), so they are bought as
+/// Living Language — and at 3 they satisfy ArMDE:7224 (ruling F5).
 #[test]
 fn greek_or_arabic_at_three_as_a_living_language_satisfies_the_academic_requirement() {
     let rs = full_ruleset();
@@ -336,7 +336,7 @@ fn greek_or_arabic_at_three_as_a_living_language_satisfies_the_academic_requirem
         assert_eq!(
             academic_warnings(&entity, &rs),
             0,
-            "Living Language {value} 3 satisfies ArMDE:7222"
+            "Living Language {value} 3 satisfies ArMDE:7224"
         );
     }
 }
@@ -350,12 +350,12 @@ fn latin_or_hebrew_at_three_as_a_dead_language_satisfies_the_academic_requiremen
         assert_eq!(
             academic_warnings(&entity, &rs),
             0,
-            "Dead Language {value} 3 satisfies ArMDE:7222"
+            "Dead Language {value} 3 satisfies ArMDE:7224"
         );
     }
 }
 
-/// Any other language does not: Gothic (a dead language ArMDE:7222 does not
+/// Any other language does not: Gothic (a dead language ArMDE:7224 does not
 /// name), Persian (a living one it does not name), and typed text naming no
 /// catalogue language.
 #[test]
@@ -380,7 +380,7 @@ fn a_language_the_rules_do_not_name_does_not_satisfy_the_academic_requirement() 
         assert_eq!(
             academic_warnings(&entity, &rs),
             1,
-            "{case} must leave the ArMDE:7222 warning standing"
+            "{case} must leave the ArMDE:7224 warning standing"
         );
     }
 }

@@ -21,7 +21,7 @@ use super::*;
 use crate::aging::AgingError;
 
 /// Validates a directly-entered aged character's aging state (advisory). Aging
-/// drops are DERIVED from [`Entity::aging_points`] (ArMDE:16656); this
+/// drops are DERIVED from [`Entity::aging_points`] (ArMDE:16658); this
 /// only surfaces informational notes, never blocking errors:
 ///
 /// - `aging_rolls_pending`: the character is over 35 and no aging roll
@@ -35,7 +35,7 @@ use crate::aging::AgingError;
 /// in the effective score, so it is not an entry problem worth flagging. An
 /// `excessive_aging_reduction` warning was removed on 2026-09-15 for a stronger
 /// reason: it fired when the drops passed an engine-invented floor that
-/// `ArMDE:16656` does not state, so it warned about a legal character. A warning
+/// `ArMDE:16658` does not state, so it warned about a legal character. A warning
 /// can only exist where a rule does; this one existed because a clamp did, and
 /// the clamp went with it.)
 ///
@@ -50,7 +50,7 @@ use crate::aging::AgingError;
 ///
 /// Reads the un-aged bought score plus the derived drops; it never touches the
 /// point-buy budget check (which is what keeps aging from perturbing creation
-/// legality). Source: ArMDE:16656.
+/// legality). Source: ArMDE:16658.
 pub(crate) fn validate_aging(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -76,10 +76,10 @@ pub(crate) fn validate_aging(
 /// # Why more than one non-cumulative row is a conflict
 ///
 /// "Modifiers marked with an asterisk are cumulative with each other"
-/// (`ArMDE:16671`) — a sentence worth writing only because the unmarked rows are *not*.
+/// (`ArMDE:16673`) — a sentence worth writing only because the unmarked rows are *not*.
 /// They describe mutually exclusive situations: a character cannot be both
-/// "Wealthy, or healthy location" (`ArMDE:16660`) and an "Average peasant" (`ArMDE:16664`),
-/// and the four covenant rows (`ArMDE:16661-16663`) are graded alternatives for the same
+/// "Wealthy, or healthy location" (`ArMDE:16662`) and an "Average peasant" (`ArMDE:16666`),
+/// and the four covenant rows (`ArMDE:16663-16665`) are graded alternatives for the same
 /// covenant. So at most one may be chosen.
 ///
 /// ONE finding, naming the first two offenders in canonical id order, rather than
@@ -90,7 +90,7 @@ pub(crate) fn validate_aging(
 /// table for an id to resolve against), exactly as
 /// [`report_pending_aging_rolls`] does with its threshold.
 ///
-/// Source: ArMDE:16658-16671.
+/// Source: ArMDE:16660-16673.
 fn report_living_conditions(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec<ValidationIssue>) {
     let Some(table) = ruleset.aging().map(|rules| &rules.living_conditions) else {
         return;
@@ -127,20 +127,20 @@ fn report_living_conditions(entity: &Entity, ruleset: &Ruleset, issues: &mut Vec
 /// Emits `apparent_age_above_age` when the entered apparent age exceeds the actual
 /// age.
 ///
-/// "Otherwise, the character's apparent age increases by one year" (`ArMDE:16654`) —
+/// "Otherwise, the character's apparent age increases by one year" (`ArMDE:16656`) —
 /// at most one year per year lived, so aging alone can never push the apparent age
 /// past the actual one; a higher figure is a transposed entry.
 ///
 /// A WARNING rather than an error: the closest the rules come to stating the bound
 /// explicitly is Unaging's aside — "You may choose your apparent age freely,
 /// although if you are basically human it should be less than or equal to your
-/// actual age" (`ArMDE:5260`). That is a *should*, and it carries its own escape for a
+/// actual age" (`ArMDE:5262`). That is a *should*, and it carries its own escape for a
 /// character who is not basically human, so the engine advises and never blocks.
 ///
 /// Silent unless both figures are entered: with either missing there is nothing to
 /// compare.
 ///
-/// Source: ArMDE:16654, :5260.
+/// Source: ArMDE:16656, :5262.
 fn report_apparent_age(entity: &Entity, issues: &mut Vec<ValidationIssue>) {
     let (Some(apparent_age), Some(age)) = (entity.apparent_age, entity.age) else {
         return;
@@ -166,7 +166,7 @@ fn report_apparent_age(entity: &Entity, issues: &mut Vec<ValidationIssue>) {
 ///
 /// "The first thing to bear in mind is that a character over the age of 35 must
 /// make aging rolls (see page 392) before the game begins."
-/// Source: ArMDE:2300.
+/// Source: ArMDE:2302.
 ///
 /// The rule is about *any* character, however it was built, which is why this
 /// lives here and not in `validate_life_stage_plan` — that one returns early for a
@@ -174,7 +174,7 @@ fn report_apparent_age(entity: &Entity, issues: &mut Vec<ValidationIssue>) {
 /// as much as a guided one.
 ///
 /// "Over the age of 35" is strict: aging begins "in the Winter after they turn
-/// 35" (`ArMDE:16642`), so 35 owes nothing and 36 owes the first roll. That derivation
+/// 35" (`ArMDE:16644`), so 35 owes nothing and 36 owes the first roll. That derivation
 /// lives once, in `first_roll_age()`, over the `start_age` the ruleset's
 /// `rules/core/aging.json` carries — the threshold is a rules number, not an engine
 /// one, so a ruleset shipping no aging rules emits nothing here rather than falling
@@ -227,7 +227,7 @@ fn report_pending_aging_rolls(
 /// and a slug is never shown to a user. The count says what the player needs —
 /// that the table fixed this row's Characteristics itself.
 ///
-/// Source: ArMDE:16674-16694.
+/// Source: ArMDE:16676-16696.
 pub fn aging_error_issue(error: &AgingError) -> ValidationIssue {
     match error {
         AgingError::NoAgingRules => ValidationIssue::error(

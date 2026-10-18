@@ -9,7 +9,7 @@
 //! kind)` tuple match), which rejects at LOAD time any ruleset that gives the
 //! effect's parameter `domain: enumerated` instead — this is what blocked
 //! retyping `virtue.academic_concentration_subject`'s `subject` parameter to
-//! the seven Artes Liberales (F-03, ArMDE:3433-3438, :7382). The fix widens
+//! the seven Artes Liberales (F-03, ArMDE:3435-3440, :7384). The fix widens
 //! that single hardcoded expectation to accept EITHER `Text` or `Enumerated`
 //! (mirroring `validate_deficient_art_effect`'s existing Technique-or-Form
 //! dual acceptance, a few hundred lines above the same match), not a removal

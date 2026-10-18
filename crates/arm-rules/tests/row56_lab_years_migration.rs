@@ -5,7 +5,7 @@
 //! four seasons, plus one year holding the remainder `s % 4` when that is 1–3.
 //! The fold writes exactly those year counts, so the charge is preserved — "the
 //! character loses 10 points from the yearly 30 experience points, to a minimum
-//! of 0 if three or four seasons are spent on lab work" (ArMDE:2550).
+//! of 0 if three or four seasons are spent on lab work" (ArMDE:2552).
 //!
 //! A save is the trust boundary, and `LifeStagePlan` does not deny unknown
 //! fields: a leftover or malformed old key would be dropped by serde in silence,

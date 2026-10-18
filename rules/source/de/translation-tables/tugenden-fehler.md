@@ -31,7 +31,7 @@
 | Major Magical Focus | Großer Magischer Fokus | |
 | Mercurian Magic | Merkurische Magie | |
 | Mythic Blood | Mythisches Blut | |
-| Potent Magic | Potente Magie | Klein **oder** Groß, Hermetisch (ArMDE:4811). Nicht mit dem Zaubertyp *Potent Spell* = Potenter Zauber verwechseln (`grundbegriffe.md`) |
+| Potent Magic | Potente Magie | Klein **oder** Groß, Hermetisch (ArMDE:4813). Nicht mit dem Zaubertyp *Potent Spell* = Potenter Zauber verwechseln (`grundbegriffe.md`) |
 
 ### Hermetische Tugenden, Klein / Hermetic, Minor
 
@@ -67,7 +67,7 @@
 | Study Bonus | Studierbonus | |
 | Subtle Magic | Subtile Magie | |
 | Tethered Magic | Gefesselte Magie | |
-| Withstand Casting | Zaubern aushalten | Klein, Hermetisch (ArMDE:5332); wie Grundregelwerk-Überschrift. Alter Name *Withstand Magic* (Die Mysterien) |
+| Withstand Casting | Zaubern aushalten | Klein, Hermetisch (ArMDE:5334); wie Grundregelwerk-Überschrift. Alter Name *Withstand Magic* (Die Mysterien) |
 
 ### Übernatürliche Tugenden, Groß / Supernatural, Major
 
@@ -140,16 +140,16 @@
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Commanding Aura | Befehlende Aura | Vom Papst oder direkt vom Göttlichen verliehen, Teil eines Kirchenamts; übernatürliche Wirkung (ArMDE:3652) |
+| Commanding Aura | Befehlende Aura | Vom Papst oder direkt vom Göttlichen verliehen, Teil eines Kirchenamts; übernatürliche Wirkung (ArMDE:3654) |
 
 ### Mythischer Gefährte, Frei / Mythic Companion, Free
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Devil Child | Teufelskind | Frei, Mythischer Gefährte (ArMDE:3742); Details s. Abschnitt SdM:I |
-| Faerie Doctor | Feendoktor | Frei, Mythischer Gefährte (ArMDE:3892) |
-| Nephilim | Nephilim | Frei, Mythischer Gefährte (ArMDE:4665); Details s. Abschnitt SdM:G |
-| Spirit Votary | Geistverehrer | Frei, Mythischer Gefährte (ArMDE:5077); Charakter pflegt rituelle Beziehung zu einem Geist |
+| Devil Child | Teufelskind | Frei, Mythischer Gefährte (ArMDE:3744); Details s. Abschnitt SdM:I |
+| Faerie Doctor | Feendoktor | Frei, Mythischer Gefährte (ArMDE:3894) |
+| Nephilim | Nephilim | Frei, Mythischer Gefährte (ArMDE:4667); Details s. Abschnitt SdM:G |
+| Spirit Votary | Geistverehrer | Frei, Mythischer Gefährte (ArMDE:5079); Charakter pflegt rituelle Beziehung zu einem Geist |
 
 ### Hermetische Tugenden, Klein (SdM:M) / Hermetic, Minor (SdM:M)
 
@@ -166,7 +166,7 @@
 | Essential Virtue | Essenzielle Tugend | SdM:M; Groß (+6) oder Klein (+3); verleiht Essenzielle Eigenschaft |
 | Giant Blood | Riesenblut | SdM:M-Hinweis: repräsentiert Halbriesen, nicht volle Riesen |
 | Magical Warder | Magischer Wächter | SdM:M; magisches Wesen als Beschützer; auch für Geisterhaften Wächter mit Machtwert |
-| Powerful Relic | Mächtige Reliquie | Reliquie mit Wahrer-Glaube-Wert 3 und einer Kraft (mit dem Spielleiter abzustimmen); Groß, Allgemein (ArMDE:4853). **Nicht** „Mächtiges Relikt" (`grundbegriffe.md`) |
+| Powerful Relic | Mächtige Reliquie | Reliquie mit Wahrer-Glaube-Wert 3 und einer Kraft (mit dem Spielleiter abzustimmen); Groß, Allgemein (ArMDE:4855). **Nicht** „Mächtiges Relikt" (`grundbegriffe.md`) |
 | Wealthy | Wohlhabend | Konsistent im Text verwendet |
 
 ### Allgemeine Tugenden, Klein / General, Minor
@@ -180,7 +180,7 @@
 | Affinity with Ability | Affinität zu (Fertigkeit) | |
 | Apt Student | Begabter Schüler | |
 | Cautious with (Ability) | Vorsichtig mit (Fertigkeit) | Weniger Patzerwürfel bei bestimmter Fertigkeit |
-| Arcane Lore | Arkanes Wissen | Arkane Fertigkeiten bei der Erschaffung erlaubt, +50 EP dafür; ohne Gabe keine Parma Magica (ArMDE:3503) |
+| Arcane Lore | Arkanes Wissen | Arkane Fertigkeiten bei der Erschaffung erlaubt, +50 EP dafür; ohne Gabe keine Parma Magica (ArMDE:3505) |
 | Book Learner | Bücherwurm | |
 | Clear Thinker | Klarer Denker | |
 | Common Sense | Gesunder Menschenverstand | |
@@ -206,23 +206,23 @@
 | Lightning Reflexes | Blitzreflexe | |
 | Long-Winded | Ausdauernd | |
 | Luck | Glück | |
-| Magic Items | Zauberartefakte | Wie Grundregelwerk-Überschrift (ArMDE:4418); nicht „Magische Gegenstände“ (= Abschnitt Magical Items) |
+| Magic Items | Zauberartefakte | Wie Grundregelwerk-Überschrift (ArMDE:4420); nicht „Magische Gegenstände“ (= Abschnitt Magical Items) |
 | Privileged Upbringing | Privilegierte Erziehung | |
 | Protection | Schutz | |
 | Puissant Ability | Begabung in (Fertigkeit) | |
 | Rapid Convalescence | Schnelle Genesung | |
 | Relic | Reliquie | Heilige Reliquie mit Wahrer-Glaube-Wert 1, ohne weitere Kräfte. **Nicht** „Relikt" – das bleibt dem Überrest/Fundstück vorbehalten (`grundbegriffe.md`) |
-| Schooled in Crime | In der Kriminalität geschult | Wie Grundregelwerk-Überschrift (ArMDE:4955) |
+| Schooled in Crime | In der Kriminalität geschult | Wie Grundregelwerk-Überschrift (ArMDE:4957) |
 | Self-Confident | Selbstbewusst | |
 | Sharp Ears | Scharfe Ohren | +3 auf Hörwürfe. Gleichlautend mit der Tier-Quality (`tiere-kreaturen.md`). Nicht „Spitze Ohren" – der Spielwert ist die Hörleistung, nicht die Ohrenform |
 | Social Contacts | Soziale Kontakte | |
 | Strong-Willed | Willensstark | |
 | Student of (Realm) | Student der (Sphäre) | |
-| Templar Office Holder | Templer-Amtsträger | Klein, Sozialer Status (ArMDE:5192). Freigabe 2026-10-04 (vorher Basisregeln „Templerstelleninhaber“); deckt alle Ordensämter ab (Komtur-Stellvertreter, Marschall, Infirmar …) |
-| Templar Prestige | Templer-Ansehen | Klein, Allgemein (ArMDE:5196). Freigabe 2026-10-04 (vorher Basisregeln „Templerrang“) |
+| Templar Office Holder | Templer-Amtsträger | Klein, Sozialer Status (ArMDE:5194). Freigabe 2026-10-04 (vorher Basisregeln „Templerstelleninhaber“); deckt alle Ordensämter ab (Komtur-Stellvertreter, Marschall, Infirmar …) |
+| Templar Prestige | Templer-Ansehen | Klein, Allgemein (ArMDE:5198). Freigabe 2026-10-04 (vorher Basisregeln „Templerrang“) |
 | Tough | Zäh | +3 Absorption. Nicht mit der Tier-Quality *Hardy* → „Widerstandsfähig" verwechseln (`tiere-kreaturen.md`); beide hießen bis 2026-09-10 „Zäh" |
 | Troupe Upbringing | Zirkuserziehung | Aufgewachsen in einer Wandertruppe |
-| True Friend | Wahrer Freund | Variante von True Love (PC), Klein, Allgemein (ArMDE:5245) |
+| True Friend | Wahrer Freund | Variante von True Love (PC), Klein, Allgemein (ArMDE:5247) |
 | Venus's Blessing | Venussegen | |
 | Warrior | Krieger | |
 | Magical Mount | Magisches Reittier | SdM:M, auch ArMDE; magisches Wesen als Reittier/Wachtier mit Machtwert ≤ 25 |
@@ -245,13 +245,13 @@
 | Apprentice | Lehrling | |
 | Bard | Barde | Sozialer Status, Frei; irischer Berufsstand nach Bardenschule |
 | Beadle | Pedell | Sozialer Status, Klein; Assistent eines Universitätsdekans |
-| Cathedral School Master | Domschulmeister | Groß, Sozialer Status (ArMDE:3620); historisch *magister scholarum* |
+| Cathedral School Master | Domschulmeister | Groß, Sozialer Status (ArMDE:3622); historisch *magister scholarum* |
 | Clerk | Kleriker | |
 | Covenfolk | Konventsbewohner | Nicht-Magi eines Konvents (Grogs, Diener, Handwerker); „Konventsmitglied" wäre missverständlich, weil es die Magi meint |
 | Craftsman | Handwerker | |
 | Custos | Custos (Lat.) | |
 | Failed Apprentice | Gescheiterter Lehrling | |
-| Forge-Companion | Schmiedegefährte | Gabeloser Handwerker im Laborhaushalt eines Verditius-Magus; +50 EP für dessen Handwerksfertigkeiten; Schutz des Haushalts, aber nicht des Codex; Klein, Sozialer Status (ArMDE:3996) |
+| Forge-Companion | Schmiedegefährte | Gabeloser Handwerker im Laborhaushalt eines Verditius-Magus; +50 EP für dessen Handwerksfertigkeiten; Schutz des Haushalts, aber nicht des Codex; Klein, Sozialer Status (ArMDE:3998) |
 | Gentleman / Gentlewoman | Edelmann / Edelfrau | |
 | Knight | Ritter | |
 | Landed Noble | Landadliger | |
@@ -274,7 +274,7 @@
 | Chaotic Magic | Chaotische Magie | |
 | Deficient Technique | Defizitäre Technik | |
 | Difficult Longevity Ritual | Schwieriges Langlebigkeitsritual | |
-| Environmental Magic Condition | Magische Umweltbedingung | Groß, Hermetisch (ArMDE:6091); alle Zauber- und Laborsummen halbiert unter bestimmten Umständen |
+| Environmental Magic Condition | Magische Umweltbedingung | Groß, Hermetisch (ArMDE:6093); alle Zauber- und Laborsummen halbiert unter bestimmten Umständen |
 | Magic Addiction | Magiesucht | |
 | Necessary Condition | Notwendige Bedingung | |
 | Restriction | Einschränkung | |
@@ -284,9 +284,9 @@
 | Twilight Prone | Zwielicht-anfällig | |
 | Unstructured Caster | Unstrukturierter Zauberer | |
 | Waster of Vis | Vis-Verschwender | |
-| Weak Magic Resistance | Schwache Magieresistenz | **Fehler**, Groß, Hermetisch (ArMDE:7139); stand früher fälschlich als Tugend |
+| Weak Magic Resistance | Schwache Magieresistenz | **Fehler**, Groß, Hermetisch (ArMDE:7141); stand früher fälschlich als Tugend |
 | Weak Spontaneous Magic | Schwache Spontane Magie | |
-| Suppressed Gift | Unterdrückte Gabe | Groß, Hermetisch **und** Geschichte (ArMDE:6874) |
+| Suppressed Gift | Unterdrückte Gabe | Groß, Hermetisch **und** Geschichte (ArMDE:6876) |
 
 ### Hermetische Fehler, Klein / Hermetic, Minor
 
@@ -304,23 +304,23 @@
 | Deficient Art | Defizitäre Kunst | **Sammelbegriff** für *Deficient Form* / *Deficient Technique*, kein eigener Fehler (HZ:ÜA, HdH:S, Basisregeln) |
 | Deficient Form | Defizitäre Form | |
 | Difficult Spontaneous Magic | Schwierige Spontane Magie | |
-| Disorientating Magic | Desorientierende Magie | ArMDE:6055 |
-| Inconstant Magic | Unbeständige Magie | Klein, Hermetisch (ArMDE:6369). Ersetzt den unbelegten Eintrag „Erratic Magic“ (2026-10-03) |
-| Flawed Parma Magica | Fehlerhafte Parma Magica | Wie Grundregelwerk-Überschrift (ArMDE:6213) |
+| Disorientating Magic | Desorientierende Magie | ArMDE:6057 |
+| Inconstant Magic | Unbeständige Magie | Klein, Hermetisch (ArMDE:6371). Ersetzt den unbelegten Eintrag „Erratic Magic“ (2026-10-03) |
+| Flawed Parma Magica | Fehlerhafte Parma Magica | Wie Grundregelwerk-Überschrift (ArMDE:6215) |
 | Incompatible Arts | Unvereinbare Künste | |
-| Infamous Master | Berüchtigter Meister | Klein, Hermetisch (ArMDE:6385). Ersetzt den unbelegten Schlüssel „Infamous Parens“ (2026-10-03); nicht mit *Infamous* = Berüchtigt verwechseln |
+| Infamous Master | Berüchtigter Meister | Klein, Hermetisch (ArMDE:6387). Ersetzt den unbelegten Schlüssel „Infamous Parens“ (2026-10-03); nicht mit *Infamous* = Berüchtigt verwechseln |
 | Limited Magic Resistance | Begrenzte Magieresistenz | |
 | No Sigil | Kein Sigil | Nur **3. Edition** (−1), nur in Werteblöcken (ToH: Rome, Lion of the North); in ArM5 nicht definiert |
 | Poor Formulaic Magic | Schwache Formulaische Magie | |
 | Short-Lived Magic | Kurzlebige Magie | |
 | Slow Caster | Langsamer Zauberer | |
 | Spontaneous Casting Tools | Spontane Zauberwerkzeuge | Verditius; muss Zauberwerkzeuge auch für spontane Zauber einsetzen |
-| Susceptibility to Divine Power | Anfälligkeit für Göttliche Macht | Freigabe 2026-10-03: „Macht“ statt „Kraft“, wie im Grundregelwerk; Klein, Hermetisch (ArMDE:6886) |
+| Susceptibility to Divine Power | Anfälligkeit für Göttliche Macht | Freigabe 2026-10-03: „Macht“ statt „Kraft“, wie im Grundregelwerk; Klein, Hermetisch (ArMDE:6888) |
 | Susceptibility to Faerie Power | Anfälligkeit für Feenmacht | Freigabe 2026-10-03 (vorher „Feenkraft“); Klein, Hermetisch |
 | Susceptibility to Infernal Power | Anfälligkeit für Infernale Macht | Freigabe 2026-10-03 (vorher „Infernale Kraft“; Grundregelwerk-Überschrift „Höllische Macht“ angeglichen); Klein, Hermetisch |
-| Unimaginative Learner | Einfallsloser Lerner | Klein, Hermetisch (ArMDE:6986) |
-| Unpredictable Magic | Unberechenbare Magie | Klein, Hermetisch (ArMDE:7006); nicht mit *Inconstant Magic* = Unbeständige Magie verwechseln |
-| Vulnerable Casting | Anfälliges Zaubern | Wie Grundregelwerk-Überschrift (ArMDE:7064) |
+| Unimaginative Learner | Einfallsloser Lerner | Klein, Hermetisch (ArMDE:6988) |
+| Unpredictable Magic | Unberechenbare Magie | Klein, Hermetisch (ArMDE:7008); nicht mit *Inconstant Magic* = Unbeständige Magie verwechseln |
+| Vulnerable Casting | Anfälliges Zaubern | Wie Grundregelwerk-Überschrift (ArMDE:7066) |
 | Warped Magic | Verzerrte Magie | Nebeneffekt der eigenen Magie, wächst mit der Zauberstufe; nicht mit *Warped by Magic* verwechseln |
 | Weak Enchanter | Schwacher Verzauberer | |
 | Weak Magic | Schwache Magie | |
@@ -331,31 +331,31 @@
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Age Quickly | Schnelles Altern | Groß, Übernatürlich (ArMDE:5730); SdM:M-Hinweis: bei Machtwert nicht immun gegen Altern, aber nur 1×/Jahr |
+| Age Quickly | Schnelles Altern | Groß, Übernatürlich (ArMDE:5732); SdM:M-Hinweis: bei Machtwert nicht immun gegen Altern, aber nur 1×/Jahr |
 | Blatant Magical Air | Auffällige Magische Ausstrahlung | SdM:M; −6 auf soziale Interaktionen; wie Auffällige Gabe |
-| Bound to (Realm) | Gebunden an (Sphäre) | Groß, Übernatürlich (ArMDE:5802) |
+| Bound to (Realm) | Gebunden an (Sphäre) | Groß, Übernatürlich (ArMDE:5804) |
 | Bound to Magic | An Magie gebunden | SdM:M; muss in Magieaura ≥ 5 leben; sonst Schwere Wunden |
 | Greater Malediction | Große Verfluchung | |
 | Hunger for (Form) Magic | Hunger nach (Form-)Magie | SdM:M; muss 1 Vis der Form pro Quartal konsumieren |
-| Lycanthrope | Lykanthrop | Groß, Übernatürlich (ArMDE:6441); auch in HdH:S erwähnt |
+| Lycanthrope | Lykanthrop | Groß, Übernatürlich (ArMDE:6443); auch in HdH:S erwähnt |
 
 ### Übernatürliche Fehler, Klein / Supernatural, Minor
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Baneful Circumstances | Schädliche Umstände | SdM:M, auch ArMDE; unter bestimmten Umständen keine Erholung/Heilung/Macht-Regeneration |
-| Deteriorating Power | Schwindende Macht | ArMDE:6015; eine Kraft wird schwächer über Zeit |
+| Deteriorating Power | Schwindende Macht | ArMDE:6017; eine Kraft wird schwächer über Zeit |
 | Exiled Atlantean | Verbannter Atlantier | SdM:M, auch ArMDE; kann nicht in heimische Regio zurückkehren |
-| Flawed Powers | Fehlerhafte Kräfte | Übernatürliche Kräfte funktionieren unzuverlässig; Klein, Übernatürlich (ArMDE:6217) |
+| Flawed Powers | Fehlerhafte Kräfte | Übernatürliche Kräfte funktionieren unzuverlässig; Klein, Übernatürlich (ArMDE:6219) |
 | Form Monstrosity | (Form-)Monstrosität | Platzhalter (Form) ersetzen |
 | Lesser Malediction | Kleine Verfluchung | |
-| Monstrous Blood | Monströses Blut | Klein, Übernatürlich (ArMDE:6525); -1 Alterungswurf aber nachteilige körperliche Eigenschaft |
-| (Realm) Stigmatic | (Sphäre-)Stigmatisierter | Klein, Übernatürlich (ArMDE:6725); Platzhalter (Sphäre) ersetzen |
+| Monstrous Blood | Monströses Blut | Klein, Übernatürlich (ArMDE:6527); -1 Alterungswurf aber nachteilige körperliche Eigenschaft |
+| (Realm) Stigmatic | (Sphäre-)Stigmatisierter | Klein, Übernatürlich (ArMDE:6727); Platzhalter (Sphäre) ersetzen |
 | Restricted Power | Eingeschränkte Kraft | SdM:M, auch ArMDE; Kraft nur unter bestimmten Umständen oder mit Zeremonie aktivierbar |
 | Slow Power | Langsame Kraft | SdM:M, auch ArMDE; Kraft benötigt zusätzliche Runde Vorbereitung |
 | Susceptibility to Sunlight | Anfälligkeit für Sonnenlicht | |
-| Susceptibility to Warping | Anfälligkeit für Verzerrung | Klein, Übernatürlich (ArMDE:6902) |
-| Unruly Air | Ungebändigte Ausstrahlung | Klein, Übernatürlich (ArMDE:7010); sozialer Effekt, keine unkontrollierte Magie |
+| Susceptibility to Warping | Anfälligkeit für Verzerrung | Klein, Übernatürlich (ArMDE:6904) |
+| Unruly Air | Ungebändigte Ausstrahlung | Klein, Übernatürlich (ArMDE:7012); sozialer Effekt, keine unkontrollierte Magie |
 | Warped by Magic | Durch Magie Verzerrt | 5 Verzerrungspunkte und Verzerrungswert 1 aus früheren Begegnungen; nicht mit *Warped Magic* verwechseln |
 
 ### Persönlichkeits-Fehler / Personality Flaws (Auswahl)
@@ -370,8 +370,8 @@
 | Compulsive Lying | Zwanghaftes Lügen | |
 | Dutybound | Pflichtgebunden | Klein, Persönlichkeit; einschränkender Verhaltenskodex, befolgt aus Schuldgefühl oder Angst, nicht aus Überzeugung. ~~Pflichtbewusst~~ (klingt nach Tugend statt nach Fehler), ~~Pflichttreu~~, ~~Pflichtverbunden~~ – alle drei kamen im Korpus vor und sind 2026-09-07 vereinheitlicht. Nicht verwechseln mit der Persönlichkeitseigenschaft *Dutiful* → „Pflichtbewusst" |
 | Continence | Enthaltsamkeit | |
-| Covenant Upbringing | Konventsprägung | Klein, Persönlichkeit (ArMDE:5936) |
-| Depressed | Schwermütig | Klein, Persönlichkeit (ArMDE:6011). Freigabe 2026-10-03: dauerhafte düstere Grundhaltung, daher weder „Depressiv“ (klinisch, vorher Basisregeln) noch „Deprimiert“ (vorübergehender Zustand, vorher Supplements) |
+| Covenant Upbringing | Konventsprägung | Klein, Persönlichkeit (ArMDE:5938) |
+| Depressed | Schwermütig | Klein, Persönlichkeit (ArMDE:6013). Freigabe 2026-10-03: dauerhafte düstere Grundhaltung, daher weder „Depressiv“ (klinisch, vorher Basisregeln) noch „Deprimiert“ (vorübergehender Zustand, vorher Supplements) |
 | Driven | Getrieben | |
 | Envious | Neidisch | |
 | Fear | Angst | |
@@ -380,30 +380,30 @@
 | Hatred | Hass | |
 | Higher Purpose | Höheres Ziel | Groß oder Klein, Persönlichkeit; altruistisches Ziel, dem alles andere untergeordnet wird. ~~Höherer Zweck~~ – kam im Korpus vor und ist 2026-09-10 auf den Namen der Basisregeln-Definition vereinheitlicht |
 | Humble | Demütig | |
-| Imagined Folk Tradition Vulnerability | Eingebildete Volksüberlieferungsanfälligkeit | Klein, Persönlichkeit (ArMDE:6351); wie Grundregelwerk-Überschrift, passend zu *Vulnerable to Folk Tradition* = Anfällig für Volksüberlieferungen (vorher „Eingebildete Volksmagie-Verwundbarkeit“) |
+| Imagined Folk Tradition Vulnerability | Eingebildete Volksüberlieferungsanfälligkeit | Klein, Persönlichkeit (ArMDE:6353); wie Grundregelwerk-Überschrift, passend zu *Vulnerable to Folk Tradition* = Anfällig für Volksüberlieferungen (vorher „Eingebildete Volksmagie-Verwundbarkeit“) |
 | Lecherous | Wollüstig | |
-| Lost Love | Verlorene Liebe | Klein, Persönlichkeit (ArMDE:6429) |
-| Meddler | Einmischer | Groß oder Klein, Persönlichkeit (ArMDE:6493); auch in WdW |
-| Noncombatant | Nichtkämpfer | Klein, Persönlichkeit (ArMDE:6579) |
-| Obsessed | Besessen | Groß oder Klein, Persönlichkeit (ArMDE:6591). Freigabe 2026-10-03: vorher Schlüssel „Obsession“, DE „Besessenheit“. Nicht verwechseln mit den Dämonenkräften *Possession* = Besessenheit und *Obsession* = Heimsuchung (*Obsession Trait* = Heimsuchungszug), Freigabe 2026-10-04, siehe `infernale-kraefte.md`. Bei „besessen“ entscheidet der Kontext (Fehler/Fixierung oder dämonische Besessenheit) |
+| Lost Love | Verlorene Liebe | Klein, Persönlichkeit (ArMDE:6431) |
+| Meddler | Einmischer | Groß oder Klein, Persönlichkeit (ArMDE:6495); auch in WdW |
+| Noncombatant | Nichtkämpfer | Klein, Persönlichkeit (ArMDE:6581) |
+| Obsessed | Besessen | Groß oder Klein, Persönlichkeit (ArMDE:6593). Freigabe 2026-10-03: vorher Schlüssel „Obsession“, DE „Besessenheit“. Nicht verwechseln mit den Dämonenkräften *Possession* = Besessenheit und *Obsession* = Heimsuchung (*Obsession Trait* = Heimsuchungszug), Freigabe 2026-10-04, siehe `infernale-kraefte.md`. Bei „besessen“ entscheidet der Kontext (Fehler/Fixierung oder dämonische Besessenheit) |
 | Overconfident | Überheblich | |
-| Poor Memory | Schlechtes Gedächtnis | Klein, Persönlichkeit (ArMDE:6693) |
+| Poor Memory | Schlechtes Gedächtnis | Klein, Persönlichkeit (ArMDE:6695) |
 | Proud | Stolz | |
 | Reckless | Rücksichtslos | |
 | Secretive | Geheimniskrämerisch | Neigt dazu, Geheimnisse vor Sodales zu bewahren |
-| Simple-Minded | Einfältig | Klein, Persönlichkeit (ArMDE:6812) |
+| Simple-Minded | Einfältig | Klein, Persönlichkeit (ArMDE:6814) |
 | Temperate | Gemäßigt | |
-| Vow | Gelübde | Groß oder Klein, Persönlichkeit (ArMDE:7060) |
-| Warped Senses | Verzerrte Sinne | Klein; SdM:M ordnet Persönlichkeit ein, Grundregelwerk Allgemein (ArMDE:7098); überempfindliche oder schwache Sinne. Ausprägungen: *Sensitive (Sense)* und *Weak (Sense)* |
-| Weak Personality | Schwache Persönlichkeit | Klein, Persönlichkeit (ArMDE:7147) |
-| Weak-Willed | Willensschwach | Klein, Persönlichkeit (ArMDE:7165) |
+| Vow | Gelübde | Groß oder Klein, Persönlichkeit (ArMDE:7062) |
+| Warped Senses | Verzerrte Sinne | Klein; SdM:M ordnet Persönlichkeit ein, Grundregelwerk Allgemein (ArMDE:7100); überempfindliche oder schwache Sinne. Ausprägungen: *Sensitive (Sense)* und *Weak (Sense)* |
+| Weak Personality | Schwache Persönlichkeit | Klein, Persönlichkeit (ArMDE:7149) |
+| Weak-Willed | Willensschwach | Klein, Persönlichkeit (ArMDE:7167) |
 | Wrathful | Jähzornig | |
 
 ### Geschichte-/Handlungs-Fehler / Story Flaws (Auswahl)
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Abandoned Apprentice | Verlassener Lehrling | Groß, Geschichte (ArMDE:5712); vom Meister mitten in der Lehre verlassen; beherrscht Hermetische Magie, ist aber **kein Mitglied des Ordens** |
+| Abandoned Apprentice | Verlassener Lehrling | Groß, Geschichte (ArMDE:5714); vom Meister mitten in der Lehre verlassen; beherrscht Hermetische Magie, ist aber **kein Mitglied des Ordens** |
 | Beloved Rival | Geliebter Rivale | |
 | Blackmail | Erpressung | |
 | Close Family Ties | Enge Familienbande | |
@@ -416,7 +416,7 @@
 | Tormenting Master | Quälender Meister | |
 | True Love | Wahre Liebe | |
 | Vendetta | Vendetta | |
-| Visions | Visionen | Klein, Geschichte **und** Übernatürlich (ArMDE:7056) |
+| Visions | Visionen | Klein, Geschichte **und** Übernatürlich (ArMDE:7058) |
 | Magical (Being) Companion | Magischer (Wesen-)Gefährte | SdM:M; Klein; begleitet von intelligentem magischem Wesen |
 | Servant of the (Land) | Diener des/der (Land) | SdM:M, auch ArMDE; Groß; von mächtiger Kreatur gerettet; muss Aufgabe erfüllen |
 | Supernatural Nuisance | Übernatürliche Plage | Groß; übernatürliche Wesen mischen sich geringfügig ins Leben ein |
@@ -426,11 +426,11 @@
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Failed Journeyman | Gescheiterter Geselle | Klein, Sozialer Status (ArMDE:6131) |
-| Failed Master | Gescheiterter Meister | Klein, Sozialer Status (ArMDE:6135) |
-| Failed Monk | Gescheiterter Mönch | Klein, Sozialer Status (ArMDE:6139) |
-| Outlaw | Geächteter | **Groß**, Sozialer Status (ArMDE:6613) |
-| Outlaw Leader | Anführer von Geächteten | **Klein**, Sozialer Status (ArMDE:6617); eigener Fehler, keine Variante von *Outlaw* |
+| Failed Journeyman | Gescheiterter Geselle | Klein, Sozialer Status (ArMDE:6133) |
+| Failed Master | Gescheiterter Meister | Klein, Sozialer Status (ArMDE:6137) |
+| Failed Monk | Gescheiterter Mönch | Klein, Sozialer Status (ArMDE:6141) |
+| Outlaw | Geächteter | **Groß**, Sozialer Status (ArMDE:6615) |
+| Outlaw Leader | Anführer von Geächteten | **Klein**, Sozialer Status (ArMDE:6619); eigener Fehler, keine Variante von *Outlaw* |
 
 ### Sozialer-Status-Fehler (SdM:M) / Social Status Flaws (SdM:M)
 
@@ -443,26 +443,26 @@
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Ability Block | Fähigkeitsblock | Klein, Allgemein (ArMDE:5722) |
+| Ability Block | Fähigkeitsblock | Klein, Allgemein (ArMDE:5724) |
 | Anchored to the (Land) | Verankert im/am (Land) | SdM:M, auch ArMDE; Klein; −3 auf alle Würfe außerhalb des Heimatlebensraums |
 | Arthritis | Arthritis | |
 | Blind | Blind | |
 | Clumsy | Ungeschickt | |
-| Craving for Travel | Reiselust | Klein, Allgemein (ArMDE:5940) |
+| Craving for Travel | Reiselust | Klein, Allgemein (ArMDE:5942) |
 | Deaf | Taub | |
-| Disfigured | Entstellt | Klein, Allgemein (ArMDE:6051). Ersetzt den unbelegten Charakterfehler „Deformed“ (2026-10-03); *Deformed* ist ein Laborfehler = Verformt (`labor-fortschritt.md`) |
-| Flashbacks | Rückblenden | Klein, Allgemein (ArMDE:6205) |
-| Hunchback | Bucklig | Klein, Allgemein (ArMDE:6343) |
-| Night Terrors | Nachtschrecken | Klein, Allgemein (ArMDE:6559) |
-| No Hands | Keine Hände | **Groß**, Allgemein (ArMDE:6567) |
-| Enfeebled | Geschwächt | Groß, Allgemein (ArMDE:6079) |
-| Environmental Sensitivity | Umweltempfindlichkeit | Klein, Allgemein (ArMDE:6095) |
-| Failed Student | Gescheiterter Student | Klein, Allgemein (ArMDE:6143) |
-| Feral Scent | Wilder Geruch | Klein, Allgemein (ArMDE:6177); nicht „Wildgeruch“ (Freigabe 2026-10-04) |
+| Disfigured | Entstellt | Klein, Allgemein (ArMDE:6053). Ersetzt den unbelegten Charakterfehler „Deformed“ (2026-10-03); *Deformed* ist ein Laborfehler = Verformt (`labor-fortschritt.md`) |
+| Flashbacks | Rückblenden | Klein, Allgemein (ArMDE:6207) |
+| Hunchback | Bucklig | Klein, Allgemein (ArMDE:6345) |
+| Night Terrors | Nachtschrecken | Klein, Allgemein (ArMDE:6561) |
+| No Hands | Keine Hände | **Groß**, Allgemein (ArMDE:6569) |
+| Enfeebled | Geschwächt | Groß, Allgemein (ArMDE:6081) |
+| Environmental Sensitivity | Umweltempfindlichkeit | Klein, Allgemein (ArMDE:6097) |
+| Failed Student | Gescheiterter Student | Klein, Allgemein (ArMDE:6145) |
+| Feral Scent | Wilder Geruch | Klein, Allgemein (ArMDE:6179); nicht „Wildgeruch“ (Freigabe 2026-10-04) |
 | Fragile Constitution | Gebrechliche Konstitution | |
-| Infamous | Berüchtigt | Klein, Allgemein (ArMDE:6381); nicht mit *Infamous Master* verwechseln |
+| Infamous | Berüchtigt | Klein, Allgemein (ArMDE:6383); nicht mit *Infamous Master* verwechseln |
 | Lame | Lahm | |
-| Lingering Injury | Anhaltende Verletzung | Klein, Allgemein (ArMDE:6421) |
+| Lingering Injury | Anhaltende Verletzung | Klein, Allgemein (ArMDE:6423) |
 | Low Self-Esteem | Geringes Selbstwertgefühl | |
 | Missing Ear | Fehlendes Ohr | |
 | Missing Eye | Fehlendes Auge | |
@@ -503,7 +503,7 @@ Beide Fehler tragen einen Sinnes-Platzhalter; im Spiel werden sie unter dem Name
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Ways of the Forest | Wege des Waldes | Ausprägung von *Ways of the (Land)*, Groß, **Allgemein** (ArMDE:5302): +3 auf alle Würfe im Gelände, ein Patzerwürfel weniger, Tiere des Geländes greifen nicht an. In GotF nur in Statblöcken |
+| Ways of the Forest | Wege des Waldes | Ausprägung von *Ways of the (Land)*, Groß, **Allgemein** (ArMDE:5304): +3 auf alle Würfe im Gelände, ein Patzerwürfel weniger, Tiere des Geländes greifen nicht an. In GotF nur in Statblöcken |
 
 #### Allgemeine Fehler / General Flaws
 
@@ -705,7 +705,7 @@ Beide Fehler tragen einen Sinnes-Platzhalter; im Spiel werden sie unter dem Name
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Lone Redcap | Einzelgänger-Rotkappe | HdH:WL, auch ArMDE (ArMDE:4390); Rotkappe ohne Hausanbindung. Freigabe 2026-10-03: gilt in allen Büchern, vorher in den Basisregeln „Einsame Rotkappe“ |
+| Lone Redcap | Einzelgänger-Rotkappe | HdH:WL, auch ArMDE (ArMDE:4392); Rotkappe ohne Hausanbindung. Freigabe 2026-10-03: gilt in allen Büchern, vorher in den Basisregeln „Einsame Rotkappe“ |
 
 #### Heroische Fehler / Heroic Flaws (HdH:WL)
 
@@ -752,14 +752,14 @@ Beide Fehler tragen einen Sinnes-Platzhalter; im Spiel werden sie unter dem Name
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
-| Painful Magic | Schmerzhafte Magie | **Groß**, Hermetisch (ArMDE:6645; auch HdH:S); in HdH:WL nur erwähnt; Zaubern verursacht körperliche Schmerzen |
+| Painful Magic | Schmerzhafte Magie | **Groß**, Hermetisch (ArMDE:6647; auch HdH:S); in HdH:WL nur erwähnt; Zaubern verursacht körperliche Schmerzen |
 
 #### Hermetische Fehler, Klein / Hermetic, Minor
 
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Illegitimate Lineage | Illegitime Abstammung | HdH:WL; Klein, **Hermetisch** (TL:3628); Mercere-Magus ohne Blutslinie zum Gründer |
-| Fettered Magic | Gekettete Magie | HdH:WL, auch Grundregelwerk (ArMDE:6185); Alle Zauber/aktivierte Gegenstände sind Arkane Verbindungen zum Zauberer. Nicht mit der Tugend Tethered Magic = Gefesselte Magie verwechseln |
+| Fettered Magic | Gekettete Magie | HdH:WL, auch Grundregelwerk (ArMDE:6187); Alle Zauber/aktivierte Gegenstände sind Arkane Verbindungen zum Zauberer. Nicht mit der Tugend Tethered Magic = Gefesselte Magie verwechseln |
 | Stockade Parma Magica | Palisaden-Parma Magica | HdH:WL; Parma kann nicht unterdrückt werden; freundliche Zauber müssen durchdringen |
 
 #### Allgemeine Fehler, Klein / General, Minor
@@ -767,7 +767,7 @@ Beide Fehler tragen einen Sinnes-Platzhalter; im Spiel werden sie unter dem Name
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Feral Upbringing | Wilde Erziehung | In der Wildnis aufgewachsen; nur Wildnisfertigkeiten als Ausgangsfertigkeiten |
-| Palsied Hands | Zittrige Hände | Klein, Allgemein (ArMDE:6649; in HdH:WL nicht definiert); Hände zittern, erschwert feinmotorische Tätigkeiten. **Im Grundregelwerk heißt der Fehler „Zitternde Hände" (ArMDE:6649)** — beide Formen sind richtig, je nach Buch. |
+| Palsied Hands | Zittrige Hände | Klein, Allgemein (ArMDE:6651; in HdH:WL nicht definiert); Hände zittern, erschwert feinmotorische Tätigkeiten. **Im Grundregelwerk heißt der Fehler „Zitternde Hände" (ArMDE:6651)** — beide Formen sind richtig, je nach Buch. |
 
 #### Geschichte-Fehler, Klein / Story, Minor
 
@@ -807,8 +807,8 @@ Beide Fehler tragen einen Sinnes-Platzhalter; im Spiel werden sie unter dem Name
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Eastern Priest | Östlicher Priester | SdM:G; Klein; wie Priester, ohne Zölibatspflicht |
-| Perfectus / Perfecti | Perfectus / Perfecti | SdM:G: Mythischer-Gefährten-Tugend (RoP:D:4696); Grundregelwerk dagegen Klein, Sozialer Status (ArMDE:4703) – buchabhängig; Lat. beibehalten |
-| Senior Clergy | Höherer Klerus | Groß; Erzbischof/Bischof/Abt/Äbtissin (ArMDE:4981) (Tabellenkorrektur: nicht "Hoher Klerus") |
+| Perfectus / Perfecti | Perfectus / Perfecti | SdM:G: Mythischer-Gefährten-Tugend (RoP:D:4696); Grundregelwerk dagegen Klein, Sozialer Status (ArMDE:4705) – buchabhängig; Lat. beibehalten |
+| Senior Clergy | Höherer Klerus | Groß; Erzbischof/Bischof/Abt/Äbtissin (ArMDE:4983) (Tabellenkorrektur: nicht "Hoher Klerus") |
 
 #### Geschichte-Fehler, Groß / Story, Major (SdM:G)
 
@@ -822,7 +822,7 @@ Beide Fehler tragen einen Sinnes-Platzhalter; im Spiel werden sie unter dem Name
 | Englisch (EN) | Deutsch (DE) | Anmerkung |
 |---|---|---|
 | Eremite | Eremit | SdM:G; gehört keiner heiligen Tradition an |
-| Raised from the Dead | Von den Toten Auferweckt | SdM:G; durch ein Wunder vom Tod zurückgebracht. **Im Grundregelwerk heißt der Fehler „Vom Tode auferstanden" (ArMDE:6717)** — beide Formen sind richtig, je nach Buch. |
+| Raised from the Dead | Von den Toten Auferweckt | SdM:G; durch ein Wunder vom Tod zurückgebracht. **Im Grundregelwerk heißt der Fehler „Vom Tode auferstanden" (ArMDE:6719)** — beide Formen sind richtig, je nach Buch. |
 
 #### Allgemeine Fehler, Klein / General, Minor (SdM:G)
 

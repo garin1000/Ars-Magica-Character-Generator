@@ -86,7 +86,7 @@
   // The specialization toggle is meaningful for a Carried or Wielded weapon
   // (K5 — a Carried weapon still gets its own Combat row) whose combat Ability
   // carries a non-empty specialty on this character — otherwise it is a dead
-  // toggle (ArMDE:7193, :7210), so we render it only when applicable.
+  // toggle (ArMDE:7195, :7212), so we render it only when applicable.
   function specializationApplicable(slot: EquipmentSlot): boolean {
     if ((slot.loadout ?? 'stowed') === 'stowed') return false;
     const weapon = store.ruleset?.ruleset?.weapons?.[slot.item];

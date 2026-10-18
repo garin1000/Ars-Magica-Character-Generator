@@ -132,17 +132,17 @@ pub(crate) fn validate_permitted_categories(
         // the profile need only allow one of them. Suppressed Gift is "*Major,
         // Hermetic, Story*", so a companion — who may take Story but not
         // Hermetic — may take it.
-        // Source: ArMDE:6874-6875.
+        // Source: ArMDE:6876-6877.
         //
         // Taken-as aware: if the selection recorded which category it was
-        // taken as (Sufi's `taken_as`, `ArMDE:5154`), only that ONE category is
+        // taken as (Sufi's `taken_as`, `ArMDE:5156`), only that ONE category is
         // "in force" here — a player who took Sufi as Social Status has
         // declared they are NOT taking the Supernatural reading, so the
         // Supernatural category must not rescue them from a profile that
         // forbids it. See `PointItem::categories_for`.
         //
         // Judged against the categories the PROFILE puts in force for this
-        // entity, so `ArMDE:2908`'s "unless you have The Gift" opens `hermetic` to a
+        // entity, so `ArMDE:2910`'s "unless you have The Gift" opens `hermetic` to a
         // Gifted companion and to nobody else.
         let in_force = item.categories_for(&selection.params);
         if !in_force.iter().any(|c| permitted.contains(c.as_str())) {
@@ -212,7 +212,7 @@ pub(crate) fn validate_forbidden_categories(
         // is open to a grog who forbids only the Supernatural one.
         // For a single-category item "every" is identical to "any", so this
         // loosens nothing else in the catalogue.
-        // Source: ArMDE:6874-6875
+        // Source: ArMDE:6876-6877
         // (Suppressed Gift's descriptor), :6809 (a companion's Flaw), :5079 and
         // :5083 (Sufi "either as a Minor Social Status Virtue or a Minor
         // Supernatural Virtue").
@@ -225,7 +225,7 @@ pub(crate) fn validate_forbidden_categories(
         // whether Supernatural also is.
         //
         // Conditional-rule aware in the same way the permitted gate is, and
-        // authored as its complement: `ArMDE:2908` forbids a companion `hermetic`
+        // authored as its complement: `ArMDE:2910` forbids a companion `hermetic`
         // only while he lacks The Gift, so the forbid drops out for exactly the
         // character the permit appears for. An empty in-force set therefore
         // forbids nothing, which is what `all` over a non-empty category list
@@ -367,7 +367,7 @@ pub(crate) fn validate_category_effect_prohibitions(
             if let Effect::ForbidsItemCategory { category } = effect {
                 for other in selections {
                     // Excludes the forbidding selection from being compared
-                    // against itself — "no OTHER Virtue/Flaw" (ArMDE:7149).
+                    // against itself — "no OTHER Virtue/Flaw" (ArMDE:7151).
                     if std::ptr::eq(other, selection) {
                         continue;
                     }
@@ -399,7 +399,7 @@ pub(crate) fn validate_category_effect_prohibitions(
 /// X6a/e5: Restricted Learning's closed funding scope — an
 /// [`Effect::RestrictedAbilityXp`] entry that names `abilities_param` states
 /// that the union of its `abilities`/`categories` PLUS that parameter's own
-/// resolved set is the ONLY thing experience may fund at all (ArMDE:6756),
+/// resolved set is the ONLY thing experience may fund at all (ArMDE:6758),
 /// unlike an ordinary earmark (Educated, Warrior, Privileged Upbringing),
 /// which merely reserves part of the general pool and leaves the rest free.
 /// Fires only when at least one effective selection carries such an entry —
@@ -486,7 +486,7 @@ pub(crate) fn validate_ability_xp_scope(
 
 /// Enforces `PointItem::excluded_if_holds` (D23/B3, `flaw.university_dean`'s
 /// "can not have the Poor Flaw or any other Flaw that grants a Bad
-/// Reputation", ArMDE:6994-6997): a selection is illegal while ANY OTHER
+/// Reputation", ArMDE:6996-6999): a selection is illegal while ANY OTHER
 /// effective (bought or granted) selection's item satisfies one of the
 /// predicates it declares, evaluated by [`ItemPredicate::holds_for`] (the ONE
 /// evaluator [`ParameterDef::exclude_if`] also uses, so the two mechanisms
@@ -549,8 +549,8 @@ pub(crate) fn validate_excluded_if_holds(
 /// id resolves its own `other_param` to the SAME target this item resolves
 /// to (a fixed one, or its own `this_param` mapped through `via`) —
 /// "You may not take Student of (Realm) and Puissant Ability for the same
-/// Lore" (ArMDE:5125), "incompatible with... Puissant Artes Liberales"
-/// (ArMDE:3435).
+/// Lore" (ArMDE:5127), "incompatible with... Puissant Artes Liberales"
+/// (ArMDE:3437).
 ///
 /// Grant-aware on both sides, on [`validate_excluded_if_holds`]'s own
 /// precedent (D2/B15): `selections` is the caller's folded bought-plus-granted
@@ -794,7 +794,7 @@ fn duplicate_key(selection: &Selection, ruleset: &Ruleset) -> Option<DuplicateKe
 
 /// D81.16 (`docs/vf-audit/decisions.md`): within ONE selection, no two of an
 /// item's declared `unordered_param_groups` entries may canonicalize to the
-/// identical role map — Incompatible Arts' "two combinations" (ArMDE:6363,
+/// identical role map — Incompatible Arts' "two combinations" (ArMDE:6365,
 /// "You may not use these Arts together") generalized to any item that
 /// declares groups, with no item id named here. `args` carries `item`.
 ///
@@ -835,7 +835,7 @@ pub(crate) fn validate_param_groups_distinct(
 /// D83.1 (amends D81.8): two copies of an item may not share any of its
 /// declared `unordered_param_groups` entries, in either position —
 /// Incompatible Arts "may be taken repeatedly with different combinations"
-/// (ArMDE:6363), generalized to any item that declares groups, with no item id
+/// (ArMDE:6365), generalized to any item that declares groups, with no item id
 /// named here. One error per offending copy pair; `args` carries `item`.
 ///
 /// Each copy is judged on its COMPLETE groups only ([`group_role_map`]), so a
@@ -903,7 +903,7 @@ pub(crate) fn validate_param_groups_shared_across_copies(
 /// a target counts the same as a bought one. This closes a wrong-rules-output
 /// bug: a Flambeau magus granted a free Puissant Ignem who also BUYS Puissant
 /// Ignem is taking the same Virtue for the same target twice — illegal
-/// (ArMDE:4891,
+/// (ArMDE:4893,
 /// "twice, for two different Arts") — but validated clean, and stacked +6 to
 /// Ignem, before grants were folded in here.
 pub(crate) fn validate_duplicate_selections(
@@ -991,7 +991,7 @@ pub(crate) fn validate_total_selection_cap(
 ///
 /// Necessary (Realm) Aura for (Ability) is the case the rules state: "A
 /// character may take this Flaw once for any particular Ability"
-/// (ArMDE:6553). The Flaw declares two parameters and that sentence binds only
+/// (ArMDE:6555). The Flaw declares two parameters and that sentence binds only
 /// one of them, which is precisely what its two neighbours cannot say —
 /// [`validate_duplicate_selections`] groups by the *whole* `(item_ref, params)`
 /// tuple, so one Ability under two Realms collides in no key, and
@@ -1004,7 +1004,7 @@ pub(crate) fn validate_total_selection_cap(
 /// `(ability, instance)` — two keys, the target's own instance key included, the
 /// pair [`validate_selection_parameters`] makes mandatory and
 /// [`validate_ability_bonus_targets`] already reads. Craft (Carpentry) and Craft
-/// (Blacksmith) are two different Abilities, and `ArMDE:6555` explicitly
+/// (Blacksmith) are two different Abilities, and `ArMDE:6557` explicitly
 /// contemplates this Flaw "applied to Craft or Profession Abilities", so
 /// counting them both as `ability.craft` would reject a character the rules
 /// permit. See [`ability_instance`].
@@ -1064,7 +1064,7 @@ pub(crate) fn validate_per_value_cap(
             }
             // A key inside an `unordered_param_groups` entry repeats by its
             // group's rule, not its own (D83.1): two Incompatible Arts copies
-            // may both name Creo, only not the same combination (ArMDE:6363).
+            // may both name Creo, only not the same combination (ArMDE:6365).
             if item
                 .unordered_param_groups
                 .iter()
@@ -1176,7 +1176,7 @@ fn ability_instance<'a>(
 /// the copies of one item: at most one member of a group may be named, however
 /// many copies are held.
 ///
-/// Folk Magic is the case the rules state: `ArMDE:3990` grants the repeat and limits
+/// Folk Magic is the case the rules state: `ArMDE:3992` grants the repeat and limits
 /// it in the same breath — "you can align it to the same Realm as before or
 /// pick a different one, although a character cannot have access to both the
 /// Divine and Infernal Realms". Which values exclude each other is **data**, so
@@ -1283,7 +1283,7 @@ pub(crate) fn validate_forbidden_traits(
 /// Whether a parameter `value` resolves against its domain's registry: `Item`
 /// → point items, `Ability` → the ability catalogue, `Art` → the art catalogue,
 /// `Technique`/`Form` → the art catalogue *and* the required art class (so
-/// Deficient Technique cannot target a Form; ArMDE:5980-5986),
+/// Deficient Technique cannot target a Form; ArMDE:5982-5988),
 /// `Characteristic` → [`Characteristic::from_id`], `Enumerated` → the definition's
 /// own declared `values`, `Text` → any value with non-whitespace content (no
 /// registry, but the domain's own documentation says "non-empty", and an empty
@@ -1307,7 +1307,7 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         // `forbid_tainted` narrows it the same way and for the same reason:
         // "this Flaw cannot apply to Supernatural Virtues that are affiliated to
         // the Infernal realm in the first place"
-        // (ArMDE:6167), and the
+        // (ArMDE:6169), and the
         // descriptor's *Tainted* tag is precisely that affiliation. Entity-free,
         // so it belongs here rather than in `validate_possessed_param_targets`.
         //
@@ -1315,7 +1315,7 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         // resolves if EITHER test passes. False Power's domain is
         // `supernatural` plus two named ids the category axis cannot reach
         // (Diedne Magic is `hermetic`, The Gift is `special`,
-        // `ArMDE:6153`) — the whitelist widens by id, never by relaxing the
+        // `ArMDE:6155`) — the whitelist widens by id, never by relaxing the
         // Tainted refusal, so `forbid_tainted` still applies to a whitelisted
         // id exactly as it does to a category match.
         //
@@ -1323,7 +1323,7 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         // rather than category: a candidate satisfying the predicate is
         // refused regardless of which of the two tests above admitted it —
         // `flaw.flawed_powers`'s imported Flaw must not
-        // `requires_hermetic_arts` (ArMDE:6217-6219) even though it already
+        // `requires_hermetic_arts` (ArMDE:6219-6221) even though it already
         // passed `require_categories: ["hermetic"]`.
         ParameterDomain::Item => ruleset.point_items.get(value).is_some_and(|item| {
             (item_matches_required_categories(item, param) || param.allow_ids.contains(value))
@@ -1362,7 +1362,7 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
         ParameterDomain::Category => param.values.contains(value),
         // No catalogue and no declared list: the four-member `Realm` enum IS the
         // registry, the same way `Characteristic` is for `characteristic`
-        // (ArMDE:3980).
+        // (ArMDE:3982).
         ParameterDomain::Realm => Realm::from_id(value).is_some(),
         // No catalogue and no declared list: the closed 5-member
         // `AbilityCategory` enum IS the registry (X6a/e5), the same idiom as
@@ -1405,7 +1405,7 @@ pub(crate) fn param_value_resolves(ruleset: &Ruleset, param: &ParameterDef, valu
 /// Resolves one member of a [`SelectionParamValue::Multi`] set against
 /// `param`'s domain — the `Multi` counterpart to [`param_value_resolves`],
 /// needed because [`ParameterDomain::Spell`] has no ruleset-only registry:
-/// Corrupted Spells (ArMDE:5930-5934) resolves against the character's own
+/// Corrupted Spells (ArMDE:5932-5936) resolves against the character's own
 /// learned spells, so this reads `entity` where [`param_value_resolves`] reads
 /// only `ruleset` (`docs/vf-audit/design-c0-parameter-model.md` § 8). Every
 /// other domain defers to [`param_value_resolves`] — the same registries a
@@ -1696,7 +1696,7 @@ pub(crate) fn validate_selection_parameters(
 ///
 /// Filed on [`CreationPhase::Abilities`], the step that owns the fix, even though
 /// the offending value is the Virtue's parameter. Puissant Ability is "choose one
-/// Ability" (ArMDE:4885-4887) with no
+/// Ability" (ArMDE:4887-4889) with no
 /// requirement that a score already exists, and abilities are bought on a later
 /// step — so filing this on `virtues_flaws` deadlocked the guided wizard, blocking
 /// a step that could not offer the fix.
@@ -1714,7 +1714,7 @@ pub(crate) fn validate_selection_parameters(
 /// `entity.selections`; that reopens D2. The target ability is *held* when it
 /// is bought (a row in `entity.ability_scores`) **or** granted a floor
 /// ([`crate::effective::granted_ability_floor`], e.g. Second Sight 1,
-/// ArMDE:4961) — the same score `effective_ability_score` already adds the
+/// ArMDE:4963) — the same score `effective_ability_score` already adds the
 /// bonus to.
 pub(crate) fn validate_ability_bonus_targets(
     entity: &Entity,
@@ -1753,8 +1753,8 @@ pub(crate) fn validate_ability_bonus_targets(
             // target rather than two spellings of it.
             let instance = ability_instance(ruleset, &selection.params, target);
             // Held = bought OR granted a floor: Second Sight "confers the
-            // Ability Second Sight 1" (ArMDE:4961), so Puissant's +2
-            // (ArMDE:4887) has a target even with no bought row.
+            // Ability Second Sight 1" (ArMDE:4963), so Puissant's +2
+            // (ArMDE:4889) has a target even with no bought row.
             let has_instance = entity.ability_scores.iter().any(|a| {
                 &a.ability == target
                     && a.parameter
@@ -1788,7 +1788,7 @@ pub(crate) fn validate_ability_bonus_targets(
 ///
 /// False Power is the case the rules state: the Flaw is taken "once for each
 /// appropriate Supernatural Virtue that the character possesses"
-/// (ArMDE:6167). Two failures follow
+/// (ArMDE:6169). Two failures follow
 /// from that one sentence, so both live here:
 ///
 /// - **possesses** → [`ValidationIssue::CODE_PARAM_TARGET_NOT_POSSESSED`] when
@@ -1815,7 +1815,7 @@ pub(crate) fn validate_ability_bonus_targets(
 ///
 /// `selections` is the caller's folded bought-plus-granted list, for the same
 /// reason [`validate_duplicate_selections`] takes it: a warping-owed Major Flaw
-/// slot (`ArMDE:16638`) or an open House grant is filled with a player-chosen
+/// slot (`ArMDE:16640`) or an open House grant is filled with a player-chosen
 /// [`Selection`], parameters and all, and such a copy claims its target exactly
 /// as a bought one does.
 pub(crate) fn validate_possessed_param_targets(
@@ -1898,9 +1898,9 @@ pub(crate) fn validate_possessed_param_targets(
 /// being actually holds.
 ///
 /// Restricted Power, Slow Power and Variable Power each modify "one of the
-/// character's supernatural powers" (ArMDE:6760, :6832, :5276). The target is free text because a power is an
+/// character's supernatural powers" (ArMDE:6762, :6834, :5278). The target is free text because a power is an
 /// anonymous *instance* of a Power Virtue rather than a catalogue entry — a
-/// Greater Power's levels may be spent on "several powers" (`ArMDE:4092`) — so only
+/// Greater Power's levels may be spent on "several powers" (`ArMDE:4094`) — so only
 /// [`Entity::powers`] can say whether the named one exists. A name no power
 /// carries is a Flaw attached to nothing, exactly as a dangling Puissant is.
 ///
@@ -1964,7 +1964,7 @@ pub(crate) fn validate_power_targets(
     }
 }
 
-/// Enforces the "one Magical Focus per magus" limit (ArMDE:4613) by
+/// Enforces the "one Magical Focus per magus" limit (ArMDE:4615) by
 /// counting [`Effect::MagicalFocus`] across everything that feeds the effective
 /// layer (bought selections plus House / Mythic-type grants, e.g. Mythic Blood's
 /// bundled Minor Focus). More than one Focus is illegal. This counts the *effect*
@@ -2005,7 +2005,7 @@ pub(crate) fn validate_magical_focus(
 /// Enforces the type's Gift policy (required / allowed / forbidden). The policy
 /// per type is data; this is the mechanism the book's Gift rules map onto.
 ///
-/// Source: ArMDE:2936-2945 (The Gift:
+/// Source: ArMDE:2938-2947 (The Gift:
 /// "all magi must have this Virtue"; "Grogs can never have The Gift"); magi must
 /// take The Gift at :2858; only magi may take the Hermetic Magus Social Status
 /// at :2293 and :4067-4069.
@@ -2097,7 +2097,7 @@ mod multi_ref_tests {
         );
     }
 
-    /// The refusal half: ArMDE:5930-5934 states the 30-level prerequisite and
+    /// The refusal half: ArMDE:5932-5936 states the 30-level prerequisite and
     /// the "as many of the character's spells" scope against spells already
     /// learned — a spell the character never learned must NOT resolve, even
     /// though it may be a perfectly real spell in the ruleset's catalogue.

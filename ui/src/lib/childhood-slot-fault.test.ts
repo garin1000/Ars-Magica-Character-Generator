@@ -10,7 +10,7 @@ import type { ChildhoodPackage, LocalizedRuleset } from './types';
 // engine is bound to reject.
 // N4b: the native language and a catalogued slot may also hold a value picked from
 // the list (`{ id }`), which is the language its display name spells.
-// Source: ArMDE:2446
+// Source: ArMDE:2448
 
 /** What `childhoodSlotFault` reads: the native-language Ability and the language names. */
 const localized = {

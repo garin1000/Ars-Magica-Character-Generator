@@ -19,7 +19,7 @@ use super::*;
 /// "The capacity of a talisman is independent of its shape and material, and
 /// instead depends on the power of the magus to whom it is attuned. The maximum
 /// number of pawns of Vim vis that may be used to prepare a talisman is equal to
-/// the sum of the magus's highest Technique and highest Form" (ArMDE:10691).
+/// the sum of the magus's highest Technique and highest Form" (ArMDE:10693).
 ///
 /// The two contributing Arts and their scores are surfaced alongside the sum so
 /// the UI can show the whole derivation without doing arithmetic in JS.
@@ -69,15 +69,15 @@ fn highest_art(entity: &Entity, ruleset: &Ruleset, art_type: ArtType) -> Option<
 /// [`crate::types::TalismanEffect`] levels are deliberately NOT added to
 /// `item_level_used`, so they can never overrun `item_level_budget`. That budget
 /// exists only because of two Redcap-only Virtues: Magic Items requires "You must
-/// be a Redcap to take this Virtue" (ArMDE:4418-4420, the requirement on `ArMDE:4420`),
+/// be a Redcap to take this Virtue" (ArMDE:4420-4422, the requirement on `ArMDE:4422`),
 /// and the Redcap Social Status itself grants the fifty starting levels
-/// (`ArMDE:4913-4921`) while stating "You may not take The Gift" (`ArMDE:4921`). A talisman
+/// (`ArMDE:4915-4923`) while stating "You may not take The Gift" (`ArMDE:4923`). A talisman
 /// can only be attuned by a magus, so the budget can never fund one, and charging
 /// against it would invent a limit the rules do not impose. The talisman's own
 /// limit is this vis capacity, which the model cannot enforce (it holds no vis
 /// stock) and therefore only reports.
 ///
-/// Source: `ArMDE:10691`.
+/// Source: `ArMDE:10693`.
 pub fn talisman_capacity(entity: &Entity, ruleset: &Ruleset) -> Option<TalismanCapacity> {
     entity.talisman.as_ref()?;
     let (technique, technique_score) = highest_art(entity, ruleset, ArtType::Technique)?;
@@ -93,7 +93,7 @@ pub fn talisman_capacity(entity: &Entity, ruleset: &Ruleset) -> Option<TalismanC
 
 // --- Familiar (bonding read-outs) ------------------------------------------
 
-/// The **total** Lab-Total points the three cords cost (ArMDE:10908).
+/// The **total** Lab-Total points the three cords cost (ArMDE:10910).
 ///
 /// The score indexing [`super::CORD_COST_TABLE`] goes through
 /// [`super::cord_score`], so it is **clamped** to the +5 maximum the same line
@@ -111,9 +111,9 @@ pub fn cord_points_spent(familiar: &Familiar) -> u32 {
 ///
 /// "The level for the enchantment is equal to 25 plus the familiar's Magic Might
 /// plus 5 times its Size. If the familiar has negative Size, this reduces the level
-/// for the enchantment" (ArMDE:10896), restated as
+/// for the enchantment" (ArMDE:10898), restated as
 /// "**FAMILIAR BONDING LEVEL: Familiar's Magic Might + 25 + (5 x Size)**"
-/// (`ArMDE:10900`).
+/// (`ArMDE:10902`).
 ///
 /// A familiar with no entered Might contributes 0 rather than suppressing the
 /// read-out — the panel says so instead.
@@ -125,7 +125,7 @@ pub fn familiar_binding_level(familiar: &Familiar) -> i32 {
 /// The total level of the powers invested in the familiar bond.
 ///
 /// Informational only: "there is no limit to the number of powers which may be
-/// invested in a familiar" (ArMDE:10938), so unlike a being's own
+/// invested in a familiar" (ArMDE:10940), so unlike a being's own
 /// [`crate::effective::powers_used`] this sum is compared against no budget and can
 /// raise no issue.
 pub fn familiar_invested_power_levels(familiar: &Familiar) -> u32 {
@@ -142,12 +142,12 @@ pub fn familiar_invested_power_levels(familiar: &Familiar) -> u32 {
 ///
 /// The bonding Lab Total is the ordinary Lab Total shape — "any appropriate
 /// Technique + any appropriate Form + Int + Magic Theory + Aura Modifier"
-/// (ArMDE:10890), restated as **FAMILIAR BONDING LAB TOTAL** (`ArMDE:10898`) — so
+/// (ArMDE:10892), restated as **FAMILIAR BONDING LAB TOTAL** (`ArMDE:10900`) — so
 /// [`lab_totals`] is reused and the best `(Technique, Form)` cell taken, exactly as
 /// [`masterpiece_item_cap`] does. Which Arts are *appropriate* to a given beast is a
-/// troupe judgment (`ArMDE:10890` spells out the correspondences in prose), and
+/// troupe judgment (`ArMDE:10892` spells out the correspondences in prose), and
 /// "Any magus should be able to find an animal that he can bind with his best
-/// Technique and Form" (`ArMDE:10894`) — so the best cell is the honest figure.
+/// Technique and Form" (`ArMDE:10896`) — so the best cell is the honest figure.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FamiliarBinding {
     /// The Technique Art of the best Lab Total.
@@ -157,7 +157,7 @@ pub struct FamiliarBinding {
     /// The best base `(Technique, Form)` Lab Total.
     pub lab_total: i32,
     /// The same cell's within-focus Lab Total; `None` when the magus holds no
-    /// Magical Focus. Unlike Masterpiece, `ArMDE:10890` explicitly allows a focus here
+    /// Magical Focus. Unlike Masterpiece, `ArMDE:10892` explicitly allows a focus here
     /// ("Puissant Arts and foci may apply to this"), but whether *this* familiar
     /// falls inside the focus's narrow field is a troupe judgment the engine cannot
     /// evaluate — so it is surfaced as a separate, conditional figure the UI labels
@@ -166,10 +166,10 @@ pub struct FamiliarBinding {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lab_total_within_focus: Option<i32>,
     /// Whether the base Lab Total reaches the binding level: "A magus can only bind
-    /// a familiar if his Lab Total equals or exceeds this level" (`ArMDE:10896`).
+    /// a familiar if his Lab Total equals or exceeds this level" (`ArMDE:10898`).
     pub lab_total_reaches_level: bool,
     /// Whether the cords bought fit in that Lab Total: "The total cost of the cords
-    /// you buy cannot exceed the magus's Lab Total" (`ArMDE:10908`).
+    /// you buy cannot exceed the magus's Lab Total" (`ArMDE:10910`).
     pub cord_points_within_lab_total: bool,
 }
 
@@ -180,15 +180,15 @@ pub struct FamiliarBinding {
 /// `fully_populated_familiar_raises_no_issues` test in `validation` pins that.
 /// Whether the bonding season is legal depends on judgments the engine cannot make
 /// (which Arts suit the beast, whether a focus applies) and on vis, which the model
-/// does not hold — so the engine reports rather than enforces. Vis costs (`ArMDE:10902`,
-/// `ArMDE:10954`) are out of scope for the same reason.
+/// does not hold — so the engine reports rather than enforces. Vis costs (`ArMDE:10904`,
+/// `ArMDE:10956`) are out of scope for the same reason.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FamiliarReadout {
-    /// The level of the bonding enchantment (`ArMDE:10900`).
+    /// The level of the bonding enchantment (`ArMDE:10902`).
     pub binding_level: i32,
-    /// The Lab-Total points the three cords cost in total (`ArMDE:10908`).
+    /// The Lab-Total points the three cords cost in total (`ArMDE:10910`).
     pub cord_points_spent: u32,
-    /// The total level of the bond-invested powers (`ArMDE:10938`; no budget).
+    /// The total level of the bond-invested powers (`ArMDE:10940`; no budget).
     pub invested_power_levels: u32,
     /// The magus's best bonding Lab Total and how it compares.
     pub binding: FamiliarBinding,
@@ -202,8 +202,8 @@ pub struct FamiliarReadout {
 /// [`Ruleset`](crate::ruleset::Ruleset): the grid was the only thing that needed
 /// one.
 ///
-/// Source: `ArMDE:10890`, `ArMDE:10894`,
-/// `ArMDE:10896`, `ArMDE:10898`, `ArMDE:10900`, `ArMDE:10908`, `ArMDE:10938`.
+/// Source: `ArMDE:10892`, `ArMDE:10896`,
+/// `ArMDE:10898`, `ArMDE:10900`, `ArMDE:10902`, `ArMDE:10910`, `ArMDE:10940`.
 pub fn familiar_readout(totals: &[LabTotal], entity: &Entity) -> Option<FamiliarReadout> {
     let familiar = entity.familiar.as_ref()?;
     let binding_level = familiar_binding_level(familiar);

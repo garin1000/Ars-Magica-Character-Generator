@@ -135,7 +135,7 @@ fn spell_level_cap_ignores_a_stale_potent_field_mark() {
 
 #[test]
 fn spell_level_cap_with_both_marks_halves_the_sum_once() {
-    // Order of operations (ArMDE:2533, :4474, :5982): the doubling and the
+    // Order of operations (ArMDE:2535, :4476, :5984): the doubling and the
     // bonus both sum into the Lab Total first, then the Deficient Form halves
     // it — floor((30 + 12 + 6) / 2) = 24.
     let ruleset = ruleset_with_only_spell(SPELL_JSON);
@@ -198,7 +198,7 @@ fn spell_caps_has_all_three_marked_figures_when_both_virtues_are_held() {
 #[test]
 fn the_combined_figure_is_not_derivable_from_the_single_marker_figures() {
     // Creo 13 / Ignem 14, Major Magical Focus (+13), Minor Potent Magic (+3),
-    // Deficient Form (halves after summing, ArMDE:5982, floored ArMDE:615):
+    // Deficient Form (halves after summing, ArMDE:5984, floored ArMDE:615):
     // plain 30 -> 15, focus 43 -> 21, potent 33 -> 16, both 46 -> 23.
     // Adding up the single-marker figures (21 + 16 - 15 = 22) would be wrong
     // by one, which is why the combined figure is an engine figure.

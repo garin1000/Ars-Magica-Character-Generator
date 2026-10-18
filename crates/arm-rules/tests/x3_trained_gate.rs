@@ -204,7 +204,7 @@ fn d12_6_gifted_companion_clan_ilfetu_refused_or_pool_absent() {
 }
 
 /// `flaw.weak_parens` (X3c scope; kept here because it is D12.6's own worked
-/// example, ArMDE:7143-7145). While `flaw.weak_parens` is on
+/// example, ArMDE:7145-7147). While `flaw.weak_parens` is on
 /// `PENDING_HERMETIC_FLAWS`, this asserts the live defect persists (the guard
 /// can only shrink the pending list, never widen it); once X3c gates it, the
 /// pending row is removed and this asserts the fix instead.
@@ -237,7 +237,7 @@ fn d12_6_gifted_companion_weak_parens_refused_or_neutral() {
     }
 }
 
-/// `flaw.restriction` (X3c scope — Major Hermetic Flaw, ArMDE:6762-6765, no
+/// `flaw.restriction` (X3c scope — Major Hermetic Flaw, ArMDE:6764-6767, no
 /// prerequisite shipped today): "Flaw points from a trained Flaw". While
 /// `flaw.restriction` is on `PENDING_HERMETIC_FLAWS`, this asserts the live
 /// defect persists; once X3c gates it, the pending row is removed and this
@@ -404,106 +404,106 @@ const GIFT_ENTRIES: &[&str] = &[
 /// passage is genuinely borderline carry an inline note explaining why they
 /// stayed `Trained` despite mentioning one of those words in passing.
 const X3A_VIRTUES: &[(&str, Gate)] = &[
-    ("virtue.adept_laboratory_student", Gate::Trained), // ArMDE:3439-3442, Lab Total
-    ("virtue.affinity_art", Gate::Trained),             // ArMDE:3447-3449, an Art
+    ("virtue.adept_laboratory_student", Gate::Trained), // ArMDE:3441-3444, Lab Total
+    ("virtue.affinity_art", Gate::Trained),             // ArMDE:3449-3451, an Art
     ("virtue.atlantean_magic", Gate::Trained), // ArMDE:3444-3469, Hermetic tradition/spells
     ("virtue.boosted_magic", Gate::Trained),   // ArMDE:3523-3528, spell levels
-    ("virtue.cautious_sorcerer", Gate::Trained), // ArMDE:3626-3629, Casting Total/botch
+    ("virtue.cautious_sorcerer", Gate::Trained), // ArMDE:3628-3631, Casting Total/botch
     (
         "virtue.clan_ilfetu",
         Gate::Order,
-        // ArMDE:3636: "a member of Clan Ilfetu within House Bjornaer" — folded
+        // ArMDE:3638: "a member of Clan Ilfetu within House Bjornaer" — folded
         // House gate (F-35); see `x3a_folded_house_gates_carry_their_house_leaf`.
     ),
-    ("virtue.cyclic_magic_positive", Gate::Trained), // ArMDE:3706-3709, spellcasting
-    ("virtue.deft_form", Gate::Trained),             // ArMDE:3716-3719, a Form
+    ("virtue.cyclic_magic_positive", Gate::Trained), // ArMDE:3708-3711, spellcasting
+    ("virtue.deft_form", Gate::Trained),             // ArMDE:3718-3721, a Form
     (
         "virtue.diedne_magic",
         Gate::Order,
-        // ArMDE:3746-3753: "hidden from the Order" — D68.12 settles the
+        // ArMDE:3748-3755: "hidden from the Order" — D68.12 settles the
         // borderline reading raised in tmp/x3a-verdicts.md: gates on
         // order_member as well as training.
     ),
-    ("virtue.elemental_magic", Gate::Trained), // ArMDE:3802-3809, Forms/spontaneous magic
-    ("virtue.enduring_magic", Gate::Trained),  // ArMDE:3826-3829, spell duration/Casting
-    ("virtue.the_enigma", Gate::Order),        // ArMDE:3830-3832: "a member of House Criamon"
+    ("virtue.elemental_magic", Gate::Trained), // ArMDE:3804-3811, Forms/spontaneous magic
+    ("virtue.enduring_magic", Gate::Trained),  // ArMDE:3828-3831, spell duration/Casting
+    ("virtue.the_enigma", Gate::Order),        // ArMDE:3832-3834: "a member of House Criamon"
     (
         "virtue.exotic_casting",
         Gate::Trained,
-        // ArMDE:3846-3849 mentions "Magic Theory within the Order" only as
+        // ArMDE:3848-3851 mentions "Magic Theory within the Order" only as
         // background contrast (non-Hermetic casting methods vs. standard
         // Hermetic ones), not an eligibility clause. BORDERLINE — see report.
     ),
-    ("virtue.extractor_of_form_vis", Gate::Trained), // ArMDE:3850-3853, lab vis extraction
-    ("virtue.faerie_magic", Gate::Order), // ArMDE:3896-3898: "a member of House Merinita"
-    ("virtue.faerie_raised_magic", Gate::Trained), // ArMDE:3900-3913, Hermetic magic style
-    ("virtue.fast_caster", Gate::Trained), // ArMDE:3936-3939, Casting Total speed
+    ("virtue.extractor_of_form_vis", Gate::Trained), // ArMDE:3852-3855, lab vis extraction
+    ("virtue.faerie_magic", Gate::Order), // ArMDE:3898-3900: "a member of House Merinita"
+    ("virtue.faerie_raised_magic", Gate::Trained), // ArMDE:3902-3915, Hermetic magic style
+    ("virtue.fast_caster", Gate::Trained), // ArMDE:3938-3941, Casting Total speed
     ("virtue.flawless_magic", Gate::Trained), // ArMDE:3887-3890, botch on spells
-    ("virtue.flexible_formulaic_magic", Gate::Trained), // ArMDE:3962-3965, formulaic spells
-    ("virtue.free_study", Gate::Trained), // ArMDE:4008-4011, D68.1's raw-vis group
+    ("virtue.flexible_formulaic_magic", Gate::Trained), // ArMDE:3964-3967, formulaic spells
+    ("virtue.free_study", Gate::Trained), // ArMDE:4010-4013, D68.1's raw-vis group
     (
         "virtue.gorgiastic",
         Gate::Order,
-        // ArMDE:4050-4053: left House Criamon but still in the Order —
+        // ArMDE:4052-4055: left House Criamon but still in the Order —
         // D68.12 settles the borderline reading raised in
         // tmp/x3a-verdicts.md: gates on order_member as well as training.
     ),
-    ("virtue.guest_of_house_criamon", Gate::Order), // ArMDE:4108-4111: "Magi... members of House Criamon"
-    ("virtue.harnessed_magic", Gate::Trained),      // ArMDE:4124-4129, spontaneous magic
-    ("virtue.heartbeast", Gate::Order),             // ArMDE:4130-4132: "a member of House Bjornaer"
-    ("virtue.hermetic_prestige", Gate::Order), // ArMDE:4142-4144: "a Reputation... within the Order"
-    ("virtue.imbued_with_the_spirit_of_form", Gate::Trained), // ArMDE:4156-4165, a Form
-    ("virtue.inventive_genius", Gate::Trained), // ArMDE:4222-4225, spell invention
+    ("virtue.guest_of_house_criamon", Gate::Order), // ArMDE:4110-4113: "Magi... members of House Criamon"
+    ("virtue.harnessed_magic", Gate::Trained),      // ArMDE:4126-4131, spontaneous magic
+    ("virtue.heartbeast", Gate::Order),             // ArMDE:4132-4134: "a member of House Bjornaer"
+    ("virtue.hermetic_prestige", Gate::Order), // ArMDE:4144-4146: "a Reputation... within the Order"
+    ("virtue.imbued_with_the_spirit_of_form", Gate::Trained), // ArMDE:4158-4167, a Form
+    ("virtue.inventive_genius", Gate::Trained), // ArMDE:4224-4227, spell invention
     (
         "virtue.leper_magus",
         Gate::Order,
-        // ArMDE:4320-4323: "only available to magi trained in House Tytalus"
+        // ArMDE:4322-4325: "only available to magi trained in House Tytalus"
         // — folded House gate (F-136); see
         // `x3a_folded_house_gates_carry_their_house_leaf`.
     ),
-    ("virtue.life_boost", Gate::Trained), // ArMDE:4366-4369, Casting Total
-    ("virtue.life_linked_spontaneous_magic", Gate::Trained), // ArMDE:4370-4377, spontaneous magic
-    ("virtue.magical_memory", Gate::Trained), // ArMDE:4426-4429, spell memorization
-    ("virtue.major_magical_focus", Gate::Trained), // ArMDE:4470-4493, Casting Total
+    ("virtue.life_boost", Gate::Trained), // ArMDE:4368-4371, Casting Total
+    ("virtue.life_linked_spontaneous_magic", Gate::Trained), // ArMDE:4372-4379, spontaneous magic
+    ("virtue.magical_memory", Gate::Trained), // ArMDE:4428-4431, spell memorization
+    ("virtue.major_magical_focus", Gate::Trained), // ArMDE:4472-4495, Casting Total
     ("virtue.mastered_spells", Gate::Trained), // ArMDE:4471-4475, Spell Mastery
     (
         "virtue.masterpiece",
         Gate::Order,
-        // ArMDE:4547-4550: passing "his Gauntlet" — D68.12 settles the
+        // ArMDE:4549-4552: passing "his Gauntlet" — D68.12 settles the
         // borderline reading raised in tmp/x3a-verdicts.md: gates on
         // order_member as well as training.
     ),
     (
         "virtue.mercurian_magic",
         Gate::Trained,
-        // ArMDE:4585-4594 mentions lineage predating "the Order of Hermes" as
+        // ArMDE:4587-4596 mentions lineage predating "the Order of Hermes" as
         // background, not an eligibility clause.
     ),
-    ("virtue.method_caster", Gate::Trained), // ArMDE:4595-4598, Casting Total
-    ("virtue.minor_magical_focus", Gate::Trained), // ArMDE:4607-4628 (F-200 fixed, X9c), Casting Total
-    ("virtue.mystical_choreography", Gate::Trained), // ArMDE:4638-4643, spellcasting
+    ("virtue.method_caster", Gate::Trained), // ArMDE:4597-4600, Casting Total
+    ("virtue.minor_magical_focus", Gate::Trained), // ArMDE:4609-4630 (F-200 fixed, X9c), Casting Total
+    ("virtue.mystical_choreography", Gate::Trained), // ArMDE:4640-4645, spellcasting
     (
         "virtue.mythic_blood",
         Gate::Trained,
-        // ArMDE:4644-4660 (D68.1's own group): "not particularly uncommon in
+        // ArMDE:4646-4662 (D68.1's own group): "not particularly uncommon in
         // the Order of Hermes" is a rarity remark, not an eligibility clause.
     ),
     ("virtue.performance_magic", Gate::Trained), // ArMDE:4642-4709, spellcasting
-    ("virtue.personal_vis_source", Gate::Trained), // ArMDE:4799-4802, D68.1's raw-vis group
-    ("virtue.potent_magic_major", Gate::Trained), // ArMDE:4811-4852, spell effect
-    ("virtue.potent_magic_minor", Gate::Trained), // ArMDE:4811-4852, spell effect
-    ("virtue.puissant_art", Gate::Trained),      // ArMDE:4889-4891, an Art
+    ("virtue.personal_vis_source", Gate::Trained), // ArMDE:4801-4804, D68.1's raw-vis group
+    ("virtue.potent_magic_major", Gate::Trained), // ArMDE:4813-4854, spell effect
+    ("virtue.potent_magic_minor", Gate::Trained), // ArMDE:4813-4854, spell effect
+    ("virtue.puissant_art", Gate::Trained),      // ArMDE:4891-4893, an Art
     ("virtue.quiet_magic", Gate::Trained),       // ArMDE:4822-4827, spellcasting
-    ("virtue.secondary_insight", Gate::Trained), // ArMDE:4963-4966, Arts
+    ("virtue.secondary_insight", Gate::Trained), // ArMDE:4965-4968, Arts
     ("virtue.side_effect", Gate::Trained),       // ArMDE:4954-4957, spell effect
-    ("virtue.skilled_parens", Gate::Trained), // ArMDE:5035-5037 — D24: a parens exists only via apprenticeship
-    ("virtue.special_circumstances", Gate::Trained), // ArMDE:5069-5072, D68.1's Magic Resistance group
-    ("virtue.spell_improvisation", Gate::Trained),   // ArMDE:5073-5076, spontaneous magic
-    ("virtue.study_bonus", Gate::Trained),           // ArMDE:5127-5143, lab study
-    ("virtue.subtle_magic", Gate::Trained),          // ArMDE:5144-5147, spellcasting
-    ("virtue.tethered_magic", Gate::Trained),        // ArMDE:5212-5215, spellcasting
-    ("virtue.verditius_magic", Gate::Order), // ArMDE:5286-5288: "a member of House Verditius"
-    ("virtue.withstand_casting", Gate::Trained), // ArMDE:5332-5353, Casting Total
+    ("virtue.skilled_parens", Gate::Trained), // ArMDE:5037-5039 — D24: a parens exists only via apprenticeship
+    ("virtue.special_circumstances", Gate::Trained), // ArMDE:5071-5074, D68.1's Magic Resistance group
+    ("virtue.spell_improvisation", Gate::Trained),   // ArMDE:5075-5078, spontaneous magic
+    ("virtue.study_bonus", Gate::Trained),           // ArMDE:5129-5145, lab study
+    ("virtue.subtle_magic", Gate::Trained),          // ArMDE:5146-5149, spellcasting
+    ("virtue.tethered_magic", Gate::Trained),        // ArMDE:5214-5217, spellcasting
+    ("virtue.verditius_magic", Gate::Order), // ArMDE:5288-5290: "a member of House Verditius"
+    ("virtue.withstand_casting", Gate::Trained), // ArMDE:5334-5355, Casting Total
 ];
 
 /// X3b's 33 Hermetic Flaws (`tmp/x3-scope.md` § 2:
@@ -522,80 +522,80 @@ const X3B_FLAWS: &[(&str, Gate)] = &[
     (
         "flaw.bound_casting_tools",
         Gate::Trained,
-        // ArMDE:5794-5797 mentions "House Verditius" only to explain that
+        // ArMDE:5796-5799 mentions "House Verditius" only to explain that
         // casting tools are a Verditius-specific mechanic (ArMDE:835,
         // :10162) — background, not an eligibility clause, unlike Consumed
         // Casting Tools' explicit "may only be taken by Verditius magi"
-        // three entries later (ArMDE:5912). BORDERLINE — see report.
+        // three entries later (ArMDE:5914). BORDERLINE — see report.
     ),
     ("flaw.bound_magic", Gate::Trained), // ArMDE:5727-5730, spells/magic items
     (
         "flaw.brutal_artist",
         Gate::Order,
-        // ArMDE:5828-5831: "only available to magi of House Jerbiton" —
+        // ArMDE:5830-5833: "only available to magi of House Jerbiton" —
         // folded House gate (F-359); see
         // `x3b_folded_house_gates_carry_their_house_leaf`.
     ),
-    ("flaw.careless_sorcerer", Gate::Trained), // ArMDE:5840-5843, botch dice when casting spells
-    ("flaw.ceremonial_spontaneous_magic", Gate::Trained), // ArMDE:5852-5855, Spontaneous magic
+    ("flaw.careless_sorcerer", Gate::Trained), // ArMDE:5842-5845, botch dice when casting spells
+    ("flaw.ceremonial_spontaneous_magic", Gate::Trained), // ArMDE:5854-5857, Spontaneous magic
     ("flaw.chaotic_magic", Gate::Trained),     // ArMDE:5785-5788, spontaneous spell effect
-    ("flaw.clumsy_magic", Gate::Trained),      // ArMDE:5872-5875, aiming rolls/Finesse
+    ("flaw.clumsy_magic", Gate::Trained),      // ArMDE:5874-5877, aiming rolls/Finesse
     (
         "flaw.consumed_casting_tools",
         Gate::Order,
-        // ArMDE:5910-5913: "This Flaw may only be taken by Verditius magi" —
+        // ArMDE:5912-5915: "This Flaw may only be taken by Verditius magi" —
         // folded House gate (F-390); see
         // `x3b_folded_house_gates_carry_their_house_leaf`.
     ),
-    ("flaw.corrupted_arts", Gate::Trained), // ArMDE:5924-5929, an Art's Casting Total
-    ("flaw.corrupted_spells", Gate::Trained), // ArMDE:5930-5935, formulaic spells
-    ("flaw.creative_block", Gate::Trained), // ArMDE:5944-5947, Lab Total
-    ("flaw.cyclic_magic_negative", Gate::Trained), // ArMDE:5964-5967, Lab Total/Casting Score
-    ("flaw.deficient_form", Gate::Trained), // ArMDE:5980-5983, a Form (D12's own worked example)
+    ("flaw.corrupted_arts", Gate::Trained), // ArMDE:5926-5931, an Art's Casting Total
+    ("flaw.corrupted_spells", Gate::Trained), // ArMDE:5932-5937, formulaic spells
+    ("flaw.creative_block", Gate::Trained), // ArMDE:5946-5949, Lab Total
+    ("flaw.cyclic_magic_negative", Gate::Trained), // ArMDE:5966-5969, Lab Total/Casting Score
+    ("flaw.deficient_form", Gate::Trained), // ArMDE:5982-5985, a Form (D12's own worked example)
     (
         "flaw.deficient_technique",
         Gate::Trained,
-        // ArMDE:5984-5986, a Technique. D12.3/D56: normalizes the retired
+        // ArMDE:5986-5988, a Technique. D12.3/D56: normalizes the retired
         // Has(virtue.hermetic_magus) spelling to HermeticallyTrained — see
         // `no_prerequisite_uses_has_hermetic_magus_spelling`.
     ),
-    ("flaw.deleterious_circumstances", Gate::Trained), // ArMDE:5988-5991, magic totals (D68.1)
-    ("flaw.difficult_longevity_ritual", Gate::Trained), // ArMDE:6033-6036, Lab Total (D68.1)
+    ("flaw.deleterious_circumstances", Gate::Trained), // ArMDE:5990-5993, magic totals (D68.1)
+    ("flaw.difficult_longevity_ritual", Gate::Trained), // ArMDE:6035-6038, Lab Total (D68.1)
     ("flaw.difficult_spontaneous_magic", Gate::Trained), // ArMDE:5966-5971, Spontaneous magic
-    ("flaw.disjointed_magic", Gate::Trained), // ArMDE:6043-6046, spells/Techniques and Forms
+    ("flaw.disjointed_magic", Gate::Trained), // ArMDE:6045-6048, spells/Techniques and Forms
     ("flaw.disorientating_magic", Gate::Trained), // ArMDE:5984-5987, after casting a spell
-    ("flaw.environmental_magic_condition", Gate::Trained), // ArMDE:6091-6094, Casting/Lab Totals
+    ("flaw.environmental_magic_condition", Gate::Trained), // ArMDE:6093-6096, Casting/Lab Totals
     ("flaw.exciting_experimentation", Gate::Trained), // ArMDE:6040-6043, lab experimentation tables
-    ("flaw.fettered_magic", Gate::Trained), // ArMDE:6185-6188, spells/magic items as Arcane Connections
-    ("flaw.flawed_parma_magica", Gate::Trained), // ArMDE:6213-6216, Parma Magica
+    ("flaw.fettered_magic", Gate::Trained), // ArMDE:6187-6190, spells/magic items as Arcane Connections
+    ("flaw.flawed_parma_magica", Gate::Trained), // ArMDE:6215-6218, Parma Magica
     ("flaw.harmless_magic", Gate::Trained), // ArMDE:6230-6235, Perdo spells
     (
         "flaw.hedge_wizard",
         Gate::Order,
-        // ArMDE:6311-6314: "a negative Reputation within the Order of
+        // ArMDE:6313-6316: "a negative Reputation within the Order of
         // Hermes... even though you are a member of the Order" — an
         // eligibility/membership fact (D68.2), not flavor; same shape as
         // `virtue.hermetic_prestige` (X3a).
     ),
     ("flaw.incompatible_arts", Gate::Trained), // ArMDE:6290-6293, Techniques and Forms
-    ("flaw.inconstant_magic", Gate::Trained),  // ArMDE:6369-6372, spellcasting/Finesse
+    ("flaw.inconstant_magic", Gate::Trained),  // ArMDE:6371-6374, spellcasting/Finesse
     (
         "flaw.infamous_master",
         Gate::Order,
-        // ArMDE:6385-6388: "don't deserve to be a member of the Order... a
+        // ArMDE:6387-6390: "don't deserve to be a member of the Order... a
         // bad Reputation... among magi" — same shape as Hedge Wizard.
     ),
-    ("flaw.limited_magic_resistance", Gate::Trained), // ArMDE:6417-6420, Magic Resistance/Parma
-    ("flaw.loose_magic", Gate::Trained),              // ArMDE:6425-6428, Spell Mastery
-    ("flaw.magic_addiction", Gate::Trained),          // ArMDE:6449-6452, spellcasting
+    ("flaw.limited_magic_resistance", Gate::Trained), // ArMDE:6419-6422, Magic Resistance/Parma
+    ("flaw.loose_magic", Gate::Trained),              // ArMDE:6427-6430, Spell Mastery
+    ("flaw.magic_addiction", Gate::Trained),          // ArMDE:6451-6454, spellcasting
     (
         "flaw.monastic_vows_hermetic",
         Gate::Trained,
-        // ArMDE:6521-6524 mentions "your order" (ArMDE:6523) — a religious
+        // ArMDE:6523-6526 mentions "your order" (ArMDE:6525) — a religious
         // order (monastic vows), NOT the Order of Hermes; operates on vis
         // ownership and magic devices.
     ),
-    ("flaw.necessary_condition", Gate::Trained), // ArMDE:6547-6550, casting spells
+    ("flaw.necessary_condition", Gate::Trained), // ArMDE:6549-6552, casting spells
 ];
 
 /// X3c's 31 Hermetic Flaws (`tmp/x3-scope.md` § 2: `flaw.painful_magic`…
@@ -613,62 +613,62 @@ const X3B_FLAWS: &[(&str, Gate)] = &[
 /// already gave `virtue.mercurian_magic`'s near-identical wording in X3a — so
 /// it is not listed on the STOP-list below.
 const X3C_FLAWS: &[(&str, Gate)] = &[
-    ("flaw.painful_magic", Gate::Trained), // ArMDE:6645-6648, casting-fatigue penalty
-    ("flaw.poor_formulaic_magic", Gate::Trained), // ArMDE:6681-6684, Formulaic spell rolls
-    ("flaw.restriction", Gate::Trained),   // ArMDE:6762-6765, casting spells (Q-X4-1's own example)
-    ("flaw.rigid_magic", Gate::Trained),   // ArMDE:6766-6769, vis when casting/Ritual magic
-    ("flaw.short_lived_magic", Gate::Trained), // ArMDE:6800-6803, spell duration
-    ("flaw.short_ranged_magic", Gate::Trained), // ArMDE:6808-6811, Casting/Lab Totals
-    ("flaw.slow_caster", Gate::Trained),   // ArMDE:6826-6829, spellcasting time
+    ("flaw.painful_magic", Gate::Trained), // ArMDE:6647-6650, casting-fatigue penalty
+    ("flaw.poor_formulaic_magic", Gate::Trained), // ArMDE:6683-6686, Formulaic spell rolls
+    ("flaw.restriction", Gate::Trained),   // ArMDE:6764-6767, casting spells (Q-X4-1's own example)
+    ("flaw.rigid_magic", Gate::Trained),   // ArMDE:6768-6771, vis when casting/Ritual magic
+    ("flaw.short_lived_magic", Gate::Trained), // ArMDE:6802-6805, spell duration
+    ("flaw.short_ranged_magic", Gate::Trained), // ArMDE:6810-6813, Casting/Lab Totals
+    ("flaw.slow_caster", Gate::Trained),   // ArMDE:6828-6831, spellcasting time
     (
         "flaw.spontaneous_casting_tools",
         Gate::Order,
-        // ArMDE:6850-6853: "This Flaw can only be taken by Verditius magi" —
+        // ArMDE:6852-6855: "This Flaw can only be taken by Verditius magi" —
         // folded House gate (F-518); see
         // `x3c_folded_house_gate_carries_its_house_leaf`.
     ),
-    ("flaw.stockade_parma_magica", Gate::Trained), // ArMDE:6858-6861, Parma Magica
-    ("flaw.study_requirement", Gate::Trained),     // ArMDE:6866-6869, studying an Art
-    ("flaw.susceptibility_to_divine_power", Gate::Trained), // ArMDE:6886-6889, D68.1's Magic Resistance group
-    ("flaw.susceptibility_to_faerie_power", Gate::Trained), // ArMDE:6890-6893, Magic Resistance/Parma
-    ("flaw.susceptibility_to_infernal_power", Gate::Trained), // ArMDE:6894-6897, Magic Resistance
-    ("flaw.the_constant_expression", Gate::Trained), // ArMDE:5892-5909, Spontaneous magic/Lab safety
-    ("flaw.twilight_prone", Gate::Trained),          // ArMDE:6950-6953, Twilight
+    ("flaw.stockade_parma_magica", Gate::Trained), // ArMDE:6860-6863, Parma Magica
+    ("flaw.study_requirement", Gate::Trained),     // ArMDE:6868-6871, studying an Art
+    ("flaw.susceptibility_to_divine_power", Gate::Trained), // ArMDE:6888-6891, D68.1's Magic Resistance group
+    ("flaw.susceptibility_to_faerie_power", Gate::Trained), // ArMDE:6892-6895, Magic Resistance/Parma
+    ("flaw.susceptibility_to_infernal_power", Gate::Trained), // ArMDE:6896-6899, Magic Resistance
+    ("flaw.the_constant_expression", Gate::Trained), // ArMDE:5894-5911, Spontaneous magic/Lab safety
+    ("flaw.twilight_prone", Gate::Trained),          // ArMDE:6952-6955, Twilight
     (
         "flaw.unimaginative_learner",
         Gate::Trained,
-        // ArMDE:6986-6989, D68.1's raw-vis group (studying from raw vis)
+        // ArMDE:6988-6991, D68.1's raw-vis group (studying from raw vis)
     ),
-    ("flaw.unnatural_magic", Gate::Trained), // ArMDE:7002-7005, Creo rituals/vis extraction
-    ("flaw.unpredictable_magic", Gate::Trained), // ArMDE:7006-7009, casting magic/botch dice
-    ("flaw.unstructured_caster", Gate::Trained), // ArMDE:7018-7021, Formulaic/Ritual spells
+    ("flaw.unnatural_magic", Gate::Trained), // ArMDE:7004-7007, Creo rituals/vis extraction
+    ("flaw.unpredictable_magic", Gate::Trained), // ArMDE:7008-7011, casting magic/botch dice
+    ("flaw.unstructured_caster", Gate::Trained), // ArMDE:7020-7023, Formulaic/Ritual spells
     (
         "flaw.vulnerable_casting",
         Gate::Trained,
-        // ArMDE:7064-7075 mentions "Magi of the Mercurian cults" only as
+        // ArMDE:7066-7077 mentions "Magi of the Mercurian cults" only as
         // background (who commonly has the Flaw), not an eligibility clause —
         // same reading as `virtue.mercurian_magic` (X3a, D68.12).
     ),
-    ("flaw.vulnerable_magic", Gate::Trained), // ArMDE:7076-7081, dispelling active spells
-    ("flaw.vulnerable_to_folk_tradition", Gate::Trained), // ArMDE:7082-7085, Magic Resistance/Penetration
-    ("flaw.warped_magic", Gate::Trained),                 // ArMDE:7094-7097, spell side effect
+    ("flaw.vulnerable_magic", Gate::Trained), // ArMDE:7078-7083, dispelling active spells
+    ("flaw.vulnerable_to_folk_tradition", Gate::Trained), // ArMDE:7084-7087, Magic Resistance/Penetration
+    ("flaw.warped_magic", Gate::Trained),                 // ArMDE:7096-7099, spell side effect
     (
         "flaw.waster_of_vis",
         Gate::Trained,
-        // ArMDE:7123-7126, D68.1's raw-vis group (using raw vis/Ritual casting)
+        // ArMDE:7125-7128, D68.1's raw-vis group (using raw vis/Ritual casting)
     ),
-    ("flaw.weak_enchanter", Gate::Trained), // ArMDE:7131-7134, Lab Total (enchanted items)
-    ("flaw.weak_magic", Gate::Trained),     // ArMDE:7135-7138, Penetration Total
-    ("flaw.weak_magic_resistance", Gate::Trained), // ArMDE:7139-7142, Magic Resistance/Penetration
+    ("flaw.weak_enchanter", Gate::Trained), // ArMDE:7133-7136, Lab Total (enchanted items)
+    ("flaw.weak_magic", Gate::Trained),     // ArMDE:7137-7140, Penetration Total
+    ("flaw.weak_magic_resistance", Gate::Trained), // ArMDE:7141-7144, Magic Resistance/Penetration
     (
         "flaw.weak_parens",
         Gate::Trained,
-        // ArMDE:7143-7145 — D24: a parens exists only via apprenticeship;
+        // ArMDE:7145-7147 — D24: a parens exists only via apprenticeship;
         // D12.6's own worked example.
     ),
-    ("flaw.weak_scholar", Gate::Trained), // ArMDE:7151-7154, Lab Totals
-    ("flaw.weak_spontaneous_magic", Gate::Trained), // ArMDE:7155-7160, Casting Score/spontaneous magic
-    ("flaw.weird_magic", Gate::Trained),            // ArMDE:7169-7172, botch dice on spellcasting
+    ("flaw.weak_scholar", Gate::Trained), // ArMDE:7153-7156, Lab Totals
+    ("flaw.weak_spontaneous_magic", Gate::Trained), // ArMDE:7157-7162, Casting Score/spontaneous magic
+    ("flaw.weird_magic", Gate::Trained),            // ArMDE:7171-7174, botch dice on spellcasting
 ];
 
 /// X3a/X3b/X3c's data pass now covers all 122 `hermetic`-category entries
@@ -681,7 +681,7 @@ const X3C_FLAWS: &[(&str, Gate)] = &[
 /// future hermetic entry is ever added mid-catalogue and needs staging before
 /// its own gate lands.
 // `flaw.vengeful_powers` (X6b, design-x6-parameters.md): its passage lets it
-// be "taken as a Hermetic Flaw" OR the ordinary Story reading (ArMDE:7046),
+// be "taken as a Hermetic Flaw" OR the ordinary Story reading (ArMDE:7048),
 // recorded by a `taken_as` Category parameter — but `trained`/`prerequisites`
 // gate the WHOLE item unconditionally, with no per-value conditional
 // prerequisite mechanism in the engine, so gating it here would wrongly
@@ -722,7 +722,7 @@ fn x3a_virtues_carry_trained_and_the_expected_gate() {
 fn x3a_folded_house_gates_carry_their_house_leaf() {
     let rs = load_ruleset();
     for (id, house) in [
-        ("virtue.clan_ilfetu", "house.bjornaer"), // ArMDE:3636 "within House Bjornaer"
+        ("virtue.clan_ilfetu", "house.bjornaer"), // ArMDE:3638 "within House Bjornaer"
         ("virtue.leper_magus", "house.tytalus"),  // ArMDE:4251 "House Tytalus"
     ] {
         let item = rs
@@ -772,7 +772,7 @@ fn x3b_folded_house_gates_carry_their_house_leaf() {
     let rs = load_ruleset();
     for (id, house) in [
         ("flaw.brutal_artist", "house.jerbiton"), // ArMDE:5759 "magi of House Jerbiton"
-        ("flaw.consumed_casting_tools", "house.verditius"), // ArMDE:5912 "Verditius magi"
+        ("flaw.consumed_casting_tools", "house.verditius"), // ArMDE:5914 "Verditius magi"
     ] {
         let item = rs
             .item(&Id::new(id))

@@ -10,7 +10,7 @@
   // "For each season that your magus spends working on a lab project, the character
   // loses 10 points from the yearly 30 experience points, to a minimum of 0 if three
   // or four seasons are spent on lab work."
-  // Source: ArMDE:2550
+  // Source: ArMDE:2552
   //
   // Store-agnostic on purpose: the caller hands in the counts and takes the edits,
   // so a later surface can mount one per span of years under its own testid prefix.

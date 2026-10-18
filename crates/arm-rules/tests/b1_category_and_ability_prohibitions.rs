@@ -469,7 +469,7 @@ fn forbids_item_category_leaves_an_unrelated_category_alone() {
 // --- E: F-511 (Sheltered Upbringing) — Effect::ForbidsAbilities -----------
 //
 // "You may not take [these] as beginning Abilities, but you may learn them
-// in play" (ArMDE:6792-6795). **The engine draws no in-play/beginning
+// in play" (ArMDE:6794-6797). **The engine draws no in-play/beginning
 // distinction at all**: `Entity::ability_scores` (`AbilityScore { ability,
 // score, specialty, parameter }`) carries no life-stage-block or timing
 // field, and no restricted-XP pool (including the LaterLife block,

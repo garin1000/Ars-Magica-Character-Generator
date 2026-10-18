@@ -1342,7 +1342,9 @@ Gebrechlichkeit: 0
 
 Verzerrungswert: 0 (0)
 
-Tugenden und Fehler: Konventsbewohner, Krieger, Pessimistisch Persönlichkeitseigenschaften: Tapfer +3, Loyal +1, Pessimistisch +3
+Tugenden und Fehler: Konventsbewohner, Krieger, Pessimistisch
+
+Persönlichkeitseigenschaften: Tapfer +3, Loyal +1, Pessimistisch +3
 
 Reputationen: Keine
 
@@ -1831,7 +1833,7 @@ Verzerrungswert: 0 (0)
 
 Selbstvertrauenswert: 1 (3)
 
-Tugenden und Fehler: Die Gabe, Hermetischer Magus; Riesenblut\* Großer Magischer Fokus (Stein), Affinität zu Terram\*, Anhaltende Magie, Verbesserte Eigenschaften, Begabung in Terram, Zäh, Großzügig (Groß), Notwendige Bedingung (Stein berühren)\*, Heimgesucht von Übernatürlicher Wesenheit, Defizitäre Form (Auram)
+Tugenden und Fehler: Die Gabe, Hermetischer Magus; Riesenblut\*, Großer Magischer Fokus (Stein), Affinität zu Terram\*, Anhaltende Magie, Verbesserte Eigenschaften, Begabung in Terram, Zäh, Großzügig (Groß), Notwendige Bedingung (Stein berühren)\*, Heimgesucht von Übernatürlicher Wesenheit, Defizitäre Form (Auram)
 
 Persönlichkeitseigenschaften: Großzügig +6, Geduldig +3, Vertrauensvoll +2, Rachsüchtig +2
 
@@ -1993,7 +1995,7 @@ Erschöpfungsstufen: OK, 0, -1, -3, -5, Bewusstlos
 
 Wundabzüge: -1 (1-5), -3 (6-10), -5 (11-15), Kampfunfähig (16-20)
 
-Fertigkeiten: Artes Liberales 1 (Musik), Zechen 2 (Würde wahren), Charme 3 (anderes Geschlecht), Kodex des Hermes 1 (Umgang mit Sterblichen). Etikette 2 (Adel), Menschenkenntnis 2 (Adlige), Täuschung 2 (schnelle Ausreden), Latein 5 (musikalische Begriffe), Magietheorie 3 (Imaginem), Musik 4+2 (Singen) Muttersprache 5 (adliger Stil), Kunde des Ordens des Hermes 2 (Jerbiton), Parma Magica 1 (Mentem)
+Fertigkeiten: Artes Liberales 1 (Musik), Zechen 2 (Würde wahren), Charme 3 (anderes Geschlecht), Kodex des Hermes 1 (Umgang mit Sterblichen), Etikette 2 (Adel), Menschenkenntnis 2 (Adlige), Täuschung 2 (schnelle Ausreden), Latein 5 (musikalische Begriffe), Magietheorie 3 (Imaginem), Musik 4+2 (Singen), Muttersprache 5 (adliger Stil), Kunde des Ordens des Hermes 2 (Jerbiton), Parma Magica 1 (Mentem)
 
 Künste: Cr 6, In 1, Mu 6, Pe 1, Re 6; An 0, Aq 0, Au 0, Co 5, He 0, Ig 0, Im 10, Me 0, Te 0, Vi 0
 

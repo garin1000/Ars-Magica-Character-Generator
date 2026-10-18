@@ -157,7 +157,7 @@ fn multi_values_built_in_either_order_serialize_identically_and_sorted() {
 /// § 8's `max_per_target` worked claim: two selections of the SAME item naming
 /// the SAME set (built in different orders) collide as duplicates under the
 /// item's default `max_per_target: 1` — "you may only take this Flaw once,
-/// though it can affect multiple Abilities" (ArMDE:5922-style wording). Already
+/// though it can affect multiple Abilities" (ArMDE:5924-style wording). Already
 /// GREEN in principle (duplicate detection already keys on `(item_ref,
 /// params)`, and `Multi`'s `BTreeSet` equality needs no extra canonicalization)
 /// — this test proves the claim end-to-end through the real validator, not

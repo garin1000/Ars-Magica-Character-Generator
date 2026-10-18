@@ -13,7 +13,7 @@ use super::*;
 
 /// The Encumbrance read-out: total Load, Burden, and the Encumbrance penalty.
 ///
-/// Burden comes from the Load table (ArMDE:17180-17200); Encumbrance =
+/// Burden comes from the Load table (ArMDE:17182-17202); Encumbrance =
 /// max(0, Burden − max(0, Strength)).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EncumbranceTotal {
@@ -26,7 +26,7 @@ pub struct EncumbranceTotal {
 }
 
 /// The Load-table thresholds: index = Burden, value = Load at which that Burden
-/// begins (ArMDE:17180-17200).
+/// begins (ArMDE:17182-17202).
 const LOAD_TABLE: [u32; 11] = [0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55];
 
 /// Burden for a total Load: the highest table index whose threshold is ≤ load.
@@ -45,27 +45,27 @@ fn burden_for_load(load: u32) -> i32 {
 ///
 /// This is a deliberate departure from the rulebook's own practice, not an
 /// attempt to copy it. The rule says to total "the Load that a character is
-/// carrying" (ArMDE:17184) and never defines carried-but-stowed, and the worked
+/// carrying" (ArMDE:17186) and never defines carried-but-stowed, and the worked
 /// templates show the book resolving that silence the *other* way: every
 /// statblock applies one Encumbrance to every Combat row, computed from the whole
 /// carried kit. Four of them prove it, because a row's Initiative exposes the
-/// Encumbrance behind it (ArMDE:16735) and their unarmed rows still pay for the
-/// weapon not being used — the Standard Soldier's Fist at ArMDE:1422 implies 3,
+/// Encumbrance behind it (ArMDE:16737) and their unarmed rows still pay for the
+/// weapon not being used — the Standard Soldier's Fist at ArMDE:1424 implies 3,
 /// the Grizzled Veteran's Kick at ArMDE:1317 implies 4, the Tough Guy's Fist at
-/// ArMDE:1458 implies 3, the Specialist's Fist at ArMDE:1386 implies 2, each the
+/// ArMDE:1460 implies 3, the Specialist's Fist at ArMDE:1388 implies 2, each the
 /// full-loadout figure rather than the weapon-less one.
 ///
 /// Equipped-only was chosen anyway, as the sounder model: a sheathed sword should
 /// not slow its owner down, and under the whole-kit reading merely recording gear
 /// a character owns costs them Encumbrance and Initiative. It also happens to
-/// reproduce the Knight (ArMDE:1515-1554), whose printed "Encumbrance: 2 (3)"
-/// (ArMDE:1552) omits his great sword's Load 2 and so contradicts both his own
+/// reproduce the Knight (ArMDE:1517-1556), whose printed "Encumbrance: 2 (3)"
+/// (ArMDE:1554) omits his great sword's Load 2 and so contradicts both his own
 /// Equipment line and the method above.
 ///
 /// Pinned by `derived.rs::only_equipped_gear_counts_toward_load` and by the
 /// Knight's entry in `tests/book_templates.rs`.
 ///
-/// Source: ArMDE:17180-17200.
+/// Source: ArMDE:17182-17202.
 pub fn encumbrance(entity: &Entity, ruleset: &Ruleset) -> EncumbranceTotal {
     // K3 (round 1 full audit, 2026-10-12): `saturating_add`, not `.sum()` — a
     // crafted save's `equipment` is an uncapped `Vec`, and `[profile.release]
@@ -104,11 +104,11 @@ fn equipment_load(ruleset: &Ruleset, id: &Id) -> u32 {
 
 /// One way of wielding an equipped weapon. A one-handed weapon carried alongside a
 /// shield yields **two** lines — one with every equipped shield's modifiers combined
-/// in (ArMDE:16733) and one bare — because both are legal choices in play. A
-/// two-handed weapon receives no shield modifiers (ArMDE:7566) and so yields a single
+/// in (ArMDE:16735) and one bare — because both are legal choices in play. A
+/// two-handed weapon receives no shield modifiers (ArMDE:7568) and so yields a single
 /// line. Attack / Damage are `None` for a weapon that lacks them (Dodge). Initiative
-/// is always reduced by Encumbrance (ArMDE:16735); Attack and Defense are reduced only
-/// when the Encumbrance is **not** largely due to weapons and armor (ArMDE:17182),
+/// is always reduced by Encumbrance (ArMDE:16737); Attack and Defense are reduced only
+/// when the Encumbrance is **not** largely due to weapons and armor (ArMDE:17184),
 /// which no modelled character can be — see the invariant noted at the
 /// `atk_def_enc` binding in [`combat_totals`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -138,7 +138,7 @@ pub struct CombatLine {
     /// True for the mounted twin of this line (K3): Attack and Defense add
     /// `min(Ride, 3)`; Initiative and Damage are untouched, per the passage.
     /// Never part of a save — `CombatLine` is a derived read-out. Source:
-    /// ArMDE:16914-16916.
+    /// ArMDE:16916-16918.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub mounted: bool,
 }
@@ -146,14 +146,14 @@ pub struct CombatLine {
 /// Combat lines: **one or two** per Carried-or-Wielded weapon (K5) — a Stowed
 /// weapon yields none. With a shield Wielded, a
 /// one-handed weapon yields a with-shield line (every Wielded shield's Init/Atk/Def
-/// modifiers added — Source: ArMDE:16733)
+/// modifiers added — Source: ArMDE:16735)
 /// followed by a bare line, because the fighter may drop the shield at will and a
 /// Single Weapon specialty "covers using that weapon with any shield or none"
-/// (Source: ArMDE:7818). With-shield first
+/// (Source: ArMDE:7820). With-shield first
 /// mirrors the book's own statblocks, which list the weapon-and-shield lines ahead of
-/// the rest (Source: ArMDE:1535-1540). The
+/// the rest (Source: ArMDE:1537-1542). The
 /// two lines differ ONLY by the shield modifiers — specialization and Encumbrance are
-/// shield-independent. Source: ArMDE:16735-16747, :16733, :7818, :17182.
+/// shield-independent. Source: ArMDE:16737-16749, :16735, :7820, :17184.
 pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
     let mods = in_play_mods(entity, ruleset);
     let quickness = characteristic(entity, ruleset, Characteristic::Qik);
@@ -162,7 +162,7 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
     let enc = encumbrance(entity, ruleset).total;
 
     // Every equipped shield's modifiers sum into one combined pseudo-shield.
-    // Source: ArMDE:16733
+    // Source: ArMDE:16735
     let shield_ids: Vec<Id> = entity
         .equipment
         .iter()
@@ -182,7 +182,7 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
 
     // The combat-total modifier for one stat on one weapon's lines: every unscoped
     // modifier, plus any delta an item scoped to this weapon (Lame's -3 on Dodge,
-    // ArMDE:6403). A weapon nobody scoped a figure to sees the unscoped sum alone.
+    // ArMDE:6405). A weapon nobody scoped a figure to sees the unscoped sum alone.
     let cm = |stat: CombatStat, weapon: &Id| {
         mods.combat_mods.get(&stat).copied().unwrap_or(0)
             + mods
@@ -195,13 +195,13 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
 
     // Attack/Defense take the Encumbrance penalty only when the Encumbrance is NOT
     // "largely due to weapons and armor"; Initiative always takes it
-    // (ArMDE:17182, :16735).
+    // (ArMDE:17184, :16737).
     //
     // That waiver is unconditional here, because **all** modelled Load is combat
     // gear by construction: `EquipmentCatalogue` holds exactly `weapons`, `shields`
     // and `armor` (`equipment.rs`), `load` is declared on exactly those three
     // structs, and `equipment_load` returns 0 for anything it cannot resolve. The
-    // rules agree — Load is "listed in the Armor and Weapons tables" (ArMDE:17184),
+    // rules agree — Load is "listed in the Armor and Weapons tables" (ArMDE:17186),
     // so non-combat carried gear has no Load to contribute in the first place.
     //
     // This was previously written as a live majority test over combat Load vs total
@@ -214,7 +214,7 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
 
     let mut out = Vec::new();
     // K5: a Carried weapon (no Load) still yields a Combat row — the Knight's own
-    // spare great sword (ArMDE:1538-1539). Only Stowed gear is excluded; Wielded
+    // spare great sword (ArMDE:1540-1541). Only Stowed gear is excluded; Wielded
     // keeps its existing behavior unchanged.
     for slot in entity
         .equipment
@@ -226,10 +226,10 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
         };
         // Ability specialization (+1) applies to Attack and Defense only, when the
         // slot is flagged and the weapon's Ability carries a specialty aligned to
-        // this weapon (ArMDE:7193, :7210). It acts as if the score were one higher.
+        // this weapon (ArMDE:7195, :7212). It acts as if the score were one higher.
         // A specialty "covers using that weapon with any shield or none", so it is
         // shield-independent and identical on both lines.
-        // Source: ArMDE:7818
+        // Source: ArMDE:7820
         let spec_bonus = i32::from(specialization_bonus(entity, ruleset, slot, weapon));
         let combat_ability =
             effective_ability_score(entity, ruleset, &weapon.ability, None) + spec_bonus;
@@ -262,14 +262,14 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
         let bare = || wielding(Vec::new(), 0, 0, 0);
         // A two-handed weapon cannot be paired with a shield, so it takes none of
         // the combined shield modifiers and offers no choice to print.
-        // Source: ArMDE:7566
+        // Source: ArMDE:7568
         if weapon.two_handed || shield_ids.is_empty() {
             out.push(bare());
             continue;
         }
         // Both ways of wielding a one-handed weapon, with the shield first — the order
         // the book's own statblocks use.
-        // Source: ArMDE:1535-1540
+        // Source: ArMDE:1537-1542
         out.push(wielding(
             shield_ids.clone(),
             shield_init,
@@ -280,10 +280,10 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
     }
 
     // K3: a mounted character adds min(Ride, 3) to Attack and Defense
-    // (ArMDE:16914-16916). Scoped to weapons that are not body attacks (D66,
+    // (ArMDE:16916-16918). Scoped to weapons that are not body attacks (D66,
     // `Weapon::body_attack` — never `min_strength` or any other unrelated
     // field): the Knight's own template prints no mounted Fist row
-    // (ArMDE:1535-1540). Appended after the on-foot set, one twin per
+    // (ArMDE:1537-1542). Appended after the on-foot set, one twin per
     // existing non-body-attack line, in the same relative order.
     if entity.mounted {
         let ride =
@@ -309,7 +309,7 @@ pub fn combat_totals(entity: &Entity, ruleset: &Ruleset) -> Vec<CombatLine> {
 /// specialty on the weapon's combat Ability (so the toggle is not a dead switch).
 /// The specialty is a per-weapon alignment the player asserts — the engine never
 /// matches specialty text to weapon names — so a flagged slot with a real specialty
-/// grants the bonus. Source: ArMDE:7193 (Single Weapon longsword example),
+/// grants the bonus. Source: ArMDE:7195 (Single Weapon longsword example),
 /// :7139 ("Add +1 when using an Ability's specialization").
 fn specialization_bonus(
     entity: &Entity,
@@ -331,7 +331,7 @@ fn specialization_bonus(
 /// The Soak read-out.
 ///
 /// Soak = Stamina + Armor Protection + SoakMod (Tough +3) + Bronze cord
-/// (ArMDE:16743, :10912-10916). The
+/// (ArMDE:16745, :10914-10918). The
 /// magus Form bonus is situational and shown as an entered addend of 0.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SoakTotal {
@@ -341,9 +341,9 @@ pub struct SoakTotal {
     pub total: i32,
 }
 
-/// The character's Soak. Source: ArMDE:16743, :5216-5218 (Tough), :10840-10844
+/// The character's Soak. Source: ArMDE:16745, :5218-5220 (Tough), :10840-10844
 /// (Bronze cord). The cord addend goes through [`bronze_cord_bonus`] and thus
-/// [`cord_score`], so it can never exceed the +5 maximum (ArMDE:10908) or
+/// [`cord_score`], so it can never exceed the +5 maximum (ArMDE:10910) or
 /// disagree with the other cord read-outs.
 pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
     let mods = in_play_mods(entity, ruleset);
@@ -371,7 +371,7 @@ pub fn soak(entity: &Entity, ruleset: &Ruleset) -> SoakTotal {
 
 /// The five penalty-bearing Fatigue levels. A fixed rules taxonomy, rendered via
 /// Fluent, never as a raw slug. Unconscious is a game state with no action penalty
-/// and is intentionally not a variant here. Source: ArMDE:17204-17206.
+/// and is intentionally not a variant here. Source: ArMDE:17206-17208.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum FatigueTier {
@@ -413,7 +413,7 @@ pub struct FatigueLevel {
 /// The five penalty-bearing Fatigue levels and their penalties, adjusted by
 /// HealthMod fatigue deltas (a positive delta reduces the penalty magnitude).
 /// Unconscious is omitted (it is a state, not an action penalty). Source:
-/// ArMDE:17204-17206.
+/// ArMDE:17206-17208.
 pub fn fatigue_levels(entity: &Entity, ruleset: &Ruleset) -> Vec<FatigueLevel> {
     let mods = in_play_mods(entity, ruleset);
     let delta = mods
@@ -422,7 +422,7 @@ pub fn fatigue_levels(entity: &Entity, ruleset: &Ruleset) -> Vec<FatigueLevel> {
         .copied()
         .unwrap_or(0);
     // (id, base penalty). Fresh/Winded are penalty-free; Unconscious is its own
-    // penalty (no numeric). ArMDE:17204-17206 gives Weary −1, Tired −3, Dazed −5.
+    // penalty (no numeric). ArMDE:17206-17208 gives Weary −1, Tired −3, Dazed −5.
     [
         (FatigueTier::Fresh, 0),
         (FatigueTier::Winded, 0),
@@ -434,7 +434,7 @@ pub fn fatigue_levels(entity: &Entity, ruleset: &Ruleset) -> Vec<FatigueLevel> {
     .map(|(level, base)| FatigueLevel {
         level,
         // A positive delta reduces magnitude; never flip a penalty positive.
-        // Fresh/Winded carry no base penalty at all (ArMDE:17206), so a
+        // Fresh/Winded carry no base penalty at all (ArMDE:17208), so a
         // penalty-increasing delta (Low Tolerance) must not invent one there —
         // only tiers that already have a nonzero base penalty are modified.
         penalty: if base == 0 { 0 } else { (base + delta).min(0) },
@@ -443,7 +443,7 @@ pub fn fatigue_levels(entity: &Entity, ruleset: &Ruleset) -> Vec<FatigueLevel> {
 }
 
 /// The five wound bands, in ascending severity. A fixed rules taxonomy, rendered
-/// via Fluent, never as a raw slug. Source: ArMDE:17244-17268.
+/// via Fluent, never as a raw slug. Source: ArMDE:17246-17270.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WoundBand {
@@ -490,7 +490,7 @@ pub struct WoundRange {
 /// The Size-indexed wound ranges, with wound penalties adjusted by any HealthMod
 /// wound delta. The band unit is `u = max(1, Size + 5)`; Light 1..u, Medium
 /// u+1..2u, Heavy 2u+1..3u, Incapacitating 3u+1..4u, Dead 4u+1.. — so each +1 Size
-/// widens every band (ArMDE:17244-17268). Uses the character's derived Size.
+/// widens every band (ArMDE:17246-17270). Uses the character's derived Size.
 pub fn wound_ranges(entity: &Entity, ruleset: &Ruleset) -> Vec<WoundRange> {
     let mods = in_play_mods(entity, ruleset);
     let delta = mods

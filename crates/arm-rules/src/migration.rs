@@ -181,7 +181,7 @@ use crate::validation::birth_year_in_saga_year;
 ///
 /// Bumped 20 → 21 for X9b (F-16, `docs/vf-audit/corrections.md`): the point
 /// item `virtue.rard` is renamed to `virtue.bard` — the English name at
-/// ArMDE:3547 is the scanno "Rard", but the book's own index (ArMDE:24372) and
+/// ArMDE:3549 is the scanno "Rard", but the book's own index (ArMDE:24374) and
 /// the German translation table (`tugenden-fehler.md:243`) both read "Bard",
 /// and the **id**, not only the displayed name, was wrong. `source.anchor`
 /// stays `"rard"`: the heading itself is still misspelled `#### Rard`, and
@@ -226,7 +226,7 @@ use crate::validation::birth_year_in_saga_year;
 /// Bumped 23 → 24 for D87 (Norbert, 2026-10-10): the point item
 /// `spell.sense_the_feet_that_thread_the_earth` is renamed to
 /// `spell.sense_the_feet_that_tread_the_earth` — the book's own heading at
-/// ArMDE:15410 reads "Tread", not the catalogue's "Thread", and the **id**,
+/// ArMDE:15412 reads "Tread", not the catalogue's "Thread", and the **id**,
 /// not only the displayed English name, was wrong. The German name was
 /// already correct ("Die Schritte auf der Erde spüren") and is unchanged;
 /// only its key moves. `source.anchor` is unaffected: the P8-3 re-sync had
@@ -247,7 +247,7 @@ use crate::validation::birth_year_in_saga_year;
 /// [`crate::life_stage::LifeStagePlan::post_gauntlet_lab_years`], which can also
 /// hold an uneven split. [`fold_legacy_lab_seasons`] turns `s` into `s / 4` years
 /// of four seasons plus one year of `s % 4` when that is 1–3 — the packing F1
-/// already charged, so the charge is preserved (ArMDE:2550). Dispatch is on the
+/// already charged, so the charge is preserved (ArMDE:2552). Dispatch is on the
 /// legacy key, before the typed parse. A malformed value fails the load, as the
 /// old `u32` field did, because `LifeStagePlan` does not deny unknown fields and
 /// a silent drop would lose the charge. A plan already carrying the new key keeps
@@ -438,9 +438,9 @@ const BEING_PARAM_KEY: &str = "being";
 /// `rules/i18n/en/virtues_flaws.json` and `rules/i18n/de/virtues_flaws.json`, both
 /// at the `being.*` entries. The rulebook supplies the wording a player copying
 /// from the page would have typed:
-/// ArMDE:4206, :6597, :6964, and the
+/// ArMDE:4208, :6599, :6966, and the
 /// German mirror at the same line numbers. The English lists and the German lists
-/// at `ArMDE:6597` / `ArMDE:6964` fold onto the i18n labels exactly; the German `ArMDE:4206` list
+/// at `ArMDE:6599` / `ArMDE:6966` fold onto the i18n labels exactly; the German `ArMDE:4208` list
 /// is in the dative, which contributes the three extra keys below. No synonym
 /// beyond what those print is invented — an unrecognised value is left exactly as
 /// typed.
@@ -463,13 +463,13 @@ const LEGACY_BEING_LABELS: &[(&str, &str)] = &[
     ("Magische Kreaturen", "being.magical_creatures"),
     ("Sterbliche Menschen", "being.mundane_humans"),
     // The German **dative** forms, printed by the Inoffensive entry at
-    // `ArMDE:4206` — "…von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen
+    // `ArMDE:4208` — "…von Wesen verbunden: Tieren, göttlichen Wesen, Feen, Dämonen
     // oder magischen Kreaturen." A player filling the old free-text box while
     // reading that page copied the inflected form off it, so these are recovered
     // too. Transcribed, not declined: "Feen" and "Dämonen" are identical in the
     // dative and are already above, and the fourth class has no dative form here
     // to take — `sterbliche Menschen` appears only in the two entries that print
-    // the nominative (`ArMDE:6597`, `ArMDE:6964`), so no "sterblichen Menschen" key is
+    // the nominative (`ArMDE:6599`, `ArMDE:6966`), so no "sterblichen Menschen" key is
     // invented.
     ("Tieren", "being.animals"),
     ("göttlichen Wesen", "being.divine"),
@@ -1177,7 +1177,7 @@ fn clamp_ages_to_max_age(entity: &mut Entity, ruleset: &Ruleset) {
 ///
 /// Saves at schema ≤ 9 carried a manual `aging_reductions` map of completed
 /// Characteristic drops. The current model derives those drops from
-/// `aging_points` (ArMDE:16656), so any legacy reductions are folded into
+/// `aging_points` (ArMDE:16658), so any legacy reductions are folded into
 /// `aging_points` as the minimal point total that reproduces the same number of
 /// drops — counted from the actual score, free deltas included, by the same helper
 /// the live `effective/warping.rs::aging_drops` uses. Because every aging point counts toward Decrepitude — including those
@@ -1401,7 +1401,7 @@ pub fn load_entity_migrating(
             }
             // Ruling F-A: the drops are reconstructed against the actual score
             // (free deltas included), through the same cost sequence the live
-            // `effective/warping.rs::aging_drops` walks. Source: ArMDE:16656.
+            // `effective/warping.rs::aging_drops` walks. Source: ArMDE:16658.
             let actual = effective_characteristic_score(&entity, ruleset, characteristic);
             let add = minimal_aging_points_for_drops(actual, u32::from(drops));
             let slot = entity.aging_points.entry(characteristic).or_insert(0);
@@ -1525,7 +1525,7 @@ mod tests {
 
     /// Ruling F-A, in lockstep: the legacy fold reconstructs the drops against the
     /// same threshold the live [`crate::effective::aging_drops`] uses — the actual
-    /// score, free delta included (ArMDE:16656). Great (Stamina) twice over a bought
+    /// score, free delta included (ArMDE:16658). Great (Stamina) twice over a bought
     /// +3 is an actual +5, so one legacy drop needs |5| + 1 = 6 points, and the
     /// live computation reads exactly one drop back from them (and none from 5).
     #[test]
@@ -2475,7 +2475,7 @@ mod tests {
         );
     }
 
-    /// German `ArMDE:4206` — the Inoffensive entry — prints its list of classes in the
+    /// German `ArMDE:4208` — the Inoffensive entry — prints its list of classes in the
     /// **dative** ("Tieren, göttlichen Wesen, … magischen Kreaturen"), so a player
     /// copying the class straight off the page typed an inflected form. Those three
     /// forms are printed by the source, not invented, and all three name a class

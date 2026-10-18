@@ -130,5 +130,5 @@ fn typed_greek_satisfies_the_academic_requirement_in_session() {
         .into_iter()
         .filter(|issue| issue.code == ACADEMIC_WARNING)
         .count();
-    assert_eq!(warnings, 0, "typed Greek 3 satisfies ArMDE:7222");
+    assert_eq!(warnings, 0, "typed Greek 3 satisfies ArMDE:7224");
 }

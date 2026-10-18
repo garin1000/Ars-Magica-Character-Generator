@@ -31,7 +31,7 @@ pub struct ReputationGrant {
 }
 
 /// The Reputation grants a character holds (one per [`Effect::GrantsReputation`]),
-/// authorizing starting Reputations. Source: ArMDE:2580-2582.
+/// authorizing starting Reputations. Source: ArMDE:2582-2584.
 pub fn reputation_grants(entity: &Entity, ruleset: &Ruleset) -> Vec<ReputationGrant> {
     let mut grants = Vec::new();
     for_each_effect!(entity, ruleset, |selection, effect| {
@@ -75,7 +75,7 @@ pub struct SupernaturalFreeSlots {
 /// so an Abandoned Apprentice's free Gift-slot is 0 exactly like a real magus's.
 /// `used` counts the Supernatural abilities the entity holds that no granting
 /// Virtue covers (a granting Virtue seeds an `ability_score_grant` floor).
-/// Source: ArMDE:2942.
+/// Source: ArMDE:2944.
 pub fn supernatural_free_slots(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -109,7 +109,7 @@ pub fn supernatural_free_slots(
 }
 
 /// The base age → maximum-Ability-score cap for `age`, read from the ruleset's
-/// age band table (ArMDE:2434-2442). Data, not hardcoded: the bands live
+/// age band table (ArMDE:2436-2444). Data, not hardcoded: the bands live
 /// in `rules/core/abilities.json` (`age_ability_caps`) and are surfaced via
 /// `EffectiveScores` so the UI never re-hardcodes the table. `None` when the
 /// ruleset ships no age caps.
@@ -129,7 +129,7 @@ pub fn age_ability_cap(entity: &Entity, ruleset: &Ruleset) -> Option<u8> {
 }
 
 /// Whether any held item waives the age → Ability-score cap outright
-/// (`Effect::WaivesAbilityAgeCap`; Mentored by Demons, ArMDE:4569, F-194). The
+/// (`Effect::WaivesAbilityAgeCap`; Mentored by Demons, ArMDE:4571, F-194). The
 /// waiver applies to every Ability — the passage names no list — so this is a
 /// single yes/no fact about the entity, not a per-ability one.
 fn ability_age_cap_waived(entity: &Entity, ruleset: &Ruleset) -> bool {
@@ -144,9 +144,9 @@ fn ability_age_cap_waived(entity: &Entity, ruleset: &Ruleset) -> bool {
 
 /// **D29: the single resolution point for an Ability's maximum score.** Folds
 /// the age band (`age_ability_cap`) with EVERY Virtue/Flaw override that
-/// bears on it — a full waiver (Mentored by Demons, ArMDE:4569), the
-/// locality-dependent halving (Foreign Upbringing, ArMDE:6231), and the
-/// Affinity +2 (ArMDE:3445) — so a second check beside this one (as
+/// bears on it — a full waiver (Mentored by Demons, ArMDE:4571), the
+/// locality-dependent halving (Foreign Upbringing, ArMDE:6233), and the
+/// Affinity +2 (ArMDE:3447) — so a second check beside this one (as
 /// `validate_ability_age_cap` used to run for Affinity) can no longer
 /// disagree with it: there is nowhere else left to ask. Both the validator and
 /// any future UI surface read this function, never `age_ability_cap` +
@@ -156,7 +156,7 @@ fn ability_age_cap_waived(entity: &Entity, ruleset: &Ruleset) -> bool {
 /// > Language, Area Lore, or Organization Lore, as well as some social Abilities,
 /// > are half (round up) that which his age normally allows.
 ///
-/// Source: ArMDE:6231 (Foreign
+/// Source: ArMDE:6233 (Foreign
 /// Upbringing). Which Abilities count as locality-dependent is catalogue data
 /// (`locality_dependent`), because the passage's "as well as some social Abilities"
 /// is deliberately open — the engine enforces the flag it is given rather than
@@ -194,7 +194,7 @@ pub fn ability_age_cap(
         });
     }
     if ability_affinity(entity, ruleset, ability, parameter).is_some() {
-        // ArMDE:3445 — "exceed the normal age-based cap … by two points", not
+        // ArMDE:3447 — "exceed the normal age-based cap … by two points", not
         // without limit, so this is an addend, never a second waiver.
         cap = cap.saturating_add(2);
     }

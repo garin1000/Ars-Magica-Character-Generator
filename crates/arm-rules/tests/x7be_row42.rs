@@ -66,7 +66,7 @@ fn issue_codes(result: &ValidationResult) -> Vec<&str> {
 }
 
 /// row 42(b): "His Presence and Communication may not be greater than 0"
-/// (ArMDE:6990-6993). `effective::characteristic_cap` is ruleset-global (base
+/// (ArMDE:6992-6995). `effective::characteristic_cap` is ruleset-global (base
 /// ±3) and does not read the entity's selections at all, so a companion who
 /// buys Presence 1 alongside this Flaw is accepted as legal today. This is the
 /// worked example the brief names directly.
@@ -85,7 +85,7 @@ fn uninspirational_caps_presence_and_communication_to_zero() {
     );
 }
 
-/// row 42(a): "all Personality Traits must be between +1 and -1" (ArMDE:7147-7150).
+/// row 42(a): "all Personality Traits must be between +1 and -1" (ArMDE:7149-7152).
 /// `validate_personality_traits` only rejects a magnitude over 3 (or over 6 for
 /// one Major-Personality-Flaw trait) — it has no per-Flaw tightened range, so a
 /// Weak Personality character with a trait at +2 is legal today. The brief's
@@ -109,7 +109,7 @@ fn weak_personality_forbids_a_trait_at_plus_two() {
 }
 
 /// row 42(c): "Select a Personality Trait at +4, and its opposite at +4"
-/// (ArMDE:6193-6195). Nothing validates that a Fickle Nature character
+/// (ArMDE:6195-6197). Nothing validates that a Fickle Nature character
 /// actually holds any such pair; a character with no personality traits at all
 /// is accepted today. `fickle_nature_trait_pair_missing` is a PROPOSED code —
 /// no constant exists for it yet, deliberately: Phase 2 is free to name it
@@ -136,7 +136,7 @@ fn fickle_nature_requires_a_matched_pair_of_traits_at_plus_four() {
 }
 
 /// row 42(d): "multiply whatever the penalty is by 1 + (Decrepitude Score)"
-/// (ArMDE:6421-6423). `flaw.lingering_injury` carries zero `effects` in the
+/// (ArMDE:6423-6425). `flaw.lingering_injury` carries zero `effects` in the
 /// shipped data, so nothing sourced from it ever appears in the surfaced-modifier
 /// list, however high the character's Decrepitude climbs. Existence is asserted
 /// rather than an exact multiplied value, since no `ModifierFamily` variant for
@@ -162,7 +162,7 @@ fn lingering_injury_penalty_is_surfaced_and_scales_with_decrepitude() {
     );
 }
 
-/// row 42/nineteen, `flaw.servant_of_the_land` (ArMDE:6788-6791): "the character
+/// row 42/nineteen, `flaw.servant_of_the_land` (ArMDE:6790-6793): "the character
 /// has the Minor Personality Flaw: Prohibition, but this does not count toward
 /// the character's total number of Virtues and Flaws". `Effect::GrantsSelection`
 /// already exists (Templar Commander) and a granted item is already free of the
@@ -186,7 +186,7 @@ fn servant_of_the_land_grants_prohibition_for_free() {
     );
 }
 
-/// row 42/nineteen, `flaw.university_dean` (ArMDE:6994-6997): "must ... be at
+/// row 42/nineteen, `flaw.university_dean` (ArMDE:6996-6999): "must ... be at
 /// least 40 years old". No `Prereq` variant can express a minimum age today, and
 /// the shipped entry carries no `prerequisites` at all, so a 30-year-old
 /// University Dean is accepted. (The Doctor-in-Faculty prerequisite and the
@@ -210,7 +210,7 @@ fn university_dean_requires_age_forty() {
 
 /// The True-arm counterpart (QA review, coverage): a companion who meets
 /// BOTH of University Dean's prerequisites — holds `virtue.doctor_in_faculty`
-/// (itself requiring Artes Liberales 5 and Dead Language 5, ArMDE:4392-4393)
+/// (itself requiring Artes Liberales 5 and Dead Language 5, ArMDE:4394-4395)
 /// and is exactly 40 (the boundary, not merely above it) — must raise no
 /// `prereq_not_met` at all. Without this, the only existing test
 /// (`university_dean_requires_age_forty`, a companion with NEITHER
@@ -249,7 +249,7 @@ fn university_dean_at_exactly_forty_with_doctor_in_faculty_raises_no_prereq_issu
     );
 }
 
-/// row 42/nineteen, `flaw.raised_from_the_dead` (ArMDE:6717-6720), D69.1: "You
+/// row 42/nineteen, `flaw.raised_from_the_dead` (ArMDE:6719-6722), D69.1: "You
 /// begin with at least three Warping points, plus one Warping point for every
 /// year that has passed since you were resurrected... You also have a level 4
 /// reputation in the area where the miracle occurred." The creation-time
@@ -274,7 +274,7 @@ fn raised_from_the_dead_grants_warping_scaled_by_years_since_resurrection_and_a_
     assert_eq!(
         warping_points_total(&e, &rs),
         8,
-        "ArMDE:6719 grants at least 3 Warping points plus 1 per year since \
+        "ArMDE:6721 grants at least 3 Warping points plus 1 per year since \
          resurrection; with 5 years since resurrection the total must be 8, \
          got {}",
         warping_points_total(&e, &rs)
@@ -284,13 +284,13 @@ fn raised_from_the_dead_grants_warping_scaled_by_years_since_resurrection_and_a_
     assert!(
         reps.iter()
             .any(|r| r.source == Id::new("flaw.raised_from_the_dead") && r.score == 4),
-        "ArMDE:6719 grants a level 4 Reputation in the area the miracle \
+        "ArMDE:6721 grants a level 4 Reputation in the area the miracle \
          occurred; reputation_grants() returned: {:?}",
         reps
     );
 }
 
-/// row 42/nineteen, `flaw.flawed_powers` (ArMDE:6217-6220): "The character must
+/// row 42/nineteen, `flaw.flawed_powers` (ArMDE:6219-6222): "The character must
 /// have at least one Major Supernatural Virtue to take this Flaw." No `Prereq`
 /// variant can express "holds a category at a given magnitude" today
 /// (`Prereq::HasCategory` ignores magnitude entirely), and the shipped entry
@@ -315,7 +315,7 @@ fn flawed_powers_requires_a_major_supernatural_virtue() {
 
 /// The True-arm counterpart (QA review, coverage): a companion who DOES hold
 /// a Major Supernatural Virtue (`virtue.amorphous_major` — magnitude major,
-/// category `supernatural`, ArMDE:3481-3484) alongside Flawed Powers must
+/// category `supernatural`, ArMDE:3483-3486) alongside Flawed Powers must
 /// raise no `prereq_not_met` at all. Without this, no test in the suite ever
 /// reaches `Prereq::HasCategoryAtMagnitude`'s True arm in
 /// `prereq.rs::evaluate_prereq`.
@@ -338,7 +338,7 @@ fn flawed_powers_is_satisfied_by_a_major_supernatural_virtue() {
 
 /// The "held but below threshold" arm (QA review, coverage): a companion
 /// holding only `virtue.amorphous_minor` (magnitude minor, category
-/// `supernatural`, ArMDE:3481-3484) — a Supernatural Virtue, just not a MAJOR
+/// `supernatural`, ArMDE:3483-3486) — a Supernatural Virtue, just not a MAJOR
 /// one — must still be refused Flawed Powers, distinguishing this from "holds
 /// nothing at all" (`flawed_powers_requires_a_major_supernatural_virtue`
 /// above). Without this, `Prereq::HasCategoryAtMagnitude`'s `>=` comparison's

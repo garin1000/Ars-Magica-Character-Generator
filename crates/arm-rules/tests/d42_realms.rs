@@ -116,7 +116,7 @@ mod resolution_chain {
 
     /// Already green: the stub's dumb default coincides with the real one
     /// here, since Magic IS the final fallback with no override and no
-    /// concept (ArMDE:3028). Not diagnostic on its own — see the two tests
+    /// concept (ArMDE:3030). Not diagnostic on its own — see the two tests
     /// above for the cases that actually distinguish the stub from D70.
     #[test]
     fn magic_is_the_final_fallback() {
@@ -134,7 +134,7 @@ mod resolution_chain {
 mod fixed_realms {
     use super::*;
 
-    /// Faerie Blood / Strong Faerie Blood: the two examples ArMDE:3028 itself
+    /// Faerie Blood / Strong Faerie Blood: the two examples ArMDE:3030 itself
     /// names. A concept realm and an override must not move them.
     #[test]
     fn faerie_bloods_are_fixed_faerie() {
@@ -196,8 +196,8 @@ mod fixed_realms {
     }
 
     /// D70 Q-X6-6's three entailed fixes beyond the book's own two examples:
-    /// Bee King (Faerie, ArMDE:3557), Commanding Aura (Divine, ArMDE:3652),
-    /// Raised from the Dead (Divine, ArMDE:6719).
+    /// Bee King (Faerie, ArMDE:3559), Commanding Aura (Divine, ArMDE:3654),
+    /// Raised from the Dead (Divine, ArMDE:6721).
     #[test]
     fn entailed_fixed_entries() {
         let rs = full_ruleset();
@@ -213,7 +213,7 @@ mod fixed_realms {
         }
     }
 
-    /// ArMDE:3068: every Tainted entry resolves Infernal by the general
+    /// ArMDE:3070: every Tainted entry resolves Infernal by the general
     /// Tainted rule, derived from `tainted: true` alone — no
     /// `realm_association` needed. Exercised against the REAL shipped data
     /// (already `tainted: true`).
@@ -242,7 +242,7 @@ mod fixed_realms {
 
     /// Demonic Might/Powers are NOT `tainted`-tagged (verified against the
     /// shipped data), so they need `Fixed { realm: Infernal }` data directly
-    /// — fixed via the ArMDE:3732 cross-entry rule on Demonic Blood, not via
+    /// — fixed via the ArMDE:3734 cross-entry rule on Demonic Blood, not via
     /// the Tainted tag.
     #[test]
     fn demonic_might_and_powers_fixed_infernal_via_cross_entry_rule() {
@@ -459,8 +459,8 @@ mod manifest_sin_subset {
 mod changed_default_class {
     use super::*;
 
-    /// Hex (Infernal, ArMDE:4148 "most often"), Spiritual Pact (Magic,
-    /// ArMDE:5083), Warped by Magic (Magic, ArMDE:7092), Sufi (Divine,
+    /// Hex (Infernal, ArMDE:4150 "most often"), Spiritual Pact (Magic,
+    /// ArMDE:5085), Warped by Magic (Magic, ArMDE:7094), Sufi (Divine,
     /// D74), Cursed Guile (Infernal, D74). Each: the default applies with no
     /// override and no warning; an override raises `realm_changed_default`
     /// EVEN when the concept realm would otherwise have agreed with the
@@ -752,7 +752,7 @@ mod shipped_data_matches_the_verdicts {
     }
 
     /// The Tainted entries in the 17-fixed tally derive Infernal from
-    /// `tainted` alone (ArMDE:3068) — they must NOT also carry a
+    /// `tainted` alone (ArMDE:3070) — they must NOT also carry a
     /// `realm_association` (that would store the same fact twice, and the
     /// two could silently disagree after an edit to one but not the other).
     #[test]

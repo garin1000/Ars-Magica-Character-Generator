@@ -919,9 +919,9 @@ describe('SpellTab Casting Total composed via one Fluent placeable (Sabine revie
 
 // I4 (try-out finding 22): the catalogue list showed only the level under its
 // Te/Fo header and the selected list a requisite-blind "CrIg 20", so a player
-// could not see that Phantasmal Fire (CrIm, "Req: Ignem", ArMDE:14629-14633)
+// could not see that Phantasmal Fire (CrIm, "Req: Ignem", ArMDE:14631-14635)
 // touches Ignem too. Both lists now show the engine's code — requisites in the
-// book's notation, "Cr(Re)Ig 30" (ArMDE:19378) — followed by the level.
+// book's notation, "Cr(Re)Ig 30" (ArMDE:19380) — followed by the level.
 describe('SpellTab shows the engine spell code in both lists (I4)', () => {
   const FIRE = 'spell.phantasmal_fire';
   const BOOST = 'spell.wizards_boost_form';

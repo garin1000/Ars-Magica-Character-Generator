@@ -1,5 +1,5 @@
 //! D87 (Norbert, 2026-10-10): the book's own heading for this spell reads
-//! "Sense the Feet That **Tread** the Earth" (ArMDE:15410, confirmed by reading
+//! "Sense the Feet That **Tread** the Earth" (ArMDE:15412, confirmed by reading
 //! the file directly) — the catalogue instead carried a scanno, "**Thread**",
 //! and so does the id: `spell.sense_the_feet_that_thread_the_earth` must
 //! become `spell.sense_the_feet_that_tread_the_earth`. Both the English display
@@ -138,7 +138,7 @@ fn spell_tread_exists_with_correct_en_and_de_names() {
         en.display_name(&new_id),
         Some("Sense the Feet That Tread the Earth"),
         "the English name is the scanno \"Thread\" today; the book's own \
-         heading (ArMDE:15410) reads \"Tread\""
+         heading (ArMDE:15412) reads \"Tread\""
     );
 
     let de = LocalizedRuleset::new(shipped_ruleset(), DE_SPELLS).expect("DE i18n loads");
@@ -172,7 +172,7 @@ fn spell_tread_keeps_its_already_relocated_anchor() {
     );
     assert_eq!(
         source.lines,
-        LineRange::new(15410, 15413),
+        LineRange::new(15412, 15415),
         "the cited range is unaffected by the id/name rename"
     );
     assert_eq!(

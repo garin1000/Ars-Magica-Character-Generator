@@ -6,18 +6,18 @@
 //! deletes the entry at 0, so "never touched" and "set to 0" cannot be told
 //! apart, and D81.2's "unset is Unknown" turned a refusal into a mere
 //! `prereq_unevaluated` warning (and warned on legal characters).
-//! ArMDE:5166 (Supernatural Beauty): "A character lacking a positive Presence
-//! score may not have this Virtue." ArMDE:6980 (Uncontrollable Strength):
+//! ArMDE:5168 (Supernatural Beauty): "A character lacking a positive Presence
+//! score may not have this Virtue." ArMDE:6982 (Uncontrollable Strength):
 //! "This Flaw may not be taken if the character's Strength is below 0."
-//! ArMDE:6069 (Dwarf): "You take a -1 penalty to each of Strength and
+//! ArMDE:6071 (Dwarf): "You take a -1 penalty to each of Strength and
 //! Stamina".
 //!
 //! **F-B — `Prereq::AbilityMin` / `Prereq::ArtMin`.** A Virtue's minimum tests
 //! the score the character HOLDS (bought, or conferred by a grant such as
-//! Second Sight 1, ArMDE:4961), not a bonus that applies only when the Ability
-//! or Art is used. ArMDE:4887 (Puissant Ability): "add 2 to its value whenever
-//! you use it". ArMDE:4891 (Puissant Art): "You add 3 to the value of one Art
-//! whenever you use it." ArMDE:4460 (Magister in Artibus): "must have scores
+//! Second Sight 1, ArMDE:4963), not a bonus that applies only when the Ability
+//! or Art is used. ArMDE:4889 (Puissant Ability): "add 2 to its value whenever
+//! you use it". ArMDE:4893 (Puissant Art): "You add 3 to the value of one Art
+//! whenever you use it." ArMDE:4462 (Magister in Artibus): "must have scores
 //! of at least 5 in Latin and Artes Liberales" — holding a degree is not a use.
 
 use arm_rules::ruleset::{Ruleset, RulesetSources};
@@ -100,7 +100,7 @@ fn unset_presence_is_zero_so_supernatural_beauty_is_refused() {
     assert_eq!(
         codes,
         vec!["prereq_not_met".to_string()],
-        "ArMDE:5166: an unset Presence is 0, which is not positive, so Supernatural \
+        "ArMDE:5168: an unset Presence is 0, which is not positive, so Supernatural \
          Beauty must be refused outright (an error, not an unevaluated warning)"
     );
 }
@@ -117,7 +117,7 @@ fn unset_strength_is_zero_so_uncontrollable_strength_is_legal() {
     let codes = prereq_codes_for(&e, &rs, "flaw.uncontrollable_strength");
     assert!(
         codes.is_empty(),
-        "ArMDE:6980: an unset Strength is 0, which is not below 0, so Uncontrollable \
+        "ArMDE:6982: an unset Strength is 0, which is not below 0, so Uncontrollable \
          Strength is legal with no prerequisite issue at all, got: {codes:?}"
     );
 }
@@ -133,14 +133,14 @@ fn unset_strength_with_dwarf_counts_its_free_delta_and_refuses_uncontrollable_st
     assert_eq!(
         effective_characteristic_score(&e, &rs, Characteristic::Str),
         -1,
-        "precondition: Dwarf's free -1 (ArMDE:6069) on an unset Strength"
+        "precondition: Dwarf's free -1 (ArMDE:6071) on an unset Strength"
     );
 
     let codes = prereq_codes_for(&e, &rs, "flaw.uncontrollable_strength");
     assert_eq!(
         codes,
         vec!["prereq_not_met".to_string()],
-        "ArMDE:6980: an unset Strength under Dwarf is 0 - 1 = -1, below 0, so \
+        "ArMDE:6982: an unset Strength under Dwarf is 0 - 1 = -1, below 0, so \
          Uncontrollable Strength must be refused"
     );
 }
@@ -171,7 +171,7 @@ fn unset_presence_with_magical_blood_counts_its_free_delta_as_one() {
     let codes = prereq_codes_for(&e, &rs, "virtue.supernatural_beauty");
     assert!(
         codes.is_empty(),
-        "ArMDE:5166: an unset Presence plus Magical Blood's free +1 is a positive 1, \
+        "ArMDE:5168: an unset Presence plus Magical Blood's free +1 is a positive 1, \
          so Supernatural Beauty is legal with no prerequisite issue, got: {codes:?}"
     );
 }
@@ -204,7 +204,7 @@ fn magister_in_artibus_with_puissant_artes_liberales_below_five_is_refused() {
     assert_eq!(
         codes,
         vec!["prereq_not_met".to_string()],
-        "ArMDE:4460 + ArMDE:4887: Puissant applies 'whenever you use it', and holding a \
+        "ArMDE:4462 + ArMDE:4889: Puissant applies 'whenever you use it', and holding a \
          degree is not a use, so a bought Artes Liberales 3 does not meet the minimum of 5"
     );
 }
@@ -227,13 +227,13 @@ fn magister_in_artibus_with_bought_five_and_puissant_is_legal() {
     let codes = prereq_codes_for(&e, &rs, "virtue.magister_in_artibus");
     assert!(
         codes.is_empty(),
-        "ArMDE:4460: a bought Artes Liberales 5 meets the minimum (Puissant on top is \
+        "ArMDE:4462: a bought Artes Liberales 5 meets the minimum (Puissant on top is \
          harmless), got: {codes:?}"
     );
 }
 
 // ---------------------------------------------------------------------------
-// F-B extended to Broken Vessel (orchestrator's Q1 ruling): ArMDE:5826, "at
+// F-B extended to Broken Vessel (orchestrator's Q1 ruling): ArMDE:5828, "at
 // least one Supernatural Ability or Art normally improved through experience
 // points", is a holding test too, so `AbilityCategoryScoreMin`/`AnyArtMin`
 // read the same held score (bought or granted, never Puissant).
@@ -257,7 +257,7 @@ fn broken_vessel_is_not_satisfied_by_puissant_on_an_unscored_supernatural_abilit
     assert_eq!(
         codes,
         vec!["prereq_not_met".to_string()],
-        "ArMDE:5826 + ArMDE:4887: a Dowsing score of 0 lifted only by Puissant is not a \
+        "ArMDE:5828 + ArMDE:4889: a Dowsing score of 0 lifted only by Puissant is not a \
          held Supernatural Ability"
     );
 }
@@ -276,7 +276,7 @@ fn broken_vessel_is_not_satisfied_by_puissant_art_on_an_unscored_art() {
     assert_eq!(
         codes,
         vec!["prereq_not_met".to_string()],
-        "ArMDE:5826 + ArMDE:4891: a Creo score of 0 lifted only by Puissant Art is not a \
+        "ArMDE:5828 + ArMDE:4893: a Creo score of 0 lifted only by Puissant Art is not a \
          held Art"
     );
 }
@@ -290,7 +290,7 @@ fn broken_vessel_is_satisfied_by_a_granted_supernatural_ability() {
     let codes = prereq_codes_for(&e, &rs, "flaw.broken_vessel");
     assert!(
         codes.is_empty(),
-        "ArMDE:4961: Second Sight confers the Ability Second Sight 1, a held Supernatural \
+        "ArMDE:4963: Second Sight confers the Ability Second Sight 1, a held Supernatural \
          Ability, got: {codes:?}"
     );
 }
@@ -371,7 +371,7 @@ fn a_grant_floor_satisfies_an_ability_min() {
     let codes = prereq_codes_for(&e, &rs, "virtue.needs_awareness_1");
     assert!(
         codes.is_empty(),
-        "a conferred score (ArMDE:4961's 'confers the Ability Second Sight 1' shape) is a \
+        "a conferred score (ArMDE:4963's 'confers the Ability Second Sight 1' shape) is a \
          held score and meets AbilityMin 1, got: {codes:?}"
     );
 }
@@ -397,7 +397,7 @@ fn puissant_on_a_grant_floor_does_not_lift_it_over_an_ability_min() {
     assert_eq!(
         codes,
         vec!["prereq_not_met".to_string()],
-        "ArMDE:4887: the held score is the granted 1; Puissant's +2 applies only when the \
+        "ArMDE:4889: the held score is the granted 1; Puissant's +2 applies only when the \
          Ability is used, so AbilityMin 3 is not met"
     );
 }
@@ -416,7 +416,7 @@ fn puissant_art_does_not_count_toward_an_art_min() {
     assert_eq!(
         codes,
         vec!["prereq_not_met".to_string()],
-        "ArMDE:4891: Puissant Art adds 3 'whenever you use it'; a bought Creo 3 does not \
+        "ArMDE:4893: Puissant Art adds 3 'whenever you use it'; a bought Creo 3 does not \
          meet ArtMin 5 even though its effective value is 6"
     );
 }

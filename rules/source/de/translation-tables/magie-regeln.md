@@ -127,7 +127,7 @@ Das Original vermeidet die Verwechslung von Reichweite und Ziel, indem es den Se
 
 **Achtung, Bonuswert entscheidet:** In Berechnungsklammern steht `+3 Sehsinn` nie – ein `+3` gehört immer zur **Reichweite** („+3 Sicht"), ein `+4` immer zum **Ziel** („+4 Sehsinn").
 
-**Bewusste Abweichung vom Original:** An zwei Stellen schreibt das Original `T: Sight` bzw. `+4 Sight` – beim Caladrius-Zauber *Wahrnehmung der Leiden des sterblichen Fleisches* (Basisregeln Z. 18795 f.) und im selben Zauber in SdM:M (Z. 3169 ff.). Ein Ziel „Sight" existiert nicht, und die Rechnung belegt *Vision*: Die Reichweite ist Per (+0), die +4 Magnituden sind der Ziel-Bonus. Die deutsche Fassung schreibt dort „Sehsinn"; das englische Original bleibt unverändert.
+**Bewusste Abweichung vom Original:** An zwei Stellen schreibt das Original `T: Sight` bzw. `+4 Sight` – beim Caladrius-Zauber *Wahrnehmung der Leiden des sterblichen Fleisches* (Basisregeln Z. 18797 f.) und im selben Zauber in SdM:M (Z. 3169 ff.). Ein Ziel „Sight" existiert nicht, und die Rechnung belegt *Vision*: Die Reichweite ist Per (+0), die +4 Magnituden sind der Ziel-Bonus. Die deutsche Fassung schreibt dort „Sehsinn"; das englische Original bleibt unverändert.
 
 ---
 

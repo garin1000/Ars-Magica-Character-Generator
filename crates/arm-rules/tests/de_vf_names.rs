@@ -766,7 +766,7 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[
         "virtue.enchanting_ability",
         "Parser cannot compare the comma-phrase style — same convention as \
          flaw.bound_to_realm ('Bezaubernde Fertigkeit, {medium}' vs the \
-         table's '(Fertigkeit)'). ArMDE:3818's heading 'Bezaubernde \
+         table's '(Fertigkeit)'). ArMDE:3820's heading 'Bezaubernde \
          (Fertigkeit)' confirms the same bracket form.",
     ),
     (
@@ -793,7 +793,7 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[
          signal to bridge the English parameter key to its German spelling. \
          Shipped 'Defizitäre Technik: {technique}' (T2, C3) is the table name \
          plus the chosen Technique after a colon; the unfilled name is the \
-         table's 'Defizitäre Technik' exactly. ArMDE:5984's heading \
+         table's 'Defizitäre Technik' exactly. ArMDE:5986's heading \
          'Defizitäre Technik' confirms this (bare, no bracket, same word).",
     ),
     (
@@ -802,13 +802,13 @@ const RULED_EXCEPTIONS: &[(&str, &str)] = &[
          flaw.deficient_technique: shipped 'Defizitäre Form: {form}' (T2, C3) \
          is the table's 'Defizitäre Form' plus the chosen Form after a colon; \
          the unfilled name is the table's 'Defizitäre Form' exactly. \
-         ArMDE:5980's heading 'Defizitäre Form' confirms this.",
+         ArMDE:5982's heading 'Defizitäre Form' confirms this.",
     ),
     (
         "virtue.great_characteristic",
         "Parser cannot compare — same bare-bare-placeholder limitation as \
          flaw.deficient_technique ('Hervorragende {characteristic}' vs the \
-         table's bare 'Hervorragende Eigenschaft'). ArMDE:4058's heading \
+         table's bare 'Hervorragende Eigenschaft'). ArMDE:4060's heading \
          'Hervorragende (Eigenschaft)' confirms the same word, bracketed.",
     ),
     (

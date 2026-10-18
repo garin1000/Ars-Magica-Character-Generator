@@ -14,9 +14,9 @@
 //!   [`characteristic_cap`] / [`characteristic_floor`] report the buy range,
 //!   which nothing widens.
 //!
-//! Source: `ArMDE:4885-4887` (Puissant
-//! Ability, +2), `ArMDE:4058-4060` (Great Characteristic, a free point to +5),
-//! `ArMDE:6669-6671` (Poor Characteristic, a free −1 to −5), `ArMDE:4046-4049`
+//! Source: `ArMDE:4887-4889` (Puissant
+//! Ability, +2), `ArMDE:4060-4062` (Great Characteristic, a free point to +5),
+//! `ArMDE:6671-6673` (Poor Characteristic, a free −1 to −5), `ArMDE:4048-4051`
 //! (Giant Blood, +1 Str/Sta as high as +6).
 
 use crate::ability::AbilityCategory;
@@ -307,7 +307,7 @@ fn vf_granted_selections(entity: &Entity, ruleset: &Ruleset) -> Vec<Selection> {
         };
         for effect in &item.effects {
             // Row 55/D74.4: a `grants_selection` effect can state its own realm
-            // (Strong Faerie Blood's Second Sight is "faerie eyes", ArMDE:5109)
+            // (Strong Faerie Blood's Second Sight is "faerie eyes", ArMDE:5111)
             // independent of the granted item's own `realm_association`.
             if let Effect::GrantsSelection { items, realm } = effect {
                 out.extend(items.iter().cloned().map(|id| {
@@ -1254,7 +1254,7 @@ mod tests {
         let rs = ruleset();
         let mut e = entity(vec![great(Characteristic::Str)]);
         e.characteristics = BTreeMap::from([(Characteristic::Str, 3)]);
-        // The Virtue performs the raise itself (ArMDE:4060)...
+        // The Virtue performs the raise itself (ArMDE:4062)...
         assert_eq!(characteristic_score_bonus(&e, &rs, Characteristic::Str), 1);
         assert_eq!(
             effective_characteristic_score(&e, &rs, Characteristic::Str),
@@ -1305,7 +1305,7 @@ mod tests {
     }
 
     /// Ruling F-A, the bve worked example: Great (Stamina) twice over a bought +3
-    /// is an actual +5, and four aging points do not exceed |+5| (ArMDE:16656), so
+    /// is an actual +5, and four aging points do not exceed |+5| (ArMDE:16658), so
     /// nothing drops. The sixth point does, and the +5 becomes +4.
     #[test]
     fn great_characteristic_raises_the_aging_threshold_to_the_actual_score() {
@@ -1330,7 +1330,7 @@ mod tests {
 
     /// Ruling F-A with a negative delta: Poor (Stamina) twice under a bought -3 is
     /// an actual -5, so the first drop needs a sixth point, not a fourth
-    /// (ArMDE:16656; the -3 → -4 worked example at ArMDE:16690 is the same rule).
+    /// (ArMDE:16658; the -3 → -4 worked example at ArMDE:16692 is the same rule).
     #[test]
     fn poor_characteristic_raises_the_aging_threshold_to_the_actual_score() {
         let rs = ruleset();
@@ -1564,7 +1564,7 @@ mod tests {
 
     /// charged_cost is the inverse of "counts as num/den, rounded up". The book's
     /// worked example: Perdo 10 needs 55 on the Art table; with Affinity 3/2 you
-    /// pay 37 (which counts as ceil(37·3/2)=56 ≥ 55). Source: ArMDE:2511.
+    /// pay 37 (which counts as ceil(37·3/2)=56 ≥ 55). Source: ArMDE:2513.
     #[test]
     fn affinity_charged_cost_matches_perdo_example() {
         assert_eq!(charged_cost(55, Some((3, 2))), 37); // Affinity with Art
@@ -1583,7 +1583,7 @@ mod tests {
 
     /// Row 47 / F-547: `charged_cost` computed `ceil(T·den/num)`, which overcharges
     /// by one whenever `T·den mod num` falls strictly between 0 and `num`. The book's
-    /// own Specialist template (`ArMDE:1366-1400`) only balances if Single Weapon 7
+    /// own Specialist template (`ArMDE:1368-1402`) only balances if Single Weapon 7
     /// (table cost `T=140`) under Affinity 3/2 costs 93, not the engine's old 94:
     /// the smallest `c` with `ceil(c·3/2) ≥ 140` is `c=93`, since `ceil(93·3/2)=140`
     /// but `ceil(92·3/2)=138 < 140`.
@@ -2118,7 +2118,7 @@ mod tests {
     #[test]
     fn linguist_group_affinity_applies_to_every_language_instance() {
         // Linguist gives a 5/4 Affinity to any Language, matched by id for every
-        // instance (ArMDE:4386-4388), unlike a param-chosen single-target Affinity.
+        // instance (ArMDE:4388-4390), unlike a param-chosen single-target Affinity.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.linguist")]);
         let lang = Id::new("ability.living_language");
@@ -2139,8 +2139,8 @@ mod tests {
 
     #[test]
     fn spell_mastery_pool_and_floor() {
-        // Mastered Spells grants 50 mastery XP (stackable, ArMDE:4542-4545);
-        // Flawless Magic floors every spell's mastery at 1 (ArMDE:3958-3960).
+        // Mastered Spells grants 50 mastery XP (stackable, ArMDE:4544-4547);
+        // Flawless Magic floors every spell's mastery at 1 (ArMDE:3960-3962).
         let rs = xp_ruleset();
         let masters = xp_entity(vec![
             sel("virtue.mastered_spells"),
@@ -2169,7 +2169,7 @@ mod tests {
     #[test]
     fn bought_mastery_is_charged_from_the_general_pool() {
         // Spell Mastery is an Ability bought from the Ability advancement table
-        // (ArMDE:9590, :16029). With no mastery Virtue it draws the general pool.
+        // (ArMDE:9592, :16031). With no mastery Virtue it draws the general pool.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![]);
         e.xp_pool = 20;
@@ -2188,7 +2188,7 @@ mod tests {
 
     #[test]
     fn mastered_spells_pool_funds_mastery_but_not_abilities() {
-        // Mastered Spells' +50 pool (ArMDE:4542-4545) is spendable only on Spell
+        // Mastered Spells' +50 pool (ArMDE:4544-4547) is spendable only on Spell
         // Mastery, never on ordinary Abilities/Arts, and the general pool is 0.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![sel("virtue.mastered_spells")]);
@@ -2220,7 +2220,7 @@ mod tests {
     #[test]
     fn flawless_magic_floors_first_mastery_free_and_halves_the_rest() {
         // Flawless Magic auto-masters every spell at 1 (free floor) AND doubles all
-        // Spell-Mastery Advancement Totals, halving the XP charged. ArMDE:3958-3960.
+        // Spell-Mastery Advancement Totals, halving the XP charged. ArMDE:3960-3962.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![sel("virtue.flawless_magic")]);
         e.xp_pool = 100;
@@ -2268,7 +2268,7 @@ mod tests {
     #[test]
     fn grants_selection_folds_free_items_into_grants() {
         // A Virtue that grants another Virtue for free (Templar Commander →
-        // Brother-Knight + Temporal Influence; ArMDE:5184-5187) folds the granted
+        // Brother-Knight + Temporal Influence; ArMDE:5186-5189) folds the granted
         // items into entity_grants (budget-exempt), and their effects apply.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.granter")]);
@@ -2289,7 +2289,7 @@ mod tests {
     #[test]
     fn item_level_budget_sums_grants() {
         // Magic Items grants +25 starting levels of enchanted devices, stackable
-        // (ArMDE:4418-4420); Redcap 50 (ArMDE:4913-4917).
+        // (ArMDE:4420-4422); Redcap 50 (ArMDE:4915-4919).
         let rs = xp_ruleset();
         assert_eq!(item_level_budget(&xp_entity(vec![]), &rs), 0);
         assert_eq!(
@@ -2308,7 +2308,7 @@ mod tests {
 
     #[test]
     fn self_confident_adds_one_score_and_two_points_on_top_of_the_base() {
-        // Self-Confident: Confidence Score +1, Confidence Points +2 (ArMDE:4971-4973), additive on top of the
+        // Self-Confident: Confidence Score +1, Confidence Points +2 (ArMDE:4973-4975), additive on top of the
         // type profile's base.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.self_confident")]);
@@ -2331,8 +2331,8 @@ mod tests {
     #[test]
     fn reputation_grants_reads_one_entry_per_grants_reputation_effect() {
         // Famous grants a player-chosen-type Reputation 3 (kind omitted =
-        // wildcard, ArMDE:3932-3934);
-        // Infamous fixes the kind to Local (ArMDE:6381-6383). Each grant names the
+        // wildcard, ArMDE:3934-3936);
+        // Infamous fixes the kind to Local (ArMDE:6383-6385). Each grant names the
         // Virtue/Flaw it came from, so the UI can say WHY the slot exists.
         let rs = xp_ruleset();
         let e = xp_entity(vec![sel("virtue.famous"), sel("flaw.infamous")]);
@@ -2360,7 +2360,7 @@ mod tests {
     #[test]
     fn reputation_grants_surfaces_a_max_score_when_the_grant_states_one() {
         // Outsider's shape (D11/Q5): "a bad Reputation of level 1 to 3"
-        // (ArMDE:6625) is score 1, max_score Some(3) — an optional upper bound,
+        // (ArMDE:6627) is score 1, max_score Some(3) — an optional upper bound,
         // absent (None) for every other granter (D10's "no ceiling" sentinel is
         // u8::MAX elsewhere; here absence itself IS "exact, no range").
         let rs = xp_ruleset();
@@ -2379,7 +2379,7 @@ mod tests {
 
     #[test]
     fn supernatural_free_slots_grants_one_gifted_non_magus_slot() {
-        // A Gifted non-magus gets one free Supernatural-Ability slot (ArMDE:2942); a magus profile gets none.
+        // A Gifted non-magus gets one free Supernatural-Ability slot (ArMDE:2944); a magus profile gets none.
         let rs = xp_ruleset();
         let profile = rs.profile(&Id::new("companion")).unwrap();
         let gifted = xp_entity(vec![sel("virtue.the_gift")]);
@@ -2441,7 +2441,7 @@ mod tests {
 
     /// Focus Power's 25 are a currency of their own — "This Virtue grants a pool
     /// of 25 points" — and copies combine: "This Virtue may be taken more than
-    /// once, and the points gained may be combined" (ArMDE:3970, :3974).
+    /// once, and the points gained may be combined" (ArMDE:3972, :3976).
     #[test]
     fn focus_power_grants_a_twenty_five_point_pool_that_copies_combine() {
         let rs = xp_ruleset();
@@ -2458,7 +2458,7 @@ mod tests {
     /// A Focus Power spends its OWN pool at its own rate: "It costs 2 points to
     /// raise the maximum level of effect by 1, and 1 point to raise the Penetration
     /// by 1. Thus, 25 points can allow a maximum level of 10 with a Penetration of
-    /// 5, or a maximum level of 5 with a Penetration of 15" (ArMDE:3970). Both of
+    /// 5, or a maximum level of 5 with a Penetration of 15" (ArMDE:3972). Both of
     /// the book's own splits are checked, and neither pool subsidises the other.
     #[test]
     fn a_focus_power_spends_two_points_per_level_and_one_per_penetration() {
@@ -2521,9 +2521,9 @@ mod tests {
     #[test]
     fn powers_used_spends_penetration_from_the_same_pool_as_level() {
         // "You may also spend levels one-for-one to give the power Penetration"
-        // (ArMDE:4090), so Penetration
+        // (ArMDE:4092), so Penetration
         // is charged against the SAME budget as the level. The book's own worked
-        // example (`ArMDE:4092`): two copies of Greater Power give 100 levels, spent as
+        // example (`ArMDE:4094`): two copies of Greater Power give 100 levels, spent as
         // "a power with a level of 60 and a Penetration of 0, and a second power
         // with a level and Penetration of 20 each" — 60 + 0 + 20 + 20 = 100, so a
         // `powers_used` that ignored Penetration would report 80 and let the
@@ -2546,7 +2546,7 @@ mod tests {
 
     #[test]
     fn true_faith_grant_sums_score() {
-        // True Faith grants a derived True Faith Score of 1 (ArMDE:5240-5242),
+        // True Faith grants a derived True Faith Score of 1 (ArMDE:5242-5244),
         // base 0, summed across grants.
         let rs = xp_ruleset();
         assert_eq!(true_faith(&xp_entity(vec![]), &rs), 0);
@@ -2560,7 +2560,7 @@ mod tests {
     fn warping_grant_derives_score_from_points() {
         // Warped by Magic grants 5 Warping Points; the score is DERIVED by
         // inverting the advancement curve (5 points → Warping Score 1) — the
-        // effect carries no stored score at all (D77.3). ArMDE:7090-7092,
+        // effect carries no stored score at all (D77.3). ArMDE:7092-7094,
         // :16464-16475.
         let rs = xp_ruleset();
         assert_eq!(
@@ -2581,7 +2581,7 @@ mod tests {
 
     /// `warping_score`/`warping_points_total` UNIFY stored + grant-derived points
     /// through one path, then invert the advancement curve. Stored 10 + Warped by
-    /// Magic's 5 = 15 points → Warping Score 2 (ArMDE:16541-16552: cumulative
+    /// Magic's 5 = 15 points → Warping Score 2 (ArMDE:16543-16554: cumulative
     /// 5/15/30/50/75).
     #[test]
     fn warping_sums_stored_and_granted_points_then_inverts() {
@@ -2605,12 +2605,12 @@ mod tests {
         assert_eq!(warping_score(&only_stored, &rs), 2);
     }
 
-    // --- Issue E: warping-owed V/F (ArMDE:16624-16638) -----------------------
+    // --- Issue E: warping-owed V/F (ArMDE:16626-16640) -----------------------
 
     /// The owed-V/F threshold curve, tested on the pure `from_score` at the rule's
     /// boundary scores so the assertion is independent of the advancement table:
     /// 0 → none; 1 → 1 Minor Flaw; 3 → 2 Minor Flaws; 5 → +supernatural Minor
-    /// Virtue; 6 → +1 Major Flaw; 7 → 2 Major Flaws. Source: ArMDE:16630-16638.
+    /// Virtue; 6 → +1 Major Flaw; 7 → 2 Major Flaws. Source: ArMDE:16632-16640.
     #[test]
     fn warping_owed_thresholds_follow_the_score_curve() {
         let owed = |score| WarpingOwed::from_score(score);
@@ -2716,7 +2716,7 @@ mod tests {
 
     /// A non-magus with a Warping Score of 2 (15 stored points → curve score 2)
     /// owes one Minor Flaw; a magus at the SAME high score owes nothing — Warping
-    /// gives magi Wizard's Twilight instead (ArMDE:16628).
+    /// gives magi Wizard's Twilight instead (ArMDE:16630).
     #[test]
     fn magus_is_exempt_from_owed_warping_vf() {
         let rs = magus_owed_ruleset();
@@ -2805,7 +2805,7 @@ mod tests {
 
     /// Decrepitude XP is the sum of aging points across every Characteristic,
     /// inverted through the (Ability) advancement curve: 17 points → Decrepitude 2
-    /// (15 ≤ 17 < 30). ArMDE:16694.
+    /// (15 ≤ 17 < 30). ArMDE:16696.
     #[test]
     fn decrepitude_score_sums_aging_points_and_inverts() {
         let rs = xp_ruleset();
@@ -2819,7 +2819,7 @@ mod tests {
 
     /// Aging reductions LOWER the effective Characteristic that derived/play stats
     /// use, but the bought score creation-legality reads is untouched — and they
-    /// are not floored anywhere, `ArMDE:16656` naming no minimum.
+    /// are not floored anywhere, `ArMDE:16658` naming no minimum.
     #[test]
     fn aging_points_derive_the_drop_but_not_creation() {
         let rs = xp_ruleset();
@@ -2850,7 +2850,7 @@ mod tests {
 
     #[test]
     fn aging_drops_match_the_worked_examples() {
-        // ArMDE:16690: a Communication of +2 drops to +1 in the year it
+        // ArMDE:16692: a Communication of +2 drops to +1 in the year it
         // gains its THIRD aging point; a Stamina of −3 drops to −4 on its FOURTH.
         let rs = xp_ruleset();
         let mut com = xp_entity(vec![]);
@@ -2883,7 +2883,7 @@ mod tests {
     #[test]
     fn aging_drop_threshold_is_the_actual_score_free_delta_included() {
         // Norbert's ruling F-A (2026-10-03): the threshold is the absolute value of
-        // "the Characteristic" (ArMDE:16656) — the score the character actually
+        // "the Characteristic" (ArMDE:16658) — the score the character actually
         // has, the free CharacteristicScoreDelta (Giant Blood +1 Str) included —
         // not the bought score. And it is that score which "drops by one point".
         let rs = xp_ruleset();
@@ -2911,7 +2911,7 @@ mod tests {
 
     #[test]
     fn effective_summary_maps_report_aged_value_and_drops() {
-        // ArMDE:16690 worked example: Communication +2 with 3 aging points
+        // ArMDE:16692 worked example: Communication +2 with 3 aging points
         // drops once → effective +1. The summary maps must surface both the aged
         // effective value and the drop count, and omit unchanged Characteristics.
         let rs = xp_ruleset();
@@ -2946,7 +2946,7 @@ mod tests {
     #[test]
     fn size_delta_sums_from_virtues_and_flaws() {
         // Size is a derived stat (base 0) modified by SizeDelta effects
-        // (Giant Blood +2, Dwarf -2). ArMDE:4046-4049, :6067-6069.
+        // (Giant Blood +2, Dwarf -2). ArMDE:4048-4051, :6069-6071.
         let rs = xp_ruleset();
         assert_eq!(size(&xp_entity(vec![]), &rs), 0);
         assert_eq!(size(&xp_entity(vec![sel("virtue.giant_blood")]), &rs), 2);
@@ -2956,7 +2956,7 @@ mod tests {
     #[test]
     fn giant_blood_grants_free_characteristic_bonus_reaching_six() {
         // Giant Blood adds a free +1 to Str and Sta that may raise the effective
-        // score as high as +6 (ArMDE:4046-4049). The bought score is untouched.
+        // score as high as +6 (ArMDE:4048-4051). The bought score is untouched.
         let rs = xp_ruleset();
         let mut e = xp_entity(vec![sel("virtue.giant_blood")]);
         e.characteristics = BTreeMap::from([(Characteristic::Str, 5)]);
@@ -2970,7 +2970,7 @@ mod tests {
 
     #[test]
     fn characteristic_bonuses_lists_each_nonzero_free_delta_in_canonical_order() {
-        // Giant Blood grants a free +1 to Str and +1 to Sta (ArMDE:4046-4049). The
+        // Giant Blood grants a free +1 to Str and +1 to Sta (ArMDE:4048-4051). The
         // accessor surfaces exactly those two nonzero bonuses in canonical
         // Characteristic order, omitting the untouched ones.
         let rs = xp_ruleset();
@@ -2994,7 +2994,7 @@ mod tests {
 
     #[test]
     fn weak_characteristics_grants_negative_points_and_nets_with_improved() {
-        // Weak Characteristics removes 3 budget points (ArMDE:7127-7129); the grant
+        // Weak Characteristics removes 3 budget points (ArMDE:7129-7131); the grant
         // is signed and nets against Improved Characteristics (+3).
         let rs = xp_ruleset();
         let weak = xp_entity(vec![sel("flaw.weak_characteristics")]);
@@ -3262,7 +3262,7 @@ mod tests {
 
     /// Three elemental Forms bought at score 6 (21 table-XP each) and one at score 4
     /// (10 table-XP): the boosted effective scores match the ceil-rounded
-    /// redistribution hand-computed from the worked example (ArMDE:3802-3808).
+    /// redistribution hand-computed from the worked example (ArMDE:3804-3810).
     ///
     /// bonus_xp(F) = Σ_{G≠F} ceil(xp(G)/2):
     ///   Aquam/Auram/Ignem (own 21): 11 + 11 + 5 = 27 → 48 XP → score 9.
@@ -3396,7 +3396,7 @@ mod tests {
     }
 
     /// The per-Technique/Form spell-level caps surfaced to the UI equal
-    /// Te + Fo + Int + Magic Theory + 3 (ArMDE:2533), one entry per Te×Fo combo.
+    /// Te + Fo + Int + Magic Theory + 3 (ArMDE:2535), one entry per Te×Fo combo.
     #[test]
     fn spell_level_caps_expose_te_fo_int_mt_plus_three() {
         let rs = ruleset();
@@ -3438,9 +3438,9 @@ mod tests {
         )
     }
 
-    /// Deficient Technique halves the per-spell level cap. `ArMDE:2533` makes the
+    /// Deficient Technique halves the per-spell level cap. `ArMDE:2535` makes the
     /// cap a Lab Total — "any Virtues and Flaws your character has apply to this
-    /// total if they would apply to a Lab Total in play" — and `ArMDE:5986` halves
+    /// total if they would apply to a Lab Total in play" — and `ArMDE:5988` halves
     /// "All totals, including Lab and Casting totals, including a particular
     /// Technique".
     #[test]
@@ -3466,7 +3466,7 @@ mod tests {
         );
     }
 
-    /// Deficient Form halves it too: `ArMDE:5982` — "Almost all totals (including
+    /// Deficient Form halves it too: `ArMDE:5984` — "Almost all totals (including
     /// Casting Totals and Lab Totals, but excluding Magic Resistance) to which a
     /// particular Form is added are halved."
     #[test]
@@ -3649,7 +3649,7 @@ mod tests {
     /// reason the spell-levels one is: the pool the solve funds from is `typed +
     /// bonus`, and a bar that shows only the total cannot say why the two differ.
     /// Skilled Parens: "You gain an additional 60 experience points … during
-    /// apprenticeship" (ArMDE:5037).
+    /// apprenticeship" (ArMDE:5039).
     #[test]
     fn the_general_xp_bonus_is_reported_beside_the_pool_it_raises() {
         let rs = ruleset();
@@ -3735,7 +3735,7 @@ mod tests {
             { "id": "ability.swim", "category": "general" }
           ]
         }"#;
-        // Art table: the shipped Core Rules figures up to 20 (`ArMDE:2476-2495`), so a
+        // Art table: the shipped Core Rules figures up to 20 (`ArMDE:2478-2497`), so a
         // post-Gauntlet magus can buy an Art far beyond what apprenticeship's 240
         // could ever fund.
         let arts = r#"{
@@ -3827,8 +3827,8 @@ mod tests {
 
     /// A guided magus's **general** pool is its apprenticeship experience, not its
     /// later life: "These experience points can be spent on Arts or Abilities"
-    /// (ArMDE:2503), and the general pool is the only one that may fund an
-    /// Art. Later life buys "any Abilities" (`ArMDE:2282`) and becomes a restricted pool
+    /// (ArMDE:2505), and the general pool is the only one that may fund an
+    /// Art. Later life buys "any Abilities" (`ArMDE:2284`) and becomes a restricted pool
     /// of its own.
     #[test]
     fn the_general_pool_of_a_guided_magus_is_its_apprenticeship() {
@@ -3836,7 +3836,7 @@ mod tests {
         assert_eq!(xp_allocation(&planned_magus(), &rs).general_pool, 240);
 
         // Skilled Parens grants "an additional 60 experience points … during
-        // apprenticeship" (`ArMDE:5037`), which lands on exactly this pool. So the block's
+        // apprenticeship" (`ArMDE:5039`), which lands on exactly this pool. So the block's
         // base (240) and the pool the solve funds from (300) are different numbers —
         // which is why the base is not stored as a pool anywhere.
         let mut magus = planned_magus();
@@ -4018,9 +4018,9 @@ mod tests {
     /// A magus's pre-apprenticeship experience may not buy an Arcane, Academic or
     /// Martial Ability: "Note that magi can only spend experience points on Arcane,
     /// Academic and Martial Abilities **before** apprenticeship if they have a Virtue
-    /// which allows them to do so." (ArMDE:2503.) The Darius example reasons
+    /// which allows them to do so." (ArMDE:2505.) The Darius example reasons
     /// the same way about a pre-apprenticeship purchase — "It's a **general** Ability,
-    /// so he can" (`ArMDE:2470`).
+    /// so he can" (`ArMDE:2472`).
     ///
     /// So later life is a pool of its own for a magus, and a gated Ability falls to
     /// apprenticeship's general pool instead.
@@ -4053,8 +4053,8 @@ mod tests {
     }
 
     /// …unless a Virtue says otherwise: "if they have a Virtue which allows them to do
-    /// so" (ArMDE:2503). Covenant Upbringing authorizes the dead language
-    /// ("You may take Latin at character creation", `ArMDE:5938`), so those points may come
+    /// so" (ArMDE:2505). Covenant Upbringing authorizes the dead language
+    /// ("You may take Latin at character creation", `ArMDE:5940`), so those points may come
     /// from before apprenticeship after all.
     ///
     /// A **regression lock**: the pool is built from the same authorizations the
@@ -4092,7 +4092,7 @@ mod tests {
     }
 
     /// A magus gauntleted at 25 and now 60: thirty-five years of "30 points per
-    /// year" (ArMDE:2539) behind it, none of them spent in the lab.
+    /// year" (ArMDE:2541) behind it, none of them spent in the lab.
     fn experienced_magus() -> Entity {
         let mut magus = planned_magus();
         magus.age = Some(60);
@@ -4108,7 +4108,7 @@ mod tests {
 
     /// The years after the Gauntlet fund the **general** pool: "Divide 30 points per
     /// year between experience points in Arts, experience points in Abilities, and
-    /// levels of spells" (ArMDE:2284) — Arts included, which no restricted
+    /// levels of spells" (ArMDE:2286) — Arts included, which no restricted
     /// pool may ever fund.
     ///
     /// Proved through the allocation rather than by reading the budget: two Arts at
@@ -4139,7 +4139,7 @@ mod tests {
     }
 
     /// The post-Gauntlet experience does not widen later life: that block stays the
-    /// restricted, Abilities-only pool of `ArMDE:2503`'s "before apprenticeship" clause,
+    /// restricted, Abilities-only pool of `ArMDE:2505`'s "before apprenticeship" clause,
     /// so it funds neither an Art nor a gated Academic Ability however many years
     /// the magus has lived since.
     #[test]
@@ -4161,7 +4161,7 @@ mod tests {
     }
 
     /// A companion's allocation is untouched by post-Gauntlet fields on its plan:
-    /// "**Hermetic Magi Only (Optional):** Years after apprenticeship" (`ArMDE:2284`), and
+    /// "**Hermetic Magi Only (Optional):** Years after apprenticeship" (`ArMDE:2286`), and
     /// a companion serves no apprenticeship, so the numbers may not move a point.
     #[test]
     fn a_companion_allocation_ignores_post_gauntlet_fields() {
@@ -4200,9 +4200,9 @@ mod tests {
     }
 
     /// The levels of spells a magus took out of its post-Gauntlet points are **added
-    /// to** the profile's 120, not a second budget beside it: the 120 of `ArMDE:2503` are
+    /// to** the profile's 120, not a second budget beside it: the 120 of `ArMDE:2505` are
     /// the type profile's `spell_levels`, while these are the player's chosen slice of
-    /// the fungible "30 points per year" (`ArMDE:2539`).
+    /// the fungible "30 points per year" (`ArMDE:2541`).
     #[test]
     fn post_gauntlet_spell_levels_add_to_the_profile_budget() {
         let rs = life_stage_ruleset();
@@ -4269,7 +4269,7 @@ mod tests {
     }
 
     /// A non-magus earns none: "**Hermetic Magi Only (Optional):** Years after
-    /// apprenticeship" (`ArMDE:2284`), so a companion's plan contributes 0 however its
+    /// apprenticeship" (`ArMDE:2286`), so a companion's plan contributes 0 however its
     /// post-Gauntlet fields are set — and so does a character with no plan at all.
     #[test]
     fn a_non_magus_gets_no_post_gauntlet_spell_levels() {
@@ -4288,8 +4288,8 @@ mod tests {
     }
 
     /// Later life is a life-stage block like the childhood ones, because for a magus
-    /// it is a **restricted** pool: it buys "any Abilities" (ArMDE:2282,
-    /// `ArMDE:2460`) and never an Art, which only apprenticeship's experience may. So it
+    /// it is a **restricted** pool: it buys "any Abilities" (ArMDE:2284,
+    /// `ArMDE:2462`) and never an Art, which only apprenticeship's experience may. So it
     /// needs a slug of its own, and a Fluent label — a block the UI cannot name would
     /// print its own slug.
     #[test]
@@ -4332,7 +4332,7 @@ mod tests {
     // --- D40/D2: replacement XP (Feral Upbringing, Redcap, Lone Redcap) ------
 
     /// A companion holding nothing but the Flaw, unaged plan defaulted, no
-    /// native language recorded — ArMDE:6183: "you may not start with a score
+    /// native language recorded — ArMDE:6185: "you may not start with a score
     /// in a Language". `native_language: None` is the correct shape for this
     /// carrier, not merely an unset field.
     fn feral_companion(age: u32) -> Entity {
@@ -4349,7 +4349,7 @@ mod tests {
     }
 
     /// D40/D2: Feral Upbringing's whole childhood collapses to ONE restricted
-    /// pool of 120 (ArMDE:6181-6184), never the standard native(75)+spread(45)
+    /// pool of 120 (ArMDE:6183-6186), never the standard native(75)+spread(45)
     /// PLUS an additive grant (F-428's 240 bug). No native-language pool at
     /// all — not merely an empty one — matching "may not start with a score
     /// in a Language". RED today: `build_flow_pools` does not yet look for a
@@ -4428,7 +4428,7 @@ mod tests {
     /// A companion holding the apprenticeship-shaped replacement Virtue
     /// (Redcap/Lone Redcap's shape): its own 300 XP funds a SOURCE-fed
     /// restricted pool — never `general`, since it does not buy Arts
-    /// (ArMDE:4919) — while its 15 years are carved out of later life, which
+    /// (ArMDE:4921) — while its 15 years are carved out of later life, which
     /// stays the companion's own general pool, reduced accordingly. RED
     /// today: `build_flow_pools` does not yet look for an
     /// `Apprenticeship`-stage replacement at all, so no such pool exists and
@@ -4518,7 +4518,7 @@ mod tests {
         );
     }
 
-    /// ArMDE:6183: "you may not start with a score in a Language" — a Feral
+    /// ArMDE:6185: "you may not start with a score in a Language" — a Feral
     /// character gets NO early-childhood native-language grant, even when a
     /// native language IS recorded on the plan (proving the pool's absence is
     /// structural, not merely "nobody set one"). RED today: with a language

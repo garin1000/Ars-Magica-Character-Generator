@@ -28,7 +28,7 @@ import { SCHEMA_VERSION, store } from '../state.svelte';
 import LivingConditionsPicker from './LivingConditionsPicker.svelte';
 
 /**
- * Four rows of the shipped table (ArMDE:16660-16669): two plain
+ * Four rows of the shipped table (ArMDE:16662-16671): two plain
  * alternatives and two of the five asterisked, cumulative ones. Catalogue size is
  * data, so nothing here asserts the shipped ten — only that every row the ruleset
  * carries gets a checkbox.
@@ -241,7 +241,7 @@ describe('LivingConditionsPicker (slice 6b6c)', () => {
   it('marks the cumulative rows and explains what that means', () => {
     const body = html();
     // "Modifiers marked with an asterisk are cumulative with each other."
-    // Source: ArMDE:16671
+    // Source: ArMDE:16673
     for (const row of ROWS.filter((r) => r.cumulative)) {
       expect(open(body, `living-condition-${row.id}`)).toContain('data-cumulative="true"');
     }

@@ -242,7 +242,7 @@ impl<'a> Doc<'a> {
                 .unwrap_or_default()
                 .to_string();
                 // D42/D70/D74: every Supernatural entry is associated with one of
-                // the four Realms (ArMDE:3028); the association is resolved, never
+                // the four Realms (ArMDE:3030); the association is resolved, never
                 // stored, so it has no cell of its own — it rides the existing
                 // text column instead, and only for a qualifying selection, so an
                 // entity holding no Supernatural entry renders byte-identical to
@@ -560,7 +560,7 @@ impl<'a> Doc<'a> {
     /// A spell's Arts and level as the one short cell the rulebook and the app both
     /// use: the engine's code ([`LocalizedRuleset::spell_code`], requisites included)
     /// and the resolved level a space apart, as the book prints it — "Cr(Re)Ig 30"
-    /// (ArMDE:19378). An unresolved General level takes the localized General marker
+    /// (ArMDE:19380). An unresolved General level takes the localized General marker
     /// in the level's place.
     ///
     /// A spell the player marked within a Magical Focus or within a Potent Magic

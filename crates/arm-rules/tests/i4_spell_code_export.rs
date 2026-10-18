@@ -4,9 +4,9 @@
 //!   (`spell_codes`, keyed by spell id), composed by the engine — so the Spells
 //!   tab never re-composes it from Art abbreviations.
 //! - The export prints the same code plus the level in the book's form, a space
-//!   apart: "Cr(Re)Ig 30" (ArMDE:19378), not `CrIg20`.
-//! - A spell the player marked within a Magical Focus (ArMDE:4470-4493) or
-//!   within a Potent Magic field (ArMDE:4811-4819) carries a short localized
+//!   apart: "Cr(Re)Ig 30" (ArMDE:19380), not `CrIg20`.
+//! - A spell the player marked within a Magical Focus (ArMDE:4472-4495) or
+//!   within a Potent Magic field (ArMDE:4813-4821) carries a short localized
 //!   marker after the code (after-deadline answer 4), never a new column (D73.2).
 
 use arm_rules::export::{LABEL_KEYS, character_markdown};
@@ -147,21 +147,21 @@ fn the_fallback_construction_path_carries_the_codes_too() {
 // --- the export prints the same code ----------------------------------------
 
 /// The level follows the code a space apart, as the book prints it: "Cr(Re)Ig 30"
-/// (ArMDE:19378).
+/// (ArMDE:19380).
 #[test]
 fn the_export_prints_code_space_level() {
     let doc = export(vec![spell("spell.pilum_of_fire", false, false)]);
     assert!(doc.contains("| CrIg 20 |"), "{doc}");
 }
 
-/// Phantasmal Fire, CrIm 20, "Req: Ignem" (ArMDE:14629-14633).
+/// Phantasmal Fire, CrIm 20, "Req: Ignem" (ArMDE:14631-14635).
 #[test]
 fn the_export_prints_a_form_requisite() {
     let doc = export(vec![spell("spell.phantasmal_fire", false, false)]);
     assert!(doc.contains("| CrIm(Ig) 20 |"), "{doc}");
 }
 
-/// Coat of Flame, CrIg 25, "Req: Rego" (ArMDE:14337-14341).
+/// Coat of Flame, CrIg 25, "Req: Rego" (ArMDE:14339-14343).
 #[test]
 fn the_export_prints_a_technique_requisite() {
     let doc = export(vec![spell("spell.coat_of_flame", false, false)]);

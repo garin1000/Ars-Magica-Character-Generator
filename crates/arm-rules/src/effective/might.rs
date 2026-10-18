@@ -47,7 +47,7 @@ pub fn effective_might(entity: &Entity, ruleset: &Ruleset) -> Option<MightScore>
 
 /// The character's derived True Faith Score: base 0 plus every
 /// [`Effect::TrueFaithGrant`] (True Faith Virtue → 1), summed and clamped to
-/// `u8`. Derived, never stored. Source: ArMDE:5240-5242.
+/// `u8`. Derived, never stored. Source: ArMDE:5242-5244.
 pub fn true_faith(entity: &Entity, ruleset: &Ruleset) -> u8 {
     let mut score = 0u32;
     for_each_effect!(entity, ruleset, |_selection, effect| {

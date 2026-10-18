@@ -102,7 +102,7 @@ static GERMAN_QUOTE_PAIR_RE: LazyLock<Regex> =
 static EN_DASH_BEFORE_DIGIT_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\u{2013}(\d)").unwrap());
 // The German book also uses the mathematical minus sign (U+2212, not the en
-// dash U+2013) before a digit in running prose (e.g. ArMDE:14886 "erleidet
+// dash U+2013) before a digit in running prose (e.g. ArMDE:14888 "erleidet
 // −3 auf..."); CLAUDE.md's "Negative signs are ASCII hyphens" rule applies
 // the same fold to it as to the en dash.
 static MINUS_SIGN_BEFORE_DIGIT_RE: LazyLock<Regex> =
@@ -137,7 +137,7 @@ mod normalize_markdown_tests {
 
     #[test]
     fn folds_the_mathematical_minus_sign_before_a_digit_to_an_ascii_hyphen() {
-        // ArMDE:14886, `spell.confusion_of_the_insane_vibrations`: the German
+        // ArMDE:14888, `spell.confusion_of_the_insane_vibrations`: the German
         // book uses U+2212 (MINUS SIGN), not U+2013 (en dash), before a
         // digit. Confirmed byte-for-byte (`e2 88 92`, not `e2 80 93`).
         assert_eq!(
@@ -181,9 +181,9 @@ fn cached_source_lines<'a>(
 /// **What the citation excludes, and why.** `start` is always the
 /// `##### <Spell Name>` heading line, and `start + 1` is always the
 /// `R: ..., D: ..., T: ...` stat line (optionally carrying an inline
-/// `, Ritual` or a run-on `Req:`/`Reg:` requisite, ArMDE:14090) — neither is
+/// `, Ritual` or a run-on `Req:`/`Reg:` requisite, ArMDE:14092) — neither is
 /// prose. A standalone `Req:`/`Reg:` line (its own line between the stat line
-/// and the description, ArMDE:13294 style) is excluded the same way, wherever
+/// and the description, ArMDE:13296 style) is excluded the same way, wherever
 /// it falls. A standalone trailing level-derivation clause — `(Base N[, +mod
 /// ...])`, `(Special spell)`, `(Mercurian Ritual)`, `(Grundstufe ...)`,
 /// `(Grundzauber)`, … — is excluded too, matched structurally (opens the
@@ -209,8 +209,8 @@ fn spell_verbatim_body(lines: &[String], start: u32, end: u32) -> String {
         &lines[(body_start - 1)..body_end]
     };
 
-    // English: "Req:"/"Reg:" (ArMDE:13294's own typo for "Req:"). German:
-    // "Req.:" (ArMDE:14251 "Req.: Intellego") — note the period before the
+    // English: "Req:"/"Reg:" (ArMDE:13296's own typo for "Req:"). German:
+    // "Req.:" (ArMDE:14253 "Req.: Intellego") — note the period before the
     // colon, which is not present in the English form.
     fn is_requisite_only_line(line: &str) -> bool {
         line.starts_with("Req:") || line.starts_with("Reg:") || line.starts_with("Req.:")
@@ -223,7 +223,7 @@ fn spell_verbatim_body(lines: &[String], start: u32, end: u32) -> String {
     // no genuine prose sentence does, is opening its own line with `(` in
     // last position (checked only there, never mid-body, so an ordinary
     // parenthetical remark elsewhere in the prose is untouched). Matched by
-    // prefix only, not requiring the line to also end on `)`: ArMDE:12705
+    // prefix only, not requiring the line to also end on `)`: ArMDE:12707
     // runs "(Grundstufe 15, +2 Stimme)" directly into the next section's
     // heading with no line break ("...+2 Stimme)### Rego Animal —
     // Leitlinien"), a markdown defect in the upstream book itself (not a
@@ -320,7 +320,7 @@ mod spell_verbatim_body_tests {
     #[test]
     fn excludes_an_arbitrarily_worded_trailing_annotation() {
         // The book's level-derivation vocabulary is open-ended ("(Special
-        // spell)", "(Mercurian Ritual)", "(Variable base)", ArMDE:12913,
+        // spell)", "(Mercurian Ritual)", "(Variable base)", ArMDE:12915,
         // :15655, :13551 — none sharing a word with "Base"), so the match is
         // structural (opens the line with `(`), not an enumerated phrase.
         let l = lines(&[
@@ -334,7 +334,7 @@ mod spell_verbatim_body_tests {
 
     #[test]
     fn excludes_a_base_clause_even_when_the_book_runs_the_next_heading_onto_the_same_line() {
-        // ArMDE:12705, `spell.cripple_the_howling_wolf`: the upstream book
+        // ArMDE:12707, `spell.cripple_the_howling_wolf`: the upstream book
         // concatenates "(Grundstufe 15, +2 Stimme)" directly onto
         // "### Rego Animal — Leitlinien" with no line break — a defect in
         // `rules/source/` itself, which may not be hand-repaired, so the

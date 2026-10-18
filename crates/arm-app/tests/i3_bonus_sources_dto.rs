@@ -24,8 +24,8 @@ fn rules_dir() -> PathBuf {
     repo_root().join("rules")
 }
 
-/// A magus with Puissant (Ignem) (+3, ArMDE:4891) and Second Sight (grants
-/// Second Sight 1, ArMDE:4961) plus Puissant (Second Sight) (+2, ArMDE:4887).
+/// A magus with Puissant (Ignem) (+3, ArMDE:4893) and Second Sight (grants
+/// Second Sight 1, ArMDE:4963) plus Puissant (Second Sight) (+2, ArMDE:4889).
 fn magus() -> Entity {
     let mut e = Entity::new(
         EntityKind::Character,

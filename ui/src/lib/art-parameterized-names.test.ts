@@ -15,7 +15,7 @@ import type { LocalizedRuleset } from './types';
 // template's slot. The two Deficiencies are the case C3 decided: EN "Deficient
 // Creo" / "Deficient Ignem", DE "Defizitäre Technik: Creo" / "Defizitäre Form:
 // Ignem" (no adjective agreement with a Latin Art name), unfilled "Deficient
-// Technique" / "Deficient Form" (ArMDE:5980, :5984) and "Defizitäre Technik" /
+// Technique" / "Deficient Form" (ArMDE:5982, :5986) and "Defizitäre Technik" /
 // "Defizitäre Form" (tugenden-fehler.md rows). The Form-apposition entries keep
 // D57's uninflected "der Form, Ignem" when filled.
 

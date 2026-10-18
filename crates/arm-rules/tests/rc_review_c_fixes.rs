@@ -78,9 +78,9 @@ fn issue_codes(entity: &Entity, ruleset: &Ruleset) -> Vec<String> {
         .collect()
 }
 
-// --- Item 2: Warped Senses' same-copy pairing (ArMDE:7104) ------------------
+// --- Item 2: Warped Senses' same-copy pairing (ArMDE:7106) ------------------
 
-/// ArMDE:7104: "Weak Sight is incompatible with Sensitive Sight, Keen Vision,
+/// ArMDE:7106: "Weak Sight is incompatible with Sensitive Sight, Keen Vision,
 /// and Blind". The cross-item half (Keen Vision, Blind) is already encoded;
 /// the same-copy half (Sensitive Sight, a DIFFERENT value of the SAME
 /// `affliction` parameter on the SAME entry) is not — `forbids` only lists
@@ -106,13 +106,13 @@ fn warped_senses_forbids_pairing_weak_sight_with_sensitive_sight() {
     let result = validate(&e, &rs);
     assert!(
         result.issues.iter().any(|i| i.code == "incompatible"),
-        "ArMDE:7104: Weak Sight is incompatible with Sensitive Sight, but selecting both \
+        "ArMDE:7106: Weak Sight is incompatible with Sensitive Sight, but selecting both \
          copies of flaw.warped_senses raises no incompatibility today: {:?}",
         result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
 }
 
-/// Same defect, hearing side: ArMDE:7104 "you cannot take Weak Hearing with
+/// Same defect, hearing side: ArMDE:7106 "you cannot take Weak Hearing with
 /// Sensitive Hearing, Sharp Ears, or Deaf" — Sharp Ears/Deaf are encoded,
 /// Sensitive Hearing (same-copy) is not.
 #[test]
@@ -134,15 +134,15 @@ fn warped_senses_forbids_pairing_weak_hearing_with_sensitive_hearing() {
     let result = validate(&e, &rs);
     assert!(
         result.issues.iter().any(|i| i.code == "incompatible"),
-        "ArMDE:7104: Weak Hearing is incompatible with Sensitive Hearing, but selecting both \
+        "ArMDE:7106: Weak Hearing is incompatible with Sensitive Hearing, but selecting both \
          copies of flaw.warped_senses raises no incompatibility today: {:?}",
         result.issues.iter().map(|i| &i.code).collect::<Vec<_>>()
     );
 }
 
-// --- Item 3: Goblin heritage's stealth bonus (ArMDE:3882) -------------------
+// --- Item 3: Goblin heritage's stealth bonus (ArMDE:3884) -------------------
 
-/// ArMDE:3882: "Goblin Blood: ... you get a +1 bonus on all totals involving
+/// ArMDE:3884: "Goblin Blood: ... you get a +1 bonus on all totals involving
 /// stealth" — a single named Ability (`ability.stealth`), exactly the same
 /// computable shape as the already-encoded Dwarf (+1 Craft) bonus on both
 /// entries.
@@ -163,15 +163,15 @@ fn goblin_heritage_grants_a_stealth_roll_bonus() {
             .unwrap_or_else(|| panic!("{id} must ship"));
         assert!(
             item.effects.contains(&expected),
-            "ArMDE:3882: Goblin Blood's +1 stealth bonus is unmodeled on {id} (effects: {:?})",
+            "ArMDE:3884: Goblin Blood's +1 stealth bonus is unmodeled on {id} (effects: {:?})",
             item.effects
         );
     }
 }
 
-// --- Item 4: Performance Magic's Ability filter (ArMDE:4717/:4676/:4684) ----
+// --- Item 4: Performance Magic's Ability filter (ArMDE:4719/:4676/:4684) ----
 
-/// ArMDE:4747/:4684: Bows, Great Weapon, Single Weapon, Thrown Weapon, and
+/// ArMDE:4749/:4684: Bows, Great Weapon, Single Weapon, Thrown Weapon, and
 /// Brawl/Martial Abilities are explicitly legal Performance Magic choices
 /// (with a combat-casting restriction, not a ban). `require_ability_categories:
 /// ["general"]` wrongly rejects every Martial ability.
@@ -186,12 +186,12 @@ fn performance_magic_accepts_a_martial_ability() {
         !issue_codes(&e, &rs)
             .iter()
             .any(|c| c == "unknown_param_value"),
-        "ArMDE:4747/:4684: Bows (a Martial Ability) is an explicitly legal Performance Magic \
+        "ArMDE:4749/:4684: Bows (a Martial Ability) is an explicitly legal Performance Magic \
          choice, but is rejected today"
     );
 }
 
-/// ArMDE:4717: "You may not choose any Language, Supernatural, Academic, or
+/// ArMDE:4719: "You may not choose any Language, Supernatural, Academic, or
 /// Arcane Ability." `ability.living_language` is catalogued under `general`
 /// (only `ability.dead_language` is `academic`), so the category filter alone
 /// does not exclude it — `forbid_ids` (already used by
@@ -208,14 +208,14 @@ fn performance_magic_rejects_a_language_ability() {
         issue_codes(&e, &rs)
             .iter()
             .any(|c| c == "unknown_param_value"),
-        "ArMDE:4717: Living Language must not resolve as a Performance Magic Ability, but is \
+        "ArMDE:4719: Living Language must not resolve as a Performance Magic Ability, but is \
          accepted today"
     );
 }
 
 // --- Item 9: F-556 — virtue.domestic_animal is takeable by a human ---------
 
-/// F-556/Q-11 (corrections.md): ArMDE:3772 "The character is an animal who is
+/// F-556/Q-11 (corrections.md): ArMDE:3774 "The character is an animal who is
 /// the property of a covenant or character" — D58 rules animal characters a
 /// deliberate non-goal (no Cunning characteristic, no animal profile), so the
 /// entry must be gated so NO current (human) character type can select it.

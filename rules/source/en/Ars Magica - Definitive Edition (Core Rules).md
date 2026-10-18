@@ -1342,7 +1342,9 @@ Decrepitude: 0
 
 Warping Score: 0 (0)
 
-Virtues and Flaws: Covenfolk, Warrior, Pessimistic Personality Traits: Brave +3, Loyal +1, Pessimistic +3
+Virtues and Flaws: Covenfolk, Warrior, Pessimistic
+
+Personality Traits: Brave +3, Loyal +1, Pessimistic +3
 
 Reputations: None
 
@@ -1504,7 +1506,7 @@ Fatigue Levels: OK, 0, -1, -3, -5, Unconscious
 
 Wound Penalties: -1 (1-5), -3 (6-10), -5 (11-15), Incapacitated (16-20)
 
-Abilities: Arabic 1 (medical terms). Area Lore 2 (nunneries), Artes Liberales 3 (rhetoric), Charm 2 (scholars), Church Lore 2 (scholars), Civil and Canon Law 1 (rights of women), Folk Ken 2 (scholars), Guile 2 (lying to authority figures), Latin 5 (academic debate), Living Language 5 (debate), Medicine 1 (women's illnesses), Philosophiae 3 (moral philosophy), Teaching 3 (Artes Liberales), Theology 2 (status of women)
+Abilities: Arabic 1 (medical terms), Area Lore 2 (nunneries), Artes Liberales 3 (rhetoric), Charm 2 (scholars), Church Lore 2 (scholars), Civil and Canon Law 1 (rights of women), Folk Ken 2 (scholars), Guile 2 (lying to authority figures), Latin 5 (academic debate), Living Language 5 (debate), Medicine 1 (women's illnesses), Philosophiae 3 (moral philosophy), Teaching 3 (Artes Liberales), Theology 2 (status of women)
 
 Equipment: Clothes, a slate or wax tablet for writing on.
 
@@ -1545,7 +1547,7 @@ Fatigue Levels: OK, 0, -1, -3, -5, Unconscious
 
 Wound Penalties: -1 (1-5), -3 (6-10), -5 (11-15), Incapacitated (16-20)
 
-Abilities: Animal Handling 2 (falconry), Area Lore 3 (nobles), Athletics 2 (running), Awareness 3 (battle), Brawl 2 (punching), Chirurgy 1 (sword wounds), Etiquette (noble) 3, Great Weapon 5 (great sword), Hunt 2 (deer), Intrigue 1 (noble courts), Leadership 4 (soldiers), Music 1 (singing), Native Language 5 (giving orders), Ride 5 (in combat), Single Weapon 5+2 (heater shield), Survival 1 (forests)
+Abilities: Animal Handling 2 (falconry), Area Lore 3 (nobles), Athletics 2 (running), Awareness 3 (battle), Brawl 2 (punching), Chirurgy 1 (sword wounds), Etiquette 3 (noble), Great Weapon 5 (great sword), Hunt 2 (deer), Intrigue 1 (noble courts), Leadership 4 (soldiers), Music 1 (singing), Native Language 5 (giving orders), Ride 5 (in combat), Single Weapon 5+2 (heater shield), Survival 1 (forests)
 
 Equipment: Full chain mail, long sword, heater shield, great sword
 
@@ -1769,7 +1771,7 @@ Customization Notes: The Bonisagus is most likely Driven to make some great disc
 
 #### Criamon
 
-Characteristics: Int +3, Per 0, Pre +2, Com -3, Str 0, Sta + 2, Dex 0, Qik + 1
+Characteristics: Int +3, Per 0, Pre +2, Com -3, Str 0, Sta +2, Dex 0, Qik +1
 
 Size: 0
 
@@ -1798,7 +1800,7 @@ Wound Penalties: -1 (1-5), -3 (6-10), -5 (11-15), Incapacitated (16–20)
 
 Abilities: Artes Liberales 1 (rhetoric), Charm 5 (educated people), Concentration 3 (spell casting), Enigmatic Wisdom 3+2 (riddles), Folk Ken 1 (educated people), Latin 4 (Enigmatic terms), Magic Sensitivity 2 (auras), Magic Theory 3 (Vim), Native Language 5 (long words), Order of Hermes Lore 1 (mysteries), Parma Magica 1
 
-Arts: Cr 4, In 6, Mu 4, Pe 4, Re 4, An 0, Ag 0, Au 0, Co 0, He 0, Ig 0, Im 2, Me 1, Te 0, Vi 10
+Arts: Cr 4, In 6, Mu 4, Pe 4, Re 4, An 0, Aq 0, Au 0, Co 0, He 0, Ig 0, Im 2, Me 1, Te 0, Vi 10
 
 Twilight Scars: None (yet)
 
@@ -1831,7 +1833,7 @@ Warping Score: 0 (0)
 
 Confidence Score: 1 (3)
 
-Virtues and Flaws: The Gift, Hermetic Magus; Giant Blood\* Major Magical Focus (stone), Affinity with Terram\*, Enduring Magic, Improved Characteristics, Puissant Terram, Tough, Generous (Major), Necessary Condition (touching stone)\*, Plagued by Supernatural Entity, Deficient Auram
+Virtues and Flaws: The Gift, Hermetic Magus; Giant Blood\*, Major Magical Focus (stone), Affinity with Terram\*, Enduring Magic, Improved Characteristics, Puissant Terram, Tough, Generous (Major), Necessary Condition (touching stone)\*, Plagued by Supernatural Entity, Deficient Auram
 
 Personality Traits: Generous +6, Patient +3, Trusting +2, Vengeful +2
 
@@ -1993,7 +1995,7 @@ Fatigue Levels: OK, 0, -1, -3, -5, Unconscious
 
 Wound Penalties: -1 (1-5), -3 (6-10), -5 (11-15), Incapacitated (16-20)
 
-Abilities: Artes Liberales 1 (music), Carouse 2 (maintaining dignity), Charm 3 (the opposite sex), Code of Hermes 1 (dealing with mundanes). Etiquette 2 (nobility), Folk Ken 2 (nobles), Guile 2 (fast excuses), Latin 5 (musical terms), Magic Theory 3 (Imaginem), Music 4+2 (singing) Native Language 5 (noble style), Order of Hermes Lore 2 (Jerbiton), Parma Magica 1 (Mentem)
+Abilities: Artes Liberales 1 (music), Carouse 2 (maintaining dignity), Charm 3 (the opposite sex), Code of Hermes 1 (dealing with mundanes), Etiquette 2 (nobility), Folk Ken 2 (nobles), Guile 2 (fast excuses), Latin 5 (musical terms), Magic Theory 3 (Imaginem), Music 4+2 (singing), Native Language 5 (noble style), Order of Hermes Lore 2 (Jerbiton), Parma Magica 1 (Mentem)
 
 Arts: Cr 6, In 1, Mu 6, Pe 1, Re 6; An 0, Aq 0, Au 0, Co 5, He 0, Ig 0, Im 10, Me 0, Te 0, Vi 0
 
@@ -2019,7 +2021,7 @@ Customization Notes: The Jerbiton took Puissant Music as his free House-related 
 
 #### Mercere
 
-Characteristics: Int +2, Per 0 Pre 0, Com -1, Str 0, Sta +2, Dex +1, Qik +1
+Characteristics: Int +2, Per 0, Pre 0, Com -1, Str 0, Sta +2, Dex +1, Qik +1
 
 Size: 0
 
@@ -2067,7 +2069,7 @@ Customization Notes: The Mercere can take another three points of Flaws and as m
 
 #### Merinita
 
-Characteristics: Int +3, Per +1 Pre +1, Com +2, Str -1, Sta -1, Dex -1, Qik -1
+Characteristics: Int +3, Per +1, Pre +1, Com +2, Str -1, Sta -1, Dex -1, Qik -1
 
 Size: 0
 
@@ -2218,7 +2220,7 @@ Customization Notes: The Tytalus can take up to three more points of Flaws, and 
 
 #### Verditius
 
-Characteristics: Int +3, Per 0, Pre 0, Com 0, Str -3, Sta + 1, Dex + 1, Qik 0
+Characteristics: Int +3, Per 0, Pre 0, Com 0, Str -3, Sta +1, Dex +1, Qik 0
 
 Size: -2
 
@@ -2613,7 +2615,7 @@ Your character may start with any equipment or possessions she might reasonably 
 > 
 > Confidence Score: 1 (3)
 >
-> Virtues and Flaws: The Gift; Hermetic Magus; Puissant Art Perdo) (free Virtue), Flawless Magic, Affinity with Perdo, Enduring Constitution, Fast Caster, Hermetic Prestige, Premonitions, Second Sight, Strong-Willed; Blatant Gift, Driven (Hunt Enemies of the Order), Enemies (Renounced Magus and his Lackeys); Disfigured (Facial Burns)
+> Virtues and Flaws: The Gift; Hermetic Magus; Puissant Art (Perdo) (free Virtue), Flawless Magic, Affinity with Perdo, Enduring Constitution, Fast Caster, Hermetic Prestige, Premonitions, Second Sight, Strong-Willed; Blatant Gift, Driven (Hunt Enemies of the Order), Enemies (Renounced Magus and his Lackeys); Disfigured (Facial Burns)
 >
 > Personality Traits: Brave +3, Dedicated to Cause +3,
 >

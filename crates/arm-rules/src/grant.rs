@@ -64,7 +64,7 @@ pub enum Grant {
         params: BTreeMap<String, Id>,
         /// D74.4/row 55 (`docs/open-todos.md`, `docs/vf-audit/decisions.md`): a
         /// mythic-type grant defaults to the type's realm — Faerie Doctor's
-        /// Dowsing, Spirit Votary's Second Sight (ArMDE:2709). `None` for every
+        /// Dowsing, Spirit Votary's Second Sight (ArMDE:2711). `None` for every
         /// other `Fixed` grant (a House's free Virtue has no realm of its own
         /// to stamp). Consumed by `resolve_grant`, which stamps it onto the
         /// resolved `Selection`'s own `association` param

@@ -223,7 +223,7 @@ fn folded_identical_tuples_draw_one_finding_not_two() {
 
 /// Craft (Carpentry) and Craft ( carpentry ) are one Ability: the instance
 /// key is free text the player types, so a per-Ability cap (Necessary Aura's
-/// "once for any particular Ability", ArMDE:6553) counts them as one target.
+/// "once for any particular Ability", ArMDE:6555) counts them as one target.
 #[test]
 fn ability_instance_text_case_variants_are_one_ability_per_value() {
     let e = entity(vec![

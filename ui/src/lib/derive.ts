@@ -406,7 +406,7 @@ const REALM_ID_PREFIX = 'realm.';
  * The `realm-<slug>` Fluent label for a Realm parameter value, or `null` when
  * the value names no Realm.
  *
- * Folk Magic's second axis (`ArMDE:3980`) stores `realm.<slug>`. The four Realms are a closed engine
+ * Folk Magic's second axis (`ArMDE:3982`) stores `realm.<slug>`. The four Realms are a closed engine
  * taxonomy with no rules-i18n entry of their own, so their labels come from the
  * same `realm-<id>` family the Might picker and the Markdown export
  * (`Doc::taxonomy_label`) already read. Membership is tested against `REALMS`
@@ -557,7 +557,7 @@ export function selectionDisplayParams(
  * keys. A target is the whole `(item_ref, params)` tuple — that is literally the
  * engine's duplicate key (`validate_duplicate_selections`) — so a row that
  * disagrees on any other key aims at a different target and must not count
- * here. Folk Magic is why this exists: `ArMDE:3990` lets a second copy "align it to
+ * here. Folk Magic is why this exists: `ArMDE:3992` lets a second copy "align it to
  * the same Realm as before or pick a different one", so two copies may share a
  * spell category as long as their Realms differ, and counting the category axis
  * alone would grey out a legal choice. Omitted (or empty) for a
@@ -987,7 +987,7 @@ function admissibleCategoryReadings(item: PointItem): string[][] {
  * reading at once (`require_categories` needs a non-empty intersection with it,
  * `forbid_categories` an empty one), so within a reading a descriptor's secondary
  * category both admits a pick and rules one out. The rules name no fixed menu for a
- * Warping-owed slot (the pick is storyguide judgement, ArMDE:16630-16638), so the
+ * Warping-owed slot (the pick is storyguide judgement, ArMDE:16632-16640), so the
  * constraint is the only filter.
  *
  * **Where the mirror is deliberately wider than the engine's.** `open_pick_satisfies`
@@ -996,7 +996,7 @@ function admissibleCategoryReadings(item: PointItem): string[][] {
  * built before any pick exists and therefore before any reading is chosen, so it
  * asks the weaker question: does ANY reading this item can still be taken under
  * satisfy the constraint? Sufi is "either ... a Minor Social Status Virtue or a
- * Minor Supernatural Virtue" (ArMDE:5148-5155), so a slot closed to Supernatural
+ * Minor Supernatural Virtue" (ArMDE:5150-5157), so a slot closed to Supernatural
  * must still offer it — taken as Social Status the engine accepts it, and testing
  * the unnarrowed list alone would hide a legal choice with no route back to it.
  * The reading itself is then chosen in the `ParameterPicker` each open-grant row
@@ -1179,7 +1179,7 @@ export function multiParamValue(value: string | string[] | undefined): string[] 
  * A Virtue/Flaw whose descriptor names two categories may record which of them
  * it was taken as, in a parameter of the `category` domain (Sufi's `taken_as`:
  * "either as a Minor Social Status Virtue or a Minor Supernatural Virtue",
- * `ArMDE:5154`). Where such a value is
+ * `ArMDE:5156`). Where such a value is
  * recorded, ONLY that category is in force; otherwise the whole descriptor is,
  * exactly as before `taken_as` existed. The domain is read off the ruleset's own
  * parameter definition rather than matching the key name, so a second taken-as
@@ -1218,12 +1218,12 @@ export function selectionCategories(
  * An item appears under EVERY category it carries, because that is what the
  * rulebook itself does: its Virtue/Flaw indexes list each dual-category item
  * twice, once per category, with no "primary" among them. Sufi is at
- * `ArMDE:3248` under
- * "### Supernatural, Minor" (ArMDE:3203) and again at ArMDE:3300 under
- * "### Social Status, Minor" (ArMDE:3256); likewise Suppressed Gift (ArMDE:5372
- * Hermetic, Major / ArMDE:5440 Story, Major), Raised from the Dead (ArMDE:5436
- * Story, Major / ArMDE:5468 Supernatural, Major) and Visions (ArMDE:5632 Story,
- * Minor / ArMDE:5632 Supernatural, Minor). Filing such an item under one
+ * `ArMDE:3250` under
+ * "### Supernatural, Minor" (ArMDE:3205) and again at ArMDE:3302 under
+ * "### Social Status, Minor" (ArMDE:3258); likewise Suppressed Gift (ArMDE:5374
+ * Hermetic, Major / ArMDE:5442 Story, Major), Raised from the Dead (ArMDE:5438
+ * Story, Major / ArMDE:5470 Supernatural, Major) and Visions (ArMDE:5634 Story,
+ * Minor / ArMDE:5634 Supernatural, Minor). Filing such an item under one
  * heading only hid it from a player
  * browsing the other category — the very category that may be the one making it
  * legal for their character. The engine's two category checks are mirrors of each
@@ -1459,7 +1459,7 @@ export function incompatibleRefs(
  * Parameter values blocked for a selection of `item` at `exceptIndex` because
  * some OTHER selection of the SAME item already holds a value that conflicts
  * with it, per `PointItem.conditional_incompatible_with`'s
- * `forbids_same_item_values` (RC review-C item 2, ArMDE:7104) — Warped
+ * `forbids_same_item_values` (RC review-C item 2, ArMDE:7106) — Warped
  * Senses: a sibling holding Weak Sight blocks Sensitive Sight for this row,
  * and a sibling holding Sensitive Sight blocks Weak Sight right back, while
  * two copies of the SAME value (two Weak Sight) stay legal, exactly as the
@@ -1596,7 +1596,7 @@ export const RITUAL_MINIMUM_LEVEL_FALLBACK = 20;
 
 /**
  * The minimum level a spell can be learned at: a Ritual must be learned at the
- * ruleset's `ritual_min_level` (ArMDE:12365, "Ritual spells are always at
+ * ruleset's `ritual_min_level` (ArMDE:12367, "Ritual spells are always at
  * least level 20"), an ordinary
  * spell at 1.
  *
@@ -1957,7 +1957,7 @@ export function exemplarLabel(
  * An Ability requirement's label — the example the rules themselves name, where they
  * name one.
  *
- * The Core Rules demand "Latin 1" of every magus (ArMDE:2505). Since L2 the engine
+ * The Core Rules demand "Latin 1" of every magus (ArMDE:2507). Since L2 the engine
  * checks Latin itself (`parameter: language.latin`), and the exemplar is how the
  * demand is worded.
  *
@@ -2059,7 +2059,7 @@ export interface ChildhoodSlot {
  * key per slot would make the catalogue's shape code, and printing the slug raw
  * would render an id as a label. Both are forbidden.
  *
- * Source: ArMDE:2452-2456.
+ * Source: ArMDE:2454-2458.
  */
 export function childhoodSlots(
   localized: LocalizedRuleset,
@@ -2095,7 +2095,7 @@ export function childhoodSlots(
  * 1"), and an unanswered one falls back to the localized parameter hint. A
  * language picked from the list reads its display name, never its id (N4b).
  *
- * Source: ArMDE:2452-2456.
+ * Source: ArMDE:2454-2458.
  */
 export function childhoodEntryPreview(
   localized: LocalizedRuleset,
@@ -2146,7 +2146,7 @@ export type ChildhoodSlotFault = 'empty' | 'duplicate' | 'native';
  * A value picked from the list (N4b) compares as its display name, which within
  * one locale names exactly that value.
  *
- * Source: ArMDE:2446, :2452-2456.
+ * Source: ArMDE:2448, :2454-2458.
  */
 export function childhoodSlotFault(
   localized: LocalizedRuleset,
@@ -2753,7 +2753,7 @@ export interface GeneralXpAllocation {
  * policy for the identical reason — the two bars report the two halves of one
  * Virtue. Skilled Parens grants "an additional 60 experience points and 30 spell
  * levels during apprenticeship"
- * (ArMDE:5037), so whatever the spell
+ * (ArMDE:5039), so whatever the spell
  * bar does with the 30 the XP bar must do with the 60.
  *
  * A **positive** modifier is spent first and the base covers the rest, mirroring
@@ -3151,7 +3151,7 @@ export const UNBOUGHT_ROW_INDEX = -1;
 /**
  * The bought score one "+" press sets (R7, try-out finding 24). The shown score
  * is max(bought, granted floor), and only the score above the floor costs XP
- * (ArMDE:2707), so a press from at or below the floor jumps to floor + 1:
+ * (ArMDE:2709), so a press from at or below the floor jumps to floor + 1:
  * stepping a bought 0 to 1 under a floor of 1 would change nothing visible.
  * Above the floor it is the ordinary +1. Never past `max`.
  */

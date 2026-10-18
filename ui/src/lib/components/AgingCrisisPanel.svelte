@@ -16,11 +16,11 @@
   // local state, so there is nothing to thread through props.
   //
   // "Increase the character's Decrepitude first, and then roll on the Crisis
-  // Table." (ArMDE:16696) — the
+  // Table." (ArMDE:16698) — the
   // parent still mounts this AFTER its own aging-points distribution UI for
   // that reason: the points placed there are the increase that comes first,
   // and they are a term of the total read below.
-  // Source: ArMDE:16696-16715
+  // Source: ArMDE:16698-16717
 
   const preview = $derived(store.agingPreview);
   const draft = $derived(store.agingDraft);
@@ -47,7 +47,7 @@
       : store.t(`crisis-modifier-${modifier.source.kind}`);
   }
 
-  /** What the rules permit someone else to bring (`ArMDE:16711`), stated in full. */
+  /** What the rules permit someone else to bring (`ArMDE:16713`), stated in full. */
   function allowanceText(allowance: CrisisAllowance): string {
     return store.t(`crisis-allowance-${allowance.kind}`, {
       ability: itemName(allowance.ability),
@@ -115,7 +115,7 @@
             {store.t('crisis-survival-ease-factor', { ease: survival.ease_factor })}
           </p>
         {:else}
-          <!-- "Terminal illness. CrCo40 required to survive." (`ArMDE:16709`) —
+          <!-- "Terminal illness. CrCo40 required to survive." (`ArMDE:16711`) —
                an absent Ease Factor is NO roll, not an unbeatable one. -->
           <p data-testid="crisis-survival-no-roll">{store.t('crisis-survival-no-roll')}</p>
         {/if}
@@ -146,12 +146,12 @@
 
         {#each survival.allowances as allowance, i (i)}
           <!-- Stated, never scored: the attendant's Medicine belongs to a
-               character this sheet does not hold (`ArMDE:16711`). -->
+               character this sheet does not hold (`ArMDE:16713`). -->
           <p class="hint" data-testid="crisis-allowance-{i}">{allowanceText(allowance)}</p>
         {/each}
       </div>
     {:else}
-      <!-- "Bedridden for a week" (`ArMDE:16703`) is time, not a roll: there is
+      <!-- "Bedridden for a week" (`ArMDE:16705`) is time, not a roll: there is
            no survival read-out to give, and an empty one would read as
            "survivable on a 0". -->
       <p class="hint" data-testid="crisis-bedridden">{store.t('crisis-bedridden')}</p>

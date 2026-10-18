@@ -53,11 +53,11 @@ import { e2eFile } from '../wdio.conf.js';
 // The arithmetic is the rulebook's:
 //
 //   "Characters begin aging in the Winter after they turn 35. Every year, a
-//    character must roll on the aging table." (`ArMDE:16642`) — so a grog of 40 owes
+//    character must roll on the aging table." (`ArMDE:16644`) — so a grog of 40 owes
 //    five rolls, for ages 36 through 40.
 //   "AGING TOTAL: Stress die (no botch) + age/10 (round up) / - Living Conditions
-//    modifier / - Longevity Ritual modifier" (`ArMDE:16644-16646`).
-//   "Modifiers marked with an asterisk are cumulative with each other" (`ArMDE:16671`)
+//    modifier / - Longevity Ritual modifier" (`ArMDE:16646-16648`).
+//   "Modifiers marked with an asterisk are cumulative with each other" (`ArMDE:16673`)
 //    — a leper colony (-1) and a poor or unhealthy location (-2) stack to -3.
 //
 // For this grog, rolling for age 36 with a +1 ritual:
@@ -66,7 +66,7 @@ import { e2eFile } from '../wdio.conf.js';
 //   conditions     -(-3)              = +3   (subtracted, so a bad life costs)
 //   ritual         -(+1)              = -1
 //   standing total                    = +6
-//   stress die 8   8 + 6              = 14   → "1 Aging Point in Quickness" (`ArMDE:16680`)
+//   stress die 8   8 + 6              = 14   → "1 Aging Point in Quickness" (`ArMDE:16682`)
 describe('the guided aging step', () => {
   const AGE_INPUT = '[data-testid="age-input"]';
   const SCHEDULE = '[data-testid="aging-schedule"]';
@@ -77,7 +77,7 @@ describe('the guided aging step', () => {
   const TOTAL_FORMULA = '[data-testid="aging-total-formula"]';
   const CONDITIONS = '[data-testid="living-conditions"]';
   const CONDITIONS_TOTAL = '[data-testid="living-conditions-total"]';
-  // The two asterisked rows this grog lives under (`ArMDE:16665`, `ArMDE:16668`).
+  // The two asterisked rows this grog lives under (`ArMDE:16667`, `ArMDE:16670`).
   const LEPER_COLONY = 'living_condition.live_in_a_leper_colony';
   const POOR_LOCATION = 'living_condition.poor_or_unhealthy_location_typical_town';
   const condition = (id) => `[data-testid="living-condition-${id}"]`;
@@ -271,7 +271,7 @@ describe('the guided aging step', () => {
 
   it('reaches an aging step that owes a young character nothing', async () => {
     await startWizard('grog');
-    // B2/D41 (ArMDE:2884): every character must take one Social Status before
+    // B2/D41 (ArMDE:2886): every character must take one Social Status before
     // Next unblocks past `virtues_flaws` — free, so it does not touch this
     // spec's aging figures. This grog is reused by every later `it()` in this
     // describe (via `standOnWizardStep`), so this is the one place it needs it.
@@ -328,7 +328,7 @@ describe('the guided aging step', () => {
     expect(await $(ROLLS_NONE).isExisting()).toBe(false);
 
     // THE PHASE-ATTRIBUTION PROOF. "a character over the age of 35 must make aging
-    // rolls … before the game begins" (`ArMDE:2300`) — filed on the AGING phase, which is
+    // rolls … before the game begins" (`ArMDE:2302`) — filed on the AGING phase, which is
     // where the age is typed and the rolls are made. Counted EXACTLY: outside the
     // Review step only the docked panel is mounted, and it is filtered to the
     // current phase, so one finding here means this phase owns it.
@@ -349,7 +349,7 @@ describe('the guided aging step', () => {
     await $(condition(LEPER_COLONY)).click();
     await $(condition(POOR_LOCATION)).click();
 
-    // -1 and -2, cumulative with each other (`ArMDE:16671`) — the ENGINE's resolved
+    // -1 and -2, cumulative with each other (`ArMDE:16673`) — the ENGINE's resolved
     // modifier, not a sum the checklist made.
     await browser.waitUntil(async () => (await textOf(CONDITIONS_TOTAL)).includes('-3'), {
       timeout: STEP_TIMEOUT,
@@ -549,7 +549,7 @@ describe('the guided aging step', () => {
 
   it('takes a Longevity Ritual bonus a grog did not make himself', async () => {
     // THE GAP THIS STEP CLOSES. "You can perform Longevity Rituals for others, even
-    // for non-magi" (`ArMDE:10744`), but the editor's only home for the ritual is the
+    // for non-magi" (`ArMDE:10746`), but the editor's only home for the ritual is the
     // Possessions tab, which is magus-gated — so for a grog this guided step is the
     // one place the bonus can be entered at all.
     await $(LONGEVITY_ADD).click();
@@ -574,7 +574,7 @@ describe('the guided aging step', () => {
     await $(LONGEVITY_BONUS).waitForClickable({ timeout: STEP_TIMEOUT });
     await replaceValue(await $(LONGEVITY_BONUS), '1');
 
-    // Subtracted like the conditions (`ArMDE:16648`ArMDE: "a high Longevity Ritual modifier
+    // Subtracted like the conditions (`ArMDE:16650`ArMDE: "a high Longevity Ritual modifier
     // … indicate[s] longer life"), so +7 becomes +6.
     await browser.waitUntil(async () => (await textOf(TOTAL_FORMULA)).includes('+6'), {
       timeout: STEP_TIMEOUT,
@@ -612,12 +612,12 @@ describe('the guided aging step', () => {
     expect(parts).toContain('-1');
     expect(parts).not.toContain('−');
 
-    // 14 is "1 Aging Point in Qik" in the book's shorthand (`ArMDE:16680`) — and the
+    // 14 is "1 Aging Point in Qik" in the book's shorthand (`ArMDE:16682`) — and the
     // Characteristic reaches the player in words, through `characteristic-qik`.
     const outcome = await textOf(OUTCOME);
     expect(outcome).toContain('Quickness');
     expect(outcome).not.toContain('qik');
-    // 14 is well past the apparent-age threshold of 3 (`ArMDE:16654`).
+    // 14 is well past the apparent-age threshold of 3 (`ArMDE:16656`).
     expect(outcome).toContain('Apparent age increases by one year.');
 
     // THE LOAD-BEARING ASSERTION: a total is not an outcome. Nothing is written to
@@ -753,7 +753,7 @@ describe('the guided aging step', () => {
   });
 
   // Slice 6b8c, re-homed in Slice 3. "You can perform Longevity Rituals for others,
-  // even for non-magi" (`ArMDE:10744`), and the ritual this grog holds is a term of every
+  // even for non-magi" (`ArMDE:10746`), and the ritual this grog holds is a term of every
   // aging total it will ever roll — but the editor's only home for one was the
   // magus-gated Possessions tab, so once the wizard was finished the bonus could no
   // longer be corrected. The ritual now lives inside `AgingPanel`, so the Aging tab
@@ -825,14 +825,14 @@ describe('the guided aging step', () => {
 // The arithmetic is the rulebook's, and both halves of it are hand-checkable:
 //
 //   "AGING TOTAL: Stress die (no botch) + age/10 (round up) / - Living Conditions
-//    modifier / - Longevity Ritual modifier" (`ArMDE:16644-16646`).
+//    modifier / - Longevity Ritual modifier" (`ArMDE:16646-16648`).
 //   "13 | Gain sufficient Aging Points (in any Characteristics) to reach the next
-//    level in Decrepitude, and Crisis" (`ArMDE:16679`).
+//    level in Decrepitude, and Crisis" (`ArMDE:16681`).
 //   "**Crisis:** Increase the character's Decrepitude first, and then roll on the
-//    Crisis Table." (`ArMDE:16696`)
-//   "CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score" (`ArMDE:16698`).
+//    Crisis Table." (`ArMDE:16698`)
+//   "CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score" (`ArMDE:16700`).
 //   "15 | **Minor illness**. Stamina stress roll against an Ease Factor of 3 or
-//    CrCo20 to survive." (`ArMDE:16705`)
+//    CrCo20 to survive." (`ArMDE:16707`)
 //
 // For this grog of 40, rolling for age 36 with no Living Conditions and a ritual
 // worth 0:
@@ -842,7 +842,7 @@ describe('the guided aging step', () => {
 //   five points placed                       → Decrepitude Score 1 (five xp buys 1)
 //   simple die 10  10 + 4 + 1         = 15   → Minor illness, Ease Factor 3, CrCo20
 //
-// THE ORDER IS THE RULE. The five points are `ArMDE:16696`'s increase, so they are a term
+// THE ORDER IS THE RULE. The five points are `ArMDE:16698`'s increase, so they are a term
 // of the crisis total — which is why the panel withholds a reading until they are
 // placed, and why this spec types the crisis die BEFORE placing them and asserts
 // there is no total yet.
@@ -877,7 +877,7 @@ describe('the aging crisis', () => {
 
   it('sends a grog of 40 to the Crisis Table and asks for the second die', async () => {
     await startWizard('grog');
-    // B2/D41 (ArMDE:2884): every character must take one Social Status before
+    // B2/D41 (ArMDE:2886): every character must take one Social Status before
     // Next unblocks past `virtues_flaws` — free, so it does not touch this
     // spec's crisis figures. This grog is reused by every later `it()` in
     // this describe, so this is the one place it needs it.
@@ -896,7 +896,7 @@ describe('the aging crisis', () => {
     await $(SCHEDULE).waitForExist({ timeout: STEP_TIMEOUT });
 
     // A ritual worth 0 leaves the AGING TOTAL alone and is still a ritual the Crisis
-    // spends (`ArMDE:16650`). The ritual is part of `AgingPanel`, so this guided step and
+    // spends (`ArMDE:16652`). The ritual is part of `AgingPanel`, so this guided step and
     // the editor's Aging tab both reach it; the step is where the Crisis is resolved,
     // so this is where the note can be provoked.
     await $(LONGEVITY_ADD).waitForExist({ timeout: STEP_TIMEOUT });
@@ -909,7 +909,7 @@ describe('the aging crisis', () => {
     await $(LONGEVITY_BONUS).waitForClickable({ timeout: STEP_TIMEOUT });
     await replaceValue(await $(LONGEVITY_BONUS), '0');
 
-    // 9 + 4 = 13, which is the first Crisis row (`ArMDE:16679`).
+    // 9 + 4 = 13, which is the first Crisis row (`ArMDE:16681`).
     await replaceValue(await $(DIE_INPUT), '9');
     await browser.waitUntil(async () => (await textOf(AGING_TOTAL)).includes('13'), {
       timeout: STEP_TIMEOUT,
@@ -929,7 +929,7 @@ describe('the aging crisis', () => {
 
   it('withholds the reading until the Aging Points are placed', async () => {
     // THE LOAD-BEARING ASSERTION of the whole slice. "Increase the character's
-    // Decrepitude first, and then roll on the Crisis Table" (`ArMDE:16696`) — those five
+    // Decrepitude first, and then roll on the Crisis Table" (`ArMDE:16698`) — those five
     // points ARE the increase, and they are a term of the crisis total. Read off the
     // character standing here, the same die answers 14; the app would then show 14
     // and write 15. So with the die typed and nothing placed, there is no reading.
@@ -962,7 +962,7 @@ describe('the aging crisis', () => {
   });
 
   it('names the row and says what surviving it would take', async () => {
-    // "15 | **Minor illness**." (`ArMDE:16705`) — the row's text comes from
+    // "15 | **Minor illness**." (`ArMDE:16707`) — the row's text comes from
     // `rules/i18n/<lang>/aging.json` keyed by its id, and the severity through
     // Fluent. Neither may reach the screen as a slug.
     const row = await textOf(CRISIS_ROW);
@@ -975,7 +975,7 @@ describe('the aging crisis', () => {
     expect(await textOf(CRISIS_RITUAL)).toContain('20');
 
     // "An Int + Medicine roll against an Ease Factor of 6 … if the doctor botches the
-    // character must subtract 3" (`ArMDE:16711`) — stated, never scored, because the
+    // character must subtract 3" (`ArMDE:16713`) — stated, never scored, because the
     // Medicine belongs to a character this sheet does not hold.
     const allowance = await textOf(CRISIS_ALLOWANCE);
     expect(allowance).toContain('Medicine');
@@ -1009,7 +1009,7 @@ describe('the aging crisis', () => {
     expect(logged).toContain('10');
     expect(logged).not.toContain('crisis.minor_illness');
 
-    // "its power is spent, and the focal ritual must be performed again" (`ArMDE:16650`) —
+    // "its power is spent, and the focal ritual must be performed again" (`ArMDE:16652`) —
     // reported, because the engine leaves the ritual entry exactly where it found it,
     // so this note is the only place the player can hear about it.
     await $(AGING_NOTE_0).waitForExist({ timeout: STEP_TIMEOUT });

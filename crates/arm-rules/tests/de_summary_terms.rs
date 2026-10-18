@@ -94,33 +94,33 @@ struct SummaryCase {
 }
 
 const CASES: &[SummaryCase] = &[
-    // Verbatim: ArMDE:4040, first sentence in both locales.
+    // Verbatim: ArMDE:4042, first sentence in both locales.
     SummaryCase {
         id: "virtue.the_gift",
         en: "You have the ability to work magic.",
         de: "Du besitzt die Fähigkeit, Magie zu wirken.",
     },
-    // Verbatim: ArMDE:7145, second sentence cut at the comma in both locales.
+    // Verbatim: ArMDE:7147, second sentence cut at the comma in both locales.
     SummaryCase {
         id: "flaw.weak_parens",
         en: "You gain 60 fewer experience points and 30 fewer spell levels from apprenticeship.",
         de: "Du erhältst 60 Erfahrungspunkte und 30 Zauberstufen weniger aus der Lehrlingschaft.",
     },
-    // Term + verbatim: the second sentence is ArMDE:4144's last, verbatim in
+    // Term + verbatim: the second sentence is ArMDE:4146's last, verbatim in
     // both locales; the book's own German says Reputation, as the table does.
     SummaryCase {
         id: "virtue.hermetic_prestige",
         en: "Other magi look up to you. You gain a Reputation of level 4 within the Order.",
         de: "Andere Magi blicken zu dir auf. Du erhältst eine Reputation der Stufe 4 innerhalb des Ordens.",
     },
-    // Term only: the English is app-condensed (ArMDE:5776), so the German
+    // Term only: the English is app-condensed (ArMDE:5778), so the German
     // stays a translation of it; Ruf -> Reputation, with agreement.
     SummaryCase {
         id: "flaw.black_sheep",
         en: "Estranged from a prestigious family; a bad Reputation at level 2 among those who respect them.",
         de: "Von einer angesehenen Familie entfremdet; eine schlechte Reputation der Stufe 2 bei denen, die sie achten.",
     },
-    // Term only: the English is app-condensed (ArMDE:6383).
+    // Term only: the English is app-condensed (ArMDE:6385).
     SummaryCase {
         id: "flaw.infamous",
         en: "A level-4 bad Reputation for horrible deeds of your choosing.",
@@ -129,7 +129,7 @@ const CASES: &[SummaryCase] = &[
     // Term (F-65's first defect): Fähigkeit -> Fertigkeit. Since T1
     // (after-deadline answer 5) both locales also carry the granted score, as
     // F-65 gave Dowsing; the Ability is named by its glossary term
-    // (`fertigkeiten.md:83`) rather than as „die gleichnamige“ (ArMDE:4999).
+    // (`fertigkeiten.md:83`) rather than as „die gleichnamige“ (ArMDE:5001).
     SummaryCase {
         id: "virtue.sense_holiness_and_unholiness",
         en: "Feel the presence of good and evil. Confers the Sense Holiness and Unholiness Ability at 1.",

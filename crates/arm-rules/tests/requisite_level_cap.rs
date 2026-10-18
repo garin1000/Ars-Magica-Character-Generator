@@ -5,12 +5,12 @@
 //! conflict found, open questions).
 //!
 //! `effective/spell.rs::spell_level_cap` computes Technique + Form + Int +
-//! Magic Theory + 3 (ArMDE:2533) from the spell's PRIMARY Technique/Form only
+//! Magic Theory + 3 (ArMDE:2535) from the spell's PRIMARY Technique/Form only
 //! — it never reads `Spell::requisites`, even though :2465's own second
 //! sentence says "If the spell has requisites (see page 311), they apply to
 //! this total as well." `derived/casting.rs::fold_requisite` already
 //! implements the identical lesser-of-primary-and-requisite fold for the
-//! Casting Total (ArMDE:12381-12385); this slice folds the same rule into the
+//! Casting Total (ArMDE:12383-12387); this slice folds the same rule into the
 //! cap instead, reached only through `validation::validate`'s
 //! `spell_level_exceeds_cap` issue (`validation/magus.rs::validate_spell_level_cap`),
 //! since the public `spell_level_cap`/`spell_level_caps` functions take no
@@ -21,7 +21,7 @@
 //! correct, rules-derived `cap` value validation should report and is RED
 //! against today's engine unless its own comment says otherwise.
 //!
-//! Source: ArMDE:2533 (`If the spell has requisites ... they apply to this
+//! Source: ArMDE:2535 (`If the spell has requisites ... they apply to this
 //! total as well`), :12309-12311 (the base min-fold and several-requisites
 //! rules, identical wording context to the Casting Total), :3737 (Elemental
 //! Magic — "you use the primary Form to calculate totals, even if the
@@ -143,7 +143,7 @@ fn cap_issue_arg(entity: &Entity, ruleset: &Ruleset, spell_id: &str) -> Option<S
         .and_then(|issue| issue.args.get("cap").cloned())
 }
 
-// --- Base min rule: ArMDE:12381, folded the same way as the Casting Total --
+// --- Base min rule: ArMDE:12383, folded the same way as the Casting Total --
 
 #[test]
 fn technique_requisite_lower_than_the_technique_lowers_the_cap() {
@@ -166,7 +166,7 @@ fn technique_requisite_lower_than_the_technique_lowers_the_cap() {
     assert_eq!(
         cap_issue_arg(&e, &ruleset, "spell.obliteration_of_the_metallic_barrier"),
         Some("16".to_string()),
-        "ArMDE:2533/:12309: a lower Technique requisite must replace the main Technique score in the cap"
+        "ArMDE:2535/:12309: a lower Technique requisite must replace the main Technique score in the cap"
     );
 }
 
@@ -188,7 +188,7 @@ fn form_requisite_lower_than_the_form_lowers_the_cap() {
     assert_eq!(
         cap_issue_arg(&e, &ruleset, "spell.rain_of_stones"),
         Some("15".to_string()),
-        "ArMDE:2533/:12309: a lower Form requisite must replace the main Form score in the cap"
+        "ArMDE:2535/:12309: a lower Form requisite must replace the main Form score in the cap"
     );
 }
 
@@ -211,11 +211,11 @@ fn requisite_higher_than_both_primary_arts_leaves_the_cap_unchanged() {
     assert_eq!(
         cap_issue_arg(&e, &ruleset, "spell.the_crystal_dart"),
         None,
-        "ArMDE:12381: a higher requisite must never lower the cap, so no issue is reported"
+        "ArMDE:12383: a higher requisite must never lower the cap, so no issue is reported"
     );
 }
 
-// --- Several requisites: ArMDE:12383 ----------------------------------------
+// --- Several requisites: ArMDE:12385 ----------------------------------------
 
 #[test]
 fn two_form_requisites_in_the_same_category_fold_to_the_lowest_of_the_group() {
@@ -246,7 +246,7 @@ fn two_form_requisites_in_the_same_category_fold_to_the_lowest_of_the_group() {
     assert_eq!(
         cap_issue_arg(&e, &ruleset, "spell.test_two_form_requisites"),
         Some("17".to_string()),
-        "ArMDE:12383: two requisites in the same class must fold to the lowest of the group"
+        "ArMDE:12385: two requisites in the same class must fold to the lowest of the group"
     );
 }
 
@@ -272,11 +272,11 @@ fn requisites_for_both_technique_and_form_fold_independently() {
     assert_eq!(
         cap_issue_arg(&e, &ruleset, "spell.fog_of_confusion"),
         Some("8".to_string()),
-        "ArMDE:12383: a Technique requisite and a Form requisite must fold independently"
+        "ArMDE:12385: a Technique requisite and a Form requisite must fold independently"
     );
 }
 
-// --- Deficient Art as a requisite: ArMDE:12383 (closing sentence) ----------
+// --- Deficient Art as a requisite: ArMDE:12385 (closing sentence) ----------
 
 #[test]
 fn deficient_requisite_still_lowers_the_cap_even_when_it_does_not_numerically_bind() {
@@ -286,7 +286,7 @@ fn deficient_requisite_still_lowers_the_cap_even_when_it_does_not_numerically_bi
     // min-rule alone would leave the cap unaffected: 10 + 10 + 3 = 23) — but
     // Rego is Deficient (flaw.deficient_technique), and using a Deficient Art
     // as a requisite still halves the whole cap (the cap is a Lab Total,
-    // ArMDE:2533, and ArMDE:5982/:5915's halving reaches a requisite Art, not
+    // ArMDE:2535, and ArMDE:5984/:5915's halving reaches a requisite Art, not
     // only a primary one): halve(23) = 11 (floor). Level 20 > 11, so the
     // engine must report the issue with cap "11". Today `spell_level_cap`'s
     // deficiency check only reads the spell's own primary Technique/Form,
@@ -309,18 +309,18 @@ fn deficient_requisite_still_lowers_the_cap_even_when_it_does_not_numerically_bi
     assert_eq!(
         cap_issue_arg(&e, &ruleset, "spell.obliteration_of_the_metallic_barrier"),
         Some("11".to_string()),
-        "ArMDE:12383: a Deficient requisite Art halves the cap even when it does not numerically bind"
+        "ArMDE:12385: a Deficient requisite Art halves the cap even when it does not numerically bind"
     );
 }
 
-// --- Elemental Magic exception: ArMDE:3808 ----------------------------------
+// --- Elemental Magic exception: ArMDE:3810 ----------------------------------
 
 #[test]
 fn elemental_magic_uses_the_primary_form_for_the_cap_even_when_an_elemental_requisite_is_lower() {
     // "if a spell with one of these Forms as its primary Form has another
     // element as a requisite, you use the primary Form to calculate totals,
     // even if the requisite is lower" — generic "totals" wording (not
-    // casting-specific), and ArMDE:2533 calls this cap itself a Lab Total, so
+    // casting-specific), and ArMDE:2535 calls this cap itself a Lab Total, so
     // the exception governs it too. spell.rain_of_stones: Mu/Au, level 20,
     // requisite art.terram — both Auram and Terram are elemental Forms
     // (virtue.elemental_magic's own `forms` list). Mu 9, Au 10 (bought),
@@ -350,7 +350,7 @@ fn elemental_magic_uses_the_primary_form_for_the_cap_even_when_an_elemental_requ
     assert_eq!(
         cap_issue_arg(&e, &ruleset, "spell.rain_of_stones"),
         None,
-        "ArMDE:3808: Elemental Magic must use the primary elemental Form for the cap, never a lower elemental requisite"
+        "ArMDE:3810: Elemental Magic must use the primary elemental Form for the cap, never a lower elemental requisite"
     );
 }
 
@@ -376,11 +376,11 @@ fn a_spell_whose_level_remains_at_or_below_the_folded_cap_is_not_reported() {
     assert_eq!(
         cap_issue_arg(&e, &ruleset, "spell.rope_of_bronze"),
         None,
-        "ArMDE:2533/:12309: a spell at or below the folded cap must not be reported"
+        "ArMDE:2535/:12309: a spell at or below the folded cap must not be reported"
     );
 }
 
-// --- Magical Focus doubling (ArMDE:4474, D81.5) -----------------------------
+// --- Magical Focus doubling (ArMDE:4476, D81.5) -----------------------------
 
 #[test]
 fn within_focus_marker_doubles_the_lowest_folded_score_and_can_admit_an_otherwise_illegal_level() {
@@ -394,7 +394,7 @@ fn within_focus_marker_doubles_the_lowest_folded_score_and_can_admit_an_otherwis
     // Cr 25, Au 20, Re 5 (Technique-class requisite, lower than Cr) ->
     // folded Technique = min(25, 5) = 5. cap0 (no focus) = 5 + 20 + 0 + 0 + 3
     // = 28. Marked within_focus: focus doubles the lower of the two FOLDED
-    // scores, min(5, 20) = 5, added before any halving (ArMDE:4474, "the
+    // scores, min(5, 20) = 5, added before any halving (ArMDE:4476, "the
     // lowest applicable score may be one of the requisites") ->
     // cap_focus = 28 + 5 = 33. Level 40 > 33, so the issue still fires, but
     // with the correct focused cap "33" — not "28" (the fold alone, ignoring
@@ -426,7 +426,7 @@ fn within_focus_marker_doubles_the_lowest_folded_score_and_can_admit_an_otherwis
     assert_eq!(
         cap_issue_arg(&e, &ruleset, "spell.test_focus_requisite"),
         Some("33".to_string()),
-        "ArMDE:4474: a spell marked within_focus must double the lowest FOLDED score \
+        "ArMDE:4476: a spell marked within_focus must double the lowest FOLDED score \
          (including a requisite that won the fold) before the cap is compared to the level"
     );
 }

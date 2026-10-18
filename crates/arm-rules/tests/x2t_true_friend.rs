@@ -1,7 +1,7 @@
 //! X2t (`docs/vf-audit/decisions.md` D60 point 3) — True Friend is a
-//! first-class twin of True Love. ArMDE:5248 ("This Virtue may be renamed
+//! first-class twin of True Love. ArMDE:5250 ("This Virtue may be renamed
 //! 'True Friend' to cover equally close attachments which are not romantic")
-//! and ArMDE:6946 ("This Story Hook may be renamed 'True Friend' to cover
+//! and ArMDE:6948 ("This Story Hook may be renamed 'True Friend' to cover
 //! characters with whom you are very closely linked, but not in a romantic
 //! way") are the *only* two mentions of "True Friend" in the English core
 //! rulebook (confirmed by grep against the full text) — there is no separate
@@ -130,7 +130,7 @@ fn flaw_true_friend_major_copies_true_love_majors_mechanics() {
         new.source, twin.source,
         "D60: True Friend [Major] cites the SAME source (file, lines, anchor) as True Love \
          [Major] — there is no separate '#### True Friend' heading, only a rename sentence \
-         inside True Love's own passage (ArMDE:6946)"
+         inside True Love's own passage (ArMDE:6948)"
     );
 }
 
@@ -184,11 +184,11 @@ fn virtue_true_friend_pc_copies_true_love_pcs_mechanics() {
     assert_eq!(
         new.source, twin.source,
         "D60: True Friend (PC) cites the SAME source as True Love (PC) (ArMDE:5173-5178, the \
-         rename sentence is ArMDE:5248, inside True Love (PC)'s own passage)"
+         rename sentence is ArMDE:5250, inside True Love (PC)'s own passage)"
     );
 }
 
-/// D60: "the major/minor exclusion is mirrored" — ArMDE:6948 states alternate,
+/// D60: "the major/minor exclusion is mirrored" — ArMDE:6950 states alternate,
 /// mutually exclusive competence levels for the SAME named NPC, exactly the
 /// D44-entailment shape `x4_incompatibilities.rs::ENTAILED_TWIN_PAIRS` already
 /// pins for `flaw.true_love_major`/`_minor`. True Friend cites the identical

@@ -41,8 +41,8 @@ use crate::types::CreationPhase;
 /// `den == 0` would otherwise make every score under the Affinity free, which is
 /// the one direction that must never fail open.
 ///
-/// Source: ArMDE:3443-3449, worked
-/// example `ArMDE:2511`.
+/// Source: ArMDE:3445-3451, worked
+/// example `ArMDE:2513`.
 pub(crate) fn charged_cost(table_xp: u32, affinity: Option<(u8, u8)>) -> u32 {
     match affinity {
         Some((num, den)) if num != 0 && den != 0 && table_xp != 0 => {
@@ -73,7 +73,7 @@ pub(crate) fn best_affinity(multipliers: impl Iterator<Item = (u8, u8)>) -> Opti
 /// The Affinity multiplier applying to one ability instance, if any
 /// ([`Effect::AffinityAbilityCost`] targeting it). Matches the instance exactly,
 /// like [`ability_bonus`]. `pub(crate)` so the age-cap validator can read whether
-/// an Ability carries an Affinity (which raises its age cap by +2, ArMDE:3445).
+/// an Ability carries an Affinity (which raises its age cap by +2, ArMDE:3447).
 pub(crate) fn ability_affinity(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -691,7 +691,7 @@ pub(crate) fn resolve_instance(
 /// pool already implies permission for what it funds... since the grant would
 /// otherwise be unspendable" is right about *ownership* and wrong about
 /// *funding*, which is exactly D43's correction (`virtue.privileged_upbringing`,
-/// ArMDE:4877-4879: "You may not... buy Academic or Martial Abilities with your
+/// ArMDE:4879-4881: "You may not... buy Academic or Martial Abilities with your
 /// normal pool of experience points unless you have another Virtue or Flaw
 /// permitting that").
 pub(crate) struct AbilityAuthorizations {
@@ -734,7 +734,7 @@ pub(crate) fn ability_is_authorized(
 /// target — a competence bonus tied to a specific Ability instance is itself
 /// permission to own it, since the bonus could never apply to an Ability the
 /// character may not buy (Student of (Realm)'s "even if you cannot learn other
-/// Arcane Abilities", ArMDE:5125). A [`Effect::RestrictedAbilityXp`] pool
+/// Arcane Abilities", ArMDE:5127). A [`Effect::RestrictedAbilityXp`] pool
 /// grants POOL-IMPLIED access only — experience earmarked for a category is
 /// evidence the category is permitted UP TO WHAT THE POOL FUNDS, which is what
 /// makes Warrior (Martial XP) and Arcane Lore (Arcane XP) work without further
@@ -911,7 +911,7 @@ pub(crate) fn ability_authorizations(entity: &Entity, ruleset: &Ruleset) -> Abil
                 // Ability/Art/Characteristic bonuses and Affinities (including
                 // the group form) target or discount something already legally
                 // owned rather than granting the right to own it (Puissant
-                // Ability: ArMDE:4885-4887);
+                // Ability: ArMDE:4887-4889);
                 // the XP/budget/derived-stat grants (spell levels, general XP,
                 // later-life rate, confidence, mastery, item levels, True
                 // Faith/Warping/Might/Power/Reputation, size, characteristic
@@ -1109,7 +1109,7 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
         // free: the player "will not need to spend experience points for the
         // first point". So only the score above the granted floor is charged —
         // the floor's own table cost is subtracted before Affinity is applied.
-        // Source: ArMDE:2707.
+        // Source: ArMDE:2709.
         let floor = granted_ability_floor(
             entity,
             ruleset,
@@ -1192,13 +1192,13 @@ fn build_spends(entity: &Entity, ruleset: &Ruleset) -> Vec<Spend> {
             general_eligible: true,
         });
     }
-    // Spell Mastery is an Ability (ArMDE:9588, :7214) bought from the
-    // Ability advancement table (ArMDE:16029, :16033-16056). Flawless Magic auto-masters
+    // Spell Mastery is an Ability (ArMDE:9590, :7216) bought from the
+    // Ability advancement table (ArMDE:16031, :16035-16058). Flawless Magic auto-masters
     // every spell at a free floor (charge only above it, like a granted Supernatural
     // floor) AND doubles all mastery Advancement Totals (an Affinity that halves the
     // charge). The mastery pool (Mastered Spells) — not the ability-restricted pools
     // — plus the general pool fund it.
-    // Source: ArMDE:3958-3960, :4542-4545.
+    // Source: ArMDE:3960-3962, :4544-4547.
     let mastery_floor = spell_mastery_floor(entity, ruleset);
     let mastery_floor_table = if mastery_floor > 0 {
         ruleset.advancement.xp_for_score(mastery_floor).unwrap_or(0)
@@ -1342,7 +1342,7 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
 
 /// Childhood's native-language pool — pool kind 2 of 5 [`build_flow_pools`]
 /// assembles. `None` when no native language is set (no pool is created for a
-/// language nobody picked). Source: ArMDE:2446.
+/// language nobody picked). Source: ArMDE:2448.
 fn childhood_native_language_pool(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -1367,7 +1367,7 @@ fn childhood_native_language_pool(
 
 /// Childhood's restricted-spread pool — pool kind 3 of 5 [`build_flow_pools`]
 /// assembles. Always present alongside a life-stage budget (unlike the native
-/// pool, which needs a language actually set). Source: ArMDE:2446.
+/// pool, which needs a language actually set). Source: ArMDE:2448.
 fn childhood_spread_pool(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -1394,10 +1394,10 @@ fn childhood_spread_pool(
 
 /// A magus's later-life pool — pool kind 4 of 5 [`build_flow_pools`] assembles:
 /// the years between childhood and being taken as an apprentice, which buy "any
-/// Abilities" (`ArMDE:2282`) and never an Art, and not an Arcane, Academic or Martial
+/// Abilities" (`ArMDE:2284`) and never an Art, and not an Arcane, Academic or Martial
 /// Ability either — "magi can only spend experience points on Arcane, Academic
 /// and Martial Abilities before apprenticeship if they have a Virtue which
-/// allows them to do so" (`ArMDE:2503`). A Virtue that does allow it (Covenant
+/// allows them to do so" (`ArMDE:2505`). A Virtue that does allow it (Covenant
 /// Upbringing, Educated, Warrior) widens the pool through the same
 /// authorizations the ownership check reads, so the two cannot disagree.
 ///
@@ -1407,9 +1407,9 @@ fn childhood_spread_pool(
 /// unauthorized one is already an error and funding it here changes nothing.
 ///
 /// `None` when `budget.later_life_xp == 0` — a grog or companion never calls
-/// this at all (later life is their general pool, `ArMDE:2460`, and the categories
+/// this at all (later life is their general pool, `ArMDE:2462`, and the categories
 /// are gated by an error on the character instead; a magus's category gate is
-/// waived whole-character, `ArMDE:7222`, so this pool is the only place the "before
+/// waived whole-character, `ArMDE:7224`, so this pool is the only place the "before
 /// apprenticeship" half can live).
 fn magus_later_life_pool(
     entity: &Entity,
@@ -1520,7 +1520,7 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
     if let Some((rules, budget)) = &life_stage_budget {
         // D40/D2: a childhood replacement (Feral Upbringing) swaps BOTH
         // ordinary childhood pools for one restricted pool of its own — no
-        // native-language carve-out at all, matching ArMDE:6183's "may not
+        // native-language carve-out at all, matching ArMDE:6185's "may not
         // start with a score in a Language" (never merely an unset one).
         if let Some((amount, abilities, categories)) =
             life_stage_replacement(entity, ruleset, LifeStageBlock::ChildhoodSpread)
@@ -1554,7 +1554,7 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
         }
         // D40/D2: an apprenticeship-shaped replacement (Redcap, Lone Redcap)
         // funds its own restricted pool — SOURCE-fed, never `general`: its XP
-        // does not buy Arts, matching ArMDE:4919's Abilities-only categories.
+        // does not buy Arts, matching ArMDE:4921's Abilities-only categories.
         if let Some((amount, abilities, categories)) =
             life_stage_replacement(entity, ruleset, LifeStageBlock::Apprenticeship)
         {
@@ -1738,27 +1738,27 @@ pub fn spell_mastery_xp_used(entity: &Entity, ruleset: &Ruleset) -> u32 {
 ///
 /// The general pool funds anything, so it is the block whose experience the rules
 /// let buy Arts as well as Abilities. For a **magus** that is apprenticeship —
-/// "These experience points can be spent on Arts or Abilities" (`ArMDE:2503`) — with
+/// "These experience points can be spent on Arts or Abilities" (`ArMDE:2505`) — with
 /// later life a restricted, Abilities-only pool ([`magus_later_life_pool`]). For a
 /// grog or companion there is no apprenticeship and later life is itself
-/// unrestricted (`ArMDE:2460`), so it is the general pool. A directly-entered character
+/// unrestricted (`ArMDE:2462`), so it is the general pool. A directly-entered character
 /// uses the typed `xp_pool`. Decided here, once: Skilled/Weak Parens (and any
 /// GeneralXp effect) then adjust it — "an additional 60 experience points … during
-/// apprenticeship" (`ArMDE:5037`) — and a net-negative grant clamps at 0 rather than
+/// apprenticeship" (`ArMDE:5039`) — and a net-negative grant clamps at 0 rather than
 /// underflowing.
 ///
 /// A magus's years past its Gauntlet join that same general pool rather than
 /// forming a block of their own: "Divide 30 points per year between experience
 /// points in Arts, experience points in Abilities, and levels of spells"
-/// (`ArMDE:2284`), "Each point can be an experience point in an Art or Ability or one
-/// level of spell" (`ArMDE:2539`) — Arts included, which is precisely what makes a pool
-/// general. The Academic/Arcane/Martial gate does not narrow them either: `ArMDE:2503`
+/// (`ArMDE:2286`), "Each point can be an experience point in an Art or Ability or one
+/// level of spell" (`ArMDE:2541`) — Arts included, which is precisely what makes a pool
+/// general. The Academic/Arcane/Martial gate does not narrow them either: `ArMDE:2505`
 /// restricts only what a magus may buy "**before** apprenticeship", and "Magi
 /// without a specific Virtue may only buy Academic Abilities during or after
-/// apprenticeship" (`ArMDE:7222`) says the years after it are on the permitted side.
+/// apprenticeship" (`ArMDE:7224`) says the years after it are on the permitted side.
 /// So there is no restricted pool and no life-stage block to add — the block that
 /// funds anything is the general pool and needs no slug.
-/// Source: ArMDE:2284, :2503, :2539, :7222.
+/// Source: ArMDE:2286, :2505, :2541, :7224.
 ///
 /// Recomputed here rather than threaded out of `build_flow_pools`: both are
 /// cheap, pure, side-effect-free lookups (a profile map lookup; a life-stage
@@ -2614,7 +2614,7 @@ mod tests {
     /// (C1) contribute a permission; every other effect is a no-op.
     /// `AbilityBonus` (Puissant Ability) stands in
     /// for the rest — it names a target ability via `params[param]` but, per the
-    /// rules text (ArMDE:4885-4887), grants no permission to own that ability,
+    /// rules text (ArMDE:4887-4889), grants no permission to own that ability,
     /// only a bonus once it is already legally held. D43 additionally
     /// characterizes which of the two contributes to EACH half.
     #[test]

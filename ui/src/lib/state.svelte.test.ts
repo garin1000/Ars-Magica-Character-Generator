@@ -2432,7 +2432,7 @@ describe('magic possessions', () => {
   });
 
   // Penetration is bought with levels out of the SAME budget as the level
-  // (ArMDE:4090), so it has to be editable or the budget bar charges for
+  // (ArMDE:4092), so it has to be editable or the budget bar charges for
   // something the player cannot enter. Clamped to u16 like the level itself.
   it('edits a power Penetration and clamps it to u16', () => {
     store.addPower();
@@ -2446,7 +2446,7 @@ describe('magic possessions', () => {
     expect(store.entity.powers?.[0].penetration).toBe(65535);
   });
 
-  // Focus Power's pool is a SECOND currency (ArMDE:3970): 2 points per level of
+  // Focus Power's pool is a SECOND currency (ArMDE:3972): 2 points per level of
   // effect, 1 per point of Penetration, out of 25 per copy of the Virtue. Its
   // level is a ceiling ("the maximum level of effect"), so it lives in its own
   // list rather than among the level-budget powers.
@@ -2556,7 +2556,7 @@ describe('integer clamps at the Tauri boundary', () => {
   });
 
   // A cord is bounded by the RULE, not by the serde width: "rated from 0 to +5 …
-  // a score of +5 (the maximum)" (ArMDE:10908). Storing a 6 gave the
+  // a score of +5 (the maximum)" (ArMDE:10910). Storing a 6 gave the
   // engine's three cord consumers a value they read inconsistently (one clamps at
   // 5, two do not), so one entered number produced three contradictory read-outs.
   it('clamps a familiar cord to the rules maximum of +5, not to u8', () => {
@@ -4596,10 +4596,10 @@ describe('addAbility', () => {
 
 // --- raiseUnboughtAbility() -------------------------------------------------
 
-// Try-out finding 24 (R7): a Virtue-granted Ability (Second Sight 1, ArMDE:4961)
+// Try-out finding 24 (R7): a Virtue-granted Ability (Second Sight 1, ArMDE:4963)
 // shows as an unbought row whose "+" did nothing. Decided: "+" on that row buys
 // it, as ONE action. The engine charges only the score above the free floor
-// (`effective/xp.rs::build_spends`, ArMDE:2707) and shows max(bought, floor), so a
+// (`effective/xp.rs::build_spends`, ArMDE:2709) and shows max(bought, floor), so a
 // bought 1 under a floor of 1 would change nothing visible: the first real step
 // is floor + 1.
 describe('raiseUnboughtAbility', () => {
@@ -6075,7 +6075,7 @@ describe('the aging roll draft', () => {
   });
 
   it('keeps the Crisis die off the entity too, and asks the engine again for each', async () => {
-    // The Simple Die of `ArMDE:16698` is player input exactly as the stress die is —
+    // The Simple Die of `ArMDE:16700` is player input exactly as the stress die is —
     // the engine has no `rand` dependency and rolls neither — so it lives in the
     // draft and the document stays clean.
     await store.createCharacter('companion');
@@ -6094,7 +6094,7 @@ describe('the aging roll draft', () => {
     expect(store.agingDraft.crisisDie).toBe(10);
 
     // Placing the points changes the CRISIS TOTAL, because those points ARE the
-    // Decrepitude increase `ArMDE:16696` puts first — so the reading has to be asked
+    // Decrepitude increase `ArMDE:16698` puts first — so the reading has to be asked
     // for again, not left standing.
     vi.mocked(ipc.agingPreview).mockClear();
     store.setAgingDistribution('sta', 5);
@@ -6123,7 +6123,7 @@ describe('the aging roll draft', () => {
     // Crisis as owed and unrolled however carefully the player rolled it.
     expect(vi.mocked(ipc.agingApply).mock.lastCall?.slice(1)).toEqual([40, 9, { sta: 5 }, 10]);
     // "its power is spent, and the focal ritual must be performed again"
-    // (`ArMDE:16650`) — the entity keeps the ritual, so only the note can say this.
+    // (`ArMDE:16652`) — the entity keeps the ritual, so only the note can say this.
     expect(store.agingNotes).toEqual([{ kind: 'longevity_ritual_spent' }]);
 
     store.clearAgingDraft();

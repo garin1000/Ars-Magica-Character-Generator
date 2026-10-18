@@ -164,7 +164,7 @@ describe('WizardStep', () => {
   });
 
   // guided-creation-review-2026-08 #19: the spell-levels base is a fixed rules grant
-  // (ArMDE:2283), so the wizard shows it and does not offer it for editing.
+  // (ArMDE:2285), so the wizard shows it and does not offer it for editing.
   // The divergence is carried by an explicit prop through the existing per-bar `props`
   // seam — the same seam that already carries `XpBar`'s testid prefix — and never by
   // the bar sniffing which flow mounted it.

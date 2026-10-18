@@ -15,7 +15,7 @@ use super::*;
 ///    points for buying Virtues and Flaws, and thus must take Flaws if they
 ///    want Virtues."
 ///
-/// Source: ArMDE:2842 ("must take
+/// Source: ArMDE:2844 ("must take
 /// Flaws if they want Virtues"), :2297 (companions), :2303 (magi) — "up to ten
 /// points of Flaws, and the same number of points of Virtues". The per-type
 /// point totals themselves are data in `rules/core/character_types.json` (see
@@ -80,7 +80,7 @@ pub(crate) fn validate_balance(
 /// `virtue_ceiling = virtue_points`, and `funded = flaw · rate`. Every Mythic
 /// Companion gets 10 Flaw / 20 budgeted Virtue points whatever its type; its
 /// compulsory package changes how that allowance is spent, never its size
-/// (ArMDE:2706, RoP:I:4968 — settled
+/// (ArMDE:2708, RoP:I:4968 — settled
 /// in `docs/vf-audit/decisions.md` D32, pinned by
 /// `tests/core_type_conformance.rs`).
 pub(crate) struct EffectiveBudget {

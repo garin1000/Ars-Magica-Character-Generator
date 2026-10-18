@@ -247,7 +247,7 @@ describe('guided creation wizard', () => {
     await useFlatPoolFunding();
 
     // The Abilities step owes the Order its minimums — Parma Magica 1, Magic Theory 1
-    // and Latin 1 (ArMDE:2505) — which are blocking errors for every magus, so
+    // and Latin 1 (ArMDE:2507) — which are blocking errors for every magus, so
     // the walk to the closing step has to settle them (and the experience to pay for
     // them) rather than passing through.
     await advanceWizardTo('abilities');

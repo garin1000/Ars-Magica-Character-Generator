@@ -839,7 +839,7 @@ lines off. They are **not** relocated and **not** brought under
 `rulebook_citations.rs`: rewriting a dated record falsifies it, exactly as D1c
 ruled for `docs/audit-2026-08.md`. To read one against today's source, look up
 the passage by its `####` heading or the cited text. The pre-sync text is in
-`tmp/p8-old-source/` while that scratch copy exists. Closes open-todos row 59.
+`tmp/p8-old-source-2026-10-09/` while that scratch copy exists. Closes open-todos row 59.
 
 ---
 

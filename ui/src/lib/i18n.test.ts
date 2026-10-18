@@ -402,7 +402,7 @@ describe('German UI bundle', () => {
 
   // manual-testing-findings-2026-09-03 #10 (reopened): `mythic_companion` is a
   // real Virtue category — `### Mythic Companion, Free` is one of the headings the
-  // `## List of Virtues` index groups by (ArMDE:3400). A category with no
+  // `## List of Virtues` index groups by (ArMDE:3402). A category with no
   // `category-<id>` message renders as its own slug in the badge, the filter
   // dropdown and the exported Type cell, and parity alone would not catch it
   // because a key missing from BOTH locales is perfectly symmetrical.
@@ -419,7 +419,7 @@ describe('German UI bundle', () => {
   });
 
   // F7/D83.7: "You must take the Free Virtue defining which type of Mythic
-  // Companion you are" (ArMDE:2914). The engine reports an unchosen type as an
+  // Companion you are" (ArMDE:2916). The engine reports an unchosen type as an
   // error, so the message may not soften it to a "should". The German names the
   // character type with the glossary's term (translation-tables/grundbegriffe.md:83).
   it('says a Mythic Companion must choose a type, in both locales', () => {
@@ -450,7 +450,7 @@ describe('German UI bundle', () => {
     }
   });
 
-  // B7 (ArMDE:3990): a new validation code, `exclusive_param_values`.
+  // B7 (ArMDE:3992): a new validation code, `exclusive_param_values`.
   // A code with no `issue-<code>` message renders as its own slug, and parity
   // alone would not catch it — a code missing from BOTH locales is perfectly
   // symmetrical. The message must also stay free of any realm name: which
@@ -472,7 +472,7 @@ describe('German UI bundle', () => {
     }
   });
 
-  // E5 (ArMDE:6553, open-todos row 29): a new validation code,
+  // E5 (ArMDE:6555, open-todos row 29): a new validation code,
   // `too_many_for_param_value`. Unlike `exclusive_param_values` above it DOES
   // name the offending value — there is exactly one of it, and "twice for
   // something" is not a finding a player can act on — so both locales must
@@ -793,7 +793,7 @@ describe('German UI bundle', () => {
     }
   });
 
-  // B2 (D41, ArMDE:2884): `CategoryCap.min`/`min_hard` (B1, landed) is the
+  // B2 (D41, ArMDE:2886): `CategoryCap.min`/`min_hard` (B1, landed) is the
   // floor twin of the ceiling test above, composed by `caps.rs` the same way
   // (`too_few_<category>_<noun>`, or `too_few_major_…` for a Major-only cap).
   // Walked from the shipped `character_types.json`, never spelled out, on the
@@ -1390,8 +1390,8 @@ describe('UI bundles, rules-claim audit fixes', () => {
     want: string;
   }[] = [
     // F2: Great/Poor (Characteristic) never move the buy cap or floor
-    // (`effective/characteristic.rs::characteristic_cap`, ArMDE:4058-4060); the
-    // only shipped cap-lowerer is Uninspirational (ArMDE:6990-6992).
+    // (`effective/characteristic.rs::characteristic_cap`, ArMDE:4060-4062); the
+    // only shipped cap-lowerer is Uninspirational (ArMDE:6992-6994).
     {
       finding: 'F2',
       lang: 'en',
@@ -1420,7 +1420,7 @@ describe('UI bundles, rules-claim audit fixes', () => {
       args: { characteristic: 'Präsenz', score: '-4', floor: '-3' },
       want: 'Eigenschaft Präsenz mit Wert -4 liegt unter ihrem Minimum von -3.',
     },
-    // F3: a magus has no free Gift slot (ArMDE:2942,
+    // F3: a magus has no free Gift slot (ArMDE:2944,
     // `effective/reputation_and_caps.rs::supernatural_free_slots`), and the
     // tooltip shows only when no slot is free.
     {
@@ -1449,7 +1449,7 @@ describe('UI bundles, rules-claim audit fixes', () => {
       args: { ability: 'Zweites Gesicht' },
       want: 'Zweites Gesicht ist eine Übernatürliche Fertigkeit und erfordert eine verleihende Tugend.',
     },
-    // F4: a Mythic Companion's Flaws fund twice their points (ArMDE:2912,
+    // F4: a Mythic Companion's Flaws fund twice their points (ArMDE:2914,
     // `validation/balance.rs::validate_balance` via `funded`), so the sentence
     // must not state 1:1. 7 Virtue / 3 Flaw fires at both rates.
     {
@@ -1498,7 +1498,7 @@ describe('UI bundles, rules-claim audit fixes', () => {
       args: { ability: 'Raufen', count: '2' },
       want: 'Raufen ist 2-mal aufgeführt.',
     },
-    // L1: the cap is the highest level a magus can LEARN (ArMDE:2533), worded as
+    // L1: the cap is the highest level a magus can LEARN (ArMDE:2535), worded as
     // `issue-spell_level_exceeds_cap` already words it. DE's neutral
     // „Zaubergrenze“ makes no casting claim and stays (pinned by S6 above).
     {
@@ -1515,7 +1515,7 @@ describe('UI bundles, rules-claim audit fixes', () => {
       args: { cap: '15' },
       want: 'Above the highest level you can learn (15); fits within your Magical Focus',
     },
-    // L2: the Flaw bars Technique+Form combinations (ArMDE:6363), and a spell
+    // L2: the Flaw bars Technique+Form combinations (ArMDE:6365), and a spell
     // trips it by touching one (`effective/spell.rs::spell_touches_barred_combination`).
     {
       finding: 'L2',
@@ -1531,7 +1531,7 @@ describe('UI bundles, rules-claim audit fixes', () => {
       args: { spell: 'Pilum des Feuers' },
       want: 'Pilum des Feuers verwendet eine Kombination aus Technik und Form, die der Fehler Unvereinbare Künste verbietet.',
     },
-    // Row 56: each lab year is one of the years as a magus (ArMDE:2550), so the
+    // Row 56: each lab year is one of the years as a magus (ArMDE:2552), so the
     // limit counts YEARS (`validation/life_stage.rs::validate_post_gauntlet_choices`),
     // not seasons.
     {

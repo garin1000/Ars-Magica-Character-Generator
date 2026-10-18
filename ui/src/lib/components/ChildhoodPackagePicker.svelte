@@ -21,7 +21,7 @@
   // "The following Ability packages can be taken to speed up character generation.
   // Each represents a particular sort of childhood. Note that you can spend the 45
   // experience points for yourself, as well."
-  // Source: ArMDE:2448-2456
+  // Source: ArMDE:2450-2458
 
   // A ruleset shipping no packages has no choice to offer, so the whole picker is
   // absent rather than an empty dropdown.

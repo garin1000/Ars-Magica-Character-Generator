@@ -13,7 +13,7 @@
 //! The three lineage classes (True Lineage, Mystery Cult, Societas) are a fixed
 //! taxonomy and so an enum; the Houses and their grants are data.
 //!
-//! Source: ArMDE:2338-2351 (the House
+//! Source: ArMDE:2340-2353 (the House
 //! benefit table), :2855-2861 (the magus's free House Virtue).
 
 use serde::{Deserialize, Serialize};
@@ -26,7 +26,7 @@ use crate::types::{Entity, Id, Selection, SourceRef};
 /// The three structural classes of Hermetic House. Flavor/grouping only — drives
 /// no mechanics; mirrors [`crate::art::ArtType`].
 ///
-/// Source: ArMDE:2338-2351 (the `Type`
+/// Source: ArMDE:2340-2353 (the `Type`
 /// column of the House table).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -75,7 +75,7 @@ pub struct House {
     pub grants: Vec<Grant>,
     /// A conditional Warping Point this House's own Mystery inflicts at
     /// creation, unless the entity meets the stated exemption — Merinita,
-    /// ArMDE:2348: "Any magus in this House without a faerie-related Virtue or
+    /// ArMDE:2350: "Any magus in this House without a faerie-related Virtue or
     /// Flaw has a Warping Point, inflicted to allow initiation into the
     /// Mystery." `None` for every House without such a clause. Data, not
     /// code: a second House's analogous Mystery-initiation clause (Houses of
@@ -101,7 +101,7 @@ pub struct ConditionalWarping {
 
 /// A closed, data-named exemption predicate for [`ConditionalWarping::unless`].
 /// Closed rather than a general boolean expression (YAGNI): the rulebook names
-/// exactly one shape today (ArMDE:2348's "faerie-related Virtue or Flaw"); a
+/// exactly one shape today (ArMDE:2350's "faerie-related Virtue or Flaw"); a
 /// future House clause needing a different predicate adds a variant here —
 /// still zero `if house.id == ...` branching at the evaluation site.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

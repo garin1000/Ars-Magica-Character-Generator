@@ -10,9 +10,9 @@
 //! (`effective::stamp_realm_override`), so `resolve_realm` itself needed no
 //! change:
 //!
-//! - Strong Faerie Blood's Second Sight is stated "faerie eyes" (ArMDE:5109).
+//! - Strong Faerie Blood's Second Sight is stated "faerie eyes" (ArMDE:5111).
 //! - Faerie Doctor's Dowsing and Spirit Votary's Second Sight are each the
-//!   mythic type's own realm (ArMDE:2709: "The following types of Mythic
+//!   mythic type's own realm (ArMDE:2711: "The following types of Mythic
 //!   Companions cover all the supernatural realms" — Faerie Doctor is Faerie,
 //!   Spirit Votary is Magic, by the same naming the book uses for Devil Child
 //!   = Infernal and Nephilim = Divine).
@@ -78,7 +78,7 @@ fn granted<'a>(granted: &'a [Selection], item_ref: &str) -> &'a Selection {
         .unwrap_or_else(|| panic!("{item_ref} must be among the granted selections: {granted:?}"))
 }
 
-// --- Strong Faerie Blood's Second Sight is stated Faerie (ArMDE:5109) ------
+// --- Strong Faerie Blood's Second Sight is stated Faerie (ArMDE:5111) ------
 
 mod strong_faerie_blood {
     use super::*;
@@ -98,7 +98,7 @@ mod strong_faerie_blood {
         assert_eq!(
             resolved.realm,
             Realm::Faerie,
-            "ArMDE:5109 'faerie eyes': {resolved:?}"
+            "ArMDE:5111 'faerie eyes': {resolved:?}"
         );
     }
 
@@ -124,7 +124,7 @@ mod strong_faerie_blood {
     }
 
     /// Phase 2: Strong Faerie Blood's `GrantsSelection` effect now authors
-    /// `realm: Some(Faerie)` in the shipped data (ArMDE:5109) — the data-level
+    /// `realm: Some(Faerie)` in the shipped data (ArMDE:5111) — the data-level
     /// counterpart to the resolver behavior tested above.
     #[test]
     fn shipped_grant_carries_the_stated_realm() {
@@ -145,13 +145,13 @@ mod strong_faerie_blood {
         assert_eq!(
             found,
             Some(Realm::Faerie),
-            "ArMDE:5109 'faerie eyes' must be authored on the grant"
+            "ArMDE:5111 'faerie eyes' must be authored on the grant"
         );
     }
 }
 
 // --- Faerie Doctor / Spirit Votary grant their mythic type's realm --------
-// (ArMDE:2709 — Devil Child/Infernal, Faerie Doctor/Faerie, Nephilim/Divine,
+// (ArMDE:2711 — Devil Child/Infernal, Faerie Doctor/Faerie, Nephilim/Divine,
 // Spirit Votary/Magic; only the latter two are exercised here, matching the
 // todo's examples).
 
@@ -179,7 +179,7 @@ mod mythic_type_realm {
         assert_eq!(
             resolved.realm,
             Realm::Faerie,
-            "ArMDE:2709 — Faerie Doctor is the Faerie-covering type: {resolved:?}"
+            "ArMDE:2711 — Faerie Doctor is the Faerie-covering type: {resolved:?}"
         );
     }
 
@@ -204,7 +204,7 @@ mod mythic_type_realm {
         assert_eq!(
             resolved.realm,
             Realm::Magic,
-            "ArMDE:2709 — Spirit Votary is the Magic-covering type: {resolved:?}"
+            "ArMDE:2711 — Spirit Votary is the Magic-covering type: {resolved:?}"
         );
     }
 
@@ -229,7 +229,7 @@ mod mythic_type_realm {
     }
 
     /// Phase 2: both types' shipped `Grant::Fixed` entries now author the
-    /// type's own realm (ArMDE:2709) directly on the grant.
+    /// type's own realm (ArMDE:2711) directly on the grant.
     #[test]
     fn shipped_grants_carry_the_types_realm() {
         let rs = full_ruleset();
@@ -263,7 +263,7 @@ mod unaffected_grants {
     use super::*;
 
     /// Already green, and must stay so: Templar Commander grants Brother-
-    /// Knight and Temporal Influence (ArMDE:5184-5187), neither Supernatural
+    /// Knight and Temporal Influence (ArMDE:5186-5189), neither Supernatural
     /// — `item_has_realm_association` is false for both, so row 55 has
     /// nothing to change here. Locks the "no behavior change outside the
     /// Supernatural grants row 55 names" boundary.

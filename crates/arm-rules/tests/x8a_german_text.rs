@@ -166,7 +166,7 @@ fn d53_mild_aging_uses_the_closed_compound_glossary_term() {
         got,
         "Die Alterungswürfe des Charakters profitieren von einem +1-Bonus auf den Lebensumständemodifikator, zusätzlich zu dem, was sein sozialer Stand normalerweise bietet.",
         "translation-tables/alterung-twilight.md:21 governs the term even though the \
-         sentence quotes ArMDE:4601 verbatim (D53): Lebensumständemodifikator, not the \
+         sentence quotes ArMDE:4603 verbatim (D53): Lebensumständemodifikator, not the \
          rulebook's hyphenated Lebensumstände-Modifikator"
     );
 }
@@ -286,7 +286,7 @@ const D57_APPOSITION_NAMES: &[(&str, &str)] = &[
     // ending agrees with ("Bezaubernde {medium}"), unlike the other six which
     // at least had an explicit class noun to convert. The canonical glossary
     // term for this entry (`tugenden-fehler.md:116`, `fertigkeiten.md:45`,
-    // matching both the DE and EN book headings at ArMDE:3818) is
+    // matching both the DE and EN book headings at ArMDE:3820) is
     // "Bezaubernde (Fertigkeit)" — so the fixed, always-feminine generic noun
     // `Fertigkeit` (never the free-text medium) is what the adjective must
     // agree with, with the medium moved to apposition after a comma.

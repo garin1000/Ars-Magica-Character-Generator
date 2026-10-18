@@ -267,8 +267,8 @@ export interface AgingOutcome {
 
 /**
  * One Crisis's CRISIS TOTAL with every term that made it — "Simple die + age/10
- * (round up) + Decrepitude Score" (ArMDE:16698). All three are ADDED, and
- * the Decrepitude is the one the crisis year itself raised (`ArMDE:16696`), never
+ * (round up) + Decrepitude Score" (ArMDE:16700). All three are ADDED, and
+ * the Decrepitude is the one the crisis year itself raised (`ArMDE:16698`), never
  * today's.
  */
 export interface CrisisTotal {
@@ -282,7 +282,7 @@ export interface CrisisTotal {
 /**
  * Where one crisis-survival modifier comes from. A tagged union rather than a
  * string so each case can be named its own way: a Virtue resolves through the item
- * catalogue by `item` id, the familiar's bronze cord (`ArMDE:10916`) through Fluent.
+ * catalogue by `item` id, the familiar's bronze cord (`ArMDE:10918`) through Fluent.
  */
 export type CrisisModifierSource = { kind: 'trait'; item: string } | { kind: 'bronze_cord' };
 
@@ -294,7 +294,7 @@ export interface CrisisModifier {
 
 /**
  * Something the rules PERMIT at a crisis, as opposed to a number the engine adds:
- * the attending doctor of `ArMDE:16711`, whose Medicine belongs to a character this
+ * the attending doctor of `ArMDE:16713`, whose Medicine belongs to a character this
  * sheet does not hold. `botch_penalty` is stored signed and added, like every other
  * aging modifier.
  */
@@ -308,11 +308,11 @@ export type CrisisAllowance = {
 
 /**
  * What surviving one Crisis would take, and what the character brings to it
- * (`ArMDE:16705-16715`). A read-out: the engine never throws the Stamina die and never
+ * (`ArMDE:16707-16717`). A read-out: the engine never throws the Stamina die and never
  * pronounces a character dead.
  *
  * `ease_factor` is absent for the Terminal row, which offers no roll at all
- * (`ArMDE:16709`) — not an unbeatable one. The modifiers are itemized *and* summed
+ * (`ArMDE:16711`) — not an unbeatable one. The modifiers are itemized *and* summed
  * because the panel has to name each one; a character carrying no bronze cord shows
  * no cord line rather than a +0.
  */
@@ -328,7 +328,7 @@ export interface CrisisSurvival {
  * One Crisis read whole: the total, the row it landed on, what that row costs, and
  * what surviving it would take. `row` is an id — its text lives in
  * `rules/i18n/<lang>/aging.json` — and `survival` is absent for a bedridden row,
- * which is time rather than a roll (`ArMDE:16703, :16704`).
+ * which is time rather than a roll (`ArMDE:16705, :16706`).
  */
 export interface CrisisPreview {
   total: CrisisTotal;
@@ -342,8 +342,8 @@ export interface CrisisPreview {
  * writes. Rendered through `aging-note-<kind>`, never as a raw tag.
  *
  * Both of today's follow the Crisis rather than the Crisis roll, so an unrolled
- * Crisis carries them: the Longevity Ritual it spends without deleting (`ArMDE:16650`),
- * and the Heavy Wound a leper takes "in addition to any other result" (`ArMDE:6411`)
+ * Crisis carries them: the Longevity Ritual it spends without deleting (`ArMDE:16652`),
+ * and the Heavy Wound a leper takes "in addition to any other result" (`ArMDE:6413`)
  * that the app records nowhere, because the health track is the player's.
  */
 export type AgingNote = { kind: 'longevity_ritual_spent' } | { kind: 'heavy_wound' };
@@ -389,7 +389,7 @@ export type AgingReversion =
  * `distribution` and `crisisDie` are the very arguments {@link agingApply} takes,
  * because the engine answers them by resolving the year in memory and throwing the
  * character away: the Aging Points a Crisis row awards ARE the Decrepitude increase
- * `ArMDE:16696` puts first, so a Crisis read off the character as it stands would be one
+ * `ArMDE:16698` puts first, so a Crisis read off the character as it stands would be one
  * short of the one Apply writes.
  */
 export function agingPreview(
@@ -405,7 +405,7 @@ export function agingPreview(
 /**
  * Apply one year's aging roll. `distribution` places the Aging Points the row left
  * to the player, per Characteristic; it is empty for a row that names its own.
- * `crisisDie` is the Simple Die thrown at the Crisis Table (`ArMDE:16698`), or `null`
+ * `crisisDie` is the Simple Die thrown at the Crisis Table (`ArMDE:16700`), or `null`
  * for a Crisis nobody has rolled yet — which the year records as owed and unrolled
  * rather than refusing.
  */

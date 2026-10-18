@@ -1,6 +1,6 @@
 //! D81.13 (`docs/vf-audit/decisions.md`): a Devil Child's required Flaw is
-//! "Tragic Life … or a suitable substitute" (ArMDE:2730). Tragic Life is a
-//! Major Story Flaw by its own descriptor (ArMDE:6926-6927), so the substitute
+//! "Tragic Life … or a suitable substitute" (ArMDE:2732). Tragic Life is a
+//! Major Story Flaw by its own descriptor (ArMDE:6928-6929), so the substitute
 //! must be a Major Story Flaw too, as each sibling type's substitute slot
 //! already requires its own category.
 

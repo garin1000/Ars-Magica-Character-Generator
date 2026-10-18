@@ -3,7 +3,7 @@
 //!
 //! For every level in a spell's Mastery Ability, the maga may choose one special
 //! ability, applying only to that mastered spell
-//! (ArMDE:9596-9598). The
+//! (ArMDE:9598-9600). The
 //! per-spell chosen abilities live on the [`SpellSelection`](crate::types::SpellSelection);
 //! the catalogue here is language-neutral mechanics, with names/descriptions in
 //! `rules/i18n`, keyed by `id`.
@@ -12,7 +12,7 @@
 //! Quiet Casting — may be taken multiple times for the same spell, flagged by
 //! [`SpellMasteryAbility::repeatable`].
 //!
-//! Source: ArMDE:9596-9664.
+//! Source: ArMDE:9598-9666.
 
 use serde::{Deserialize, Serialize};
 
@@ -21,31 +21,31 @@ use crate::types::{Id, SourceRef};
 /// A single choosable Spell Mastery special ability in the catalogue. Its display
 /// name and description live in `rules/i18n`, keyed by `id`.
 ///
-/// Source: ArMDE:9600-9664.
+/// Source: ArMDE:9602-9666.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SpellMasteryAbility {
     /// Slug-style id, e.g. `spell_mastery_ability.penetration`.
     pub id: Id,
     /// Whether this ability may be taken multiple times for the same spell.
     /// `true` only for Precise, Quick, and Quiet Casting
-    /// (ArMDE:9644, :9648, :9652);
+    /// (ArMDE:9646, :9650, :9654);
     /// `false` (the default) for the rest,
     /// which are once-per-spell.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub repeatable: bool,
     /// A hard ceiling on picks per spell, tighter than plain `repeatable`
     /// (unlimited). `Some(2)` only for Quiet Casting — "A maga may take this
-    /// ability twice" (ArMDE:9652) — vs. Precise/Quick Casting's unlimited
-    /// "multiple times" (ArMDE:9644, :9648). `None` (the default) means no
+    /// ability twice" (ArMDE:9654) — vs. Precise/Quick Casting's unlimited
+    /// "multiple times" (ArMDE:9646, :9650). `None` (the default) means no
     /// ceiling beyond the ordinary `repeatable` rule.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_count: Option<u8>,
     /// Whether this ability may not be chosen for a Ritual spell. `true` for
     /// Ceremonial Casting, Fast Casting, and Quick Casting
-    /// (ArMDE:9606, :9612, :9648);
+    /// (ArMDE:9608, :9614, :9650);
     /// `false` (the default) for the rest — Multiple Casting is the explicit
     /// converse, "may be taken for Ritual spells"
-    /// (ArMDE:9632).
+    /// (ArMDE:9634).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub forbidden_for_ritual: bool,
     /// Provenance into the Markdown rules source.

@@ -6,7 +6,7 @@
 use super::*;
 
 /// Sanity-checks a being's Might: its entered base Realm must agree with the Realm
-/// its Might Virtues grant (a being belongs to exactly one Realm; ArMDE:2691-2693).
+/// its Might Virtues grant (a being belongs to exactly one Realm; ArMDE:2693-2695).
 /// A warning, never a block — the troupe may be modelling an unusual creature.
 ///
 /// `selections` is the caller's already-folded bought-plus-granted list
@@ -91,7 +91,7 @@ pub(crate) fn validate_powers(
 ///
 /// "This Virtue grants a pool of 25 points… It costs 2 points to raise the maximum
 /// level of effect by 1, and 1 point to raise the Penetration by 1"
-/// (`ArMDE:3970`); copies of the Virtue combine their points (`ArMDE:3974`). A
+/// (`ArMDE:3972`); copies of the Virtue combine their points (`ArMDE:3976`). A
 /// focus power on a character with no Focus Power Virtue (pool 0) is flagged,
 /// mirroring [`validate_powers`] and [`validate_devices`].
 pub(crate) fn validate_focus_powers(
@@ -119,7 +119,7 @@ pub(crate) fn validate_focus_powers(
 /// not exceed the item-level budget the character's Virtues grant (Magic Items
 /// +25, Redcap 50). A device requires budget, so a device on a character with no
 /// granting Virtue (budget 0) is flagged — consistent with how a starting
-/// Reputation requires a granting Virtue. Source: ArMDE:4418-4420, :4913-4917.
+/// Reputation requires a granting Virtue. Source: ArMDE:4420-4422, :4915-4919.
 pub(crate) fn validate_devices(
     entity: &Entity,
     ruleset: &Ruleset,

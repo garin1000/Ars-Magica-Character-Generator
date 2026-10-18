@@ -211,7 +211,7 @@ fn corrupted_abilities_selection_naming_two_targets_validates_cleanly() {
 }
 
 /// "You may only take this Flaw once, though it can affect multiple Abilities"
-/// (ArMDE:5922) — a second copy naming the SAME set, built in a different
+/// (ArMDE:5924) — a second copy naming the SAME set, built in a different
 /// order, must collide under the default `max_per_target: 1`. RED today for
 /// the same reason as above (no parameter declared, so no duplicate-target key
 /// can be built from it at all).
@@ -234,7 +234,7 @@ fn a_second_copy_naming_the_same_set_is_refused_as_duplicate() {
     );
 }
 
-/// Corrupted Spells (ArMDE:5930-5934) resolves its `targets` against the
+/// Corrupted Spells (ArMDE:5932-5936) resolves its `targets` against the
 /// character's OWN learned spells, never the ruleset's whole catalogue: naming
 /// a spell the magus never learned must raise `unknown_param_value`. RED
 /// today: no parameter is declared at all, so `targets` is `unexpected_param`,

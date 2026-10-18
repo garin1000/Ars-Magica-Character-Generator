@@ -2136,7 +2136,7 @@ class AppStore {
   /**
    * Levels spent one-for-one on the power's Penetration. Charged against the
    * SAME power-levels budget as the level itself ("You may also spend levels
-   * one-for-one to give the power Penetration", ArMDE:4090), which is why
+   * one-for-one to give the power Penetration", ArMDE:4092), which is why
    * the engine's `power_levels_used` counts both — so this must be editable, or
    * the bar would charge for something no control can enter. Clamped to u16 like
    * the level.
@@ -2154,7 +2154,7 @@ class AppStore {
   // A separate list from `powers` because the numbers are a separate currency:
   // "This Virtue grants a pool of 25 points… It costs 2 points to raise the
   // maximum level of effect by 1, and 1 point to raise the Penetration by 1"
-  // (ArMDE:3970). `max_level` is a CEILING on what the character may create, not a
+  // (ArMDE:3972). `max_level` is a CEILING on what the character may create, not a
   // level that was spent, so it is never charged against `power_levels_used`.
 
   addFocusPower(): void {
@@ -2609,7 +2609,7 @@ class AppStore {
    * Take or drop one Living Conditions row, by its id into the aging catalogue.
    *
    * A SET, not a single pick: "Modifiers marked with an asterisk are cumulative
-   * with each other" (ArMDE:16671), so several rows can hold at once. The
+   * with each other" (ArMDE:16673), so several rows can hold at once. The
    * engine decides which combinations are legal
    * (`living_conditions_conflict`); this only records the choice.
    *
@@ -2755,7 +2755,7 @@ class AppStore {
   }
 
   /** D42: the concept's optional default realm — a default SOURCE for every
-   *  Supernatural entry's realm (ArMDE:3028), never the character's own realm
+   *  Supernatural entry's realm (ArMDE:3030), never the character's own realm
    *  and never mechanical on its own. `null` clears it back to unset. */
   setConceptRealm(realm: Realm | null): void {
     this.entity.concept_realm = realm;

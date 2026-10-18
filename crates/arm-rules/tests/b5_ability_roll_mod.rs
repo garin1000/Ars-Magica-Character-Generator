@@ -12,7 +12,7 @@
 //! **D61 correction (`docs/vf-audit/decisions.md`, 2026-09-28): the mechanism's
 //! worked example is NOT Poor Hearing.** B5's original design picked
 //! `flaw.poor_hearing` ("Subtract 3 from rolls involving hearing",
-//! ArMDE:6685-6688) as its worked example, which is wrong: "rolls involving
+//! ArMDE:6687-6690) as its worked example, which is wrong: "rolls involving
 //! hearing" is conditioned on a SENSE, exactly like Corrupted's "selfish or
 //! sinful" (D15) — a table judgement, not a fixed Ability, since it hits
 //! Awareness rolls made by sight or smell just as wrongly as it misses
@@ -24,8 +24,8 @@
 //!
 //! The mechanism's real, genuine carriers are three Flaws whose passage names
 //! one Ability with NO further condition: `flaw.poor_concentration` (-3
-//! Concentration, ArMDE:6673-6676), `flaw.inconstant_magic` (-3 Finesse,
-//! ArMDE:6369-6372), and `flaw.clumsy_magic` (-3 Finesse, ArMDE:5872-5875).
+//! Concentration, ArMDE:6675-6678), `flaw.inconstant_magic` (-3 Finesse,
+//! ArMDE:6371-6374), and `flaw.clumsy_magic` (-3 Finesse, ArMDE:5874-5877).
 //!
 //! Ruleset-JSON-only rename (design § 6): no `SCHEMA_VERSION` bump. The one
 //! known parameter-relative carrier, `virtue.academic_concentration_subject`,
@@ -245,7 +245,7 @@ fn assert_shipped_uncomputed_roll_text(id: &str, checks: &[(&str, &str, &str)]) 
 }
 
 /// D61 (`docs/vf-audit/decisions.md`, 2026-09-28): B5's worked example above
-/// was wrong. "Subtract 3 from rolls involving hearing" (ArMDE:6685-6688) is a
+/// was wrong. "Subtract 3 from rolls involving hearing" (ArMDE:6687-6690) is a
 /// modifier conditioned on a SENSE, like Corrupted's "selfish or sinful"
 /// (D15) — a table judgement, not a fixed-Ability roll modifier: it hits
 /// Awareness rolls made by sight or smell just as wrongly as it misses
@@ -270,7 +270,7 @@ fn shipped_poor_hearing_stays_textual_per_d61() {
 }
 
 /// D61 (coordinator correction, 2026-09-28): `virtue.convoluted_mind`
-/// (ArMDE:3672-3675) is NOT a genuine carrier despite naming Infernal Lore
+/// (ArMDE:3674-3677) is NOT a genuine carrier despite naming Infernal Lore
 /// outright — "+3 bonus on all Infernal Lore rolls **to determine what a
 /// demon will do**" narrows the modifier to a subset of Infernal Lore rolls,
 /// exactly Poor Hearing's error: Infernal Lore has uses beyond predicting a
@@ -345,7 +345,7 @@ fn assert_shipped_roll_mod_carrier(id: &str, ability: &str, amount: i32) {
     );
 }
 
-/// `flaw.poor_concentration` (ArMDE:6673-6676): "The character has a -3
+/// `flaw.poor_concentration` (ArMDE:6675-6678): "The character has a -3
 /// penalty to Concentration rolls." — unconditional, names Concentration
 /// outright.
 #[test]
@@ -353,7 +353,7 @@ fn shipped_poor_concentration_surfaces_minus_three_to_concentration() {
     assert_shipped_roll_mod_carrier("flaw.poor_concentration", "ability.concentration", -3);
 }
 
-/// `flaw.inconstant_magic` (ArMDE:6369-6372): "The character suffers a -3
+/// `flaw.inconstant_magic` (ArMDE:6371-6374): "The character suffers a -3
 /// penalty to all Finesse rolls." — unconditional; the rest of the passage
 /// describes unrelated narrative effects on the character's spells, not a
 /// condition on this modifier.
@@ -362,7 +362,7 @@ fn shipped_inconstant_magic_surfaces_minus_three_to_finesse() {
     assert_shipped_roll_mod_carrier("flaw.inconstant_magic", "ability.finesse", -3);
 }
 
-/// `flaw.clumsy_magic` (ArMDE:5872-5875): "You receive a -3 penalty to any
+/// `flaw.clumsy_magic` (ArMDE:5874-5877): "You receive a -3 penalty to any
 /// rolls involving Finesse." — unconditional; the passage's other clause (an
 /// aiming roll of 0 auto-botching) is a separate rule about a different
 /// mechanic (the botch die), not a condition on this penalty.
@@ -373,7 +373,7 @@ fn shipped_clumsy_magic_surfaces_minus_three_to_finesse() {
 
 // --- (d) regression: the renamed param-based shape keeps working ----------
 
-/// `virtue.academic_concentration_subject` (ArMDE:3433-3438) must still
+/// `virtue.academic_concentration_subject` (ArMDE:3435-3440) must still
 /// resolve its +3 subject bonus after the `ability_roll_mod` ->
 /// `ability_roll_mod_param` rename — the ONE known carrier the rename
 /// touches (design § 1/§ 8), updated in the same commit as the Rust rename.

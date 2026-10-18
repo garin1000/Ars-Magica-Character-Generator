@@ -211,7 +211,7 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
   });
 
   // guided-creation-review-2026-08 #26: `decrepitude_effect` is the cumulative
-  // overall aging/decrepitude narrative (RULES.md, ArMDE:16640-16654), so it
+  // overall aging/decrepitude narrative (RULES.md, ArMDE:16642-16656), so it
   // grows over a character's life — its analogue `warping_effect` has always been a
   // `<textarea rows="3">` (CharacterDetails.svelte). A single-line input was simply
   // the wrong control for the data.
@@ -237,7 +237,7 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
 
   it('reads a resolved Crisis back off the log entry that recorded it', () => {
     // The four crisis fields are the whole record of what the Crisis Table was
-    // asked and what it answered (`ArMDE:16698`, `ArMDE:16701-16709`). Without them on
+    // asked and what it answered (`ArMDE:16700`, `ArMDE:16703-16711`). Without them on
     // screen a resolved Crisis is invisible the moment the calculator is closed.
     installRuleset();
     store.entity.aging_log = [
@@ -436,7 +436,7 @@ describe('AgingRecordPanel (slice 6b6b)', () => {
   });
 
   it('keeps the Crisis on its own line after the roll summary (#27)', () => {
-    // Two rolls against two tables, resolved in that order (`ArMDE:16696`: the points
+    // Two rolls against two tables, resolved in that order (`ArMDE:16698`: the points
     // first, then the Crisis Table), so two lines rather than one run-on sentence.
     installRuleset();
     store.entity.aging_log = [

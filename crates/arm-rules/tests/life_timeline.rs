@@ -2,24 +2,24 @@
 //! what its years earned and how much of that the purchases fill. Display only:
 //! derived from the life-stage budget and an already-solved `XpAllocation`.
 //!
-//! ArMDE:2432: "For grogs and companions they are acquired in two blocks: early
+//! ArMDE:2434: "For grogs and companions they are acquired in two blocks: early
 //! childhood, and later life. For magi, there are two more periods to consider:
 //! apprenticeship, and life as a magus after that."
-//! ArMDE:2503: "The fifteen years of apprenticeship give the character 240
+//! ArMDE:2505: "The fifteen years of apprenticeship give the character 240
 //! experience points, and 120 levels of spells."
-//! ArMDE:2539: "For every year, the magus gets 30 points. Each point can be an
+//! ArMDE:2541: "For every year, the magus gets 30 points. Each point can be an
 //! experience point in an Art or Ability or one level of spell."
-//! ArMDE:2550: "For each season that your magus spends working on a lab project,
+//! ArMDE:2552: "For each season that your magus spends working on a lab project,
 //! the character loses 10 points from the yearly 30 experience points, to a
 //! minimum of 0 if three or four seasons are spent on lab work."
-//! ArMDE:2554, :2556 (Darius): eight years of study "gives him 240 experience
+//! ArMDE:2556, :2558 (Darius): eight years of study "gives him 240 experience
 //! points", then a year in the laboratory, "so he gains no experience points in
 //! that year".
-//! ArMDE:4919 (Redcap): "You are trained in a similar manner to magi […] You have
+//! ArMDE:4921 (Redcap): "You are trained in a similar manner to magi […] You have
 //! spent fifteen years as an apprentice, and gained a total of 300 experience
 //! points in those fifteen years. […] In addition, you have the Well-Traveled
 //! Virtue (page 116) at no cost."
-//! ArMDE:5714 (Abandoned Apprentice): "The character was abandoned by his master
+//! ArMDE:5716 (Abandoned Apprentice): "The character was abandoned by his master
 //! midway through his Hermetic training."
 
 use arm_rules::ruleset::{Ruleset, RulesetSources};
@@ -170,7 +170,7 @@ fn entry(
 }
 
 /// "75 experience points in their native language […] and 45 experience points
-/// to divide" (ArMDE:2446) — childhood as one fixed span.
+/// to divide" (ArMDE:2448) — childhood as one fixed span.
 fn childhood(filled_xp: u32) -> TimelineEntry {
     entry(
         fixed(FixedSection::Childhood),
@@ -193,7 +193,7 @@ fn capacity_total(capacity: EntryCapacity) -> u32 {
 // ---------------------------------------------------------------------------
 
 /// A companion of 35 splits its 30 later-life years into three named sections
-/// and leaves 10 as Remaining. Each span earns its years × 15 (ArMDE:2460), and
+/// and leaves 10 as Remaining. Each span earns its years × 15 (ArMDE:2462), and
 /// the general experience is poured into them oldest first, capped.
 #[test]
 fn a_companion_pours_later_life_xp_into_its_sections_oldest_first() {
@@ -205,7 +205,7 @@ fn a_companion_pours_later_life_xp_into_its_sections_oldest_first() {
         section("Monastery", 5),
     ];
     companion.ability_scores = vec![
-        // Childhood's spread funds Athletics (ArMDE:2446).
+        // Childhood's spread funds Athletics (ArMDE:2448).
         ability_xp("ability.athletics", 30),
         // Ride is not on the childhood list, so later life pays.
         ability_xp("ability.ride", 200),
@@ -243,7 +243,7 @@ fn a_companion_pours_later_life_xp_into_its_sections_oldest_first() {
 // Magus: Childhood → LaterLife → Apprenticeship → post-Gauntlet sections
 // ---------------------------------------------------------------------------
 
-/// Darius (ArMDE:2554, :2556): gauntleted at 25, eight years of study worth 240
+/// Darius (ArMDE:2556, :2558): gauntleted at 25, eight years of study worth 240
 /// points, then a year of four lab seasons worth nothing. 40 of the points are
 /// taken as levels of spells.
 fn darius(sections: Vec<LifeSection>, plan_lab_years: LabYears) -> Entity {
@@ -273,10 +273,10 @@ fn one_four_season_lab_year() -> LabYears {
     }
 }
 
-/// The magus shape: later life ends where the apprenticeship begins (ArMDE:2282),
+/// The magus shape: later life ends where the apprenticeship begins (ArMDE:2284),
 /// the apprenticeship holds 240 experience and 120 levels as two numbers
-/// (ArMDE:2503), and each post-Gauntlet section earns years × 30 less its OWN lab
-/// seasons (ArMDE:2539, :2550). Experience is poured first, oldest first; the
+/// (ArMDE:2505), and each post-Gauntlet section earns years × 30 less its OWN lab
+/// seasons (ArMDE:2541, :2552). Experience is poured first, oldest first; the
 /// levels of spells then take the apprenticeship's 120 and the room the
 /// experience left in the post-Gauntlet points.
 #[test]
@@ -342,7 +342,7 @@ fn darius_split_into_two_sections_earns_the_unsplit_points() {
 }
 
 /// Skilled Parens: "You gain an additional 60 experience points and 30 spell
-/// levels during apprenticeship" (ArMDE:5037) — counted in the Apprenticeship
+/// levels during apprenticeship" (ArMDE:5039) — counted in the Apprenticeship
 /// span (DECIDED 1).
 #[test]
 fn skilled_parens_widens_the_apprenticeship_span() {
@@ -393,7 +393,7 @@ fn a_spell_levels_override_sets_the_apprenticeship_spell_capacity() {
 // Redcap: the magus shape, anchored at the default Gauntlet age (25)
 // ---------------------------------------------------------------------------
 
-/// A Redcap of 30 (ArMDE:4919): later life 5–10, the fifteen apprentice years
+/// A Redcap of 30 (ArMDE:4921): later life 5–10, the fifteen apprentice years
 /// 10–25 showing their own restricted pool, then the named sections from 25.
 /// General experience fills the fixed later life first, skips the
 /// apprenticeship, then the sections. Well-Traveled's grant is no span's.
@@ -473,7 +473,7 @@ fn a_redcap_younger_than_twenty_five_is_clamped_to_its_age() {
 // Abandoned Apprentice: pre-span → truncated training → post-span sections
 // ---------------------------------------------------------------------------
 
-/// An Abandoned Apprentice of 30 who completed 5 years (ArMDE:5714, D3/D64):
+/// An Abandoned Apprentice of 30 who completed 5 years (ArMDE:5716, D3/D64):
 /// the training would have started at 25 − 15 = 10, so later life runs 5–10,
 /// the truncated training 10–15 (16 XP and 8 levels a year, D56), and the
 /// post-span sections from 15 at the later-life rate.
@@ -562,7 +562,7 @@ fn an_abandoned_apprentice_younger_than_the_training_end_is_clamped_to_its_age()
 
 /// Skilled Parens is open to an Abandoned Apprentice (Hermetic, prerequisite
 /// "hermetically trained", which the Flaw confers). Its 60 experience and 30
-/// levels "during apprenticeship" (ArMDE:5037) land in the truncated training.
+/// levels "during apprenticeship" (ArMDE:5039) land in the truncated training.
 #[test]
 fn skilled_parens_widens_an_abandoned_apprentices_truncated_training() {
     let rs = shipped_ruleset();
@@ -597,7 +597,7 @@ fn skilled_parens_widens_an_abandoned_apprentices_truncated_training() {
 // ---------------------------------------------------------------------------
 
 /// Feral Upbringing replaces both childhood pools with one of its own
-/// (ArMDE:6183, D40/D2): the Childhood span shows that pool's amount and use.
+/// (ArMDE:6185, D40/D2): the Childhood span shows that pool's amount and use.
 #[test]
 fn a_childhood_replacement_fills_the_childhood_span() {
     let rs = shipped_ruleset();
@@ -627,7 +627,7 @@ fn a_childhood_replacement_fills_the_childhood_span() {
 }
 
 /// "In the first five years of life, characters gain 75 experience points in
-/// their native language […] and 45 experience points to divide" (ArMDE:2446) —
+/// their native language […] and 45 experience points to divide" (ArMDE:2448) —
 /// whether or not the language has been picked yet. Without one the solve
 /// builds no native-language pool, but the span still earned all 120.
 #[test]
@@ -708,7 +708,7 @@ fn sections_beyond_the_open_span_are_clipped_and_noted() {
     assert_eq!(timeline.overrun_years, 5);
 }
 
-/// With no age there is no open span: childhood still stands (ArMDE:2446), and
+/// With no age there is no open span: childhood still stands (ArMDE:2448), and
 /// every named year is overrun.
 #[test]
 fn an_unset_age_overruns_every_named_year() {

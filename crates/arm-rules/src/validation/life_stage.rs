@@ -27,7 +27,7 @@ use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 /// - `life_stage_age_before_childhood`: an age inside the childhood block, which
 ///   earns childhood's experience but cannot have lived any later-life year. For a
 ///   magus the bar is its Gauntlet instead — childhood plus apprenticeship
-///   (`ArMDE:2503`) — reported as `life_stage_age_before_gauntlet`, so one wrong age
+///   (`ArMDE:2505`) — reported as `life_stage_age_before_gauntlet`, so one wrong age
 ///   still produces exactly one finding. That floor is measured against the
 ///   **Gauntlet** age ([`crate::life_stage::LifeStageBudget::gauntlet_age`]), which
 ///   is the character's own age only while it stands at its Gauntlet.
@@ -38,15 +38,15 @@ use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 ///   still made.
 /// - `life_stage_lab_seasons_out_of_range`: more years of lab work
 ///   ([`crate::life_stage::LabYears::years_used`]) than the post-Gauntlet years
-///   (`ArMDE:2550`): each counted year is one of them, whatever its seasons (row 56).
+///   (`ArMDE:2552`): each counted year is one of them, whatever its seasons (row 56).
 /// - `life_stage_lab_seasons_without_years`: years of lab work on a plan with no year
-///   as a magus to work them in. The same rule (`ArMDE:2550`), reported separately
+///   as a magus to work them in. The same rule (`ArMDE:2552`), reported separately
 ///   because there is no span for the years to fall in at all.
 /// - `life_stage_section_lab_years_exceed_section`: one life section's lab years
-///   count more years than the section covers (`ArMDE:2550`). Both lab-year checks
+///   count more years than the section covers (`ArMDE:2552`). Both lab-year checks
 ///   count the sections' lab years whether or not the sections are switched on.
 /// - `life_stage_spell_level_split_exceeds_points`: more of the post-Gauntlet points
-///   taken as levels of spells than the years granted (`ArMDE:2539`). Held to the points
+///   taken as levels of spells than the years granted (`ArMDE:2541`). Held to the points
 ///   by [`crate::life_stage::LifeStageRules::budget`]. Filed under `abilities`, the
 ///   phase whose input surface owns the number, never `spells`.
 /// - `life_stage_native_language_unset`: no native language chosen, so the
@@ -56,14 +56,14 @@ use crate::life_stage::{LifeStageBudget, LifeStagePlan, LifeStageRules};
 /// - `childhood_package_unknown`: the recorded Sample Childhood package names an id
 ///   the loaded ruleset does not ship.
 ///
-/// A magus is welcome here: all four periods of `ArMDE:2432` are modelled — the first
+/// A magus is welcome here: all four periods of `ArMDE:2434` are modelled — the first
 /// three in M6/6b4, life as a magus after the Gauntlet in M6/6b5 — so nothing
 /// refuses the combination. What a magus's plan costs differs — its later life ends
-/// at apprenticeship (`ArMDE:2282`) and the years past its Gauntlet earn 30 points each
-/// (`ArMDE:2539`) — but that is arithmetic in
+/// at apprenticeship (`ArMDE:2284`) and the years past its Gauntlet earn 30 points each
+/// (`ArMDE:2541`) — but that is arithmetic in
 /// [`crate::life_stage::LifeStageRules::budget`], not a finding.
 ///
-/// Source: ArMDE:2432, :2446, :2460, :2503,
+/// Source: ArMDE:2434, :2448, :2462, :2505,
 /// :2284, :2539, :2550.
 pub(crate) fn validate_life_stage_plan(
     entity: &Entity,
@@ -105,7 +105,7 @@ pub(crate) fn validate_life_stage_plan(
     validate_life_stage_age_meets_minimum(entity, ruleset, rules, magus, budget, issues);
 
     // "**Hermetic Magi Only (Optional):** Years after apprenticeship"
-    // (ArMDE:2284), so the three post-Gauntlet choices are checked for a
+    // (ArMDE:2286), so the three post-Gauntlet choices are checked for a
     // magus and nobody else: on any other plan `budget()` ignores them outright, and
     // a finding about a value that changes nothing is noise a player cannot act on.
     // An unset age is its own finding (`life_stage_age_unset`) and leaves nothing to
@@ -119,7 +119,7 @@ pub(crate) fn validate_life_stage_plan(
 }
 
 /// The later-life block is "15 experience points per year" up to the character's
-/// age (ArMDE:2460), so an unset age
+/// age (ArMDE:2462), so an unset age
 /// leaves it uncountable — said plainly here rather than left to surface as a
 /// shortfall on rows the guided flow may itself have written before an age was
 /// typed.
@@ -136,13 +136,13 @@ fn validate_life_stage_age_is_set(entity: &Entity, issues: &mut Vec<ValidationIs
 
 /// How young is too young depends on the periods the character has lived through.
 /// A grog or companion may be a child, so the bar is childhood itself; a magus has
-/// also served the fifteen years of apprenticeship (`ArMDE:2503`) and cannot have been
+/// also served the fifteen years of apprenticeship (`ArMDE:2505`) and cannot have been
 /// gauntleted before twenty. One wrong age gets ONE finding, under the code that
 /// describes it truthfully — telling the owner of a 19-year-old magus that its age
 /// falls inside childhood would simply be wrong.
 ///
 /// For a magus the subject is its **Gauntlet** age, not its own: the years after
-/// the Gauntlet run forward from it (`ArMDE:2284`), so a magus of 60 gauntleted at 12
+/// the Gauntlet run forward from it (`ArMDE:2286`), so a magus of 60 gauntleted at 12
 /// is exactly as impossible as one aged 12 standing at its Gauntlet, and only the
 /// Gauntlet age sees both. With no Gauntlet age stored the budget supplies the
 /// ruleset's baseline (`ApprenticeshipRules::default_gauntlet_age`), clamped to the
@@ -215,7 +215,7 @@ fn validate_life_stage_age_meets_minimum(
     }
 }
 
-/// "75 experience points in their native language" (ArMDE:2446) names one Ability —
+/// "75 experience points in their native language" (ArMDE:2448) names one Ability —
 /// `childhood.native_language_ability` — at one instance, so "bought" is a row
 /// for exactly that id whose parameter is this language, scoring above 0.
 /// Testing the parameter alone would let an `Area Lore (German)` pass while the
@@ -265,7 +265,7 @@ fn validate_life_stage_native_language(
 /// so a save can name one the loaded ruleset does not ship — a dangling
 /// reference like any other, reported rather than quietly ignored. What the
 /// package granted is not re-checked: the Abilities are ordinary bought rows
-/// (ArMDE:2450 keeps a taken package
+/// (ArMDE:2452 keeps a taken package
 /// open to adjustment).
 fn validate_childhood_package_known(
     ruleset: &Ruleset,
@@ -295,7 +295,7 @@ fn validate_childhood_package_known(
 /// season beyond the cap costs nothing — so each finding here names the fault
 /// standing beside the clamp that absorbed it.
 ///
-/// Source: ArMDE:2284, :2539, :2550.
+/// Source: ArMDE:2286, :2541, :2552.
 fn validate_post_gauntlet_choices(
     plan: &LifeStagePlan,
     rules: &LifeStageRules,
@@ -323,7 +323,7 @@ fn validate_post_gauntlet_choices(
     // "For each season that your magus spends working on a lab project, the
     // character loses 10 points from the yearly 30 experience points, to a minimum
     // of 0 if three or four seasons are spent on lab work"
-    // (ArMDE:2550). Every lab year is one of the post-Gauntlet years (row 56), so
+    // (ArMDE:2552). Every lab year is one of the post-Gauntlet years (row 56), so
     // the year counts together may not exceed the span. Past it the extra years'
     // charge is lost to the floor of 0, so without this finding an impossible plan
     // looks like a bargain.
@@ -362,7 +362,7 @@ fn validate_post_gauntlet_choices(
     }
 
     // "Each point can be an experience point in an Art or Ability or one level of
-    // spell" (ArMDE:2539) — a split of the
+    // spell" (ArMDE:2541) — a split of the
     // points the years granted, so a stored share beyond them is not a split at all.
     // `budget()` holds it to the points, which quietly rewrites "600 levels" as "all
     // of them" and hands the rest to nobody.
@@ -394,7 +394,7 @@ fn validate_post_gauntlet_choices(
 }
 
 /// Each life section's lab years are years *of that section*, so they may not
-/// count more years than it covers (`ArMDE:2550` charges a lab season against the
+/// count more years than it covers (`ArMDE:2552` charges a lab season against the
 /// year that holds it). One finding per offending section, naming its 1-based
 /// position, since a name may be empty.
 ///
@@ -439,7 +439,7 @@ fn validate_life_section_lab_years(plan: &LifeStagePlan, issues: &mut Vec<Valida
 /// `childhood_package_unknown` — the same fact, whether it arrives as a command or
 /// out of a save.
 ///
-/// Source: ArMDE:2446, :2448-2456.
+/// Source: ArMDE:2448, :2450-2458.
 pub fn childhood_rejection_issues(
     rejections: &[ChildhoodRejection],
     ruleset: &Ruleset,
@@ -621,7 +621,7 @@ mod tests {
       }
     }"#;
     /// One shipped package, priced to the blocks above: spread 30 + 15 = 45,
-    /// native language 75 (ArMDE:2446).
+    /// native language 75 (ArMDE:2448).
     const CHILDHOODS: &str = r#"{ "packages": [
       { "id": "childhood.shipped",
         "entries": [
@@ -797,7 +797,7 @@ mod tests {
         assert_eq!(issue.args.get("min").map(String::as_str), Some("17"));
     }
 
-    /// D3/D56 Parma advisory (ArMDE:5718: "If the character knows the Parma
+    /// D3/D56 Parma advisory (ArMDE:5720: "If the character knows the Parma
     /// Magica, he must join the Order or be slain") — a HEDGED restriction,
     /// F-550/Q8's existing machinery, generic and independent of D3's own new
     /// effects. **Knowing Parma is the trigger, not the absence of it**: the
@@ -844,7 +844,7 @@ mod tests {
     }
 
     /// The earliest a magus can have been gauntleted is childhood plus the fifteen
-    /// years of apprenticeship (ArMDE:2503) — twenty — and this magus carries
+    /// years of apprenticeship (ArMDE:2505) — twenty — and this magus carries
     /// no `gauntlet_age`. The ruleset's baseline of 25 is clamped to the character's
     /// own age, so 19 is still the number measured and this finding is reachable
     /// exactly as it was before the baseline existed. A younger magus is one wrong
@@ -905,7 +905,7 @@ mod tests {
         assert!(!issues.contains(&ValidationIssue::CODE_LIFE_STAGE_AGE_BEFORE_CHILDHOOD.into()));
     }
 
-    /// Later life is counted in years up to an age (ArMDE:2460), so a plan
+    /// Later life is counted in years up to an age (ArMDE:2462), so a plan
     /// with no age has no later-life block to earn. That is worth saying out loud:
     /// the guided flow can write childhood rows before an age is typed, and without
     /// this the only symptom would be a shortfall the player did not cause.
@@ -963,7 +963,7 @@ mod tests {
 
     /// The Gauntlet-age floor is a floor on the **Gauntlet age**, not on the
     /// character's own age. The years after the Gauntlet run forward from it
-    /// (ArMDE:2284), so a magus of 60 gauntleted at 12 never served its
+    /// (ArMDE:2286), so a magus of 60 gauntleted at 12 never served its
     /// fifteen years of apprenticeship either — and reading the character's age
     /// instead would call that plan perfectly legal.
     #[test]
@@ -1104,7 +1104,7 @@ mod tests {
     /// More lab years than years as a magus (row 56). Each lab year is one of the
     /// post-Gauntlet years, so the buckets together may not count more years than
     /// the span holds. Past it the extra years' charge is lost to the floor of 0
-    /// (ArMDE:2550), which reads as a bargain rather than a mistake unless it is
+    /// (ArMDE:2552), which reads as a bargain rather than a mistake unless it is
     /// said out loud.
     #[test]
     fn more_lab_years_than_years_as_a_magus_is_an_error() {
@@ -1184,7 +1184,7 @@ mod tests {
     }
 
     /// Norbert 2026-10-03 (F1): a year holds four seasons, and a year spent wholly in
-    /// the lab is legal (`ArMDE:2550` "three or four seasons"), so one year with four
+    /// the lab is legal (`ArMDE:2552` "three or four seasons"), so one year with four
     /// lab seasons is not out of range.
     #[test]
     fn one_year_of_four_lab_seasons_is_in_range() {
@@ -1269,7 +1269,7 @@ mod tests {
             .count()
     }
 
-    /// Every lab year is one of the post-Gauntlet years (`ArMDE:2550`), wherever it
+    /// Every lab year is one of the post-Gauntlet years (`ArMDE:2552`), wherever it
     /// is recorded: the plan level and every section together may not count more
     /// years than the magus has lived since its Gauntlet.
     #[test]
@@ -1443,7 +1443,7 @@ mod tests {
 
     /// More of the yearly points taken as levels of spells than the years granted.
     /// "Each point can be an experience point in an Art or Ability or one level of
-    /// spell" (ArMDE:2539) is a split of points that exist, so `budget()`
+    /// spell" (ArMDE:2541) is a split of points that exist, so `budget()`
     /// holds the stored figure to them — silently turning an over-large split into
     /// "all of them", which is a different character from the one that was asked for.
     ///
@@ -1509,7 +1509,7 @@ mod tests {
         );
     }
 
-    /// "75 experience points in their native language" (ArMDE:2446) names
+    /// "75 experience points in their native language" (ArMDE:2448) names
     /// **one** Ability: the childhood's `native_language_ability`. An Area Lore
     /// whose area happens to be spelled like the language is a different Ability,
     /// and the 75-point pool — which keys on that id — cannot fund a point of it, so
@@ -1591,9 +1591,9 @@ mod tests {
     }
 
     /// A magus **may** now be built through its life stages. All four periods
-    /// `ArMDE:2432` names are modelled — early childhood, later life (which for a magus
-    /// ends at apprenticeship, `ArMDE:2282`), apprenticeship itself (`ArMDE:2503`), and life as
-    /// a magus after the Gauntlet (`ArMDE:2539`) — so the combination is costed rather
+    /// `ArMDE:2434` names are modelled — early childhood, later life (which for a magus
+    /// ends at apprenticeship, `ArMDE:2284`), apprenticeship itself (`ArMDE:2505`), and life as
+    /// a magus after the Gauntlet (`ArMDE:2541`) — so the combination is costed rather
     /// than refused, and the 6b2 refusal (`life_stage_magus_guided_unsupported`) is
     /// gone.
     ///
@@ -1624,7 +1624,7 @@ mod tests {
         );
     }
 
-    /// Childhood grants two separately-restricted blocks (ArMDE:2446), so a
+    /// Childhood grants two separately-restricted blocks (ArMDE:2448), so a
     /// life-stage character can leave both unspent and would otherwise receive two
     /// warnings a reader cannot tell apart. Each names its own block, and the
     /// unspent-45 case — the common one, since the 75 buys one language — says

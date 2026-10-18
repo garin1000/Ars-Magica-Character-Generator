@@ -18,7 +18,7 @@
 //! gets the same 10 Flaw / 20 budgeted Virtue points, and only how they are
 //! spent differs (`docs/vf-audit/decisions.md` D32).
 //!
-//! Source: ArMDE:2703-2707 (general
+//! Source: ArMDE:2705-2709 (general
 //! rules), :2643-2765 (the four types), :2842-2851 (V/F guidelines).
 
 use serde::{Deserialize, Serialize};
@@ -32,7 +32,7 @@ use crate::types::{Entity, Id, Selection, SourceRef};
 /// must satisfy (same magnitude/category). The UI seeds `default` and offers the
 /// constraint-eligible Flaws as substitutes.
 ///
-/// Source: ArMDE:2728, :2757, :2822
+/// Source: ArMDE:2730, :2759, :2824
 /// ("or a suitable substitute agreed with the troupe").
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RequiredFlaw {

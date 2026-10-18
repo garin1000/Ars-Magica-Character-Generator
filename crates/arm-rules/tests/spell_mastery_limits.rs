@@ -3,11 +3,11 @@
 //! Two gaps found by `tmp/small-catalogues-audit.md` (findings S1/S2) in
 //! `validation/magus.rs::validate_spell_mastery_abilities`:
 //!
-//! - S1: Quiet Casting (ArMDE:9650-9652) — "A maga may take this ability
+//! - S1: Quiet Casting (ArMDE:9652-9654) — "A maga may take this ability
 //!   twice." The catalogue's only cap mechanism is the boolean `repeatable`
 //!   flag, so a third (or later) pick validates cleanly today.
-//! - S2: Ceremonial Casting (ArMDE:9606), Fast Casting (ArMDE:9612), and Quick
-//!   Casting (ArMDE:9648) each state "may not be taken for Ritual spells" — nothing
+//! - S2: Ceremonial Casting (ArMDE:9608), Fast Casting (ArMDE:9614), and Quick
+//!   Casting (ArMDE:9650) each state "may not be taken for Ritual spells" — nothing
 //!   checks the target spell's `ritual` flag before permitting one of these
 //!   three.
 //!
@@ -80,7 +80,7 @@ fn codes(e: &Entity, rs: &Ruleset) -> Vec<String> {
 
 // --- S1: Quiet Casting capped at 2 per spell --------------------------------
 
-/// ArMDE:9650-9652: "A maga may take this ability twice." Two picks on a
+/// ArMDE:9652-9654: "A maga may take this ability twice." Two picks on a
 /// real (non-Ritual) shipped spell must validate clean of any per-ability cap
 /// error — today this is already true (no such check exists at all), so this
 /// assertion stays green across Phase 1→2 and only guards against a future
@@ -102,7 +102,7 @@ fn quiet_casting_twice_is_not_too_many() {
     );
 }
 
-/// ArMDE:9650-9652's "twice" is a hard ceiling, not "repeatable" in the
+/// ArMDE:9652-9654's "twice" is a hard ceiling, not "repeatable" in the
 /// unlimited sense Precise/Quick Casting get. A third pick must error with
 /// the new per-ability-max code. RED today: `repeatable: true` plus no
 /// `max_count` field means the validator has no way to reject this.
@@ -126,7 +126,7 @@ fn quiet_casting_thrice_is_too_many() {
 }
 
 /// Sanity floor: Precise/Quick Casting are also `repeatable: true` but carry
-/// no stated ceiling ("multiple times", ArMDE:9644, :9648) — three picks of
+/// no stated ceiling ("multiple times", ArMDE:9646, :9650) — three picks of
 /// Quick Casting must NOT trip the new cap, so the fix (Phase 2) must key the
 /// cap on Quiet Casting specifically, not on `repeatable` in general.
 #[test]
@@ -191,7 +191,7 @@ fn ceremonial_fast_and_quick_casting_are_clean_on_a_non_ritual_spell() {
     }
 }
 
-/// Multiple Casting is explicitly the opposite case (ArMDE:9632: "This
+/// Multiple Casting is explicitly the opposite case (ArMDE:9634: "This
 /// special ability may be taken for Ritual spells") — it must never trip the
 /// Ritual-forbidden error, pinning that the Phase 2 fix's forbidden set is
 /// exactly {Ceremonial, Fast, Quick} and not every mastery ability.

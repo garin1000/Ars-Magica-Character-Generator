@@ -1,11 +1,11 @@
 //! Aging table-row guard (data-integrity, PHASE 1 — test + triage only, see
 //! `tmp/table-guard-handover.md`): every `rules/core/aging.json` row must
 //! match the English core rulebook's own `## Aging` section
-//! (`ArMDE:16640-16719`) — the Living Conditions table (`ArMDE:16658-16671`),
-//! the Aging Roll table (`ArMDE:16674-16688`), the Crisis Roll table
-//! (`ArMDE:16701-16709`), and the two prose-derived facts that are not table
+//! (`ArMDE:16642-16721`) — the Living Conditions table (`ArMDE:16660-16673`),
+//! the Aging Roll table (`ArMDE:16676-16690`), the Crisis Roll table
+//! (`ArMDE:16703-16711`), and the two prose-derived facts that are not table
 //! rows at all: `crisis.die` (`ArMDE:540-542`, the Simple Die) and
-//! `crisis.attendant` (`ArMDE:16711`, the attending doctor).
+//! `crisis.attendant` (`ArMDE:16713`, the attending doctor).
 //!
 //! Table rows are read the same way as `equipment_table_row.rs`: the header
 //! governing a cited data row is found by scanning upward for the nearest
@@ -484,7 +484,7 @@ fn check_crisis_die(entry: &Value, lines: &[&str]) -> Result<(), Vec<String>> {
     }
 }
 
-/// `crisis.attendant` is prose, not a table row (`ArMDE:16711`): "An Int +
+/// `crisis.attendant` is prose, not a table row (`ArMDE:16713`): "An Int +
 /// Medicine roll against an Ease Factor of 6 allows the character to add the
 /// attendant's Medicine score to the roll to survive the crisis. ... if the
 /// doctor botches the character must subtract 3 from the survival roll."

@@ -7,7 +7,7 @@
 //! The spans follow the rules' own periods: "For grogs and companions they are
 //! acquired in two blocks: early childhood, and later life. For magi, there are
 //! two more periods to consider: apprenticeship, and life as a magus after that."
-//! (ArMDE:2432.) The player's named life sections split the open, last period —
+//! (ArMDE:2434.) The player's named life sections split the open, last period —
 //! later life for a grog or companion, the years after the Gauntlet for a magus.
 
 use std::fmt;
@@ -83,15 +83,15 @@ pub enum TimelineEntryKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum FixedSection {
-    /// "the first five years of life" (ArMDE:2446).
+    /// "the first five years of life" (ArMDE:2448).
     Childhood,
     /// The later-life years before an apprenticeship: a magus's, a Redcap's, or
     /// the years before an Abandoned Apprentice's training began.
     LaterLife,
-    /// The fifteen years of apprenticeship (ArMDE:2503), or a Redcap's
-    /// "fifteen years as an apprentice" (ArMDE:4919).
+    /// The fifteen years of apprenticeship (ArMDE:2505), or a Redcap's
+    /// "fifteen years as an apprentice" (ArMDE:4921).
     Apprenticeship,
-    /// An Abandoned Apprentice's training, cut short (ArMDE:5714).
+    /// An Abandoned Apprentice's training, cut short (ArMDE:5716).
     TruncatedTraining,
 }
 
@@ -124,7 +124,7 @@ impl fmt::Display for FixedSection {
 #[serde(rename_all = "snake_case", tag = "kind")]
 pub enum EntryCapacity {
     /// Experience and levels of spells as two numbers that cannot be traded:
-    /// "240 experience points, and 120 levels of spells" (ArMDE:2503).
+    /// "240 experience points, and 120 levels of spells" (ArMDE:2505).
     Separate {
         /// Experience points.
         xp: u32,
@@ -132,7 +132,7 @@ pub enum EntryCapacity {
         spell_levels: u32,
     },
     /// Points that are each "an experience point in an Art or Ability or one
-    /// level of spell" (ArMDE:2539): a magus's years after the Gauntlet.
+    /// level of spell" (ArMDE:2541): a magus's years after the Gauntlet.
     Shared {
         /// The points.
         points: u32,
@@ -167,7 +167,7 @@ pub struct OutsideLump {
 /// The general experience (plus every earmark carved from it) is poured oldest
 /// first into the spans the general pool pays for, each capped at what its
 /// years earned; levels of spells are poured after it, into the spell capacity
-/// and the post-Gauntlet points the experience left (ArMDE:2539).
+/// and the post-Gauntlet points the experience left (ArMDE:2541).
 pub fn life_timeline(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -281,9 +281,9 @@ enum Shape {
     Untrained,
     /// A magus: its apprenticeship, then the years after the Gauntlet.
     Magus,
-    /// A Redcap: "trained in a similar manner to magi" (ArMDE:4919).
+    /// A Redcap: "trained in a similar manner to magi" (ArMDE:4921).
     Redcap,
-    /// An Abandoned Apprentice: training cut short (ArMDE:5714, D3/D64).
+    /// An Abandoned Apprentice: training cut short (ArMDE:5716, D3/D64).
     AbandonedApprentice,
 }
 
@@ -439,10 +439,10 @@ fn fixed(section: FixedSection) -> TimelineEntryKind {
     TimelineEntryKind::Fixed { section }
 }
 
-/// Childhood: the budget's 75 + 45 (ArMDE:2446), which the years earn whether
+/// Childhood: the budget's 75 + 45 (ArMDE:2448), which the years earn whether
 /// or not a native language has been picked (without one the solve builds no
 /// native-language pool) — unless a replacement such as Feral Upbringing funds
-/// childhood instead, when the span shows that pool's own amount (ArMDE:6183).
+/// childhood instead, when the span shows that pool's own amount (ArMDE:6185).
 fn childhood_draft(rules: &LifeStageRules, budget: &LifeStageBudget, pools: &PoolReading) -> Draft {
     let (pooled, used) = pools.childhood;
     let amount = if pools.childhood_replaced {
@@ -491,9 +491,9 @@ fn training_drafts(
     let spell_bonus = spell_levels_bonus(entity, ruleset);
     match layout.shape {
         Shape::Untrained => Vec::new(),
-        // Later life "until apprenticeship for magi" (ArMDE:2282) is its own
-        // pool; the apprenticeship's experience and levels (ArMDE:2503) take
-        // Skilled/Weak Parens (ArMDE:5037).
+        // Later life "until apprenticeship for magi" (ArMDE:2284) is its own
+        // pool; the apprenticeship's experience and levels (ArMDE:2505) take
+        // Skilled/Weak Parens (ArMDE:5039).
         Shape::Magus => vec![
             later_life(budget.later_life_xp).filled_by_own_pool(pools.later_life_used),
             training(
@@ -540,8 +540,8 @@ fn open_span_drafts(
     budget: &LifeStageBudget,
 ) -> (Vec<Draft>, u32) {
     let capacity = |years: u32, lab_years: LabYears| match layout.shape {
-        // "For every year, the magus gets 30 points" (ArMDE:2539), less each
-        // section's own lab seasons (ArMDE:2550).
+        // "For every year, the magus gets 30 points" (ArMDE:2541), less each
+        // section's own lab seasons (ArMDE:2552).
         Shape::Magus => EntryCapacity::Shared {
             points: rules
                 .post_apprenticeship
@@ -591,7 +591,7 @@ fn pour_general_xp(drafts: &mut [Draft], mut xp: u32) {
 
 /// Pours the levels of spells, oldest first, into each span's spell capacity —
 /// or, for post-Gauntlet points, into what the experience left of them
-/// (ArMDE:2539).
+/// (ArMDE:2541).
 fn pour_spell_levels(drafts: &mut [Draft], mut levels: u32) {
     for draft in drafts.iter_mut() {
         let room = match draft.entry.capacity {

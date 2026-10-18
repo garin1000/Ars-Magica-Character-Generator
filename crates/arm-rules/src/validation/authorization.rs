@@ -15,19 +15,19 @@ use crate::ability::AbilityCategory;
 /// > the first three groups, although other Virtues (and some Flaws) also grant
 /// > access to some of these Abilities.
 ///
-/// Source: ArMDE:2383, restated for the
-/// later-life block at `ArMDE:2460`.
+/// Source: ArMDE:2385, restated for the
+/// later-life block at `ArMDE:2462`.
 ///
 /// **Supernatural is not checked here.** It has its own, stricter rule — access is
-/// granted per Ability rather than per category (`ArMDE:2383`: "In most cases, access to
+/// granted per Ability rather than per category (`ArMDE:2385`: "In most cases, access to
 /// each Supernatural Ability is granted by a separate Virtue") — which
 /// [`validate_supernatural_abilities`] already enforces. Which categories this
 /// function gates is therefore rules *data*
 /// (`abilities.json` → `categories_requiring_virtue`), not a hardcoded list.
 ///
-/// **The Hermetically trained are exempt**, per `ArMDE:7222` ("Beginning characters
+/// **The Hermetically trained are exempt**, per `ArMDE:7224` ("Beginning characters
 /// may only purchase Academic Abilities if they are specifically permitted to
-/// through the purchase of a Virtue, **or if they are magi**") and `ArMDE:2503`,
+/// through the purchase of a Virtue, **or if they are magi**") and `ArMDE:2505`,
 /// where apprenticeship experience may be spent on "Arcane, Academic, and Martial
 /// Abilities". The exemption is read off `is_hermetically_trained` (D56/A0's union
 /// of the profile flag with any selection carrying
@@ -35,7 +35,7 @@ use crate::ability::AbilityCategory;
 /// type id — a stray Arcane Ability on a companion with no such Virtue and no such
 /// selection is still gated.
 ///
-/// The exemption is whole-character on purpose, and the other half of `ArMDE:2503` —
+/// The exemption is whole-character on purpose, and the other half of `ArMDE:2505` —
 /// "magi can only spend experience points on Arcane, Academic and Martial Abilities
 /// **before** apprenticeship if they have a Virtue which allows them to do so" — is
 /// enforced elsewhere and is **not** unenforced: for a guided magus it is a property
@@ -125,7 +125,7 @@ pub(crate) fn validate_ability_authorization(
 /// > Arabic, Greek and Hebrew fill similar functions, although of these only Hebrew
 /// > is a dead language.
 ///
-/// Source: ArMDE:7222, :7504.
+/// Source: ArMDE:7224, :7506.
 ///
 /// A **warning**, not an error, for two reasons the passage itself gives: "normally"
 /// and "depending on the region", so a saga may legitimately differ. Any one of the
@@ -395,7 +395,7 @@ mod tests {
     }
 
     /// "a character must have a Virtue to buy Academic, Arcane, Martial … Abilities"
-    /// (ArMDE:2383).
+    /// (ArMDE:2385).
     ///
     /// The category arrives under `ability_category`, NOT `category`: the latter is
     /// the Virtue/Flaw grouping category `category_not_permitted` and
@@ -460,7 +460,7 @@ mod tests {
     }
 
     /// F-349/F-16x's actual fix (`docs/vf-audit/design-c0-parameter-model.md`
-    /// § 1, § 4): "You may take Latin at character creation" (`ArMDE:5938`)
+    /// § 1, § 4): "You may take Latin at character creation" (`ArMDE:5940`)
     /// authorizes Latin, not any dead language — the id-only proxy silently
     /// over-permitted every instance of `ability.dead_language`. Once the
     /// effect carries an `instance` restriction, Latin is still authorized but
@@ -491,7 +491,7 @@ mod tests {
         assert_eq!(gate_issues(&validate(&greek, &rs())).len(), 1);
     }
 
-    /// W2/F-349's exclusive-choice gate (`ArMDE:5330`: "You may take either
+    /// W2/F-349's exclusive-choice gate (`ArMDE:5332`: "You may take either
     /// Arcane or Academic Abilities, but not both, at character creation").
     /// The naive fix — authorizing both categories unconditionally — is
     /// exactly the over-permission F-349 warns against: choosing Academic
@@ -551,8 +551,8 @@ mod tests {
         assert_eq!(gate_issues(&validate(&wrong, &rs())).len(), 1);
     }
 
-    /// "…or if they are magi" (`ArMDE:7222`), and apprenticeship experience may go on
-    /// "Arcane, Academic, and Martial Abilities" (`ArMDE:2503`). Read off the profile
+    /// "…or if they are magi" (`ArMDE:7224`), and apprenticeship experience may go on
+    /// "Arcane, Academic, and Martial Abilities" (`ArMDE:2505`). Read off the profile
     /// flag, never a type id.
     #[test]
     fn a_magus_needs_no_virtue_for_the_restricted_categories() {

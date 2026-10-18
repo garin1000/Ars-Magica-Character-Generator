@@ -35,7 +35,7 @@
    * has not been asked yet.
    *
    * "**Crisis:** Increase the character's Decrepitude first, and then roll on the
-   * Crisis Table." Source: ArMDE:16696
+   * Crisis Table." Source: ArMDE:16698
    *
    * A `crisis` with no `crisis_row` is a Crisis the aging row demanded and nobody
    * has rolled — a real state, not an incomplete record, because the aging roll
@@ -154,7 +154,7 @@
        having, not worth the top of the surface. It is a block of its own, and not
        part of the section below, because it is the one block here that grows without
        bound — one row per aging roll, and a pre-play catch-up can owe 25
-       (ArMDE:2300). Its bounded scrollport (`.aging-log-scroll`, app.css)
+       (ArMDE:2302). Its bounded scrollport (`.aging-log-scroll`, app.css)
        is what keeps that growth from moving anything at all: adding a year scrolls
        in place. -->
   <div class="detail-section aging-log-block" data-testid="aging-log-block">
@@ -268,7 +268,7 @@
     {/if}
 
     <!-- The cumulative overall aging/decrepitude narrative, which grows over a
-       character's life (ArMDE:16640-16654) — distinct from the aging log's
+       character's life (ArMDE:16642-16656) — distinct from the aging log's
        per-year one-liners above. A textarea for the same reason `warping_effect` is
        one in CharacterDetails: it is the same kind of field, and the two must not
        offer different controls for the same kind of writing. -->
@@ -358,7 +358,7 @@
   /* The engine's record of a resolved year — the roll, and beneath it a Crisis where
      one was rolled — sitting under its row rather than beside the editable fields:
      these are read-outs, not controls. Two lines and not one, because they are two
-     rolls against two different tables, resolved in that order (`ArMDE:16696`), and one
+     rolls against two different tables, resolved in that order (`ArMDE:16698`), and one
      run-on sentence would read as a single result. */
   .aging-log-readout {
     flex-basis: 100%;

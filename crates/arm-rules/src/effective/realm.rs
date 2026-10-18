@@ -39,7 +39,7 @@ pub struct ResolvedRealm {
 }
 
 /// Whether `item`, as `selection` names it, carries a realm association at
-/// all — Tainted items (ArMDE:3068), or items currently read as the
+/// all — Tainted items (ArMDE:3070), or items currently read as the
 /// `supernatural` category ([`PointItem::categories_for`], so a
 /// multi-category entry like Sufi only qualifies when `taken_as` that
 /// category). Used to admit [`REALM_OVERRIDE_PARAM_KEY`] as a legal (but
@@ -75,7 +75,7 @@ fn override_realm(selection: &Selection) -> Option<Realm> {
 /// doc comment).
 ///
 /// The chain (D42/D70 Q-X6-5, D74):
-/// 1. `tainted: true` (ArMDE:3068) → Infernal, no warning — checked first, so
+/// 1. `tainted: true` (ArMDE:3070) → Infernal, no warning — checked first, so
 ///    the general Tainted rule cannot disagree with a stale/never-added
 ///    [`RealmAssociation`] on the same item.
 /// 2. [`RealmAssociation::Fixed`] → that realm; an override is ignored,
@@ -95,7 +95,7 @@ fn override_realm(selection: &Selection) -> Option<Realm> {
 ///    through to step 6 if the named parameter is itself missing or
 ///    unparseable (a crafted save; never a panic).
 /// 6. No association at all → override, else `concept_realm`, else
-///    [`Realm::Magic`] (ArMDE:3028) — never a warning.
+///    [`Realm::Magic`] (ArMDE:3030) — never a warning.
 pub fn resolve_realm(
     item: &PointItem,
     selection: &Selection,

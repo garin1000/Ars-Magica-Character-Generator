@@ -32,7 +32,7 @@ fn grog_with_animal_companion() -> Entity {
         Id::new("grog"),
         RulesetRef::new(Id::new("arm5-core"), "2024.1"),
     );
-    // A shipped Minor Story Flaw (ArMDE:5742-5744).
+    // A shipped Minor Story Flaw (ArMDE:5744-5746).
     e.selections = vec![Selection::new(Id::new("flaw.animal_companion"))];
     e
 }
@@ -49,7 +49,7 @@ fn a_grogs_story_flaw_is_not_a_category_error() {
         .collect();
     assert!(
         not_permitted.is_empty(),
-        "ArMDE:1077, :2894 — grogs 'should not' take Story Flaws; that is advice, \
+        "ArMDE:1077, :2896 — grogs 'should not' take Story Flaws; that is advice, \
          not a ban: {not_permitted:?}"
     );
 }

@@ -123,7 +123,7 @@ describe('Reputations writes nothing on load', () => {
 
   it('writes the pre-filled minimum level for a ranged grant (Outsider, D11/Q5)', () => {
     // Outsider grants Local 1, max_score 3 ("a bad Reputation of level 1 to
-    // 3", ArMDE:6625). Before the level is ever raised, the first description
+    // 3", ArMDE:6627). Before the level is ever raised, the first description
     // typed must record the grant's own score — its minimum — exactly like
     // any exact grant, not some other figure.
     store.effective = {
@@ -142,7 +142,7 @@ describe('Reputations writes nothing on load', () => {
 
 describe('Reputations level control (D11/Q5, D58)', () => {
   // Outsider is the one grant in the catalogue stating a range: "a bad
-  // Reputation of level 1 to 3" (ArMDE:6625). A legal character with level 2
+  // Reputation of level 1 to 3" (ArMDE:6627). A legal character with level 2
   // or 3 must be enterable, so the panel needs a level control bounded to
   // `[grant.score, grant.max_score]` — an exact grant (Infamous, Famous) gets
   // none, since there is nothing to choose.
@@ -207,7 +207,7 @@ describe('Reputations level control (D11/Q5, D58)', () => {
   });
 
   it('offers no level control for an exact grant', () => {
-    // Infamous grants exactly 4 (ArMDE:6381-6383) — nothing to choose.
+    // Infamous grants exactly 4 (ArMDE:6383-6385) — nothing to choose.
     app = mount(Reputations, { target });
     flushSync();
 

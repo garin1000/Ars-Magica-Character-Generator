@@ -291,7 +291,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     // "Gain sufficient Aging Points (in any Characteristics)" — plural, so the
     // player may spread them; forcing them into one target would force drops the
     // player could legally avoid.
-    // Source: ArMDE:16679
+    // Source: ArMDE:16681
     store.agingDraft = draft({ die: 9 });
     setPreview(
       total({ die: 9, total: 13 }),
@@ -400,7 +400,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
 
   it('reads the CRISIS TOTAL and names the row in words, never as a slug', () => {
     // "CRISIS TOTAL: Simple die + age/10 (round up) + Decrepitude Score"
-    // Source: ArMDE:16698
+    // Source: ArMDE:16700
     store.agingDraft = draft({ die: 9, crisisDie: 10 });
     setPreview(total({ die: 9, total: 13 }), crisisOutcome(), crisis());
     const body = html();
@@ -423,9 +423,9 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
 
   it('names every survival modifier separately, and invents none', () => {
     // "The character's aging rolls benefit from a +1 bonus … Furthermore, he
-    // receives a +3 bonus to rolls to survive an aging crisis" (`ArMDE:4601`), and
+    // receives a +3 bonus to rolls to survive an aging crisis" (`ArMDE:4603`), and
     // "you can apply your bronze cord score as a bonus to … rolls to resist
-    // aging" (`ArMDE:10916`). The panel has to NAME each, so they are never summed away.
+    // aging" (`ArMDE:10918`). The panel has to NAME each, so they are never summed away.
     store.agingDraft = draft({ die: 9, crisisDie: 10 });
     setPreview(
       total({ die: 9, total: 13 }),
@@ -445,7 +445,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     );
     let body = html();
     const survival = text(body, 'crisis-survival');
-    // Ease Factor 3 or CrCo20 (`ArMDE:16705`), both offered.
+    // Ease Factor 3 or CrCo20 (`ArMDE:16707`), both offered.
     expect(survival).toContain('3');
     expect(survival).toContain('20');
     expect(text(body, 'crisis-modifier-0')).toContain('Mild Aging');
@@ -465,7 +465,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
   it('states what an attending doctor may bring, without scoring it', () => {
     // "An Int + Medicine roll against an Ease Factor of 6 allows the character to
     // add the attendant's Medicine score … if the doctor botches the character
-    // must subtract 3." (`ArMDE:16711`) The Medicine belongs to another character, so
+    // must subtract 3." (`ArMDE:16713`) The Medicine belongs to another character, so
     // the app states the allowance and no more.
     store.agingDraft = draft({ die: 9, crisisDie: 10 });
     setPreview(
@@ -500,7 +500,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
   });
 
   it('says a bedridden Crisis is time rather than a roll', () => {
-    // "Bedridden for a week" (`ArMDE:16703`) — no Stamina roll, no Ritual level, and
+    // "Bedridden for a week" (`ArMDE:16705`) — no Stamina roll, no Ritual level, and
     // no empty read-out that would say "survivable on a 0".
     store.agingDraft = draft({ die: 9, crisisDie: 4 });
     setPreview(
@@ -520,7 +520,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
   });
 
   it('says the Terminal row offers no roll at all', () => {
-    // "**Terminal illness**. CrCo40 required to survive." (`ArMDE:16709`) — an absent
+    // "**Terminal illness**. CrCo40 required to survive." (`ArMDE:16711`) — an absent
     // Ease Factor is no roll, never an unbeatable one.
     store.agingDraft = draft({ die: 9, crisisDie: 10 });
     setPreview(
@@ -541,7 +541,7 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
 
   it('reports the Longevity Ritual the applied year spent', () => {
     // "the ritual assures that the character survives, but its power is spent"
-    // (`ArMDE:16650`) — reported, because the entity keeps the stored choice, so this
+    // (`ArMDE:16652`) — reported, because the entity keeps the stored choice, so this
     // is the only place the player can be told.
     store.agingNotes = [{ kind: 'longevity_ritual_spent' }];
     const body = html();

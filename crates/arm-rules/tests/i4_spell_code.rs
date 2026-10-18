@@ -6,11 +6,11 @@
 //! after the Form, several of them comma-separated:
 //!
 //! - "Cr(Re)Ig 30 (Base 5, +1 Touch, +2 Sun, +1 requisite, +1 constant effect)"
-//!   (ArMDE:19378)
+//!   (ArMDE:19380)
 //! - "ReAq(Co) 30 (Base 5, +1 Touch, +2 Sun, +1 requisite, +1 constant effect)"
-//!   (ArMDE:19243)
+//!   (ArMDE:19245)
 //! - "MuTe(Aq, Co, An) 25 (Base 3, +2 Voice, +2 affect metal, +2 affect humans
-//!   and animals)" (ArMDE:19318)
+//!   and animals)" (ArMDE:19320)
 //!
 //! `LocalizedRuleset::spell_code` is the one place that composes it, without the
 //! level: the Spells tab appends the level in TypeScript, and the Markdown
@@ -103,7 +103,7 @@ fn code(localized: &LocalizedRuleset, spell: &str) -> Option<String> {
 
 /// A spell with no requisite is the plain Technique+Form pair.
 /// Pilum of Fire, a Creo Ignem spell of level 20 with no "Req:" line
-/// (ArMDE:14323-14328).
+/// (ArMDE:14325-14330).
 #[test]
 fn a_spell_without_requisites_is_technique_then_form() {
     assert_eq!(
@@ -113,7 +113,7 @@ fn a_spell_without_requisites_is_technique_then_form() {
 }
 
 /// A Form requisite follows the Form. Phantasmal Fire, CrIm 20, "Req: Ignem"
-/// (ArMDE:14629-14633).
+/// (ArMDE:14631-14635).
 #[test]
 fn a_form_requisite_follows_the_form() {
     assert_eq!(
@@ -123,7 +123,7 @@ fn a_form_requisite_follows_the_form() {
 }
 
 /// A Technique requisite follows the Technique. Coat of Flame, CrIg 25,
-/// "Req: Rego" (ArMDE:14337-14341) — the shape of "Cr(Re)Ig 30" (ArMDE:19378).
+/// "Req: Rego" (ArMDE:14339-14343) — the shape of "Cr(Re)Ig 30" (ArMDE:19380).
 #[test]
 fn a_technique_requisite_follows_the_technique() {
     assert_eq!(
@@ -133,7 +133,7 @@ fn a_technique_requisite_follows_the_technique() {
 }
 
 /// Each requisite goes to its own Art, whichever order the data lists them in.
-/// Fog of Confusion, MuAu 45, "Req: Imaginem, Rego" (ArMDE:13313-13317): the
+/// Fog of Confusion, MuAu 45, "Req: Imaginem, Rego" (ArMDE:13315-13319): the
 /// Rego requisite is a Technique, the Imaginem one a Form.
 #[test]
 fn mixed_requisites_each_follow_their_own_art() {
@@ -158,7 +158,7 @@ fn the_code_is_the_same_in_german() {
 }
 
 /// Several Form requisites are comma+space separated, in data order — not
-/// sorted: "MuTe(Aq, Co, An) 25" (ArMDE:19318).
+/// sorted: "MuTe(Aq, Co, An) 25" (ArMDE:19320).
 #[test]
 fn several_form_requisites_are_comma_separated_in_data_order() {
     let rs = synthetic(
@@ -174,7 +174,7 @@ fn several_form_requisites_are_comma_separated_in_data_order() {
 }
 
 /// The book's Technique-requisite and Form-requisite examples, composed from
-/// synthetic spells: "Cr(Re)Ig 30" (ArMDE:19378), "ReAq(Co) 30" (ArMDE:19243).
+/// synthetic spells: "Cr(Re)Ig 30" (ArMDE:19380), "ReAq(Co) 30" (ArMDE:19245).
 /// Two Technique requisites take the same comma form as two Form requisites.
 #[test]
 fn the_books_power_codes_compose_the_same_way() {

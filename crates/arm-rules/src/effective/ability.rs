@@ -31,7 +31,7 @@ pub struct AbilityBonus {
 /// and not "Berlin Lore". A plain ability matches by id alone. Two virtues
 /// boosting the same instance stack.
 ///
-/// Source: ArMDE:4885-4887 ("You may
+/// Source: ArMDE:4887-4889 ("You may
 /// only take this Virtue once for a given Ability"; each (Area) Lore is a
 /// distinct Ability).
 pub fn ability_bonus(
@@ -322,8 +322,8 @@ pub struct AbilityBonusSources {
 
 /// Each item that moves the `(ability, parameter)` instance's effective score off
 /// its bought score: the winning grant, for the part of its floor above the
-/// bought score (Second Sight 1, ArMDE:4959-4961), and every additive bonus
-/// (Puissant Ability, ArMDE:4885-4887). Sums to `effective - bought` by
+/// bought score (Second Sight 1, ArMDE:4961-4963), and every additive bonus
+/// (Puissant Ability, ArMDE:4887-4889). Sums to `effective - bought` by
 /// construction, since [`effective_ability_score`] is `max(bought, floor) + bonus`
 /// and `max(bought, floor) - bought` is `max(0, floor - bought)`.
 fn ability_score_sources(

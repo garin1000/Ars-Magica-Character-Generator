@@ -104,7 +104,7 @@ fn displayed_text(locale_json: &str, id: &str) -> String {
 }
 
 // ---------------------------------------------------------------------------
-// F-30 — `virtue.cathedral_school_master`, ArMDE:3620-3625.
+// F-30 — `virtue.cathedral_school_master`, ArMDE:3622-3627.
 // "He is at least (30 – Intelligence) years old and must have scores of 5 in
 // Latin and Artes Liberales, and a Teaching score of at least 3."
 //
@@ -141,7 +141,7 @@ fn f30_cathedral_school_master_below_ability_minimums_is_refused() {
     let result = validate(&e, &rs);
     assert!(
         has_prereq_not_met(&result),
-        "ArMDE:3622 requires Latin (dead_language) >= 5 as well; a score of 4 \
+        "ArMDE:3624 requires Latin (dead_language) >= 5 as well; a score of 4 \
          must be refused, got issues {:?}",
         issue_codes(&result)
     );
@@ -160,7 +160,7 @@ fn f30_cathedral_school_master_at_ability_minimums_is_legal() {
     let result = validate(&e, &rs);
     assert!(
         !has_prereq_not_met(&result),
-        "ArMDE:3622's three minima exactly met must be legal, got issues {:?}",
+        "ArMDE:3624's three minima exactly met must be legal, got issues {:?}",
         issue_codes(&result)
     );
 }
@@ -205,7 +205,7 @@ fn f30_cathedral_school_master_prereq_issue_is_reported_on_a_reachable_phase() {
 }
 
 // ---------------------------------------------------------------------------
-// F-56 — `virtue.doctor_in_faculty`, ArMDE:3754-3769.
+// F-56 — `virtue.doctor_in_faculty`, ArMDE:3756-3771.
 // "He must have a score of 5 in Latin. Artes Liberales, and the Ability that
 // correlates to his faculty degree." (German resolves the OCR's missing
 // comma: three Abilities at 5, not "Latin at 5" plus two unquantified.)
@@ -240,7 +240,7 @@ fn f56_doctor_in_faculty_below_ability_minimums_is_refused() {
     let result = validate(&e, &rs);
     assert!(
         has_prereq_not_met(&result),
-        "ArMDE:3758 requires Artes Liberales >= 5; a score of 4 must be \
+        "ArMDE:3760 requires Artes Liberales >= 5; a score of 4 must be \
          refused, got issues {:?}",
         issue_codes(&result)
     );
@@ -265,14 +265,14 @@ fn f56_doctor_in_faculty_at_ability_minimums_is_legal() {
     let result = validate(&e, &rs);
     assert!(
         !has_prereq_not_met(&result),
-        "ArMDE:3758's two expressible minima exactly met must be legal, got \
+        "ArMDE:3760's two expressible minima exactly met must be legal, got \
          issues {:?}",
         issue_codes(&result)
     );
 }
 
 // ---------------------------------------------------------------------------
-// F-145 — `virtue.license_of_absence`, ArMDE:4362-4365.
+// F-145 — `virtue.license_of_absence`, ArMDE:4364-4367.
 // "A license of absence may only be taken by a character with the Priest
 // Social Status. It may not be taken by Senior Clergy."
 //
@@ -335,7 +335,7 @@ fn f145_license_of_absence_for_a_priest_is_legal() {
 }
 
 // ---------------------------------------------------------------------------
-// F-169 — `virtue.magister_in_artibus`, ArMDE:4456-4465.
+// F-169 — `virtue.magister_in_artibus`, ArMDE:4458-4467.
 // "You are at least (25 – Int) years old, and must have scores of at least 5
 // in Latin and Artes Liberales."
 //
@@ -356,7 +356,7 @@ fn f169_magister_in_artibus_below_ability_minimums_is_refused() {
     let result = validate(&e, &rs);
     assert!(
         has_prereq_not_met(&result),
-        "ArMDE:4460 requires Artes Liberales >= 5; a score of 4 must be \
+        "ArMDE:4462 requires Artes Liberales >= 5; a score of 4 must be \
          refused, got issues {:?}",
         issue_codes(&result)
     );
@@ -374,14 +374,14 @@ fn f169_magister_in_artibus_at_ability_minimums_is_legal() {
     let result = validate(&e, &rs);
     assert!(
         !has_prereq_not_met(&result),
-        "ArMDE:4460's two minima exactly met must be legal, got issues {:?}",
+        "ArMDE:4462's two minima exactly met must be legal, got issues {:?}",
         issue_codes(&result)
     );
 }
 
 // ---------------------------------------------------------------------------
-// F-172 — `virtue.magister_in_medicina`, ArMDE:4466-4469, importing
-// ArMDE:3758's "must have a score of 5 in Latin, Artes Liberales, and the
+// F-172 — `virtue.magister_in_medicina`, ArMDE:4468-4471, importing
+// ArMDE:3760's "must have a score of 5 in Latin, Artes Liberales, and the
 // Ability that correlates to his faculty degree" — but here the faculty is
 // FIXED (medicine), so all three resolve to concrete ids:
 // `ability.dead_language` >= 5, `ability.artes_liberales` >= 5,
@@ -402,7 +402,7 @@ fn f172_magister_in_medicina_below_ability_minimums_is_refused() {
     let result = validate(&e, &rs);
     assert!(
         has_prereq_not_met(&result),
-        "ArMDE:3758 (imported) requires Medicine >= 5; a score of 4 must be \
+        "ArMDE:3760 (imported) requires Medicine >= 5; a score of 4 must be \
          refused, got issues {:?}",
         issue_codes(&result)
     );
@@ -427,7 +427,7 @@ fn f172_magister_in_medicina_at_ability_minimums_is_legal() {
 }
 
 // ---------------------------------------------------------------------------
-// F-183 — `virtue.master_bard`, ArMDE:4528-4533.
+// F-183 — `virtue.master_bard`, ArMDE:4530-4535.
 // "must have a Profession: Storyteller or Poet of at least 5, and also a 5 in
 // at least one of Area Lore, Organization Lore, Faerie Lore, or Magic Lore."
 //
@@ -458,7 +458,7 @@ fn f183_master_bard_below_ability_minimums_is_refused() {
     let result = validate(&e, &rs);
     assert!(
         has_prereq_not_met(&result),
-        "ArMDE:4532 requires at least one of the four Lores at 5; all four \
+        "ArMDE:4534 requires at least one of the four Lores at 5; all four \
          at 4 must be refused even with Profession >= 5, got issues {:?}",
         issue_codes(&result)
     );
@@ -476,7 +476,7 @@ fn f183_master_bard_at_one_lore_minimum_is_legal() {
     let result = validate(&e, &rs);
     assert!(
         !has_prereq_not_met(&result),
-        "any ONE of the four Lores at 5 (ArMDE:4532's \"at least one of\") \
+        "any ONE of the four Lores at 5 (ArMDE:4534's \"at least one of\") \
          plus Profession >= 5 (D70) must be legal, got issues {:?}",
         issue_codes(&result)
     );
@@ -499,7 +499,7 @@ fn f183_master_bard_without_profession_minimum_is_refused() {
 }
 
 // ---------------------------------------------------------------------------
-// F-223 — `virtue.physician_of_salerno`, ArMDE:4803-4806.
+// F-223 — `virtue.physician_of_salerno`, ArMDE:4805-4808.
 // "To take this Virtue, you must be able to take Academic Abilities."
 //
 // NOT expressible as a `Prereq`: this gates on whether a *category* is
@@ -533,7 +533,7 @@ fn f223_physician_of_salerno_academic_gate_is_stated_in_german() {
 }
 
 // ---------------------------------------------------------------------------
-// F-252 — `virtue.rosh_beth_din`, ArMDE:4949-4954.
+// F-252 — `virtue.rosh_beth_din`, ArMDE:4951-4956.
 // "Your character must be (30 – Int) years old to take this Virtue and have
 // scores of at least 5 in Hebrew, Rabbinic Law, and Theology: Judaism."
 //
@@ -600,7 +600,7 @@ fn f252_rosh_beth_din_age_formula_is_stated_in_both_locales() {
 }
 
 // ---------------------------------------------------------------------------
-// F-261 — `virtue.senior_bard`, ArMDE:4975-4980.
+// F-261 — `virtue.senior_bard`, ArMDE:4977-4982.
 // "The character has a minimum age of 22."
 //
 // NOT expressible: B6 lists the `Prereq` variants and none reads
@@ -637,7 +637,7 @@ fn f261_senior_bard_minimum_age_is_stated_in_both_locales() {
 }
 
 // ---------------------------------------------------------------------------
-// F-322 — `virtue.town_magistrate`, ArMDE:5220-5223.
+// F-322 — `virtue.town_magistrate`, ArMDE:5222-5225.
 // "have a score of at least 3 in the Civil and Canon Law (or Common Law)
 // Ability."
 //
@@ -658,7 +658,7 @@ fn f322_town_magistrate_below_ability_minimums_is_refused() {
     let result = validate(&e, &rs);
     assert!(
         has_prereq_not_met(&result),
-        "ArMDE:5222 requires Civil and Canon Law OR Common Law >= 3; both at \
+        "ArMDE:5224 requires Civil and Canon Law OR Common Law >= 3; both at \
          2 must be refused, got issues {:?}",
         issue_codes(&result)
     );
@@ -680,13 +680,13 @@ fn f322_town_magistrate_at_one_ability_minimum_is_legal() {
 }
 
 // ---------------------------------------------------------------------------
-// F-324 — `virtue.trained_assassin`, ArMDE:5224-5227.
+// F-324 — `virtue.trained_assassin`, ArMDE:5226-5229.
 // "This Virtue is only available to characters with one of the Social
 // Status Virtues of the Nizaris."
 //
 // The passage names no Virtue directly; the referent is `virtue.fidai`
-// (ArMDE:3948, "an assassin of the Nizari Isma'ilis") and `virtue.lasiq`
-// (ArMDE:4304, "an experienced assassin of the Nizari Isma'ilis") — both
+// (ArMDE:3950, "an assassin of the Nizari Isma'ilis") and `virtue.lasiq`
+// (ArMDE:4306, "an experienced assassin of the Nizari Isma'ilis") — both
 // confirmed in the catalogue, both `social_status`, neither carrying a
 // prerequisite of its own. Fully expressible:
 // `any[has(virtue.fidai), has(virtue.lasiq)]`.
