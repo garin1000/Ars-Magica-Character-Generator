@@ -514,6 +514,11 @@
     "next_line": "**Arts:** The character's scores in the Hermetic Arts, in the format Art X (Z), ",
     "heading": "### Format"
   },
+  "ArMDE:12453": {
+    "excerpt": "When you invent a spell, some amount of your personal magical style is likely to",
+    "next_line": "Note that even when you learn a spell from another magus, or from a lab text, yo",
+    "heading": "### The Wizard's Sigil"
+  },
   "ArMDE:12459-16020": {
     "excerpt": "## Animal Spells",
     "next_line": "Animal spells affect all natural living things that are not plants or humans, do",
@@ -1058,6 +1063,11 @@
     "excerpt": "### Creo Mentem Spells",
     "next_line": "#### LEVEL 10",
     "heading": "### Creo Mentem Guidelines"
+  },
+  "ArMDE:14974": {
+    "excerpt": "Causes the victim to feel the despair, anguish, pain, and sorrow of a thousand s",
+    "next_line": "(Base 4, +1 Eye, +3 Moon, +1 complex effect)",
+    "heading": "##### Weight of a Thousand Hells"
   },
   "ArMDE:1501": {
     "excerpt": "- Dodging: Init +1, Atk n/a, Def +1, Dam n/a",
@@ -3337,6 +3347,11 @@
   "ArMDE:2368-2374": {
     "excerpt": "",
     "next_line": "Companions who do not have The Gift may not choose Hermetic Virtues or Flaws. Co",
+    "heading": "### Virtues and Flaws"
+  },
+  "ArMDE:2369": {
+    "excerpt": "Companions who do not have The Gift may not choose Hermetic Virtues or Flaws. Co",
+    "next_line": "Mythic Companions get more Virtues for their Flaws, as described in the rules on",
     "heading": "### Virtues and Flaws"
   },
   "ArMDE:2373": {
@@ -5909,6 +5924,11 @@
     "next_line": "*Free, Social Status*<br>",
     "heading": "#### Hermetic Experience"
   },
+  "ArMDE:4142": {
+    "excerpt": "You are a member of the Order of Hermes. All magi must take this as their Social",
+    "next_line": "#### Hermetic Prestige",
+    "heading": "#### Hermetic Magus"
+  },
   "ArMDE:4144-4146": {
     "excerpt": "#### Hermetic Prestige",
     "next_line": "*Minor, Hermetic*<br>",
@@ -6957,6 +6977,11 @@
   "ArMDE:4917": {
     "excerpt": "Although you do not have The Gift and cannot work Hermetic magic, you are a full",
     "next_line": "You deliver messages for the Order, and you possess a number of enchanted device",
+    "heading": "#### Redcap"
+  },
+  "ArMDE:4919": {
+    "excerpt": "You deliver messages for the Order, and you possess a number of enchanted device",
+    "next_line": "These levels are invariably split between two or more effects useful for deliver",
     "heading": "#### Redcap"
   },
   "ArMDE:4921": {
@@ -8099,6 +8124,11 @@
     "next_line": "*Minor, Hermetic*<br>",
     "heading": "#### Broken Vessel"
   },
+  "ArMDE:5832": {
+    "excerpt": "This Flaw is only available to magi of House Jerbiton. The magus creates and enj",
+    "next_line": "#### Busybody",
+    "heading": "#### Brutal Artist"
+  },
   "ArMDE:5836-5837": {
     "excerpt": "You usually know everything that is going on among your friends and acquaintance",
     "next_line": "#### Carefree",
@@ -8443,6 +8473,11 @@
     "excerpt": "#### Disorientating Magic",
     "next_line": "*Minor, Hermetic*<br>",
     "heading": "#### Disfigured"
+  },
+  "ArMDE:6059": {
+    "excerpt": "After casting a spell, you must spend a round doing nothing but recovering your ",
+    "next_line": "#### Driven",
+    "heading": "#### Disorientating Magic"
   },
   "ArMDE:6061": {
     "excerpt": "#### Driven",
@@ -10403,6 +10438,11 @@
     "excerpt": "Sleight of hand and knowledge of confidence games requiring sleight of hand. It ",
     "next_line": "*Specialties:* filching, picking pockets, \"magic\" tricks. (General)",
     "heading": "#### Legerdemain\\*"
+  },
+  "ArMDE:7720-7722": {
+    "excerpt": "#### Magic Theory\\*",
+    "next_line": "Knowledge of what magic is and how it works, used primarily in the laboratory. M",
+    "heading": "#### Magic Sensitivity\\*"
   },
   "ArMDE:7720-7723": {
     "excerpt": "#### Magic Theory\\*",

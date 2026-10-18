@@ -6056,7 +6056,7 @@ Eine sichtbare Entstellung macht dich hässlich und leicht erkennbar. Präsenz-W
 
 #### Desorientierende Magie
 *Klein, Hermetisch*<br>
-Nach dem Wirken eines Zaubers musst du eine Runde lang nichts tun außer deine geistigen Kräfte zu sammeln.
+Nach dem Wirken eines Zaubers musst du eine Runde lang ausschließlich deine geistigen Kräfte sammeln.
 
 #### Getrieben
 *Groß oder Klein, Persönlichkeit*<br>
@@ -14971,7 +14971,7 @@ Versetzt jemanden in einen nagenenden, quälenden, schmerzhaften Gefühlszustand
 
 ##### Gewicht von tausend Höllen
 R: Auge, D: Mond, Z: Ind.<br>
-Lässt das Opfer die Verzweiflung, Qual, den Schmerz und die Trauer von tausend Sündern in der Hölle spüren. Dies ist ein fürchterlicher Zauber, denn das Opfer verliert fast jeden Antrieb und jedes irdische Interesse. Es fühlt nur noch seinen eigenen Schmerz — endlos, unerbittlich und brennend. Würfe mit passenden Persönlichkeitsmerkmalen erleiden einen Abzug von −5, und das Ziel erhält −2 auf alle Würfe, die Denken oder Konzentration erfordern. Das Ziel neigt stark dazu, nichts zu tun außer zu grübeln.<br>
+Lässt das Opfer die Verzweiflung, Qual, den Schmerz und die Trauer von tausend Sündern in der Hölle spüren. Dies ist ein fürchterlicher Zauber, denn das Opfer verliert fast jeden Antrieb und jedes irdische Interesse. Es fühlt nur noch seinen eigenen Schmerz — endlos, unerbittlich und brennend. Würfe mit passenden Persönlichkeitsmerkmalen erleiden einen Abzug von −5, und das Ziel erhält −2 auf alle Würfe, die Denken oder Konzentration erfordern. Das Ziel neigt stark dazu, nichts zu tun, außer zu grübeln.<br>
 (Grundstufe 4, +1 Auge, +3 Mond, +1 komplexer Effekt)
 
 #### STUFE 35

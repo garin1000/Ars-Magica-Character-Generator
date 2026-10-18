@@ -463,8 +463,8 @@
   },
   "flaw.disorientating_magic": {
     "name": "Desorientierende Magie",
-    "summary": "Nach dem Wirken eines Zaubers musst du eine Runde lang nichts tun außer deine geistigen Kräfte zu sammeln.",
-    "description": "Nach dem Wirken eines Zaubers musst du eine Runde lang nichts tun außer deine geistigen Kräfte zu sammeln."
+    "summary": "Nach dem Wirken eines Zaubers musst du eine Runde lang ausschließlich deine geistigen Kräfte sammeln.",
+    "description": "Nach dem Wirken eines Zaubers musst du eine Runde lang ausschließlich deine geistigen Kräfte sammeln."
   },
   "flaw.driven_major": {
     "name": "Getrieben [Groß]",
