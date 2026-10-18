@@ -3109,6 +3109,14 @@ class AppStore {
       this.entity.life_stages = {};
     }
     this.entity.selections = [...this.#mandatoryTraitRefs(typeId)].map((ref) => ({ ref }));
+    // D42/#1: the type profile's default concept realm (magus → Magic) is
+    // seeded ONLY here, at instantiation — never on load or migration, so a
+    // loaded save's stored (or deliberately cleared) concept_realm is never
+    // overwritten.
+    const defaultRealm = this.ruleset?.ruleset.type_profiles[typeId]?.default_concept_realm;
+    if (defaultRealm) {
+      this.entity.concept_realm = defaultRealm;
+    }
     this.currentPath = null;
     // Goes with the outgoing document, exactly as in `newDocument()`.
     this.migratedAgingCharacteristics = [];

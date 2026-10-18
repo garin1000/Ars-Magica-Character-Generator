@@ -1076,6 +1076,37 @@ mod tests {
         assert_eq!(rs.id, Id::new("arm5-core"));
     }
 
+    /// #1 (manual-testing-findings-2026-10-18): a type profile may declare a
+    /// default concept realm (D42: "the concept gains one optional default
+    /// realm"), seeded on the magus profile alone. Parsing is the whole of
+    /// this field's own contract — what it drives (`setConceptRealm` at
+    /// character instantiation) lives in the frontend, never re-derived here.
+    #[test]
+    fn a_type_profile_may_declare_a_default_concept_realm() {
+        use crate::types::Realm;
+        const TYPES_WITH_DEFAULT_CONCEPT_REALM: &str = r#"[
+          {
+            "id": "magus",
+            "budget": { "virtue_points": 10, "flaw_points": 10 },
+            "default_concept_realm": "magic",
+            "creation_phases": []
+          }
+        ]"#;
+        let rs =
+            Ruleset::from_json("t", "1", VALID_ITEMS, TYPES_WITH_DEFAULT_CONCEPT_REALM).unwrap();
+        let profile = rs.profile(&Id::new("magus")).unwrap();
+        assert_eq!(profile.default_concept_realm, Some(Realm::Magic));
+    }
+
+    /// The field is optional: every other shipped type (a companion here)
+    /// declares none, and parses to `None` rather than failing to load.
+    #[test]
+    fn a_type_profile_with_no_default_concept_realm_parses_as_none() {
+        let rs = Ruleset::from_json("arm5-core", "2024.1", VALID_ITEMS, VALID_TYPES).unwrap();
+        let profile = rs.profile(&Id::new("companion")).unwrap();
+        assert_eq!(profile.default_concept_realm, None);
+    }
+
     #[test]
     fn from_sources_named_struct_form() {
         let rs = Ruleset::from_sources(RulesetSources {

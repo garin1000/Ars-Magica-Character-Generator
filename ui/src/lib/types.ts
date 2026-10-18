@@ -1777,6 +1777,13 @@ export interface EntityTypeProfile {
   // when the guided wizard advises on Hermetic Flaws it must key off THIS one,
   // exactly as the engine's `missing_hermetic_flaw` does.
   hermetic_flaw_categories?: string[];
+  // D42's concept default realm, as a property of the TYPE (magus only, set to
+  // `magic`) rather than something the player types — the free-text concept
+  // carries no mechanical realm hint for the engine to read. Applied ONLY at
+  // character instantiation (`#instantiateCharacter` in state.svelte.ts), never
+  // on load or migration, so it can never overwrite a concept realm the player
+  // already chose or cleared. Omitted for every other type.
+  default_concept_realm?: Realm;
   // Ordered: the guided wizard walks these in sequence. Typed in the engine too,
   // so a phase string it has no variant for fails the ruleset load. Each entry
   // is a `PhaseRule` (A2/D56): a bare phase, or one conditional on `when`.

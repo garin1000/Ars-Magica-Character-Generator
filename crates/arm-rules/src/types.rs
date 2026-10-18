@@ -4699,6 +4699,18 @@ pub struct EntityTypeProfile {
     /// Categories that count as carrying The Gift (e.g. `hermetic`).
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub gift_categories: BTreeSet<String>,
+    /// D42's "concept gains one optional default realm" — but as a property of
+    /// the TYPE rather than something the player types: "this should be the
+    /// choice if the character concept does not suggest another option"
+    /// (ArMDE:3030) is unactionable against the free-text concept the engine
+    /// actually carries, so the default is seeded from the type instead. Set
+    /// only on `magus` (`ArMDE:3030`: a magus's Supernatural Virtues and Flaws
+    /// default to the Magic Realm absent a stated concept). Applied ONLY at
+    /// character instantiation (`ui/src/lib/state.svelte.ts`'s
+    /// `#instantiateCharacter`) — never on load or migration, so it can never
+    /// overwrite a concept realm the player already chose or cleared.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub default_concept_realm: Option<Realm>,
     /// Categories whose Flaws satisfy this type's "at least one Hermetic Flaw"
     /// guideline. `["hermetic"]` on the magus profile; empty everywhere else,
     /// which switches the guideline off entirely.

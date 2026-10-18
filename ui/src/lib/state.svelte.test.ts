@@ -370,6 +370,23 @@ describe('createCharacter', () => {
 
     expect(store.filters).toEqual(defaultPickerFilters());
   });
+
+  // manual-testing-findings #1 (D42): a magus's default Realm should be Magic.
+  // The concept is free text with no mechanical realm hint, so the default is
+  // seeded from the TYPE PROFILE instead, at instantiation only.
+  it("seeds a magus's concept realm from the profile's default_concept_realm (#1, D42)", async () => {
+    installRuleset([gift(), hermeticMagus()], [], {
+      magus: { ...magusProfiles.magus, default_concept_realm: 'magic' },
+    });
+    await store.createCharacter('magus');
+    expect(store.entity.concept_realm).toBe('magic');
+  });
+
+  it('leaves the concept realm unset for a type profile with no default_concept_realm', async () => {
+    installRuleset([item({ id: 'virtue.plain' })]);
+    await store.createCharacter('companion');
+    expect(store.entity.concept_realm).toBeUndefined();
+  });
 });
 
 // --- the guided wizard (M6b1b) -----------------------------------------------
@@ -1092,6 +1109,26 @@ describe('open() and the startup view', () => {
     await openAndConfirm();
 
     expect(store.view).toBe('editor');
+  });
+
+  // manual-testing-findings #1 (D42): default_concept_realm is applied ONLY at
+  // #instantiateCharacter, never on load — a loaded magus with no stored
+  // concept_realm must stay unset even though its profile declares a default,
+  // or opening a save with a deliberately cleared realm would silently
+  // overwrite the player's own choice.
+  it('never applies a profile default_concept_realm to a loaded character', async () => {
+    installRuleset([], [], {
+      magus: { ...magusProfiles.magus, default_concept_realm: 'magic' },
+    });
+    vi.mocked(ipc.loadEntity).mockResolvedValue({
+      path: '/tmp/marcus.armc',
+      entity: { ...loadedEntity(), type_id: 'magus' },
+      migrated_aging_characteristics: [],
+    });
+
+    await openAndConfirm();
+
+    expect(store.entity.concept_realm).toBeUndefined();
   });
 
   it('leaves the view alone when the dialog is cancelled', async () => {
