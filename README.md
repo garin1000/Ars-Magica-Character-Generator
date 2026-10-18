@@ -203,7 +203,7 @@ phase of that type's flow filled in, on the shipped binary. A follow-up review o
 guided wizard (31 numbered issues plus two more found along the way) has since been
 fixed in full, in 12 dependency-ordered slices. Two full-codebase audits, a
 rulebook audit of all 655 Virtues and Flaws, and two manual try-out rounds with
-their fix rounds have since been completed. The current version is 0.4.0. See
+their fix rounds have since been completed. The current version is 0.5.0-beta. See
 [PLAN.md](PLAN.md) for the detailed history and current focus.
 
 ### What works today
