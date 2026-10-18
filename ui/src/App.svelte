@@ -16,6 +16,7 @@
   import ExperienceStep from './lib/components/ExperienceStep.svelte';
   import XpBar from './lib/components/XpBar.svelte';
   import ArtGrid from './lib/components/ArtGrid.svelte';
+  import LifeTimeline from './lib/components/LifeTimeline.svelte';
   import SpellTab from './lib/components/SpellTab.svelte';
   import SpellBudgetBar from './lib/components/SpellBudgetBar.svelte';
   import MagicPossessions from './lib/components/MagicPossessions.svelte';
@@ -607,13 +608,19 @@
             </div>
           </div>
         {:else if tab === 'abilities'}
+          <!-- manual-testing-findings #10: the life timeline (D89), read-only and
+               reused as-is, so spending here can be judged against the life
+               periods it funds from. Renders nothing of its own when the character
+               carries no timeline (pool funding, or life sections off). -->
           <div class="vf-tab">
             <XpBar />
+            <LifeTimeline />
             <AbilityTab />
           </div>
         {:else if tab === 'arts'}
           <div class="vf-tab">
             <XpBar prefix="art-" />
+            <LifeTimeline />
             <ArtGrid />
           </div>
         {:else if tab === 'spells'}

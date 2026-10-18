@@ -490,10 +490,80 @@ describe('the editor tabs Slice 3 splits out', () => {
 
     clickTab('abilities');
 
-    // The bridge is gone: `.region-row` is the tab's only content below the XP bar,
-    // which is the arrangement #11 asked for and Slice 2 could only half-deliver.
+    // The bridge is gone: no second home for the funding switch. `.region-row`
+    // still stands below the XP bar (and, since #10, the read-only life
+    // timeline when one is on offer — asserted separately below).
     expect(document.querySelector('[data-testid="life-stage-panel"]')).toBeNull();
     expect(document.querySelector('.region-row')).not.toBeNull();
+  });
+
+  // manual-testing-findings #10: the life timeline — previously shown only on
+  // the Experience tab and in the export — also mounts (read-only, reusing the
+  // same component) on the Abilities and Arts tabs, so spending there can be
+  // judged against the life periods. D89 amended.
+  it('shows the life timeline on the Abilities tab when one is on offer', async () => {
+    await mountApp();
+    store.view = 'editor';
+    store.effective = {
+      life_timeline: {
+        entries: [
+          {
+            kind: { kind: 'fixed', section: 'childhood' },
+            start_age: 0,
+            end_age: 5,
+            years: 5,
+            capacity: { kind: 'separate', xp: 120, spell_levels: 0 },
+            filled_xp: 30,
+            filled_spell_levels: 0,
+          },
+        ],
+        overrun_years: 0,
+        outside: [],
+      },
+    } as unknown as EffectiveScores;
+    flushSync();
+
+    clickTab('abilities');
+
+    expect(document.querySelector('[data-testid="life-timeline"]')).not.toBeNull();
+  });
+
+  it('shows the life timeline on the Arts tab when one is on offer', async () => {
+    await mountApp();
+    store.view = 'editor';
+    store.effective = {
+      phases_in_force: ['arts'],
+      life_timeline: {
+        entries: [
+          {
+            kind: { kind: 'fixed', section: 'childhood' },
+            start_age: 0,
+            end_age: 5,
+            years: 5,
+            capacity: { kind: 'separate', xp: 120, spell_levels: 0 },
+            filled_xp: 30,
+            filled_spell_levels: 0,
+          },
+        ],
+        overrun_years: 0,
+        outside: [],
+      },
+    } as unknown as EffectiveScores;
+    flushSync();
+
+    clickTab('arts');
+
+    expect(document.querySelector('[data-testid="life-timeline"]')).not.toBeNull();
+  });
+
+  it('shows no life timeline on the Abilities tab when none is on offer', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    clickTab('abilities');
+
+    expect(document.querySelector('[data-testid="life-timeline"]')).toBeNull();
   });
 
   it('mounts Personality Traits and Reputations on their own tab', async () => {

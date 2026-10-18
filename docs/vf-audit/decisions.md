@@ -886,6 +886,11 @@ the passage by its `####` heading or the cited text. The pre-sync text is in
   span's own lab seasons (ArMDE:2539, :2550). Fill: own-pool spans show their `used`; general XP
   plus normal-budget earmarks pour oldest first, then levels of spells (ArMDE:2539). Educated and
   Warrior are `outside` lumps. Export: a Life table after the Abilities; switched off, byte-identical.
+- **Amended (manual-testing-findings #10, 2026-10-18):** the timeline also mounts, read-only and
+  reusing the same `LifeTimeline.svelte`, on the editor's Abilities and Arts tabs — not only the
+  Life-stages area and the export, which is what this decision originally scoped it to. Norbert had
+  asked for exactly this so spending there can be judged against the life periods; the request was
+  lost in the original scoping and is restored here.
 
 ---
 
