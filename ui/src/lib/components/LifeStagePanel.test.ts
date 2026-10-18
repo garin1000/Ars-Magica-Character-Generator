@@ -894,3 +894,168 @@ describe('LifeStagePanel life sections (G3)', () => {
     expect(open).toMatch(/aria-describedby="life-stage-post-gauntlet-no-years-note"/);
   });
 });
+
+// manual-testing-findings #4-#7, #20: the panel's reading order, re-specified.
+describe('LifeStagePanel layout order (manual-testing-findings #4-#7, #20)', () => {
+  /** Where a testid first appears — i.e. its place in reading order. */
+  function at(body: string, testid: string): number {
+    const index = body.indexOf(`data-testid="${testid}"`);
+    expect(index, `no element with data-testid="${testid}"`).toBeGreaterThanOrEqual(0);
+    return index;
+  }
+
+  // A ruleset that also ships a Sample Childhood catalogue, so the picker renders.
+  function installCatalogue(): void {
+    store.ruleset!.ruleset.childhoods = {
+      'childhood.athletic': {
+        id: 'childhood.athletic',
+        entries: [{ ability: 'ability.athletics', score: 2 }],
+      },
+    };
+    store.ruleset!.i18n['childhood.athletic'] = { name: 'Athletic Childhood' };
+  }
+
+  // #4: the "Life sections" checkbox is nested directly under the "Life stages"
+  // radio it belongs to, not floating beside the native-language field.
+  it('nests the Life sections checkbox under the Life stages radio', () => {
+    installPlan();
+    const body = html();
+    const pool = at(body, 'ability-funding-pool');
+    const lifeStages = at(body, 'ability-funding-life_stages');
+    const toggle = at(body, 'life-sections-toggle');
+    expect(pool).toBeLessThan(lifeStages);
+    expect(lifeStages).toBeLessThan(toggle);
+  });
+
+  it('offers no Life sections checkbox at all in pool mode', () => {
+    // Pool mode has no "Life stages" option selected, so nothing to nest it under.
+    expect(has(html(), 'life-sections-toggle')).toBe(false);
+  });
+
+  // #5: a magus WITHOUT life sections — age (+ Gauntlet age), levels of spells
+  // with the lab-years block beside it, native language, then childhood.
+  it('lays out a magus’s fields in the new order without life sections', () => {
+    installRuleset(lifeStageRules(), profile('magus', true));
+    resetEntity('magus');
+    installPlan({ gauntlet_age: 25 });
+    installCatalogue();
+    store.entity.age = 40;
+    setLifeStageBudget(magusBudget(40));
+    const body = html();
+
+    const age = at(body, 'age-readout');
+    const gauntlet = at(body, 'life-stage-gauntlet-age-input');
+    const levels = at(body, 'life-stage-spell-levels-input');
+    const labYears = at(body, 'life-stage-lab-years-1-input');
+    const native = at(body, 'native-language-input');
+    const childhood = at(body, 'childhood-package-select');
+
+    expect(age).toBeLessThan(gauntlet);
+    // Levels of spells moves to its own line, below Age/Gauntlet age.
+    expect(gauntlet).toBeLessThan(levels);
+    // The lab-years block sits to the right of Levels of spells — i.e. right
+    // after it in the row's markup.
+    expect(levels).toBeLessThan(labYears);
+    expect(labYears).toBeLessThan(native);
+    // #5(a): native language goes directly above the childhood picker.
+    expect(native).toBeLessThan(childhood);
+  });
+
+  // #6: a magus WITH life sections — age/Gauntlet, levels of spells (no lab
+  // years beside it any more), the XP explanation, the timeline, native
+  // language, childhood, the sections list, Add section, then Remaining.
+  it('lays out a magus’s fields in the new order with life sections', () => {
+    installRuleset(lifeStageRules(), profile('magus', true));
+    resetEntity('magus');
+    installPlan({
+      gauntlet_age: 25,
+      life_sections_enabled: true,
+      life_sections: [{ name: 'Study', years: 8 }],
+    });
+    installCatalogue();
+    store.entity.age = 34;
+    store.effective = {
+      life_stage: magusBudget(34, { four_seasons: 1 }),
+      life_timeline: {
+        entries: [
+          {
+            kind: { kind: 'remaining' },
+            start_age: 33,
+            end_age: 34,
+            years: 1,
+            capacity: { kind: 'shared', points: 30 },
+            filled_xp: 0,
+            filled_spell_levels: 0,
+          },
+        ],
+        overrun_years: 0,
+        outside: [],
+      },
+    } as unknown as EffectiveScores;
+    const body = html();
+
+    const levels = at(body, 'life-stage-spell-levels-input');
+    const summary = at(body, 'life-stage-post-gauntlet-summary');
+    const timeline = at(body, 'life-timeline');
+    const native = at(body, 'native-language-input');
+    const childhood = at(body, 'childhood-package-select');
+    const list = at(body, 'life-sections-list');
+    const addBtn = at(body, 'life-section-add');
+    const remaining = at(body, 'life-section-remaining');
+
+    expect(levels).toBeLessThan(summary);
+    expect(summary).toBeLessThan(timeline);
+    expect(timeline).toBeLessThan(native);
+    expect(native).toBeLessThan(childhood);
+    expect(childhood).toBeLessThan(list);
+    // Add section precedes Remaining (#6 items 8 then 9).
+    expect(addBtn).toBeLessThan(remaining);
+    expect(list).toBeLessThan(addBtn);
+  });
+
+  // #20: a companion follows the SAME order, with every magus-only field simply
+  // absent — not a second layout.
+  it('gives a companion the same order, minus every magus-only field', () => {
+    installRuleset(lifeStageRules(), profile('companion', false));
+    resetEntity('companion');
+    installPlan({ life_sections_enabled: true, life_sections: [{ name: 'Squire', years: 5 }] });
+    installCatalogue();
+    store.entity.age = 25;
+    store.effective = {
+      life_timeline: {
+        entries: [
+          {
+            kind: { kind: 'named', index: 0 },
+            start_age: 5,
+            end_age: 10,
+            years: 5,
+            capacity: { kind: 'separate', xp: 75, spell_levels: 0 },
+            filled_xp: 0,
+            filled_spell_levels: 0,
+          },
+        ],
+        overrun_years: 0,
+        outside: [],
+      },
+    } as unknown as EffectiveScores;
+    const body = html();
+
+    expect(has(body, 'life-stage-gauntlet-age-input')).toBe(false);
+    expect(has(body, 'life-stage-spell-levels-input')).toBe(false);
+    expect(has(body, 'life-stage-post-gauntlet-summary')).toBe(false);
+    expect(has(body, 'life-section-remaining')).toBe(false);
+
+    const age = at(body, 'age-readout');
+    const timeline = at(body, 'life-timeline');
+    const native = at(body, 'native-language-input');
+    const childhood = at(body, 'childhood-package-select');
+    const list = at(body, 'life-sections-list');
+    const addBtn = at(body, 'life-section-add');
+
+    expect(age).toBeLessThan(timeline);
+    expect(timeline).toBeLessThan(native);
+    expect(native).toBeLessThan(childhood);
+    expect(childhood).toBeLessThan(list);
+    expect(list).toBeLessThan(addBtn);
+  });
+});

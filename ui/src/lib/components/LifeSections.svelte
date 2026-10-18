@@ -124,6 +124,11 @@
       </li>
     {/each}
   </ol>
+  <button type="button" onclick={() => store.addLifeSection()} data-testid="life-section-add">
+    {store.t('life-section-add')}
+  </button>
+  <!-- manual-testing-findings #6: Remaining comes AFTER Add section, not before —
+       it is the last line of the whole surface. -->
   {#if showRemaining}
     <div class="life-section-remaining" data-testid="life-section-remaining">
       <LabYearsFields
@@ -138,7 +143,4 @@
       />
     </div>
   {/if}
-  <button type="button" onclick={() => store.addLifeSection()} data-testid="life-section-add">
-    {store.t('life-section-add')}
-  </button>
 </div>

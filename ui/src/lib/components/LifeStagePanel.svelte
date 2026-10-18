@@ -125,67 +125,133 @@
             />
             <span>{store.t(`ability-funding-${option}`)}</span>
           </label>
+          {#if option === 'life_stages' && guided}
+            <!-- manual-testing-findings #4: the "Life sections" switch belongs to the
+                 "Life stages" mode it only ever does anything in, so it sits nested
+                 directly under that radio rather than floating elsewhere in the
+                 panel. -->
+            <label class="field inline life-sections-toggle-row">
+              <input
+                type="checkbox"
+                checked={sectionsOn}
+                onchange={(event) =>
+                  store.setLifeSectionsEnabled((event.currentTarget as HTMLInputElement).checked)}
+                data-testid="life-sections-toggle"
+              />
+              <span>{store.t('life-sections-label')}</span>
+            </label>
+          {/if}
         </div>
       {/each}
     </fieldset>
 
     {#if guided}
-      <!-- Slice 12 (#24) ended the duplication this panel used to carry. It had its
-           own `life-stage-age-input`, a second editable copy of the one `entity.age`,
-           because later life's experience is (age - childhood years) × rate and the
-           panel had to be priceable. The age now has ONE canonical home — beside the
-           identity it belongs with, on the editor's Details tab and the wizard's
-           Concept step alike — so what is left here is `AgeFields` in `readonly`
-           mode: the age is still shown, because a magus carries two ages and the
-           Gauntlet age below is measured against this one, but it is no longer a
-           second place to change it. -->
+      <!-- manual-testing-findings #4-#7, #20: one layout for every character type,
+           in a fixed reading order — Age (+ a magus's Gauntlet age), Levels of
+           spells (+ the lab-years block beside it, unless the sections have taken
+           it), the XP explanation, the timeline, native language, then the
+           childhood picker. Every magus-only piece (Gauntlet age, levels of
+           spells, the lab-years blocks, the XP explanation) is simply absent for
+           anyone else — not a second layout. -->
       <div class="life-stage-fields">
-        <AgeFields readonly />
-        {#if showPostGauntlet}
-          <!-- In the same wrapping row as the age, deliberately. On the wizard's own
-               `experience` step (Slice 2) the panel has the step to itself, but it is
-               still mounted above the editor's Abilities tab until Slice 3 gives that
-               tab its own Experience sibling — and there it is an auto-height sibling
-               of the `flex: 1` region row, so every full-width row added here comes
-               straight out of the Available/Selected lists' height (see `.region-row`
-               in app.css). -->
-          <label class="field inline">
-            <span>{store.t('life-stage-gauntlet-age-label')}</span>
-            <input
-              type="number"
-              min="1"
-              max={U32_MAX}
-              placeholder={gauntletPlaceholder}
-              value={fieldValue(plan?.gauntlet_age)}
-              oninput={(event) => store.setGauntletAge(count(event))}
-              use:commitStored={{ read: () => fieldValue(plan?.gauntlet_age) }}
-              data-testid="life-stage-gauntlet-age-input"
-            />
-          </label>
-          {#if !sectionsOn}
-            <LabYearsFields
-              value={plan?.post_gauntlet_lab_years}
-              testidPrefix="life-stage-lab-years"
-              readonly={noPostGauntletYears}
-              describedBy={noYearsNoteId}
-              onchange={(bucket, years) => store.setPostGauntletLabYears(bucket, years)}
-            />
+        <!-- Slice 12 (#24) ended the duplication this panel used to carry. It had its
+             own `life-stage-age-input`, a second editable copy of the one `entity.age`,
+             because later life's experience is (age - childhood years) × rate and the
+             panel had to be priceable. The age now has ONE canonical home — beside the
+             identity it belongs with, on the editor's Details tab and the wizard's
+             Concept step alike — so what is left here is `AgeFields` in `readonly`
+             mode: the age is still shown, because a magus carries two ages and the
+             Gauntlet age below is measured against this one, but it is no longer a
+             second place to change it. -->
+        <div class="life-stage-row">
+          <AgeFields readonly />
+          {#if showPostGauntlet}
+            <label class="field inline">
+              <span>{store.t('life-stage-gauntlet-age-label')}</span>
+              <input
+                type="number"
+                min="1"
+                max={U32_MAX}
+                placeholder={gauntletPlaceholder}
+                value={fieldValue(plan?.gauntlet_age)}
+                oninput={(event) => store.setGauntletAge(count(event))}
+                use:commitStored={{ read: () => fieldValue(plan?.gauntlet_age) }}
+                data-testid="life-stage-gauntlet-age-input"
+              />
+            </label>
           {/if}
-          <label class="field inline">
-            <span>{store.t('life-stage-spell-levels-label')}</span>
-            <input
-              type="number"
-              min="0"
-              max={U32_MAX}
-              readonly={noPostGauntletYears}
-              value={fieldValue(plan?.post_gauntlet_spell_levels)}
-              aria-describedby={noPostGauntletYears ? noYearsNoteId : undefined}
-              oninput={(event) => store.setPostGauntletSpellLevels(count(event))}
-              use:commitStored={{ read: () => fieldValue(plan?.post_gauntlet_spell_levels) }}
-              data-testid="life-stage-spell-levels-input"
-            />
-          </label>
+        </div>
+
+        {#if showPostGauntlet}
+          <!-- #5(b)/(c): Levels of spells gets a line of its own below Age, with the
+               lab-years block (when the sections have not taken it) sitting to its
+               right, vertically aligned on its own baseline (`.lab-years`,
+               app.css — #7). -->
+          <div class="life-stage-row">
+            <label class="field inline">
+              <span>{store.t('life-stage-spell-levels-label')}</span>
+              <input
+                type="number"
+                min="0"
+                max={U32_MAX}
+                readonly={noPostGauntletYears}
+                value={fieldValue(plan?.post_gauntlet_spell_levels)}
+                aria-describedby={noPostGauntletYears ? noYearsNoteId : undefined}
+                oninput={(event) => store.setPostGauntletSpellLevels(count(event))}
+                use:commitStored={{ read: () => fieldValue(plan?.post_gauntlet_spell_levels) }}
+                data-testid="life-stage-spell-levels-input"
+              />
+            </label>
+            {#if !sectionsOn}
+              <LabYearsFields
+                value={plan?.post_gauntlet_lab_years}
+                testidPrefix="life-stage-lab-years"
+                readonly={noPostGauntletYears}
+                describedBy={noYearsNoteId}
+                onchange={(bucket, years) => store.setPostGauntletLabYears(bucket, years)}
+              />
+            {/if}
+          </div>
+
+          {#if noPostGauntletYears}
+            <!-- The one surviving note on this panel (manual-testing-findings #21): it
+                 states why the lab-year counts and the levels of spells above are
+                 read-only, which they cannot state for themselves, and it is the
+                 `aria-describedby` target of each. Deliberately NOT a `role="status"`
+                 live region: the references would announce it twice, once on arrival
+                 and again on focus. -->
+            <div class="life-stage-hints">
+              <span class="funding-hint" id={noYearsNoteId} data-testid={noYearsNoteId}>
+                {store.t('life-stage-post-gauntlet-no-years-note')}
+              </span>
+            </div>
+          {/if}
+          {#if budget}
+            <!-- Announced: the numbers arrive in response to an edit above (either age,
+                 the lab years or the split), so their change must reach a screen
+                 reader. Every figure is the engine's own — nothing is recomputed here. -->
+            <span
+              class="post-gauntlet-summary"
+              role="status"
+              data-testid="life-stage-post-gauntlet-summary"
+            >
+              {store.t('life-stage-post-gauntlet-summary', {
+                years: String(budget.post_gauntlet_years),
+                points: String(budget.post_gauntlet_points),
+                xp: String(budget.post_gauntlet_xp),
+                levels: String(budget.post_gauntlet_spell_levels),
+              })}
+            </span>
+          {/if}
         {/if}
+
+        {#if sectionsOn}
+          <LifeTimeline />
+        {/if}
+
+        <!-- #5(a): native language sits directly above the childhood picker it is
+             measured against — a package's native entry is bought in that
+             language, and its own childhood language must differ from it. -->
         <label class="field inline">
           <span>{store.t('native-language-label')}</span>
           {#if languageOptions}
@@ -210,61 +276,17 @@
             />
           {/if}
         </label>
-        <label class="field inline">
-          <input
-            type="checkbox"
-            checked={sectionsOn}
-            onchange={(event) =>
-              store.setLifeSectionsEnabled((event.currentTarget as HTMLInputElement).checked)}
-            data-testid="life-sections-toggle"
-          />
-          <span>{store.t('life-sections-label')}</span>
-        </label>
       </div>
-      {#if showPostGauntlet}
-        {#if noPostGauntletYears}
-          <!-- The one surviving note on this panel (manual-testing-findings #21): it
-               states why the lab-year counts and the levels of spells above are
-               read-only, which they cannot state for themselves, and it is the
-               `aria-describedby` target of each. Deliberately NOT a `role="status"`
-               live region: the references would announce it twice, once on arrival
-               and again on focus. -->
-          <div class="life-stage-hints">
-            <span class="funding-hint" id={noYearsNoteId} data-testid={noYearsNoteId}>
-              {store.t('life-stage-post-gauntlet-no-years-note')}
-            </span>
-          </div>
-        {/if}
-        {#if budget}
-          <!-- Announced: the numbers arrive in response to an edit above (either age,
-               the lab years or the split), so their change must reach a screen
-               reader. Every figure is the engine's own — nothing is recomputed here. -->
-          <span
-            class="post-gauntlet-summary"
-            role="status"
-            data-testid="life-stage-post-gauntlet-summary"
-          >
-            {store.t('life-stage-post-gauntlet-summary', {
-              years: String(budget.post_gauntlet_years),
-              points: String(budget.post_gauntlet_points),
-              xp: String(budget.post_gauntlet_xp),
-              levels: String(budget.post_gauntlet_spell_levels),
-            })}
-          </span>
-        {/if}
-      {/if}
+
+      <ChildhoodPackagePicker />
+
       {#if sectionsOn}
         <LifeSections
           labYears={showPostGauntlet}
           labYearsReadonly={noPostGauntletYears}
           labYearsDescribedBy={noYearsNoteId}
         />
-        <LifeTimeline />
       {/if}
-      <!-- Childhood comes after the native language it is measured against: a
-           package's native entry is bought in that language, and its own childhood
-           language must differ from it. -->
-      <ChildhoodPackagePicker />
     {/if}
   </div>
 {/if}

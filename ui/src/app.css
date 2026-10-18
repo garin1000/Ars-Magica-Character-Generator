@@ -2272,12 +2272,19 @@ ul {
   font-weight: 600;
 }
 
-/* One option: the radio beside its label, its hint underneath. */
+/* One option: the radio beside its label, and — for "Life stages" only — the
+   "Life sections" switch nested under it (manual-testing-findings #4). */
 .funding-option {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
   max-width: 32rem;
+}
+
+/* Indented to read as belonging to the radio above it, not as a sibling field —
+   roughly the radio's own width plus its label gap. */
+.life-sections-toggle-row {
+  margin-inline-start: 1.4rem;
 }
 
 /* The global input rule dresses text fields; a radio wants none of that padding. */
@@ -2293,11 +2300,18 @@ ul {
   font-size: var(--font-small);
 }
 
-/* Age, its cap echo, a magus's three post-Gauntlet fields and the native language
-   on ONE wrapping row. Everything shares the row on purpose: the panel is an
-   auto-height sibling of the `flex: 1` `.region-row`, so each full-width row added
-   here is height taken straight off the Available/Selected lists. */
+/* manual-testing-findings #4-#7, #20: the guided fields as a column of ROWS —
+   Age (+ Gauntlet age), Levels of spells (+ lab years), the timeline, native
+   language — rather than one flat wrapping line. Still auto-height: the panel
+   is a sibling of the `flex: 1` `.region-row`, so each row added here is height
+   taken straight off the Available/Selected lists. */
 .life-stage-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.life-stage-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -2354,6 +2368,20 @@ ul {
 
 .life-section input[type='text'] {
   width: 12rem;
+}
+
+/* manual-testing-findings #7: `.life-stage-panel fieldset` gives every fieldset
+   a legend, and the legend's own height sits ABOVE the fieldset's content box —
+   so wherever `LabYearsFields`' `.lab-years` fieldset shares a row with plain
+   `.field` controls (the main row between Gauntlet age and Levels of spells, or
+   a `.life-section` row's Name/Years/buttons), its row sat visibly higher and
+   its season inputs sat lower than its row-mates. `align-self: flex-end` pins
+   the fieldset's BOTTOM — i.e. the season inputs' own line — to the row's
+   bottom edge, wherever that row is, so the legend is free to stick up above
+   the row without dragging the inputs down with it. One rule, because
+   `align-self` overrides the row's own `align-items` for this one child only. */
+.lab-years {
+  align-self: flex-end;
 }
 
 /* The timeline: one segment per span, as wide as its years, its figures in words
