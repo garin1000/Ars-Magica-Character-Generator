@@ -8728,7 +8728,16 @@ Abilities are bought with experience earned in blocks, not from one bank:
   (`ArMDE:5716`). Then the named sections and Remaining, for a magus each earning years × 30
   less its own lab seasons (`ArMDE:2541`, :2550), otherwise years × the later-life rate
   (`ArMDE:2462`). A training that would end past the age ends at it; sections past the age
-  are clipped, the excess reported as `overrun_years`.
+  are clipped, the excess reported as `overrun_years` — **and, since manual-testing-findings
+  #11-20 round (2026-10-18), also a validation issue**: `life_stage_sections_exceed_age`
+  (`overrun_years`; `validation/life_stage.rs::validate_life_stage_sections_fit_the_open_span`)
+  reports it as an error whenever it is nonzero, for every shape (grog, companion, magus),
+  not only a magus. The figure is computed by
+  `life_timeline.rs::life_section_overrun_years` — `open_span_drafts`'s own overrun
+  calculation, factored out so the validator can read it without a solved `XpAllocation`
+  (the spans' ages and years come from the budget and `Layout` alone; the XP solve only
+  decides how full a span is, never where it falls), so the display note and the issue can
+  never disagree.
 - **Fill.** A span its own pool funds shows that pool's `used`. The general pool's use plus
   the earmarks of the normal budget (Church Upbringing) pour oldest first, capped by each
   span's capacity; levels of spells pour after them, into the apprenticeship's levels and

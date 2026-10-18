@@ -116,6 +116,30 @@ pub(crate) fn validate_life_stage_plan(
 
     validate_life_stage_native_language(entity, ruleset, rules, plan, issues);
     validate_childhood_package_known(ruleset, plan, issues);
+    validate_life_stage_sections_fit_the_open_span(entity, ruleset, issues);
+}
+
+/// The life sections' years, summed, against the open span they must fit in —
+/// later life for a grog or companion, the years after the Gauntlet for a
+/// magus (`ArMDE:2434`). `crate::life_timeline::life_section_overrun_years` is
+/// the single source of the figure, shared with the display timeline's own
+/// `overrun_years`, which clips the same excess silently rather than raising
+/// anything.
+fn validate_life_stage_sections_fit_the_open_span(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    issues: &mut Vec<ValidationIssue>,
+) {
+    if let Some(overrun) = crate::life_timeline::life_section_overrun_years(entity, ruleset)
+        && overrun > 0
+    {
+        issues.push(ValidationIssue::error(
+            ValidationIssue::CODE_LIFE_STAGE_SECTIONS_EXCEED_AGE,
+            CreationPhase::Experience,
+            args([("overrun_years", overrun.to_string())]),
+            None,
+        ));
+    }
 }
 
 /// The later-life block is "15 experience points per year" up to the character's
@@ -1766,6 +1790,62 @@ mod tests {
              apprenticeship); later_life's spare 75 XP must not cover the \
              shortfall since Magic Theory holds no authorization: {:?}",
             codes(&result)
+        );
+    }
+
+    /// #8 (manual-testing-findings-2026-10-18): the life sections' years must
+    /// not add up to more than the open span they fall in actually holds — for
+    /// this companion (age 25, untrained), later life after childhood's 5
+    /// years is 20. `life_timeline::life_section_overrun_years` is the same
+    /// figure the display timeline already clips silently
+    /// (`LifeTimeline::overrun_years`); this is its validation-issue sibling.
+    #[test]
+    fn life_sections_totalling_more_than_the_open_span_raise_an_issue() {
+        let mut entity = planned(25);
+        let plan = entity.life_stages.as_mut().unwrap();
+        plan.life_sections_enabled = true;
+        plan.life_sections.push(LifeSection {
+            name: "Wanderjahre".into(),
+            years: 25,
+            ..Default::default()
+        });
+
+        let result = validate(&entity, &rs());
+        let issue = result
+            .issues
+            .iter()
+            .find(|i| i.code == ValidationIssue::CODE_LIFE_STAGE_SECTIONS_EXCEED_AGE)
+            .unwrap_or_else(|| {
+                panic!(
+                    "a 25-year section exceeds the 20-year open span: {:?}",
+                    codes(&result)
+                )
+            });
+        assert_eq!(
+            issue.args.get("overrun_years").map(String::as_str),
+            Some("5"),
+            "25 claimed - 20 available = 5 years over"
+        );
+    }
+
+    /// The negative case: sections that fit the open span exactly raise
+    /// nothing, and neither does a switched-off plan — matching
+    /// `life_section_overrun_years`'s own `None` for a disabled plan.
+    #[test]
+    fn life_sections_fitting_the_open_span_raise_nothing() {
+        let mut entity = planned(25);
+        let plan = entity.life_stages.as_mut().unwrap();
+        plan.life_sections_enabled = true;
+        plan.life_sections.push(LifeSection {
+            name: "Wanderjahre".into(),
+            years: 20,
+            ..Default::default()
+        });
+
+        let issues = codes(&validate(&entity, &rs()));
+        assert!(
+            !issues.contains(&ValidationIssue::CODE_LIFE_STAGE_SECTIONS_EXCEED_AGE.into()),
+            "issues: {issues:?}"
         );
     }
 

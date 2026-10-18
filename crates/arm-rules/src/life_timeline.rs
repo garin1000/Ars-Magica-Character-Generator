@@ -199,6 +199,27 @@ pub fn life_timeline(
     })
 }
 
+/// [`LifeTimeline::overrun_years`] alone, computed without a solved
+/// [`XpAllocation`]: the spans' ages and years come from the budget and
+/// [`Layout`] alone, and the XP solve only decides how full a span is, never
+/// where it falls or how many years it holds. So
+/// [`crate::validation::validate`] can raise an issue over the same figure
+/// [`life_timeline`] clips silently for display, without a redundant XP
+/// solve of its own. `None` under the identical conditions `life_timeline`
+/// itself declines: sections switched off, pool funding, or no life-stage
+/// budget.
+pub(crate) fn life_section_overrun_years(entity: &Entity, ruleset: &Ruleset) -> Option<u32> {
+    let plan = entity
+        .life_stages
+        .as_ref()
+        .filter(|plan| plan.life_sections_enabled)?;
+    let rules = ruleset.life_stages()?;
+    let budget = rules.budget(entity, ruleset)?;
+    let layout = Layout::of(entity, ruleset, rules, &budget);
+    let (_, overrun_years) = open_span_drafts(plan, rules, &layout, &budget);
+    Some(overrun_years)
+}
+
 // --- What the allocation says about each pool ---------------------------------
 
 /// The solved pools, sorted by the span they belong to.

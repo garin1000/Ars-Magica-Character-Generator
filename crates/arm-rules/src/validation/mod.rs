@@ -206,6 +206,7 @@ impl fmt::Display for IssueSeverity {
 /// | `life_stage_lab_seasons_without_years` | error | experience | `years_used` |
 /// | `life_stage_section_lab_years_exceed_section` | error | experience | `section`, `years_used`, `years` |
 /// | `life_stage_spell_level_split_exceeds_points` | error | experience | `levels`, `points` |
+/// | `life_stage_sections_exceed_age` | error | experience | `overrun_years` |
 /// | `life_stage_native_language_unset` | error | experience | (none) |
 /// | `life_stage_native_language_missing_score` | warning | experience | `language` |
 /// | `magus_minimum_ability` | error | abilities | `ability`, `min`, `score`, `exemplar`&nbsp;(opt) |
@@ -701,6 +702,15 @@ impl ValidationIssue {
     /// Each lab year is one of the years it falls in (ArMDE:2552).
     pub const CODE_LIFE_STAGE_SECTION_LAB_YEARS_EXCEED_SECTION: &'static str =
         "life_stage_section_lab_years_exceed_section";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: the life sections'
+    /// years, summed, claim more than the open span actually holds — later
+    /// life for a grog or companion, the years after the Gauntlet for a magus
+    /// (`ArMDE:2434`'s periods bound how many years there are to spend
+    /// sections across at all). The display timeline
+    /// ([`crate::life_timeline::LifeTimeline::overrun_years`]) already clips
+    /// the excess silently; this names the fault the clip absorbs. `args`
+    /// carries `overrun_years`, the same figure.
+    pub const CODE_LIFE_STAGE_SECTIONS_EXCEED_AGE: &'static str = "life_stage_sections_exceed_age";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: more of a magus's yearly
     /// post-Gauntlet points are taken as levels of spells than those years granted.
     /// "Each point can be an experience point in an Art or Ability or one level of

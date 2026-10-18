@@ -891,6 +891,14 @@ the passage by its `####` heading or the cited text. The pre-sync text is in
   Life-stages area and the export, which is what this decision originally scoped it to. Norbert had
   asked for exactly this so spending there can be judged against the life periods; the request was
   lost in the original scoping and is restored here.
+- **Amended (manual-testing-findings #8, 2026-10-18):** the `overrun_years` note above was display
+  only — nothing fired when the named sections' years added up to more than the open span held. It
+  is now also a validation issue, `life_stage_sections_exceed_age` (error, `experience`, arg
+  `overrun_years`), raised by `validation/life_stage.rs::validate_life_stage_sections_fit_the_open_span`
+  for every shape (grog, companion, magus) whenever the figure is nonzero — reusing
+  `life_timeline.rs::open_span_drafts`'s own calculation via a new sibling,
+  `life_section_overrun_years`, which needs only the budget and `Layout` (no solved
+  `XpAllocation`), so the issue and the display note can never disagree.
 
 ---
 

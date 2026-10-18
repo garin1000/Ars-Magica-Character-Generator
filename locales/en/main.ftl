@@ -1485,6 +1485,7 @@ issue-life_stage_lab_seasons_out_of_range = { $years_used } year(s) of lab work 
 issue-life_stage_lab_seasons_without_years = { $years_used } year(s) of lab work recorded, but this character has no years as a magus to work them in.
 issue-life_stage_section_lab_years_exceed_section = Section { $section }: { $years_used } year(s) of lab work is more than the section's { $years } year(s).
 issue-life_stage_spell_level_split_exceeds_points = Taking { $levels } level(s) of spells out of the years as a magus is more than those years grant: they are worth { $points } points, to be divided between experience and levels of spells.
+issue-life_stage_sections_exceed_age = The life sections run { $overrun_years } year(s) past the character's age.
 issue-life_stage_native_language_unset = Choose a native language: childhood's largest block of experience can be spent on nothing else.
 issue-life_stage_native_language_missing_score = No { $language } score is bought, so childhood's native-language experience is unspent.
 issue-magus_minimum_ability = No magus is admitted to the Order below { $ability } { $min }{ $qualifier }; this character has { $score }.

@@ -1567,6 +1567,7 @@ issue-life_stage_lab_seasons_out_of_range = Jahre mit Laborarbeit ({ $years_used
 issue-life_stage_lab_seasons_without_years = Eingetragene Jahre mit Laborarbeit: { $years_used }; dieser Charakter hat aber keine Jahre als Magus, in denen sie stattfinden könnten.
 issue-life_stage_section_lab_years_exceed_section = Abschnitt { $section }: Jahre mit Laborarbeit ({ $years_used }) sind mehr als die Jahre des Abschnitts ({ $years }).
 issue-life_stage_spell_level_split_exceeds_points = Die aus den Jahren als Magus genommenen Zauberstufen ({ $levels }) übersteigen, was diese Jahre gewähren: Sie sind { $points } Punkte wert, die zwischen Erfahrung und Zauberstufen aufzuteilen sind.
+issue-life_stage_sections_exceed_age = Die Lebensabschnitte reichen { $overrun_years } Jahr(e) über das Alter des Charakters hinaus.
 issue-life_stage_native_language_unset = Wähle eine Muttersprache: der größte Erfahrungsblock der Kindheit kann für nichts anderes ausgegeben werden.
 issue-life_stage_native_language_missing_score = Kein Wert in { $language } gekauft, daher bleibt die Erfahrung der Kindheit für die Muttersprache unausgegeben.
 issue-magus_minimum_ability = Kein Magus wird unter { $ability } { $min }{ $qualifier } in den Orden aufgenommen; dieser Charakter hat { $score }.
