@@ -4,6 +4,9 @@ Norbert's rulings on questions the audit could not settle from the source.
 Recorded here so no batch agent re-litigates them and no correction slice
 guesses. Each names the question, the ruling, and what it obliges.
 
+**Line citations in `docs/vf-audit/` are pre-re-sync snapshots** (D91): they
+predate 2026-10-09, so look a passage up by heading, not by number.
+
 ---
 
 ## D1 — `lab_total_mod` and the spell-level cap
@@ -825,6 +828,18 @@ because moving one entry would make the catalogue *less* consistent.
 Supernatural entries — 48 of 115 moving out leaves the class thinly populated
 there, and the remaining ones deserve a look during Phase 2 rather than a
 presumption of correctness.
+
+---
+
+## D91 — `docs/vf-audit/` line citations stay as a snapshot (Norbert, 2026-10-18)
+
+The `ArMDE:NNNN` citations in this directory are dated records written against
+the source **before** the P8 re-sync (2026-10-09), so many now point a few dozen
+lines off. They are **not** relocated and **not** brought under
+`rulebook_citations.rs`: rewriting a dated record falsifies it, exactly as D1c
+ruled for `docs/audit-2026-08.md`. To read one against today's source, look up
+the passage by its `####` heading or the cited text. The pre-sync text is in
+`tmp/p8-old-source/` while that scratch copy exists. Closes open-todos row 59.
 
 ---
 
