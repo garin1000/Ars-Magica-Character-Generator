@@ -1736,6 +1736,39 @@ mod tests {
         );
     }
 
+    /// #11 (manual-testing-findings-2026-10-18): confirms the engine already
+    /// refuses to fund a magus's Magic Theory (Arcane, gated) once the general
+    /// pool (apprenticeship + post-Gauntlet, both unrestricted by category)
+    /// cannot absorb the gated demand and no authorizing Virtue is held.
+    /// `magus_later_life_pool` (`effective/xp.rs`) excludes every gated
+    /// category (academic/arcane/martial) from the PRE-apprenticeship
+    /// `later_life` pool absent an explicit authorization (D43) — so once
+    /// gated demand alone exceeds the apprenticeship pool's 240 XP, the
+    /// shortfall cannot be papered over by spilling into `later_life`'s spare
+    /// 75 XP, unlike an ordinary (ungated) Ability, which `later_life` could
+    /// fund instead. Gated demand here: artes_liberales 75 + philosophiae 75
+    /// + magic_theory 75 + penetration 30 = 255 > 240.
+    #[test]
+    fn magic_theory_without_authorization_cannot_be_funded_once_apprenticeship_is_exhausted() {
+        let mut magus = planned(25);
+        magus.type_id = Id::new("magus");
+        magus.ability_scores.extend([
+            AbilityScore::new(Id::new("ability.artes_liberales"), 5),
+            AbilityScore::new(Id::new("ability.philosophiae"), 5),
+            AbilityScore::new(Id::new("ability.magic_theory"), 5),
+            AbilityScore::new(Id::new("ability.penetration"), 3),
+        ]);
+
+        let result = validate(&magus, &rs());
+        assert!(
+            codes(&result).contains(&ValidationIssue::CODE_NOT_ENOUGH_XP.into()),
+            "gated demand (255) exceeds the only pool that may fund it (240 \
+             apprenticeship); later_life's spare 75 XP must not cover the \
+             shortfall since Magic Theory holds no authorization: {:?}",
+            codes(&result)
+        );
+    }
+
     /// A rejected package application describes **command input**, not entity
     /// state, so `validate()` never produces these codes: they are localized here
     /// instead. Each carries what a message needs — the Ability, the `parameter`
