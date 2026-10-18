@@ -28,22 +28,20 @@
   const hasConditions = $derived(
     (store.ruleset?.ruleset.aging?.living_conditions ?? []).length > 0,
   );
-  // `AgingRollCalculator`: `{#if aging && schedule.length > 0}`.
-  const hasRoll = $derived(aging != null && aging.schedule.length > 0);
 </script>
 
 <!-- The whole aging surface, in the order a year is actually resolved: what the
      rules owe this character (the schedule and the standing half of the aging
      total), the Living Conditions that are the one term of that total the player
-     chooses, the roll itself (the die, the total it makes, and applying it), then
-     what aging has already done to the character — the per-year log first, since
-     that is what the roll has just written to and where a year is taken back, then
-     the running totals it explains (apparent age, Decrepitude, points) — and finally
-     the Longevity Ritual, whose bonus is subtracted from
-     every aging total this character will ever roll
-     (ArMDE:16646-16648). Composed once so
-     the editor's Aging tab and the guided aging step mount the same thing and can
-     never drift.
+     chooses, the roll itself (the die, the total it makes, and applying it) with
+     the Longevity Ritual directly beneath it — its bonus is subtracted from every
+     aging total this character will ever roll (ArMDE:16646-16648), so it sits
+     right where that total is computed (manual-testing-findings #13) — and
+     finally what aging has already done to the character: the per-year log first,
+     since that is what the roll has just written to and where a year is taken
+     back, then the running totals it explains (apparent age, Decrepitude,
+     points). Composed once so the editor's Aging tab and the guided aging step
+     mount the same thing and can never drift.
 
      The ritual belongs here and used to be mounted twice outside instead — by
      `AgingStep` and by `MagicPossessions` — only because the editor had no aging
@@ -78,10 +76,10 @@
      an independent block container whose height is its own content's. The tall block
      is given a column to itself for the same reason.
 
-     Column order is source order, and source order is unchanged: the surface still
-     reads schedule → conditions → roll → log → totals → ritual, so DOM order is the
-     order on screen and the order the keyboard walks (the grid places items in
-     source order, left to right and then down; nothing is moved by CSS).
+     Column order is source order: the surface reads schedule → conditions → roll →
+     ritual → log → totals, so DOM order is the order on screen and the order the
+     keyboard walks (the grid places items in source order, left to right and then
+     down; nothing is moved by CSS).
 
      The panel degrades with the window: `auto-fit` gives two tracks and then one with
      no breakpoint, and at one track the three wrappers simply stack in that same
@@ -109,23 +107,28 @@
     </div>
   {/if}
 
-  <!-- The roll itself — the die, the total it makes, the outcome and Apply — alone
-       in its column BECAUSE it is the tall one. Under #22's diagnosis a tall block
-       is only a problem when something short shares its row; give it a column and
-       there is nothing to share with. -->
-  {#if hasRoll}
-    <div class="aging-column" data-testid="aging-column-roll">
-      <AgingRollCalculator />
-    </div>
-  {/if}
+  <!-- The roll itself — the die, the total it makes, the outcome and Apply — with
+       the Longevity Ritual directly below it (manual-testing-findings #13): the
+       ritual's bonus is a term of that very total, and it is tall enough to be
+       the column's whole reason to exist (#22's diagnosis — a tall block is only
+       a problem when something short shares its row).
 
-  <!-- What aging has already done, and the ritual that reduces every future total.
-       The log LEADS, so it sits at the top of a column and is visible without
-       scrolling — the whole of #24/#25 — with the running totals it explains under
-       it and the ritual last. `AgingRecordPanel`'s own `display: contents` (app.css)
-       drops its two blocks straight into this wrapper, so both land here. -->
+       UNGATED, unlike the schedule column: `LongevityPanel` reads
+       `entity.longevity_ritual` directly and always renders its Add/edit
+       content, so this column can never be the EMPTY TRACK the gating comment
+       above warns about — only `AgingRollCalculator` inside it can render
+       nothing (`{#if aging && schedule.length > 0}`, its own gate). -->
+  <div class="aging-column" data-testid="aging-column-roll">
+    <AgingRollCalculator />
+    <LongevityPanel />
+  </div>
+
+  <!-- What aging has already done: the log LEADS, so it sits at the top of a
+       column and is visible without scrolling (#24/#25), with the running
+       totals it explains under it. `AgingRecordPanel`'s own
+       `display: contents` (app.css) drops both of its blocks straight into
+       this wrapper. -->
   <div class="aging-column" data-testid="aging-column-record">
     <AgingRecordPanel />
-    <LongevityPanel />
   </div>
 </div>
