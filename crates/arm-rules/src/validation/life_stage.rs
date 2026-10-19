@@ -582,7 +582,13 @@ mod tests {
           { "type": "truncated_apprenticeship_xp", "param": "years_completed" }
         ],
         "advisory_prerequisites": { "kind": "none",
-          "value": [{ "kind": "ability_min", "value": { "ability": "ability.parma_magica", "score": 1 } }] } }
+          "value": [{ "kind": "ability_min", "value": { "ability": "ability.parma_magica", "score": 1 } }] } },
+      { "id": "virtue.test_arcane_lore", "kind": "virtue", "classification": "creation_effect",
+        "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+        "effects": [
+          { "type": "restricted_ability_xp", "amount": 50, "categories": ["arcane"] },
+          { "type": "ability_authorization", "categories": ["arcane"] }
+        ] }
     ]"#;
     const TYPES: &str = r#"[
       { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -1791,6 +1797,108 @@ mod tests {
              shortfall since Magic Theory holds no authorization: {:?}",
             codes(&result)
         );
+    }
+
+    /// #11 follow-up (Norbert, 2026-10-19): the engine's own `magus` fixture
+    /// above (`magic_theory_without_authorization_cannot_be_funded_once_apprenticeship_is_exhausted`)
+    /// proved the UNAUTHORIZED case correct, but Norbert's real character held
+    /// an authorizing Virtue (Arcane Lore-shaped: `ArMDE:3505`, "You may take
+    /// Arcane Abilities... You get an additional 50 experience points, which
+    /// must be spent on Arcane Abilities") and reported Magic Theory funded by
+    /// Later Life even though Apprenticeship's 240 was completely untouched.
+    ///
+    /// Root cause: once a Virtue authorizes a gated category, D43's own
+    /// `magus_later_life_pool` widening (`effective/xp.rs`) correctly makes
+    /// `later_life` ELIGIBLE for that category too (ArMDE:2462's "a Virtue that
+    /// permits her to learn those Abilities" applies before apprenticeship as
+    /// much as after it) — but the flow solve's "drain restricted pools before
+    /// the general pool" ordering then prefers later_life's 75 XP over
+    /// Apprenticeship's 240, even though Apprenticeship funds EVERY gated
+    /// category unconditionally regardless of any Virtue (`ArMDE:2505`) and so
+    /// should never be skipped in favor of the character's few pre-apprenticeship
+    /// years. This magus's gated demand is magic_theory 75 — Arcane Lore's own
+    /// 50-point pool covers 50 of it, and the remaining 25 must come from
+    /// Apprenticeship (unconditionally eligible), never from later_life.
+    #[test]
+    fn an_authorized_gated_ability_is_funded_from_apprenticeship_before_later_life() {
+        let mut magus = planned(25);
+        magus.type_id = Id::new("magus");
+        magus.selections = vec![Selection::new(Id::new("virtue.test_arcane_lore"))];
+        magus
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.magic_theory"), 5));
+
+        let allocation = crate::effective::checked_xp_allocation(&magus, &rs()).unwrap();
+        let later_life = allocation
+            .restricted
+            .iter()
+            .find(|pool| {
+                matches!(
+                    &pool.origin,
+                    crate::effective::XpPoolOrigin::LifeStage { block }
+                        if *block == crate::life_stage::LifeStageBlock::LaterLife
+                )
+            })
+            .expect("a magus with later-life XP always reports the block");
+        assert_eq!(
+            later_life.used, 0,
+            "Apprenticeship (240, unconditionally eligible for every gated category, \
+             ArMDE:2505) must be exhausted before later_life's authorization-only \
+             access (ArMDE:2462) is ever touched — restricted pools: {:?}",
+            allocation.restricted
+        );
+        let arcane_lore = allocation
+            .restricted
+            .iter()
+            .find(|pool| {
+                matches!(&pool.origin, crate::effective::XpPoolOrigin::Item { item }
+                    if item.as_str() == "virtue.test_arcane_lore")
+            })
+            .expect("Arcane Lore's own 50-point pool is reported");
+        assert_eq!(
+            arcane_lore.used, 50,
+            "Arcane Lore's own earmark funds as much of Magic Theory as it can \
+             before Apprenticeship takes the rest: {:?}",
+            allocation.restricted
+        );
+        assert_eq!(
+            allocation.general_used, 25,
+            "the remaining 25 of Magic Theory's 75 cost must come from \
+             Apprenticeship (the general pool for a magus), not later_life"
+        );
+    }
+
+    /// The unauthorized case must still behave exactly as
+    /// `magic_theory_without_authorization_cannot_be_funded_once_apprenticeship_is_exhausted`
+    /// already locks: with NO authorizing Virtue, later_life stays wholly
+    /// ineligible for a gated Ability — the fix above only reorders WHICH
+    /// eligible pool is preferred, it must never WIDEN eligibility.
+    #[test]
+    fn an_unauthorized_gated_ability_still_never_draws_from_later_life() {
+        let mut magus = planned(25);
+        magus.type_id = Id::new("magus");
+        magus
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.magic_theory"), 5));
+
+        let allocation = crate::effective::checked_xp_allocation(&magus, &rs()).unwrap();
+        let later_life = allocation
+            .restricted
+            .iter()
+            .find(|pool| {
+                matches!(
+                    &pool.origin,
+                    crate::effective::XpPoolOrigin::LifeStage { block }
+                        if *block == crate::life_stage::LifeStageBlock::LaterLife
+                )
+            })
+            .expect("a magus with later-life XP always reports the block");
+        assert_eq!(
+            later_life.used, 0,
+            "restricted pools: {:?}",
+            allocation.restricted
+        );
+        assert_eq!(allocation.general_used, 75);
     }
 
     /// #8 (manual-testing-findings-2026-10-18): the life sections' years must

@@ -12074,6 +12074,21 @@ Virtue or Flaw permitting this").
 - `xp.rs::magus_later_life_pool` reads the explicit set only — a pool-implied
   permission (Warrior's own Martial-XP earmark) does not widen what a magus's
   unrestricted later-life block may fund.
+- **manual-testing-findings-2026-10-18 #11 (2026-10-19).** An authorizing
+  Virtue's widened gated-category/ability scope is now carried as
+  `FlowPool::deferred`, not folded into the pool's own immediate eligibility:
+  `xp.rs::two_phase_max_flow` gained a **third phase**, opened only after the
+  general pool, that tries `deferred` edges last. Apprenticeship (`ArMDE:2505`)
+  already funds every gated category unconditionally, with no Virtue needed at
+  all, so it must be exhausted FIRST; the authorizing Virtue's widened
+  later-life access (`ArMDE:2462`) is now the last resort, used only for
+  demand apprenticeship itself could not cover. Before this, a magus holding
+  e.g. an Arcane-Lore-shaped Virtue had a gated purchase funded from Later Life
+  while Apprenticeship's 240 sat completely untouched — correct per the raw
+  eligibility rule, wrong as an allocation. `childhood_native_language_pool`/
+  `childhood_spread_pool`/`restricted_ability_xp_pools`'s own (non-authorized)
+  scopes are unaffected — they keep the ordinary restricted-pools-first
+  preference, since those are true bonus/earmark pools, never wasted by it.
 - `effective/parameter_options.rs::ability_parameter_options` unions both
   halves — owning-at-all vs. funding-from-general is a funding question, not a
   picker one.

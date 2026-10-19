@@ -4057,9 +4057,20 @@ mod tests {
     /// ("You may take Latin at character creation", `ArMDE:5940`), so those points may come
     /// from before apprenticeship after all.
     ///
-    /// A **regression lock**: the pool is built from the same authorizations the
-    /// ownership check reads, so this already holds — which is exactly the property
-    /// worth pinning, since the two readings may never drift apart.
+    /// **Updated for manual-testing-findings-2026-10-18 #11.** Revised 2026-10-19:
+    /// the earlier version of this lock asserted that, once authorized, later life
+    /// is drawn FIRST and apprenticeship stays untouched. That was exactly
+    /// Norbert's reported defect — a magus whose apprenticeship sat completely
+    /// unspent while an authorizing Virtue sent a gated purchase through later
+    /// life instead. Apprenticeship funds every gated category unconditionally,
+    /// with no Virtue needed at all (`ArMDE:2505`), so it must be exhausted
+    /// FIRST; the authorizing Virtue's widened later-life access
+    /// (`ArMDE:2462`) is now the LAST resort, used only for demand apprenticeship
+    /// itself could not cover. A **regression lock** either way: the pool is
+    /// built from the same authorizations the ownership check reads, so
+    /// existence stays legal regardless of which pool ends up paying — which is
+    /// exactly the property worth pinning, since the two readings may never
+    /// drift apart.
     #[test]
     fn an_authorizing_virtue_lets_pre_apprenticeship_experience_buy_a_gated_ability() {
         let rs = life_stage_ruleset();
@@ -4075,11 +4086,13 @@ mod tests {
         assert_eq!(later_life_pool(&allocation).expect("a pool").used, 0);
         assert_eq!(allocation.general_used, 30);
 
-        // With it, later life may fund them.
+        // With it: apprenticeship still pays first, since it already could —
+        // the Flaw's own authorization makes no OBSERVABLE difference yet, this
+        // purchase being nowhere near apprenticeship's 240-point capacity.
         magus.selections = vec![Selection::new(Id::new("flaw.covenant_upbringing"))];
         let allocation = xp_allocation(&magus, &rs);
-        assert_eq!(later_life_pool(&allocation).expect("a pool").used, 30);
-        assert_eq!(allocation.general_used, 0);
+        assert_eq!(later_life_pool(&allocation).expect("a pool").used, 0);
+        assert_eq!(allocation.general_used, 30);
 
         // It authorizes that Ability alone: Artes Liberales stays out.
         magus.ability_scores.pop();
@@ -4089,6 +4102,69 @@ mod tests {
         let allocation = xp_allocation(&magus, &rs);
         assert_eq!(later_life_pool(&allocation).expect("a pool").used, 0);
         assert_eq!(allocation.general_used, 30);
+    }
+
+    /// The authorization's effect on WHICH pool pays only becomes observable
+    /// once apprenticeship's own 240 points cannot cover every gated purchase
+    /// alone — this is the actual shape of Norbert's report (manual-testing-
+    /// findings-2026-10-18 #11, confirmed 2026-10-19): apprenticeship exhausted
+    /// FIRST, down to the last point, before the authorizing Virtue's widened
+    /// later-life pool ever takes a single point of the overflow.
+    #[test]
+    fn apprenticeship_is_exhausted_before_an_authorized_overflow_reaches_later_life() {
+        let rs = life_stage_ruleset();
+        let mut magus = planned_magus();
+        // Artes Liberales, Philosophiae, Magic Theory at 5 (75 each, 225 total) —
+        // gated, but apprenticeship's hermetic-training exemption funds them
+        // unconditionally (`ArMDE:2505`) regardless of any Virtue, leaving only
+        // 15 of apprenticeship's 240 free.
+        magus.ability_scores.extend([
+            AbilityScore::new(Id::new("ability.artes_liberales"), 5),
+            AbilityScore::new(Id::new("ability.philosophiae"), 5),
+            AbilityScore::new(Id::new("ability.magic_theory"), 5),
+        ]);
+        // Dead Language (Latin) 5 — 75 more, Academic, gated. Apprenticeship
+        // alone has only 15 points left for it.
+        magus.ability_scores.push({
+            let mut a = AbilityScore::new(Id::new("ability.dead_language"), 5);
+            a.parameter = Some(AbilityParameterValue::text("Latin"));
+            a
+        });
+
+        // Without the Flaw: apprenticeship's remaining 15 points cannot cover
+        // Dead Language's other 60, and unauthorized later life cannot either —
+        // a genuine shortfall. `total_demand`/`max_flow` also carry the 75-point
+        // native-language purchase `planned_magus()` already holds, funded from
+        // its own childhood pool, not general.
+        let allocation = xp_allocation(&magus, &rs);
+        assert_eq!(later_life_pool(&allocation).expect("a pool").used, 0);
+        assert_eq!(allocation.general_used, 240, "apprenticeship exhausted");
+        assert_eq!(
+            allocation.total_demand, 375,
+            "75 native + 225 + 75 Dead Language"
+        );
+        assert_eq!(
+            allocation.max_flow, 315,
+            "75 native + 225 + only 15 of Dead Language's 75"
+        );
+
+        // With it: apprenticeship is STILL exhausted first — the identical 240 —
+        // and the Flaw's widened later-life pool is the overflow, covering only
+        // the remaining 60. Apprenticeship must never be left with spare
+        // capacity while later life pays instead: that is exactly what left
+        // Norbert's apprenticeship pool reading 0 used.
+        magus.selections = vec![Selection::new(Id::new("flaw.covenant_upbringing"))];
+        let allocation = xp_allocation(&magus, &rs);
+        assert_eq!(
+            allocation.general_used, 240,
+            "apprenticeship pays first, to the last point"
+        );
+        assert_eq!(
+            later_life_pool(&allocation).expect("a pool").used,
+            60,
+            "later life is the overflow, never the first resort"
+        );
+        assert_eq!(allocation.max_flow, 375, "fully funded now");
     }
 
     /// A magus gauntleted at 25 and now 60: thirty-five years of "30 points per

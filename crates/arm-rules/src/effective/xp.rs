@@ -420,6 +420,18 @@ struct FlowPool {
     /// general budget rather than added to it. Read only by the life timeline;
     /// the solve itself never looks at it.
     from_normal_budget: bool,
+    /// Extra eligibility usable only AFTER the general pool has been tried
+    /// (manual-testing-findings-2026-10-18 #11): `magus_later_life_pool`'s own
+    /// authorization-widened categories/abilities (ArMDE:2462 — a Virtue that
+    /// permits learning a gated category widens later life too). The general
+    /// pool for a hermetically-trained character ALREADY funds every gated
+    /// category unconditionally (ArMDE:2505), with no Virtue needed, so this
+    /// pool's few pre-apprenticeship years must never be drained for a gated
+    /// spend before Apprenticeship is — unlike `eligibility`'s own scope, which
+    /// stays preferred over general exactly as every other restricted pool is
+    /// (a true bonus/earmark, otherwise wasted). `None` for every pool but
+    /// `magus_later_life_pool`'s own.
+    deferred: Option<PoolEligibility>,
 }
 
 /// The instance childhood's native-language experience may be spent on: the
@@ -1290,6 +1302,7 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
                             item: selection.item_ref.clone(),
                         },
                         from_normal_budget: *from_normal_budget,
+                        deferred: None,
                     });
                 }
                 // D35: the grant's `amount` is `per_unit` times the value the
@@ -1329,6 +1342,7 @@ fn restricted_ability_xp_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPo
                             item: selection.item_ref.clone(),
                         },
                         from_normal_budget: false,
+                        deferred: None,
                     });
                 }
                 // Every other effect grants nothing to a restricted Ability-XP
@@ -1362,6 +1376,7 @@ fn childhood_native_language_pool(
             block: LifeStageBlock::ChildhoodNativeLanguage,
         },
         from_normal_budget: false,
+        deferred: None,
     })
 }
 
@@ -1389,6 +1404,7 @@ fn childhood_spread_pool(
             block: LifeStageBlock::ChildhoodSpread,
         },
         from_normal_budget: false,
+        deferred: None,
     }
 }
 
@@ -1399,7 +1415,17 @@ fn childhood_spread_pool(
 /// and Martial Abilities before apprenticeship if they have a Virtue which
 /// allows them to do so" (`ArMDE:2505`). A Virtue that does allow it (Covenant
 /// Upbringing, Educated, Warrior) widens the pool through the same
-/// authorizations the ownership check reads, so the two cannot disagree.
+/// authorizations the ownership check reads, so the two cannot disagree —
+/// **but only as [`FlowPool::deferred`]** (manual-testing-findings-2026-10-18
+/// #11): Apprenticeship already funds every gated category unconditionally,
+/// with no Virtue at all (`ArMDE:2505`), so once a Virtue happens to widen this
+/// pool too, these few pre-apprenticeship years must still be the LAST resort
+/// for a gated spend, never preferred ahead of Apprenticeship the way this
+/// pool's own ordinary (ungated) scope rightly is. Without the split, a magus
+/// holding e.g. an Arcane-Lore-shaped Virtue had Magic Theory's cost drawn from
+/// Later Life while Apprenticeship's 240 sat completely untouched — correct
+/// per the raw eligibility rule, wrong as an allocation, since nothing is
+/// gained by spending the narrower, Virtue-conditional pool first.
 ///
 /// Supernatural stays in the set and legalizes nothing: access to each
 /// Supernatural Ability is granted per Ability, which
@@ -1424,23 +1450,42 @@ fn magus_later_life_pool(
     // fund; only a stated permission (Educated, Covenant Upbringing) does.
     let auth = ability_authorizations(entity, ruleset);
     let gated = ruleset.categories_requiring_virtue();
+    // Deferred (gated, authorization-only) categories/abilities: never tried
+    // until Apprenticeship has already been — see the function doc comment. A
+    // category that is NOT gated belongs in the immediate scope below
+    // regardless of `auth`, so this set is exactly the gated ones a Virtue
+    // happens to authorize.
+    let deferred_categories: Vec<AbilityCategory> = gated
+        .iter()
+        .copied()
+        .filter(|category| auth.explicit_categories.contains(category))
+        .collect();
+    // Funding stays id-scoped (any instance) here — narrowing a POOL to one
+    // instance is D48/C4's `instances` field, not this slice's job; C1 only
+    // tightens OWNERSHIP (`validate_ability_authorization`), which is the
+    // actual F-349 defect. An explicitly authorized Ability whose OWN category
+    // is not gated is harmless to list here too (it is already covered by the
+    // immediate `categories` below, so this entry is simply never needed).
+    let deferred_abilities: Vec<Id> = auth
+        .explicit_abilities
+        .iter()
+        .map(|a| a.ability.clone())
+        .collect();
+    let deferred = (!deferred_categories.is_empty() || !deferred_abilities.is_empty()).then_some(
+        PoolEligibility::Ability {
+            abilities: deferred_abilities,
+            categories: deferred_categories,
+            instances: Vec::new(),
+            exclude: Vec::new(),
+        },
+    );
     Some(FlowPool {
         amount: budget.later_life_xp,
         eligibility: PoolEligibility::Ability {
-            // Funding stays id-scoped (any instance) here — narrowing a POOL to
-            // one instance is D48/C4's `instances` field, not this slice's job;
-            // C1 only tightens OWNERSHIP (`validate_ability_authorization`),
-            // which is the actual F-349 defect.
-            abilities: auth
-                .explicit_abilities
-                .iter()
-                .map(|a| a.ability.clone())
-                .collect(),
+            abilities: Vec::new(),
             categories: AbilityCategory::ALL
                 .into_iter()
-                .filter(|category| {
-                    !gated.contains(category) || auth.explicit_categories.contains(category)
-                })
+                .filter(|category| !gated.contains(category))
                 .collect(),
             instances: Vec::new(),
             exclude: Vec::new(),
@@ -1449,6 +1494,7 @@ fn magus_later_life_pool(
             block: LifeStageBlock::LaterLife,
         },
         from_normal_budget: false,
+        deferred,
     })
 }
 
@@ -1465,6 +1511,7 @@ fn spell_mastery_flow_pool(entity: &Entity, ruleset: &Ruleset) -> Option<FlowPoo
             block: LifeStageBlock::ChildhoodSpread,
         },
         from_normal_budget: false,
+        deferred: None,
     })
 }
 
@@ -1537,6 +1584,7 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
                     block: LifeStageBlock::ChildhoodSpread,
                 },
                 from_normal_budget: false,
+                deferred: None,
             });
         } else {
             flow_pools.extend(childhood_native_language_pool(
@@ -1570,6 +1618,7 @@ fn build_flow_pools(entity: &Entity, ruleset: &Ruleset) -> Vec<FlowPool> {
                     block: LifeStageBlock::Apprenticeship,
                 },
                 from_normal_budget: false,
+                deferred: None,
             });
         }
     }
@@ -1701,8 +1750,9 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
         .iter()
         .fold(general_pool, |sum, pool| sum.saturating_add(pool.amount));
 
-    let (layout, mut cap) = build_capacity_matrix(&flow_pools, &spends);
-    let (max_flow, general_used) = two_phase_max_flow(&layout, general_pool, &mut cap);
+    let (layout, mut cap, deferred_edges) = build_capacity_matrix(&flow_pools, &spends);
+    let (max_flow, general_used) =
+        two_phase_max_flow(&layout, general_pool, &deferred_edges, &mut cap);
     let restricted = assemble_restricted_pools(&layout, &flow_pools, &cap);
 
     XpAllocation {
@@ -1945,10 +1995,15 @@ impl FlowGraphLayout {
 /// only as an internal invariant for any future in-crate caller that
 /// bypasses the checked wrapper; it can no longer be reached by an
 /// untrusted `Entity` loaded from disk.
+/// A [`FlowPool::deferred`] edge not yet opened in the capacity matrix:
+/// `(pool_node, spend_node, capacity)`, applied by [`two_phase_max_flow`]'s
+/// third phase.
+type DeferredEdges = Vec<(usize, usize, u32)>;
+
 fn build_capacity_matrix(
     flow_pools: &[FlowPool],
     spends: &[Spend],
-) -> (FlowGraphLayout, Vec<Vec<u32>>) {
+) -> (FlowGraphLayout, Vec<Vec<u32>>, DeferredEdges) {
     let layout = FlowGraphLayout {
         r: flow_pools.len(),
         s: spends.len(),
@@ -1965,6 +2020,11 @@ fn build_capacity_matrix(
     );
 
     let mut cap = vec![vec![0u32; n]; n];
+    // D43/#11: a pool's `deferred` edges (`magus_later_life_pool`'s own
+    // authorization-widened, gated scope) start CLOSED here — they open only
+    // in `two_phase_max_flow`'s third phase, after the general pool has
+    // already been tried. See [`FlowPool::deferred`]'s own doc comment.
+    let mut deferred_edges = Vec::new();
     for (i, pool) in flow_pools.iter().enumerate() {
         cap[FlowGraphLayout::SOURCE][layout.pool_node(i)] = pool.amount;
     }
@@ -1980,27 +2040,40 @@ fn build_capacity_matrix(
         for (i, pool) in flow_pools.iter().enumerate() {
             if pool_covers(&pool.eligibility, spend) {
                 cap[layout.pool_node(i)][layout.spend_node(j)] = spend.cost;
+            } else if pool
+                .deferred
+                .as_ref()
+                .is_some_and(|deferred| pool_covers(deferred, spend))
+            {
+                deferred_edges.push((layout.pool_node(i), layout.spend_node(j), spend.cost));
             }
         }
     }
-    (layout, cap)
+    (layout, cap, deferred_edges)
 }
 
-/// Runs the two-phase max-flow solve on `cap` in place — sub-check 3 of
+/// Runs the three-phase max-flow solve on `cap` in place — sub-check 3 of
 /// [`xp_allocation`]. So a spend the restricted pools *can* cover drains them
 /// before the general pool (Educated/Warrior/Privileged and Mastered-Spells XP
 /// is free-but-earmarked; the general pool must stay available and no
 /// restricted XP wasted while eligible spends exist):
-/// - Phase 1: restricted-only max flow — the source→general edge stays closed.
+/// - Phase 1: restricted-only max flow — the source→general edge, and every
+///   `deferred_edges` entry, stay closed.
 /// - Phase 2: open the source→general edge and continue Edmonds-Karp on the
-///   same residuals. The sum is the true max flow with restricted usage
-///   maximized, i.e. minimum general used.
+///   same residuals. The sum so far is the true max flow with restricted
+///   usage maximized, i.e. minimum general used.
+/// - Phase 3: open `deferred_edges` (D43/#11: `magus_later_life_pool`'s own
+///   authorization-widened, gated scope — see [`FlowPool::deferred`]) and
+///   continue once more, so this last-resort capacity is tried only for
+///   whatever demand phases 1 and 2 — restricted pools AND the unconditionally
+///   eligible general pool together — still could not fund.
 ///
 /// Returns the total max flow and how much of `general_pool` the solve used
 /// (read off the source→general residual `cap` is left holding).
 fn two_phase_max_flow(
     layout: &FlowGraphLayout,
     general_pool: u32,
+    deferred_edges: &DeferredEdges,
     cap: &mut [Vec<u32>],
 ) -> (u32, u32) {
     let n = layout.n();
@@ -2008,7 +2081,7 @@ fn two_phase_max_flow(
     cap[FlowGraphLayout::SOURCE][FlowGraphLayout::GENERAL] = general_pool;
     // Saturating: a general pool near `u32::MAX` plus any restricted pool can fund
     // more than `u32` holds (see the edge case noted on `total_demand`).
-    let total = restricted_flow.saturating_add(max_flow(
+    let mut total = restricted_flow.saturating_add(max_flow(
         n,
         FlowGraphLayout::SOURCE,
         FlowGraphLayout::SINK,
@@ -2019,6 +2092,17 @@ fn two_phase_max_flow(
     // never above their starting capacity), so this can never underflow.
     debug_assert!(cap[FlowGraphLayout::SOURCE][FlowGraphLayout::GENERAL] <= general_pool);
     let general_used = general_pool - cap[FlowGraphLayout::SOURCE][FlowGraphLayout::GENERAL];
+    if !deferred_edges.is_empty() {
+        for &(pool_node, spend_node, cost) in deferred_edges {
+            cap[pool_node][spend_node] = cost;
+        }
+        total = total.saturating_add(max_flow(
+            n,
+            FlowGraphLayout::SOURCE,
+            FlowGraphLayout::SINK,
+            cap,
+        ));
+    }
     (total, general_used)
 }
 
