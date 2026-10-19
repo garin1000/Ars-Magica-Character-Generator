@@ -290,6 +290,12 @@ describe('Ability parameter picker (CV7): choosing a catalogued value', () => {
 // purely through clicks. `flaw.blatant_gift` is in the `hermetic` category,
 // which the default `companion` profile forbids, giving a deterministic
 // error-severity issue through the same render path the over-budget case uses.
+//
+// Since "Picker refuses forbidden-category and unmet-prereq V/F in Enforced
+// mode" (manual-test findings #2/#19), Enforced mode refuses the Add button
+// outright for a forbidden-category item, so the illegal state this test
+// reports on is reached in Advisory instead — Enforced mode's own refusal is
+// asserted first, as the stronger guarantee that superseded the old behaviour.
 describe('validation errors', () => {
   it('shows a localized, error-severity issue for a forbidden-category selection', async () => {
     // A fresh companion already carries exactly one issue: the mandatory Social
@@ -315,6 +321,23 @@ describe('validation errors', () => {
     await vfTab.click();
     const addForbidden = await $('[data-testid="add-flaw.blatant_gift"]');
     await addForbidden.waitForExist({ timeout: 10000 });
+
+    // Enforced (default): the forbidden category is already known, so the Add
+    // button refuses the pick outright and the issue list is unchanged.
+    await browser.waitUntil(async () => isRowBlocked(addForbidden), {
+      timeout: 5000,
+      timeoutMsg: 'the hermetic-category flaw should be add-blocked for a Gift-less companion',
+    });
+    await addForbidden.click();
+    expect(await $$('[data-testid="issue-list"] li').then((l) => l.length)).toBe(1);
+
+    // Advisory: the pick is let through, and the engine reports it exactly as
+    // it always did.
+    await setValidationMode('advisory');
+    await browser.waitUntil(async () => !(await isRowBlocked(addForbidden)), {
+      timeout: 5000,
+      timeoutMsg: 'the hermetic-category flaw should become addable in Advisory mode',
+    });
     await addForbidden.click();
 
     // The forbidden-category issue now joins the pre-existing floor one,
@@ -329,6 +352,11 @@ describe('validation errors', () => {
     expect(text).not.toContain('issue-');
     expect(text).not.toContain('flaw.blatant_gift');
     expect(text).toContain('Blatant Gift');
+
+    // Restored so later describes in this shared session — which assume the
+    // default Enforced mode's greying/blocking behaviour — are not silently
+    // affected (see this file's header comment on `ValidationMode` persisting).
+    await setValidationMode('enforced');
   });
 });
 
@@ -337,7 +365,12 @@ describe('validation errors', () => {
 // clears the panel entirely.
 describe('validation modes', () => {
   // `flaw.blatant_gift` (hermetic category) is forbidden for the `companion`
-  // profile, so it yields a deterministic error in Enforced mode.
+  // profile, so it yields a deterministic error once added. Since "Picker
+  // refuses forbidden-category and unmet-prereq V/F in Enforced mode"
+  // (manual-test findings #2/#19), Enforced mode refuses the Add button
+  // outright — only Advisory/Silent let the pick through — so the pick itself
+  // must happen in Advisory; the SAME now-illegal selection is then inspected
+  // under every mode, which is the point of this test.
   const FORBIDDEN = '[data-testid="add-flaw.blatant_gift"]';
 
   async function severities() {
@@ -375,8 +408,11 @@ describe('validation modes', () => {
   });
 
   it('reports the same illegal entity differently per mode', async () => {
-    // A companion whose only issue is the forbidden flaw added below, so the
-    // per-mode severity counts are unambiguous.
+    // A companion whose only issues are the mandatory Social Status floor
+    // (D41, present on every fresh companion) and the forbidden flaw added
+    // below — not unambiguous counts on their own, which is exactly why every
+    // assertion below is phrased as "contains"/"does not contain" a severity
+    // rather than an exact count.
     await startCharacter('companion');
 
     // V/F add buttons live in the Virtues & Flaws tab; the shared validation bar is
@@ -385,26 +421,34 @@ describe('validation modes', () => {
     const vfTab = await $('[data-testid="tab-virtues_flaws"]');
     await vfTab.waitForExist({ timeout: 30000 });
     await vfTab.click();
+
+    // Advisory first: the only mode that lets the forbidden-category pick
+    // through at all.
+    await setValidationMode('advisory');
     const addForbidden = await $(FORBIDDEN);
     await addForbidden.waitForExist({ timeout: 10000 });
+    await browserWaitFor(async () => !(await isRowBlocked(addForbidden)));
     await addForbidden.click();
-
-    // Enforced (default): at least one error-severity issue, no warnings.
-    await setValidationMode('enforced');
-    await $('[data-testid="issue-list"]').waitForExist({ timeout: 5000 });
-    let sev = await severities();
-    expect(sev).toContain('error');
-    expect(sev).not.toContain('warning');
+    await $('[data-testid^="remove-flaw.blatant_gift-"]').waitForExist({ timeout: 10000 });
 
     // Advisory: every issue is downgraded to a warning; no errors remain.
-    await setValidationMode('advisory');
     await browserWaitFor(async () => {
       const s = await severities();
       return s.length > 0 && !s.includes('error');
     });
-    sev = await severities();
+    let sev = await severities();
     expect(sev).toContain('warning');
     expect(sev).not.toContain('error');
+
+    // Enforced: the same selection now reports at error severity, no warnings.
+    await setValidationMode('enforced');
+    await browserWaitFor(async () => {
+      const s = await severities();
+      return s.length > 0 && !s.includes('warning');
+    });
+    sev = await severities();
+    expect(sev).toContain('error');
+    expect(sev).not.toContain('warning');
 
     // Silent: the panel reports no issues at all.
     await setValidationMode('silent');
@@ -605,12 +649,23 @@ describe('mutually exclusive Virtues/Flaws', () => {
     const vfTab = await $('[data-testid="tab-virtues_flaws"]');
     await vfTab.waitForExist({ timeout: 30000 });
     await vfTab.click();
+
+    // Gentle Gift and Blatant Gift are both `hermetic`-category items gated on
+    // `has: virtue.the_gift` — forbidden outright for a Gift-less companion
+    // since "Picker refuses forbidden-category and unmet-prereq V/F in
+    // Enforced mode" (manual-test findings #2/#19). Granting The Gift first
+    // (free, category `special`, exempt from that same gate) is what makes
+    // the clique itself — not the surrounding Hermetic gate — the thing this
+    // test demonstrates.
+    const addGift = await addButton('virtue.the_gift');
+    await addGift.click();
+    await $('[data-testid^="remove-virtue.the_gift-"]').waitForExist({ timeout: 10000 });
   });
 
   it('greys out an excluded counterpart in Enforced mode, but not in Advisory', async () => {
     // Gentle Gift and Blatant Gift exclude each other via `incompatible_with`.
     const blatant = await addButton('flaw.blatant_gift');
-    expect(await isRowBlocked(blatant)).toBe(false);
+    await waitForEnabled('flaw.blatant_gift', true);
     await blatant.click();
 
     // Enforced (default): the counterpart is no longer takeable, so the illegal

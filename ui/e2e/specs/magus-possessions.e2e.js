@@ -841,7 +841,6 @@ describe('longevity ritual', () => {
   const TOTALS_TAB = '[data-testid="tab-totals"]';
 
   const HINT = '[data-testid="longevity-hint"]';
-  const HALVED = '[data-testid="longevity-hint-halved"]';
   const BONUS = '[data-testid="longevity-bonus"]';
   const FOCUS = '[data-testid="longevity-focus"]';
 
@@ -1029,15 +1028,17 @@ describe('longevity ritual', () => {
     await waitForHint('11', '+3');
     expect(await $(BONUS).getValue()).toBe('9');
 
-    // Difficult Longevity Ritual halves the Lab Total: 11 → 5 → ceil(5/5) = +1,
-    // and the hint is marked as halved.
+    // Difficult Longevity Ritual halves the Lab Total: 11 → 5 → ceil(5/5) = +1.
+    // #14: the hint names BOTH the raw Lab Total and what it was halved to
+    // (`longevity-hint-halved-detail`, merged into the one `longevity-hint`
+    // paragraph — there is no longer a separate "halved" marker element), so the
+    // pre-halving 11 must show alongside the halved 5 and the resulting +1.
     await $(VF_TAB).click();
     const addFlaw = await $('[data-testid="add-flaw.difficult_longevity_ritual"]');
     await addFlaw.waitForExist({ timeout: 10000 });
     await addFlaw.click();
     await $(AGING_TAB).click();
-    await waitForHint('5', '+1');
-    await $(HALVED).waitForExist({ timeout: 5000 });
+    await waitForHint('11', '5', '+1');
     expect(await $(BONUS).getValue()).toBe('9');
 
     // The focus is stored; the sterility consequence the rules attach to it is in the

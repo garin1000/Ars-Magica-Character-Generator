@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { hasXvfbRun, preflightDisplay } from './display.js';
+import { hasXvfb, preflightDisplay } from './display.js';
 import {
   allDriverPorts,
   seedUpdateCheckAnswer,
@@ -38,6 +38,7 @@ import {
 } from './reap.js';
 import { portableApp, stagePortableApp } from './stage-portable.js';
 import { appVersion, e2eLogDir, MAX_WORKERS, sharedWdioConfig } from './wdio.shared.conf.js';
+import { ensureOwnDisplay } from './xvfb.js';
 
 // Same fix as wdio.conf.js: Xvfb has no DRI3, so Mesa's hardware probe fails
 // and falls back to swrast noisily. Pin llvmpipe up front instead — this
@@ -55,6 +56,16 @@ let tauriDriver;
 // driver handle itself, the same way `tauriDriver` already is.
 let currentCid;
 
+/** A display `onPrepare` started with {@link ensureOwnDisplay}, or `undefined`. */
+let xvfbHandle;
+
+/** Stops this run's own Xvfb, if it started one. Idempotent. */
+function stopXvfbHandle() {
+  if (!xvfbHandle) return;
+  xvfbHandle.stop();
+  xvfbHandle = undefined;
+}
+
 export const config = {
   ...sharedWdioConfig(portableApp),
   specs: [path.resolve(dirname, 'portable/**/*.e2e.js')],
@@ -66,21 +77,33 @@ export const config = {
 
   // Build the production binary, then stage it — with `rules/` beside it — where
   // Tauri cannot mistake it for a dev build. The display check runs first and runs
-  // here, the last point at which `DISPLAY` still reflects the real environment.
+  // here — the launcher process, the only point at which setting `DISPLAY` is
+  // guaranteed to reach every worker — and `ensureOwnDisplay` (`xvfb.js`) starts
+  // this run's own Xvfb right here when there is none already, same as the
+  // standard config's `prepareRun`.
   onPrepare: async () => {
-    const problem = preflightDisplay(process.env, { xvfbRunAvailable: hasXvfbRun() });
+    const problem = preflightDisplay(process.env, { xvfbAvailable: hasXvfb() });
     if (problem) throw new Error(problem);
 
-    // Same reasoning as the standard config's onPrepare: refuse immediately,
-    // naming the port, rather than hang the session-creation timeout against a
-    // stale driver (docs/open-todos.md, "the e2e harness leaks its driver
-    // processes" — this config's own teardown bug, fixed below, is exactly
-    // what produced the stale drivers that finding was written from).
-    const portProblem = await preflightDriverPorts(allDriverPorts(MAX_WORKERS));
-    if (portProblem) throw new Error(portProblem);
-    fs.rmSync(pidRegistryDir(repoRoot), { recursive: true, force: true });
+    xvfbHandle = await ensureOwnDisplay();
 
-    stagePortableApp();
+    try {
+      // Same reasoning as the standard config's onPrepare: refuse immediately,
+      // naming the port, rather than hang the session-creation timeout against a
+      // stale driver (docs/open-todos.md, "the e2e harness leaks its driver
+      // processes" — this config's own teardown bug, fixed below, is exactly
+      // what produced the stale drivers that finding was written from).
+      const portProblem = await preflightDriverPorts(allDriverPorts(MAX_WORKERS));
+      if (portProblem) throw new Error(portProblem);
+      fs.rmSync(pidRegistryDir(repoRoot), { recursive: true, force: true });
+
+      stagePortableApp();
+    } catch (err) {
+      // `onComplete` never runs when `onPrepare` throws, so a display this run
+      // started itself must be stopped here or it would outlive the failed run.
+      stopXvfbHandle();
+      throw err;
+    }
   },
 
   // Deliberately narrower than the standard suite's `beforeSession` (V39): this
@@ -144,5 +167,6 @@ export const config = {
   // `onComplete` runs.
   onComplete: () => {
     reapRegisteredDrivers(pidRegistryDir(repoRoot));
+    stopXvfbHandle();
   },
 };

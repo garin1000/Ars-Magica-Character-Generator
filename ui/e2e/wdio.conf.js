@@ -28,7 +28,7 @@ import {
   rustInputsFingerprint,
   writeE2eBuildStamp,
 } from './build-freshness.js';
-import { hasXvfbRun, preflightDisplay } from './display.js';
+import { hasXvfb, preflightDisplay } from './display.js';
 import {
   allDriverPorts,
   resetWorkerConfigHome,
@@ -47,6 +47,7 @@ import {
   unregisterDriverPid,
 } from './reap.js';
 import { appVersion, e2eLogDir, MAX_WORKERS, sharedWdioConfig } from './wdio.shared.conf.js';
+import { ensureOwnDisplay } from './xvfb.js';
 
 /**
  * How each update-check spec meets the check (M6.6), by spec basename. A spec
@@ -176,46 +177,69 @@ export const SPECS_LONGEST_FIRST = [
  * relies on load_ruleset's exe-dir fallback (see commands.rs).
  *
  * The display check runs first, and runs here rather than in a session hook:
- * onPrepare is the launcher process, the last point at which `DISPLAY` still
- * reflects the real environment — every worker below it is already inside
- * WebdriverIO's `xvfb-run` wrapper when headless.
+ * onPrepare is the launcher process, the only point at which setting
+ * `DISPLAY` is guaranteed to reach every worker — a worker-side hook already
+ * runs after `@wdio/local-runner` has forked it. When there is none already,
+ * `ensureOwnDisplay` (`xvfb.js`) starts this run's own Xvfb right here, rather
+ * than relying on WebdriverIO's own `xvfb-run` wrapping (disabled via
+ * `autoXvfb: false`, `wdio.shared.conf.js`) — see `xvfb.js`'s header for why.
  *
  * @param {{ reuse: boolean }} options `reuse` skips cargo when the last e2e
  *   build is still current (`build-freshness.js`). Never used by the gate.
  */
 export async function prepareRun({ reuse }) {
-  const problem = preflightDisplay(process.env, { xvfbRunAvailable: hasXvfbRun() });
+  const problem = preflightDisplay(process.env, { xvfbAvailable: hasXvfb() });
   if (problem) throw new Error(problem);
 
-  // Refuses immediately, naming the port, if a stale driver from a previous
-  // run is still holding one of the ports this run's workers would bind —
-  // instead of this run connecting to it and hanging the full ~120s
-  // session-creation timeout before an inscrutable `WebDriverError: timeout`
-  // (docs/open-todos.md, "the e2e harness leaks its driver processes").
-  const portProblem = await preflightDriverPorts(allDriverPorts(MAX_WORKERS));
-  if (portProblem) throw new Error(portProblem);
+  xvfbHandle = await ensureOwnDisplay();
 
-  // The preflight above just proved every one of this run's ports is free,
-  // which means any driver a *previous* run's pid registry still names is
-  // already dead (whether cleanly reaped or a genuine orphan) — so it is
-  // safe to discard stale bookkeeping here rather than ever attempting to
-  // signal a pid that might since have been reused by an unrelated process.
-  fs.rmSync(pidRegistryDir(repoRoot), { recursive: true, force: true });
+  try {
+    // Refuses immediately, naming the port, if a stale driver from a previous
+    // run is still holding one of the ports this run's workers would bind —
+    // instead of this run connecting to it and hanging the full ~120s
+    // session-creation timeout before an inscrutable `WebDriverError: timeout`
+    // (docs/open-todos.md, "the e2e harness leaks its driver processes").
+    const portProblem = await preflightDriverPorts(allDriverPorts(MAX_WORKERS));
+    if (portProblem) throw new Error(portProblem);
 
-  if (reuse && e2eBuildReusable(repoRoot)) {
-    console.log(
-      `*** ARM_E2E_REUSE_BUILD: REUSING ${path.relative(repoRoot, application)} from the last e2e build, NO cargo build ran (never for the gate) ***`,
-    );
-  } else {
-    buildE2eBinary();
+    // The preflight above just proved every one of this run's ports is free,
+    // which means any driver a *previous* run's pid registry still names is
+    // already dead (whether cleanly reaped or a genuine orphan) — so it is
+    // safe to discard stale bookkeeping here rather than ever attempting to
+    // signal a pid that might since have been reused by an unrelated process.
+    fs.rmSync(pidRegistryDir(repoRoot), { recursive: true, force: true });
+
+    if (reuse && e2eBuildReusable(repoRoot)) {
+      console.log(
+        `*** ARM_E2E_REUSE_BUILD: REUSING ${path.relative(repoRoot, application)} from the last e2e build, NO cargo build ran (never for the gate) ***`,
+      );
+    } else {
+      buildE2eBinary();
+    }
+
+    const destRules = path.resolve(path.dirname(application), 'rules');
+    for (const sub of ['core', 'i18n']) {
+      fs.cpSync(path.resolve(repoRoot, 'rules', sub), path.resolve(destRules, sub), {
+        recursive: true,
+      });
+    }
+  } catch (err) {
+    // A display this run started itself must not outlive a failed prepare —
+    // `onComplete` never runs when `onPrepare` throws, so this is the only
+    // place left to stop it.
+    stopXvfbHandle();
+    throw err;
   }
+}
 
-  const destRules = path.resolve(path.dirname(application), 'rules');
-  for (const sub of ['core', 'i18n']) {
-    fs.cpSync(path.resolve(repoRoot, 'rules', sub), path.resolve(destRules, sub), {
-      recursive: true,
-    });
-  }
+/** A display `prepareRun` started with {@link ensureOwnDisplay}, or `undefined`. */
+let xvfbHandle;
+
+/** Stops this run's own Xvfb, if it started one. Idempotent. */
+function stopXvfbHandle() {
+  if (!xvfbHandle) return;
+  xvfbHandle.stop();
+  xvfbHandle = undefined;
 }
 
 /**
@@ -354,5 +378,6 @@ export const config = {
   // ever does anything when a worker's teardown did not run.
   onComplete: () => {
     reapRegisteredDrivers(pidRegistryDir(repoRoot));
+    stopXvfbHandle();
   },
 };

@@ -78,6 +78,13 @@ function workerCount(env) {
 export function sharedWdioConfig(application) {
   return {
     runner: 'local',
+    // `onPrepare` starts and stops its own Xvfb (`xvfb.js`'s `ensureOwnDisplay`)
+    // rather than letting `@wdio/local-runner` wrap the forked worker in
+    // `xvfb-run` itself: on this machine (and any distro sharing the same
+    // `xvfb-run` fix) that wrapper closes fd 3 — Node's IPC channel to the
+    // worker — before exec'ing the wrapped command, so every worker died at its
+    // first `process.send`. See `xvfb.js`'s header for the whole story.
+    autoXvfb: false,
     maxInstances: MAX_WORKERS,
     // Each spec file drives its own freshly launched app and passes in
     // isolation, but a run occasionally emits a transient

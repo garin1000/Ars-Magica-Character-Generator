@@ -14,19 +14,19 @@ describe('preflightDisplay', () => {
   const linux = { platform: 'linux' };
 
   it('passes when a display is available', () => {
-    expect(preflightDisplay({ DISPLAY: ':0' }, { ...linux, xvfbRunAvailable: false })).toBeNull();
+    expect(preflightDisplay({ DISPLAY: ':0' }, { ...linux, xvfbAvailable: false })).toBeNull();
   });
 
   it('passes without a display when Xvfb can supply one', () => {
-    expect(preflightDisplay({}, { ...linux, xvfbRunAvailable: true })).toBeNull();
+    expect(preflightDisplay({}, { ...linux, xvfbAvailable: true })).toBeNull();
   });
 
   it('reports the missing package when there is neither a display nor Xvfb', () => {
-    expect(preflightDisplay({}, { ...linux, xvfbRunAvailable: false })).toContain('xvfb');
+    expect(preflightDisplay({}, { ...linux, xvfbAvailable: false })).toContain('xvfb');
   });
 
   it('treats a blank DISPLAY as no display', () => {
-    const problem = preflightDisplay({ DISPLAY: '   ' }, { ...linux, xvfbRunAvailable: false });
+    const problem = preflightDisplay({ DISPLAY: '   ' }, { ...linux, xvfbAvailable: false });
     expect(problem).not.toBeNull();
   });
 
@@ -35,15 +35,15 @@ describe('preflightDisplay', () => {
   // check from passing a run that the framework will then fail.
   it('still requires Xvfb on a Wayland-only session', () => {
     const wayland = { WAYLAND_DISPLAY: 'wayland-0' };
-    expect(preflightDisplay(wayland, { ...linux, xvfbRunAvailable: false })).not.toBeNull();
-    expect(preflightDisplay(wayland, { ...linux, xvfbRunAvailable: true })).toBeNull();
+    expect(preflightDisplay(wayland, { ...linux, xvfbAvailable: false })).not.toBeNull();
+    expect(preflightDisplay(wayland, { ...linux, xvfbAvailable: true })).toBeNull();
   });
 
   // X11 is a Linux concern. macOS (safaridriver) and Windows (msedgedriver)
   // render natively and never set DISPLAY, so requiring one there would block
   // perfectly healthy runs — WebdriverIO's own Xvfb path is Linux-only too.
   it('never demands a display off Linux', () => {
-    const noDisplay = { xvfbRunAvailable: false };
+    const noDisplay = { xvfbAvailable: false };
     expect(preflightDisplay({}, { ...noDisplay, platform: 'darwin' })).toBeNull();
     expect(preflightDisplay({}, { ...noDisplay, platform: 'win32' })).toBeNull();
     expect(preflightDisplay({}, { ...noDisplay, platform: 'linux' })).not.toBeNull();

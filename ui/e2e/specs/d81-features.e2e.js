@@ -24,7 +24,14 @@
 
 import { $, $$, browser, expect } from '@wdio/globals';
 
-import { clean, isRowBlocked, replaceValue, startCharacter, STEP_TIMEOUT } from '../helpers.js';
+import {
+  clean,
+  isRowBlocked,
+  replaceValue,
+  setValidationMode,
+  startCharacter,
+  STEP_TIMEOUT,
+} from '../helpers.js';
 
 const ARTS_TAB = '[data-testid="tab-arts"]';
 const VF_TAB = '[data-testid="tab-virtues_flaws"]';
@@ -273,10 +280,17 @@ describe('Incompatible Arts: barred pairs, the Unusable cell, and the spell erro
 });
 
 // End-to-end: a Characteristic-floor prerequisite (Supernatural Beauty
-// requires Presence >= 1, ArMDE:5162-5168) is not grey-gated on the Available
-// list — the engine cannot evaluate it ahead of the pick in the UI's current
-// menu-filtering (that only narrows on House) — so taking it must report
-// `prereq_not_met` once Presence is definitely below the floor.
+// requires Presence >= 1, ArMDE:5162-5168). Since "Picker refuses
+// forbidden-category and unmet-prereq V/F in Enforced mode" (manual-test
+// findings #2/#19), the engine's `vf_add_verdicts` DOES evaluate this ahead of
+// the pick — Presence is already known before Supernatural Beauty is ever
+// selected — so Enforced mode now refuses the Add button outright rather than
+// letting the pick happen and reporting `prereq_not_met` afterwards. Advisory
+// mode is the one place that still lets the pick through, exactly as it does
+// for an incompatible pair (`companion-editor.e2e.js`'s "mutually exclusive
+// Virtues/Flaws"), so this test checks both halves: the Enforced-mode refusal,
+// and `prereq_not_met` still firing once the same pick is actually made in
+// Advisory.
 //
 // `AppStore.setCharacteristic` deletes the map entry whenever a score resolves
 // to 0 (`state.svelte.ts`); since D83.4 the engine's `PrereqCtx` reads an
@@ -301,6 +315,24 @@ describe('Characteristic-floor prerequisite reports its issue (Supernatural Beau
     await $(VF_TAB).click();
     const add = await $('[data-testid="add-virtue.supernatural_beauty"]');
     await add.waitForExist({ timeout: 10000 });
+
+    // Enforced (default): the unmet Characteristic floor is known up front, so
+    // the Add button already refuses the pick — the illegal state is never
+    // reached at all.
+    await browser.waitUntil(async () => isRowBlocked(add), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'Supernatural Beauty should be add-blocked while Presence is below the floor',
+    });
+    await add.click();
+    expect(await $('[data-testid^="remove-virtue.supernatural_beauty-"]').isExisting()).toBe(false);
+
+    // Advisory: the pick is allowed through, and the engine reports the same
+    // violation it always did, now as a validation issue on the selection.
+    await setValidationMode('advisory');
+    await browser.waitUntil(async () => !(await isRowBlocked(add)), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'Supernatural Beauty should become addable in Advisory mode',
+    });
     await add.click();
 
     const issue = await $(`${ISSUE_LIST} li[data-code="prereq_not_met"]`);

@@ -30,6 +30,7 @@ import {
   SPEC_UPDATE_SETUPS,
 } from './wdio.conf.js';
 import { config as reuseConfig } from './wdio.reuse.conf.js';
+import { ensureOwnDisplay } from './xvfb.js';
 
 // A fixed, recognizable stand-in pid — `registerDriverPid`/`killDriverTree`
 // need a real number to write a registry filename and to assert the kill
@@ -74,6 +75,15 @@ vi.mock('node:net', () => ({
     }),
   },
 }));
+// The own-Xvfb lifecycle itself (spawning, parsing -displayfd, teardown) is
+// unit-tested in `xvfb.test.js`. Here it is fixed to "nothing to start" by
+// default, so these tests exercise the configs' own wiring against it rather
+// than needing a display or a real spawn; individual tests below override it
+// with `mockResolvedValueOnce` to check what happens when there IS one to stop.
+vi.mock('./xvfb.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  ensureOwnDisplay: vi.fn(async () => null),
+}));
 
 // An e2e run is expensive — a release build plus a full drive of the real
 // binary. Its output is therefore worth keeping rather than re-running the
@@ -99,6 +109,20 @@ describe.each([
 
   it('does not write run logs to the system temp dir', () => {
     expect(config.outputDir.startsWith(os.tmpdir())).toBe(false);
+  });
+});
+
+// `xvfb-run` on this machine closes fd 3 (Node's IPC channel to a forked
+// worker) before exec'ing the wrapped command, killing every worker at its
+// first `process.send` (see `xvfb.js`'s header). `onPrepare` now starts its own
+// Xvfb instead (`ensureOwnDisplay`), so WebdriverIO's own wrapping must be off,
+// or the two would race to supply a display.
+describe.each([
+  ['standard', standardConfig],
+  ['portable', portableConfig],
+])('%s wdio config autoXvfb', (_name, config) => {
+  it("disables WebdriverIO's own Xvfb wrapping", () => {
+    expect(config.autoXvfb).toBe(false);
   });
 });
 
@@ -525,6 +549,44 @@ describe.each([
   });
 });
 
+// `xvfb-run` on this machine closes fd 3 before exec'ing the wrapped command,
+// killing every worker's IPC channel (see `xvfb.js`'s header). `onPrepare` now
+// asks `ensureOwnDisplay` for a display itself, before anything else, and must
+// tear down whatever it started if a later preparation step fails — the
+// success path (kept alive through the whole run, stopped only in
+// `onComplete`) is covered in "standard config e2e build" below, where a full
+// successful `onPrepare` is already exercised.
+describe.each([
+  ['standard', () => standardConfig],
+  ['portable', () => portableConfig],
+])('%s config own-Xvfb lifecycle', (_name, getConfig) => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    spawnSync.mockReturnValue({ status: 1 });
+    frontendIsFresh.mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    spawnSync.mockReset();
+    frontendIsFresh.mockReturnValue(false);
+  });
+
+  it('asks for a display before anything else in onPrepare', async () => {
+    await expect(getConfig().onPrepare()).rejects.toThrow();
+
+    expect(ensureOwnDisplay).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops an own Xvfb it started when a later preparation step fails', async () => {
+    const stop = vi.fn();
+    ensureOwnDisplay.mockResolvedValueOnce({ display: ':123', pid: 4321, stop });
+
+    await expect(getConfig().onPrepare()).rejects.toThrow();
+
+    expect(stop).toHaveBeenCalledTimes(1);
+  });
+});
+
 /** The `--config` override a build spawn carries, parsed, or `undefined`. */
 function configOverride(args) {
   const at = args.indexOf('--config');
@@ -743,6 +805,20 @@ describe('standard config e2e build', () => {
     await reuseConfig.onPrepare();
 
     expect(spawnSync).not.toHaveBeenCalled();
+  });
+
+  // The own-Xvfb failure path is covered above ("own-Xvfb lifecycle"); this is
+  // the success path, only exercisable here where `onPrepare` is already set up
+  // to complete without throwing.
+  it('keeps a started own Xvfb running through a successful prepare, stopping it only on completion', async () => {
+    const stop = vi.fn();
+    ensureOwnDisplay.mockResolvedValueOnce({ display: ':123', pid: 4321, stop });
+
+    await standardConfig.onPrepare();
+    expect(stop).not.toHaveBeenCalled();
+
+    standardConfig.onComplete();
+    expect(stop).toHaveBeenCalledTimes(1);
   });
 });
 

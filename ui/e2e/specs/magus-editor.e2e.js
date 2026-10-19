@@ -19,6 +19,7 @@ import {
   clean,
   isRowBlocked,
   setLanguage,
+  setValidationMode,
   SETTLE_TIMEOUT,
   startCharacter,
   STEP_TIMEOUT,
@@ -644,15 +645,31 @@ describe('character types', () => {
   });
 
   it('applies the created type category rules to the same selection', async () => {
-    // As a companion, the Hermetic flaw is a forbidden-category error.
+    // As a companion, the Hermetic flaw is a forbidden-category error. Since
+    // "Picker refuses forbidden-category and unmet-prereq V/F in Enforced
+    // mode" (manual-test findings #2/#19), Enforced mode now refuses the Add
+    // button outright instead of letting the pick through — the stronger
+    // guarantee that superseded the old behaviour — so the pick itself (to
+    // observe the engine still reporting it, same as always) happens in
+    // Advisory, restored to Enforced once this character is done with.
     await startOnVfTab('companion');
     const addHermetic = await $(HERMETIC_FLAW);
     await addHermetic.waitForExist({ timeout: 10000 });
+    await browser.waitUntil(async () => isRowBlocked(addHermetic), {
+      timeout: 5000,
+      timeoutMsg: 'companion should add-block the Hermetic flaw outright',
+    });
+    await setValidationMode('advisory');
+    await browser.waitUntil(async () => !(await isRowBlocked(addHermetic)), {
+      timeout: 5000,
+      timeoutMsg: 'the Hermetic flaw should become addable in Advisory mode',
+    });
     await addHermetic.click();
     await browser.waitUntil(async () => (await codes()).includes('forbidden_category'), {
       timeout: 5000,
       timeoutMsg: 'companion should forbid the Hermetic flaw',
     });
+    await setValidationMode('enforced');
 
     // As a magus, the Hermetic category is permitted: the same pick raises no
     // forbidden-category error, and a magus-specific issue (no House chosen yet →

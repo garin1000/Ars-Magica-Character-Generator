@@ -8,9 +8,9 @@ verify true Tauri IPC, the bundled rules resources, and the save/load flow.
 - `tauri-driver` — `cargo install tauri-driver`
 - **Linux:** `WebKitWebDriver` — `sudo apt install webkit2gtk-driver`
   (macOS uses the system `safaridriver`; Windows needs `msedgedriver`.)
-- A display — either a desktop session or, on Linux, `xvfb`
-  (`sudo apt install xvfb`), which WebdriverIO uses automatically when there
-  is none. See [Headful and headless](#headful-and-headless).
+- A display — either a desktop session or, on Linux, the `Xvfb` binary
+  (`sudo apt install xvfb`), which the suite starts and stops itself when
+  there is none. See [Headful and headless](#headful-and-headless).
 
 ## Run
 
@@ -21,7 +21,8 @@ npm run test:e2e:portable   # the portable-layout smoke check (see below)
 npm run test:e2e:reuse -- --spec ./e2e/specs/app-shell.e2e.js   # fast local rerun
 ```
 
-One command, both environments — no `xvfb-run` wrapper.
+One command, both environments — no `xvfb-run` wrapper. (It used to be WebdriverIO's own `xvfb-run` wrapper; see
+[Headful and headless](#headful-and-headless) for why that was replaced.)
 
 `wdio.conf.js` builds `arm-app` in release with `--features e2e-testing` into
 its **own cargo target dir**, `target/e2e`, copies `rules/` beside
@@ -169,33 +170,51 @@ look.
 
 ## Headful and headless
 
-Both modes come from the same command; WebdriverIO chooses between them:
+Both modes come from the same command; `onPrepare` chooses between them:
 
 | `DISPLAY` at launch | Mode                                                     |
 | ------------------- | -------------------------------------------------------- |
 | set                 | **headful** — renders on your desktop session, watchable |
-| unset               | **headless** — the worker is wrapped in `xvfb-run`       |
+| unset               | **headless** — the suite starts its own `Xvfb`           |
 
-`@wdio/local-runner` (via `@wdio/xvfb`) checks `DISPLAY` in the launcher process
-and, when it is unset, spawns the test worker as
-`xvfb-run --auto-servernum -- node …`, tearing the server down with the worker.
-So on a remote/cron session the suite is already headless — no `xvfb-run`
-wrapper of your own, no `DISPLAY` juggling in `wdio.conf.js`. Anything a session
-hook spawns (`tauri-driver` → `WebKitWebDriver` → the app) inherits that display.
+`onPrepare` (`xvfb.js`'s `ensureOwnDisplay`) checks `DISPLAY` in the launcher
+process and, when it is unset on Linux, spawns exactly one `Xvfb` itself
+(`-displayfd 3` so Xvfb picks a free server number and reports it once ready —
+no racy scanning of `/tmp/.X*-lock` needed), sets `DISPLAY` before any worker
+is forked, and stops it again in `onComplete` (or on an earlier failure). So on
+a remote/cron session the suite is already headless — no `DISPLAY` juggling of
+your own. Anything a worker spawns (`tauri-driver` → `WebKitWebDriver` → the
+app) inherits that display.
+
+This used to be `@wdio/local-runner`'s own job (via `@wdio/xvfb`): when
+`DISPLAY` was unset it wrapped the forked worker in
+`xvfb-run --auto-servernum -- node …`. That wrapping is now disabled
+(`autoXvfb: false`, `wdio.shared.conf.js`): on this machine (and any distro
+sharing the same `xvfb-run` fix) that wrapper closes fd 3 —
+`DISPLAY=:$N XAUTHORITY=$AUTHFILE "$@" 3>&-`, `/usr/bin/xvfb-run` — before
+exec'ing the wrapped command, and fd 3 is exactly the IPC channel Node's
+`fork()` gives a worker (`stdio: [..., 'ipc']`). So every worker died at its
+very first `process.send` with `write EINVAL`, every one of the suite's spec
+files failing in seconds with no test ever actually running.
 
 Two consequences worth knowing:
 
 - The decision keys on **`DISPLAY` only**. A Wayland session without XWayland
   exports none, so it takes the Xvfb path too.
-- It is decided **before any hook runs in the worker**, so a hook cannot observe
-  "no display" and cannot usefully start its own X server.
+- It is decided **in `onPrepare`, before any worker is forked** — the only
+  point at which setting `DISPLAY` is guaranteed to reach every worker. A
+  worker-side hook is already too late: by the time it runs, the worker
+  process already exists with whatever `DISPLAY` the launcher gave it.
 
-What WebdriverIO does _not_ do well is a headless box with no xvfb installed: it
-logs a warning, proceeds, and the run dies later inside WebDriver with an
-unrelated-looking error. `onPrepare` therefore runs `preflightDisplay`
-(`display.js`) in the launcher — the last place `DISPLAY` still reflects reality
-— and fails immediately with the install hint instead. That check is pure and
-unit-tested in `display.test.js`, which runs under `npm run test:unit`.
+What this does _not_ handle well is a headless box with no `Xvfb` binary
+installed: starting it would simply fail with an ENOENT buried a few frames
+down. `onPrepare` therefore runs `preflightDisplay` (`display.js`) first, in
+the launcher — the last place `DISPLAY` still reflects reality — and fails
+immediately with the install hint instead. That check is pure and unit-tested
+in `display.test.js`; the Xvfb argument-building, `-displayfd` parsing, and
+lifecycle (`shouldStartOwnXvfb`, `buildXvfbArgs`, `startOwnXvfb`,
+`ensureOwnDisplay`) are unit-tested in `xvfb.test.js` — both run under
+`npm run test:unit`.
 
 ## Layout
 
@@ -209,6 +228,8 @@ e2e/
   sync-dist.js           # `npm run build`: mirrors tmp/vite-dist into ui/dist, changed files only
   display.js             # display preflight (pure; unit-tested by display.test.js)
   display.test.js        # runs under `npm run test:unit`, NOT under wdio
+  xvfb.js                # starts/stops this run's own Xvfb when there is no DISPLAY
+  xvfb.test.js           # runs under `npm run test:unit`, NOT under wdio
   helpers.js             # shared spec harness — `startCharacter()`, `startWizard()`, …
   wizard-walk.js         # shared driver for the four per-type guided walks
   fixtures/              # files the app reads through a seam (the update feed)
