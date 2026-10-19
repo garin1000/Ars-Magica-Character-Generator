@@ -538,6 +538,79 @@ pub fn spell_level_cap(
     range_beyond_touch: bool,
     marks: SpellMarks,
 ) -> i64 {
+    // The cap IS the Lab Total at aura +3 (ArMDE:2535), so it reads the same
+    // effective Intelligence the Lab Total does — after aging drops and free
+    // deltas such as Great (Intelligence) — not the bought score.
+    let int = i64::from(effective_characteristic_after_aging(
+        entity,
+        ruleset,
+        Characteristic::Int,
+    ));
+    spell_level_cap_with_intelligence(
+        entity,
+        ruleset,
+        technique,
+        form,
+        requisites,
+        range_beyond_touch,
+        marks,
+        int,
+    )
+}
+
+/// Same cap as [`spell_level_cap`], but Intelligence is read BEFORE aging
+/// drops ([`effective_characteristic_score`], not
+/// [`effective_characteristic_after_aging`]) — still after free deltas such as
+/// Great (Intelligence).
+///
+/// D92 (`docs/vf-audit/decisions.md`, Norbert 2026-10-19; manual-testing-findings-2026-10-18
+/// #16): a known spell is not unlearned when its creator ages, so a spell
+/// whose level now exceeds [`spell_level_cap`] ONLY because an aging drop
+/// lowered Intelligence since it was learned is a warning, not an error. The
+/// one caller, `validation/magus.rs::validate_spell_level_cap`, compares the
+/// spell's level against both this cap and [`spell_level_cap`] to tell the two
+/// cases apart.
+pub(crate) fn spell_level_cap_pre_aging(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    technique: &Id,
+    form: &Id,
+    requisites: &[Id],
+    range_beyond_touch: bool,
+    marks: SpellMarks,
+) -> i64 {
+    let int = i64::from(effective_characteristic_score(
+        entity,
+        ruleset,
+        Characteristic::Int,
+    ));
+    spell_level_cap_with_intelligence(
+        entity,
+        ruleset,
+        technique,
+        form,
+        requisites,
+        range_beyond_touch,
+        marks,
+        int,
+    )
+}
+
+/// The shared body of [`spell_level_cap`]/[`spell_level_cap_pre_aging`]: every
+/// term the cap sums EXCEPT Intelligence, which the caller supplies already
+/// resolved (post- or pre-aging) — the only difference between the two public
+/// functions.
+#[allow(clippy::too_many_arguments)]
+fn spell_level_cap_with_intelligence(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    technique: &Id,
+    form: &Id,
+    requisites: &[Id],
+    range_beyond_touch: bool,
+    marks: SpellMarks,
+    int: i64,
+) -> i64 {
     // Read before the Art *scores* shadow `technique`/`form` with their totals.
     let deficiencies = deficient_arts(entity, ruleset);
     let deficient = arts_deficient(&deficiencies, technique, form, requisites);
@@ -559,14 +632,6 @@ pub fn spell_level_cap(
         effective_art_score(entity, ruleset, form),
         requisites,
         elemental_forms.as_ref(),
-    ));
-    // The cap IS the Lab Total at aura +3 (ArMDE:2535), so it reads the same
-    // effective Intelligence the Lab Total does — after aging drops and free
-    // deltas such as Great (Intelligence) — not the bought score.
-    let int = i64::from(effective_characteristic_after_aging(
-        entity,
-        ruleset,
-        Characteristic::Int,
     ));
     let magic_theory = i64::from(effective_ability_score(
         entity,

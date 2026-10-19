@@ -1617,6 +1617,11 @@ issue-duplicate_spell = { $spell } ist { $count }-mal aufgeführt.
 issue-spell_level_unresolved = Der Gen-Zauber { $spell } hat noch keine gewählte Stufe.
 issue-over_spell_levels = Die Zauber ergeben { $used } Stufen und überschreiten das Budget von { $budget } (um { $over }).
 issue-spell_level_exceeds_cap = Zauber { $spell } hat Stufe { $level }, über der höchsten erlernbaren Stufe ({ $cap }).
+# D92: Die Stufe des Zaubers liegt innerhalb der mit der Intelligenz VOR der
+# Alterung berechneten Grenze — die Überschreitung kommt also allein von einem
+# Alterungsabfall seit dem Erlernen. Ein bekannter Zauber wird dadurch nicht
+# verlernt.
+issue-spell_level_exceeds_cap_due_to_aging = Zauber { $spell } hat Stufe { $level }, über der aktuell höchsten erlernbaren Stufe ({ $cap }) — aber nur, weil die Alterung deine Intelligenz seither gesenkt hat. Der Zauber bleibt bekannt.
 issue-spell_ritual_legality = Zauber { $spell } wird auf Stufe { $level } erlernt und verletzt die Ritualgrenzen (Rituale mindestens 20, Nicht-Rituale höchstens 50).
 issue-ritual_casting_restricted = { $spell } ist ein Ritual, und Starre Magie verbietet es, dabei Vis einzusetzen.
 issue-spell_uses_incompatible_arts = { $spell } verwendet eine Kombination aus Technik und Form, die der Fehler Unvereinbare Künste verbietet.

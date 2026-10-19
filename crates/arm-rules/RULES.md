@@ -3468,7 +3468,7 @@ exemption is read off the effect's presence (age cap itself is M4/4e).
 - Implementation: `effective/xp.rs::charged_cost` (the `floor(den·(T−1)/num) + 1`
   arithmetic, verified against the worked example below) + `ability_affinity`,
   folded into `effective/xp.rs::xp_allocation` and so into
-  `validation/magus.rs::validate_xp_pool` (:984). **Not** the simpler
+  `validation/magus.rs::validate_xp_pool` (:1014). **Not** the simpler
   `ceil(T·den/num)`, which looks equivalent and agrees with it on the worked
   example below, but overcharges by one XP whenever `T·den mod num` falls
   strictly between `0` and `den` — row 47 / V/F-audit F-547, fixed after
@@ -3546,7 +3546,7 @@ approximation of "Latin").
   feasibility graph (general pool + one node per restricted pool → eligible spends
   → sink). A greedy assignment is incorrect under overlapping eligibility
   (Educated's academic ids overlap Privileged's `academic` category), so flow is
-  used. `validation/magus.rs::validate_xp_pool` (:984) reports `not_enough_xp` (with
+  used. `validation/magus.rs::validate_xp_pool` (:1014) reports `not_enough_xp` (with
   `shortfall`) and `restricted_xp_unspent` (warning, naming the granting item
   through `origin_kind`/`origin` — see the life-stage section for why the pool has to
   be named). `not_enough_xp` and `xp_solve_bound_exceeded` are owned by Abilities and
@@ -5509,6 +5509,22 @@ all (`has_magical_focus`), independent of whether any spell is marked
 grey/offer logic should read `spell_caps` for any spell carrying requisites.
 Tests: `crates/arm-rules/tests/requisite_level_cap.rs` (engine fold + focus),
 `crates/arm-app/tests/spell_caps_dto.rs` (DTO row).
+
+**D92 (`docs/vf-audit/decisions.md`, Norbert 2026-10-19): an over-cap violation
+caused ONLY by aging is a WARNING, not an ERROR.** Aging lowers Intelligence,
+which lowers the cap (manual-testing-findings-2026-10-18 #16) — but a known
+spell is not unlearned when its creator ages; the cap limits what can be
+*learned* (ArMDE:2541). `validate_spell_level_cap` (`validation/magus.rs`), on
+finding the level over the ordinary cap, also computes
+`spell_level_cap_pre_aging` (`effective/spell.rs`) — the identical cap with
+Intelligence read via `effective_characteristic_score` (before aging drops)
+instead of `effective_characteristic_after_aging`. Within that pre-aging cap,
+the issue is `spell_level_exceeds_cap_due_to_aging` (Warning); still over it
+too, it stays `spell_level_exceeds_cap` (Error), unchanged. Both functions
+share one body, `spell_level_cap_with_intelligence`, parameterized only on
+which Intelligence reading the caller supplies — so the two caps can never
+diverge on anything but that one term. Tests:
+`crates/arm-rules/tests/spell_level_cap_aging_warning.rs`.
 
 **Casting Total — requisite folding (X11, `derived/casting.rs::fold_requisite`).**
 

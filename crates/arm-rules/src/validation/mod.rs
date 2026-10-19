@@ -245,6 +245,7 @@ impl fmt::Display for IssueSeverity {
 /// | `over_spell_levels` | error | spells | `used`, `budget`, `over` |
 /// | `spell_levels_unspent` | warning | spells | `used`, `budget`, `unspent` |
 /// | `spell_level_exceeds_cap` | error | spells | `spell`, `level`, `cap` |
+/// | `spell_level_exceeds_cap_due_to_aging` | warning | spells | `spell`, `level`, `cap` |
 /// | `ability_above_age_cap` | error | abilities | `ability`, `score`, `cap`, `age` |
 /// | `supernatural_ability_requires_virtue` | error | abilities | `ability` |
 /// | `personality_trait_out_of_range` | error | personality_reputations | `name`, `value`, `max` |
@@ -825,6 +826,16 @@ impl ValidationIssue {
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a spell's level exceeds
     /// Technique + Form + Intelligence + Magic Theory + 3 (ArMDE:2535).
     pub const CODE_SPELL_LEVEL_EXCEEDS_CAP: &'static str = "spell_level_exceeds_cap";
+    /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Warning, not
+    /// [`ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP`]'s error: the spell's level
+    /// exceeds the cap computed with the entity's CURRENT (aged) Intelligence, but
+    /// is within the cap computed with its PRE-aging Intelligence — i.e. the
+    /// violation is caused only by an aging drop since the spell was learned. A
+    /// known spell is not unlearned when its creator ages; the cap limits what can
+    /// be learned (ArMDE:2541). D92 (`docs/vf-audit/decisions.md`, Norbert
+    /// 2026-10-19; manual-testing-findings-2026-10-18 #16).
+    pub const CODE_SPELL_LEVEL_EXCEEDS_CAP_DUE_TO_AGING: &'static str =
+        "spell_level_exceeds_cap_due_to_aging";
     /// See [`ValidationIssue::CODE_UNKNOWN_TYPE`]. Error: a spell's resolved learned
     /// level violates the ritual level bounds — a ritual learned below level 20, or a
     /// non-ritual learned above level 50

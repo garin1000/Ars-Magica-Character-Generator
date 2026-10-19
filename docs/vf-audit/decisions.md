@@ -3947,3 +3947,28 @@ inside the 10 — and both ship the same value.
 - **Precedent:** a number in `RULES.md` presented as *verified* is not evidence
   that anyone verified it. Re-derive from the book, and prefer the supplement that
   states a cap over a core-book sentence that only describes a package.
+
+---
+
+## D92 — an over-cap spell caused only by aging warns, it does not block (Norbert, 2026-10-19)
+
+manual-testing-findings-2026-10-18 #16: aging lowers Intelligence, which lowers
+`effective/spell.rs::spell_level_cap` (ArMDE:2535), so a spell legally learned
+before an aging crisis can read as over-cap afterward. A known spell is not
+unlearned when its creator ages; the cap limits what can be *learned*
+(ArMDE:2541, "limited as before"), not what stays known.
+
+**Ruling.** Demote to a WARNING **only if** the spell's level would still be
+within the cap computed with PRE-aging Characteristics — i.e. the violation is
+caused solely by the aging drop. If the level exceeds even the pre-aging cap,
+it stays the ERROR it is today.
+
+**Implementation.** `spell_level_cap_pre_aging` (`effective/spell.rs`) is the
+same cap, reading Intelligence via `effective_characteristic_score` (before
+aging) instead of `effective_characteristic_after_aging`; both share one body,
+`spell_level_cap_with_intelligence`, so they can never diverge except on that
+one term. `validate_spell_level_cap` (`validation/magus.rs`) compares the
+level to both caps: within the pre-aging one, it raises the new
+`spell_level_exceeds_cap_due_to_aging` (Warning); otherwise the existing
+`spell_level_exceeds_cap` (Error), unchanged. Tests:
+`crates/arm-rules/tests/spell_level_cap_aging_warning.rs`.

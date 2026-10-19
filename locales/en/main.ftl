@@ -1535,6 +1535,10 @@ issue-duplicate_spell = { $spell } is listed { $count } times.
 issue-spell_level_unresolved = General spell { $spell } has no chosen level yet.
 issue-over_spell_levels = Spells total { $used } levels, over the budget of { $budget } (by { $over }).
 issue-spell_level_exceeds_cap = Spell { $spell } is level { $level }, above the maximum you can learn ({ $cap }).
+# D92: the spell's level is within the cap computed with pre-aging Intelligence,
+# so the violation is caused only by an aging drop since it was learned — a
+# known spell, unlike a learnable one, is not unlearned by aging.
+issue-spell_level_exceeds_cap_due_to_aging = Spell { $spell } is level { $level }, above the maximum you could learn now ({ $cap }) — but only because aging has since lowered your Intelligence. The spell stays known.
 issue-spell_ritual_legality = Spell { $spell } is learned at level { $level }, which breaks the ritual level bounds (rituals at least 20, non-rituals at most 50).
 issue-ritual_casting_restricted = { $spell } is a Ritual, and Rigid Magic forbids using vis to cast it.
 issue-spell_uses_incompatible_arts = { $spell } uses a Technique and Form combination that Incompatible Arts forbids.

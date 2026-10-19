@@ -745,6 +745,15 @@ fn validate_spell_focus_marker_without_focus(
 /// Further halved for a Short-Ranged-Magic holder when the spell's own Range
 /// is beyond Touch (D28). Trained only — the caller gates on
 /// `is_hermetically_trained`.
+///
+/// D92 (`docs/vf-audit/decisions.md`, Norbert 2026-10-19; manual-testing-findings-2026-10-18
+/// #16): when the level exceeds the cap, a second cap is computed with
+/// PRE-aging Intelligence (`spell_level_cap_pre_aging`). Within that cap, the
+/// violation is caused only by an aging drop since the spell was learned —
+/// known spells aren't unlearned by aging — so the issue is demoted to
+/// [`ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP_DUE_TO_AGING`] (Warning).
+/// Still over the pre-aging cap too, it stays
+/// [`ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP`] (Error), unchanged.
 fn validate_spell_level_cap(
     entity: &Entity,
     ruleset: &Ruleset,
@@ -759,6 +768,7 @@ fn validate_spell_level_cap(
     let range_beyond_touch = spell
         .range
         .is_some_and(crate::effective::range_beyond_touch);
+    let marks = crate::effective::SpellMarks::from(sel);
     let cap = crate::effective::spell_level_cap(
         entity,
         ruleset,
@@ -766,17 +776,37 @@ fn validate_spell_level_cap(
         &spell.form,
         &spell.requisites,
         range_beyond_touch,
-        crate::effective::SpellMarks::from(sel),
+        marks,
     );
-    if i64::from(level) > cap {
+    if i64::from(level) <= cap {
+        return;
+    }
+    let cap_args = args([
+        ("spell", sel.spell.to_string()),
+        ("level", level.to_string()),
+        ("cap", cap.max(0).to_string()),
+    ]);
+    let pre_aging_cap = crate::effective::spell_level_cap_pre_aging(
+        entity,
+        ruleset,
+        &spell.technique,
+        &spell.form,
+        &spell.requisites,
+        range_beyond_touch,
+        marks,
+    );
+    if i64::from(level) <= pre_aging_cap {
+        issues.push(ValidationIssue::warning(
+            ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP_DUE_TO_AGING,
+            CreationPhase::Spells,
+            cap_args,
+            Some(sel.spell.clone()),
+        ));
+    } else {
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_SPELL_LEVEL_EXCEEDS_CAP,
             CreationPhase::Spells,
-            args([
-                ("spell", sel.spell.to_string()),
-                ("level", level.to_string()),
-                ("cap", cap.max(0).to_string()),
-            ]),
+            cap_args,
             Some(sel.spell.clone()),
         ));
     }

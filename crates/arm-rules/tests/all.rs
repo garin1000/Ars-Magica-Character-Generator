@@ -103,6 +103,7 @@ mod source_citations;
 mod source_relocation;
 mod spell_cap_effective_intelligence;
 mod spell_description_verbatim;
+mod spell_level_cap_aging_warning;
 mod spell_mastery_limits;
 mod spell_stat_line;
 mod t2_art_parameterized_names;
