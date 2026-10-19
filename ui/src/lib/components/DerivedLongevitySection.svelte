@@ -32,9 +32,14 @@
           modifier: formatSigned(-d.longevity.hint.suggested_bonus),
         })}
         ({store.t('derived-lab-total')}
-        {d.longevity.hint.lab_total}{#if d.longevity.hint.halved}, {store.t(
-            'longevity-hint-halved',
-          )}{/if})
+        {#if d.longevity.hint.halved}
+          {store.t('derived-lab-total-halved', {
+            before: d.longevity.hint.lab_total_before_halving,
+            after: d.longevity.hint.lab_total,
+          })}
+        {:else}
+          {d.longevity.hint.lab_total}
+        {/if})
       {/if}
       {#if d.longevity.bronze_cord > 0}
         · {store.t('derived-addend-bronze_cord')} {formatSigned(d.longevity.bronze_cord)}

@@ -971,16 +971,20 @@ longevity-remove = Remove Longevity Ritual
 # entered, never derived. Distinguishes an unfilled field from a deliberate 0.
 longevity-not-entered = Not entered
 # The live suggestion beside the input: what a ritual made now would be worth.
-# { $bonus } is already signed; { $total } is today's Creo Corpus Lab Total,
-# AFTER any halving (see longevity-hint-halved below) — never a pre-halving
-# figure, which the engine does not expose. The quantity is named ("aging
-# bonus") because it is the STORED magnitude to type into the field — the
-# totals panel shows the same number as an aging-roll modifier (-7). The Lab
-# Total leads the sentence, with the bonus it buys stated after it
-# (manual-testing-findings #14): the old "bonus (Lab Total) halved" order read
-# as if the halving applied after the bonus was already computed.
+# { $bonus } is already signed; { $total } is today's Creo Corpus Lab Total —
+# used only when nothing halves it (see longevity-hint-halved-detail below for
+# the halved case, which spells out the pre-halving figure too). The quantity
+# is named ("aging bonus") because it is the STORED magnitude to type into the
+# field — the totals panel shows the same number as an aging-roll modifier
+# (-7). The Lab Total leads the sentence, with the bonus it buys stated after
+# it (manual-testing-findings #14): the old "bonus (Lab Total) halved" order
+# read as if the halving applied after the bonus was already computed.
 longevity-hint = A ritual made now: Creo Corpus Lab Total { $total } → aging bonus { $bonus }
-longevity-hint-halved = halved
+# manual-testing-findings #14 (2026-10-19 ruling): names BOTH figures — the raw
+# Lab Total and what it was halved to — so the steps read in the order they
+# happen ("Lab Total 4, halved to 2 → +1"), instead of tacking a bare "halved"
+# onto an already-halved number with no sign it was ever anything larger.
+longevity-hint-halved-detail = A ritual made now: Creo Corpus Lab Total { $before }, halved to { $after } → aging bonus { $bonus }
 longevity-focus-label = Focus
 longevity-focus-placeholder = How the ritual culminates
 # Shown as the reason a Supernatural Ability is greyed in the picker.
@@ -1675,6 +1679,10 @@ derived-range = Range
 derived-load = Load
 derived-burden = Burden
 derived-lab-total = Lab Total
+# The Longevity line's parenthetical Lab Total figure, when a halving applies
+# (manual-testing-findings #14) — names both the raw total and what it was
+# halved to, matching longevity-hint-halved-detail's wording.
+derived-lab-total-halved = { $before }, halved to { $after }
 # On-demand Lab/Casting Total picker: choose a Technique and Form to see the
 # single matching totals instead of the full combination tables.
 derived-section-lab-casting = Lab & Casting Totals

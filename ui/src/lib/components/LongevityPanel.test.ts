@@ -96,14 +96,24 @@ beforeEach(() => {
 describe('LongevityPanel entered bonus (stored for both sources)', () => {
   it('offers the bonus input for a self-made ritual, not only an external one', () => {
     store.addLongevityRitual('self_made');
-    setDerived('self_made', 0, false, { lab_total: 35, suggested_bonus: 7, halved: false });
+    setDerived('self_made', 0, false, {
+      lab_total: 35,
+      suggested_bonus: 7,
+      halved: false,
+      lab_total_before_halving: 35,
+    });
     const { open } = element(html(), 'longevity-bonus');
     expect(open).toMatch(/<input/i);
   });
 
   it('leaves the input empty and flags "not entered" when no bonus is stored', () => {
     store.addLongevityRitual('self_made');
-    setDerived('self_made', 0, false, { lab_total: 35, suggested_bonus: 7, halved: false });
+    setDerived('self_made', 0, false, {
+      lab_total: 35,
+      suggested_bonus: 7,
+      halved: false,
+      lab_total_before_halving: 35,
+    });
     const body = html();
     // Empty, not a placeholder 0 that would read as a deliberate choice.
     expect(element(body, 'longevity-bonus').open).not.toMatch(/value="0"/);
@@ -113,7 +123,12 @@ describe('LongevityPanel entered bonus (stored for both sources)', () => {
   it('renders the stored bonus and drops the not-entered flag once entered', () => {
     store.addLongevityRitual('self_made');
     store.setLongevityBonus(4);
-    setDerived('self_made', 4, true, { lab_total: 35, suggested_bonus: 7, halved: false });
+    setDerived('self_made', 4, true, {
+      lab_total: 35,
+      suggested_bonus: 7,
+      halved: false,
+      lab_total_before_halving: 35,
+    });
     const body = html();
     expect(element(body, 'longevity-bonus').open).toMatch(/value="4"/);
     expect(() => element(body, 'longevity-not-entered')).toThrow();
@@ -122,12 +137,22 @@ describe('LongevityPanel entered bonus (stored for both sources)', () => {
   it('brings the not-entered marker back when the field is emptied', () => {
     store.addLongevityRitual('self_made');
     store.setLongevityBonus(4);
-    setDerived('self_made', 4, true, { lab_total: 35, suggested_bonus: 7, halved: false });
+    setDerived('self_made', 4, true, {
+      lab_total: 35,
+      suggested_bonus: 7,
+      halved: false,
+      lab_total_before_halving: 35,
+    });
     expect(() => element(html(), 'longevity-not-entered')).toThrow();
     // Emptying the input is how a player takes back a value they mistyped — it must
     // restore "not entered", not write a deliberate 0 that can never be undone.
     store.setLongevityBonus(null);
-    setDerived('self_made', 0, false, { lab_total: 35, suggested_bonus: 7, halved: false });
+    setDerived('self_made', 0, false, {
+      lab_total: 35,
+      suggested_bonus: 7,
+      halved: false,
+      lab_total_before_halving: 35,
+    });
     const body = html();
     expect(element(body, 'longevity-not-entered').text).toContain('Not entered');
     expect(element(body, 'longevity-bonus').open).not.toMatch(/value="0"/);
@@ -144,7 +169,12 @@ describe('LongevityPanel entered bonus (stored for both sources)', () => {
 describe('LongevityPanel hint (engine-authoritative suggestion)', () => {
   it('shows the suggested bonus and the Lab Total it comes from', () => {
     store.addLongevityRitual('self_made');
-    setDerived('self_made', 0, false, { lab_total: 35, suggested_bonus: 7, halved: false });
+    setDerived('self_made', 0, false, {
+      lab_total: 35,
+      suggested_bonus: 7,
+      halved: false,
+      lab_total_before_halving: 35,
+    });
     const { text } = element(html(), 'longevity-hint');
     expect(text).toContain('35');
     // Signed via formatSigned, so a positive bonus reads "+7".
@@ -161,28 +191,57 @@ describe('LongevityPanel hint (engine-authoritative suggestion)', () => {
   // stated after it, so the steps read in the order they actually happen.
   it('states the Lab Total before the bonus it buys, so the steps read in order (#14)', () => {
     store.addLongevityRitual('self_made');
-    setDerived('self_made', 0, false, { lab_total: 35, suggested_bonus: 7, halved: false });
+    setDerived('self_made', 0, false, {
+      lab_total: 35,
+      suggested_bonus: 7,
+      halved: false,
+      lab_total_before_halving: 35,
+    });
     const { text } = element(html(), 'longevity-hint');
     expect(text.indexOf('35')).toBeLessThan(text.indexOf('+7'));
   });
 
-  it('marks the hint as halved when the engine flags a halving', () => {
+  // manual-testing-findings #14 (2026-10-19 ruling): a halved hint must name
+  // BOTH the raw Lab Total and what it was halved to, not just the
+  // already-halved figure with a bare "halved" tacked on — otherwise "4"
+  // never appears anywhere and the player cannot tell the total was ever
+  // larger. Norbert's own worked example: Lab Total 4, halved to 2 -> +1.
+  it('states both the raw and the halved Lab Total, in that order (#14)', () => {
     store.addLongevityRitual('self_made');
-    setDerived('self_made', 0, false, { lab_total: 17, suggested_bonus: 4, halved: true });
-    const body = html();
-    expect(element(body, 'longevity-hint').text).toContain('17');
-    expect(element(body, 'longevity-hint-halved').text).toContain('halved');
+    setDerived('self_made', 0, false, {
+      lab_total: 2,
+      suggested_bonus: 1,
+      halved: true,
+      lab_total_before_halving: 4,
+    });
+    const { text } = element(html(), 'longevity-hint');
+    expect(text).toContain('4');
+    expect(text).toContain('2');
+    expect(text.toLowerCase()).toContain('halved to');
+    expect(text.indexOf('4')).toBeLessThan(text.indexOf('2'));
+    expect(text).toContain('+1');
   });
 
-  it('omits the halved marker when nothing halved the Lab Total', () => {
+  it('omits any halving wording when nothing halved the Lab Total', () => {
     store.addLongevityRitual('self_made');
-    setDerived('self_made', 0, false, { lab_total: 35, suggested_bonus: 7, halved: false });
-    expect(() => element(html(), 'longevity-hint-halved')).toThrow();
+    setDerived('self_made', 0, false, {
+      lab_total: 35,
+      suggested_bonus: 7,
+      halved: false,
+      lab_total_before_halving: 35,
+    });
+    const { text } = element(html(), 'longevity-hint');
+    expect(text.toLowerCase()).not.toContain('halved');
   });
 
   it('renders a negative Lab Total with the ASCII hyphen, never U+2212', () => {
     store.addLongevityRitual('self_made');
-    setDerived('self_made', 0, false, { lab_total: -6, suggested_bonus: 0, halved: false });
+    setDerived('self_made', 0, false, {
+      lab_total: -6,
+      suggested_bonus: 0,
+      halved: false,
+      lab_total_before_halving: -6,
+    });
     const { text } = element(html(), 'longevity-hint');
     expect(text).toContain('-6');
     expect(text).not.toContain('−');
@@ -194,7 +253,12 @@ describe('LongevityPanel hint (engine-authoritative suggestion)', () => {
   // reactive figures, which both carry role="status".
   it('announces the hint so a screen reader hears it change, matching the other reactive hints', () => {
     store.addLongevityRitual('self_made');
-    setDerived('self_made', 0, false, { lab_total: 35, suggested_bonus: 7, halved: false });
+    setDerived('self_made', 0, false, {
+      lab_total: 35,
+      suggested_bonus: 7,
+      halved: false,
+      lab_total_before_halving: 35,
+    });
     const { open } = element(html(), 'longevity-hint');
     expect(open).toContain('role="status"');
   });

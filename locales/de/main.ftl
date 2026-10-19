@@ -1009,15 +1009,21 @@ longevity-remove = Langlebigkeitsritual entfernen
 longevity-not-entered = Nicht eingetragen
 # Der Hinweis neben dem Eingabefeld: Was ein jetzt erschaffenes Ritual wert wäre.
 # { $bonus } ist bereits vorzeichenbehaftet; { $total } ist die heutige
-# Laborsumme, BEREITS halbiert, falls zutreffend (siehe longevity-hint-halved
-# unten) — nie ein Wert vor der Halbierung, den die Engine nicht liefert. Die
-# Größe wird benannt („Alterungsbonus“), denn es ist der gespeicherte Wert für
-# das Eingabefeld — die Gesamtwerte-Ansicht zeigt dieselbe Zahl als Modifikator.
-# Die Laborsumme steht vor dem Bonus, den sie ergibt (manual-testing-findings
-# #14): die alte Reihenfolge „Bonus (Laborsumme) halbiert“ las sich, als gälte
-# die Halbierung erst nach der Berechnung des Bonus.
+# Laborsumme — nur verwendet, wenn nichts sie halbiert (siehe
+# longevity-hint-halved-detail unten für den halbierten Fall, der auch den Wert
+# VOR der Halbierung nennt). Die Größe wird benannt („Alterungsbonus“), denn es
+# ist der gespeicherte Wert für das Eingabefeld — die Gesamtwerte-Ansicht zeigt
+# dieselbe Zahl als Modifikator. Die Laborsumme steht vor dem Bonus, den sie
+# ergibt (manual-testing-findings #14): die alte Reihenfolge „Bonus
+# (Laborsumme) halbiert“ las sich, als gälte die Halbierung erst nach der
+# Berechnung des Bonus.
 longevity-hint = Ein jetzt erschaffenes Ritual: Creo Corpus-Laborsumme { $total } → Alterungsbonus { $bonus }
-longevity-hint-halved = halbiert
+# manual-testing-findings #14 (Entscheidung 2026-10-19): nennt BEIDE Werte —
+# die rohe Laborsumme und den Wert, auf den sie halbiert wurde —, damit die
+# Schritte in der Reihenfolge gelesen werden, in der sie geschehen
+# („Laborsumme 4, halbiert auf 2 → +1“), statt ein bloßes „halbiert“ an eine
+# bereits halbierte Zahl zu hängen, ohne dass erkennbar wäre, dass sie je größer war.
+longevity-hint-halved-detail = Ein jetzt erschaffenes Ritual: Creo Corpus-Laborsumme { $before }, halbiert auf { $after } → Alterungsbonus { $bonus }
 longevity-focus-label = Fokus
 longevity-focus-placeholder = Worin das Ritual gipfelt
 # Grund, warum eine Übernatürliche Fertigkeit im Auswähler ausgegraut ist.
@@ -1767,6 +1773,10 @@ derived-range = Reichweite
 derived-load = Last
 derived-burden = Beladung
 derived-lab-total = Laborsumme
+# Die Laborsummen-Angabe in Klammern in der Langlebigkeits-Zeile, wenn eine
+# Halbierung greift (manual-testing-findings #14) — nennt sowohl die rohe
+# Summe als auch den halbierten Wert, wie longevity-hint-halved-detail.
+derived-lab-total-halved = { $before }, halbiert auf { $after }
 # Auf-Abruf-Auswahl für Labor-/Zaubersumme: Technik und Form wählen, um nur die
 # passenden Summen statt der vollständigen Kombinationstabellen zu sehen.
 derived-section-lab-casting = Labor- & Zaubersummen

@@ -1525,6 +1525,9 @@ export interface LongevityHint {
   lab_total: number;
   suggested_bonus: number;
   halved: boolean;
+  // The RAW Creo Corpus Lab Total, BEFORE either halving — equal to lab_total
+  // when `halved` is false (manual-testing-findings #14).
+  lab_total_before_halving: number;
 }
 
 // The Longevity Ritual read-out. `bonus` is the stored, player-entered value for

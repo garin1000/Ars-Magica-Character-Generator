@@ -154,6 +154,41 @@ describe('DerivedTotalsPanel longevity read-out', () => {
     const text = textOf(html(), 'derived-longevity');
     expect(text).toContain(store.t('derived-longevity-not-entered'));
   });
+
+  // manual-testing-findings #14 (2026-10-19 ruling): the hint's parenthetical
+  // Lab Total must name both the raw total and what it was halved to — a bare
+  // "17, halved" never shows the 35 it came from.
+  it('names both the raw and the halved Lab Total in the hint (#14)', () => {
+    store.derived = derivedFixture({
+      longevity: {
+        source: 'self_made',
+        bonus: 0,
+        entered: false,
+        bronze_cord: 0,
+        hint: { lab_total: 17, suggested_bonus: 4, halved: true, lab_total_before_halving: 35 },
+      },
+    });
+    const text = textOf(html(), 'derived-longevity');
+    expect(text).toContain('35');
+    expect(text).toContain('17');
+    expect(text.toLowerCase()).toContain('halved to');
+    expect(text.indexOf('35')).toBeLessThan(text.indexOf('17'));
+  });
+
+  it('shows only the plain Lab Total when nothing halved it', () => {
+    store.derived = derivedFixture({
+      longevity: {
+        source: 'self_made',
+        bonus: 0,
+        entered: false,
+        bronze_cord: 0,
+        hint: { lab_total: 35, suggested_bonus: 7, halved: false, lab_total_before_halving: 35 },
+      },
+    });
+    const text = textOf(html(), 'derived-longevity');
+    expect(text).toContain('35');
+    expect(text.toLowerCase()).not.toContain('halved');
+  });
 });
 
 describe('DerivedTotalsPanel loading state', () => {

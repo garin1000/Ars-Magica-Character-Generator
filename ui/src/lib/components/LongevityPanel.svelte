@@ -69,14 +69,20 @@
            Puissant Art added), matching AgingSchedulePanel's and
            LivingConditionsPicker's own reactive figures. -->
       <p class="hint" role="status" data-testid="longevity-hint">
-        {store.t('longevity-hint', {
-          bonus: formatSigned(hint.suggested_bonus),
-          total: hint.lab_total,
-        })}
         {#if hint.halved}
-          <span class="halved" data-testid="longevity-hint-halved">
-            {store.t('longevity-hint-halved')}
-          </span>
+          <!-- #14 (2026-10-19 ruling): names BOTH the raw Lab Total and what it
+               was halved to, so the steps read in order ("Lab Total 4, halved
+               to 2 -> +1") instead of only showing the already-halved figure. -->
+          {store.t('longevity-hint-halved-detail', {
+            before: hint.lab_total_before_halving,
+            after: hint.lab_total,
+            bonus: formatSigned(hint.suggested_bonus),
+          })}
+        {:else}
+          {store.t('longevity-hint', {
+            bonus: formatSigned(hint.suggested_bonus),
+            total: hint.lab_total,
+          })}
         {/if}
       </p>
     {/if}
@@ -138,11 +144,5 @@
 
   .empty {
     color: var(--muted);
-  }
-
-  /* A halving is a rules consequence the player should not miss, so it is marked
-     rather than folded silently into the suggested number. */
-  .halved {
-    font-weight: 600;
   }
 </style>

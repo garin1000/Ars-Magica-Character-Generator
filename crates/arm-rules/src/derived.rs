@@ -1562,6 +1562,9 @@ mod tests {
         assert_eq!(hint.lab_total, 35);
         assert_eq!(hint.suggested_bonus, 7);
         assert!(!hint.halved);
+        // #14 (manual-testing-findings-2026-10-18): unhalved, the pre-halving
+        // figure is the same number.
+        assert_eq!(hint.lab_total_before_halving, 35);
     }
 
     /// A zero aura does not suppress the hint. The Lab Total takes the Aura
@@ -1655,6 +1658,10 @@ mod tests {
         assert_eq!(hint.lab_total, 17);
         assert_eq!(hint.suggested_bonus, 4);
         assert!(hint.halved);
+        // #14 (manual-testing-findings-2026-10-18): the hint must still carry the
+        // RAW, pre-halving Lab Total (35) so the UI can show "Lab Total 35, halved
+        // to 17 → +4" instead of just the already-halved figure.
+        assert_eq!(hint.lab_total_before_halving, 35);
     }
 
     /// The two halvings compound (an inference — neither Flaw carves out the other):
@@ -1678,6 +1685,8 @@ mod tests {
         assert_eq!(hint.lab_total, 8, "floor(floor(35/2)/2)");
         assert_eq!(hint.suggested_bonus, 2);
         assert!(hint.halved);
+        // #14: the pre-halving figure is the RAW total, before EITHER halving.
+        assert_eq!(hint.lab_total_before_halving, 35);
     }
 
     /// A non-positive Lab Total suggests no bonus at all — "every five points" has

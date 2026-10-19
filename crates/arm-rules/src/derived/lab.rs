@@ -144,6 +144,12 @@ pub struct LongevityHint {
     pub suggested_bonus: i32,
     /// Whether a Deficient Art or Difficult Longevity Ritual halved `lab_total`.
     pub halved: bool,
+    /// The RAW Creo Corpus Lab Total, BEFORE either halving — equal to
+    /// `lab_total` when `halved` is `false`. Exposed (manual-testing-findings-2026-10-18
+    /// #14) so the UI can spell out the steps — "Lab Total 4, halved to 2 →
+    /// +1" — instead of only showing the already-halved figure, which read as
+    /// if the halving still needed to happen (ArMDE:10736, :6037).
+    pub lab_total_before_halving: i32,
 }
 
 /// The Longevity Ritual aging bonus read-out.
@@ -187,11 +193,13 @@ pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBo
     // from another magus's Lab Total, which this sheet does not know (ArMDE:10746).
     let hint = match ritual.source {
         LongevitySource::SelfMade => {
-            let (lab_total, halved) = creo_corpus_lab_total(entity, ruleset);
+            let (lab_total, lab_total_before_halving, halved) =
+                creo_corpus_lab_total(entity, ruleset);
             Some(LongevityHint {
                 lab_total,
                 suggested_bonus: suggested_longevity_bonus(lab_total),
                 halved,
+                lab_total_before_halving,
             })
         }
         LongevitySource::External => None,
@@ -205,7 +213,8 @@ pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBo
     })
 }
 
-/// The Creo Corpus Lab Total and whether it was halved.
+/// The Creo Corpus Lab Total (after any halvings), the SAME total before
+/// either halving, and whether it was halved at all.
 ///
 /// "Your basic Lab Total is: Technique + Form + Intelligence + Magic Theory + Aura
 /// Modifier" (ArMDE:10350-10352) plus any flat Lab-Total modifier. The Aura Modifier
@@ -228,7 +237,7 @@ pub fn longevity_bonus(entity: &Entity, ruleset: &Ruleset) -> Option<LongevityBo
 /// figures legitimately differ — no focus figure applies to a Longevity Ritual, and
 /// the `LabLongevity` halving applies to nothing else. Keep the shared addend list
 /// (Int + Magic Theory + Technique + Form + aura + `lab_mod`) in step across both.
-fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> (i32, bool) {
+fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> (i32, i32, bool) {
     let mods = in_play_mods(entity, ruleset);
     let base = saturating_i32_sum([
         characteristic(entity, ruleset, Characteristic::Int),
@@ -250,7 +259,7 @@ fn creo_corpus_lab_total(entity: &Entity, ruleset: &Ruleset) -> (i32, bool) {
     if difficult {
         total = halve(total);
     }
-    (total, deficient || difficult)
+    (total, base, deficient || difficult)
 }
 
 /// The bonus a Creo Corpus Lab Total buys: "+1 bonus for every five points or
