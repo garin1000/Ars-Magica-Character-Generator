@@ -844,7 +844,7 @@ pub(crate) fn validate_personality_traits(
     // Unlike caps.rs — whose per-category caps are driven by profile data that
     // *happens* to name categories, so no slug is baked in — this is a universal
     // core rule keyed specifically to the Personality Flaw category (ArMDE:2572,
-    // :2888): each Major Personality Flaw permits exactly one ±6 trait. Categories
+    // :2890): each Major Personality Flaw permits exactly one ±6 trait. Categories
     // are free-form data slugs with no registry or per-item metadata that marks
     // "this is the personality category", and the rule is not per-profile, so there
     // is no non-speculative data field to drive it from — adding a dedicated

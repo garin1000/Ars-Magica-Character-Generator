@@ -619,9 +619,9 @@
     "next_line": "Equipment: Pole Axe, Full metal scale armor, pack containing gear to care for we",
     "heading": "#### The Berserker"
   },
-  "ArMDE:12915": {
-    "excerpt": "Req: Imaginem<br>",
-    "next_line": "Turns a body of water into a scrying pool. Innately magical people (including mo",
+  "ArMDE:12917": {
+    "excerpt": "(Special spell)",
+    "next_line": "### Muto Aquam Guidelines",
     "heading": "##### Enchantment of the Scrying Pool"
   },
   "ArMDE:1292": {
@@ -764,9 +764,9 @@
     "next_line": "Fatigue Levels: OK, 0, -1, -3, -5, Unconscious",
     "heading": "#### The Hunter"
   },
-  "ArMDE:13551": {
-    "excerpt": "R: Per, D: Mom, T: Vision<br>",
-    "next_line": "You see the true, original form of any person whose form has been changed or mas",
+  "ArMDE:13553": {
+    "excerpt": "(Variable base)",
+    "next_line": "#### LEVEL 5",
     "heading": "##### Sight of the True Form"
   },
   "ArMDE:1362": {
@@ -1224,9 +1224,9 @@
     "next_line": "(Base 3, +2 Voice, +1 Diam, +1 Part, requisite free)",
     "heading": "##### Hands of the Grasping Earth"
   },
-  "ArMDE:15655": {
-    "excerpt": "R: Arc. D: Year, T: Ind, Ritual<br>",
-    "next_line": "Creates a magical portal through which people, animals, and objects can travel a",
+  "ArMDE:15657": {
+    "excerpt": "(Mercurian Ritual)",
+    "next_line": "---",
     "heading": "##### Hermes' Portal"
   },
   "ArMDE:15707": {

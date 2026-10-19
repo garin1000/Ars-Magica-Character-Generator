@@ -3231,11 +3231,46 @@ fn parse_number_span(text: &str, at: usize) -> Option<ParsedNumberSpan> {
     Some((start, end, (at, at + start_len), end_span, after))
 }
 
+/// Finds the byte offset of the `:` that starts a continuation's number,
+/// given `pos` sits right after the previous number — or `None` if no
+/// continuation follows. Handles two shapes: the ordinary same-line `, :NNNN`
+/// run, and row 61's wrapped shape, where the comma ends one physical `//`/
+/// `///`/`//!` comment line and the bare `:NNNN` starts the next (the raw
+/// text then holds a newline plus the next line's own leading whitespace and
+/// comment marker between the comma and the colon — exactly what
+/// `comment_blocks` strips away before [`find_citations`] ever sees it, which
+/// is why only this raw-text scanner needs to know the shape explicitly).
+fn continuation_colon_at(content: &str, pos: usize) -> Option<usize> {
+    let after_comma = content[pos..].strip_prefix(',').map(|_| pos + 1)?;
+    let same_line_rest = content[after_comma..].trim_start_matches([' ', '\t']);
+    let mut i = after_comma + (content[after_comma..].len() - same_line_rest.len());
+    if content[i..].starts_with(':') {
+        return Some(i);
+    }
+    // Not same-line: the only other accepted shape is a single newline then
+    // the continuation's own comment-line prefix.
+    let rest = content[i..]
+        .strip_prefix("\r\n")
+        .or_else(|| content[i..].strip_prefix('\n'))?;
+    i = content.len() - rest.len();
+    let line_rest = content[i..].trim_start_matches([' ', '\t']);
+    i += content[i..].len() - line_rest.len();
+    let marker_len = ["///", "//!", "//"]
+        .iter()
+        .find_map(|marker| content[i..].starts_with(marker).then_some(marker.len()))?;
+    i += marker_len;
+    if let Some(rest) = content[i..].strip_prefix(' ') {
+        i = content.len() - rest.len();
+    }
+    content[i..].starts_with(':').then_some(i)
+}
+
 /// Finds every citation occurrence in `content`'s raw text (whole-file, not
 /// block-joined — see this section's header comment), chasing `, :NNNN`
-/// continuations exactly as [`find_citations`] does. Independent of that
-/// function: this one tracks byte spans for rewriting rather than collecting
-/// `Citation` values for detection.
+/// continuations exactly as [`find_citations`] does, including one wrapped
+/// onto its own comment line (see [`continuation_colon_at`]). Independent of
+/// that function: this one tracks byte spans for rewriting rather than
+/// collecting `Citation` values for detection.
 fn find_citation_occurrences(content: &str) -> Vec<CitationOccurrence> {
     let mut found = Vec::new();
     for &(acronym, _) in BOOK_ACRONYMS {
@@ -3263,8 +3298,7 @@ fn find_citation_occurrences(content: &str) -> Vec<CitationOccurrence> {
                 start_span,
                 end_span,
             });
-            while let Some(_rest) = content[pos..].strip_prefix(", :") {
-                let colon_at = pos + 2;
+            while let Some(colon_at) = continuation_colon_at(content, pos) {
                 let Some((cstart, cend, cstart_span, cend_span, next_pos)) =
                     parse_number_span(content, colon_at + 1)
                 else {
@@ -3365,6 +3399,60 @@ fn find_citation_occurrences_chases_a_continuation_inheriting_the_acronym() {
     assert_eq!(found.len(), 2);
     assert_eq!(found[0].key, "ArMDE:100");
     assert_eq!(found[1].key, "ArMDE:150");
+}
+
+/// Row 61 (open-todos.md): a continuation list hand-wrapped onto its own `//`
+/// comment line — the shape the P8/2026-10-18 sweep found 57 of — leaves no
+/// literal `, :` substring in the raw text (a newline plus the next line's
+/// comment marker sit between the comma and the colon), so the raw-text
+/// scanner must learn this shape explicitly rather than inherit it for free
+/// the way [`find_citations`]'s block-joined detector does.
+#[test]
+fn find_citation_occurrences_chases_a_continuation_wrapped_onto_its_own_comment_line() {
+    let content = "        // See ArMDE:12915,\n        // :15655, :13551 for the rest.\n";
+    let found = find_citation_occurrences(content);
+    assert_eq!(
+        found.len(),
+        3,
+        "expected all three numbers, found {found:?}"
+    );
+    assert_eq!(found[0].key, "ArMDE:12915");
+    assert_eq!(found[1].key, "ArMDE:15655");
+    assert_eq!(found[2].key, "ArMDE:13551");
+    assert_eq!(
+        &content[found[1].start_span.0..found[1].start_span.1],
+        "15655"
+    );
+    assert_eq!(
+        &content[found[2].start_span.0..found[2].start_span.1],
+        "13551"
+    );
+}
+
+/// Doc-comment analogue of the test above (`///` instead of `//`), since the
+/// marker scan must accept either.
+#[test]
+fn find_citation_occurrences_chases_a_wrapped_continuation_on_a_doc_comment_line() {
+    let content = "/// See ArMDE:12915,\n/// :15655 for the rest.\n";
+    let found = find_citation_occurrences(content);
+    assert_eq!(found.len(), 2, "expected both numbers, found {found:?}");
+    assert_eq!(found[0].key, "ArMDE:12915");
+    assert_eq!(found[1].key, "ArMDE:15655");
+}
+
+#[test]
+fn apply_citation_relocations_rewrites_a_continuation_wrapped_onto_its_own_comment_line() {
+    let content = "        // See ArMDE:12915,\n        // :15655, :13551 for the rest.\n";
+    let mut relocations = BTreeMap::new();
+    relocations.insert("ArMDE:12915".to_string(), (12917, 12917));
+    relocations.insert("ArMDE:15655".to_string(), (15657, 15657));
+    relocations.insert("ArMDE:13551".to_string(), (13553, 13553));
+    let (rewritten, applied) = apply_citation_relocations(content, &relocations);
+    assert_eq!(applied, 3);
+    assert_eq!(
+        rewritten,
+        "        // See ArMDE:12917,\n        // :15657, :13553 for the rest.\n"
+    );
 }
 
 #[test]

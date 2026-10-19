@@ -320,8 +320,8 @@ mod spell_verbatim_body_tests {
     #[test]
     fn excludes_an_arbitrarily_worded_trailing_annotation() {
         // The book's level-derivation vocabulary is open-ended ("(Special
-        // spell)", "(Mercurian Ritual)", "(Variable base)", ArMDE:12915,
-        // :15655, :13551 — none sharing a word with "Base"), so the match is
+        // spell)", "(Mercurian Ritual)", "(Variable base)", ArMDE:12917,
+        // :15657, :13553 — none sharing a word with "Base"), so the match is
         // structural (opens the line with `(`), not an enumerated phrase.
         let l = lines(&[
             "##### Test Spell",
