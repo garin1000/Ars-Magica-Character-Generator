@@ -316,9 +316,12 @@ describe('Characteristic-floor prerequisite reports its issue (Supernatural Beau
     const add = await $('[data-testid="add-virtue.supernatural_beauty"]');
     await add.waitForExist({ timeout: 10000 });
 
-    // Enforced (default): the unmet Characteristic floor is known up front, so
-    // the Add button already refuses the pick — the illegal state is never
-    // reached at all.
+    // Enforced: the unmet Characteristic floor is known up front, so the Add
+    // button already refuses the pick — the illegal state is never reached at
+    // all. Set explicitly, never assumed: the mode persists in the worker's
+    // settings file, so a retry of this test (or a spec an earlier run left in
+    // Advisory) would otherwise start from Advisory.
+    await setValidationMode('enforced');
     await browser.waitUntil(async () => isRowBlocked(add), {
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'Supernatural Beauty should be add-blocked while Presence is below the floor',
@@ -340,6 +343,9 @@ describe('Characteristic-floor prerequisite reports its issue (Supernatural Beau
       timeout: STEP_TIMEOUT,
       timeoutMsg: 'Supernatural Beauty with Presence -1 should report prereq_not_met',
     });
+
+    // Restore the default for whichever spec next reuses this worker's settings.
+    await setValidationMode('enforced');
   });
 });
 
