@@ -182,8 +182,7 @@ export class AgingWorkflow {
    * Aging Points the current preview leaves to the player to place: the award
    * rows whose target is not `named` — a `named` row places its own points
    * ("1 Aging Point in Str and Sta", `ArMDE:16686`), so only the rest are a
-   * player choice at all ("in any Characteristic**s**", plural: `ArMDE:16681`,
-   * `:16690`). `points` is counted as 0 only when it is unpriceable (the next
+   * player choice at all ("in any Characteristic**s**", plural: `ArMDE:16681, :16690`). `points` is counted as 0 only when it is unpriceable (the next
    * Decrepitude level lies beyond the advancement table) — that is a WHETHER,
    * not a HOW MANY, and stays `unpriceable` for the caller to read separately.
    *
