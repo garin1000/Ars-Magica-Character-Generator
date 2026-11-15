@@ -202,6 +202,12 @@ export class ChildhoodWorkflow {
         return;
       }
       this.#host.setEntity(outcome.entity);
+      // The package is now `life_stages.childhood_package` on the entity itself
+      // (history), so the draft that drafted it is stale — reset it or the picker
+      // keeps showing a live Apply button beside "Childhood taken: …" (F29). The
+      // draft is UI-only state (never part of the entity snapshot), so this
+      // neither marks nor clears the document's dirty flag.
+      this.draft = defaultChildhoodDraft();
       await this.#host.revalidate();
     } catch (e) {
       this.#host.setError(e as AppError);

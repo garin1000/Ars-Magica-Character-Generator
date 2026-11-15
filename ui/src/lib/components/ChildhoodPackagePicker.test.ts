@@ -444,6 +444,51 @@ describe('ChildhoodPackagePicker apply (slice 6b3b)', () => {
   });
 });
 
+describe('ChildhoodPackagePicker apply outcome (F29)', () => {
+  it('hides Apply once the childhood is taken and no new draft is chosen', async () => {
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
+      status: 'applied',
+      entity: {
+        ...store.entity,
+        life_stages: {
+          native_language: { text: 'German' },
+          childhood_package: 'childhood.traveling',
+        },
+      },
+    });
+    store.setChildhoodDraftPackage('childhood.traveling');
+
+    await store.applyChildhoodPackage();
+
+    const body = html();
+    // The button is stale once the package is already taken: it must not sit
+    // beside "Childhood taken: …" with nothing left to apply.
+    expect(has(body, 'childhood-apply')).toBe(false);
+    expect(text(body, 'childhood-taken')).toBe('Childhood taken: Traveling Childhood');
+  });
+
+  it('still offers Apply for a newly chosen draft once a different childhood is taken', async () => {
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
+      status: 'applied',
+      entity: {
+        ...store.entity,
+        life_stages: {
+          native_language: { text: 'German' },
+          childhood_package: 'childhood.athletic',
+        },
+      },
+    });
+    store.setChildhoodDraftPackage('childhood.athletic');
+    await store.applyChildhoodPackage();
+
+    store.setChildhoodDraftPackage('childhood.traveling');
+
+    const body = html();
+    expect(has(body, 'childhood-apply')).toBe(true);
+    expect(text(body, 'childhood-taken')).toBe('Childhood taken: Athletic Childhood');
+  });
+});
+
 describe('ChildhoodPackagePicker record vs draft (slice 6b3b)', () => {
   it('names the package the character has taken, read-only', () => {
     resetEntity({ native_language: { text: 'German' }, childhood_package: 'childhood.traveling' });

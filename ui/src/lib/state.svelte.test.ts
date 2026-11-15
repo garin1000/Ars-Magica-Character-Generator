@@ -4322,6 +4322,62 @@ describe('applyChildhoodPackage', () => {
     expect(vi.mocked(ipc.validateEntity)).toHaveBeenCalledTimes(1);
   });
 
+  it('resets the draft once the engine accepts the package (F29)', async () => {
+    // Otherwise the picker still shows the drafted package and an Apply button
+    // beside "Childhood taken: …" — the button is stale, since the package was
+    // already taken.
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
+      status: 'applied',
+      entity: appliedEntity(),
+    });
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+
+    await store.applyChildhoodPackage();
+
+    expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
+  });
+
+  it('keeps the draft when the engine refuses the package (F29)', async () => {
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
+      status: 'rejected',
+      issues: [slotUnfilled()],
+    });
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+
+    await store.applyChildhoodPackage();
+
+    expect(store.childhoodDraft).toEqual({
+      packageId: 'childhood.traveling',
+      slots: { area_a: 'Rhine' },
+    });
+  });
+
+  it('leaves dirty untouched by the draft reset itself (F29)', async () => {
+    // `createCharacter` re-seeds the saved baseline, so dirty starts reliably false.
+    await store.createCharacter('companion');
+    // Applied entity byte-identical to what is already saved: if resetting the
+    // draft moved the dirty flag by itself (rather than the entity's own content),
+    // this would catch it — the draft is UI-only state, never part of the
+    // `#snapshot()` the dirty comparison reads.
+    const unchanged = plain(store.entity);
+    vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
+      status: 'applied',
+      entity: unchanged,
+    });
+    expect(store.dirty).toBe(false);
+
+    store.setChildhoodDraftPackage('childhood.traveling');
+    store.setChildhoodDraftSlot('area_a', 'Rhine');
+    expect(store.dirty).toBe(false);
+
+    await store.applyChildhoodPackage();
+
+    expect(store.childhoodDraft).toEqual({ packageId: null, slots: {} });
+    expect(store.dirty).toBe(false);
+  });
+
   it('clears a previous rejection when applying again', async () => {
     vi.mocked(ipc.applyChildhoodPackage).mockResolvedValue({
       status: 'rejected',
