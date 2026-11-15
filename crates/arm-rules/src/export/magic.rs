@@ -468,7 +468,7 @@ impl<'a> Doc<'a> {
                         escape_cell(&line.name),
                         line.max_level.to_string(),
                         line.penetration.to_string(),
-                        line.initiative.to_string(),
+                        signed(line.initiative),
                         // Above level 75 the book states no cost (`ArMDE:3974`), so
                         // the cell says "unstated" through a label rather than
                         // printing a band nothing sourced.

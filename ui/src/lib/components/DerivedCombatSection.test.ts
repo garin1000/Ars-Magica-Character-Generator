@@ -115,12 +115,16 @@ describe('DerivedCombatSection — the not-applicable cell (Sabine 7)', () => {
   // own `{#if d.combat.length > 0}` so it never renders, left it green. It is the
   // only test in this file whose NAME promises present values are rendered, so it
   // now asserts them positively.
-  it('still shows a present value rather than the placeholder', () => {
+  // F30 (manual-test findings 2026-11-15): a positive combat modifier carries an
+  // explicit "+", exactly like a Characteristic (`formatSigned`, `ui/src/lib/
+  // derive.ts`) and the Markdown export's own `signed`/`optional_signed`. Range
+  // is not a signed modifier and stays plain, which is what `range: 0` here pins.
+  it('still shows a present value rather than the placeholder, signed', () => {
     const body = html([{ ...unarmed(), attack: 7, damage: 9, range: 0 }]);
     const cells = [...body.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((m) => m[1].trim());
 
     // Initiative, Attack, Defense, Damage, Range — in the template's own order.
-    expect(cells).toEqual(['2', '7', '5', '9', '0']);
+    expect(cells).toEqual(['+2', '+7', '+5', '+9', '0']);
     // `range: 0` is the deliberate case: a falsy-but-present value. `??` keeps it,
     // `||` would swap it for the placeholder.
     expect(body).not.toContain(store.t('derived-not-applicable'));

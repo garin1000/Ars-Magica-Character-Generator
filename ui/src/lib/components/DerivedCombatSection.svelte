@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { combatRowLabel } from '../derive';
+  import { combatRowLabel, formatSigned } from '../derive';
   import type { DerivedTotals } from '../types';
 
   // Split out of `DerivedTotalsPanel.svelte` (V26, full-audit round). Always
@@ -58,10 +58,10 @@
                   store.t('derived-combat-shield-joiner'),
                 )}
               </th>
-              <td>{line.initiative}</td>
-              <td>{line.attack ?? notApplicable}</td>
-              <td>{line.defense}</td>
-              <td>{line.damage ?? notApplicable}</td>
+              <td>{formatSigned(line.initiative)}</td>
+              <td>{line.attack != null ? formatSigned(line.attack) : notApplicable}</td>
+              <td>{formatSigned(line.defense)}</td>
+              <td>{line.damage != null ? formatSigned(line.damage) : notApplicable}</td>
               <td>{line.range ?? notApplicable}</td>
             </tr>
           {/each}

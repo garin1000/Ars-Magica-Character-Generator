@@ -671,10 +671,10 @@ impl<'a> Doc<'a> {
                 vec![
                     escape_cell(&self.combat_line_name(line)),
                     escape_cell(&self.name(&line.ability)),
-                    line.initiative.to_string(),
-                    optional_number(line.attack),
-                    line.defense.to_string(),
-                    optional_number(line.damage),
+                    signed(line.initiative),
+                    optional_signed(line.attack),
+                    signed(line.defense),
+                    optional_signed(line.damage),
                     line.range.map(|r| r.to_string()).unwrap_or_default(),
                 ]
             })

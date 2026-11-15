@@ -496,12 +496,6 @@ const SUBTITLE_SEPARATOR: &str = " · ";
 /// misread as a minus. Mirrors the frontend's wound list.
 const RANGE_DASH: &str = "–";
 
-/// An optional total as a cell: the number, or an empty cell when the weapon has no
-/// such total (Dodge has neither Attack nor Damage).
-fn optional_number(value: Option<i32>) -> String {
-    value.map(|v| v.to_string()).unwrap_or_default()
-}
-
 /// A signed modifier for display: `+` for positive, an ASCII hyphen-minus `-`
 /// (U+002D) for negative, plain for zero. The engine-side twin of `formatSigned`
 /// in `ui/src/lib/derive.ts` — the mathematical minus U+2212 is never used, so
@@ -512,6 +506,13 @@ fn signed(n: i32) -> String {
     } else {
         n.to_string()
     }
+}
+
+/// An optional signed total as a cell: [`signed`], or an empty cell when the
+/// weapon has no such total (Dodge has neither Attack nor Damage). F30: a
+/// combat modifier carries the same explicit "+" a Characteristic does.
+fn optional_signed(value: Option<i32>) -> String {
+    value.map(signed).unwrap_or_default()
 }
 
 /// Makes an arbitrary free-text value safe to print inside the document.
@@ -2480,7 +2481,8 @@ mod tests {
         );
         assert!(doc.contains("## Combat\n"), "{doc}");
         // Qik 1 + weapon Init 2 + shield 0 - Encumbrance 0; Single Weapon 4.
-        assert!(doc.contains("| Long Sword | Single Weapon | 3 |"), "{doc}");
+        // F30: a positive combat value carries an explicit "+", like a Characteristic.
+        assert!(doc.contains("| Long Sword | Single Weapon | +3 |"), "{doc}");
         // A missile weapon carries a Range; the melee weapon leaves the cell blank.
         assert!(doc.contains("| Sling | Single Weapon |"), "{doc}");
         assert!(doc.contains("| 30 |"), "the missile range: {doc}");
@@ -2507,8 +2509,10 @@ mod tests {
             ]),
         );
         // Defense = Qik 1 + Single Weapon 4 + WpnDef 1 (+ ShieldDef 2 on the first).
-        let with_shield = doc.find("| Long Sword & Round Shield | Single Weapon | 2 | 9 | 8 | 7 |");
-        let bare = doc.find("| Long Sword | Single Weapon | 2 | 9 | 6 | 7 |");
+        // F30: every combat value here is positive, so each carries an explicit "+".
+        let with_shield =
+            doc.find("| Long Sword & Round Shield | Single Weapon | +2 | +9 | +8 | +7 |");
+        let bare = doc.find("| Long Sword | Single Weapon | +2 | +9 | +6 | +7 |");
         assert!(with_shield.is_some(), "no with-shield row: {doc}");
         assert!(bare.is_some(), "no bare row: {doc}");
         assert!(
@@ -2892,7 +2896,7 @@ mod tests {
     #[test]
     fn focus_powers_print_their_own_table_with_initiative_and_fatigue() {
         let mut e = magus();
-        e.characteristics.insert(Characteristic::Qik, 2);
+        e.characteristics.insert(Characteristic::Qik, 3);
         e.focus_powers = vec![FocusPower {
             name: "Wolves of the wood".to_string(),
             max_level: 10,
@@ -2916,9 +2920,10 @@ mod tests {
             doc.contains("| Name | Max. level | Penetration | Initiative | Fatigue |"),
             "{doc}"
         );
-        // Qik 2 − magnitude 2 = 0; level 10 costs one Fatigue level.
+        // Qik 3 − magnitude 2 = +1; level 10 costs one Fatigue level. F30: a
+        // positive Initiative carries an explicit "+", like a Characteristic.
         assert!(
-            doc.contains("| Wolves of the wood | 10 | 5 | 0 | 1 |"),
+            doc.contains("| Wolves of the wood | 10 | 5 | +1 | 1 |"),
             "{doc}"
         );
     }
@@ -3376,6 +3381,8 @@ mod tests {
     }
 
     /// A weapon with neither Attack nor Damage (Dodge) leaves those cells blank.
+    /// F30: Init/Defense 0 stays unsigned (`signed(0)` carries no "+", matching a
+    /// Characteristic's own zero), and a blank Attack/Damage cell stays blank.
     #[test]
     fn a_weapon_without_attack_or_damage_leaves_those_cells_blank() {
         let mut e = magus();
