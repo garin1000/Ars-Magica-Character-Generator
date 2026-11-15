@@ -1349,6 +1349,12 @@ export interface EffectiveScores {
   // picker's one engine verdict behind the Add button's Enforced-mode gate,
   // the Ability twin of `vf_add_blocked`.
   ability_add_blocked?: Record<string, AbilityAddBlockReason>;
+  // Manual-test findings #27 (F27/E5): the profile's `forbidden_categories`
+  // list, resolved IN FORCE for this entity right now (e.g. `hermetic` for a
+  // Gift-less companion) — read straight off the engine rather than
+  // re-derived from the profile. Empty/absent for a profile with no
+  // forbidden categories at all (a magus).
+  forbidden_categories_in_force?: string[];
 }
 
 // One selection's resolved D42 realm association. `fixed` means the book

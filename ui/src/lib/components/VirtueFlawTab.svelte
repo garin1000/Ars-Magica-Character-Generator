@@ -97,6 +97,17 @@
       magnitudes: filter.magnitude ? [filter.magnitude as Magnitude] : undefined,
       tainted: filter.taintedOnly || undefined,
     };
+    // Manual-test findings 2026-11-15 #27: a category the profile forbids IN
+    // FORCE for this entity (`hermetic` for a Gift-less companion) still
+    // lists an item under that heading when the item ALSO carries another,
+    // permitted category — Vengeful Powers (`story`, `hermetic`) must not
+    // read as a Hermetic option for such a character, but it is a legal
+    // Story one, so it stays under Story and drops only the Hermetic
+    // heading. An item with no other category to fall back to (Hermetic-only)
+    // stays listed there, greyed by `vf_add_blocked` (2026-10-18 #19) — this
+    // only ever REMOVES a row from one heading, never adds a block of its
+    // own.
+    const forbiddenInForce = new Set(store.effective?.forbidden_categories_in_force ?? []);
     // A dual-category item is listed under BOTH its headings, so a category
     // filter has to narrow the SECTIONS as well as the rows: otherwise Sufi,
     // which passes a membership filter on either of its categories, comes back
@@ -108,7 +119,11 @@
       .map((g) => ({
         key: g.category,
         header: store.t(`category-${g.category}`),
-        items: filterItems(rs, g.items, itemFilter, store.t),
+        items: filterItems(rs, g.items, itemFilter, store.t).filter(
+          (it) =>
+            !forbiddenInForce.has(g.category) ||
+            it.categories.every((c) => forbiddenInForce.has(c)),
+        ),
       }))
       .filter((g) => g.items.length > 0);
   }

@@ -567,6 +567,7 @@ class AppStore {
     entity: () => this.entity,
     ruleset: () => this.ruleset,
     effective: () => this.effective,
+    mode: () => this.mode,
     scheduleValidate: () => this.#scheduleValidate(),
   });
 

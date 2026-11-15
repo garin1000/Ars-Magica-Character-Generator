@@ -1203,7 +1203,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2938-2947` (The Gift),
   `ArMDE:2928` (magi must take The Gift + Hermetic Magus status), `ArMDE:2363` and
   `ArMDE:4140-4142` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:2257).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:2292).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1272,7 +1272,7 @@ reason: a category condition would license itself.
   character as of saga-start only) can express.
 - **All three forbid effects are consumed by one grant-aware validator**:
   `validation/selections.rs::validate_category_effect_prohibitions`
-  (:519). Grant-aware on both sides (D2): the forbidding item's effect applies
+  (:554). Grant-aware on both sides (D2): the forbidding item's effect applies
   bought or granted, and the forbidden target (an Ability held via
   `entity.ability_scores` or an `AbilityScoreGrant`/`AbilityScoreGrantParam`
   floor, or another V/F selection) is read the same way — closing the F-466
@@ -1778,7 +1778,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2884`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :1154) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :1189) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4889`) and "Great twice per Characteristic" (`ArMDE:4062`). Effect
@@ -11456,11 +11456,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1486),
-  `validate_forbidden_traits` (:1507))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1521),
+  `validate_forbidden_traits` (:1542))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:864),
-  `validate_parameters` (:1707), `validate_duplicate_selections` (:1154))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:899),
+  `validate_parameters` (:1742), `validate_duplicate_selections` (:1189))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,
@@ -12164,6 +12164,29 @@ Virtue or Flaw permitting this").
   `EffectiveScores.ability_add_blocked` DTO field (beside `vf_add_blocked`) in
   Enforced mode only, via `AbilityTab.svelte::isDisabled`, which drops its own
   TS-side `supernaturalLocked` re-derivation of the Supernatural half.
+- **manual-testing-findings-2026-11-15 #27 (D93.3/E5).** Vengeful Powers
+  (categories `["story", "hermetic"]`, `taken_as` values
+  `["hermetic", "story"]`, ArMDE:7033 "Major, Story, Tainted", ArMDE:7048 "may
+  be taken as a Hermetic Flaw") used to list under a Hermetic heading for
+  every non-magus entity, even though the companion/grog/mythic-companion
+  profile forbids that category — "Companions who do not have The Gift may
+  not choose Hermetic Virtues or Flaws" (ArMDE:2369, restated at :2910).
+  `validation/selections.rs::forbidden_categories_in_force` resolves the
+  profile's `forbidden_categories` **in force** for the entity — the same
+  `categories_in_force` resolution `validate_forbidden_categories` already
+  applies to a held selection, run here with no selection in hand yet,
+  exactly as `vf_add_verdicts`/`phases_in_force` do. Surfaced as a new
+  `EffectiveScores.forbidden_categories_in_force` DTO field (beside
+  `vf_add_blocked`). `VirtueFlawTab.svelte::sourceGroups` drops a forbidden
+  heading for an item that keeps another, permitted category (Vengeful Powers stays listed only
+  under Story), while a Hermetic-only item has no such fallback and stays
+  listed (greyed via `vf_add_blocked`, 2026-10-18 #19). In Enforced mode,
+  `ParameterPicker.svelte`'s `category`-domain branch offers only permitted
+  `taken_as` readings, and `SelectionWorkflow.add` defaults a new row to a
+  permitted reading; an already-held forbidden `taken_as` keeps its existing
+  `category_not_permitted` validation error, unchanged. Tests:
+  `tests/vf_add_verdicts.rs` (companion without/with The Gift, magus),
+  `VirtueFlawTab.test.ts`, `ParameterPicker.test.ts`, `state.svelte.test.ts`.
 
 **Data — 62 entries backfilled with an `ability_authorization` effect** (the
 verdict table's `docs/vf-audit/corrections.md` § 3.2/§ 3.2a "primary auth" +

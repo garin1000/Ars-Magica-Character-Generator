@@ -1710,6 +1710,58 @@ describe('addSelection', () => {
       expect(store.entity.selections).toHaveLength(1);
     });
   });
+
+  // F27/E5 (manual-test findings 2026-11-15 #27): Vengeful Powers' own shape —
+  // a `category`-domain `taken_as` parameter naming a forbidden-in-force
+  // reading ("hermetic") alongside a permitted one ("story"). In Enforced
+  // mode the add must default the new row to the permitted reading, rather
+  // than leaving `taken_as` unset for the player to discover the forbidden
+  // option is offered; outside Enforced mode nothing is defaulted, exactly as
+  // before this fix.
+  describe('defaults a forbidden-category item to a permitted taken_as reading (F27)', () => {
+    function installTakenAsItem(): void {
+      installRuleset([
+        item({
+          id: 'flaw.vengeful_powers_probe',
+          kind: 'flaw',
+          categories: ['story', 'hermetic'],
+          parameters: [
+            { key: 'taken_as', type: 'ref', domain: 'category', values: ['hermetic', 'story'] },
+          ],
+        }),
+      ]);
+    }
+
+    it('defaults to the permitted reading in Enforced mode', () => {
+      installTakenAsItem();
+      store.mode = 'enforced';
+      store.effective = {
+        forbidden_categories_in_force: ['hermetic'],
+      } as unknown as EffectiveScores;
+      try {
+        store.addSelection('flaw.vengeful_powers_probe');
+        expect(store.entity.selections).toEqual([
+          { ref: 'flaw.vengeful_powers_probe', params: { taken_as: 'story' } },
+        ]);
+      } finally {
+        store.mode = 'enforced';
+      }
+    });
+
+    it('leaves taken_as unset outside Enforced mode', () => {
+      installTakenAsItem();
+      store.mode = 'advisory';
+      store.effective = {
+        forbidden_categories_in_force: ['hermetic'],
+      } as unknown as EffectiveScores;
+      try {
+        store.addSelection('flaw.vengeful_powers_probe');
+        expect(store.entity.selections).toEqual([{ ref: 'flaw.vengeful_powers_probe' }]);
+      } finally {
+        store.mode = 'enforced';
+      }
+    });
+  });
 });
 
 // --- addSpell() / removeSpellAt() -------------------------------------------

@@ -59,7 +59,9 @@ pub use authorization::{AbilityAddBlockReason, ability_add_verdicts};
 pub use balance::{Balance, PointCeilings, compute_balance, effective_point_ceilings};
 pub use life_stage::childhood_rejection_issues;
 pub use saga::{AgeInSagaYear, DEFAULT_SAGA_YEAR, age_in_saga_year, birth_year_in_saga_year};
-pub use selections::{VfAddBlockReason, phases_in_force, vf_add_verdicts};
+pub use selections::{
+    VfAddBlockReason, forbidden_categories_in_force, phases_in_force, vf_add_verdicts,
+};
 // Load-time integrity checks an `at_most_one_of` group's members against the
 // SAME resolution a selection's value goes through, so the two can never drift.
 pub(crate) use selections::param_value_resolves;

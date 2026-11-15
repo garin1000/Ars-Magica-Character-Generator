@@ -15,7 +15,7 @@
 // keeps comparing the very object these methods mutate.
 
 import { canonicalizeMultiRefValue, totalCopies } from './derive';
-import type { EffectiveScores, Entity, LocalizedRuleset } from './types';
+import type { EffectiveScores, Entity, LocalizedRuleset, PointItem, ValidationMode } from './types';
 
 /** The slice of `AppStore` the selection workflow needs, as live accessors so it
  * always reads/writes the host's *current* state — `entity` stays owned by
@@ -25,6 +25,9 @@ export interface SelectionWorkflowHost {
   ruleset: () => LocalizedRuleset | null;
   /** The last settled engine reading, for the granted half of a `max_total` count. */
   effective: () => EffectiveScores | null;
+  /** The active validation mode — read only to decide whether a new row's
+   *  `taken_as` defaults to a permitted reading (F27/E5). */
+  mode: () => ValidationMode;
   /** The host's debounced validation pass, shared with every other picker edit. */
   scheduleValidate: () => void;
 }
@@ -63,8 +66,29 @@ export class SelectionWorkflow {
       ref,
     );
     if (count >= max) return;
-    entity.selections = [...(entity.selections ?? []), { ref }];
+    const params = this.#defaultTakenAs(item);
+    entity.selections = [...(entity.selections ?? []), params ? { ref, params } : { ref }];
     this.#host.scheduleValidate();
+  }
+
+  /**
+   * F27/E5 (manual-test findings 2026-11-15 #27): a new row of an item whose
+   * `category`-domain `taken_as` parameter carries a reading the profile
+   * forbids IN FORCE (`EffectiveScores.forbidden_categories_in_force`)
+   * defaults to the first PERMITTED one instead — Vengeful Powers added for a
+   * Gift-less companion defaults to "story", never "hermetic". Enforced mode
+   * only: Advisory/Silent leave `taken_as` unset, as before this fix, since
+   * only Enforced mode refuses the forbidden reading at all. `undefined` when
+   * the item has no `category`-domain parameter, or when every one of its
+   * readings is forbidden (nothing permitted to default to).
+   */
+  #defaultTakenAs(item: PointItem | undefined): Record<string, string> | undefined {
+    if (this.#host.mode() !== 'enforced') return undefined;
+    const param = item?.parameters?.find((p) => p.domain === 'category');
+    if (!param?.values?.length) return undefined;
+    const forbidden = new Set(this.#host.effective()?.forbidden_categories_in_force ?? []);
+    const permitted = param.values.find((value) => !forbidden.has(value));
+    return permitted ? { [param.key]: permitted } : undefined;
   }
 
   /** Selection edits are by row index, since a repeatable item has several rows. */

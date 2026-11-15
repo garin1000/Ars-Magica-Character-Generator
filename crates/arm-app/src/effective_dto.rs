@@ -8,7 +8,7 @@
 //! under what used to be the same file, even though both are called from the
 //! same `commands.rs` shims.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use arm_rules::{
     AbilityAddBlockReason, AbilityBonus, AbilityBonusSources, AbilityFloor,
@@ -22,13 +22,13 @@ use arm_rules::{
     characteristic_caps, characteristic_floors, characteristic_points_granted,
     checked_xp_allocation, compute_balance, confidence, decrepitude_score,
     effective_characteristics, effective_might, effective_point_ceilings, entity_grants,
-    focus_points_budget, focus_points_used, is_hermetically_trained, item_has_realm_association,
-    item_level_budget, item_level_used, life_stage_spell_levels, life_timeline, longevity_bonus,
-    magus_minimum_abilities, phases_in_force, power_levels_budget, powers_used, reputation_grants,
-    resolve_realm, size, spell_caps, spell_level_caps, spell_levels_base, spell_levels_bonus,
-    spell_levels_budget, spell_levels_used, spell_mastery_floor, spell_mastery_xp,
-    spell_mastery_xp_used, supernatural_free_slots, true_faith, vf_add_verdicts, warping,
-    warping_owed_grants,
+    focus_points_budget, focus_points_used, forbidden_categories_in_force, is_hermetically_trained,
+    item_has_realm_association, item_level_budget, item_level_used, life_stage_spell_levels,
+    life_timeline, longevity_bonus, magus_minimum_abilities, phases_in_force, power_levels_budget,
+    powers_used, reputation_grants, resolve_realm, size, spell_caps, spell_level_caps,
+    spell_levels_base, spell_levels_bonus, spell_levels_budget, spell_levels_used,
+    spell_mastery_floor, spell_mastery_xp, spell_mastery_xp_used, supernatural_free_slots,
+    true_faith, vf_add_verdicts, warping, warping_owed_grants,
 };
 use serde::Serialize;
 
@@ -325,6 +325,17 @@ pub struct EffectiveScores {
     /// companion); the frontend must not re-derive this from category/
     /// prerequisite data itself.
     pub vf_add_blocked: BTreeMap<Id, VfAddBlockReason>,
+    /// F27/E5 (manual-test findings 2026-11-15 #27): the profile's
+    /// `forbidden_categories` list, resolved **in force** for this entity
+    /// right now — Vengeful Powers (categories `["story", "hermetic"]`) must
+    /// not be filed under a Hermetic heading for a non-magus, since it keeps
+    /// a permitted `story` category to fall back to; a Hermetic-only item has
+    /// no such fallback and stays listed (greyed via `vf_add_blocked`,
+    /// 2026-10-18 #19). The frontend must read this straight off the DTO
+    /// rather than re-deriving the profile's category rule itself. Empty for
+    /// an entity whose profile declares no forbidden categories at all (every
+    /// non-Gift-gated type).
+    pub forbidden_categories_in_force: BTreeSet<String>,
     /// Every catalogue Ability this entity may not yet add, with why —
     /// absent means legal to add. The Ability twin of `vf_add_blocked`
     /// (manual-test findings #25): a companion with no authorizing Virtue is
@@ -986,6 +997,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         granted_realm_associations,
 
         vf_add_blocked: vf_add_verdicts(entity, ruleset),
+        forbidden_categories_in_force: forbidden_categories_in_force(entity, ruleset),
         ability_add_blocked: ability_add_verdicts(entity, ruleset),
     }
 }

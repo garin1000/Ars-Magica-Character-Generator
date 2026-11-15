@@ -224,6 +224,23 @@ const ITEMS: Record<string, PointItem> = {
       values: ['social_status', 'supernatural'],
     },
   ]),
+  // F27/E5 (manual-test findings 2026-11-15 #27): Vengeful Powers' own shape
+  // (`rules/core/virtues_flaws.json`) — categories ["story", "hermetic"], a
+  // `taken_as` reading per category. In Enforced mode, a reading the entity's
+  // profile forbids in force (`EffectiveScores.forbidden_categories_in_force`)
+  // must not be offered.
+  'flaw.vengeful_powers_probe': pointItem(
+    'flaw.vengeful_powers_probe',
+    [
+      {
+        key: 'taken_as',
+        type: 'ref',
+        domain: 'category',
+        values: ['hermetic', 'story'],
+      },
+    ],
+    ['story', 'hermetic'],
+  ),
   // C5b (D9 part 3, § 8): Corrupted Spells' own shape — "as many of the
   // character's spells as you wish" (ArMDE:5932-5937), so the domain resolves
   // against `Entity.spells`, never the whole spell catalogue. Modelled on the
@@ -388,6 +405,7 @@ function installRuleset(): void {
       'folk_magic.divination': { name: 'Divination' },
       'folk_magic.healing': { name: 'Healing' },
       'virtue.sufi': { name: 'Sufi' },
+      'flaw.vengeful_powers_probe': { name: 'Vengeful Powers Probe' },
       'virtue.custos_probe': { name: 'Custos Probe' },
       'flaw.corrupted_spells_probe': { name: 'Corrupted Spells Probe' },
       'spell.pilum_of_fire': { name: 'Pilum of Fire' },
@@ -1089,6 +1107,44 @@ describe('ParameterPicker category domain (row 19 "taken as")', () => {
     const select = selectFor(pickerBody('virtue.sufi', 1), 'param-virtue.sufi-taken_as-1');
     expect(optionByText(select!, 'Social Status')).toContain('disabled');
     expect(optionByText(select!, 'Supernatural')).not.toContain('disabled');
+  });
+});
+
+// F27/E5 (manual-test findings 2026-11-15 #27): Vengeful Powers' `taken_as`
+// reading set is ["hermetic", "story"] — a companion without The Gift has
+// "hermetic" forbidden IN FORCE (`EffectiveScores.forbidden_categories_in_force`).
+// In Enforced mode the picker must not offer a reading the entity cannot
+// legally take; Advisory/Silent leave every reading open and let the engine's
+// `category_not_permitted`/`forbidden_category` issue report it once taken,
+// exactly as the rest of this picker's Enforced-only gates already do.
+describe('ParameterPicker category domain excludes a forbidden reading in Enforced mode (F27)', () => {
+  const TESTID = 'param-flaw.vengeful_powers_probe-taken_as-0';
+
+  it('drops the forbidden reading from the options in Enforced mode', () => {
+    store.mode = 'enforced';
+    store.effective = {
+      forbidden_categories_in_force: ['hermetic'],
+    } as unknown as EffectiveScores;
+    try {
+      const select = selectFor(pickerBody('flaw.vengeful_powers_probe'), TESTID);
+      expect(select).not.toBeNull();
+      expect(optionTexts(select!)).toEqual(['Taken as', 'Story']);
+    } finally {
+      store.mode = 'enforced';
+    }
+  });
+
+  it('keeps every reading offered outside Enforced mode', () => {
+    store.mode = 'advisory';
+    store.effective = {
+      forbidden_categories_in_force: ['hermetic'],
+    } as unknown as EffectiveScores;
+    try {
+      const select = selectFor(pickerBody('flaw.vengeful_powers_probe'), TESTID);
+      expect(optionTexts(select!)).toEqual(['Taken as', 'Hermetic', 'Story']);
+    } finally {
+      store.mode = 'enforced';
+    }
   });
 });
 

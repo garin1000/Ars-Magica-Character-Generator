@@ -228,6 +228,41 @@ pub fn vf_add_verdicts(entity: &Entity, ruleset: &Ruleset) -> BTreeMap<Id, VfAdd
     blocked
 }
 
+/// The profile's `forbidden_categories` list, resolved **in force** for this
+/// entity right now — the same [`categories_in_force`] resolution
+/// [`validate_forbidden_categories`] applies to an already-held selection, run
+/// here with no selection in hand yet (manual-test findings 2026-11-15 #27):
+/// Vengeful Powers ("Major, Story, Tainted... may be taken as a Hermetic
+/// Flaw", ArMDE:7033, :7048) must not be filed under a Hermetic heading for a
+/// non-magus — "Companions who do not have The Gift may not choose Hermetic
+/// Virtues or Flaws" (ArMDE:2369, restated for the rules summary at :2910,
+/// "unless you have The Gift") — while a Hermetic-only item (no other
+/// category to fall back to) stays listed there, greyed by [`vf_add_verdicts`]
+/// (#19). The frontend reads this straight off the DTO rather than
+/// re-deriving a profile rule of its own, on the same discipline
+/// [`vf_add_verdicts`] already keeps.
+///
+/// Returns an empty set when `entity.type_id` resolves to no profile, or when
+/// the profile declares no forbidden categories at all — both exactly as
+/// [`vf_add_verdicts`]/[`phases_in_force`] treat an unresolvable profile.
+pub fn forbidden_categories_in_force(entity: &Entity, ruleset: &Ruleset) -> BTreeSet<String> {
+    let Some(profile) = ruleset.type_profiles.get(&entity.type_id) else {
+        return BTreeSet::new();
+    };
+    if profile.forbidden_categories.is_empty() {
+        return BTreeSet::new();
+    }
+
+    let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+    let granted = crate::effective::entity_grants(entity, ruleset);
+    let ctx = PrereqCtx::build(entity, ruleset, Some(profile), &selected_ids, &granted);
+
+    categories_in_force(&profile.forbidden_categories, &ctx)
+        .into_iter()
+        .map(String::from)
+        .collect()
+}
+
 /// The permitted `taken_as` readings an unselected item could resolve to —
 /// one single-category slice per value its [`ParameterDomain::Category`]
 /// parameter declares (Sufi: `social_status` alone, or `supernatural` alone —

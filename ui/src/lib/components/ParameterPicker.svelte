@@ -378,6 +378,25 @@
     return options;
   }
 
+  // F27/E5 (manual-test findings 2026-11-15 #27): a `category`-domain
+  // parameter's own `values` list (Vengeful Powers: "hermetic", "story"), with
+  // a reading the profile forbids IN FORCE for this entity dropped — but only
+  // in Enforced mode, and only when the reading is not ALREADY the row's own
+  // stored value. An already-held forbidden reading stays offered so the
+  // select still shows it selected; its `category_not_permitted` validation
+  // error is unchanged by this filter, which governs only what a NEW pick may
+  // choose. Advisory/Silent leave every reading open, exactly like every other
+  // Enforced-only gate on this component (`full`/`blocked`).
+  function categoryValuesFor(param: ParameterDef): string[] {
+    const values = param.values ?? [];
+    if (store.mode !== 'enforced') return values;
+    const forbidden = store.effective?.forbidden_categories_in_force;
+    if (!forbidden?.length) return values;
+    const current = singleParamValue(selection.params?.[param.key]);
+    const forbiddenSet = new Set(forbidden);
+    return values.filter((value) => value === current || !forbiddenSet.has(value));
+  }
+
   // Every point item the character holds: bought rows plus granted ones, the
   // frontend mirror of the engine's `present_ids`.
   function heldItemRefs(): Set<string> {
@@ -782,7 +801,7 @@
               data-testid="param-{selection.ref}-{param.key}-{suffix}"
             >
               <option value="" disabled>{typeLabel}</option>
-              {#each param.values ?? [] as value (value)}
+              {#each categoryValuesFor(param) as value (value)}
                 <option {value} disabled={full(used, value)}>
                   {store.t(`category-${value}`)}
                 </option>

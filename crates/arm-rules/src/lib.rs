@@ -131,6 +131,6 @@ pub use types::{
 pub use validation::{
     AbilityAddBlockReason, AgeInSagaYear, Balance, DEFAULT_SAGA_YEAR, IssueSeverity, PointCeilings,
     ValidationIssue, ValidationResult, VfAddBlockReason, ability_add_verdicts, age_in_saga_year,
-    birth_year_in_saga_year, compute_balance, effective_point_ceilings, phases_in_force, validate,
-    vf_add_verdicts,
+    birth_year_in_saga_year, compute_balance, effective_point_ceilings,
+    forbidden_categories_in_force, phases_in_force, validate, vf_add_verdicts,
 };

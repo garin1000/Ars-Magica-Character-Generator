@@ -174,6 +174,27 @@ function sourceOutline(body: string): string[] {
   return out;
 }
 
+/** The Flaws *source* (Available) picker's markup: from its filter bar to the Selected region. */
+function flawSourceColumn(body: string): string {
+  const start = body.indexOf('data-testid="vf-search-flaw"');
+  if (start < 0) throw new Error('no Flaws source picker');
+  const end = body.indexOf('region-selected');
+  return body.slice(start, end < 0 ? undefined : end);
+}
+
+/** `sourceOutline`, but over the Flaws Available picker instead of the Virtues one. */
+function flawSourceOutline(body: string): string[] {
+  const column = flawSourceColumn(body);
+  const out: string[] = [];
+  for (const m of column.matchAll(
+    /<h3 class="category"[^>]*>([\s\S]*?)<\/h3>|<span class="item-name">([\s\S]*?)<\/span>/g,
+  )) {
+    if (m[1] !== undefined) out.push(`# ${m[1].replace(/<[^>]*>/g, '').trim()}`);
+    else out.push(clean(m[2].replace(/<[^>]*>/g, '')).trim());
+  }
+  return out;
+}
+
 /** Every `<ul>` start tag in the Virtues column, with the heading (if any) before it. */
 function listsWithHeaders(body: string): { header: string | null }[] {
   const column = virtueColumn(body);
@@ -337,6 +358,78 @@ describe('VirtueFlawTab offers a dual-category item under every heading', () => 
     const select = /data-testid="vf-category-filter-virtue"[\s\S]*?<\/select>/.exec(html());
     const options = [...(select?.[0] ?? '').matchAll(/<option value="([^"]*)"/g)].map((m) => m[1]);
     expect(options).toEqual(['', 'general', 'hermetic', 'social_status', 'supernatural']);
+  });
+});
+
+// F27/E5 (manual-test findings 2026-11-15 #27, Norbert's ruling): Vengeful
+// Powers ("Major, Story, Tainted... may be taken as a Hermetic Flaw",
+// ArMDE:7033, :7048) must not be listed under a Hermetic heading for a
+// non-magus — it keeps a permitted "story" category to fall back to. A
+// Hermetic-ONLY item has no such fallback and stays listed (greyed) under
+// Hermetic, per the 2026-10-18 #19 ruling. The engine resolves which
+// categories are forbidden IN FORCE for this entity
+// (`EffectiveScores.forbidden_categories_in_force`); the component must read
+// that DTO field rather than re-derive the profile rule.
+describe('VirtueFlawTab drops a forbidden heading for an item with a permitted category (F27)', () => {
+  const VENGEFUL = item({
+    id: 'flaw.vengeful_powers_probe',
+    kind: 'flaw',
+    magnitude: 'major',
+    categories: ['story', 'hermetic'],
+  });
+  const HERMETIC_ONLY = item({
+    id: 'flaw.hermetic_only_probe',
+    kind: 'flaw',
+    categories: ['hermetic'],
+  });
+
+  function installF27Ruleset(): void {
+    store.ruleset = {
+      ruleset: {
+        id: 'test',
+        version: '1',
+        point_items: { [VENGEFUL.id]: VENGEFUL, [HERMETIC_ONLY.id]: HERMETIC_ONLY },
+        type_profiles: {
+          companion: {
+            id: 'companion',
+            budget: { virtue_points: 10, flaw_points: 10 },
+            creation_phases: [],
+          },
+        },
+        abilities: {},
+        magnitude_points: { free: 0, minor: 1, major: 3 },
+        ability_category_order: ['general'],
+        art_type_order: ['technique', 'form'],
+      },
+      i18n: {
+        [VENGEFUL.id]: { name: 'Vengeful Powers Probe' },
+        [HERMETIC_ONLY.id]: { name: 'Hermetic Only Probe' },
+      },
+    } as unknown as LocalizedRuleset;
+  }
+
+  beforeEach(() => {
+    installF27Ruleset();
+    resetEntity([]);
+    store.entity.type_id = 'companion';
+    // Read straight off the DTO — the component must not recompute this from
+    // the profile's own `forbidden_categories` list.
+    store.effective = {
+      forbidden_categories_in_force: ['hermetic'],
+    } as unknown as EffectiveScores;
+  });
+
+  it('lists the dual-category item under Story only, never under Hermetic', () => {
+    expect(flawSourceOutline(html())).toEqual([
+      '# Hermetic',
+      'Hermetic Only Probe',
+      '# Story',
+      'Vengeful Powers Probe',
+    ]);
+  });
+
+  it('keeps a Hermetic-only item listed under Hermetic (#19)', () => {
+    expect(flawSourceOutline(html())).toContain('Hermetic Only Probe');
   });
 });
 

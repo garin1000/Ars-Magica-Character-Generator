@@ -4004,3 +4004,16 @@ verdict reads it so: `PrereqCtx` gained the flag `unset_house_is_false`, set by
 no House set still validates as before (`prereq_unevaluated`, a warning).
 Tests: `tests/vf_add_verdicts.rs`, `validation/prereq.rs` (House under `Nor`
 and `Any`).
+
+**D93.3 — list a dual-category item only under its permitted headings**
+(findings #27). Vengeful Powers (categories `["story", "hermetic"]`,
+ArMDE:7033/:7048) must not sit under a Hermetic heading for a non-magus, since
+a companion without The Gift forbids `hermetic` (ArMDE:2369, restated at
+:2910) but not `story`. New `validation/selections.rs::forbidden_categories_in_force`
+resolves the profile's forbidden categories in force; a new `EffectiveScores.
+forbidden_categories_in_force` DTO field lets `VirtueFlawTab.svelte::sourceGroups`
+drop a forbidden heading for an item keeping another permitted category — a
+Hermetic-only item has no fallback and stays listed, greyed (2026-10-18 #19).
+In Enforced mode the `taken_as` picker offers, and a new add defaults to, only
+a permitted reading; an already-held forbidden reading keeps its existing
+validation error.

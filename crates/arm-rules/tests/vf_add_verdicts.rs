@@ -10,7 +10,8 @@
 use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::validation::{
-    IssueSeverity, ValidationIssue, VfAddBlockReason, validate, vf_add_verdicts,
+    IssueSeverity, ValidationIssue, VfAddBlockReason, forbidden_categories_in_force, validate,
+    vf_add_verdicts,
 };
 
 const SHIPPED_HOUSES: &str = include_str!("../../../rules/core/houses.json");
@@ -376,4 +377,49 @@ fn the_add_verdict_agrees_with_validate_on_every_hard_cap_for_every_type() {
             );
         }
     }
+}
+
+// --- E5/F27 (manual-test findings 2026-11-15 #27): the profile's forbidden
+// categories, resolved IN FORCE for this entity right now — the new DTO field
+// `VirtueFlawTab.svelte::sourceGroups` reads so it can drop a forbidden
+// heading for an item that keeps another, permitted category (Vengeful
+// Powers: "story", "hermetic") without re-deriving the profile rule itself. ---
+
+#[test]
+fn companion_without_the_gift_has_hermetic_forbidden_in_force() {
+    let rs = load_ruleset();
+    let e = bare_companion();
+    let forbidden = forbidden_categories_in_force(&e, &rs);
+    assert!(
+        forbidden.contains("hermetic"),
+        "a Gift-less companion's forbidden-in-force set must contain \"hermetic\" \
+         (ArMDE:2369 \"Companions who do not have The Gift may not choose Hermetic \
+         Virtues or Flaws\", restated at :2910), got {forbidden:?}"
+    );
+}
+
+#[test]
+fn companion_with_the_gift_has_no_forbidden_categories_in_force() {
+    let rs = load_ruleset();
+    let e = entity(
+        "companion",
+        vec![Selection::new(Id::new("virtue.the_gift"))],
+    );
+    let forbidden = forbidden_categories_in_force(&e, &rs);
+    assert!(
+        !forbidden.contains("hermetic"),
+        "a Gifted companion must not have \"hermetic\" forbidden-in-force, \
+         got {forbidden:?}"
+    );
+}
+
+#[test]
+fn magus_has_no_forbidden_categories_in_force() {
+    let rs = load_ruleset();
+    let e = entity("magus", vec![]);
+    let forbidden = forbidden_categories_in_force(&e, &rs);
+    assert!(
+        forbidden.is_empty(),
+        "a magus profile declares no forbidden_categories at all, got {forbidden:?}"
+    );
 }
