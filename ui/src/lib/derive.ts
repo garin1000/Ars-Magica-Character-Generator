@@ -2835,6 +2835,56 @@ export function invalidSelectionIds(result: ValidationResult | null | undefined)
   return ids;
 }
 
+/** One error-severity issue's row target: an Ability id, plus which entry it names. */
+export interface InvalidAbilityRow {
+  id: string;
+  /**
+   * The `entity.ability_scores` position the issue's `index` arg names, or
+   * `null` when the issue carries no `index` — meaning it marks every entry
+   * sharing `id`, exactly like {@link invalidSelectionIds} always has.
+   */
+  index: number | null;
+}
+
+/**
+ * AbilityTab's row-aware counterpart of {@link invalidSelectionIds} (F18,
+ * manual-testing-findings-2026-11-15 #18). Two entries of a parameterized
+ * Ability ((Area) Lore) share one catalogue id, so a blanket by-id match
+ * paints EVERY entry red the moment any one issue names that id — even when
+ * only one entry (say, the one with no Area filled in) is actually invalid.
+ * An issue that also carries an `index` arg (currently only
+ * `ability_parameter_required`) names one entry's position in
+ * `entity.ability_scores`; {@link isInvalidAbilityRow} uses it to mark only
+ * that entry. An issue with no `index` arg still marks every entry sharing
+ * the id, unchanged from before.
+ */
+export function invalidAbilityRows(
+  result: ValidationResult | null | undefined,
+): InvalidAbilityRow[] {
+  const rows: InvalidAbilityRow[] = [];
+  for (const issue of result?.issues ?? []) {
+    if (issue.severity !== 'error') continue;
+    if (!issue.context) continue;
+    const raw = issue.args.index;
+    const index = raw !== undefined ? Number(raw) : null;
+    rows.push({ id: issue.context, index: index !== null && Number.isNaN(index) ? null : index });
+  }
+  return rows;
+}
+
+/**
+ * Whether the Ability row at `index` (its `entity.ability_scores` position)
+ * is marked invalid by any entry of {@link invalidAbilityRows}'s output — by
+ * id, and by `index` only when the issue named one.
+ */
+export function isInvalidAbilityRow(
+  rows: readonly InvalidAbilityRow[],
+  id: string,
+  index: number,
+): boolean {
+  return rows.some((row) => row.id === id && (row.index === null || row.index === index));
+}
+
 /**
  * The warning codes that mark the Ability or Art ROW they are about (I2, try-out
  * finding 7): banked XP that already reaches the next level, or that sits at the

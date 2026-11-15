@@ -331,8 +331,8 @@ pub(crate) fn validate_abilities(
     // `issues`' push order byte-identical to the original single loop — a
     // second traversal here would interleave differently the moment two
     // checks fire on different entries.
-    for entry in &entity.ability_scores {
-        validate_ability_known_and_parameterized(ruleset, entry, issues);
+    for (index, entry) in entity.ability_scores.iter().enumerate() {
+        validate_ability_known_and_parameterized(ruleset, entry, index, issues);
         validate_ability_score_in_range(ruleset, entry, max_score, issues);
         validate_ability_age_cap(entity, ruleset, entry, issues);
         validate_ability_specialty_permitted(ruleset, effective_selections, entry, issues);
@@ -401,9 +401,16 @@ fn validate_ability_specialty_permitted(
 /// An ability must resolve against the catalogue (`unknown_ability`), and a
 /// parameterized one needs its instance value supplied
 /// (`ability_parameter_required`, e.g. which Area for `(Area) Lore`).
+///
+/// `index` is this entry's position in `entity.ability_scores`: two entries of
+/// one parameterized Ability (e.g. two `(Area) Lore` rows) share the same
+/// catalogue id, so without it the UI could only mark a row by id — which
+/// would paint EVERY entry of the ability red the moment just one of them
+/// lacks its parameter (manual-testing-findings-2026-11-15 #18).
 fn validate_ability_known_and_parameterized(
     ruleset: &Ruleset,
     entry: &AbilityScore,
+    index: usize,
     issues: &mut Vec<ValidationIssue>,
 ) {
     match ruleset.abilities.get(&entry.ability) {
@@ -424,7 +431,10 @@ fn validate_ability_known_and_parameterized(
                 issues.push(ValidationIssue::error(
                     ValidationIssue::CODE_ABILITY_PARAMETER_REQUIRED,
                     CreationPhase::Abilities,
-                    args([("ability", entry.ability.to_string())]),
+                    args([
+                        ("ability", entry.ability.to_string()),
+                        ("index", index.to_string()),
+                    ]),
                     Some(entry.ability.clone()),
                 ));
             }
@@ -1242,5 +1252,79 @@ mod unspecialized_flaw_tests {
             Some("long sword"),
         );
         assert!(specialty_forbidden(&e, &rs()));
+    }
+}
+
+/// Manual-testing finding #18 (2026-11-15): two entries of one parameterized
+/// Ability (e.g. (Area) Lore) share a single catalogue id, so when only one
+/// entry lacks its parameter, `ability_parameter_required` must still name
+/// exactly that entry — by its position in `entity.ability_scores` — rather
+/// than leaving the UI to mark every entry sharing the id.
+#[cfg(test)]
+mod ability_parameter_required_index_tests {
+    use crate::types::{AbilityParameterValue, AbilityScore, Entity, EntityKind, Id, RulesetRef};
+    use crate::validation::{ValidationIssue, validate};
+    use crate::{Ruleset, RulesetSources};
+
+    const ITEMS: &str = r#"[
+      { "id": "flaw.optimistic", "kind": "flaw", "classification": "narrative",
+        "magnitude": "minor", "categories": ["personality"], "entity_kinds": ["character"] }
+    ]"#;
+    const TYPES: &str = r#"[
+      { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
+        "permitted_categories": ["general", "personality"], "creation_phases": [] }
+    ]"#;
+    const ABILITIES: &str = r#"{
+      "advancement": [
+        { "score": 1, "total_xp": 5 }, { "score": 2, "total_xp": 15 },
+        { "score": 3, "total_xp": 30 }
+      ],
+      "abilities": [
+        { "id": "ability.area_lore", "category": "general", "parameter": "area" }
+      ]
+    }"#;
+
+    fn rs() -> Ruleset {
+        Ruleset::from_sources(RulesetSources {
+            id: "test",
+            version: "1",
+            point_items: ITEMS,
+            type_profiles: TYPES,
+            abilities: Some(ABILITIES),
+            ..RulesetSources::default()
+        })
+        .unwrap()
+    }
+
+    /// Index 0 carries its Area ("Brandenburg"); index 1 is the empty one.
+    fn companion_with_one_filled_and_one_empty_area_lore() -> Entity {
+        let mut entity = Entity::new(
+            EntityKind::Character,
+            Id::new("companion"),
+            RulesetRef::new(Id::new("test"), "1"),
+        );
+        entity.xp_pool = 500;
+        let mut filled = AbilityScore::new(Id::new("ability.area_lore"), 3);
+        filled.parameter = Some(AbilityParameterValue::text("Brandenburg"));
+        let empty = AbilityScore::new(Id::new("ability.area_lore"), 2);
+        entity.ability_scores = vec![filled, empty];
+        entity
+    }
+
+    #[test]
+    fn the_parameter_required_issue_names_only_the_empty_entrys_index() {
+        let entity = companion_with_one_filled_and_one_empty_area_lore();
+        let result = validate(&entity, &rs());
+        let hits: Vec<&ValidationIssue> = result
+            .issues
+            .iter()
+            .filter(|i| i.code == ValidationIssue::CODE_ABILITY_PARAMETER_REQUIRED)
+            .collect();
+        assert_eq!(
+            hits.len(),
+            1,
+            "expected exactly one parameter-required issue, got {hits:?}"
+        );
+        assert_eq!(hits[0].args.get("index").map(String::as_str), Some("1"));
     }
 }

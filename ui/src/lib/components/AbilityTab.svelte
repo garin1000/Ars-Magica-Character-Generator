@@ -10,7 +10,8 @@
     filterAbilities,
     groupAbilitiesByCategory,
     groupAbilitySelectionsByCategory,
-    invalidSelectionIds,
+    invalidAbilityRows,
+    isInvalidAbilityRow,
     maxAbilityScore,
     resolvedLinksFrom,
     rowWarningFor,
@@ -173,8 +174,11 @@
   );
 
   // Abilities an error-severity issue points at (e.g. a supernatural ability whose
-  // granting Virtue was removed after it was bought) — their rows render red.
-  const invalidIds = $derived(invalidSelectionIds(store.result));
+  // granting Virtue was removed after it was bought) — their rows render red. A row
+  // whose issue also names an `index` (F18, e.g. a missing (Area) Lore parameter on
+  // one of two same-ability entries) is marked by that position alone, not by every
+  // entry sharing the ability id.
+  const invalidRows = $derived(invalidAbilityRows(store.result));
 
   // Banked-XP warnings (I2): marked on the one row they name, by Ability AND
   // instance, with a warning glyph distinct from the error "!" above.
@@ -435,7 +439,7 @@
             {@const id = rowSuffix(i)}
             {@const key = paramKey(entry.ability)}
             {@const options = optionsFor(entry.ability)}
-            {@const invalid = invalidIds.has(entry.ability)}
+            {@const invalid = isInvalidAbilityRow(invalidRows, entry.ability, i)}
             {@const warning = warningOf(entry)}
             <!-- The bought score the badge below is paired with (#16) — held to the
                  generation the modifiers were computed for, while `entry.score`

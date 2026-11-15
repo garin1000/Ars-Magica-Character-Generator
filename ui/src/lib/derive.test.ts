@@ -47,8 +47,10 @@ import {
   groupSpellsByTechniqueForm,
   groupWarpingOwedGrants,
   incompatibleRefs,
+  invalidAbilityRows,
   invalidSelectionIds,
   isDisabled,
+  isInvalidAbilityRow,
   lifeSectionLabel,
   minLearnableLevel,
   movedAbilityParameterNotice,
@@ -4026,6 +4028,118 @@ describe('invalidSelectionIds', () => {
 
   it('is empty for a null result (not yet validated, or Silent mode)', () => {
     expect(invalidSelectionIds(null).size).toBe(0);
+  });
+});
+
+// F18 (manual-testing-findings-2026-11-15 #18): two entries of a parameterized
+// Ability ((Area) Lore) share one catalogue id, so a blanket by-id match (as
+// `invalidSelectionIds` does) paints EVERY entry red the moment any one issue
+// names that id. `invalidAbilityRows` keeps each issue's optional `index` arg
+// so AbilityTab can tell which single entry an issue actually names.
+describe('invalidAbilityRows', () => {
+  it('keeps the index an issue names, for an issue that names one', () => {
+    const result = {
+      issues: [
+        {
+          severity: 'error' as const,
+          code: 'ability_parameter_required',
+          phase: 'abilities' as const,
+          context: 'ability.area_lore',
+          args: { ability: 'ability.area_lore', index: '1' },
+        },
+      ],
+    };
+    expect(invalidAbilityRows(result)).toEqual([{ id: 'ability.area_lore', index: 1 }]);
+  });
+
+  it('matches every entry of the id for an issue with no index arg', () => {
+    const result = {
+      issues: [
+        {
+          severity: 'error' as const,
+          code: 'ability_score_out_of_range',
+          phase: 'abilities' as const,
+          context: 'ability.athletics',
+          args: { ability: 'ability.athletics', score: '12', max: '10' },
+        },
+      ],
+    };
+    expect(invalidAbilityRows(result)).toEqual([{ id: 'ability.athletics', index: null }]);
+  });
+
+  it('ignores warnings and issues carrying no context', () => {
+    const result = {
+      issues: [
+        {
+          severity: 'warning' as const,
+          code: 'x',
+          phase: 'abilities' as const,
+          context: 'ability.athletics',
+          args: {},
+        },
+        {
+          severity: 'error' as const,
+          code: 'y',
+          phase: 'abilities' as const,
+          context: null,
+          args: {},
+        },
+      ],
+    };
+    expect(invalidAbilityRows(result)).toEqual([]);
+  });
+
+  it('is empty for a null result', () => {
+    expect(invalidAbilityRows(null)).toEqual([]);
+  });
+});
+
+describe('isInvalidAbilityRow', () => {
+  it('matches only the named index when the issue carries one', () => {
+    const rows = invalidAbilityRows({
+      issues: [
+        {
+          severity: 'error' as const,
+          code: 'ability_parameter_required',
+          phase: 'abilities' as const,
+          context: 'ability.area_lore',
+          args: { ability: 'ability.area_lore', index: '1' },
+        },
+      ],
+    });
+    expect(isInvalidAbilityRow(rows, 'ability.area_lore', 0)).toBe(false);
+    expect(isInvalidAbilityRow(rows, 'ability.area_lore', 1)).toBe(true);
+  });
+
+  it('matches every index sharing the id when the issue carries no index', () => {
+    const rows = invalidAbilityRows({
+      issues: [
+        {
+          severity: 'error' as const,
+          code: 'ability_score_out_of_range',
+          phase: 'abilities' as const,
+          context: 'ability.athletics',
+          args: {},
+        },
+      ],
+    });
+    expect(isInvalidAbilityRow(rows, 'ability.athletics', 0)).toBe(true);
+    expect(isInvalidAbilityRow(rows, 'ability.athletics', 5)).toBe(true);
+  });
+
+  it('never matches an unrelated id', () => {
+    const rows = invalidAbilityRows({
+      issues: [
+        {
+          severity: 'error' as const,
+          code: 'ability_score_out_of_range',
+          phase: 'abilities' as const,
+          context: 'ability.athletics',
+          args: {},
+        },
+      ],
+    });
+    expect(isInvalidAbilityRow(rows, 'ability.brawl', 0)).toBe(false);
   });
 });
 

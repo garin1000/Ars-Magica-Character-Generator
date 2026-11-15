@@ -316,6 +316,50 @@ describe('AbilityTab invalid selection (S7)', () => {
   });
 });
 
+// Finding #18 (manual-testing-findings-2026-11-15): two entries of the same
+// parameterized Ability ((Area) Lore) share one catalogue id, so when the
+// engine's `ability_parameter_required` issue names only the empty entry's
+// `index`, only THAT row may render red — not every entry sharing the id.
+describe('AbilityTab marks only the empty entry of a repeated parameterized Ability (F18)', () => {
+  beforeEach(() => {
+    store.ruleset!.ruleset.abilities = {
+      ...store.ruleset!.ruleset.abilities,
+      'ability.area_lore': { id: 'ability.area_lore', category: 'general', parameter: 'area' },
+    };
+    store.entity.ability_scores = [
+      { ability: 'ability.area_lore', score: 3, parameter: { text: 'Brandenburg' } },
+      { ability: 'ability.area_lore', score: 2 },
+    ];
+    store.result = {
+      issues: [
+        {
+          severity: 'error',
+          code: 'ability_parameter_required',
+          phase: 'abilities',
+          context: 'ability.area_lore',
+          args: { ability: 'ability.area_lore', index: '1' },
+        },
+      ],
+    };
+  });
+
+  it('leaves the filled entry (index 0) unmarked', () => {
+    const body = html();
+    const specialty = /<input[^>]*data-testid="ability-specialty-ability.area_lore-0"[^>]*>/.exec(
+      body,
+    );
+    expect(specialty![0]).not.toContain('aria-invalid="true"');
+  });
+
+  it('marks only the empty entry (index 1)', () => {
+    const body = html();
+    const specialty = /<input[^>]*data-testid="ability-specialty-ability.area_lore-1"[^>]*>/.exec(
+      body,
+    );
+    expect(specialty![0]).toContain('aria-invalid="true"');
+  });
+});
+
 // S5 (full-audit a11y): the free-text search box carries only a placeholder,
 // which is not an accessible name — a screen-reader user tabbing into it hears
 // only "text box, search". Mirrors the S6 fix for the sibling <select> above.

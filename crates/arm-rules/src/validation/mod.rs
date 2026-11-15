@@ -215,7 +215,7 @@ impl fmt::Display for IssueSeverity {
 /// | `childhood_slot_unfilled` | error | experience | `ability`, `key`, `slot` |
 /// | `childhood_slot_is_native_language` | error | experience | `ability`, `key`, `slot`, `language` |
 /// | `childhood_slot_duplicate_value` | error | experience | `ability`, `key`, `slot`, `other_slot`, `value` |
-/// | `ability_parameter_required` | error | abilities | `ability` |
+/// | `ability_parameter_required` | error | abilities | `ability`, `index` |
 /// | `ability_parameter_outside_catalogue` | error | abilities | `ability`, `parameter` |
 /// | `ability_score_out_of_range` | error | abilities | `ability`, `score`, `max` |
 /// | `ability_bonus_dangling_target` | error | abilities | `item`, `ability`, `parameter` |
