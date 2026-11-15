@@ -126,8 +126,8 @@
 
 | identity-name | param-label-ability | derived-combat-init | derived-combat-attack | derived-combat-defense | derived-combat-damage | derived-range |
 | --- | --- | --- | --- | --- | --- | --- |
-| Long Sword derived-combat-shield-joiner Round Shield | Single Weapon | 2 | 10 | 9 | 7 |  |
-| Long Sword | Single Weapon | 2 | 10 | 7 | 7 |  |
+| Long Sword derived-combat-shield-joiner Round Shield | Single Weapon | +2 | +10 | +9 | +7 |  |
+| Long Sword | Single Weapon | +2 | +10 | +7 | +7 |  |
 
 ## derived-section-soak
 
