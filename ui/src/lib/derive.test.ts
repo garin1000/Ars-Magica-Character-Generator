@@ -22,6 +22,7 @@ import {
   childhoodSlotFault,
   childhoodSlots,
   combatRowLabel,
+  abilityAddBlockedRefs,
   addBlockedRefs,
   atMaxTotalRefs,
   blockedSameItemValues,
@@ -82,6 +83,7 @@ import {
   spellCodeWithLevel,
   spellDisplayName,
   spellLevelAllocation,
+  supernaturalFreeSlotsTooltip,
   totalCopies,
   withinFocusAddable,
   withinFocusAndPotentFieldAddable,
@@ -744,6 +746,43 @@ describe('addBlockedRefs', () => {
 
   it('is empty when the DTO has not loaded yet (undefined)', () => {
     expect(addBlockedRefs(undefined, 'enforced').size).toBe(0);
+  });
+});
+
+describe('abilityAddBlockedRefs (F25)', () => {
+  const addBlocked = {
+    'ability.magic_theory': 'requires_virtue' as const,
+    'ability.second_sight': 'supernatural_requires_virtue' as const,
+  };
+
+  it('passes the engine verdicts through unchanged in enforced mode', () => {
+    const blocked = abilityAddBlockedRefs(addBlocked, 'enforced');
+    expect(blocked.get('ability.magic_theory')).toBe('requires_virtue');
+    expect(blocked.get('ability.second_sight')).toBe('supernatural_requires_virtue');
+    expect(blocked.size).toBe(2);
+  });
+
+  it('is empty in advisory and silent mode, where violations only get reported', () => {
+    expect(abilityAddBlockedRefs(addBlocked, 'advisory').size).toBe(0);
+    expect(abilityAddBlockedRefs(addBlocked, 'silent').size).toBe(0);
+  });
+
+  it('is empty when the DTO has not loaded yet (undefined)', () => {
+    expect(abilityAddBlockedRefs(undefined, 'enforced').size).toBe(0);
+  });
+});
+
+describe('supernaturalFreeSlotsTooltip (F25)', () => {
+  const t = (key: string, args?: Record<string, string>) =>
+    key === 'ability-supernatural-free-slots' ? `${args?.used} of ${args?.total}` : key;
+
+  it('renders the used/total figures through the Fluent key', () => {
+    expect(supernaturalFreeSlotsTooltip(1, 0, t)).toBe('0 of 1');
+  });
+
+  it('is undefined before the DTO has finished loading (either figure missing)', () => {
+    expect(supernaturalFreeSlotsTooltip(undefined, 0, t)).toBeUndefined();
+    expect(supernaturalFreeSlotsTooltip(1, undefined, t)).toBeUndefined();
   });
 });
 

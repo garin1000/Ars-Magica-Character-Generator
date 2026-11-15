@@ -1040,6 +1040,16 @@ longevity-focus-placeholder = Worin das Ritual gipfelt
 # "Fertigkeit", nie "Fähigkeit": Ability ist im Glossar und im Regelwerk
 # durchgehend die Fertigkeit (Basisregeln.md:1065, :1067, :2315, :2872).
 ability-requires-virtue = Erfordert eine verleihende Tugend
+# Manual-test finding #25: Grund, warum eine akademische/arkane/Kampf-Fertigkeit
+# im Auswähler ausgegraut ist. `$category` ist bereits das lokalisierte Label
+# `ability-category-<id>` (Akademisch/Arkan/Kampf), prädikativ verwendet ("ist
+# { $category }") wie bei `issue-ability_category_requires_virtue` — niemals
+# ein roher Kategorie-Slug.
+ability-blocked-requires-virtue = Dies ist { $category } und erfordert eine Tugend, die den Zugang gewährt
+# Manual-test finding #25: Hover-Hinweis auf der Übernatürlich-Gruppenüberschrift
+# im Fertigkeiten-Auswähler, der die freien Plätze der Begabung direkt aus der
+# Engine zeigt.
+ability-supernatural-free-slots = Freie übernatürliche Plätze: { $used } von { $total } belegt
 # Nur für Screenreader: Text auf einer gewählten Fähigkeitszeile, auf die ein
 # Prüfhinweis mit Schweregrad „Fehler" zeigt (S7, full-audit a11y) — ergänzt ein
 # sichtbares Symbol, damit die Ungültigkeit nie allein über die Farbe vermittelt

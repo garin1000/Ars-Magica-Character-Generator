@@ -814,23 +814,14 @@ pub(crate) fn validate_supernatural_abilities(
             .into_iter()
             .map(|f| f.ability)
             .collect();
-    let mut uncovered: Vec<&Id> = entity
-        .ability_scores
-        .iter()
-        .filter(|a| {
-            ruleset
-                .abilities
-                .get(&a.ability)
-                .is_some_and(|ab| ab.category == crate::ability::AbilityCategory::Supernatural)
-        })
-        .map(|a| &a.ability)
-        .filter(|id| !floors.contains(*id))
-        .collect();
-    uncovered.sort();
-    uncovered.dedup();
-    // The first `free_total` uncovered abilities occupy the free Gift slot(s); the
-    // rest require a granting Virtue.
-    for ability in uncovered.into_iter().skip(usize::from(free_total)) {
+    let uncovered = held_uncovered_supernatural(entity, ruleset, &floors);
+    // The first `free_total` uncovered abilities (by sorted id) occupy the free
+    // Gift slot(s); the rest require a granting Virtue — `supernatural_gate_allows`
+    // is the SAME predicate `ability_add_verdicts` asks for a not-yet-bought entry.
+    for (index, ability) in uncovered.iter().enumerate() {
+        if supernatural_gate_allows(free_total, index, &floors, ability) {
+            continue;
+        }
         issues.push(ValidationIssue::error(
             ValidationIssue::CODE_SUPERNATURAL_ABILITY_REQUIRES_VIRTUE,
             // Fixable from either side, but the stored offending value is the

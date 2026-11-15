@@ -997,6 +997,15 @@ longevity-focus-label = Focus
 longevity-focus-placeholder = How the ritual culminates
 # Shown as the reason a Supernatural Ability is greyed in the picker.
 ability-requires-virtue = Requires a granting Virtue
+# Manual-test finding #25: shown as the reason an Academic/Arcane/Martial
+# Ability is greyed in the picker. `$category` is already the localized
+# `ability-category-<id>` label (Academic/Arcane/Martial), used predicatively
+# ("is { $category }") like `issue-ability_category_requires_virtue` — never a
+# raw category slug.
+ability-blocked-requires-virtue = This is { $category }, which requires a Virtue granting access
+# Manual-test finding #25: the Ability picker's Supernatural group-header
+# hover hint, showing the Gift's free-slot count straight off the engine.
+ability-supernatural-free-slots = Free Supernatural slots: { $used } of { $total } used
 # Screen-reader-only text on a selected Ability row an error-severity issue
 # points at (S7, full-audit a11y) — pairs with a visible glyph so the row's
 # invalidity is never colour-only (WCAG 1.4.1).

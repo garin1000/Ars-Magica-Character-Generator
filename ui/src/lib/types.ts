@@ -12,6 +12,11 @@ export type IssueSeverity = 'error' | 'warning';
 // (manual-test findings #2/#19, and `exceeds_cap` for #7/E2: a HARD
 // magnitude/category cap the pick would breach).
 export type VfAddBlockReason = 'forbidden_category' | 'prereq_not_met' | 'exceeds_cap';
+// Mirrors `arm_rules::validation::AbilityAddBlockReason` — why the Ability
+// picker's Add button refuses a catalogue Ability the entity has not yet
+// bought (manual-test findings #25): the category gate (Academic/Arcane/
+// Martial require a Virtue) or the Supernatural free-slot gate.
+export type AbilityAddBlockReason = 'requires_virtue' | 'supernatural_requires_virtue';
 
 // A phase of character creation (`CreationPhase`). Two things speak it: the
 // character type's ordered `creation_phases`, which the guided wizard walks, and
@@ -1256,7 +1261,10 @@ export interface EffectiveScores {
   confidence_score: number;
   confidence_points: number;
   // The Gift's free Supernatural-Ability slots (1 for a Gifted non-magus, else 0)
-  // and how many are used, so the ability picker greys unavailable ones.
+  // and how many are used — F25: the Available list's Supernatural group header
+  // shows this as a hover hint (`derive.ts::supernaturalFreeSlotsTooltip`), the
+  // same `headerTooltip` pattern the Spells tab's Te/Fo cap figure uses. The
+  // greying itself reads `ability_add_blocked` instead of re-deriving this.
   supernatural_free_total: number;
   supernatural_free_used: number;
   // Reputation grants the character's V/F confer (kind + score), so the UI only
@@ -1336,6 +1344,11 @@ export interface EffectiveScores {
   // picker's one engine verdict behind the Add button's Enforced-mode gate;
   // the frontend must not re-derive a category or prerequisite rule itself.
   vf_add_blocked?: Record<string, VfAddBlockReason>;
+  // Manual-test findings #25: every catalogue Ability this entity may not yet
+  // add, keyed by id, with why — absent means legal to add. The Ability
+  // picker's one engine verdict behind the Add button's Enforced-mode gate,
+  // the Ability twin of `vf_add_blocked`.
+  ability_add_blocked?: Record<string, AbilityAddBlockReason>;
 }
 
 // One selection's resolved D42 realm association. `fixed` means the book

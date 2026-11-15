@@ -12139,6 +12139,31 @@ Virtue or Flaw permitting this").
 - `effective/parameter_options.rs::ability_parameter_options` unions both
   halves — owning-at-all vs. funding-from-general is a funding question, not a
   picker one.
+- **manual-testing-findings-2026-11-15 #25 (E4).** The Ability picker now
+  refuses the Add button for a catalogue Ability the entity cannot currently
+  fund, the same way `vf_add_verdicts` already does for Virtues/Flaws:
+  Academic/Arcane/Martial Abilities require a Virtue (`ArMDE:2385`, restated at
+  `ArMDE:2462`), and Supernatural Abilities are gated per-Ability by the
+  Gift's one free slot or a granting Virtue (`ArMDE:2944`).
+  `validation/authorization.rs::ability_add_verdicts` is the Ability twin of
+  `vf_add_verdicts` — it shares its two gates with the validator rather than
+  re-deriving either: `validation/mod.rs::category_gate_allows` is the ONE
+  predicate both `validate_ability_authorization` (an already-bought entry)
+  and `ability_add_verdicts` (a catalogue entry, `parameter: None`) call, and
+  `validation/mod.rs::supernatural_gate_allows`/`held_uncovered_supernatural`
+  is the ONE pair both `validate_supernatural_abilities` and
+  `ability_add_verdicts` call. The one thing `ability_add_verdicts` adds on
+  top: a parameterized Ability (e.g. `(Dead Language)`) whose only
+  authorization is instance-scoped (Latin via `flaw.covenant_upbringing`,
+  `ArMDE:5938-5940`) still has *some* instance it may add, even though the
+  bare id — tested with no instance chosen yet — is not itself authorized
+  (`ability_has_any_authorized_instance`). `AbilityAddBlockReason::RequiresVirtue`/
+  `SupernaturalRequiresVirtue` is the verdict; `tests/ability_add_verdicts.rs`
+  pins both plus an agreement sweep over the shipped catalogue and every
+  character type. The frontend reads it off a new
+  `EffectiveScores.ability_add_blocked` DTO field (beside `vf_add_blocked`) in
+  Enforced mode only, via `AbilityTab.svelte::isDisabled`, which drops its own
+  TS-side `supernaturalLocked` re-derivation of the Supernatural half.
 
 **Data — 62 entries backfilled with an `ability_authorization` effect** (the
 verdict table's `docs/vf-audit/corrections.md` § 3.2/§ 3.2a "primary auth" +

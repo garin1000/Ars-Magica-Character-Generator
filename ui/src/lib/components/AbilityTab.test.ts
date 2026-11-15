@@ -372,6 +372,52 @@ describe('AbilityTab search box (S5)', () => {
   });
 });
 
+// Manual-test finding #25 (`docs/manual-testing-findings-2026-11-15.md`): in
+// Enforced mode the picker does not grey out a gated category (Academic,
+// Arcane, Martial, Supernatural) the character cannot currently fund. The
+// Available list must read `EffectiveScores.ability_add_blocked` straight off
+// the DTO, exactly like VirtueFlawTab already reads `vf_add_blocked` (#2/#19)
+// — never re-derive the authorization/Supernatural-free-slot rule itself.
+describe('AbilityTab disables an Add button the engine already refuses (F25)', () => {
+  function setAddBlocked(
+    blocked: Record<string, 'requires_virtue' | 'supernatural_requires_virtue'>,
+  ): void {
+    store.effective = {
+      ability_add_blocked: blocked,
+    } as unknown as EffectiveScores;
+  }
+
+  /** The Available list's `add-ability.parma_magica` button's opening tag. */
+  function addRow(body: string): string {
+    return /<button[^>]*data-testid="add-ability\.parma_magica"[^>]*>/.exec(body)![0];
+  }
+
+  it('disables the row for a requires_virtue verdict', () => {
+    setAddBlocked({ 'ability.parma_magica': 'requires_virtue' });
+    expect(addRow(html())).toContain('aria-disabled="true"');
+  });
+
+  it('disables the row for a supernatural_requires_virtue verdict', () => {
+    setAddBlocked({ 'ability.parma_magica': 'supernatural_requires_virtue' });
+    expect(addRow(html())).toContain('aria-disabled="true"');
+  });
+
+  it('leaves the row enabled when the engine reports no block', () => {
+    setAddBlocked({});
+    expect(addRow(html())).toContain('aria-disabled="false"');
+  });
+
+  it('stops blocking in advisory mode, unlike an already-selected row', () => {
+    setAddBlocked({ 'ability.parma_magica': 'requires_virtue' });
+    store.mode = 'advisory';
+    try {
+      expect(addRow(html())).toContain('aria-disabled="false"');
+    } finally {
+      store.mode = 'enforced';
+    }
+  });
+});
+
 // Issue 17: the Selected list is built from BOUGHT rows, so a Puissant Ability (or
 // a virtue-granted floor) whose target has no bought score had nothing to hang its
 // badge on — the character genuinely held Puissant Magic Theory and this tab said

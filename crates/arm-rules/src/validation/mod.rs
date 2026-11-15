@@ -11,15 +11,17 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
+use crate::ability::AbilityCategory;
 use crate::characteristics::Characteristic;
 use crate::completeness::{CompletenessReport, completeness};
+use crate::effective::AbilityAuthorizations;
 use crate::grant::{Grant, open_pick_satisfies};
 use crate::ruleset::Ruleset;
 use crate::types::{
-    AbilityFunding, CategoryCap, CategoryRule, CharacteristicDeltaCap, CreationPhase, Effect,
-    Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind, LoadoutState, Magnitude,
-    PREREQ_MAX_DEPTH, ParamType, ParameterDef, ParameterDomain, PhaseRule, PointItem, Prereq,
-    Realm, Selection, SelectionParamValue, ValidationMode,
+    AbilityFunding, AbilityParameterValue, CategoryCap, CategoryRule, CharacteristicDeltaCap,
+    CreationPhase, Effect, Entity, EntityKind, EntityTypeProfile, GiftPolicy, Id, ItemKind,
+    LoadoutState, Magnitude, PREREQ_MAX_DEPTH, ParamType, ParameterDef, ParameterDomain, PhaseRule,
+    PointItem, Prereq, Realm, Selection, SelectionParamValue, ValidationMode,
 };
 
 mod aging;
@@ -53,6 +55,7 @@ use selections::*;
 use warping::*;
 
 pub use aging::aging_error_issue;
+pub use authorization::{AbilityAddBlockReason, ability_add_verdicts};
 pub use balance::{Balance, PointCeilings, compute_balance, effective_point_ceilings};
 pub use life_stage::childhood_rejection_issues;
 pub use saga::{AgeInSagaYear, DEFAULT_SAGA_YEAR, age_in_saga_year, birth_year_in_saga_year};
@@ -1159,6 +1162,92 @@ impl ValidationIssue {
 /// Convenience: build an `args` map from `(name, Display value)` pairs.
 fn args<const N: usize>(pairs: [(&str, String); N]) -> BTreeMap<String, String> {
     pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect()
+}
+
+/// Whether `entity` may own/buy `ability` (in `category`, with `parameter`)
+/// under the Academic/Arcane/Martial category-gate rule (`ArMDE:2385`,
+/// restated at `ArMDE:2462`) — the ONE evaluation path shared by
+/// `authorization::validate_ability_authorization` (an already-bought entry,
+/// passing its own `parameter`) and `authorization::ability_add_verdicts` (a
+/// catalogue entry, `parameter: None`, plus its own widening for a
+/// parameterized Ability whose only authorization is instance-scoped — see
+/// that function). `gated`/`auth` are computed once by the caller's own pass
+/// over the entity and passed in, since a full sweep checks many Abilities
+/// against the same two facts.
+fn category_gate_allows(
+    gated: &BTreeSet<AbilityCategory>,
+    hermetically_trained: bool,
+    auth: &AbilityAuthorizations,
+    category: AbilityCategory,
+    ability: &Id,
+    parameter: Option<&AbilityParameterValue>,
+) -> bool {
+    if !gated.contains(&category) {
+        return true;
+    }
+    if hermetically_trained {
+        return true;
+    }
+    // D43: owning the Ability is legal under EITHER half — the same
+    // predicate, applied twice.
+    crate::effective::ability_is_authorized(
+        category,
+        ability,
+        parameter,
+        &auth.explicit_categories,
+        &auth.explicit_abilities,
+    ) || crate::effective::ability_is_authorized(
+        category,
+        ability,
+        parameter,
+        &auth.pool_categories,
+        &auth.pool_abilities,
+    )
+}
+
+/// The distinct Supernatural Abilities `entity` currently holds that no
+/// granting Virtue covers (a granting Virtue seeds an `ability_score_grant`
+/// floor, so it never consumes the Gift's free slot) — the ONE set shared by
+/// `scores::validate_supernatural_abilities` (which flags every one beyond
+/// the free allowance) and `authorization::ability_add_verdicts` (which only
+/// needs the COUNT, for a catalogue Ability that is not bought yet).
+fn held_uncovered_supernatural(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    floors: &BTreeSet<Id>,
+) -> BTreeSet<Id> {
+    entity
+        .ability_scores
+        .iter()
+        .filter(|a| {
+            ruleset
+                .ability(&a.ability)
+                .is_some_and(|ab| ab.category == AbilityCategory::Supernatural)
+        })
+        .map(|a| a.ability.clone())
+        .filter(|id| !floors.contains(id))
+        .collect()
+}
+
+/// Whether a Supernatural Ability is allowed under the Gift's free-slot rule
+/// (`ArMDE:2944`) — the ONE evaluation path shared by
+/// `scores::validate_supernatural_abilities` and
+/// `authorization::ability_add_verdicts`: covered by a granting Virtue's
+/// floor, or there is still room among the `free_total` free slots once
+/// `prior_uncovered_count` other uncovered instances are accounted for.
+/// `validate_supernatural_abilities` passes the SORTED POSITION of each
+/// already-held uncovered Ability (so the first `free_total`, by id, are free
+/// and the rest are flagged — deterministic by sorted id, unchanged from
+/// before this was split out); `ability_add_verdicts` passes the TOTAL held
+/// count, since a not-yet-bought catalogue entry has no position of its own —
+/// only whether a slot remains.
+fn supernatural_gate_allows(
+    free_total: u8,
+    prior_uncovered_count: usize,
+    floors: &BTreeSet<Id>,
+    ability: &Id,
+) -> bool {
+    floors.contains(ability) || prior_uncovered_count < usize::from(free_total)
 }
 
 /// The outcome of validating an entity: a flat list of issues, plus which of the

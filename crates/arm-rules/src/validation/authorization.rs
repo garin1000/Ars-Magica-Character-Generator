@@ -69,33 +69,21 @@ pub(crate) fn validate_ability_authorization(
     }
     // A Hermetically trained entity may buy the restricted categories with no
     // further Virtue.
-    if crate::effective::is_hermetically_trained(entity, ruleset, type_profile) {
-        return;
-    }
-
+    let hermetically_trained =
+        crate::effective::is_hermetically_trained(entity, ruleset, type_profile);
     let auth = crate::effective::ability_authorizations(entity, ruleset);
 
     for entry in &entity.ability_scores {
         let Some(ability) = ruleset.ability(&entry.ability) else {
             continue; // `unknown_ability` covers this.
         };
-        if !gated.contains(&ability.category) {
-            continue;
-        }
-        // D43: owning the Ability is legal under EITHER half — the same
-        // predicate, applied twice.
-        if crate::effective::ability_is_authorized(
+        if category_gate_allows(
+            gated,
+            hermetically_trained,
+            &auth,
             ability.category,
             &entry.ability,
             entry.parameter.as_ref(),
-            &auth.explicit_categories,
-            &auth.explicit_abilities,
-        ) || crate::effective::ability_is_authorized(
-            ability.category,
-            &entry.ability,
-            entry.parameter.as_ref(),
-            &auth.pool_categories,
-            &auth.pool_abilities,
         ) {
             continue;
         }
@@ -183,6 +171,111 @@ pub(crate) fn validate_academic_language(
         ]),
         None,
     ));
+}
+
+/// Why the Ability picker refuses to offer the Add button on a catalogue
+/// Ability the entity has not yet bought — the engine's one verdict behind
+/// that button's Enforced-mode gate (manual-test findings #25,
+/// `docs/manual-testing-findings-2026-11-15.md`), mirroring
+/// [`crate::validation::VfAddBlockReason`] for Virtues/Flaws.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AbilityAddBlockReason {
+    /// The Ability's category (Academic/Arcane/Martial) is in
+    /// `categories_requiring_virtue` and no held Virtue/pool authorizes it —
+    /// the not-yet-bought twin of
+    /// [`ValidationIssue::CODE_ABILITY_CATEGORY_REQUIRES_VIRTUE`].
+    RequiresVirtue,
+    /// The Ability is Supernatural, no granting Virtue covers it, and no free
+    /// Gift slot remains — the not-yet-bought twin of
+    /// [`ValidationIssue::CODE_SUPERNATURAL_ABILITY_REQUIRES_VIRTUE`].
+    SupernaturalRequiresVirtue,
+}
+
+/// Every catalogue Ability this entity may not yet add, with why — absent
+/// means legal to add right now. The Ability picker's one engine verdict
+/// behind the Add button's Enforced-mode gate (manual-test findings #25).
+///
+/// Shares its two gates with the validator rather than re-deriving either:
+/// the category gate is [`super::category_gate_allows`], the SAME function
+/// [`validate_ability_authorization`] calls per bought entry; the Supernatural
+/// gate is [`super::supernatural_gate_allows`]/[`super::held_uncovered_supernatural`],
+/// the SAME functions `validate_supernatural_abilities` calls. The one thing
+/// this function adds on top, which the validator has no need for: a
+/// parameterized Ability (e.g. `(Dead Language)`) whose only authorization is
+/// instance-scoped (Latin via `flaw.covenant_upbringing`) still has *some*
+/// instance it may add, even though the bare id — tested with `parameter:
+/// None`, since no instance is chosen yet — is not itself authorized.
+///
+/// Returns an empty map when `entity.type_id` resolves to no profile — there
+/// is no declared rule to resolve any Ability's legality against.
+pub fn ability_add_verdicts(
+    entity: &Entity,
+    ruleset: &Ruleset,
+) -> BTreeMap<Id, AbilityAddBlockReason> {
+    let Some(profile) = ruleset.type_profiles.get(&entity.type_id) else {
+        return BTreeMap::new();
+    };
+
+    let gated = ruleset.categories_requiring_virtue();
+    let hermetically_trained =
+        crate::effective::is_hermetically_trained(entity, ruleset, Some(profile));
+    let auth = crate::effective::ability_authorizations(entity, ruleset);
+
+    let free_total = crate::effective::supernatural_free_slots(entity, ruleset, profile).total;
+    let floors: BTreeSet<Id> = crate::effective::ability_score_floors(entity, ruleset)
+        .into_iter()
+        .map(|f| f.ability)
+        .collect();
+    let held_uncovered_count = held_uncovered_supernatural(entity, ruleset, &floors).len();
+
+    let mut blocked = BTreeMap::new();
+    for ability in ruleset.abilities() {
+        if ability.category == AbilityCategory::Supernatural {
+            if supernatural_gate_allows(free_total, held_uncovered_count, &floors, &ability.id) {
+                continue;
+            }
+            blocked.insert(
+                ability.id.clone(),
+                AbilityAddBlockReason::SupernaturalRequiresVirtue,
+            );
+            continue;
+        }
+
+        if category_gate_allows(
+            gated,
+            hermetically_trained,
+            &auth,
+            ability.category,
+            &ability.id,
+            None,
+        ) {
+            continue;
+        }
+        if ability.parameter.is_some() && ability_has_any_authorized_instance(&auth, &ability.id) {
+            continue;
+        }
+        blocked.insert(ability.id.clone(), AbilityAddBlockReason::RequiresVirtue);
+    }
+    blocked
+}
+
+/// Whether ANY authorization — explicit or pool, regardless of instance
+/// restriction — names `ability` at all, for [`ability_add_verdicts`]'s
+/// parameterized-Ability widening: an instance-scoped entry (Latin only)
+/// still means *some* instance of the Ability may be added, which
+/// [`crate::effective::ability_is_authorized`]'s exact-instance test (called
+/// with `parameter: None`, since no instance is chosen pre-pick) cannot see.
+/// Not shared with the validator, which always has a real bought `parameter`
+/// to test exactly instead.
+fn ability_has_any_authorized_instance(
+    auth: &crate::effective::AbilityAuthorizations,
+    ability: &Id,
+) -> bool {
+    auth.explicit_abilities
+        .iter()
+        .any(|a| a.ability == *ability)
+        || auth.pool_abilities.iter().any(|a| a.ability == *ability)
 }
 
 #[cfg(test)]

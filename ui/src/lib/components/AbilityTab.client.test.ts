@@ -507,13 +507,17 @@ describe('AbilityTab "+" on an unbought Virtue-granted row (R7, finding 24)', ()
   });
 });
 
-// R7 (b): the picker greys a Supernatural Ability with "requires a Virtue" unless
-// a Virtue grants it. A GRANTED Virtue counts too: Strong Faerie Blood grants the
-// Second Sight Virtue (`grants_selection`), Houses grant theirs, and the engine
-// reports both in `effective.granted_selections`.
-describe('AbilityTab picker counts granted Virtues (R7 b)', () => {
+// R7 (b), now engine-owned (manual-test finding #25): the picker greys a
+// Supernatural Ability per `EffectiveScores.ability_add_blocked` — which
+// already accounts for a GRANTED Virtue (Strong Faerie Blood's
+// `grants_selection`, a House's own grant), since `ability_add_verdicts`
+// shares `effective::ability_authorizations`' reading of `entity_grants` with
+// the validator. That authorization rule is pinned at the engine level
+// (`tests/ability_add_verdicts.rs::second_sight_grants_access_to_its_own_supernatural_ability`);
+// this block only proves the LIVE component reads the DTO field (AbilityTab's
+// own SSR suite already covers the static render + mode gating).
+describe('AbilityTab picker reads the engine Supernatural verdict (R7 b, F25)', () => {
   const SECOND_SIGHT = 'ability.second_sight';
-  const SECOND_SIGHT_VIRTUE = 'virtue.second_sight';
 
   function pickRow(): HTMLElement {
     const testid = `add-${SECOND_SIGHT}`;
@@ -531,30 +535,24 @@ describe('AbilityTab picker counts granted Virtues (R7 b)', () => {
       ...store.ruleset!.ruleset.ability_category_order,
       'supernatural',
     ];
-    store.ruleset!.ruleset.point_items = {
-      [SECOND_SIGHT_VIRTUE]: {
-        id: SECOND_SIGHT_VIRTUE,
-        kind: 'virtue',
-        magnitude: 'minor',
-        categories: ['supernatural'],
-        effects: [{ type: 'ability_score_grant', ability: SECOND_SIGHT, amount: 1 }],
-      },
-    } as unknown as LocalizedRuleset['ruleset']['point_items'];
     store.ruleset!.i18n = { ...store.ruleset!.i18n, [SECOND_SIGHT]: { name: 'Second Sight' } };
     store.entity.ability_scores = [];
     store.entity.selections = [];
   });
 
-  it('greys Second Sight when nothing grants it (baseline)', () => {
-    store.effective = { ability_bonuses: [], granted_selections: [] } as unknown as EffectiveScores;
+  it('greys Second Sight when the engine verdict blocks it', () => {
+    store.effective = {
+      ability_bonuses: [],
+      ability_add_blocked: { [SECOND_SIGHT]: 'supernatural_requires_virtue' },
+    } as unknown as EffectiveScores;
     flushSync();
     expect(pickRow().getAttribute('aria-disabled')).toBe('true');
   });
 
-  it('does not grey Second Sight when a granted Virtue confers it', () => {
+  it('does not grey Second Sight when the engine verdict reports no block', () => {
     store.effective = {
       ability_bonuses: [],
-      granted_selections: [{ ref: SECOND_SIGHT_VIRTUE }],
+      ability_add_blocked: {},
     } as unknown as EffectiveScores;
     flushSync();
     expect(pickRow().getAttribute('aria-disabled')).toBe('false');

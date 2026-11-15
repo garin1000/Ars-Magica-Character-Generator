@@ -3,6 +3,7 @@
 
 import type {
   Ability,
+  AbilityAddBlockReason,
   AbilityBonus,
   AbilityCategory,
   AbilityFloor,
@@ -1477,6 +1478,43 @@ export function addBlockedRefs(
 ): Map<string, VfAddBlockReason> {
   if (mode !== 'enforced' || !addBlocked) return new Map();
   return new Map(Object.entries(addBlocked));
+}
+
+/**
+ * Catalogue Ability ids the Add button must refuse right now, with why — the
+ * Ability twin of {@link addBlockedRefs} (manual-test finding #25: a companion
+ * with no authorizing Virtue was offered Arcane/Academic/Martial Abilities,
+ * and a Supernatural Ability stayed offered past the Gift's one free slot). A
+ * dumb passthrough of `EffectiveScores.ability_add_blocked`, never a
+ * re-implementation of the category-gate/Supernatural-free-slot rule behind
+ * it — `AbilityTab.svelte` used to re-derive the Supernatural half itself
+ * (`supernaturalLocked`/`grantedSupernatural`/`freeSupernaturalSlot`), which
+ * is exactly the duplicate logic the finding named. Same mode gate as
+ * `addBlockedRefs`: only `enforced` blocks.
+ */
+export function abilityAddBlockedRefs(
+  addBlocked: Record<string, AbilityAddBlockReason> | undefined,
+  mode: ValidationMode,
+): Map<string, AbilityAddBlockReason> {
+  if (mode !== 'enforced' || !addBlocked) return new Map();
+  return new Map(Object.entries(addBlocked));
+}
+
+/**
+ * The Ability picker's Supernatural group-header hover hint (F25): how many
+ * of the Gift's free Supernatural-Ability slots remain, straight off the
+ * engine's own count (`EffectiveScores.supernatural_free_total`/`_used`) —
+ * mirrors `spellGroupCapTooltip`'s pattern (N1) for the Spells tab's Te/Fo
+ * cap figure. `undefined` before the ruleset/entity has finished loading (no
+ * `EffectiveScores` yet), which is as good as "nothing to show".
+ */
+export function supernaturalFreeSlotsTooltip(
+  total: number | undefined,
+  used: number | undefined,
+  t: Translate,
+): string | undefined {
+  if (total == null || used == null) return undefined;
+  return t('ability-supernatural-free-slots', { used: String(used), total: String(total) });
 }
 
 /**

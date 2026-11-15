@@ -1,6 +1,7 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import {
+    abilityAddBlockedRefs,
     abilityDisplayName,
     abilityFloor,
     abilityLabel,
@@ -19,6 +20,7 @@
     rowWarningText,
     sameParam,
     scoreSourceLines,
+    supernaturalFreeSlotsTooltip,
     unboughtModifiedAbilities,
     UNBOUGHT_ROW_INDEX,
     type IndexedAbilityScore,
@@ -56,36 +58,36 @@
       .map((g) => ({
         key: g.category,
         header: store.t(`ability-category-${g.category}`),
+        // F25: the Supernatural group alone carries a hover hint with the
+        // Gift's free-slot count — the same `headerTooltip` pattern the
+        // Spells tab's Te/Fo cap figure uses (N1). Every other group's hint
+        // stays `undefined` (no tabindex, out of the tab order, as before).
+        headerTooltip:
+          g.category === 'supernatural'
+            ? supernaturalFreeSlotsTooltip(
+                store.effective?.supernatural_free_total,
+                store.effective?.supernatural_free_used,
+                store.t,
+              )
+            : undefined,
         items: filterAbilities(rs, g.abilities, abilityFilter, store.t),
       }))
       .filter((g) => g.items.length > 0);
   });
   const selected = $derived(new Set((store.entity.ability_scores ?? []).map((a) => a.ability)));
 
-  // Supernatural Abilities are unlocked by a granting Virtue (one whose
-  // `ability_score_grant` effect targets them) or by the Gift's one free slot.
-  // The picker greys any Supernatural Ability the character can't currently take,
-  // with a "requires a Virtue" reason. "Granted" is read straight from the
-  // selected virtues (synchronous, like `selected`) so a just-added granting
-  // Virtue enables its Ability without waiting for the async effective scores —
-  // plus the Virtues the engine reports as granted (a House's, or the Second
-  // Sight that Strong Faerie Blood grants), which only it can resolve (R7 b).
-  const grantedSupernatural = $derived.by(() => {
-    const granted = new Set<string>();
-    const items = store.ruleset?.ruleset.point_items ?? {};
-    for (const selection of [
-      ...(store.entity.selections ?? []),
-      ...(store.effective?.granted_selections ?? []),
-    ]) {
-      for (const effect of items[selection.ref]?.effects ?? []) {
-        if (effect.type === 'ability_score_grant') granted.add(effect.ability);
-      }
-    }
-    return granted;
-  });
-  const freeSupernaturalSlot = $derived(
-    (store.effective?.supernatural_free_used ?? 0) <
-      (store.effective?.supernatural_free_total ?? 0),
+  // Manual-test finding #25: items the engine's own `ability_add_verdicts`
+  // already knows are illegal to add for this entity right now (an
+  // Academic/Arcane/Martial category gate, or the Supernatural free-slot
+  // gate) — read straight off the DTO, never re-derived here. This replaces
+  // the TS-side `supernaturalLocked`/`grantedSupernatural`/
+  // `freeSupernaturalSlot` the finding named as a duplicate of engine logic.
+  // Gated by `ValidationMode` exactly like `VirtueFlawTab`'s own
+  // `addBlocked`: advisory/silent leave the pick open and let the engine's
+  // `ability_category_requires_virtue`/`supernatural_ability_requires_virtue`
+  // issues report the violation once added instead.
+  const addBlocked = $derived(
+    abilityAddBlockedRefs(store.effective?.ability_add_blocked, store.mode),
   );
 
   // A parameterized ability (e.g. (Area) Lore) can be selected repeatedly; a plain
@@ -94,25 +96,8 @@
     return !!store.ruleset?.ruleset.abilities?.[abilityId]?.parameter;
   }
 
-  function isSupernatural(abilityId: string): boolean {
-    return store.ruleset?.ruleset.abilities?.[abilityId]?.category === 'supernatural';
-  }
-
-  // A Supernatural Ability with no granting Virtue and no free Gift slot cannot
-  // be taken right now.
-  function supernaturalLocked(abilityId: string): boolean {
-    return (
-      isSupernatural(abilityId) &&
-      !grantedSupernatural.has(abilityId) &&
-      !selected.has(abilityId) &&
-      !freeSupernaturalSlot
-    );
-  }
-
   function isDisabled(abilityId: string): boolean {
-    return (
-      (!isParameterized(abilityId) && selected.has(abilityId)) || supernaturalLocked(abilityId)
-    );
+    return (!isParameterized(abilityId) && selected.has(abilityId)) || addBlocked.has(abilityId);
   }
 
   function sourceName(abilityId: string): string {
@@ -130,16 +115,38 @@
   // each row a single compact line.
   function sourceTip(abilityId: string): TooltipContent {
     const entry = store.ruleset?.i18n[abilityId];
-    // A locked Supernatural Ability explains WHY above its normal description,
-    // not instead of it.
-    return withReason(
-      {
-        text: entry?.description ?? undefined,
-        listLabel: store.t('ability-specialties-label'),
-        list: entry?.specialties ?? [],
-      },
-      supernaturalLocked(abilityId) ? store.t('ability-requires-virtue') : undefined,
-    );
+    const base = {
+      text: entry?.description ?? undefined,
+      listLabel: store.t('ability-specialties-label'),
+      list: entry?.specialties ?? [],
+    };
+    // An already-selected non-parameterized row is disabled because it is
+    // already owned, not because the engine refuses it — same precedence
+    // `isDisabled` gives that case, so the tooltip never shows a stale
+    // "requires a Virtue" reason for an Ability the character already holds.
+    if (!isParameterized(abilityId) && selected.has(abilityId)) return base;
+    // A blocked row explains WHY above its normal description, not instead of it.
+    return withReason(base, blockedReason(abilityId));
+  }
+
+  // The engine's add-verdict reason, localized. `requires_virtue` names the
+  // gated category (Academic/Arcane/Martial) through the SAME
+  // `ability-category-<id>` label the picker's own filter/group headers use —
+  // never the raw category slug. `supernatural_requires_virtue` reuses the
+  // existing generic "requires a granting Virtue" text, unchanged from before
+  // this read the engine instead of re-deriving it.
+  function blockedReason(abilityId: string): string | undefined {
+    const reason = addBlocked.get(abilityId);
+    if (reason === 'supernatural_requires_virtue') return store.t('ability-requires-virtue');
+    if (reason === 'requires_virtue') {
+      const category = store.ruleset?.ruleset.abilities?.[abilityId]?.category;
+      return category
+        ? store.t('ability-blocked-requires-virtue', {
+            category: store.t(`ability-category-${category}`),
+          })
+        : undefined;
+    }
+    return undefined;
   }
 
   // === Selected side ===

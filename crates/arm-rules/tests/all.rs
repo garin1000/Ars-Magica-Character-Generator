@@ -13,6 +13,7 @@
 mod citation_support;
 
 mod a1_max_age;
+mod ability_add_verdicts;
 mod ability_category_line;
 mod ability_grant_summaries;
 mod ability_text_facts;

@@ -11,12 +11,13 @@
 use std::collections::BTreeMap;
 
 use arm_rules::{
-    AbilityBonus, AbilityBonusSources, AbilityFloor, AbilityParameterOptions, ArtBonus,
-    ArtBonusSources, Characteristic, CharacteristicBonus, Confidence, CreationPhase, Entity,
-    EntityTypeProfile, Grant, Id, LifeStageBudget, LifeTimeline, MagusMinimumAbility, MightScore,
-    PointCeilings, Realm, RealmAssociation, ReputationType, RestrictedXpPool, Ruleset, Selection,
-    SpellCap, SpellLevelCap, SupernaturalFreeSlots, VfAddBlockReason, ability_bonus_sources,
-    ability_bonuses, ability_parameter_options, ability_score_floors, aging_schedule, aging_total,
+    AbilityAddBlockReason, AbilityBonus, AbilityBonusSources, AbilityFloor,
+    AbilityParameterOptions, ArtBonus, ArtBonusSources, Characteristic, CharacteristicBonus,
+    Confidence, CreationPhase, Entity, EntityTypeProfile, Grant, Id, LifeStageBudget, LifeTimeline,
+    MagusMinimumAbility, MightScore, PointCeilings, Realm, RealmAssociation, ReputationType,
+    RestrictedXpPool, Ruleset, Selection, SpellCap, SpellLevelCap, SupernaturalFreeSlots,
+    VfAddBlockReason, ability_add_verdicts, ability_bonus_sources, ability_bonuses,
+    ability_parameter_options, ability_score_floors, aging_schedule, aging_total,
     art_bonus_sources, art_bonuses, characteristic_aging_drops, characteristic_bonuses,
     characteristic_caps, characteristic_floors, characteristic_points_granted,
     checked_xp_allocation, compute_balance, confidence, decrepitude_score,
@@ -324,6 +325,12 @@ pub struct EffectiveScores {
     /// companion); the frontend must not re-derive this from category/
     /// prerequisite data itself.
     pub vf_add_blocked: BTreeMap<Id, VfAddBlockReason>,
+    /// Every catalogue Ability this entity may not yet add, with why —
+    /// absent means legal to add. The Ability twin of `vf_add_blocked`
+    /// (manual-test findings #25): a companion with no authorizing Virtue is
+    /// offered Arcane/Academic/Martial Abilities, and a Supernatural Ability
+    /// stays offered past the Gift's one free slot.
+    pub ability_add_blocked: BTreeMap<Id, AbilityAddBlockReason>,
 }
 
 /// One selection's resolved D42 realm, for the V/F row. `fixed` is `true`
@@ -979,6 +986,7 @@ pub fn effective_scores_loaded(entity: &Entity, ruleset: &Ruleset) -> EffectiveS
         granted_realm_associations,
 
         vf_add_blocked: vf_add_verdicts(entity, ruleset),
+        ability_add_blocked: ability_add_verdicts(entity, ruleset),
     }
 }
 

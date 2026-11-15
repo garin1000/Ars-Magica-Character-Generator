@@ -129,7 +129,8 @@ pub use types::{
     ValidationMode,
 };
 pub use validation::{
-    AgeInSagaYear, Balance, DEFAULT_SAGA_YEAR, IssueSeverity, PointCeilings, ValidationIssue,
-    ValidationResult, VfAddBlockReason, age_in_saga_year, birth_year_in_saga_year, compute_balance,
-    effective_point_ceilings, phases_in_force, validate, vf_add_verdicts,
+    AbilityAddBlockReason, AgeInSagaYear, Balance, DEFAULT_SAGA_YEAR, IssueSeverity, PointCeilings,
+    ValidationIssue, ValidationResult, VfAddBlockReason, ability_add_verdicts, age_in_saga_year,
+    birth_year_in_saga_year, compute_balance, effective_point_ceilings, phases_in_force, validate,
+    vf_add_verdicts,
 };

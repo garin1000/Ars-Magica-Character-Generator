@@ -8209,6 +8209,11 @@
     "next_line": "*Minor, Hermetic, Tainted*<br>",
     "heading": "#### Corrupted Arts"
   },
+  "ArMDE:5938-5940": {
+    "excerpt": "#### Covenant Upbringing",
+    "next_line": "*Minor, Personality*<br>",
+    "heading": "#### Corrupted Spells"
+  },
   "ArMDE:5940": {
     "excerpt": "You were raised in a large, old covenant that has little contact with the outsid",
     "next_line": "#### Craving for Travel",
