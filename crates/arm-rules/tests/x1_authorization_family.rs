@@ -16,6 +16,7 @@
 //! total; every assertion is per-entry presence/shape.
 
 use arm_rules::AbilityCategory;
+use arm_rules::LifeStagePlan;
 use arm_rules::ruleset::{Ruleset, RulesetSources};
 use arm_rules::types::*;
 use arm_rules::validation::{ValidationIssue, ValidationResult, validate};
@@ -543,6 +544,82 @@ fn well_traveled_carries_its_fifty_point_pool() {
         item.effects.contains(&expected),
         "virtue.well_traveled: expected the 50-point pool, got {:?}",
         item.effects
+    );
+}
+
+/// **F28 (manual-testing-findings-2026-11-15 #28), real-ruleset regression
+/// lock.** Norbert's companion: age 44, Wealthy, Well-Traveled, an Athletic
+/// Childhood (Athletics 2, Brawl 2, Native Language 5, Swim 2 —
+/// `ArMDE:2454`). Native Language (German) 5 costs 75 xp, funded entirely by
+/// the childhood native-language block (`ArMDE:2448`); Athletics/Brawl/Swim
+/// (15 each, 45 total) exactly exhaust the childhood spread block. Well-Traveled's
+/// 50-point grant (`ArMDE:5314`) also covers living languages, so it is
+/// eligible for the same German spend the native block already fully funds —
+/// it must stay untouched, since the narrower (instance-scoped) native block
+/// drains first. So `restricted_xp_unspent` must fire exactly once, for
+/// Well-Traveled, and never for the native-language origin.
+#[test]
+fn well_traveled_never_funds_the_native_language_before_it_is_full() {
+    let rs = load_ruleset();
+    let mut companion = entity(
+        "companion",
+        vec![
+            Selection::new(Id::new("virtue.wealthy")),
+            Selection::new(Id::new("virtue.well_traveled")),
+        ],
+    );
+    companion.age = Some(44);
+    companion.ability_funding = AbilityFunding::LifeStages;
+    companion.life_stages = Some(LifeStagePlan {
+        native_language: Some("German".into()),
+        ..LifeStagePlan::default()
+    });
+    companion.ability_scores = vec![
+        score("ability.athletics", 2),
+        score("ability.brawl", 2),
+        {
+            let mut german = score("ability.living_language", 5);
+            german.parameter = Some(AbilityParameterValue::text("German"));
+            german
+        },
+        score("ability.swim", 2),
+    ];
+
+    let result = validate(&companion, &rs);
+    let unspent: Vec<&ValidationIssue> = result
+        .issues
+        .iter()
+        .filter(|i| i.code == ValidationIssue::CODE_RESTRICTED_XP_UNSPENT)
+        .collect();
+
+    assert!(
+        !unspent
+            .iter()
+            .any(
+                |i| i.args.get("origin_kind").map(String::as_str) == Some("life_stage")
+                    && i.args.get("origin").map(String::as_str)
+                        == Some("childhood_native_language")
+            ),
+        "the native-language block must not report unspent xp: {unspent:?}"
+    );
+    assert_eq!(
+        unspent.len(),
+        1,
+        "exactly one restricted_xp_unspent, for Well-Traveled: {unspent:?}"
+    );
+    let well_traveled = unspent[0];
+    assert_eq!(
+        well_traveled.args.get("origin_kind").map(String::as_str),
+        Some("item")
+    );
+    assert_eq!(
+        well_traveled.args.get("origin").map(String::as_str),
+        Some("virtue.well_traveled")
+    );
+    assert_eq!(
+        well_traveled.args.get("unspent").map(String::as_str),
+        Some("50"),
+        "Well-Traveled's full 50 points are now correctly unspent: {well_traveled:?}"
     );
 }
 

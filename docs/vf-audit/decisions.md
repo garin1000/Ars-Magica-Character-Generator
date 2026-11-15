@@ -3972,3 +3972,17 @@ level to both caps: within the pre-aging one, it raises the new
 `spell_level_exceeds_cap_due_to_aging` (Warning); otherwise the existing
 `spell_level_exceeds_cap` (Error), unchanged. Tests:
 `crates/arm-rules/tests/spell_level_cap_aging_warning.rs`.
+
+## D93 — fix round for the manual test of 2026-11-15 (Norbert, 2026-11-15)
+
+**D93.1 — the narrowest restricted XP pool drains first** (findings #28). The
+flow solve opened every restricted pool at once and let node order break ties,
+so Well-Traveled (`ArMDE:5314`) paid for the native language ahead of the
+75-XP native-language block (`ArMDE:2448`), wasting that block; the same tie
+let Ineslemen lose to Arcane Lore. Phase 1 of
+`effective/xp.rs::two_phase_max_flow` now opens restricted pools one at a time
+in order of intrinsic scope (instance-only pools first, then by the number of
+catalogue Abilities covered, then pool index). The total funded is unchanged;
+only which pool pays changes. Tests: `effective.rs` (three pool-order cases),
+`tests/x1_authorization_family.rs`, `tests/e1_restricted_pool_overlap_sweep.rs`
+(every overlapping pair in the shipped ruleset).

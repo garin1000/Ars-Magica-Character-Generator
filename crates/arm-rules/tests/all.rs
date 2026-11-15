@@ -52,6 +52,7 @@ mod data_integrity;
 mod de_quote_pairs;
 mod de_summary_terms;
 mod de_vf_names;
+mod e1_restricted_pool_overlap_sweep;
 mod enchanting_ability_label;
 mod equipment_table_row;
 mod export_golden;

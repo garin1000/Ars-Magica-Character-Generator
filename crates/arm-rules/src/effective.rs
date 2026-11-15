@@ -3703,7 +3703,13 @@ mod tests {
           { "id": "flaw.test_church_upbringing", "kind": "flaw", "classification": "creation_effect",
             "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
             "effects": [{ "type": "restricted_ability_xp", "amount": 25, "from_normal_budget": true,
-                          "abilities": ["ability.artes_liberales"] }] }
+                          "abilities": ["ability.artes_liberales"] }] },
+          { "id": "virtue.test_well_traveled", "kind": "virtue", "classification": "creation_effect",
+            "magnitude": "minor", "categories": ["general"], "entity_kinds": ["character"],
+            "effects": [{ "type": "restricted_ability_xp", "amount": 50,
+                          "abilities": ["ability.area_lore", "ability.bargain", "ability.carouse",
+                                        "ability.charm", "ability.etiquette", "ability.folk_ken",
+                                        "ability.guile", "ability.living_language"] }] }
         ]"#;
         let types = r#"[
           { "id": "companion", "budget": { "virtue_points": 10, "flaw_points": 10 },
@@ -3724,9 +3730,16 @@ mod tests {
           ],
           "categories_requiring_virtue": ["academic", "arcane", "martial"],
           "abilities": [
+            { "id": "ability.area_lore", "category": "general" },
             { "id": "ability.artes_liberales", "category": "academic" },
+            { "id": "ability.bargain", "category": "general" },
+            { "id": "ability.carouse", "category": "general" },
+            { "id": "ability.charm", "category": "general" },
             { "id": "ability.concentration", "category": "general" },
             { "id": "ability.dead_language", "category": "academic", "parameter": "language" },
+            { "id": "ability.etiquette", "category": "general" },
+            { "id": "ability.folk_ken", "category": "general" },
+            { "id": "ability.guile", "category": "general" },
             { "id": "ability.living_language", "category": "general", "parameter": "language" },
             { "id": "ability.magic_theory", "category": "arcane" },
             { "id": "ability.parma_magica", "category": "arcane" },
@@ -3772,7 +3785,7 @@ mod tests {
             "native_language_ability": "ability.living_language",
             "native_language_xp": 75,
             "spread_xp": 45,
-            "spread_abilities": ["ability.living_language", "ability.swim"]
+            "spread_abilities": ["ability.living_language", "ability.swim", "ability.charm"]
           },
           "later_life": { "xp_per_year": 15 },
           "post_apprenticeship": {
@@ -3949,6 +3962,133 @@ mod tests {
         assert_eq!(allocation.total_demand, 150);
         assert_eq!(allocation.max_flow, 150);
         assert_eq!(allocation.general_used, 30, "75 − 45 comes from later life");
+    }
+
+    /// Finds a restricted pool by its origin item id — used by the F28 tests
+    /// below to read `virtue.test_well_traveled`'s own pool out of the
+    /// allocation, alongside the childhood blocks `later_life_pool` already
+    /// reads by life-stage block.
+    fn item_pool<'a>(allocation: &'a XpAllocation, item: &str) -> Option<&'a RestrictedXpPool> {
+        allocation.restricted.iter().find(|p| {
+            matches!(&p.origin, XpPoolOrigin::Item { item: granting } if *granting == Id::new(item))
+        })
+    }
+
+    /// Finds a restricted pool by its life-stage block — the `ChildhoodNativeLanguage`/
+    /// `ChildhoodSpread` sibling of [`item_pool`] and `later_life_pool`.
+    fn life_stage_pool(
+        allocation: &XpAllocation,
+        block: LifeStageBlock,
+    ) -> Option<&RestrictedXpPool> {
+        allocation
+            .restricted
+            .iter()
+            .find(|p| p.origin == XpPoolOrigin::LifeStage { block })
+    }
+
+    /// **F28 (manual-testing-findings-2026-11-15 #28).** The native-language
+    /// block is the NARROWEST pool that can fund Native Language 5 (German, 75
+    /// xp) — it covers only that one instance, where Well-Traveled's 50-point
+    /// grant covers EVERY living language, German included (`ArMDE:5314`). The
+    /// narrowest restricted pool must drain first (`ArMDE:2448`), so the
+    /// native block must fund the whole 75 and Well-Traveled must stay
+    /// untouched — never the reverse, which strands the native block's own
+    /// capacity for a spend nothing else needs it for.
+    ///
+    /// Before the tiered fix, `two_phase_max_flow`'s single combined solve let
+    /// `max_flow`'s node-index tie-break decide instead: `virtue.test_well_traveled`
+    /// sits at flow-pool index 0 (`restricted_ability_xp_pools` runs before the
+    /// childhood pools in `build_flow_pools`), so the first augmenting path
+    /// drained IT first — 50 of German's 75, leaving the native block to cover
+    /// only the remaining 25 and reporting 50 native-language xp wasted.
+    #[test]
+    fn well_traveled_never_outcompetes_the_native_language_block() {
+        let rs = life_stage_ruleset();
+        let mut entity = planned_companion();
+        entity.selections = vec![Selection::new(Id::new("virtue.test_well_traveled"))];
+        let allocation = xp_allocation(&entity, &rs);
+
+        assert_eq!(allocation.total_demand, 75, "Native Language 5 alone");
+        assert_eq!(allocation.max_flow, 75, "fully funded");
+        let native = life_stage_pool(&allocation, LifeStageBlock::ChildhoodNativeLanguage)
+            .expect("the native-language block exists");
+        assert_eq!(native.used, 75, "the native block pays for all of it");
+        let well_traveled = item_pool(&allocation, "virtue.test_well_traveled")
+            .expect("Well-Traveled's pool exists");
+        assert_eq!(
+            well_traveled.used, 0,
+            "Well-Traveled must stay untouched while the narrower native block has room"
+        );
+    }
+
+    /// **F28, the overlap case.** Charm is eligible for BOTH the childhood
+    /// spread pool (3 abilities in this fixture: Living Language, Swim, Charm)
+    /// and Well-Traveled (8 abilities, `ArMDE:5314`) — the spread pool is the
+    /// NARROWER of the two, so it must drain first (`ArMDE:2448`) rather than
+    /// Well-Traveled's broader grant spending in its place. No native language
+    /// is bought here, so the native-language block never enters the
+    /// picture — this isolates the tier-2 ordering (narrowest-by-ability-count)
+    /// from tier-1's instance-only rule, which the previous test already pins.
+    #[test]
+    fn the_narrower_spread_pool_outcompetes_well_traveled_for_an_overlapping_ability() {
+        let rs = life_stage_ruleset();
+        let mut entity = planned_companion();
+        entity.ability_scores = vec![AbilityScore::new(Id::new("ability.charm"), 3)]; // 30 xp
+        entity.selections = vec![Selection::new(Id::new("virtue.test_well_traveled"))];
+        let allocation = xp_allocation(&entity, &rs);
+
+        assert_eq!(allocation.total_demand, 30, "Charm 3 alone");
+        assert_eq!(allocation.max_flow, 30, "fully funded");
+        let spread = life_stage_pool(&allocation, LifeStageBlock::ChildhoodSpread)
+            .expect("the spread block exists");
+        assert_eq!(spread.used, 30, "the narrower spread pool pays for Charm");
+        let well_traveled = item_pool(&allocation, "virtue.test_well_traveled")
+            .expect("Well-Traveled's pool exists");
+        assert_eq!(
+            well_traveled.used, 0,
+            "the broader Well-Traveled grant must not spend where the narrower spread pool could"
+        );
+    }
+
+    /// **F28 invariant, on a mixed fixture.** German (native-only), Swim and
+    /// Charm (both spread-eligible) are spent together with Well-Traveled
+    /// held: no restricted pool may keep unused capacity while a strictly
+    /// broader pool funds a spend it covers. The native block (narrowest:
+    /// one instance) pays the whole 75 for German; the spread pool (next
+    /// narrowest: 3 abilities) pays its own 30 for Swim+Charm, with 15 left
+    /// over since nothing else needs it; Well-Traveled (broadest: 8
+    /// abilities) never touches a spend either narrower pool already covers,
+    /// so it stays fully unspent even though it is eligible for both German
+    /// and Charm.
+    #[test]
+    fn no_restricted_pool_is_stranded_while_a_broader_pool_spends_in_its_place() {
+        let rs = life_stage_ruleset();
+        let mut entity = planned_companion(); // Native Language (German) 5, 75 xp
+        entity
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.swim"), 2)); // 15 xp
+        entity
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.charm"), 2)); // 15 xp
+        entity.selections = vec![Selection::new(Id::new("virtue.test_well_traveled"))];
+        let allocation = xp_allocation(&entity, &rs);
+
+        assert_eq!(allocation.total_demand, 105, "75 + 15 + 15");
+        assert_eq!(allocation.max_flow, 105, "fully funded");
+        assert_eq!(allocation.general_used, 0, "later life is never needed");
+
+        let native = life_stage_pool(&allocation, LifeStageBlock::ChildhoodNativeLanguage)
+            .expect("the native-language block exists");
+        assert_eq!(native.used, 75, "German, fully");
+        let spread = life_stage_pool(&allocation, LifeStageBlock::ChildhoodSpread)
+            .expect("the spread block exists");
+        assert_eq!(spread.used, 30, "Swim + Charm, with 15 left unneeded");
+        let well_traveled = item_pool(&allocation, "virtue.test_well_traveled")
+            .expect("Well-Traveled's pool exists");
+        assert_eq!(
+            well_traveled.used, 0,
+            "narrower pools covered everything eligible; the broadest pool is never stranded-around"
+        );
     }
 
     /// Affinity's discount applies to a childhood-funded Ability exactly as it does

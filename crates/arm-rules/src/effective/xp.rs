@@ -1062,6 +1062,19 @@ fn pool_covers(eligibility: &PoolEligibility, spend: &Spend) -> bool {
 /// validation layer rejects a hostile save with a structured issue *before*
 /// ever calling `xp_allocation`, and this `assert!` remains the unbypassable
 /// backstop for any caller that skips validation.
+///
+/// D93.1/E1's tiered phase 1 ([`tiered_pool_order`], `two_phase_max_flow`)
+/// adds up to `R` extra `max_flow` calls — one per restricted pool, as each
+/// one's source edge opens — on top of the roughly-one-per-spend calls phase
+/// 1 already made. Each such call is bounded by the same `O(n)`
+/// augmenting-BFS/`O(n)`-per-BFS cost as any other `max_flow` call here, so
+/// phase 1 alone is `O(R·n²)` worst case. Since `R ≤ n` by construction
+/// (`FlowGraphLayout::n` is `3 + r + s`), this stays inside the `O(n^3)`
+/// bound the measurements above were taken against — a larger constant
+/// factor, not a new growth rate — but those measurements predate this
+/// change and were not retaken for it; an entity whose `flow_pools` (not just
+/// its spends) make up most of `n` is now also worth measuring, not only the
+/// spends-heavy shape `rs_with_dead_pools` targets.
 pub(crate) const MAX_XP_SOLVE_NODES: usize = 1024;
 
 /// The counts behind the flow-solve node total [`xp_allocation`] would need for
@@ -1751,8 +1764,14 @@ pub(crate) fn xp_allocation(entity: &Entity, ruleset: &Ruleset) -> XpAllocation 
         .fold(general_pool, |sum, pool| sum.saturating_add(pool.amount));
 
     let (layout, mut cap, deferred_edges) = build_capacity_matrix(&flow_pools, &spends);
-    let (max_flow, general_used) =
-        two_phase_max_flow(&layout, general_pool, &deferred_edges, &mut cap);
+    let (max_flow, general_used) = two_phase_max_flow(
+        ruleset,
+        &flow_pools,
+        &layout,
+        general_pool,
+        &deferred_edges,
+        &mut cap,
+    );
     let restricted = assemble_restricted_pools(&layout, &flow_pools, &cap);
 
     XpAllocation {
@@ -1941,9 +1960,11 @@ impl FlowGraphLayout {
 }
 
 /// Builds the flow graph's initial residual-capacity matrix — sub-check 2 of
-/// [`xp_allocation`]. `cap[u][v]` is the capacity of edge `u → v`: every pool
-/// from the source, every spend to the sink, the general pool to every spend,
-/// and each restricted pool to the spends it [`pool_covers`].
+/// [`xp_allocation`]. `cap[u][v]` is the capacity of edge `u → v`: every spend
+/// to the sink, the general pool to every spend, and each restricted pool to
+/// the spends it [`pool_covers`]. A restricted pool's own SOURCE edge is left
+/// at 0 here — [`two_phase_max_flow`]'s tiered phase 1 opens those, one at a
+/// time (D93.1/E1).
 ///
 /// # Panics
 /// Panics if the graph would need more than [`MAX_XP_SOLVE_NODES`] nodes.
@@ -2024,10 +2045,19 @@ fn build_capacity_matrix(
     // authorization-widened, gated scope) start CLOSED here — they open only
     // in `two_phase_max_flow`'s third phase, after the general pool has
     // already been tried. See [`FlowPool::deferred`]'s own doc comment.
+    //
+    // D93.1/E1 (manual-testing-findings-2026-11-15 #28): a restricted pool's
+    // own SOURCE edge is NOT opened here. Opening every pool's source edge
+    // together, as this function used to, let `max_flow`'s BFS node-index
+    // tie-break decide which of several eligible pools funded an overlapping
+    // spend — favouring whichever pool happened to sit earlier in
+    // `flow_pools`'s fixed assembly order (a Virtue's grant, always built
+    // before the childhood blocks) regardless of which pool's own eligibility
+    // was actually narrower. `two_phase_max_flow`'s tiered phase 1 opens each
+    // pool's source edge one at a time instead, narrowest first, which is the
+    // one thing an entity's own spends must never decide — so it is read off
+    // the ruleset, not off this matrix. See [`tiered_pool_order`].
     let mut deferred_edges = Vec::new();
-    for (i, pool) in flow_pools.iter().enumerate() {
-        cap[FlowGraphLayout::SOURCE][layout.pool_node(i)] = pool.amount;
-    }
     for (j, spend) in spends.iter().enumerate() {
         cap[layout.spend_node(j)][FlowGraphLayout::SINK] = spend.cost;
         // The general pool can fund any spend it is eligible for (D43: not a
@@ -2052,13 +2082,79 @@ fn build_capacity_matrix(
     (layout, cap, deferred_edges)
 }
 
-/// Runs the three-phase max-flow solve on `cap` in place — sub-check 3 of
+/// A restricted pool's intrinsic scope for [`tiered_pool_order`]: how many
+/// catalogue Abilities it may fund, resolved against the LIVE `ruleset` —
+/// never a count baked into the pool or the entity's own spends, so a
+/// category's width is read off the current catalogue ("Catalogue size is
+/// data, never code", CLAUDE.md). `None` marks an INSTANCE-ONLY pool (no
+/// `abilities`, no `categories` — only `instances`, e.g. childhood's
+/// native-language block, `ArMDE:2448`): eligible for one specific instance of
+/// one Ability and nothing else, strictly narrower than any pool a count could
+/// describe, so it always sorts first. A [`PoolEligibility::Mastery`] pool
+/// never competes with an Ability pool at all ([`pool_covers`] never lets the
+/// two kinds cross), so its own position here is unobservable; it sorts last
+/// among the counted pools rather than being given a meaningless count of
+/// catalogue Abilities.
+fn pool_scope(ruleset: &Ruleset, eligibility: &PoolEligibility) -> Option<usize> {
+    match eligibility {
+        PoolEligibility::Ability {
+            abilities,
+            categories,
+            instances,
+            ..
+        } => {
+            if abilities.is_empty() && categories.is_empty() {
+                None
+            } else {
+                let mut covered: BTreeSet<Id> = abilities.iter().cloned().collect();
+                covered.extend(instances.iter().map(|i| i.ability.clone()));
+                covered.extend(
+                    ruleset
+                        .abilities
+                        .values()
+                        .filter(|a| categories.contains(&a.category))
+                        .map(|a| a.id.clone()),
+                );
+                Some(covered.len())
+            }
+        }
+        PoolEligibility::Mastery => Some(usize::MAX),
+    }
+}
+
+/// The order [`two_phase_max_flow`]'s tiered phase 1 opens each restricted
+/// pool's SOURCE edge in: by [`pool_scope`] ascending (an instance-only pool's
+/// `None` sorts before every `Some(_)` count under `Option`'s derived `Ord`,
+/// which is exactly tier 1 before tier 2; ties within tier 2 sort by ascending
+/// count), then the pool's own index in `flow_pools` as the final,
+/// deterministic tie-break (rule 3 of D93.1/E1's design) — never the spends an
+/// entity happens to hold, which is precisely the state the old single
+/// combined phase 1 let decide instead (manual-testing-findings-2026-11-15
+/// #28).
+fn tiered_pool_order(ruleset: &Ruleset, flow_pools: &[FlowPool]) -> Vec<usize> {
+    let mut order: Vec<usize> = (0..flow_pools.len()).collect();
+    order.sort_by_key(|&i| (pool_scope(ruleset, &flow_pools[i].eligibility), i));
+    order
+}
+
+/// Runs the four-phase max-flow solve on `cap` in place — sub-check 3 of
 /// [`xp_allocation`]. So a spend the restricted pools *can* cover drains them
 /// before the general pool (Educated/Warrior/Privileged and Mastered-Spells XP
 /// is free-but-earmarked; the general pool must stay available and no
-/// restricted XP wasted while eligible spends exist):
-/// - Phase 1: restricted-only max flow — the source→general edge, and every
-///   `deferred_edges` entry, stay closed.
+/// restricted XP wasted while eligible spends exist), and so the NARROWEST
+/// restricted pool drains before a broader one that also covers the same
+/// spend (D93.1/E1, manual-testing-findings-2026-11-15 #28; `ArMDE:2448`,
+/// `ArMDE:5314`):
+/// - Phase 1: restricted-only max flow, TIERED — [`tiered_pool_order`] opens
+///   one pool's source edge at a time (narrowest first) and re-runs
+///   `max_flow` on the same residuals after each, so an already-opened
+///   pool's own allocation can only grow, never shrink, as a later, broader
+///   pool's edge opens (`parent[source] = source` means `max_flow`'s BFS
+///   never revisits the source node mid-path, so a pool's source-edge residual
+///   is monotonically non-increasing call over call — the total stays the
+///   same eventual maximum a single combined solve would reach, only WHICH
+///   pool supplies it changes). The source→general edge, and every
+///   `deferred_edges` entry, stay closed throughout.
 /// - Phase 2: open the source→general edge and continue Edmonds-Karp on the
 ///   same residuals. The sum so far is the true max flow with restricted
 ///   usage maximized, i.e. minimum general used.
@@ -2071,13 +2167,26 @@ fn build_capacity_matrix(
 /// Returns the total max flow and how much of `general_pool` the solve used
 /// (read off the source→general residual `cap` is left holding).
 fn two_phase_max_flow(
+    ruleset: &Ruleset,
+    flow_pools: &[FlowPool],
     layout: &FlowGraphLayout,
     general_pool: u32,
     deferred_edges: &DeferredEdges,
     cap: &mut [Vec<u32>],
 ) -> (u32, u32) {
     let n = layout.n();
-    let restricted_flow = max_flow(n, FlowGraphLayout::SOURCE, FlowGraphLayout::SINK, cap);
+    let mut restricted_flow = 0u32;
+    for i in tiered_pool_order(ruleset, flow_pools) {
+        cap[FlowGraphLayout::SOURCE][layout.pool_node(i)] = flow_pools[i].amount;
+        // Saturating: see the comment on `total` below — the same several-pools
+        // overflow risk applies to this running sum.
+        restricted_flow = restricted_flow.saturating_add(max_flow(
+            n,
+            FlowGraphLayout::SOURCE,
+            FlowGraphLayout::SINK,
+            cap,
+        ));
+    }
     cap[FlowGraphLayout::SOURCE][FlowGraphLayout::GENERAL] = general_pool;
     // Saturating: a general pool near `u32::MAX` plus any restricted pool can fund
     // more than `u32` holds (see the edge case noted on `total_demand`).

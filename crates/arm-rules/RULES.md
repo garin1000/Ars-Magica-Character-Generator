@@ -12089,6 +12089,26 @@ Virtue or Flaw permitting this").
   `childhood_spread_pool`/`restricted_ability_xp_pools`'s own (non-authorized)
   scopes are unaffected — they keep the ordinary restricted-pools-first
   preference, since those are true bonus/earmark pools, never wasted by it.
+- **manual-testing-findings-2026-11-15 #28 (D93.1/E1).** Phase 1 used to open
+  every restricted pool's source edge together, so `max_flow`'s BFS
+  node-index tie-break — not either pool's actual eligibility — decided
+  which of several eligible pools funded an overlapping spend: a Virtue's
+  grant pool (built first in `xp.rs::build_flow_pools`'s fixed assembly
+  order) could drain ahead of a narrower pool built later, such as
+  childhood's native-language block (`ArMDE:2448`), even though Well-Traveled's
+  broader living-language grant (`ArMDE:5314`) is the one that should wait.
+  `xp.rs::two_phase_max_flow`'s phase 1 is now TIERED: `xp.rs::tiered_pool_order`
+  opens one pool's source edge at a time, narrowest first by
+  `xp.rs::pool_scope` (an instance-only pool — eligible for one instance of
+  one Ability, no `abilities`/`categories` — sorts first; the rest sort by
+  ascending count of catalogue Abilities the pool covers, resolved against
+  the live ruleset; the pool's own `flow_pools` index is the final,
+  deterministic tie-break), re-running `max_flow` after each. A pool's own
+  source-edge flow only ever grows across these calls (`max_flow`'s BFS never
+  revisits the source node mid-path, since `parent[source] = source` marks it
+  visited before the search starts), so the total stays the same maximum a
+  single combined solve would reach — only which pool supplies it changes.
+  Phases 2/3 are unaffected.
 - `effective/parameter_options.rs::ability_parameter_options` unions both
   halves — owning-at-all vs. funding-from-general is a funding question, not a
   picker one.
