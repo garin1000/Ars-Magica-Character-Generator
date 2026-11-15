@@ -303,6 +303,67 @@ describe('VirtueFlawTab gives the status-Virtue block a reason', () => {
   });
 });
 
+// E2/F7 (manual-test findings 2026-11-15 #7): a grog's `max_major_virtues: 0`
+// hard cap passes every category/prereq gate the Available picker already
+// checks, so Redcap must still say WHY the Add button is greyed — the same
+// `sourceTip` treatment the at-cap and mythic-status legs already get.
+describe('VirtueFlawTab gives an exceeds_cap block a reason', () => {
+  const REDCAP: PointItem = {
+    id: 'virtue.redcap',
+    kind: 'virtue',
+    magnitude: 'major',
+    categories: ['social_status'],
+    classification: 'creation_effect',
+    entity_kinds: ['character'],
+  } as PointItem;
+
+  it('names the hard cap as the reason', () => {
+    store.ruleset = {
+      ruleset: {
+        id: 'test',
+        version: '1',
+        point_items: { [REDCAP.id]: REDCAP },
+        type_profiles: {
+          grog: {
+            id: 'grog',
+            budget: { virtue_points: 3, flaw_points: 3, max_major_virtues: 0 },
+            gift_policy: 'forbidden',
+            creation_phases: [],
+          },
+        },
+        abilities: {},
+        magnitude_points: { free: 0, minor: 1, major: 3 },
+        ability_category_order: ['general'],
+        art_type_order: ['technique', 'form'],
+      },
+      i18n: { [REDCAP.id]: { name: 'Redcap' } },
+    } as unknown as LocalizedRuleset;
+    store.entity.type_id = 'grog';
+    store.effective = {
+      granted_selections: [],
+      vf_add_blocked: { [REDCAP.id]: 'exceeds_cap' },
+    } as unknown as EffectiveScores;
+
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(VirtueFlawTab, { target });
+    flushSync();
+
+    const row = target.querySelector('[data-testid="add-virtue.redcap"]');
+    expect(row).not.toBeNull();
+    vi.useFakeTimers();
+    row!.dispatchEvent(new Event('focusin', { bubbles: true }));
+    vi.advanceTimersByTime(500);
+    flushSync();
+
+    const reason = document.querySelector('[data-testid="tooltip-reason"]');
+    const expected = store.t('vf-blocked-exceeds-cap');
+    expect(reason?.textContent?.replace(/[⁦-⁩]/g, '')).toBe(expected);
+    // …and that text is a real message, not the raw key.
+    expect(expected).not.toBe('vf-blocked-exceeds-cap');
+  });
+});
+
 // I1 (try-out finding 4): an Available row whose item carries a prerequisite
 // says what it requires in its tooltip, before the player takes it — the same
 // `describePrereq` text the `prereq_not_met` finding shows after the fact. The

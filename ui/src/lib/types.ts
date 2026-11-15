@@ -9,8 +9,9 @@ export type ValidationMode = 'enforced' | 'advisory' | 'silent';
 export type IssueSeverity = 'error' | 'warning';
 // Mirrors `arm_rules::validation::VfAddBlockReason` — why the picker's Add
 // button refuses a catalogue Virtue/Flaw the entity has not yet selected
-// (manual-test findings #2/#19).
-export type VfAddBlockReason = 'forbidden_category' | 'prereq_not_met';
+// (manual-test findings #2/#19, and `exceeds_cap` for #7/E2: a HARD
+// magnitude/category cap the pick would breach).
+export type VfAddBlockReason = 'forbidden_category' | 'prereq_not_met' | 'exceeds_cap';
 
 // A phase of character creation (`CreationPhase`). Two things speak it: the
 // character type's ordered `creation_phases`, which the guided wizard walks, and

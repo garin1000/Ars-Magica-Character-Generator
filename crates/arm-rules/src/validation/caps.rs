@@ -5,6 +5,96 @@
 
 use super::*;
 
+/// Selections whose resolved point item matches `kind`+`magnitude` exactly —
+/// the fixed hard-cap predicate (`max_major_virtues`/`max_major_flaws`/
+/// `max_minor_flaws`), with no category involved. Shared by `validate_caps`'s
+/// post-hoc enforcement and [`crate::validation::vf_add_verdicts`]'s pre-pick
+/// check (E2/F7, manual-test findings 2026-11-15 #7), so the two can never
+/// disagree about what counts toward a hard budget cap.
+pub(crate) fn count_by_kind_and_magnitude(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    kind: ItemKind,
+    magnitude: Magnitude,
+) -> usize {
+    entity
+        .selections
+        .iter()
+        .filter(|s| {
+            ruleset
+                .point_items
+                .get(&s.item_ref)
+                .is_some_and(|item| item.kind == kind && item.magnitude == magnitude)
+        })
+        .count()
+}
+
+/// Every selection id counting toward a category cap right now — a bought
+/// selection carrying the capped category (primary or secondary,
+/// `taken_as`-narrowed via [`PointItem::categories_for`]), PLUS a bought
+/// selection's own `Effect::GrantsCategoryCount` phantom entries (D68.11,
+/// Mythic Blood's hereditary Personality Flaw). May repeat an id (two copies
+/// of the same item both count), so `.len()` is the ceiling count and the
+/// list itself is the paired-entry naming data (D41/B2). Shared by
+/// `validate_caps`'s post-hoc enforcement and
+/// [`crate::validation::vf_add_verdicts`]'s pre-pick check (E2/F7), so the two
+/// can never disagree about what counts toward a cap, hard or soft.
+pub(crate) fn category_cap_matches(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    cap: &CategoryCap,
+    kind: ItemKind,
+) -> Vec<Id> {
+    // An item counts against the cap when it *carries* the capped category,
+    // primary or secondary: Suppressed Gift is "*Major, Hermetic, Story*"
+    // (ArMDE:6876-6877), so it is a Story Flaw for the Story cap just as much
+    // as it is a Hermetic one.
+    //
+    // Taken-as aware, via `PointItem::categories_for`: a Sufi taken as Social
+    // Status must not count against a Supernatural cap, and vice versa —
+    // `ArMDE:5156` is a choice between the two readings, not both at once.
+    let mut matched: Vec<Id> = entity
+        .selections
+        .iter()
+        .filter(|s| {
+            ruleset.point_items.get(&s.item_ref).is_some_and(|item| {
+                (cap.both_kinds || item.kind == kind)
+                    && item
+                        .categories_for(&s.params)
+                        .iter()
+                        .any(|c| c == &cap.category)
+                    && (!cap.major_only || item.magnitude == Magnitude::Major)
+            })
+        })
+        .map(|s| s.item_ref.clone())
+        .collect();
+
+    // D68.11: fold in `Effect::GrantsCategoryCount` on BOUGHT selections
+    // (Mythic Blood's hereditary Personality Flaw) — an id-less phantom item,
+    // so the granting selection's own id stands in for it in the paired-entry
+    // message. Bought-only, matching this whole function's "House-granted
+    // items are exempt" scope: the effect is defined to be read only from
+    // `entity.selections`, never a granted row.
+    for selection in &entity.selections {
+        let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
+            continue;
+        };
+        let counts = item.effects.iter().any(|effect| {
+            matches!(
+                effect,
+                Effect::GrantsCategoryCount { category, magnitude, item_kind }
+                    if (cap.both_kinds || *item_kind == kind)
+                        && category == &cap.category
+                        && (!cap.major_only || *magnitude == Magnitude::Major)
+            )
+        });
+        if counts {
+            matched.push(selection.item_ref.clone());
+        }
+    }
+    matched
+}
+
 /// Enforces per-type caps on the *count* of items (distinct from the point
 /// budget). The caps themselves are data in the type profile; whether a cap is
 /// a hard rule (error) or a soft guideline (warning) is fixed by the rulebook
@@ -27,41 +117,6 @@ pub(crate) fn validate_caps(
 ) {
     let Some(profile) = type_profile else {
         return;
-    };
-
-    // Counts selections whose resolved point item (and that selection's own
-    // params, so a taken-as-aware predicate can read `s.params`) matches `pred`.
-    let count = |pred: &dyn Fn(&PointItem, &Selection) -> bool| -> usize {
-        entity
-            .selections
-            .iter()
-            .filter(|s| {
-                ruleset
-                    .point_items
-                    .get(&s.item_ref)
-                    .is_some_and(|item| pred(item, s))
-            })
-            .count()
-    };
-
-    // The same match, but naming which items matched rather than merely
-    // counting them (D41/B2): a category-cap ceiling warning must name the
-    // paired entries, not just say "2 of 1". Sorted so a pair reports in a
-    // stable order across runs.
-    let matching_ids = |pred: &dyn Fn(&PointItem, &Selection) -> bool| -> Vec<Id> {
-        let mut ids: Vec<Id> = entity
-            .selections
-            .iter()
-            .filter(|s| {
-                ruleset
-                    .point_items
-                    .get(&s.item_ref)
-                    .is_some_and(|item| pred(item, s))
-            })
-            .map(|s| s.item_ref.clone())
-            .collect();
-        ids.sort();
-        ids
     };
 
     let count_args = |n: usize, max: u8| args([("count", n.to_string()), ("max", max.to_string())]);
@@ -97,7 +152,7 @@ pub(crate) fn validate_caps(
     ];
     for (max, kind, magnitude, code) in hard_caps {
         let Some(max) = max else { continue };
-        let n = count(&|i, _s| i.kind == kind && i.magnitude == magnitude);
+        let n = count_by_kind_and_magnitude(entity, ruleset, kind, magnitude);
         if n > max as usize {
             issues.push(ValidationIssue::error(
                 code,
@@ -123,47 +178,7 @@ pub(crate) fn validate_caps(
     // Source: ArMDE:2925-2931.
     let mut push_category_cap_issues = |caps: &[CategoryCap], kind: ItemKind, noun: &str| {
         for cap in caps {
-            // An item counts against the cap when it *carries* the capped
-            // category, primary or secondary: Suppressed Gift is "*Major,
-            // Hermetic, Story*" (ArMDE:6876-6877), so it is a Story Flaw for the Story cap just
-            // as much as it is a Hermetic one.
-            //
-            // Taken-as aware, via `PointItem::categories_for`: a Sufi taken as
-            // Social Status must not count against a Supernatural cap, and vice
-            // versa — `ArMDE:5156` is a choice between the two readings, not both at
-            // once.
-            let mut matched = matching_ids(&|i, s| {
-                (cap.both_kinds || i.kind == kind)
-                    && i.categories_for(&s.params)
-                        .iter()
-                        .any(|c| c == &cap.category)
-                    && (!cap.major_only || i.magnitude == Magnitude::Major)
-            });
-
-            // D68.11: fold in `Effect::GrantsCategoryCount` on BOUGHT
-            // selections (Mythic Blood's hereditary Personality Flaw) — an
-            // id-less phantom item, so the granting selection's own id
-            // stands in for it in the paired-entry message. Bought-only,
-            // matching this whole function's "House-granted items are
-            // exempt" scope: the effect is defined to be read only from
-            // `entity.selections`, never a granted row.
-            for selection in &entity.selections {
-                let Some(item) = ruleset.point_items.get(&selection.item_ref) else {
-                    continue;
-                };
-                let counts = item.effects.iter().any(|effect| {
-                    matches!(
-                        effect,
-                        Effect::GrantsCategoryCount { category, magnitude, item_kind }
-                            if (cap.both_kinds || *item_kind == kind)
-                                && category == &cap.category
-                                && (!cap.major_only || *magnitude == Magnitude::Major)
-                    )
-                });
-                if counts {
-                    matched.push(selection.item_ref.clone());
-                }
-            }
+            let mut matched = category_cap_matches(entity, ruleset, cap, kind);
             matched.sort();
             let n = matched.len();
 

@@ -187,6 +187,14 @@ vf-blocked-forbidden-category = Not permitted for this character type
 # Jerbiton, manual-test finding #2).
 vf-blocked-prereq-not-met = Does not meet a requirement
 
+# Reason shown on a Virtue/Flaw the enforced mode greys out because adding it
+# would push a HARD per-type cap over its limit (e.g. a grog's Major Virtues,
+# always zero — manual-test finding #7), every permitted taken_as reading
+# included. No { $max } arg: unlike vf-blocked-max-total this cap can be the
+# fixed budget cap or any hard category cap, and the picker never re-derives
+# which one.
+vf-blocked-exceeds-cap = Maximum for this character type already reached
+
 # Filter/search controls for long selectable lists.
 filter-search-placeholder = Search…
 filter-magnitude-all = All levels

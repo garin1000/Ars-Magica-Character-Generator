@@ -198,6 +198,16 @@ vf-blocked-forbidden-category = Für diesen Charaktertyp nicht erlaubt
 # manuellen Tests).
 vf-blocked-prereq-not-met = Erfüllt eine Voraussetzung nicht
 
+# Grund, der bei einer im erzwingenden Modus ausgegrauten Tugend/einem Fehler
+# angezeigt wird, weil die Auswahl eine feste Obergrenze des Charaktertyps
+# überschreiten würde (z. B. die Großen Tugenden eines Grogs, immer null —
+# Befund #7 des manuellen Tests), über jede erlaubte taken_as-Lesart hinweg.
+# Ohne { $max }-Argument: Anders als bei vf-blocked-max-total kann diese
+# Obergrenze entweder die feste Budgetobergrenze oder jede harte
+# Kategorieobergrenze sein, und die Auswahlliste leitet nicht her, welche es
+# ist.
+vf-blocked-exceeds-cap = Maximum für diesen Charaktertyp bereits erreicht
+
 # Filter-/Suchsteuerung für lange Auswahllisten.
 filter-search-placeholder = Suchen…
 filter-magnitude-all = Alle Stufen

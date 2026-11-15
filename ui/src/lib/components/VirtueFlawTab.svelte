@@ -219,7 +219,9 @@
         ? store.t('vf-blocked-forbidden-category')
         : addBlockReason === 'prereq_not_met'
           ? store.t('vf-blocked-prereq-not-met')
-          : undefined,
+          : addBlockReason === 'exceeds_cap'
+            ? store.t('vf-blocked-exceeds-cap')
+            : undefined,
     );
   }
 

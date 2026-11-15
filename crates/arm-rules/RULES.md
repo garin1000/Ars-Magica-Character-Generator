@@ -88,7 +88,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 > "You may not take Major Virtues or Flaws" (grogs).
 
 - Source: `ArMDE:2894-2900` (grogs).
-- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_caps` (:22)
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_caps` (:112)
   (counts items with `magnitude == Major`; cap value is data via
   `max_major_virtues` / `max_major_flaws`).
 - The magus rule "You may not have more than one Major Hermetic Virtue" (`ArMDE:2927`)
@@ -103,7 +103,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 
 - Source: `ArMDE:2844`; companion
   `ArMDE:2905`, magus `ArMDE:2926`; grogs "no more than three Minor Flaws" `ArMDE:1077`.
-- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_caps` (:22), error
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_caps` (:112), error
   `too_many_minor_flaws` (counts `magnitude == Minor` flaws; cap value is data,
   `max_minor_flaws`).
 
@@ -116,7 +116,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
 - Source: `ArMDE:2890` (Major
   Personality, hard; restated per type at companion `ArMDE:2908`, magus `ArMDE:2921`),
   `ArMDE:3046` (Personality total), `ArMDE:2888`/`ArMDE:3052` (Story), grogs `ArMDE:1077`/`ArMDE:2896`.
-- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_caps` (:22). These
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_caps` (:112). These
   caps are **fully data-driven**: each entry of the profile's
   `flaw_category_caps` (`PointBudget.flaw_category_caps`, type
   `FlawCategoryCap { category, max, major_only, hard }`) names the flaw
@@ -164,7 +164,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   below under-count their points; `core_rules_tainted_virtues_carry_the_tainted_flag`
   in `crates/arm-rules/tests/data_integrity.rs` now pins a sample of tagged
   entries plus that control.
-- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:257).
+- Implementation: `crates/arm-rules/src/validation/caps.rs` — `validate_tainted_cap` (:272).
   The book frames the limit as a "should", so it is a **non-blocking warning**,
   measured against the points **actually taken** (not the type budget): a side
   warns when `2·tainted_points > total_points` for that side (Virtue / Flaw).
@@ -214,7 +214,7 @@ introduced `rules/core/aging.json`, so it is now a data value — see
   Tainted precedent.** `validate_share_of_kind_cap` takes the **folded**
   selection list (bought ++ granted), because **Devil Child grants a free
   Demonic Might or Demonic Powers** (`ArMDE:3746`) and a granted copy is still a copy
-  of the Virtue. `validate_tainted_cap` (`validation/caps.rs`, :257) reads raw
+  of the Virtue. `validate_tainted_cap` (`validation/caps.rs`, :272) reads raw
   `entity.selections` and so counts only bought ones — arguably right for Tainted,
   which the book frames as a character-generation guideline. Two identically
   worded "half" rules therefore disagree about grants **on purpose**; do not
@@ -1203,7 +1203,7 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2938-2947` (The Gift),
   `ArMDE:2928` (magi must take The Gift + Hermetic Magus status), `ArMDE:2363` and
   `ArMDE:4140-4142` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:2113).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:2251).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
@@ -1272,7 +1272,7 @@ reason: a category condition would license itself.
   character as of saga-start only) can express.
 - **All three forbid effects are consumed by one grant-aware validator**:
   `validation/selections.rs::validate_category_effect_prohibitions`
-  (:375). Grant-aware on both sides (D2): the forbidding item's effect applies
+  (:513). Grant-aware on both sides (D2): the forbidding item's effect applies
   bought or granted, and the forbidden target (an Ability held via
   `entity.ability_scores` or an `AbilityScoreGrant`/`AbilityScoreGrantParam`
   floor, or another V/F selection) is read the same way — closing the F-466
@@ -1541,7 +1541,7 @@ companion's count of Major Virtues. The value was therefore corrected to `null`
 - Implementation: `crates/arm-rules/src/art.rs` — `Art`, `ArtType` (fixed enum;
   `ArtType::ALL` surfaces `art_type_order` on `Ruleset`), `ArtsFile` loader.
   Registry + integrity (`ArtMin`, `art`-domain params resolve against it) in
-  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:706).
+  `ruleset/integrity.rs`; `validate_arts` in `validation/scores.rs` (:716).
 
 ### Effect layer (score-boosting Virtues, limit-shifting Virtues/Flaws)
 
@@ -1778,7 +1778,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2884`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :1010) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :1148) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4889`) and "Great twice per Characteristic" (`ArMDE:4062`). Effect
@@ -4755,7 +4755,7 @@ resolved values); the free Virtue is **derived** at eval by
 - Data: magus profile in `rules/core/character_types.json` —
   `virtue_category_caps: [{ "category": "hermetic", "max": 1, "major_only": true,
   "hard": true }]`. The cap *value* lives here.
-- Implementation: `validation/caps.rs::validate_caps` (:22) gains a virtue loop mirroring the
+- Implementation: `validation/caps.rs::validate_caps` (:112) gains a virtue loop mirroring the
   flaw loop, counting `entity.selections` only (granted Hermetic Virtues exempt),
   emitting `too_many_major_hermetic_virtues` (code derived as
   `too_many_[major_]<category>_virtues`). Fluent key `issue-too_many_major_hermetic_virtues`
@@ -4780,7 +4780,7 @@ resolved values); the free Virtue is **derived** at eval by
   a `compatible_with` list — it would model none of ArMDE:4398/4614/4441's
   three different exception shapes and would look authoritative while
   guessing.
-- Implementation: `validation/caps.rs::validate_caps` (:22)'s existing
+- Implementation: `validation/caps.rs::validate_caps` (:112)'s existing
   category-cap loop, extended with the floor half (code
   `too_few_[major_]<category>_<flaws|virtues>`, severity following `min_hard`
   rather than `hard`) and, on a ceiling breach, naming the first two matched
@@ -6754,6 +6754,20 @@ one) before the player even tries, via `` `selections.rs::vf_add_verdicts` ``
 `docs/manual-testing-findings-2026-10-18.md`) — it reads this file's own
 `prerequisites` and the type profile's `permitted_categories`/
 `forbidden_categories`, never a UI copy of either rule.
+
+The picker also refuses an add that would breach a HARD per-type cap
+(`max_major_virtues`/`max_major_flaws`/`max_minor_flaws`, and any
+`virtue_category_caps`/`flaw_category_caps` entry with `hard: true`) —
+manual-test findings 2026-11-15 #7: a grog's `max_major_virtues: 0`
+(`ArMDE:2898`, "may not take Major Virtues or Flaws") let Redcap (Major,
+Social Status, `ArMDE:4915-4916`) through every gate `vf_add_verdicts` already
+checked, and only `validate_caps` caught it after the pick. The counting in
+`validation/caps.rs` (the hard-cap table and the per-category walk, including
+`Effect::GrantsCategoryCount`) is one shared helper both functions call, so
+they cannot disagree. A SOFT cap never blocks the add. An item whose category
+depends on its `taken_as` choice is blocked only when every reading breaches.
+`VfAddBlockReason::ExceedsCap` is the verdict; `tests/vf_add_verdicts.rs` pins
+it, plus an agreement sweep over the shipped catalogue.
 
 ### D69/X7b-e — row 42 compute verdicts (2026-09-29)
 
@@ -11429,11 +11443,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1342),
-  `validate_forbidden_traits` (:1363))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1480),
+  `validate_forbidden_traits` (:1501))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:720),
-  `validate_parameters` (:1563), `validate_duplicate_selections` (:1010))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:858),
+  `validate_parameters` (:1701), `validate_duplicate_selections` (:1148))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

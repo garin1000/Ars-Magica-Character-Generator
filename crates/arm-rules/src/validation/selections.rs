@@ -3,6 +3,7 @@
 //! Split out of `validation`; see `validation/mod.rs` for the public API and
 //! the `ValidationIssue` issue-code contract.
 
+use super::caps::{category_cap_matches, count_by_kind_and_magnitude};
 use super::*;
 use crate::types::AbilityParameterValue;
 
@@ -115,6 +116,16 @@ pub enum VfAddBlockReason {
     /// item, exactly as [`validate_prerequisites`] raises `prereq_not_met`
     /// only on a definite False, never on Unknown.
     PrereqNotMet,
+    /// Adding this item would push a HARD per-type cap over its limit —
+    /// `EntityTypeProfile::budget`'s `max_major_virtues`/`max_major_flaws`/
+    /// `max_minor_flaws`, or a `virtue_category_caps`/`flaw_category_caps`
+    /// entry with `hard: true` — the same cap [`crate::validation::caps`]'s
+    /// `validate_caps` enforces after the fact (manual-test findings
+    /// 2026-11-15 #7: a grog's `max_major_virtues: 0` let Redcap through
+    /// every other gate here, and only the validator caught it, after the
+    /// pick). A SOFT cap (`hard: false`) never reports this — it stays a
+    /// post-hoc warning, unchanged.
+    ExceedsCap,
 }
 
 /// Every catalogue Virtue/Flaw this entity may not yet add, with why — an
@@ -188,11 +199,138 @@ pub fn vf_add_verdicts(entity: &Entity, ruleset: &Ruleset) -> BTreeMap<Id, VfAdd
             let (outcome, _) = ctx.evaluate_for_item(prereq, &item.id);
             if outcome == Tri::False {
                 blocked.insert(item.id.clone(), VfAddBlockReason::PrereqNotMet);
+                continue;
             }
+        }
+
+        // E2/F7 (manual-test findings 2026-11-15 #7): a grog's
+        // `max_major_virtues: 0` (ArMDE:2898) lets Redcap (Major, Social
+        // Status, ArMDE:4915-4923) clear every gate above, so only a
+        // cap-aware check catches it before the pick — `validate_caps`
+        // otherwise only raises the error AFTER the item is already taken.
+        // Blocked only when EVERY permitted `taken_as` reading would breach a
+        // HARD cap (budget-level, or a category cap with `hard: true`); a
+        // SOFT cap never blocks here, same as it never blocks after the fact.
+        if taken_as_readings(item)
+            .iter()
+            .all(|reading| reading_breaches_a_hard_cap(entity, ruleset, profile, item, reading))
+        {
+            blocked.insert(item.id.clone(), VfAddBlockReason::ExceedsCap);
         }
     }
 
     blocked
+}
+
+/// The permitted `taken_as` readings an unselected item could resolve to —
+/// one single-category slice per value its [`ParameterDomain::Category`]
+/// parameter declares (Sufi: `social_status` alone, or `supernatural` alone —
+/// never both at once, ArMDE:5156's "either/or"), or, for a plain item with no
+/// such parameter, the one reading [`PointItem::categories_for`] already
+/// returns for an empty params map (every category simultaneously, as before
+/// `taken_as` existed — Suppressed Gift's "Major, Hermetic, Story" is one
+/// reading, not alternatives).
+fn taken_as_readings(item: &PointItem) -> Vec<&[String]> {
+    let Some(param) = item
+        .parameters
+        .iter()
+        .find(|p| p.domain == ParameterDomain::Category)
+    else {
+        return vec![item.categories_for(&BTreeMap::new())];
+    };
+    param
+        .values
+        .iter()
+        .map(|value| {
+            let mut params = BTreeMap::new();
+            params.insert(
+                param.key.clone(),
+                SelectionParamValue::Single(value.clone()),
+            );
+            item.categories_for(&params)
+        })
+        .collect()
+}
+
+/// Whether adding `item` under this single `taken_as` reading would push a
+/// HARD cap over its limit — the budget-level `max_major_virtues`/
+/// `max_major_flaws`/`max_minor_flaws` triple (which never depends on
+/// category, so it is checked once regardless of `reading`), plus any
+/// `virtue_category_caps`/`flaw_category_caps` entry with `hard: true` whose
+/// category `reading` carries. A SOFT cap (`hard: false`) is never checked
+/// here — it stays a post-hoc warning, as before.
+fn reading_breaches_a_hard_cap(
+    entity: &Entity,
+    ruleset: &Ruleset,
+    profile: &EntityTypeProfile,
+    item: &PointItem,
+    reading: &[String],
+) -> bool {
+    let fixed_caps: [(Option<u8>, ItemKind, Magnitude); 3] = [
+        (
+            profile.budget.max_major_virtues,
+            ItemKind::Virtue,
+            Magnitude::Major,
+        ),
+        (
+            profile.budget.max_major_flaws,
+            ItemKind::Flaw,
+            Magnitude::Major,
+        ),
+        (
+            profile.budget.max_minor_flaws,
+            ItemKind::Flaw,
+            Magnitude::Minor,
+        ),
+    ];
+    for (max, kind, magnitude) in fixed_caps {
+        let Some(max) = max else { continue };
+        if item.kind == kind && item.magnitude == magnitude {
+            let n = count_by_kind_and_magnitude(entity, ruleset, kind, magnitude);
+            if n + 1 > max as usize {
+                return true;
+            }
+        }
+    }
+
+    // A `both_kinds` category cap can live in EITHER list and still apply to
+    // an item of the other kind (the companion/magus Social Status cap is
+    // declared only in `virtue_category_caps` but counts `flaw.outlaw` too) —
+    // so both lists are checked regardless of `item.kind`, exactly as
+    // `validate_caps` evaluates each list independently and `both_kinds`
+    // bypasses the kind filter inside `category_cap_matches`.
+    let category_caps = profile
+        .budget
+        .virtue_category_caps
+        .iter()
+        .map(|cap| (cap, ItemKind::Virtue))
+        .chain(
+            profile
+                .budget
+                .flaw_category_caps
+                .iter()
+                .map(|cap| (cap, ItemKind::Flaw)),
+        );
+    for (cap, list_kind) in category_caps {
+        if !cap.hard {
+            continue;
+        }
+        if !(cap.both_kinds || item.kind == list_kind) {
+            continue;
+        }
+        if !reading.iter().any(|c| c == &cap.category) {
+            continue;
+        }
+        if cap.major_only && item.magnitude != Magnitude::Major {
+            continue;
+        }
+        let n = category_cap_matches(entity, ruleset, cap, list_kind).len();
+        if n + 1 > cap.max as usize {
+            return true;
+        }
+    }
+
+    false
 }
 
 pub(crate) fn validate_permitted_categories(
