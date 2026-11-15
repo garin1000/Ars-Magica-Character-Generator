@@ -6874,6 +6874,11 @@
     "next_line": "*Minor, General*<br>",
     "heading": "#### Rapid Convalescence"
   },
+  "ArMDE:4915-4916": {
+    "excerpt": "#### Redcap",
+    "next_line": "*Major, Social Status*<br>",
+    "heading": "#### Rat Up a Drainpipe"
+  },
   "ArMDE:4915-4919": {
     "excerpt": "#### Redcap",
     "next_line": "*Major, Social Status*<br>",
@@ -7558,6 +7563,11 @@
     "excerpt": "#### Well-Traveled",
     "next_line": "*Minor, General*<br>",
     "heading": "#### Wealthy"
+  },
+  "ArMDE:5314": {
+    "excerpt": "You have journeyed extensively in this part of the world and find it easy to get",
+    "next_line": "#### Whistle Up The Wind",
+    "heading": "#### Well-Traveled"
   },
   "ArMDE:5316-5319": {
     "excerpt": "#### Whistle Up The Wind",
