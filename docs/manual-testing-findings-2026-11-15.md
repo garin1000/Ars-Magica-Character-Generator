@@ -13,7 +13,7 @@ Retest of the 2026-10-18 findings: all passed on 0.5.0 except #15 (F20) and the 
 | 5 | Unsaved-changes dialog | The default button is Discard; it must be Cancel (Enter must never discard work). | open |
 | 6 | — | Withdrawn (stale beta exe). | withdrawn |
 | 7 | V/F picker | A grog can pick Redcap (Major, `ArMDE:4915-4916`) in Enforced mode, though grogs "may not take Major Virtues or Flaws" (`ArMDE:2898`). The engine raises the error; the add-verdict (#2/#19) must also refuse items that break a hard magnitude cap. | open |
-| 8 | V/F picker | Brutal Artist is not greyed while the House is unset (House prereq is Unknown, by design). Norbert expects it greyed. Decide: treat an unset House as not-Jerbiton for the verdict? | decision |
+| 8 | V/F picker | Brutal Artist is not greyed while the House is unset (House prereq is Unknown, by design). **Decided (Norbert, 2026-11-15):** greyed out whenever the House is not Jerbiton, including "House not set". So in the add-verdict an unset House counts as not meeting a `House` prerequisite; validation of an already-held item is unchanged. | open |
 | 9 | Numeric inputs | Gauntlet age and other number fields are fiddly to type: per-keystroke checks block normal typing. | open |
 | 10 | Life stages | With Age unset, nothing shows next to "Age"; show "unknown" or similar. | open |
 | 11 | Life stages | "Age" and "Gauntlet age" are not on one baseline. | open |
