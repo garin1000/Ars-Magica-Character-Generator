@@ -153,7 +153,13 @@ pub fn vf_add_verdicts(entity: &Entity, ruleset: &Ruleset) -> BTreeMap<Id, VfAdd
 
     let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
     let granted = crate::effective::entity_grants(entity, ruleset);
-    let ctx = PrereqCtx::build(entity, ruleset, Some(profile), &selected_ids, &granted);
+    // F8/D93.2 (Norbert, 2026-11-15): "greyed out whenever the House is not
+    // Jerbiton, INCLUDING House not set." At PICK TIME only — an
+    // already-held item's own `validate_prerequisites` pass builds its
+    // `PrereqCtx` unflagged, so re-evaluating a held item with House still
+    // unset keeps the non-blocking `prereq_unevaluated` warning, unchanged.
+    let ctx = PrereqCtx::build(entity, ruleset, Some(profile), &selected_ids, &granted)
+        .unset_house_is_false();
 
     // Empty declared list means "no restriction", exactly as
     // `validate_permitted_categories`/`validate_forbidden_categories` treat it —

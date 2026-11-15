@@ -3986,3 +3986,13 @@ catalogue Abilities covered, then pool index). The total funded is unchanged;
 only which pool pays changes. Tests: `effective.rs` (three pool-order cases),
 `tests/x1_authorization_family.rs`, `tests/e1_restricted_pool_overlap_sweep.rs`
 (every overlapping pair in the shipped ruleset).
+
+**D93.2 — an unset House fails a House prerequisite at pick time** (findings
+#8). In Enforced mode the picker greys out a House-gated item whenever the House
+is not the required one, including "House not set" — e.g. Brutal Artist
+(`ArMDE:5832`, "only available to magi of House Jerbiton"). Only the picker
+verdict reads it so: `PrereqCtx` gained the flag `unset_house_is_false`, set by
+`validation/selections.rs::vf_add_verdicts` alone. An item already held with
+no House set still validates as before (`prereq_unevaluated`, a warning).
+Tests: `tests/vf_add_verdicts.rs`, `validation/prereq.rs` (House under `Nor`
+and `Any`).

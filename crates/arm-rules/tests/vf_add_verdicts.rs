@@ -107,8 +107,14 @@ fn magus_of_house_jerbiton_is_not_blocked_from_brutal_artist() {
 /// `Tri::Unknown` (unset age is Unknown, not False — the `Prereq::AgeMin` doc
 /// comment), so the whole `all` resolves Unknown too (no child is a definite
 /// False to short-circuit on) — and an Unknown outcome must never block.
+///
+/// This is the general rule for a NON-House Unknown. `Prereq::House`'s own
+/// `None` arm is the one deliberate exception (F8/D93.2, Norbert
+/// 2026-11-15): `vf_add_verdicts` flags its context so an unset House counts
+/// as a definite mismatch at pick time — see
+/// `magus_with_house_unset_is_blocked_from_brutal_artist` below.
 #[test]
-fn an_unevaluable_prerequisite_never_blocks() {
+fn an_unevaluable_age_prerequisite_never_blocks() {
     let rs = load_ruleset();
     let e = entity(
         "companion",
@@ -119,6 +125,54 @@ fn an_unevaluable_prerequisite_never_blocks() {
         !verdicts.contains_key(&Id::new("flaw.university_dean")),
         "an item whose prerequisite cannot yet be decided (age unset) must not be \
          blocked, got {verdicts:?}"
+    );
+}
+
+/// F8/D93.2 (Norbert, 2026-11-15): "greyed out whenever the House is not
+/// Jerbiton, INCLUDING House not set." Unlike the AgeMin case above, an unset
+/// House at PICK TIME must now be treated as a definite mismatch, not an
+/// Unknown that lets the item through.
+#[test]
+fn magus_with_house_unset_is_blocked_from_brutal_artist() {
+    let rs = load_ruleset();
+    let e = entity("magus", vec![]);
+    assert!(e.house.is_none(), "the fixture must set no House");
+    let verdicts = vf_add_verdicts(&e, &rs);
+    assert_eq!(
+        verdicts.get(&Id::new("flaw.brutal_artist")),
+        Some(&VfAddBlockReason::PrereqNotMet),
+        "F8/D93.2: a magus with no House set yet must be blocked from Brutal Artist \
+         exactly like a magus of a confirmed different House, got {verdicts:?}"
+    );
+}
+
+/// F8/D93.2's other half: the flag is set ONLY in `vf_add_verdicts`, never in
+/// `validate`'s own context — so an ALREADY-HELD Brutal Artist with House
+/// unset must keep today's Unknown-path behavior (a non-blocking
+/// `prereq_unevaluated` warning, never `prereq_not_met`), unchanged by this
+/// fix. Mirrors `data_integrity.rs::heartbeast_without_a_house_warns_rather_than_failing`,
+/// pinned here for Brutal Artist specifically since it is this finding's item.
+#[test]
+fn held_brutal_artist_with_house_unset_still_warns_rather_than_blocks() {
+    let rs = load_ruleset();
+    let e = entity("magus", vec![Selection::new(Id::new("flaw.brutal_artist"))]);
+    assert!(e.house.is_none(), "the fixture must set no House");
+
+    let result = validate(&e, &rs);
+    let codes: Vec<&str> = result
+        .issues
+        .iter()
+        .filter(|i| i.context.as_ref() == Some(&Id::new("flaw.brutal_artist")))
+        .map(|i| i.code.as_str())
+        .collect();
+    assert!(
+        codes.contains(&"prereq_unevaluated"),
+        "validating an already-held Brutal Artist with House unset must stay on the \
+         Unknown path (unflagged context), got {codes:?}"
+    );
+    assert!(
+        !codes.contains(&"prereq_not_met"),
+        "an unset House on an already-held item must never become a hard error, got {codes:?}"
     );
 }
 

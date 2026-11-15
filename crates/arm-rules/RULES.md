@@ -1203,13 +1203,13 @@ reason: a category condition would license itself.
 - Source: `ArMDE:2938-2947` (The Gift),
   `ArMDE:2928` (magi must take The Gift + Hermetic Magus status), `ArMDE:2363` and
   `ArMDE:4140-4142` (only magi may take the Hermetic Magus Social Status).
-- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:2251).
+- Implementation: `crates/arm-rules/src/validation/selections.rs` — `validate_gift_policy` (:2257).
   The Gift policy is independent of the `hermetically_trained`/`order_member` flags
   (an unGifted Redcap is a companion; a Gifted hedge wizard is not Hermetically trained).
 
 #### Prerequisite evaluation (meta-mechanic)
 - The tri-state `Prereq` evaluator (`crates/arm-rules/src/validation/prereq.rs` —
-  `evaluate_prereq`, :436) is engine infrastructure, not a single rulebook passage. It
+  `evaluate_prereq`, :459) is engine infrastructure, not a single rulebook passage. It
   enforces book requirements expressed as data, e.g. "all magi must take the
   Hermetic Magus Social Status" (`ArMDE:2363`), encoded as a `Prereq` on the relevant
   items.
@@ -1272,7 +1272,7 @@ reason: a category condition would license itself.
   character as of saga-start only) can express.
 - **All three forbid effects are consumed by one grant-aware validator**:
   `validation/selections.rs::validate_category_effect_prohibitions`
-  (:513). Grant-aware on both sides (D2): the forbidding item's effect applies
+  (:519). Grant-aware on both sides (D2): the forbidding item's effect applies
   bought or granted, and the forbidden target (an Ability held via
   `entity.ability_scores` or an `AbilityScoreGrant`/`AbilityScoreGrantParam`
   floor, or another V/F selection) is read the same way — closing the F-466
@@ -1778,7 +1778,7 @@ written until they do. `SCHEMA_VERSION` is unchanged: no shape moved.
 - Source: `ArMDE:2884`.
 
 The per-`(item, params)` selection cap. `validate_duplicate_selections`
-(`validation/selections.rs`, :1148) errors `duplicate_selection` when a target's count exceeds the
+(`validation/selections.rs`, :1154) errors `duplicate_selection` when a target's count exceeds the
 item's `max_per_target` (default 1; Great Characteristic 2). This generalizes the
 former hardcoded "at most once" rule and enforces both "Puissant once per
 Ability" (`ArMDE:4889`) and "Great twice per Characteristic" (`ArMDE:4062`). Effect
@@ -6769,6 +6769,19 @@ depends on its `taken_as` choice is blocked only when every reading breaches.
 `VfAddBlockReason::ExceedsCap` is the verdict; `tests/vf_add_verdicts.rs` pins
 it, plus an agreement sweep over the shipped catalogue.
 
+An unset House is ordinarily `Tri::Unknown` against a `Prereq::House` leaf
+(the House step may simply come later), which never blocks — but manual-test
+findings 2026-11-15 #8 decided (Norbert, D93.2) that the picker must grey out
+a House-gated item "whenever the House is not Jerbiton, INCLUDING House not
+set," for `flaw.brutal_artist` (`ArMDE:5832`, "only available to magi of
+House Jerbiton"). `validation/prereq.rs::unset_house_is_false` (:413) is a
+builder flag on `PrereqCtx`, read only by `Prereq::House`'s `None` arm inside
+`validation/prereq.rs::evaluate_prereq` (:459); only
+`validation/selections.rs::vf_add_verdicts` (:149) sets it, so an
+already-held item's own `validate_prerequisites` pass stays on the unflagged
+Unknown path (the non-blocking `prereq_unevaluated` warning, unchanged).
+`tests/vf_add_verdicts.rs` pins both halves.
+
 ### D69/X7b-e — row 42 compute verdicts (2026-09-29)
 
 Eight `docs/open-todos.md` row-42 entries move from `uncomputed_rule`-with-no-
@@ -11443,11 +11456,11 @@ These checks are structural integrity, not Ars Magica rules, and intentionally
 carry no source citation:
 
 - Incompatibility symmetry (`ruleset/integrity.rs` — `validate_incompatibility_symmetry`)
-- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1480),
-  `validate_forbidden_traits` (:1501))
+- Required/forbidden traits (`validation/selections.rs` — `validate_required_traits` (:1486),
+  `validate_forbidden_traits` (:1507))
 - Entity-kind applicability, parameter validation, duplicate-selection detection
-  (`validation/selections.rs` — `validate_entity_kind_applicability` (:858),
-  `validate_parameters` (:1701), `validate_duplicate_selections` (:1148))
+  (`validation/selections.rs` — `validate_entity_kind_applicability` (:864),
+  `validate_parameters` (:1707), `validate_duplicate_selections` (:1154))
 - `Prereq` nesting depth bound, `PREREQ_MAX_DEPTH = 32` (K8; `types.rs`, next
   to the `Prereq` enum) — a robustness limit against a pathologically deep
   boolean-expression tree from a crafted or corrupted `rules/` directory,

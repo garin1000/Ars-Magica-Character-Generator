@@ -244,6 +244,17 @@ pub(crate) struct PrereqCtx<'a> {
     /// Art, so no category filter is needed (unlike the Ability side). `0`
     /// when the entity holds no Art.
     max_art_score: u8,
+    /// F8/D93.2 (Norbert, 2026-11-15): when set, `Prereq::House`'s `None` arm
+    /// (the entity has no House yet) resolves to a definite `Tri::False`
+    /// instead of `Tri::Unknown` — "greyed out whenever the House is not
+    /// Jerbiton, INCLUDING House not set." Defaults to `false` (the
+    /// unflagged, pre-existing Unknown behavior every other caller keeps).
+    /// Set ONLY by [`PrereqCtx::unset_house_is_false`], called ONLY from
+    /// `selections.rs::vf_add_verdicts` — an already-held item's own
+    /// `validate_prerequisites` pass builds its `PrereqCtx` without this flag,
+    /// so re-evaluating a held Brutal Artist with House still unset keeps
+    /// today's non-blocking `prereq_unevaluated` warning, unchanged.
+    unset_house_is_false: bool,
 }
 
 impl<'a> PrereqCtx<'a> {
@@ -389,7 +400,19 @@ impl<'a> PrereqCtx<'a> {
             characteristic_scores,
             ability_category_max_score,
             max_art_score,
+            unset_house_is_false: false,
         }
+    }
+
+    /// F8/D93.2: flags this context so `Prereq::House`'s `None` arm resolves
+    /// to a definite `Tri::False` rather than `Tri::Unknown` — "an unset
+    /// House fails a House prerequisite at pick time only." Consuming
+    /// builder method; call ONLY from `vf_add_verdicts`, never from
+    /// `validate_prerequisites`'s own context (an already-held item's
+    /// re-evaluation must keep the unflagged Unknown-path warning).
+    pub(crate) fn unset_house_is_false(mut self) -> Self {
+        self.unset_house_is_false = true;
+        self
     }
 
     /// Evaluates a prerequisite expression to a tri-state against this
@@ -548,11 +571,15 @@ fn evaluate_prereq(
             }
         }
         // House matches against the entity's own house: a known house that
-        // matches is True, a known house that differs is False, and no house at
-        // all (non-magus or an unset magus) is genuinely Unknown.
+        // matches is True, a known house that differs is False. No house at
+        // all (non-magus or an unset magus) is genuinely Unknown UNLESS the
+        // context is flagged (F8/D93.2: `vf_add_verdicts` only) — then an
+        // unset House counts as a definite non-match, same as a confirmed
+        // different House.
         Prereq::House(id) => match ctx.house {
             Some(h) if h == id => (Tri::True, false),
             Some(_) => (Tri::False, false),
+            None if ctx.unset_house_is_false => (Tri::False, false),
             None => (Tri::Unknown, true),
         },
         // Static (an item's own category never depends on missing data), so
@@ -839,6 +866,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         // A single leaf, but evaluated as though it were already past the
@@ -875,6 +903,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) =
@@ -933,6 +962,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
@@ -964,6 +994,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
@@ -993,6 +1024,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsCompanion, &ctx, 1, None);
@@ -1022,6 +1054,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) =
@@ -1052,6 +1085,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(
@@ -1086,6 +1120,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) =
@@ -1120,6 +1155,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) =
@@ -1150,6 +1186,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) =
@@ -1262,6 +1299,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
@@ -1290,6 +1328,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
@@ -1318,6 +1357,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
@@ -1348,6 +1388,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::AgeMin(40), &ctx, 1, None);
@@ -1381,6 +1422,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(&Prereq::IsGrog, &ctx, 1, None);
@@ -1416,6 +1458,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(
@@ -1454,6 +1497,7 @@ mod tests {
             characteristic_scores: BTreeMap::new(),
             ability_category_max_score: BTreeMap::new(),
             max_art_score: 0,
+            unset_house_is_false: false,
         };
 
         let (outcome, depended_on_unknown) = evaluate_prereq(
@@ -1523,5 +1567,64 @@ mod tests {
             Tri::True,
             "a SEPARATE Major supernatural Virtue must satisfy the asking item's own prerequisite"
         );
+    }
+
+    /// F8/D93.2 (Norbert, 2026-11-15): `vf_add_verdicts` flags its `PrereqCtx`
+    /// so an unset House counts as "not that House" rather than Unknown — only
+    /// at pick time, never for an already-held item (`selections.rs` sets the
+    /// flag; `validate_prerequisites`'s own context never does). Under `Nor`,
+    /// that flagged False is exactly what the quantifier wants: no House
+    /// matches, so `Nor([House(id)])` is True and the item stays addable.
+    #[test]
+    fn house_under_nor_with_unset_house_is_false_treats_absent_house_as_not_matching() {
+        let ruleset = Ruleset::from_json("test", "1", "[]", "[]").unwrap();
+        let entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            crate::RulesetRef::new(Id::new("test"), "1"),
+        );
+        assert!(entity.house.is_none(), "the fixture must set no House");
+        let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+        let ctx =
+            PrereqCtx::build(&entity, &ruleset, None, &selected_ids, &[]).unset_house_is_false();
+
+        let prereq = Prereq::Nor(vec![Prereq::House(Id::new("house.jerbiton"))]);
+        let (outcome, depended_on_unknown) = ctx.evaluate(&prereq);
+        assert_eq!(
+            outcome,
+            Tri::True,
+            "an unset House must satisfy Nor(House(x)) under the flagged context, same as a \
+             confirmed different House would"
+        );
+        assert!(!depended_on_unknown);
+    }
+
+    /// The `Any` twin: a flagged, unset House is a definite False leaf, so
+    /// `Any([House(id)])` with no other True child resolves to a definite
+    /// False rather than Unknown — unlike the unflagged context, where the
+    /// same tree would stay Unknown (`evaluate_prereq_is_companion_unknown_when_type_unresolved`'s
+    /// sibling shape, but for `House`).
+    #[test]
+    fn house_under_any_with_unset_house_is_false_is_a_definite_false() {
+        let ruleset = Ruleset::from_json("test", "1", "[]", "[]").unwrap();
+        let entity = Entity::new(
+            EntityKind::Character,
+            Id::new("magus"),
+            crate::RulesetRef::new(Id::new("test"), "1"),
+        );
+        assert!(entity.house.is_none(), "the fixture must set no House");
+        let selected_ids: BTreeSet<&Id> = entity.selections.iter().map(|s| &s.item_ref).collect();
+        let ctx =
+            PrereqCtx::build(&entity, &ruleset, None, &selected_ids, &[]).unset_house_is_false();
+
+        let prereq = Prereq::Any(vec![Prereq::House(Id::new("house.jerbiton"))]);
+        let (outcome, depended_on_unknown) = ctx.evaluate(&prereq);
+        assert_eq!(
+            outcome,
+            Tri::False,
+            "an unset House under the flagged context must make Any(House(x)) a definite \
+             False, not Unknown"
+        );
+        assert!(!depended_on_unknown);
     }
 }
