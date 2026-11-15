@@ -9,6 +9,7 @@
   import ConceptStep from './ConceptStep.svelte';
   import ExperienceStep from './ExperienceStep.svelte';
   import HouseSelector from './HouseSelector.svelte';
+  import LifeTimeline from './LifeTimeline.svelte';
   import MythicCompanionTypeSelector from './MythicCompanionTypeSelector.svelte';
   import PersonalityReputationsStep from './PersonalityReputationsStep.svelte';
   import SpellBudgetBar from './SpellBudgetBar.svelte';
@@ -41,6 +42,13 @@
     bars?: BarDef[];
     /** Long, self-contained panels need the scrolling wrapper or they clip. */
     scroll?: boolean;
+    /**
+     * Mount the read-only life timeline (`LifeTimeline`) below the bars, same as
+     * the editor's matching tab (manual-testing-findings #10, #16, #24). It
+     * self-gates on `store.effective.life_timeline`, so declaring it here costs
+     * nothing on a ruleset or funding mode that offers no timeline.
+     */
+    timeline?: boolean;
   }
 
   // Every phase has exactly one entry, checked by `satisfies`: a new CreationPhase
@@ -80,8 +88,12 @@
     // modes. It stays on `abilities` as well — there you spend against the total,
     // here you set it — and #14's life-stage chips belong on this step too.
     experience: { component: ExperienceStep, scroll: true, bars: [{ component: XpBar }] },
-    abilities: { component: AbilityTab, bars: [{ component: XpBar }] },
-    arts: { component: ArtGrid, bars: [{ component: XpBar, props: { prefix: 'art-' } }] },
+    abilities: { component: AbilityTab, bars: [{ component: XpBar }], timeline: true },
+    arts: {
+      component: ArtGrid,
+      bars: [{ component: XpBar, props: { prefix: 'art-' } }],
+      timeline: true,
+    },
     // Spell Mastery spends the shared experience pool, so the XP bar rides above the
     // spell-levels bar (try-out finding 11).
     spells: {
@@ -90,6 +102,7 @@
         { component: XpBar, props: { prefix: 'spell-' } },
         { component: SpellBudgetBar, props: { readonlyBase: true } },
       ],
+      timeline: true,
     },
     house_specialisation: { component: HouseSelector, scroll: true },
     mythic_type: { component: MythicCompanionTypeSelector },
@@ -125,6 +138,9 @@
     </div>
   {:else}
     {@render barList()}
+  {/if}
+  {#if step.timeline}
+    <LifeTimeline />
   {/if}
   {#if step.scroll}
     <div class="tab-scroll">

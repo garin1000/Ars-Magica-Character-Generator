@@ -566,6 +566,37 @@ describe('the editor tabs Slice 3 splits out', () => {
     expect(document.querySelector('[data-testid="life-timeline"]')).toBeNull();
   });
 
+  // manual-testing-findings #16: post-Gauntlet points buy spell levels from the
+  // same pool as XP (`ArMDE:2541`), so the Spells tab gets the same read-only
+  // timeline the Abilities and Arts tabs already show (#10).
+  it('shows the life timeline on the Spells tab when one is on offer', async () => {
+    await mountApp();
+    store.view = 'editor';
+    store.effective = {
+      phases_in_force: ['arts', 'spells'],
+      life_timeline: {
+        entries: [
+          {
+            kind: { kind: 'fixed', section: 'childhood' },
+            start_age: 0,
+            end_age: 5,
+            years: 5,
+            capacity: { kind: 'separate', xp: 120, spell_levels: 0 },
+            filled_xp: 30,
+            filled_spell_levels: 0,
+          },
+        ],
+        overrun_years: 0,
+        outside: [],
+      },
+    } as unknown as EffectiveScores;
+    flushSync();
+
+    clickTab('spells');
+
+    expect(document.querySelector('[data-testid="life-timeline"]')).not.toBeNull();
+  });
+
   it('mounts Personality Traits and Reputations on their own tab', async () => {
     await mountApp();
     store.view = 'editor';

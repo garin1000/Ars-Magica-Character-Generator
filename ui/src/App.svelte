@@ -627,12 +627,16 @@
           <!-- Spell Mastery spends the shared experience pool, so the XP bar rides
                above the spell-levels bar (try-out finding 11). The pair is ONE pinned
                box: two sibling stickies at `top: 0` would paint over each other. Same
-               arrangement as the wizard's Spells step (`WizardStep`'s `STEPS`). -->
+               arrangement as the wizard's Spells step (`WizardStep`'s `STEPS`).
+               manual-testing-findings #16: post-Gauntlet points buy spell levels from
+               the same pool as XP (`ArMDE:2541`), so the same read-only life timeline
+               the Abilities/Arts tabs show (#10) rides here too, below the bars. -->
           <div class="vf-tab">
             <div class="bar-stack">
               <XpBar prefix="spell-" />
               <SpellBudgetBar />
             </div>
+            <LifeTimeline />
             <SpellTab />
           </div>
         {:else if tab === 'possessions'}

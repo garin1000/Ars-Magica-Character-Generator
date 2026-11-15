@@ -353,4 +353,55 @@ describe('WizardStep', () => {
     store.entity.age = 30;
     expect(countAcrossSteps('age-cap-note')).toBe(0);
   });
+
+  // --- manual-testing-findings #24: the wizard gets the editor's life timeline ---
+
+  // The editor's Abilities/Arts tabs show the read-only life timeline (#10), and
+  // the Spells tab now does too (#16) — but the wizard, which reuses these very
+  // input surfaces, offered no timeline on any of the three. `LifeTimeline` mounts
+  // itself on nothing (its own `store.effective.life_timeline` guard), so the
+  // fixture has to supply one before any of these can be seen at all.
+  describe('the life timeline on the abilities/arts/spells steps (#24)', () => {
+    function withLifeTimeline(): void {
+      store.effective = {
+        life_timeline: {
+          entries: [
+            {
+              kind: { kind: 'fixed', section: 'childhood' },
+              start_age: 0,
+              end_age: 5,
+              years: 5,
+              capacity: { kind: 'separate', xp: 120, spell_levels: 0 },
+              filled_xp: 30,
+              filled_spell_levels: 0,
+            },
+          ],
+          overrun_years: 0,
+          outside: [],
+        },
+      } as unknown as EffectiveScores;
+    }
+
+    it('shows the life timeline on the abilities step', () => {
+      withLifeTimeline();
+      expect(body('abilities')).toContain('data-testid="life-timeline"');
+    });
+
+    it('shows the life timeline on the arts step', () => {
+      withLifeTimeline();
+      expect(body('arts')).toContain('data-testid="life-timeline"');
+    });
+
+    it('shows the life timeline on the spells step', () => {
+      withLifeTimeline();
+      expect(body('spells')).toContain('data-testid="life-timeline"');
+    });
+
+    it('shows no life timeline on the abilities step when none is on offer', () => {
+      // The suite is a module singleton (`store`): without this, the previous
+      // test's fixture would still be sitting in `store.effective`.
+      store.effective = null;
+      expect(body('abilities')).not.toContain('data-testid="life-timeline"');
+    });
+  });
 });

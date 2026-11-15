@@ -899,6 +899,14 @@ the passage by its `####` heading or the cited text. The pre-sync text is in
   `life_timeline.rs::open_span_drafts`'s own calculation via a new sibling,
   `life_section_overrun_years`, which needs only the budget and `Layout` (no solved
   `XpAllocation`), so the issue and the display note can never disagree.
+- **Amended (manual-testing-findings #16/#24, 2026-11-15):** the same read-only mount reaches two
+  more surfaces. The editor's Spells tab (`App.svelte`) gets it below the XP/spell-levels bar
+  stack — post-Gauntlet points buy spell levels from the same pool as XP (`ArMDE:2541`), so Spells
+  needed the same judged-against-the-life-periods view the Abilities/Arts tabs already had. And the
+  guided wizard, which had none at all on any of the three steps, gets it via a new `StepDef.timeline`
+  flag in `WizardStep.svelte`'s `STEPS` table (abilities, arts, spells), rendered after the bars and
+  before the step body — the same relative position the editor uses, so the two surfaces stay
+  consistent rather than growing independent placements.
 
 ---
 
