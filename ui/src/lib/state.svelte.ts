@@ -455,6 +455,16 @@ class AppStore {
     return this.#agingWorkflow.year;
   }
 
+  /** @see AgingWorkflow.owed */
+  get agingOwed(): number | null {
+    return this.#agingWorkflow.owed;
+  }
+
+  /** @see AgingWorkflow.capFor */
+  agingDistributionCap(characteristic: Characteristic): number {
+    return this.#agingWorkflow.capFor(characteristic);
+  }
+
   /** @see AgingWorkflow.busy */
   get agingBusy(): boolean {
     return this.#agingWorkflow.busy;

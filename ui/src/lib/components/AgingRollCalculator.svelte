@@ -80,7 +80,11 @@
   // of Decrepitude costs five of them. Forcing them all into one target would force
   // Characteristic drops the player may legally avoid.
   // Source: ArMDE:16681, :16690, :16694
-  const owed = $derived(openAwards.reduce((sum, award) => sum + (award.points ?? 0), 0));
+  //
+  // Read off `AgingWorkflow.owed` rather than summed here a second time — the
+  // single-source formula `setDistribution` itself clamps against
+  // (manual-testing-findings #22).
+  const owed = $derived(store.agingOwed ?? 0);
   // `points` is null only when the next Decrepitude level lies beyond the
   // advancement table. Reported as unpriceable, never silently costed at zero — and
   // never applied, since there is no number to match.
@@ -210,6 +214,7 @@
                   <input
                     type="number"
                     min="0"
+                    max={store.agingDistributionCap(characteristic)}
                     value={draft.distribution[characteristic] ?? ''}
                     oninput={(event) => onDistribute(characteristic, event)}
                     use:commitStored={{ read: () => draft.distribution[characteristic] }}
@@ -319,10 +324,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
-  }
-
-  .aging-distribute-list input {
-    width: 4ch;
   }
 
   .aging-actions {

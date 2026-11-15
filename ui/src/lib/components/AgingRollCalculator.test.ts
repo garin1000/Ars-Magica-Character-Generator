@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
@@ -34,6 +36,13 @@ vi.mock('../ipc', () => ({
 import * as ipc from '../ipc';
 import { SCHEMA_VERSION, defaultAgingDraft, store, type AgingDraft } from '../state.svelte';
 import AgingRollCalculator from './AgingRollCalculator.svelte';
+
+/** The component's own source, for the F20 scoped-CSS guard — visual layout
+ *  (which attribute selector wins) is not observable from rendered markup. */
+const componentSource = readFileSync(
+  fileURLToPath(new URL('./AgingRollCalculator.svelte', import.meta.url)),
+  'utf-8',
+);
 
 function resetEntity(): void {
   store.entity = {
@@ -317,6 +326,25 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     body = html();
     expect(open(body, 'aging-apply')).not.toContain('disabled');
     expect(text(body, 'aging-distribute-remaining')).toContain('5');
+  });
+
+  it('caps each distribution input at the points still unplaced (manual-testing-findings #22)', () => {
+    // 5 owed; `qik` and `sta` already hold 2 each. Each input's own cap excludes
+    // only its OWN placed value, so `qik` may still take up to 5-2(sta)=3, and
+    // `sta` the same; `per` (nothing placed yet) is capped at what both leave: 1.
+    store.agingDraft = draft({ die: 9, distribution: { qik: 2, sta: 2 } });
+    setPreview(
+      total({ die: 9, total: 13 }),
+      outcome({
+        total: 13,
+        awards: [{ target: { kind: 'next_decrepitude_level' }, points: 5 }],
+        crisis: true,
+      }),
+    );
+    const body = html();
+    expect(open(body, 'aging-distribute-qik')).toContain('max="3"');
+    expect(open(body, 'aging-distribute-sta')).toContain('max="3"');
+    expect(open(body, 'aging-distribute-per')).toContain('max="1"');
   });
 
   it('disables Apply and Clear while a previous apply is still in flight (G5, full-audit round 1)', () => {
@@ -630,5 +658,18 @@ describe('AgingRollCalculator (slice 6b6c)', () => {
     expect(has(body, 'aging-revert-36')).toBe(false);
     expect(has(body, 'aging-revert-37')).toBe(false);
     expect(body).not.toContain('aging-reverts');
+  });
+
+  it('does not narrow the distribution inputs below the global number-input width (manual-testing-findings #20)', () => {
+    // On Windows/WebView2 a scoped `.aging-distribute-list input { width: 4ch }`
+    // out-specifies the global `input[type='number'] { width: 4.5rem }`
+    // (`app.css`), so only the spinner arrows show — commit c30abd3c only added
+    // `flex-shrink: 0` and left this rule standing. Visual layout is not
+    // observable from rendered markup, so this reads the component's own scoped
+    // style block and asserts the rule sets no competing `width` at all.
+    const styleBlock = /<style>([\s\S]*)<\/style>/.exec(componentSource)?.[1] ?? '';
+    expect(styleBlock.length).toBeGreaterThan(0);
+    const rule = /\.aging-distribute-list\s+input[^{]*\{([^}]*)\}/.exec(styleBlock)?.[1] ?? '';
+    expect(rule).not.toMatch(/width\s*:/);
   });
 });

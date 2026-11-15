@@ -179,18 +179,67 @@ export class AgingWorkflow {
   }
 
   /**
+   * Aging Points the current preview leaves to the player to place: the award
+   * rows whose target is not `named` — a `named` row places its own points
+   * ("1 Aging Point in Str and Sta", `ArMDE:16686`), so only the rest are a
+   * player choice at all ("in any Characteristic**s**", plural: `ArMDE:16681`,
+   * `:16690`). `points` is counted as 0 only when it is unpriceable (the next
+   * Decrepitude level lies beyond the advancement table) — that is a WHETHER,
+   * not a HOW MANY, and stays `unpriceable` for the caller to read separately.
+   *
+   * `null` with no preview yet, which {@link capFor} reads as "uncapped" rather
+   * than "nothing owed" — the two must not collapse into the same zero.
+   */
+  get owed(): number | null {
+    if (!this.preview) return null;
+    return this.preview.outcome.awards
+      .filter((award) => award.target.kind !== 'named')
+      .reduce((sum, award) => sum + (award.points ?? 0), 0);
+  }
+
+  /**
+   * The most Aging Points one Characteristic may still take: what {@link owed}
+   * leaves once every OTHER Characteristic's current placement is subtracted.
+   * The one formula both {@link setDistribution} and the calculator's `max`
+   * attribute read, so the two can never drift apart (manual-testing-findings
+   * #22: "5 of 1 placed" was the two readings disagreeing).
+   *
+   * Uncapped (`U8_MAX`) while no preview exists — a distribution typed before
+   * the engine has answered has no owed figure to cap against, and the
+   * calculator never renders the field until a preview is in.
+   */
+  capFor(characteristic: Characteristic): number {
+    const owed = this.owed;
+    if (owed == null) return U8_MAX;
+    const placedElsewhere = Object.entries(this.draft.distribution)
+      .filter(([key]) => key !== characteristic)
+      .reduce((sum, [, value]) => sum + (value ?? 0), 0);
+    return Math.max(0, owed - placedElsewhere);
+  }
+
+  /**
    * Place (or, with 0, un-place) Aging Points in one Characteristic.
    *
    * "If an Aging Point 'in any Characteristic' is gained, the player may choose
    * the Characteristic." Source: ArMDE:16694 — and `ArMDE:16681`/`ArMDE:16690`
    * say "in any Characteristic**s**", plural, so this is a map and not a single
    * pick.
+   *
+   * Capped at {@link capFor}: typing more than the award still owes once every
+   * other Characteristic's placement is accounted for silently clamps down
+   * rather than leaving Apply disabled on an uncorrectable "5 of 1 placed".
    */
   setDistribution(characteristic: Characteristic, points: number | null): void {
     this.rejections = [];
     const distribution = { ...this.draft.distribution };
     if (points != null && Number.isFinite(points) && points > 0) {
-      distribution[characteristic] = clampInt(points, 1, U8_MAX);
+      const cap = this.capFor(characteristic);
+      const clamped = cap > 0 ? clampInt(points, 1, Math.min(cap, U8_MAX)) : 0;
+      if (clamped > 0) {
+        distribution[characteristic] = clamped;
+      } else {
+        delete distribution[characteristic];
+      }
     } else {
       delete distribution[characteristic];
     }

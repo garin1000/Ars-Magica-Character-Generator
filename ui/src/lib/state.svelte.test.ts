@@ -6253,6 +6253,53 @@ describe('the aging roll draft', () => {
 
     expect(store.agingPreview?.total.total).toBe(14);
   });
+
+  it('caps a placed entry at the points still unplaced, tightening as another Characteristic fills (F22)', async () => {
+    // manual-testing-findings-2026-11-15 #22: the distribution inputs let a
+    // player type more than the award owes ("5 of 1 placed") and Apply just
+    // stayed disabled forever instead of refusing the excess up front.
+    await store.createCharacter('companion');
+    store.setAgingYear(40);
+    store.setAgingDie(9);
+    vi.mocked(ipc.agingPreview).mockResolvedValue({
+      status: 'previewed',
+      total: { total: 13 },
+      outcome: {
+        total: 13,
+        awards: [{ target: { kind: 'next_decrepitude_level' }, points: 1 }],
+      },
+    } as unknown as AgingProjection);
+    await store.previewAgingRoll();
+
+    // Only 1 Aging Point is owed; asking for 5 must cap at what is left, 1.
+    store.setAgingDistribution('sta', 5);
+    expect(store.agingDraft.distribution).toEqual({ sta: 1 });
+
+    // Raise the award to 3: placing 2 in `sta` leaves only 1 for `qik`, however
+    // many the player types there.
+    vi.mocked(ipc.agingPreview).mockResolvedValue({
+      status: 'previewed',
+      total: { total: 13 },
+      outcome: {
+        total: 13,
+        awards: [{ target: { kind: 'next_decrepitude_level' }, points: 3 }],
+      },
+    } as unknown as AgingProjection);
+    await store.previewAgingRoll();
+
+    store.setAgingDistribution('sta', 2);
+    store.setAgingDistribution('qik', 5);
+    expect(store.agingDraft.distribution).toEqual({ sta: 2, qik: 1 });
+
+    // Lowering `sta` frees the room back up for `qik`.
+    store.setAgingDistribution('sta', 1);
+    store.setAgingDistribution('qik', 5);
+    expect(store.agingDraft.distribution).toEqual({ sta: 1, qik: 2 });
+
+    // Nothing is left at all: a third Characteristic gets none of it.
+    store.setAgingDistribution('per', 1);
+    expect(store.agingDraft.distribution).toEqual({ sta: 1, qik: 2 });
+  });
 });
 
 describe('applyAgingRoll — concurrent calls do not stack (G5)', () => {
