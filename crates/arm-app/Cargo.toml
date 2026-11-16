@@ -57,6 +57,46 @@ open = "5"
 # `cargo update` tauri past 2.11, update the workflow pins in the same change.
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
+# A3 (F5): the macOS discard-confirmation dialog (`discard_dialog.rs`) calls rfd
+# directly instead of through tauri-plugin-dialog, because the plugin always
+# maps a plain `rfd::MessageDialogResult::Cancel` (Esc, the sheet closed) to
+# its SECOND button label — which would be Discard here
+# (`tauri-plugin-dialog-2.7.1/src/desktop.rs:236-239`). Same version
+# tauri-plugin-dialog already resolves (`Cargo.lock`), so this adds no second
+# resolution. The pure outcome-mapping function also needs this to compile on
+# every platform, not only macOS — see `discard_dialog.rs`'s module doc.
+# `default-features = false`: tauri-plugin-dialog's own `gtk3` feature (its
+# default) already enables rfd's `gtk3`, and rfd's build script refuses to
+# enable both `gtk3` and the default `xdg-portal` at once — this crate needs
+# no rfd feature of its own, only the always-compiled `MessageDialogResult`
+# type and, on macOS, `MessageDialog` itself.
+rfd = { version = "0.16", default-features = false }
+
+# A3 (F5): the Linux discard-confirmation dialog (`discard_dialog.rs`) is a
+# direct `gtk::MessageDialog` instead of rfd's GTK3 backend, which never calls
+# `set_default_response` at all
+# (`rfd-0.16.0/src/backend/gtk3/message_dialog.rs`) — so Enter has no effect
+# and GTK's own fallback (tab order), not this app, decides which button
+# activates. Same version already resolved transitively (tauri, muda and rfd's
+# own gtk3 backend all pull gtk 0.18 — `Cargo.lock`).
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk = "0.18"
+
+# A3 (F5): the Windows discard-confirmation dialog (`discard_dialog.rs`) calls
+# `TaskDialogIndirect` directly, because rfd's own Windows backend
+# (`rfd-0.16.0/src/backend/win_cid/message_dialog.rs:156`) hardcodes
+# `nDefaultButton: 0`, which matches none of its custom button ids, so
+# `TaskDialogIndirect`'s own documented fallback makes the FIRST button —
+# Discard — the Enter default. `0.61` matches the version most of this
+# workspace's other Windows-only dependencies already resolve to
+# (`Cargo.lock`); minimal features — just the two modules `discard_dialog.rs`
+# needs (`Win32_Foundation`'s types, e.g. `HWND`, are unconditionally part of
+# windows-sys and need no feature flag of their own).
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", default-features = false, features = [
+    "Win32_UI_Controls",
+    "Win32_UI_WindowsAndMessaging",
+] }
 
 [dev-dependencies]
 # Tests only — never linked into the binary. `tests/menu.rs` parses the menu's

@@ -6,10 +6,11 @@ use std::sync::{Mutex, RwLock, RwLockReadGuard};
 use arm_rules::{Characteristic, Entity, Id, LocalizedRuleset, ValidationMode, ValidationResult};
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager, Runtime, State};
-use tauri_plugin_dialog::{DialogExt, FileDialogBuilder, MessageDialogButtons, MessageDialogKind};
+use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
 
 use arm_rules::DerivedTotals;
 
+use crate::discard_dialog;
 use crate::effective_dto::{self, EffectiveScores};
 use crate::error::AppError;
 use crate::menu::{MenuFlags, MenuLabels};
@@ -898,31 +899,28 @@ pub fn e2e_file_override() -> Option<std::path::PathBuf> {
 /// Returns `Some(true)` to discard, `Some(false)` to cancel, and `None` when
 /// this build has no native confirmation to offer, which is the test seam: see
 /// [`native_discard_confirmation_enabled`].
+///
+/// Uses [`discard_dialog::show_discard_dialog`] (A3, F5) rather than
+/// `tauri-plugin-dialog` directly — see that module's doc for why — via a
+/// one-shot channel rather than `blocking_show`: `show_discard_dialog` never
+/// blocks the thread that calls it (its own contract), so there is no blocking
+/// call left to make off the main thread the way the old `blocking_show` did;
+/// this command instead awaits the one answer its callback sends.
 #[tauri::command]
 pub async fn confirm_discard(labels: CloseGuardLabels, app: AppHandle) -> Option<bool> {
     if !native_discard_confirmation_enabled() {
         return None;
     }
-    let mut dialog = app
-        .dialog()
-        .message(labels.message)
-        .title(labels.title)
-        .kind(MessageDialogKind::Warning)
-        .buttons(MessageDialogButtons::OkCancelCustom(
-            labels.discard,
-            labels.cancel,
-        ));
-    // Tie the confirmation to the window it is about, so it cannot be lost
-    // behind it. Parenting IS the modality mechanism the dialog plugin offers —
-    // the same call `guard_blocks_quit` makes for the close/quit dialog.
-    if let Some(window) = app.get_webview_window("main") {
-        dialog = dialog.parent(&window);
-    }
-    // `blocking_show` off the main thread, exactly as [`save_entity`] calls
-    // `blocking_save_file`: an async command runs on Tauri's async runtime, not
-    // on the UI thread, so blocking here waits for the answer without stalling
-    // the event loop that has to draw the dialog.
-    Some(dialog.blocking_show())
+    let (tx, mut rx) = tauri::async_runtime::channel(1);
+    discard_dialog::show_discard_dialog(&app, labels, move |outcome| {
+        let _ = tx.try_send(outcome.discards());
+    });
+    // `rx.recv()` returns `None` only if the sender were dropped without
+    // sending, which `show_discard_dialog` must never do — every path,
+    // including a platform error, calls back with an `Outcome` (that
+    // module's doc) — but `unwrap_or(false)` still resolves to "cancel"
+    // rather than hanging New/Open forever if it somehow did.
+    Some(rx.recv().await.unwrap_or(false))
 }
 
 /// Whether this build owns a native discard confirmation. The single switch

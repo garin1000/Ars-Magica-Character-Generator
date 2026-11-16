@@ -2,8 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use arm_app::commands::{self, AppState};
+use arm_app::discard_dialog;
 use tauri::{AppHandle, Manager};
-use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 fn main() {
     tauri::Builder::default()
@@ -248,9 +248,10 @@ fn request_exit_enabled() -> bool {
 /// test`, clippy, fmt, vitest and the full e2e suite green.
 ///
 /// What is left below is the one step that genuinely needs Tauri — building the
-/// dialog, parenting it to the window, and handing its answer back. See those
-/// five functions for the table, and `tests/commands.rs` for the rows that walk
-/// it.
+/// dialog and handing its answer back, via [`discard_dialog::show_discard_dialog`]
+/// (A3, F5) rather than `tauri-plugin-dialog` directly — see that module's doc
+/// for why. See those five functions for the table, and `tests/commands.rs`
+/// for the rows that walk it.
 fn guard_blocks_quit<F>(app: &AppHandle, on_discard: F) -> bool
 where
     F: FnOnce(&AppHandle) + Send + 'static,
@@ -261,24 +262,12 @@ where
     if decision.shows_dialog() {
         let labels = guard.labels.clone();
         drop(guard);
-        let app = app.clone();
-        let mut dialog = app
-            .dialog()
-            .message(labels.message)
-            .title(labels.title)
-            .kind(MessageDialogKind::Warning)
-            .buttons(MessageDialogButtons::OkCancelCustom(
-                labels.discard,
-                labels.cancel,
-            ));
-        // Tie the confirmation to the window it is about, so it cannot be lost
-        // behind it. Parenting IS the modality mechanism the dialog plugin offers.
-        if let Some(window) = app.get_webview_window("main") {
-            dialog = dialog.parent(&window);
-        }
-        dialog.show(move |discard| {
-            let state = app.state::<AppState>();
-            commands::resolve_discard_dialog(&state.close_guard, discard, || on_discard(&app));
+        let callback_app = app.clone();
+        discard_dialog::show_discard_dialog(app, labels, move |outcome| {
+            let state = callback_app.state::<AppState>();
+            commands::resolve_discard_dialog(&state.close_guard, outcome.discards(), || {
+                on_discard(&callback_app)
+            });
         });
     }
     decision.blocks()

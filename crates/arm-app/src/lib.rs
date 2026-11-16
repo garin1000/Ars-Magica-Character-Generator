@@ -14,6 +14,7 @@
 
 pub mod atomic_write;
 pub mod commands;
+pub mod discard_dialog;
 pub mod effective_dto;
 pub mod error;
 pub mod menu;

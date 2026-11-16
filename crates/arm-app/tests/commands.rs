@@ -4665,6 +4665,54 @@ fn the_discard_confirmation_stands_down_under_the_e2e_feature() {
     );
 }
 
+/// A3 (F5): `discard_dialog::show_discard_dialog`'s per-platform backends each
+/// funnel their own native result through exactly one of the `*_to_outcome`
+/// functions into a single [`arm_app::discard_dialog::Outcome`], and
+/// [`Outcome::discards`] is the one bit that then has to feed the EXISTING
+/// close-guard gate (`apply_dialog_answer`/`resolve_discard_dialog`) the same
+/// way a direct `bool` always has. This pins that wiring from both directions,
+/// so a platform error — which the module doc requires to map to
+/// `Outcome::Cancel`, same as a real Cancel click — cannot leave `showing`
+/// stuck `true` (a quit path that can never ask again), and a real `Discard`
+/// still latches the re-issued quit through exactly as `confirming_the_discard_latches_the_re_issued_quit_through`
+/// already proves for the raw `bool` API.
+#[test]
+fn an_outcome_cancel_clears_the_dialog_state_and_an_outcome_discard_still_latches() {
+    use arm_app::commands::{CloseGuardState, apply_dialog_answer};
+    use arm_app::discard_dialog::Outcome;
+
+    let mut guard = CloseGuardState {
+        dirty: true,
+        showing: true,
+        ..CloseGuardState::default()
+    };
+
+    // Stands in for any platform error (TaskDialogIndirect failing, the GTK
+    // dialog destroyed without a response, …): the module doc requires every
+    // such path to map to `Outcome::Cancel`, so this is the outcome a quit
+    // path sees however the native call actually failed.
+    apply_dialog_answer(&mut guard, Outcome::Cancel.discards());
+    assert!(
+        !guard.showing,
+        "an error (or a real Cancel) outcome must clear the dialog-open latch, \
+         or a later quit could never ask again"
+    );
+    assert!(
+        !guard.confirmed,
+        "an error must never be treated as a confirmed discard"
+    );
+
+    // The dialog is shown again (a second quit attempt) and this time the user
+    // genuinely chooses Discard.
+    guard.showing = true;
+    apply_dialog_answer(&mut guard, Outcome::Discard.discards());
+    assert!(!guard.showing, "the dialog is no longer on screen");
+    assert!(
+        guard.confirmed,
+        "choosing Discard must still latch the re-issued quit through"
+    );
+}
+
 /// C3b, trap 2: the New/Open confirmation must not ride on
 /// `CloseGuardState::confirmed`. That flag is a one-shot LATCH — set in
 /// `main.rs`'s dialog callback so the re-issued close/quit belonging to the same
