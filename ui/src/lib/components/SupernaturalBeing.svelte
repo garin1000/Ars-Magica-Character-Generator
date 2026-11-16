@@ -34,6 +34,21 @@
   function num(event: Event): number {
     return Number((event.currentTarget as HTMLInputElement).value);
   }
+
+  // manual-testing-findings-2026-11-15 #9 (F9): Might is unsigned but reaches a
+  // hard ceiling (0..255). Forwarding every keystroke unconditionally clamped a
+  // value past it immediately, and the plain `value={might.score}` binding
+  // snapped the field back before typing finished.
+  function onMightScoreInput(event: Event): void {
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw === '') return;
+    const typed = Number(raw);
+    if (!Number.isFinite(typed) || typed < 0 || typed > 255) return;
+    store.setMightScore(typed);
+  }
+  function commitMightScore(raw: string): void {
+    store.setMightScore(Number(raw));
+  }
 </script>
 
 <section class="panel supernatural-being">
@@ -62,8 +77,8 @@
               min="0"
               max="255"
               value={might.score}
-              oninput={(e) => store.setMightScore(num(e))}
-              use:commitStored={{ read: () => might?.score }}
+              oninput={onMightScoreInput}
+              use:commitStored={{ read: () => might?.score, commit: commitMightScore }}
               data-testid="might-score"
             />
           </label>

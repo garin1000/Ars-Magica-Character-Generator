@@ -146,6 +146,12 @@ function click(testid: string): void {
   flushSync();
 }
 
+/** Commit the field, as leaving it (or Enter) does. */
+function commit(testid: string): void {
+  byTestId<HTMLInputElement>(testid).dispatchEvent(new Event('change', { bubbles: true }));
+  flushSync();
+}
+
 const names = () => store.entity.life_stages?.life_sections?.map((s) => s.name);
 
 describe('LifeSections editor wiring (G3)', () => {
@@ -179,6 +185,32 @@ describe('LifeSections editor wiring (G3)', () => {
     typeInto('life-stage-lab-years-1-input', '3');
     expect(store.entity.life_stages?.life_sections?.[1].lab_years).toEqual({ four_seasons: 2 });
     expect(store.entity.life_stages?.post_gauntlet_lab_years).toEqual({ one_season: 3 });
+  });
+
+  // manual-testing-findings-2026-11-15 #9 (F9): `setLifeSectionYears` reads a blank
+  // field as 0 (the field is "required" — there is no stored `null`), so clearing it
+  // to retype used to write 0 on the very next keystroke, and the plain `value={...}`
+  // binding snapped the field straight back to "0" before the player could type a
+  // replacement — exactly the "checks prevent proper typing" F9 reports. The
+  // birth-year pattern's "or nothing" clause (`actions.ts::commitStored`'s own doc,
+  // and `IdentityFields.svelte::onBirthYearInput`) is for precisely this case: a
+  // field with no legitimate blank value must leave the store untouched while typing
+  // rather than force a default through it, and clamp only on commit.
+  it('keeps a cleared years field blank instead of snapping to the required 0 (F9)', () => {
+    mountEditor();
+    typeInto('life-section-1-years-input', '');
+    expect(
+      byTestId<HTMLInputElement>('life-section-1-years-input').value,
+      'typing is never fought',
+    ).toBe('');
+    expect(
+      store.entity.life_stages?.life_sections?.[1].years,
+      'no write until the edit is committed',
+    ).toBe(2);
+
+    commit('life-section-1-years-input');
+    expect(store.entity.life_stages?.life_sections?.[1].years).toBe(0);
+    expect(byTestId<HTMLInputElement>('life-section-1-years-input').value).toBe('0');
   });
 });
 

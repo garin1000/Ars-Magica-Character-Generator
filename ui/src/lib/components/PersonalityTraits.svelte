@@ -4,6 +4,25 @@
   import Spinner from './Spinner.svelte';
 
   const traits = $derived(store.entity.personality_traits ?? []);
+
+  // manual-testing-findings-2026-11-15 #9 (F9): the value is signed (|6| max,
+  // S29). A `type="number"` input reads an incomplete entry — a bare "-" on the
+  // way to "-4" — back as the empty string, so forwarding every keystroke
+  // unconditionally (the old `Number(raw) || 0`) wrote a 0 for it, and the plain
+  // `value={trait.value}` binding snapped the field back before the digit after
+  // the sign could ever be typed. An empty read must never be forwarded while
+  // typing; the existing `|| 0` fallback still applies on commit.
+  function onValueInput(index: number, event: Event): void {
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw === '') return;
+    const typed = Number(raw);
+    if (!Number.isFinite(typed) || typed < -6 || typed > 6) return;
+    store.setPersonalityTraitValue(index, typed);
+  }
+
+  function commitValue(index: number, raw: string): void {
+    store.setPersonalityTraitValue(index, Number(raw) || 0);
+  }
 </script>
 
 <!-- Personality Traits. Extracted from CharacterDetails so the wizard's
@@ -45,12 +64,8 @@
               max="6"
               value={trait.value}
               aria-label={store.t('personality-value-label', { name: trait.name })}
-              oninput={(e) =>
-                store.setPersonalityTraitValue(
-                  i,
-                  Number((e.currentTarget as HTMLInputElement).value) || 0,
-                )}
-              use:commitStored={{ read: () => trait.value }}
+              oninput={(e) => onValueInput(i, e)}
+              use:commitStored={{ read: () => trait.value, commit: (raw) => commitValue(i, raw) }}
               data-testid="personality-value-{i}"
             />
           {/snippet}

@@ -151,11 +151,22 @@ describe('AgeFields shows the stored age once an edit is committed (N2)', () => 
     expect(store.entity.age).toBe(500);
   });
 
-  it('rewrites a typed 6000 to 500 — the clamp reached on the third key holds', async () => {
+  // manual-testing-findings-2026-11-15 #9 (F9): a keystroke whose parsed value falls
+  // outside [1, ageInputMax] must never reach the store — the birth-year pattern
+  // (`IdentityFields.svelte::onBirthYearInput`). Before this fix every keystroke
+  // reached `setAge` unconditionally, so the THIRD key here ("600") was already
+  // clamped to 500 mid-edit, and the superseded test name ("the clamp reached on the
+  // third key holds") documented that as expected. It is exactly the fiddliness F9
+  // reports: the field snaps to a different number than what was typed, before
+  // typing is even finished.
+  it('keeps a typed 6000 out of the store past the bound, and clamps only on commit', async () => {
     await openDocument(character(null));
     const input = mountField();
 
     typeKeys(input, '6000');
+    expect(store.entity.age, 'no keystroke past the bound reaches the store').toBe(60);
+    expect(input.value, 'typing is never fought').toBe('6000');
+
     commit(input);
     expect(store.entity.age).toBe(500);
     expect(input.value).toBe('500');

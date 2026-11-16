@@ -248,6 +248,22 @@
     return cat ? minLearnableLevel(cat, ritualMinLevel) : ORDINARY_SPELL_MINIMUM_LEVEL;
   }
 
+  // manual-testing-findings-2026-11-15 #9 (F9): a General spell's level reaches a
+  // hard ceiling (255, `clamp.ts::U8_MAX`). Forwarding every keystroke
+  // unconditionally clamped a value past it immediately, and the plain
+  // `value={chosen.level ?? minLevelForChosen(...)}` binding snapped the field back
+  // before typing finished.
+  function onSpellLevelInput(index: number, spellId: string, event: Event): void {
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw === '') return;
+    const typed = Number(raw);
+    if (!Number.isFinite(typed) || typed < minLevelForChosen(spellId) || typed > 255) return;
+    store.setSpellLevelAt(index, typed);
+  }
+  function commitSpellLevel(index: number, raw: string): void {
+    store.setSpellLevelAt(index, Number(raw));
+  }
+
   // Clicking a source row adds the spell. A General spell (no fixed level) is
   // added at its minimum learnable level (edited inline afterwards): the
   // ordinary floor (1) for a plain spell, but the engine's ritual_min_level
@@ -651,10 +667,10 @@
                     step="1"
                     aria-label={store.t('spell-general-level-label')}
                     value={chosen.level ?? minLevelForChosen(chosen.spell)}
-                    oninput={(e) =>
-                      store.setSpellLevelAt(i, Number((e.currentTarget as HTMLInputElement).value))}
+                    oninput={(e) => onSpellLevelInput(i, chosen.spell, e)}
                     use:commitStored={{
                       read: () => chosen.level ?? minLevelForChosen(chosen.spell),
+                      commit: (raw) => commitSpellLevel(i, raw),
                     }}
                     data-testid="spell-level-input-{chosen.spell}-{i}"
                   />

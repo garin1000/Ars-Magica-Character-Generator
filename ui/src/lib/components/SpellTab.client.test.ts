@@ -526,3 +526,52 @@ describe('SpellTab "add within Potent field" actions add the spell already marke
     ]);
   });
 });
+
+// manual-testing-findings-2026-11-15 #9 (F9), phase 2 fold-in: a General spell's
+// inline level reaches a hard ceiling (255, `clamp.ts::U8_MAX`), same as a
+// Characteristic's Aging Points. The current inline handler forwards `Number(raw)`
+// unconditionally on every keystroke, so a value past 255 writes immediately and the
+// plain `value={chosen.level ?? minLevelForChosen(...)}` binding snaps the field
+// back before typing finishes — same mechanism as
+// `AgingRecordPanel.client.test.ts`'s Aging Points case.
+describe('SpellTab a General spell’s level stays within its ceiling while typing (F9)', () => {
+  function mountTab(): void {
+    target = document.createElement('div');
+    document.body.appendChild(target);
+    app = mount(SpellTab, { target });
+    flushSync();
+  }
+
+  function typeInto(input: HTMLInputElement, text: string): void {
+    input.value = text;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+  }
+
+  /** Commit the field, as leaving it (or Enter) does. */
+  function commit(input: HTMLInputElement): void {
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+  }
+
+  it('keeps an out-of-range level out of the store, and clamps only on commit', () => {
+    // RITUAL is General (no fixed catalogue level), so its level is editable inline.
+    store.entity.spells = [{ spell: RITUAL, level: 20 }];
+    mountTab();
+    const input = target.querySelector<HTMLInputElement>(
+      `[data-testid="spell-level-input-${RITUAL}-0"]`,
+    );
+    expect(input).toBeTruthy();
+
+    typeInto(input!, '300');
+    expect(input!.value, 'typing is never fought').toBe('300');
+    expect(
+      store.entity.spells![0].level,
+      'no write past the bound until the edit is committed',
+    ).toBe(20);
+
+    commit(input!);
+    expect(store.entity.spells![0].level).toBe(255);
+    expect(input!.value).toBe('255');
+  });
+});

@@ -1,7 +1,7 @@
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Entity } from '../types';
+import type { Entity, LocalizedRuleset } from '../types';
 
 // guided-creation-review-2026-08 #26 turned the decrepitude-effect control from an
 // `<input type="text">` into a `<textarea rows="3">`, which changes the handler's
@@ -130,4 +130,104 @@ describe('AgingRecordPanel decrepitude narrative (#26)', () => {
       'Deaf in one ear, and a limp since the winter of 1223.',
     );
   });
+});
+
+// manual-testing-findings-2026-11-15 #9 (F9), phase 2 fold-in: Norbert's "true for
+// other fields too" names the apparent-age and Aging-Points fields on this very
+// panel. Same mechanism as `AgeFields.client.test.ts`/`AgingRollCalculator.client.test.ts`:
+// each `oninput` forwards an out-of-range value on every keystroke, and the plain
+// `value={...}` binding snaps the field back to the clamped number before typing
+// finishes. Table-driven over the two fields, which share the same pattern and only
+// differ in bound and store path.
+function installAgingRuleset(): void {
+  store.ruleset = {
+    ruleset: {
+      id: 'test',
+      version: '1',
+      point_items: {},
+      type_profiles: {},
+      abilities: {},
+      magnitude_points: { free: 0, minor: 1, major: 3 },
+      ability_category_order: ['general'],
+      art_type_order: ['technique', 'form'],
+      aging: {
+        start_age: 35,
+        age_divisor: 10,
+        apparent_age_increase_min: 3,
+        living_conditions: [],
+        outcomes: [],
+        max_age: 500,
+      },
+    },
+    i18n: {},
+  } as unknown as LocalizedRuleset;
+}
+
+function typeInto(input: HTMLInputElement, text: string): void {
+  input.value = text;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+}
+
+/** Commit the field, as leaving it (or Enter) does. */
+function commitField(input: HTMLInputElement): void {
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  flushSync();
+}
+
+describe('AgingRecordPanel number fields stay within range while typing (F9)', () => {
+  const cases: {
+    name: string;
+    testid: string;
+    setup: () => void;
+    read: () => number | undefined;
+    typed: string;
+    blockedAt: number;
+    committed: number;
+  }[] = [
+    {
+      name: 'apparent age',
+      testid: 'apparent-age-input',
+      setup: () => {
+        installAgingRuleset();
+        store.entity.apparent_age = 100;
+      },
+      read: () => store.entity.apparent_age ?? undefined,
+      typed: '600',
+      blockedAt: 100,
+      committed: 500,
+    },
+    {
+      name: 'Aging Points (sta)',
+      testid: 'aging-points-sta',
+      setup: () => {
+        store.entity.aging_points = { sta: 10 };
+      },
+      read: () => store.entity.aging_points?.sta,
+      typed: '300',
+      blockedAt: 10,
+      committed: 255,
+    },
+  ];
+
+  it.each(cases)(
+    '$name keeps an out-of-range value out of the store, and clamps only on commit',
+    ({ setup, testid, read, typed, blockedAt, committed }) => {
+      setup();
+      target = document.createElement('div');
+      document.body.appendChild(target);
+      app = mount(AgingRecordPanel, { target });
+      flushSync();
+      const input = target.querySelector<HTMLInputElement>(`[data-testid="${testid}"]`);
+      expect(input, `no field ${testid}`).toBeTruthy();
+
+      typeInto(input!, typed);
+      expect(input!.value, 'typing is never fought').toBe(typed);
+      expect(read(), 'no write past the bound until the edit is committed').toBe(blockedAt);
+
+      commitField(input!);
+      expect(read()).toBe(committed);
+      expect(input!.value).toBe(String(committed));
+    },
+  );
 });

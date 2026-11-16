@@ -17,6 +17,46 @@
     return Number((event.currentTarget as HTMLInputElement).value);
   }
 
+  // manual-testing-findings-2026-11-15 #9 (F9): size and the Characteristics are
+  // signed (-128..127, `clamp.ts::I8_MIN`/`I8_MAX`); Might is unsigned but reaches
+  // a hard ceiling (0..255). A `type="number"` input reads an incomplete entry — a
+  // bare "-" on the way to "-4" — back as the empty string, so forwarding every
+  // keystroke unconditionally wrote a clamped-to-0 value for it (`clamp.ts::clampInt`
+  // reads a non-finite value as 0), and the plain `value={...}` bindings below
+  // snapped each field back before typing finished.
+  function onSizeInput(event: Event): void {
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw === '') return;
+    const typed = Number(raw);
+    if (!Number.isFinite(typed) || typed < -128 || typed > 127) return;
+    store.setFamiliarSize(typed);
+  }
+  function commitSize(raw: string): void {
+    store.setFamiliarSize(Number(raw));
+  }
+
+  function onMightScoreInput(event: Event): void {
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw === '') return;
+    const typed = Number(raw);
+    if (!Number.isFinite(typed) || typed < 0 || typed > 255) return;
+    store.setFamiliarMightScore(typed);
+  }
+  function commitMightScore(raw: string): void {
+    store.setFamiliarMightScore(Number(raw));
+  }
+
+  function onCharacteristicInput(characteristic: Characteristic, event: Event): void {
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw === '') return;
+    const typed = Number(raw);
+    if (!Number.isFinite(typed) || typed < -128 || typed > 127) return;
+    store.setFamiliarCharacteristic(characteristic, typed);
+  }
+  function commitCharacteristic(characteristic: Characteristic, raw: string): void {
+    store.setFamiliarCharacteristic(characteristic, Number(raw));
+  }
+
   // S18: removing the familiar discards its whole statblock — name, Might,
   // Characteristics, personality traits, cords, powers — in one click, with
   // no undo. Gate it behind a confirmation instead of calling
@@ -70,8 +110,8 @@
         min="-128"
         max="127"
         value={familiar.size ?? 0}
-        oninput={(e) => store.setFamiliarSize(num(e))}
-        use:commitStored={{ read: () => familiar?.size ?? 0 }}
+        oninput={onSizeInput}
+        use:commitStored={{ read: () => familiar?.size ?? 0, commit: commitSize }}
         data-testid="familiar-size"
       />
     </label>
@@ -101,8 +141,8 @@
           min="0"
           max="255"
           value={might.score}
-          oninput={(e) => store.setFamiliarMightScore(num(e))}
-          use:commitStored={{ read: () => might?.score }}
+          oninput={onMightScoreInput}
+          use:commitStored={{ read: () => might?.score, commit: commitMightScore }}
           data-testid="familiar-might-score"
         />
       </label>
@@ -137,9 +177,10 @@
             min="-128"
             max="127"
             value={characteristics[characteristic as Characteristic] ?? 0}
-            oninput={(e) => store.setFamiliarCharacteristic(characteristic, num(e))}
+            oninput={(e) => onCharacteristicInput(characteristic, e)}
             use:commitStored={{
               read: () => characteristics[characteristic as Characteristic] ?? 0,
+              commit: (raw) => commitCharacteristic(characteristic, raw),
             }}
             data-testid="familiar-char-{characteristic}"
           />

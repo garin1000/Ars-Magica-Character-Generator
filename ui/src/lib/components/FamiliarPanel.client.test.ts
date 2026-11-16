@@ -213,3 +213,90 @@ describe('FamiliarPanel remove confirmation (S18)', () => {
     expect(target.querySelector('[data-testid="familiar-remove-confirm-prompt"]')).toBeFalsy();
   });
 });
+
+// manual-testing-findings-2026-11-15 #9 (F9), phase 2 fold-in: size and the
+// Characteristics are signed (-128..127, `clamp.ts::I8_MIN`/`I8_MAX`); Might is
+// unsigned but reaches a hard ceiling (0..255). A `type="number"` input's own
+// value-sanitization algorithm reads an incomplete entry — a bare "-" on the way to
+// "-4" — back as the empty string (`event.currentTarget.value` is `''` at that
+// instant even though the field still visibly shows the "-"; confirmed directly
+// against happy-dom, which implements the same algorithm), and the current inline
+// handlers forward `Number(raw)` unconditionally on every keystroke, so the empty
+// read (or an over-255 one) writes immediately and the plain `value={...}` binding
+// snaps the field back before typing finishes — same mechanism as
+// `PersonalityTraits.client.test.ts` and `AgingRecordPanel.client.test.ts`.
+function typeIntoField(input: HTMLInputElement, text: string): void {
+  input.value = text;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+}
+
+/** Commit the field, as leaving it (or Enter) does. */
+function commitField(input: HTMLInputElement): void {
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  flushSync();
+}
+
+describe('FamiliarPanel signed and bounded number fields stay within range while typing (F9)', () => {
+  const cases: {
+    name: string;
+    testid: string;
+    setup: () => void;
+    read: () => number | undefined;
+    typed: string;
+    blockedAt: number;
+    committed: number;
+  }[] = [
+    {
+      name: 'size (signed, empty read)',
+      testid: 'familiar-size',
+      setup: () => {
+        store.entity.familiar!.size = 5;
+      },
+      read: () => store.entity.familiar?.size,
+      typed: '',
+      blockedAt: 5,
+      committed: 0,
+    },
+    {
+      name: 'a Characteristic (signed, empty read)',
+      testid: 'familiar-char-qik',
+      setup: () => {
+        store.entity.familiar!.characteristics = { qik: 3 };
+      },
+      read: () => store.entity.familiar?.characteristics?.qik,
+      typed: '',
+      blockedAt: 3,
+      committed: undefined as unknown as number, // 0 is pruned from the map (#withCharCount-style delete)
+    },
+    {
+      name: 'Might score (unsigned ceiling)',
+      testid: 'familiar-might-score',
+      setup: () => {
+        store.setFamiliarMightRealm('magic');
+        store.setFamiliarMightScore(10);
+      },
+      read: () => store.entity.familiar?.might?.score,
+      typed: '300',
+      blockedAt: 10,
+      committed: 255,
+    },
+  ];
+
+  it.each(cases)(
+    '$name: an out-of-range value stays out of the store, and clamps only on commit',
+    ({ setup, testid, read, typed, blockedAt, committed }) => {
+      setup();
+      mountPanel();
+      const input = target.querySelector<HTMLInputElement>(`[data-testid="${testid}"]`);
+      expect(input, `no field ${testid}`).toBeTruthy();
+
+      typeIntoField(input!, typed);
+      expect(input!.value, 'typing is never fought').toBe(typed);
+      expect(read(), 'no write past the bound until the edit is committed').toBe(blockedAt);
+
+      commitField(input!);
+      expect(read()).toBe(committed);
+    },
+  );
+});

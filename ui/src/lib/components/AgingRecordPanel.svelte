@@ -12,8 +12,24 @@
   const agingPoints = $derived(store.entity.aging_points ?? {});
   const agingLog = $derived(store.entity.aging_log ?? []);
 
+  // manual-testing-findings-2026-11-15 #9 (F9): the birth-year pattern
+  // (`IdentityFields.svelte::onBirthYearInput`). An empty read forwards as `null`
+  // (a genuine clear is legitimate), but a non-empty one only reaches the store
+  // once it is within [1, ageInputMax] — otherwise every keystroke past the bound
+  // reached `setApparentAge` unconditionally, clamped, and the plain
+  // `value={apparentAge ?? ''}` binding snapped the field to the clamped number
+  // before typing finished.
   function onApparentAge(event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw === '') {
+      store.setApparentAge(null);
+      return;
+    }
+    const typed = Number(raw);
+    if (!Number.isFinite(typed) || typed < 1 || typed > store.ageInputMax) return;
+    store.setApparentAge(typed);
+  }
+  function commitApparentAge(raw: string): void {
     store.setApparentAge(raw === '' ? null : Number(raw));
   }
 
@@ -21,8 +37,19 @@
     return store.t(`characteristic-${characteristic}`);
   }
 
-  function numValue(event: Event): number {
-    return Number((event.currentTarget as HTMLInputElement).value || 0);
+  // manual-testing-findings-2026-11-15 #9 (F9): Aging Points reach the u8 ceiling
+  // (0..255). Forwarding every keystroke unconditionally clamped a value past it
+  // immediately, and the plain `value={agingPoints[characteristic] ?? 0}` binding
+  // snapped the field back before typing finished.
+  function onAgingPointsInput(characteristic: Characteristic, event: Event): void {
+    const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw === '') return;
+    const typed = Number(raw);
+    if (!Number.isFinite(typed) || typed < 0 || typed > 255) return;
+    store.setAgingPoints(characteristic, typed);
+  }
+  function commitAgingPoints(characteristic: Characteristic, raw: string): void {
+    store.setAgingPoints(characteristic, Number(raw || 0));
   }
 
   /** An emptied field reads as "not given", not as 0 — same as the age field. */
@@ -253,7 +280,7 @@
           max={store.ageInputMax}
           value={apparentAge ?? ''}
           oninput={onApparentAge}
-          use:commitStored={{ read: () => apparentAge }}
+          use:commitStored={{ read: () => apparentAge, commit: commitApparentAge }}
           data-testid="apparent-age-input"
         />
       </label>
@@ -306,8 +333,11 @@
               min="0"
               max="255"
               value={agingPoints[characteristic] ?? 0}
-              oninput={(e) => store.setAgingPoints(characteristic, numValue(e))}
-              use:commitStored={{ read: () => agingPoints[characteristic] ?? 0 }}
+              oninput={(e) => onAgingPointsInput(characteristic, e)}
+              use:commitStored={{
+                read: () => agingPoints[characteristic] ?? 0,
+                commit: (raw) => commitAgingPoints(characteristic, raw),
+              }}
               aria-labelledby="aging-points-label-{characteristic}"
               data-testid="aging-points-{characteristic}"
             />

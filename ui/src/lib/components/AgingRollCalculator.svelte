@@ -121,8 +121,34 @@
     store.setAgingDie(raw === '' ? null : Number(raw));
   }
 
-  function onDistribute(characteristic: Characteristic, event: Event): void {
+  // manual-testing-findings-2026-11-15 #9 (F9): "Gain sufficient Aging Points (in
+  // any Characteristics)" (ArMDE:16681) lets the player spread the owed points, so
+  // the live cap on any one field (`agingDistributionCap`, manual-testing-findings
+  // #22) shrinks as the others fill up and is often tiny. Forwarding every
+  // keystroke unconditionally clamped past it immediately, and the plain
+  // `value={draft.distribution[characteristic] ?? ''}` binding snapped the field
+  // back before typing finished — the birth-year pattern's gate, keyed on this
+  // field's own live cap rather than a fixed bound.
+  function onDistributeInput(characteristic: Characteristic, event: Event): void {
     const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw === '') {
+      store.setAgingDistribution(characteristic, null);
+      return;
+    }
+    const typed = Number(raw);
+    if (
+      !Number.isFinite(typed) ||
+      typed < 0 ||
+      typed > store.agingDistributionCap(characteristic)
+    ) {
+      return;
+    }
+    store.setAgingDistribution(characteristic, typed);
+  }
+
+  // Commit (blur or Enter): the live cap still applies, exactly as
+  // `onDistributeInput` would have, had the field never left it.
+  function commitDistribution(characteristic: Characteristic, raw: string): void {
     store.setAgingDistribution(characteristic, raw === '' ? null : Number(raw));
   }
 
@@ -216,8 +242,11 @@
                     min="0"
                     max={store.agingDistributionCap(characteristic)}
                     value={draft.distribution[characteristic] ?? ''}
-                    oninput={(event) => onDistribute(characteristic, event)}
-                    use:commitStored={{ read: () => draft.distribution[characteristic] }}
+                    oninput={(event) => onDistributeInput(characteristic, event)}
+                    use:commitStored={{
+                      read: () => draft.distribution[characteristic],
+                      commit: (raw) => commitDistribution(characteristic, raw),
+                    }}
                     data-testid="aging-distribute-{characteristic}"
                   />
                 </label>

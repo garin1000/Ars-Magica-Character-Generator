@@ -14,8 +14,26 @@
 
   const age = $derived(store.entity.age ?? null);
 
-  function onAge(event: Event) {
+  // manual-testing-findings-2026-11-15 #9 (F9): the birth-year pattern
+  // (`IdentityFields.svelte::onBirthYearInput`). An empty read forwards as `null`
+  // (a genuine clear is legitimate), but a non-empty one only reaches the store
+  // once it is within [1, ageInputMax] — otherwise every keystroke past the bound
+  // reached `setAge` unconditionally, clamped, and the plain `value={age ?? ''}`
+  // binding snapped the field to the clamped number before typing finished.
+  function onAgeInput(event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw === '') {
+      store.setAge(null);
+      return;
+    }
+    const typed = Number(raw);
+    if (!Number.isFinite(typed) || typed < 1 || typed > store.ageInputMax) return;
+    store.setAge(typed);
+  }
+
+  // Commit (blur or Enter): clamps the full typed text, exactly as `onAgeInput`
+  // would have had it stayed in bounds the whole time.
+  function commitAge(raw: string) {
     store.setAge(raw === '' ? null : Number(raw));
   }
 </script>
@@ -46,8 +64,8 @@
         min="1"
         max={store.ageInputMax}
         value={age ?? ''}
-        oninput={onAge}
-        use:commitStored={{ read: () => store.entity.age }}
+        oninput={onAgeInput}
+        use:commitStored={{ read: () => store.entity.age, commit: commitAge }}
         data-testid="age-input"
       />
     </label>

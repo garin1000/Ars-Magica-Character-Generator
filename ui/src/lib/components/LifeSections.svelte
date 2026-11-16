@@ -52,10 +52,24 @@
     return lifeSectionLabel(section, index, t);
   }
 
-  /** The number typed into the years field, with a blank field meaning `null`. */
-  function count(event: Event): number | null {
+  // manual-testing-findings-2026-11-15 #9 (F9): `setLifeSectionYears` reads a blank
+  // field as 0 (the field is "required" — there is no stored `null`), so an empty
+  // read must never be forwarded while typing: forwarding it immediately wrote 0,
+  // and the plain `value={String(section.years)}` binding snapped the field back
+  // to "0" before the player could type a replacement. The birth-year pattern's "or
+  // nothing" clause (`actions.ts::commitStored`'s own doc) is for exactly this case.
+  function onYearsInput(index: number, event: Event) {
     const raw = (event.currentTarget as HTMLInputElement).value;
-    return raw === '' ? null : Number(raw);
+    if (raw === '') return;
+    const typed = Number(raw);
+    if (!Number.isFinite(typed) || typed < 0) return;
+    store.setLifeSectionYears(index, typed);
+  }
+
+  // Commit (blur or Enter): the required fallback-to-0 still applies, exactly as
+  // `onYearsInput` would have, had the field never been left blank.
+  function commitYears(index: number, raw: string) {
+    store.setLifeSectionYears(index, raw === '' ? null : Number(raw));
   }
 </script>
 
@@ -94,8 +108,11 @@
               min="0"
               max={U32_MAX}
               value={String(section.years)}
-              oninput={(event) => store.setLifeSectionYears(i, count(event))}
-              use:commitStored={{ read: () => String(sections[i]?.years ?? '') }}
+              oninput={(event) => onYearsInput(i, event)}
+              use:commitStored={{
+                read: () => String(sections[i]?.years ?? ''),
+                commit: (raw) => commitYears(i, raw),
+              }}
               data-testid="life-section-{i}-years-input"
             />
           </label>

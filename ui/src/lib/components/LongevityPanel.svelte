@@ -12,12 +12,26 @@
   // single evaluation path (the `itemBudget`/`itemUsed` pattern).
   const hint = $derived(store.derived?.longevity?.hint ?? null);
 
-  // An emptied `type="number"` input reads as '', and `Number('')` is 0 — so the
-  // raw string is read here and an empty field passes `null` ("not entered"),
-  // exactly as MagicPossessions' `onAura` does. Without this, clearing the box
-  // would store a deliberate 0 there is no way back from.
+  // manual-testing-findings-2026-11-15 #9 (F9): forwarding an empty read as `null`
+  // (so a genuine clear is never stored as a deliberate 0, exactly as
+  // MagicPossessions' `onAura` does) was not enough on its own — a `type="number"`
+  // input reads an INCOMPLETE entry, a bare "-" on the way to "-4", back as the
+  // empty string too, so typing "-" wrote `null` immediately and the plain
+  // `value={longevity.bonus ?? ''}` binding blanked the field before the digit
+  // after the sign could ever be typed. The fix leaves a non-empty, in-bounds read
+  // forwarding exactly as before, but neither an empty one nor an out-of-range one
+  // reaches the store until the edit is committed.
   function onBonus(event: Event): void {
     const raw = (event.currentTarget as HTMLInputElement).value;
+    if (raw === '') return;
+    const typed = Number(raw);
+    if (!Number.isFinite(typed) || typed < -128 || typed > 127) return;
+    store.setLongevityBonus(typed);
+  }
+
+  // Commit (blur or Enter): the genuine-clear-as-null rule still applies, exactly
+  // as `onBonus` would have, had the field never left bounds.
+  function commitBonus(raw: string): void {
     store.setLongevityBonus(raw === '' ? null : Number(raw));
   }
 
@@ -55,7 +69,7 @@
         max="127"
         value={longevity.bonus ?? ''}
         oninput={onBonus}
-        use:commitStored={{ read: () => longevity?.bonus }}
+        use:commitStored={{ read: () => longevity?.bonus, commit: commitBonus }}
         data-testid="longevity-bonus"
       />
     </label>
