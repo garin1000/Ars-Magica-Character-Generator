@@ -329,3 +329,76 @@ describe('AgingPanel heading hierarchy (S17)', () => {
     expect(found).toBe(true);
   });
 });
+
+// manual-testing-findings-2026-11-15 #21 (F21, Norbert's decision: ONE BRIGHT
+// PANEL PER COLUMN). The three aging columns used to sit inside a single
+// `.panel.character-details` section that painted ONE flat background behind
+// all three — "the three columns sit left-aligned while the bright panel spans
+// the full width" — so each column now paints its OWN `.panel` box instead, and
+// the two sections that mount `<AgingPanel />` directly (the editor's Aging tab
+// in App.svelte, and the wizard's AgingStep) drop the shared "panel" class that
+// used to paint the one flat background behind them. The Details and
+// Personality & Reputations tabs are untouched: they still share one
+// `.panel.character-details` box, same as app.css's own layout comment
+// describes.
+describe('AgingPanel per-column panel (F21)', () => {
+  it('gives each aging column its own panel box, not a shared outer one', () => {
+    installAgingSurface();
+    const body = html();
+    for (const name of ['schedule', 'roll', 'record']) {
+      const open = new RegExp(`<div[^>]*data-testid="aging-column-${name}"[^>]*>`).exec(body);
+      expect(open, `aging-column-${name}`).not.toBeNull();
+      const classes = /class="([^"]*)"/.exec(open![0])?.[1].split(/\s+/) ?? [];
+      expect(classes).toContain('panel');
+      expect(classes).toContain('aging-column');
+    }
+  });
+});
+
+/** Raw source text of a `.svelte` file, for a markup question no render can
+ *  answer — which SECTION mounts `<AgingPanel />` is the parent file's concern,
+ *  not this component's own rendered output. */
+function sourceOf(relativePath: string): string {
+  return readFileSync(fileURLToPath(new URL(relativePath, import.meta.url)), 'utf-8');
+}
+
+describe('the two AgingPanel mount sections (F21)', () => {
+  it("drops the shared panel background from the editor's Aging tab, and takes the three-column grid", () => {
+    const app = sourceOf('../../App.svelte');
+    const section = /<section class="([^"]*)">\s*<AgingPanel \/>/.exec(app);
+    expect(section, 'App.svelte should mount <AgingPanel /> in its own <section>').not.toBeNull();
+    const classes = section![1].split(/\s+/);
+    expect(classes).toContain('character-details');
+    expect(classes).not.toContain('panel');
+    // F21 follow-up: the shared auto-fit grid can create a phantom empty track
+    // the `1/-1` heading still spans on a wide window — the aging surface takes
+    // its own `.aging-grid` modifier (app.css) to force exactly three.
+    expect(classes).toContain('aging-grid');
+  });
+
+  it("drops the shared panel background from the wizard's aging step, and takes the three-column grid", () => {
+    const step = sourceOf('./AgingStep.svelte');
+    const section = /<section class="([^"]*)" data-testid="aging-step">\s*<AgingPanel \/>/.exec(
+      step,
+    );
+    expect(
+      section,
+      'AgingStep.svelte should mount <AgingPanel /> in its own <section>',
+    ).not.toBeNull();
+    const classes = section![1].split(/\s+/);
+    expect(classes).toContain('character-details');
+    expect(classes).not.toContain('panel');
+    expect(classes).toContain('aging-grid');
+  });
+
+  // The other two `.character-details` surfaces are NOT part of this fix — #21
+  // named the aging surface alone.
+  it('leaves the Details and Personality & Reputations panel backgrounds alone', () => {
+    expect(sourceOf('./CharacterDetails.svelte')).toContain(
+      '<section class="panel character-details">',
+    );
+    expect(sourceOf('./PersonalityReputationsStep.svelte')).toContain(
+      '<section class="panel character-details">',
+    );
+  });
+});

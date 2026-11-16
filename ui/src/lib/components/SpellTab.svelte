@@ -641,6 +641,7 @@
                     i,
                   )}
                   <select
+                    class="spell-param-select"
                     aria-label={store.t('param-label-form')}
                     value={chosen.parameter ?? ''}
                     onchange={(e) =>

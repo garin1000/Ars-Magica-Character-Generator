@@ -701,10 +701,13 @@
                the age stays on Details, beside the identity it belongs with. The
                `.character-details` wrapper is the grid the panel's
                `display: contents` children are laid out by (app.css), the same one
-               the step provides. -->
+               the step provides. No "panel" class here (#21, F21): the aging surface
+               paints its background per column instead of behind the whole grid, and
+               "aging-grid" forces that grid to exactly three equal tracks — see
+               AgingPanel.svelte's own doc comment. -->
           <div class="vf-tab">
             <div class="tab-scroll">
-              <section class="panel character-details">
+              <section class="character-details aging-grid">
                 <AgingPanel />
               </section>
             </div>

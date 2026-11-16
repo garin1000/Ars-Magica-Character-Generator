@@ -1814,11 +1814,32 @@ ul {
   margin-left: 0.3rem;
 }
 
+/* manual-testing-findings-2026-11-15 #19: like the Casting Total badge and the
+   General level input above, the within-focus/within-potent-field toggles had
+   no line box/height matching `.item-name`'s 1.9rem one, so `.spell-list li`'s
+   `align-items: flex-start` left them sitting flush at the row's top instead of
+   level with the spell name. */
+.within-focus-toggle,
+.within-potent-field-toggle {
+  height: 1.9rem;
+}
+
+/* #19 continued: the target-Form select on a parametrized spell needs the same
+   height match. */
+.spell-param-select {
+  height: 1.9rem;
+}
+
 /* The detail-panel layout: the editor's Details tab (identity, age, the Confidence
    and Warping read-outs, Twilight), its Personality & Reputations and Aging tabs,
-   and the guided steps those two mirror — each of which is a
-   `.panel.character-details` section. All four surfaces share this one layout, on
-   purpose: order-stability is a win on every one of them.
+   and the guided steps those two mirror — each of which is a `.character-details`
+   grid section. All four surfaces share this GRID, on purpose: order-stability is
+   a win on every one of them. Three of the four also carry `.panel` on that same
+   section, painting one shared background behind the whole grid; the Aging tab is
+   the exception (manual-testing-findings-2026-11-15 #21) — it paints its
+   background per column instead (`.aging-column`, below) and takes its own
+   `.aging-grid` modifier, so grep for a `.character-details` mount with no
+   `panel` class finds exactly the two aging surfaces.
 
    A GRID, deliberately not multi-column (`columns: 2`, which this replaces —
    guided-creation-review-2026-08 #20). Multi-column *flows* content between
@@ -1865,6 +1886,35 @@ ul {
   grid-template-columns: repeat(auto-fit, minmax(28.25rem, 1fr));
   align-items: start;
   gap: 1rem 1.5rem;
+}
+
+/* manual-testing-findings-2026-11-15 #21 continued: Norbert's "one panel per
+   column" decision turned up a second defect once the columns were given their
+   own background. The shared grid above is `repeat(auto-fit, minmax(28.25rem,
+   1fr))`, and `.character-details-heading`'s `grid-column: 1 / -1` spans every
+   track that WOULD fit at the window's width — not only the three the aging
+   surface actually has. On a wide window that can be four tracks or more, and
+   auto-fit's empty-track COLLAPSE never triggers for the extra ones: collapse
+   requires a track to hold no item at all, and the spanning heading touches
+   every one of them. The fourth-plus track then sits at its `1fr` share with
+   nothing in it — three columns, left-aligned, inside a row visibly wider than
+   they fill.
+
+   The fix is a per-track floor that is the LARGER of the absolute 28.25rem floor
+   and a THIRD of the available row, after its two 1.5rem column gaps:
+   `max(28.25rem, (100% - 3rem) / 3)`. Three tracks at exactly that share plus
+   their two gaps sum to exactly 100% of the row — 3 × (100% − 3rem) / 3 + 2 ×
+   1.5rem = 100% — so `auto-fit`'s own "how many tracks fit" arithmetic resolves
+   to EXACTLY three whenever the computed share still clears the floor, with no
+   breakpoint and no phantom track: the three columns are then always equal and
+   always fill the row. Once the window narrows enough that a third of it drops
+   under 28.25rem, `max()` clamps back to the plain floor and the row degrades
+   exactly as the shared grid above already does — to two tracks, then one —
+   which is the narrow-window fallback a flat three-track split alone would not
+   have, and still the SAME 360px floor every other `.character-details` surface
+   is measured against. */
+.character-details.aging-grid {
+  grid-template-columns: repeat(auto-fit, minmax(max(28.25rem, (100% - 3rem) / 3), 1fr));
 }
 
 /* The aging cluster is composed from child components (AgingPanel →
@@ -2149,10 +2199,15 @@ ul {
   padding: 0;
 }
 
+/* manual-testing-findings-2026-11-15 #26: a Reputation row's label ("Academic
+   level 2 from Failed Student") and its text input sat at mismatched heights
+   under `align-items: center`, the same failure `.life-stage-row` had (#11/#12)
+   — baseline alignment lines up the text instead of the boxes. `.trait-list li`
+   shares the selector, so it takes the same fix. */
 .trait-list li,
 .reputation-list li {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.4rem;
   padding: 0.15rem 0;
 }
@@ -2334,9 +2389,16 @@ ul {
   gap: 0.6rem;
 }
 
+/* manual-testing-findings-2026-11-15 #11/#12: Age (bold, `AgeFields`'
+   `.detail-field`/`.detail-label`) and Gauntlet age (small, muted, `.field.inline`)
+   — and later, "Levels of spells" and the lab-years block — sat at mismatched
+   heights under `align-items: center`, which centres each item's whole BOX, not
+   its text. Baseline alignment lines up the actual text baselines regardless of
+   the two items' own font-size/weight, which is the one thing they have in
+   common. */
 .life-stage-row {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
@@ -2382,10 +2444,14 @@ ul {
   gap: 0.3rem;
 }
 
+/* manual-testing-findings-2026-11-15 #12: a life-section row (Name, Years, the
+   move/remove buttons, and the section's own nested lab-years fieldset) needs
+   the same baseline treatment as `.life-stage-row` above — "Name" must share a
+   baseline with the section's own season labels. */
 .life-stage-panel fieldset.life-section {
   border: none;
   padding: 0;
-  align-items: center;
+  align-items: baseline;
   gap: 0.4rem 0.75rem;
 }
 
@@ -2393,19 +2459,15 @@ ul {
   width: 12rem;
 }
 
-/* manual-testing-findings #7: `.life-stage-panel fieldset` gives every fieldset
-   a legend, and the legend's own height sits ABOVE the fieldset's content box —
-   so wherever `LabYearsFields`' `.lab-years` fieldset shares a row with plain
-   `.field` controls (the main row between Gauntlet age and Levels of spells, or
-   a `.life-section` row's Name/Years/buttons), its row sat visibly higher and
-   its season inputs sat lower than its row-mates. `align-self: flex-end` pins
-   the fieldset's BOTTOM — i.e. the season inputs' own line — to the row's
-   bottom edge, wherever that row is, so the legend is free to stick up above
-   the row without dragging the inputs down with it. One rule, because
-   `align-self` overrides the row's own `align-items` for this one child only. */
-.lab-years {
-  align-self: flex-end;
-}
+/* `.lab-years` (LabYearsFields' fieldset) needs no `align-self` override of its
+   own any more: a fieldset's first baseline (for a flex/grid ancestor aligning
+   on `baseline`) comes from its own first in-flow child — its first season
+   label — so once the row it sits in aligns on the baseline (above, and
+   `.life-stage-panel fieldset.life-section` above that), the season inputs
+   already land level with their row-mates. The old `align-self: flex-end` hack
+   this replaced pinned the fieldset's bottom edge instead, which worked only
+   because every row-mate happened to be the same height; baseline alignment
+   does not depend on that. */
 
 /* The timeline: one segment per span, as wide as its years, its figures in words
    beneath a thin fill bar (decoration; the text carries the numbers). */
@@ -2693,6 +2755,13 @@ ul {
   font-size: var(--font-chrome);
   color: var(--muted);
   margin: 0.25rem 0 0.5rem 1rem;
+}
+
+/* manual-testing-findings-2026-11-15 #3: the Realm override's visible caption,
+   inside `.param` — bold like `.param-group-label` and `.detail-label`, so the
+   caption reads as a label rather than more of the muted `.param` body text. */
+.vf-realm-label {
+  font-weight: 600;
 }
 
 /* review-ui-today finding 2: the small accessible separator ParameterPicker

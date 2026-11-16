@@ -16,7 +16,10 @@
 
      `.character-details` is an auto-placed CSS grid (see app.css) in which source
      order is placement order. Under grid each block owns its cell, so nothing here
-     moves when one of them changes height. -->
-<section class="panel character-details" data-testid="aging-step">
+     moves when one of them changes height. No "panel" class (#21, F21): the aging
+     surface paints its background per column instead of behind the whole grid, and
+     "aging-grid" forces exactly three equal tracks — see AgingPanel.svelte's own
+     doc comment. -->
+<section class="character-details aging-grid" data-testid="aging-step">
   <AgingPanel />
 </section>

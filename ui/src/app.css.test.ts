@@ -1590,3 +1590,101 @@ describe('app.css row warning mark (I2)', () => {
     expect(glyph()).not.toMatch(/var\(--error\)/);
   });
 });
+
+// Wave 4 layout (manual-testing-findings-2026-11-15 #11, #12, #19, #26): five
+// label/control pairs that sat at mismatched heights because their row CENTRED
+// its children instead of aligning their text. Baseline alignment lines up the
+// actual text baselines regardless of the two items' own font-size/weight — the
+// effect `.lab-years`'s old hand-written `align-self: flex-end` patch faked for
+// one case only.
+describe('app.css baseline alignment (wave 4 layout)', () => {
+  // #11: "Age" (AgeFields' readonly `.detail-field`/`.detail-label`, bold) and
+  // "Gauntlet age" (a `.field.inline` label, small and muted) sat at different
+  // heights under `align-items: center` — centring a bold full-size readout and
+  // a small muted field does not put their TEXT at the same spot, only their
+  // boxes. #12: the same row, with a `fieldset` (Levels of spells + the
+  // lab-years block) in place of Gauntlet age.
+  it('aligns the life-stage row on its text baseline, not centred (#11/#12)', () => {
+    const block = /^\.life-stage-row\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block, 'app.css should declare a .life-stage-row rule').not.toBeNull();
+    expect(block![1]).toMatch(/align-items:\s*baseline;/);
+  });
+
+  // #12 continued: a life-SECTION row (Name, Years, the move/remove buttons, and
+  // the section's own nested lab-years fieldset) needs the identical treatment —
+  // "Name" must share a baseline with the section's season labels.
+  it('aligns a life-section row on its text baseline too (#12)', () => {
+    const block = /^\.life-stage-panel fieldset\.life-section\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block, 'app.css should declare .life-stage-panel fieldset.life-section').not.toBeNull();
+    expect(block![1]).toMatch(/align-items:\s*baseline;/);
+  });
+
+  // The hand-pinned fix retires now the row itself aligns on the baseline: a
+  // fieldset's own first baseline already comes from its first in-flow child
+  // (the first season label), so an `align-self` override on this one item would
+  // fight the row's baseline alignment instead of falling out of it for free.
+  it('drops the lab-years flex-end override now the row aligns on baseline (#12)', () => {
+    expect(appCss).not.toMatch(/\.lab-years\s*\{[^}]*align-self:\s*flex-end/);
+  });
+
+  // #19: the within-focus/within-potent-field toggles and the spell's target-Form
+  // select carried no line box matching `.item-name`'s 1.9rem one, the same gap
+  // 6e9b3ec1 closed for the Casting Total badge and the General level input
+  // (`.spell-list li` is `align-items: flex-start`, so anything without a
+  // matching height sits flush at the row's top instead of level with the name).
+  it('height-matches the spell-row toggles to the spell name, like 6e9b3ec1 (#19)', () => {
+    const block = /^\.within-focus-toggle,\n\.within-potent-field-toggle\s*\{([^}]*)\}/m.exec(
+      appCss,
+    );
+    expect(
+      block,
+      'app.css should declare one rule for both within-focus and within-potent-field toggles',
+    ).not.toBeNull();
+    expect(block![1]).toMatch(/height:\s*1\.9rem;/);
+  });
+
+  it('height-matches the spell-row Form select too (#19)', () => {
+    const block = /^\.spell-param-select\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block, 'app.css should declare a .spell-param-select rule').not.toBeNull();
+    expect(block![1]).toMatch(/height:\s*1\.9rem;/);
+  });
+
+  // #26: a Reputation row's label ("Academic level 2 from Failed Student") and
+  // its text input were centred against each other, same failure as #11/#12 —
+  // and `.trait-list li` shares the selector, so the one fix covers both lists.
+  it('aligns Reputation and trait rows on their text baseline (#26)', () => {
+    const block = /^\.trait-list li,\n\.reputation-list li\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block, 'app.css should declare .trait-list li, .reputation-list li').not.toBeNull();
+    expect(block![1]).toMatch(/align-items:\s*baseline;/);
+  });
+
+  // #21 continued, after Norbert's "one panel per column" decision turned up a
+  // second defect: the shared `.character-details` grid is `repeat(auto-fit,
+  // minmax(28.25rem, 1fr))`, and the `.character-details-heading`'s `grid-column:
+  // 1 / -1` spans every track that WOULD fit at the window's width — not only the
+  // three the aging surface actually has. On a wide window that is 4+ tracks, so
+  // auto-fit's empty-track COLLAPSE never triggers (collapse requires a track to
+  // hold no item at all, and the spanning heading touches every one of them), and
+  // the fourth-plus track sits there at its `1fr` share with nothing in it: three
+  // columns, left-aligned, inside a panel visibly wider than they fill.
+  //
+  // The fix is a per-track floor that is the LARGER of the absolute 28.25rem
+  // floor and a THIRD of the available row (after its two 1.5rem column gaps):
+  // `max(28.25rem, (100% - 3rem) / 3)`. Algebraically, three tracks at exactly
+  // that share plus their two gaps sum to exactly 100% — 3 × (100% − 3rem) / 3 +
+  // 2 × 1.5rem = 100% — so auto-fit's own "how many tracks fit" arithmetic
+  // resolves to EXACTLY three whenever the computed share still clears the
+  // floor, with no breakpoint and no phantom track. Once the window narrows
+  // enough that a third of it drops under 28.25rem, `max()` clamps back to the
+  // plain floor and the row degrades exactly as the shared grid already does (to
+  // two tracks, then one) — the narrow-window fallback the fixed share alone
+  // would not have, and still the SAME 360px floor every other
+  // `.character-details` surface is measured against.
+  it('gives the aging surface its own grid: three equal columns filling the row, with the shared floor below it (F21)', () => {
+    const block = /^\.character-details\.aging-grid\s*\{([^}]*)\}/m.exec(appCss);
+    expect(block, 'app.css should declare .character-details.aging-grid').not.toBeNull();
+    expect(block![1]).toMatch(
+      /grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(max\(28\.25rem,\s*\(100%\s*-\s*3rem\)\s*\/\s*3\),\s*1fr\)\);/,
+    );
+  });
+});

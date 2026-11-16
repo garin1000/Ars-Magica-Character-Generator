@@ -122,6 +122,33 @@ function clean(text: string): string {
   return text.replace(/[⁦-⁩]/g, '');
 }
 
+/**
+ * The element bearing `data-testid={testid}`, matched by TAG DEPTH rather than
+ * up to the first closing tag — needed once a row's label may nest its own
+ * child spans (F3), where a naive `[\s\S]*?<\/[a-z]+>` stops at the first
+ * nested element's close and silently truncates the match.
+ */
+function elementAt(body: string, testid: string): string {
+  const open = new RegExp(`<([a-z]+)[^>]*data-testid="${testid}"[^>]*>`).exec(body);
+  expect(open, `no element with data-testid="${testid}"`).not.toBeNull();
+  const tag = open![1];
+  const tagRe = new RegExp(`<${tag}(?:\\s[^>]*)?>|</${tag}>`, 'g');
+  tagRe.lastIndex = open!.index;
+  let depth = 0;
+  let match: RegExpExecArray | null;
+  while ((match = tagRe.exec(body))) {
+    depth += match[0].startsWith('</') ? -1 : 1;
+    if (depth === 0) return body.slice(open!.index, tagRe.lastIndex);
+  }
+  throw new Error(`unbalanced <${tag}> for data-testid="${testid}"`);
+}
+
+/** The `class` attribute of an opening tag, split into its individual tokens. */
+function classesOf(openingTagOrElement: string): string[] {
+  const match = /class="([^"]*)"/.exec(openingTagOrElement);
+  return match ? match[1].split(/\s+/).filter(Boolean) : [];
+}
+
 /** The Virtues column's markup (the side both fixtures' items live on). */
 function virtueColumn(body: string): string {
   const start = body.indexOf('data-testid="selection-list-virtue"');
@@ -923,7 +950,7 @@ describe('VirtueFlawTab D42 realm row', () => {
     } as unknown as EffectiveScores;
 
     const body = virtueColumn(html());
-    const realm = /<[a-z]+[^>]*data-testid="realm-0"[\s\S]*?<\/[a-z]+>/.exec(body)![0];
+    const realm = elementAt(body, 'realm-0');
     expect(realm).not.toContain('<select');
     expect(clean(realm)).toContain('Faerie');
   });
@@ -947,6 +974,29 @@ describe('VirtueFlawTab D42 realm row', () => {
     const body = virtueColumn(html());
     expect(body).not.toContain('data-testid="realm-0"');
   });
+
+  // manual-testing-findings-2026-11-15 #3 (F3): the bare override select had no
+  // explanation, took much space and sat misaligned — wrapped now like
+  // ParameterPicker's `label.param`, with a visible `vf-realm-label` caption
+  // ahead of the control, left-aligned with the text field above (D42).
+  it('wraps the override select in a visible, left-aligned label (F3)', () => {
+    resetEntity([{ ref: 'virtue.second_sight' }]);
+    store.effective = {
+      realm_associations: [
+        { index: 0, item_ref: 'virtue.second_sight', realm: 'magic', fixed: false },
+      ],
+    } as unknown as EffectiveScores;
+
+    const body = virtueColumn(html());
+    const label = /<label class="[^"]*"[^>]*>[\s\S]*?<\/label>/.exec(body);
+    expect(label, 'the realm select should sit inside a .param label').not.toBeNull();
+    expect(classesOf(label![0])).toContain('param');
+    expect(label![0]).toContain('data-testid="realm-0"');
+    // A visible caption, not only an aria-label on the select.
+    expect(label![0]).toContain('vf-realm-label');
+    expect(clean(label![0])).toContain(store.t('vf-realm-label'));
+    expect(label![0].indexOf('vf-realm-label')).toBeLessThan(label![0].indexOf('<select'));
+  });
 });
 
 // Row 55 (D74.4): a GRANTED item's resolved realm, via
@@ -962,11 +1012,24 @@ describe('VirtueFlawTab row 55 granted realm row', () => {
     ];
 
     const body = virtueColumn(html());
-    const realm =
-      /<[a-z]+[^>]*data-testid="granted-realm-virtue\.second_sight-0"[\s\S]*?<\/[a-z]+>/.exec(
-        body,
-      )![0];
+    const realm = elementAt(body, 'granted-realm-virtue.second_sight-0');
     expect(realm).not.toContain('<select');
+    expect(clean(realm)).toContain('Faerie');
+  });
+
+  // manual-testing-findings-2026-11-15 #3 (F3): the read-only `span.realm-fixed`
+  // variant gets the same `.param` wrapping and visible `vf-realm-label` caption
+  // as the editable select, for the same left-aligned column.
+  it("aligns a granted item's realm read-only the same way, inside .param (F3)", () => {
+    grant({ ref: 'virtue.second_sight' });
+    store.effective!.granted_realm_associations = [
+      { index: 0, item_ref: 'virtue.second_sight', realm: 'faerie', fixed: true },
+    ];
+
+    const body = virtueColumn(html());
+    const realm = elementAt(body, 'granted-realm-virtue.second_sight-0');
+    expect(classesOf(realm)).toContain('param');
+    expect(realm).toContain('vf-realm-label');
     expect(clean(realm)).toContain('Faerie');
   });
 
@@ -984,11 +1047,7 @@ describe('VirtueFlawTab row 55 granted realm row', () => {
 
     const body = virtueColumn(html());
     const realmAt = (position: number) =>
-      clean(
-        new RegExp(
-          `<[a-z]+[^>]*data-testid="granted-realm-virtue\\.second_sight-${position}"[\\s\\S]*?</[a-z]+>`,
-        ).exec(body)![0],
-      );
+      clean(elementAt(body, `granted-realm-virtue.second_sight-${position}`));
     expect(realmAt(1)).toContain('Faerie');
     expect(realmAt(2)).toContain('Divine');
     expect(body).not.toContain('data-testid="granted-realm-virtue.heartbeast-');

@@ -83,7 +83,17 @@
 
      The panel degrades with the window: `auto-fit` gives two tracks and then one with
      no breakpoint, and at one track the three wrappers simply stack in that same
-     order. -->
+     order.
+
+     ONE BRIGHT PANEL PER COLUMN (manual-testing-findings-2026-11-15 #21, Norbert's
+     decision). Each `.aging-column` now carries `.panel` itself, rather than sitting
+     inside the one shared `.panel.character-details` background every OTHER
+     `.character-details` surface still paints: the two sections that mount this panel
+     directly (App.svelte's editor Aging tab, AgingStep.svelte) drop "panel" from their
+     own class list and add "aging-grid" instead, which forces app.css's
+     `.character-details.aging-grid` to lay out exactly three equal-width tracks
+     filling the row — the shared `auto-fit` grid could otherwise create a track past
+     the third that the `1 / -1` heading still spans, with nothing in it. -->
 <div class="aging-panel" data-testid="aging-panel">
   <!-- S17 (full-audit a11y): the tab's own <h2> — every block below opened at
        <h3> directly under the app's single <h1> with no <h2> between (a
@@ -101,7 +111,7 @@
   <!-- What the rules owe this character, and the one term of the aging total the
        player chooses. Two short blocks, so they share a column. -->
   {#if hasSchedule || hasConditions}
-    <div class="aging-column" data-testid="aging-column-schedule">
+    <div class="panel aging-column" data-testid="aging-column-schedule">
       <AgingSchedulePanel />
       <LivingConditionsPicker />
     </div>
@@ -118,7 +128,7 @@
        content, so this column can never be the EMPTY TRACK the gating comment
        above warns about — only `AgingRollCalculator` inside it can render
        nothing (`{#if aging && schedule.length > 0}`, its own gate). -->
-  <div class="aging-column" data-testid="aging-column-roll">
+  <div class="panel aging-column" data-testid="aging-column-roll">
     <AgingRollCalculator />
     <LongevityPanel />
   </div>
@@ -128,7 +138,7 @@
        totals it explains under it. `AgingRecordPanel`'s own
        `display: contents` (app.css) drops both of its blocks straight into
        this wrapper. -->
-  <div class="aging-column" data-testid="aging-column-record">
+  <div class="panel aging-column" data-testid="aging-column-record">
     <AgingRecordPanel />
   </div>
 </div>

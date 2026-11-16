@@ -213,6 +213,28 @@ describe('SpellTab selected-row layout', () => {
     expect(open).not.toBeNull();
     expect(open![0]).toContain('class="spell-general-level-input"');
   });
+
+  // manual-testing-findings-2026-11-15 #19 (F19): the target-Form select on a
+  // parametrized (meta-magic Vim) spell carries a dedicated class too, for the
+  // same reason as the General level input above — app.css height-matches it to
+  // `.item-name`'s 1.9rem line box (see app.css.test.ts for the CSS assertion).
+  it('marks the parametrized spell Form select with its baseline-alignment class', () => {
+    const PARAMETRIZED = 'spell.test_parametrized';
+    store.ruleset!.ruleset.spells![PARAMETRIZED] = {
+      id: PARAMETRIZED,
+      technique: 'art.creo',
+      form: 'art.animal',
+      parameters: [{ key: 'form', domain: 'form' }],
+    } as unknown as NonNullable<LocalizedRuleset['ruleset']['spells']>[string];
+    store.ruleset!.i18n[PARAMETRIZED] = { name: 'Test Parametrized Spell' };
+    store.entity.spells = [{ spell: PARAMETRIZED, parameter: null }];
+    const body = html();
+    const open = /<select[^>]*data-testid="spell-param-spell\.test_parametrized-0"[^>]*>/.exec(
+      body,
+    );
+    expect(open).not.toBeNull();
+    expect(open![0]).toContain('class="spell-param-select"');
+  });
 });
 
 // --- 6b8c: who owns the budget bar ------------------------------------------

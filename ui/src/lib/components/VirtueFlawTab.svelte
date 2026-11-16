@@ -523,26 +523,36 @@
                   {#if realmEntry.fixed}
                     <!-- D74 Q4: the book fixes this entry's realm, so it is shown
                          read-only rather than offered a control that could never
-                         legally change it. -->
-                    <span class="realm-fixed" data-testid="realm-{index}">
-                      {store.t('vf-realm-label')}: {store.t(`realm-${realmEntry.realm}`)}
+                         legally change it. F3 (manual-testing-findings-2026-11-15 #3):
+                         the same `.param` wrapping and visible caption the editable
+                         select below gets, so a fixed and an overridable row read the
+                         same way and line up in the same left-aligned column. -->
+                    <span class="param realm-fixed" data-testid="realm-{index}">
+                      <span class="vf-realm-label">{store.t('vf-realm-label')}</span>
+                      {store.t(`realm-${realmEntry.realm}`)}
                     </span>
                   {:else}
                     <!-- The resolved realm (override, else the entry's own default/
                          concept/Magic — never re-derived here, see `EffectiveScores.
                          realm_associations`) is pre-selected, so choosing a
-                         DIFFERENT one is what writes an explicit override. -->
-                    <select
-                      aria-label={store.t('vf-realm-label')}
-                      value={`realm.${realmEntry.realm}`}
-                      onchange={(e) => onRealmOverride(index, e)}
-                      data-testid="realm-{index}"
-                    >
-                      <option value="">{store.t('vf-realm-override-none')}</option>
-                      {#each REALMS as realm (realm)}
-                        <option value="realm.{realm}">{store.t(`realm-${realm}`)}</option>
-                      {/each}
-                    </select>
+                         DIFFERENT one is what writes an explicit override.
+                         F3: a bare `<select>` here had no explanation, took much
+                         space and sat misaligned — wrapped now like ParameterPicker's
+                         `label.param`, with a visible caption ahead of the control. -->
+                    <label class="param">
+                      <span class="vf-realm-label">{store.t('vf-realm-label')}</span>
+                      <select
+                        aria-label={store.t('vf-realm-label')}
+                        value={`realm.${realmEntry.realm}`}
+                        onchange={(e) => onRealmOverride(index, e)}
+                        data-testid="realm-{index}"
+                      >
+                        <option value="">{store.t('vf-realm-override-none')}</option>
+                        {#each REALMS as realm (realm)}
+                          <option value="realm.{realm}">{store.t(`realm-${realm}`)}</option>
+                        {/each}
+                      </select>
+                    </label>
                   {/if}
                 {/if}
               </li>
@@ -558,12 +568,14 @@
                 </div>
                 {#if grantRealmEntry}
                   <!-- Row 55/D74.4: always read-only — a granted row has no
-                       `entity.selections` index to attach an override control to. -->
+                       `entity.selections` index to attach an override control to.
+                       F3: same `.param`/caption treatment as the bought row above. -->
                   <span
-                    class="realm-fixed"
+                    class="param realm-fixed"
                     data-testid="granted-realm-{item.selection.ref}-{item.grantIndex}"
                   >
-                    {store.t('vf-realm-label')}: {store.t(`realm-${grantRealmEntry.realm}`)}
+                    <span class="vf-realm-label">{store.t('vf-realm-label')}</span>
+                    {store.t(`realm-${grantRealmEntry.realm}`)}
                   </span>
                 {/if}
               </li>
