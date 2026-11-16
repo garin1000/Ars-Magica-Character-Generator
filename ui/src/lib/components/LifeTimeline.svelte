@@ -54,14 +54,24 @@
     return store.t('life-timeline-entry-xp', { ...span, xp: String(capacity.xp) });
   }
 
-  /** How full the span is, as a percentage of what it earned (0 for an empty span). */
+  /**
+   * How full the span is, as a percentage of what it earned (0 for an empty
+   * span). A Shared span's XP and spell levels are one traded budget
+   * (ArMDE:2541), so both count. A Separate span's are NOT — apprenticeship's
+   * "240 experience points, and 120 levels of spells" (ArMDE:2505) are two
+   * budgets that cannot be traded, so the bar reads the XP figure alone; the
+   * spell levels already appear as their own count in `describe()`'s words
+   * (manual-testing-findings-2026-11-15 #17).
+   */
   function fillPercent(entry: TimelineEntry): number {
     const capacity = entry.capacity;
-    const earned =
-      capacity.kind === 'shared' ? capacity.points : capacity.xp + capacity.spell_levels;
-    if (earned === 0) return 0;
-    const filled = entry.filled_xp + entry.filled_spell_levels;
-    return Math.min(100, Math.round((filled / earned) * 100));
+    if (capacity.kind === 'shared') {
+      if (capacity.points === 0) return 0;
+      const filled = entry.filled_xp + entry.filled_spell_levels;
+      return Math.min(100, Math.round((filled / capacity.points) * 100));
+    }
+    if (capacity.xp === 0) return 0;
+    return Math.min(100, Math.round((entry.filled_xp / capacity.xp) * 100));
   }
 </script>
 
@@ -99,21 +109,29 @@
       </span>
     {/if}
     {#if timeline.outside.length > 0 && ruleset}
-      <ul
-        class="life-timeline-outside"
-        aria-label={store.t('life-timeline-outside-label')}
-        data-testid="life-timeline-outside"
-      >
-        {#each timeline.outside as lump, i (i)}
-          <li class="xp-restricted" data-testid="life-timeline-outside-{i}">
-            {store.t('life-timeline-outside-chip', {
-              item: displayName(ruleset, lump.item),
-              used: String(lump.used),
-              amount: String(lump.amount),
-            })}
-          </li>
-        {/each}
-      </ul>
+      <!-- F23: its own labelled row, visually apart from the stage entries above —
+           previously only an invisible aria-label marked this list, so the chips
+           read as trailing text under Early childhood. -->
+      <div class="life-timeline-outside-block" data-testid="life-timeline-outside-block">
+        <span class="life-timeline-outside-heading" data-testid="life-timeline-outside-heading">
+          {store.t('life-timeline-outside-heading')}
+        </span>
+        <ul
+          class="life-timeline-outside"
+          aria-label={store.t('life-timeline-outside-label')}
+          data-testid="life-timeline-outside"
+        >
+          {#each timeline.outside as lump, i (i)}
+            <li class="xp-restricted" data-testid="life-timeline-outside-{i}">
+              {store.t('life-timeline-outside-chip', {
+                item: displayName(ruleset, lump.item),
+                used: String(lump.used),
+                amount: String(lump.amount),
+              })}
+            </li>
+          {/each}
+        </ul>
+      </div>
     {/if}
   </div>
 {/if}

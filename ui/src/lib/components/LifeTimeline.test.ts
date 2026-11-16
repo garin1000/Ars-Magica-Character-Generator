@@ -317,3 +317,59 @@ describe('LifeTimeline in German (G3)', () => {
     );
   });
 });
+
+// manual-testing-findings-2026-11-15 #17: apprenticeship earns "240 experience
+// points, and 120 levels of spells" (ArMDE:2505) as two budgets that cannot be
+// traded (`EntryCapacity::Separate`), so the fill bar must read the XP figure
+// alone — never xp + spell_levels pooled together, which is what `describe()`
+// already shows as two separate counts in words.
+describe('LifeTimeline fill percentage derives from XP only (F17)', () => {
+  it('fills a Separate span from its XP alone, never mixing in spell levels', () => {
+    install({
+      entries: [entry(fixed('apprenticeship'), [10, 25], separate(240, 120), 60, 120)],
+      overrun_years: 0,
+      outside: [],
+    });
+    const body = html();
+    const fill = [...body.matchAll(/<[^>]*class="[^"]*life-timeline-fill[^"]*"[^>]*>/g)][0][0];
+    // 60 / 240 XP = 25%. Pooling the full 120 / 120 spell levels in as well
+    // (the old behaviour) would read 180 / 360 = 50%.
+    expect(fill).toMatch(/width:\s*25%/);
+  });
+
+  it('still fills a Shared post-Gauntlet span from XP + spell levels together', () => {
+    // Post-Gauntlet points ARE one traded budget — "an experience point … or
+    // one level of spell" (ArMDE:2541) — so EntryCapacity::Shared keeps the
+    // combined fill.
+    install(magusTimeline(), [{ name: 'Study', years: 8 }]);
+    const body = html();
+    const fills = [...body.matchAll(/<[^>]*class="[^"]*life-timeline-fill[^"]*"[^>]*>/g)].map(
+      (m) => m[0],
+    );
+    // Entry 3 is named(0): shared(240), filled 100 XP + 40 levels = 140 / 240 ≈ 58%.
+    expect(fills[3]).toMatch(/width:\s*58%/);
+  });
+});
+
+// manual-testing-findings-2026-11-15 #23: the bonus-pool chips (Well-Traveled
+// and the like) must read as their own row, not as part of Early childhood —
+// the first stage entry above them.
+describe('LifeTimeline bonus-pool row stands apart from the stages (F23)', () => {
+  it('labels the chips with their own visible heading, in their own container', () => {
+    install(companionTimeline(0, [{ item: 'virtue.educated', amount: 50, used: 20 }]), squire);
+    const body = html();
+    expect(text(body, 'life-timeline-outside-heading')).toBe('Bonus XP:');
+    const block = openTag(body, 'life-timeline-outside-block');
+    expect(block).toMatch(/^<div\b/);
+    // The row sits after every stage entry, not nested inside the first one.
+    const firstEntryEnd = body.indexOf('</li>');
+    const blockStart = body.search(/<[^>]*data-testid="life-timeline-outside-block"/);
+    expect(blockStart).toBeGreaterThan(firstEntryEnd);
+  });
+
+  it('labels the row in German', () => {
+    store.lang = 'de';
+    install(companionTimeline(0, [{ item: 'virtue.educated', amount: 50, used: 20 }]), squire);
+    expect(text(html(), 'life-timeline-outside-heading')).toBe('Bonus-EP:');
+  });
+});

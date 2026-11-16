@@ -2452,6 +2452,23 @@ ul {
   font-weight: 600;
 }
 
+/* F23 (manual-testing-findings-2026-11-15): the bonus-pool chips' own row, set
+   apart from the stage entries above by a rule and top spacing — previously
+   they had neither a visible heading nor any visual gap, so they read as
+   trailing text under Early childhood. */
+.life-timeline-outside-block {
+  margin-top: 0.4rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid var(--border);
+}
+
+.life-timeline-outside-heading {
+  display: block;
+  font-size: var(--font-small);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
 .life-timeline-outside {
   list-style: none;
   margin: 0;
