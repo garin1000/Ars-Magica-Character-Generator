@@ -267,6 +267,10 @@ describe('Ability parameter picker (CV7): choosing a catalogued value', () => {
     await $('[data-testid="xp-pool"]').waitForExist({ timeout: 10000 });
     await replaceValue(await $('[data-testid="xp-pool"]'), 100);
 
+    // Dead Language is Academic, which a companion needs a Virtue to learn
+    // (ArMDE:2462), so Enforced mode refuses the pick (F25). This test is about the
+    // catalogued-value picker, not that gate, so it picks in Advisory.
+    await setValidationMode('advisory');
     await $('[data-testid="add-ability.dead_language"]').click();
     const combo = await $('[data-testid="ability-param-select-ability.dead_language-0"]');
     await combo.waitForExist({ timeout: 5000 });
@@ -278,6 +282,9 @@ describe('Ability parameter picker (CV7): choosing a catalogued value', () => {
       timeoutMsg: 'the row never showed the localized "Latin" label',
     });
     expect(await label.getText()).not.toContain('language.latin');
+
+    // The mode persists in the worker's settings file; restore the default.
+    await setValidationMode('enforced');
   });
 });
 

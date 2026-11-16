@@ -382,6 +382,17 @@ describe('life-stage funding and Sample Childhoods', () => {
     const before = await countOf(AREA_LORE_SCORES);
 
     await standOnWizardStep('experience');
+    // Taking a package clears the draft, so "Take this childhood" is gone (F29);
+    // re-taking it means choosing it and answering its slots again, as a player would.
+    expect(await $(APPLY).isExisting()).toBe(false);
+    await (await reach(PACKAGE_SELECT)).selectByAttribute('value', TRAVELING);
+    await (await reach('[data-testid="childhood-slot-area_a"]')).setValue('Rhine');
+    await (await reach('[data-testid="childhood-slot-area_b"]')).setValue('Provence');
+    await (await reach('[data-testid="childhood-slot-language"]')).setValue('Italian');
+    await browser.waitUntil(async () => await $(APPLY).isEnabled(), {
+      timeout: STEP_TIMEOUT,
+      timeoutMsg: 'the re-drafted package should be takeable again',
+    });
     await $(APPLY).click();
 
     // A package raises scores monotonically, so re-taking it must not duplicate a
