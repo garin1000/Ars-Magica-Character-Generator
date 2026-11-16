@@ -90,7 +90,11 @@
       {/each}
     </ol>
     {#if timeline.overrun_years > 0}
-      <span class="life-timeline-overrun" role="status" data-testid="life-timeline-overrun">
+      <span
+        class="life-timeline-overrun error-text"
+        role="status"
+        data-testid="life-timeline-overrun"
+      >
         {store.t('life-timeline-overrun', { years: String(timeline.overrun_years) })}
       </span>
     {/if}

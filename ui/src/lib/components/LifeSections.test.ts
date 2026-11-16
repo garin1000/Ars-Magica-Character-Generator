@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
 import type { EffectiveScores, Entity, LifeSection, LifeStagePlan } from '../types';
@@ -246,6 +246,56 @@ describe('LifeSections Remaining row with no years left (#9)', () => {
     // `LifeStagePanel`'s no-years gate uses.
     const body = html({ labYears: true });
     expect(has(body, 'life-section-remaining')).toBe(true);
+  });
+});
+
+// F15 (manual-testing-findings-2026-11-15 #15): a section whose lab years
+// exceed its own years must be marked in the ROW itself, like AbilityTab's
+// `.invalid-selection` rows — not only in the issues footer.
+describe('LifeSections lab-years row marking (F15)', () => {
+  afterEach(() => {
+    store.result = null;
+  });
+
+  it('marks only the section an error-severity issue names', () => {
+    store.result = {
+      issues: [
+        {
+          severity: 'error',
+          code: 'life_stage_section_lab_years_exceed_section',
+          phase: 'experience',
+          args: { section: '2', years: '10', years_used: '12' },
+        },
+      ],
+    };
+    const body = html({ labYears: true });
+    expect(row(body, 0)).not.toContain('invalid-glyph');
+    expect(row(body, 1)).toMatch(/<span class="invalid-glyph" aria-hidden="true">[^<]+<\/span>/);
+    expect(row(body, 1)).toContain('class="sr-only"');
+    expect(row(body, 1)).toContain(
+      "Section 2: 12 year(s) of lab work is more than the section's 10 year(s).",
+    );
+  });
+
+  it('marks nothing when the result carries no such issue', () => {
+    store.result = { issues: [] };
+    const body = html({ labYears: true });
+    expect(body).not.toContain('invalid-glyph');
+  });
+
+  it('does not mark a row a WARNING-severity issue points at (advisory only)', () => {
+    store.result = {
+      issues: [
+        {
+          severity: 'warning',
+          code: 'life_stage_section_lab_years_exceed_section',
+          phase: 'experience',
+          args: { section: '2', years: '10', years_used: '12' },
+        },
+      ],
+    };
+    const body = html({ labYears: true });
+    expect(body).not.toContain('invalid-glyph');
   });
 });
 

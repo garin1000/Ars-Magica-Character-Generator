@@ -49,9 +49,11 @@ import {
   groupWarpingOwedGrants,
   incompatibleRefs,
   invalidAbilityRows,
+  invalidLifeSectionIndices,
   invalidSelectionIds,
   isDisabled,
   isInvalidAbilityRow,
+  lifeSectionInvalidText,
   lifeSectionLabel,
   minLearnableLevel,
   movedAbilityParameterNotice,
@@ -4179,6 +4181,98 @@ describe('isInvalidAbilityRow', () => {
       ],
     });
     expect(isInvalidAbilityRow(rows, 'ability.brawl', 0)).toBe(false);
+  });
+});
+
+// F15 (manual-testing-findings-2026-11-15 #15): a life section whose lab years
+// exceed the section's own years must be marked in the section ROW, the same
+// way AbilityTab marks an invalid Ability row. The issue carries no `context`
+// (only a catalogue id has one) — just a 1-based `section` arg naming the
+// `life_sections` position, so the row index is `section - 1`.
+describe('invalidLifeSectionIndices', () => {
+  it('names the 0-based index of the section an error names', () => {
+    const result = {
+      issues: [
+        {
+          severity: 'error' as const,
+          code: 'life_stage_section_lab_years_exceed_section',
+          phase: 'experience' as const,
+          args: { section: '2', years: '1', years_used: '3' },
+        },
+      ],
+    };
+    expect(invalidLifeSectionIndices(result)).toEqual(new Set([1]));
+  });
+
+  it('ignores a warning-severity issue (Advisory/Silent never mark a row)', () => {
+    const result = {
+      issues: [
+        {
+          severity: 'warning' as const,
+          code: 'life_stage_section_lab_years_exceed_section',
+          phase: 'experience' as const,
+          args: { section: '1', years: '1', years_used: '3' },
+        },
+      ],
+    };
+    expect(invalidLifeSectionIndices(result).size).toBe(0);
+  });
+
+  it('ignores an unrelated issue code', () => {
+    const result = {
+      issues: [
+        {
+          severity: 'error' as const,
+          code: 'life_stage_sections_exceed_age',
+          phase: 'experience' as const,
+          args: { overrun_years: '3' },
+        },
+      ],
+    };
+    expect(invalidLifeSectionIndices(result).size).toBe(0);
+  });
+
+  it('is empty for a null result', () => {
+    expect(invalidLifeSectionIndices(null).size).toBe(0);
+  });
+});
+
+describe('lifeSectionInvalidText', () => {
+  const bundle = buildBundle('en');
+  const t: Translate = (key, args) => formatMessage(bundle, key, args);
+
+  it("reuses the issue's own localized message for the named section", () => {
+    const result = {
+      issues: [
+        {
+          severity: 'error' as const,
+          code: 'life_stage_section_lab_years_exceed_section',
+          phase: 'experience' as const,
+          args: { section: '2', years: '1', years_used: '3' },
+        },
+      ],
+    };
+    expect(lifeSectionInvalidText(result, 1, t)).toBe(
+      "Section 2: 3 year(s) of lab work is more than the section's 1 year(s).",
+    );
+  });
+
+  it('is null for a section no issue names', () => {
+    const result = {
+      issues: [
+        {
+          severity: 'error' as const,
+          code: 'life_stage_section_lab_years_exceed_section',
+          phase: 'experience' as const,
+          args: { section: '2', years: '1', years_used: '3' },
+        },
+      ],
+    };
+    expect(lifeSectionInvalidText(result, 0, t)).toBeNull();
+  });
+
+  it('is null for a null result', () => {
+    expect(lifeSectionInvalidText(null, 0, t)).toBeNull();
   });
 });
 

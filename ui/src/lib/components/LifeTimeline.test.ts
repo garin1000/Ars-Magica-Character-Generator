@@ -280,6 +280,15 @@ describe('LifeTimeline notes (G3)', () => {
     expect(has(html(), 'life-timeline-overrun')).toBe(false);
   });
 
+  // F14 (manual-testing-findings-2026-11-15 #14): the overrun text must read as
+  // bold and red, not merely small. CSS is not evaluated under `svelte/server`,
+  // so this asserts the semantic class `app.css` styles that way.
+  it('carries the error-styling class (F14)', () => {
+    install(companionTimeline(3), squire);
+    const body = html();
+    expect(openTag(body, 'life-timeline-overrun')).toMatch(/class="[^"]*\berror-text\b[^"]*"/);
+  });
+
   it('shows a grant on top of the years as a named chip outside the timeline', () => {
     install(companionTimeline(0, [{ item: 'virtue.educated', amount: 50, used: 20 }]), squire);
     const body = html();

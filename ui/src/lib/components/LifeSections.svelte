@@ -1,7 +1,13 @@
 <script lang="ts">
   import { store } from '../state.svelte';
   import { commitStored } from '../actions';
-  import { lifeSectionLabel, U32_MAX, type Translate } from '../derive';
+  import {
+    invalidLifeSectionIndices,
+    lifeSectionInvalidText,
+    lifeSectionLabel,
+    U32_MAX,
+    type Translate,
+  } from '../derive';
   import type { LifeSection } from '../types';
   import LabYearsFields from './LabYearsFields.svelte';
 
@@ -37,6 +43,11 @@
   );
   const showRemaining = $derived(labYears && (remainingYears == null || remainingYears >= 1));
 
+  // F15 (manual-testing-findings-2026-11-15 #15): a section whose lab years
+  // exceed its own years is marked in the row itself, like AbilityTab's
+  // `.invalid-selection` rows — not only the issues footer.
+  const invalidSections = $derived(invalidLifeSectionIndices(store.result));
+
   function label(section: LifeSection, index: number): string {
     return lifeSectionLabel(section, index, t);
   }
@@ -55,7 +66,14 @@
     data-testid="life-sections-list"
   >
     {#each sections as section, i (i)}
-      <li data-testid="life-section-{i}">
+      <li data-testid="life-section-{i}" class:invalid-selection={invalidSections.has(i)}>
+        {#if invalidSections.has(i)}
+          <!-- WCAG 1.4.1: the red tint on `.invalid-selection` is not the only
+               signal — a visible glyph plus words for a screen reader, matching
+               AbilityTab's own invalid-row marker. -->
+          <span class="invalid-glyph" aria-hidden="true">!</span>
+          <span class="sr-only">{lifeSectionInvalidText(store.result, i, t)}</span>
+        {/if}
         <fieldset class="life-section">
           <legend class="sr-only">{label(section, i)}</legend>
           <label class="field inline">

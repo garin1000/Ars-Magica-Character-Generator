@@ -2924,6 +2924,51 @@ export function isInvalidAbilityRow(
 }
 
 /**
+ * F15 (manual-testing-findings-2026-11-15 #15): which `LifeSection` rows (by
+ * their 0-based `life_sections` position) a `life_stage_section_lab_years_exceed_section`
+ * error names. That issue carries no `context` — unlike AbilityTab's rows,
+ * which key on a catalogue id — only a 1-based `section` arg, so the row index
+ * is `section - 1`. Error severity only, matching {@link invalidSelectionIds}:
+ * Advisory/Silent downgrade or clear every issue, so only Enforced ever marks
+ * a row.
+ */
+const CODE_LIFE_STAGE_SECTION_LAB_YEARS_EXCEED_SECTION =
+  'life_stage_section_lab_years_exceed_section';
+
+export function invalidLifeSectionIndices(
+  result: ValidationResult | null | undefined,
+): Set<number> {
+  const indices = new Set<number>();
+  for (const issue of result?.issues ?? []) {
+    if (issue.severity !== 'error') continue;
+    if (issue.code !== CODE_LIFE_STAGE_SECTION_LAB_YEARS_EXCEED_SECTION) continue;
+    const section = Number(issue.args.section);
+    if (Number.isNaN(section)) continue;
+    indices.add(section - 1);
+  }
+  return indices;
+}
+
+/**
+ * The screen-reader text for an invalid LifeSections row (F15): the matching
+ * issue's own localized message, reused as-is rather than a second generic
+ * string that would say less — it already names the section plainly.
+ */
+export function lifeSectionInvalidText(
+  result: ValidationResult | null | undefined,
+  index: number,
+  t: Translate,
+): string | null {
+  const issue = (result?.issues ?? []).find(
+    (candidate) =>
+      candidate.severity === 'error' &&
+      candidate.code === CODE_LIFE_STAGE_SECTION_LAB_YEARS_EXCEED_SECTION &&
+      Number(candidate.args.section) - 1 === index,
+  );
+  return issue ? t(`issue-${issue.code}`, issue.args) : null;
+}
+
+/**
  * The warning codes that mark the Ability or Art ROW they are about (I2, try-out
  * finding 7): banked XP that already reaches the next level, or that sits at the
  * advancement table's top score. An explicit list, not "every warning with an
