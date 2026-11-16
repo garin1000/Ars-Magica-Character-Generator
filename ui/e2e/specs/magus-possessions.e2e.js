@@ -962,12 +962,12 @@ describe('longevity ritual', () => {
     );
 
     // EMPTYING the box must come back to not-entered, never store a 0. This is the
-    // only test at any level that exercises that decision (`raw === '' ? null :
-    // Number(raw)` in the panel's `onBonus`): the panel's unit tests render to an
-    // SSR string so no handler ever runs there, and both the store test and the
-    // "brings the marker back" test call `setLongevityBonus(null)` directly, past the
-    // panel. Reverting `onBonus` to `num(event)` — which turns an emptied field into
-    // a permanent, irreversible 0 — otherwise leaves every gate green.
+    // only test at any level that exercises that decision: the panel's unit tests
+    // render to an SSR string so no handler ever runs there, and both the store
+    // test and the "brings the marker back" test call `setLongevityBonus(null)`
+    // directly, past the panel. Reverting `onBonus` to `num(event)` — which turns
+    // an emptied field into a permanent, irreversible 0 — otherwise leaves every
+    // gate green.
     //
     // The field is emptied with a real BACKSPACE keystroke, not `clearValue()`:
     // verified here against the shipped binary, WebDriver's Element Clear blanks the
@@ -976,6 +976,14 @@ describe('longevity ritual', () => {
     // `addValue`/`setValue` use) delivers real key events, which the webview turns
     // into a genuine `input`. The stored bonus is one digit, so one Backspace empties
     // it.
+    //
+    // No commit (blur/Enter) is needed to see the marker: `onBonus` now forwards a
+    // genuine empty read (`validity.badInput === false`) to the store on that same
+    // `input` event, a fix made necessary because WebKitGTK does NOT fire `change`
+    // on Enter for this element — confirmed directly against the shipped binary
+    // while diagnosing this test (a `change` listener attached just before an Enter
+    // keystroke never ran). Waiting on commit here, as an earlier version of this
+    // test did, hung on exactly that gap.
     await (await reach(BONUS)).addValue(BACKSPACE);
     expect(await $(BONUS).getValue()).toBe('');
     await $('[data-testid="longevity-not-entered"]').waitForExist({ timeout: 5000 });

@@ -107,15 +107,51 @@ function commit(input: HTMLInputElement): void {
   flushSync();
 }
 
-describe('LongevityPanel bonus does not blank on the empty read a mid-typed minus sign produces (F9)', () => {
-  it('keeps the stored bonus on an empty read instead of writing null', () => {
+/**
+ * Force `input.validity.badInput` to read as `value` for the next read, standing in
+ * for the one moment happy-dom cannot reproduce: a real browser's number-input value
+ * sanitization algorithm runs on every `.value` SET (ours included), so a half-typed
+ * "-" is already sanitized down to "" before `onBonus` ever sees it, and happy-dom's
+ * own `ValidityState.badInput` getter (`value.length > 0 && ...`) therefore always
+ * reads `false` once that sanitized, zero-length value is in place — there is no way
+ * to make it read `true` by setting `.value` alone, in happy-dom or in a real browser.
+ * A real browser instead tracks the user's actual keystrokes internally, separately
+ * from the sanitized `.value`, which is exactly what `badInput` exposes. Stubbing the
+ * getter is the honest way to exercise that half-typed branch here.
+ */
+function stubBadInput(input: HTMLInputElement, value: boolean): void {
+  Object.defineProperty(input, 'validity', {
+    configurable: true,
+    get: () => ({ badInput: value }),
+  });
+}
+
+describe('manual-testing-findings-2026-11-15 #9 follow-up: LongevityPanel bonus tells a genuine clear from a half-typed minus sign', () => {
+  it('forwards a genuine empty read (validity.badInput false) to the store at once, as "not entered"', () => {
     const input = mountPanel();
     expect(input.value).toBe('5');
 
     typeInto(input, '');
     expect(input.value, 'the field is left showing what the user typed').toBe('');
-    expect(store.entity.longevity_ritual?.bonus, 'no write to null mid-edit').toBe(5);
+    expect(
+      store.entity.longevity_ritual?.bonus,
+      'a genuine clear reaches the store immediately, matching the other nullable fields',
+    ).toBe(null);
+  });
 
+  it('ignores an empty read reported as badInput (a half-typed minus sign), keeping the stored bonus', () => {
+    const input = mountPanel();
+    expect(input.value).toBe('5');
+
+    stubBadInput(input, true);
+    typeInto(input, '');
+    expect(input.value, 'the field is left showing what the user typed').toBe('');
+    expect(
+      store.entity.longevity_ritual?.bonus,
+      'no write to null while the field only reads as an incomplete entry',
+    ).toBe(5);
+
+    stubBadInput(input, false);
     typeInto(input, '-4');
     expect(input.value).toBe('-4');
     expect(store.entity.longevity_ritual?.bonus).toBe(-4);

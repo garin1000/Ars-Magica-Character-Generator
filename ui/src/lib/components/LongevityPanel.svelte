@@ -12,18 +12,32 @@
   // single evaluation path (the `itemBudget`/`itemUsed` pattern).
   const hint = $derived(store.derived?.longevity?.hint ?? null);
 
-  // manual-testing-findings-2026-11-15 #9 (F9): forwarding an empty read as `null`
-  // (so a genuine clear is never stored as a deliberate 0, exactly as
-  // MagicPossessions' `onAura` does) was not enough on its own — a `type="number"`
-  // input reads an INCOMPLETE entry, a bare "-" on the way to "-4", back as the
-  // empty string too, so typing "-" wrote `null` immediately and the plain
-  // `value={longevity.bonus ?? ''}` binding blanked the field before the digit
-  // after the sign could ever be typed. The fix leaves a non-empty, in-bounds read
-  // forwarding exactly as before, but neither an empty one nor an out-of-range one
-  // reaches the store until the edit is committed.
+  // manual-testing-findings-2026-11-15 #9 (F9) + follow-up: forwarding an empty
+  // read as `null` (so a genuine clear is never stored as a deliberate 0, exactly
+  // as MagicPossessions' `onAura` does) is not enough on its own — a
+  // `type="number"` input reads an INCOMPLETE entry, a bare "-" on the way to
+  // "-4", back as the empty string too, so typing "-" would write `null`
+  // immediately and the plain `value={longevity.bonus ?? ''}` binding would blank
+  // the field before the digit after the sign could ever be typed. F9 fixed that
+  // by deferring EVERY empty read to commit — but that made the genuine clear
+  // depend on the `change` event (blur or Enter), and WebKitGTK does not fire
+  // `change` on Enter for this element (confirmed against the shipped binary:
+  // `magus-possessions.e2e.js`'s longevity-ritual test), leaving the field
+  // visibly blank with the old bonus still stored underneath.
+  //
+  // `validity.badInput` tells the two empty reads apart without waiting for
+  // commit at all: it is `false` for a genuine clear and `true` only for an
+  // incomplete token the UA cannot parse (a bare "-"), so a genuine clear can
+  // forward immediately — exactly like the other nullable fields already do
+  // (`AgeFields`, `AgingRecordPanel`'s apparent age, `AgingRollCalculator`'s
+  // distribution) — while the half-typed case still waits for commit.
   function onBonus(event: Event): void {
-    const raw = (event.currentTarget as HTMLInputElement).value;
-    if (raw === '') return;
+    const target = event.currentTarget as HTMLInputElement;
+    const raw = target.value;
+    if (raw === '') {
+      if (!target.validity.badInput) store.setLongevityBonus(null);
+      return;
+    }
     const typed = Number(raw);
     if (!Number.isFinite(typed) || typed < -128 || typed > 127) return;
     store.setLongevityBonus(typed);
