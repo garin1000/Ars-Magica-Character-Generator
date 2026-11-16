@@ -990,8 +990,9 @@ checked all 655 Virtue/Flaw entries against the rulebook (`docs/vf-audit/`, deci
 D1 onwards), and its Phase 2 corrections landed. Two manual try-out rounds followed,
 each with a fix round planned slice by slice (decisions D83 and D84). The second round's
 retest passed every step. A third manual test of 0.5.0-beta (2026-10-18, 20 findings,
-`docs/manual-testing-findings-2026-10-18.md`) was fixed in full. The save schema is at
-version 25. The app is at **version 0.5.0**.
+`docs/manual-testing-findings-2026-10-18.md`) was fixed in full, and so was the fourth,
+on Windows (2026-11-15, 28 findings, `docs/manual-testing-findings-2026-11-15.md`,
+decisions D93). The save schema is at version 25. The app is at **version 0.5.0**.
 
 **Milestone 6.6, the optional update check, is done** (D90). **Next: Milestone 7, the
 character-sheet window**. Detail: its section above.
