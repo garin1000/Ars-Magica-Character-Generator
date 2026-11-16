@@ -177,3 +177,22 @@ describe('AgeFields read-only mode (slice 12, #24)', () => {
     expect(has(html({ readonly: true }), 'age-cap-note')).toBe(false);
   });
 });
+
+// manual-testing-findings #10: an unset age used to render as nothing beside the
+// "Age" label in the read-only read-out (the one `LifeStagePanel` mounts), which
+// read as a blank field rather than a character with no recorded age.
+describe('AgeFields unknown age (manual-testing-findings #10)', () => {
+  it('shows a localized "unknown" in the read-out when the age is unset', () => {
+    const body = html({ readonly: true });
+    const readout = element(body, 'age-readout');
+    expect(readout.text).toBe('unknown');
+  });
+
+  it('shows the number, not "unknown", once the age is set', () => {
+    store.entity.age = 40;
+    const body = html({ readonly: true });
+    const readout = element(body, 'age-readout');
+    expect(readout.text).toBe('40');
+    expect(readout.text).not.toContain('unknown');
+  });
+});

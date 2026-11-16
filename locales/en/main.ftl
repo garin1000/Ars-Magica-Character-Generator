@@ -387,6 +387,13 @@ life-stage-spell-levels-label = Levels of spells
 # cannot state for themselves, and it is their `aria-describedby` target.
 life-stage-post-gauntlet-no-years-note = No years as a magus yet, so years of lab work and levels of spells can take nothing.
 life-stage-post-gauntlet-summary = Years as a magus: { $years }; { $points } points = { $xp } XP + { $levels } level(s) of spells
+# manual-testing-findings #13: life stages (later life's years, a magus's
+# post-Gauntlet span, the timeline) all price against the entity's age, so an
+# unset age leaves the whole block computing against nothing — stated right here,
+# not only as the footer's validation issue. Worded per mount: the editor keeps
+# the age on its Details tab, the wizard on its Concept step.
+life-stage-age-unset-notice-editor = Set the age on the Details tab to use life stages.
+life-stage-age-unset-notice-wizard = Set the age on the Concept step to use life stages.
 # Named sections of the life (phase 2). The fixed spans, keyed by the engine's
 # `FixedSection` slug, are named like the rulebook's periods and the XP bar's
 # block chips.
@@ -616,6 +623,9 @@ spell-mastery-ability-add = Add special ability
 remove-item = Remove { $name }
 # Details tab: age, Confidence (read-only, derived), Personality Traits, Reputations.
 age-label = Age
+# manual-testing-findings #10: what the read-only age read-out (`AgeFields`,
+# mounted `readonly` by `LifeStagePanel`) shows for a character with no age set yet.
+age-unknown = unknown
 apparent-age-label = Apparent age
 confidence-label = Confidence
 confidence-readout = Score { $score }, Points { $points }

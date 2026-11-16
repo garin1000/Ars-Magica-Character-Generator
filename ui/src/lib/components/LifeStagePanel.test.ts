@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'svelte/server';
 
 import type {
@@ -892,6 +892,48 @@ describe('LifeStagePanel life sections (G3)', () => {
     const open = element(body, 'life-section-0-lab-years-1-input').open;
     expect(open).toMatch(/readonly/);
     expect(open).toMatch(/aria-describedby="life-stage-post-gauntlet-no-years-note"/);
+  });
+});
+
+// manual-testing-findings #13: life stages depend on the character's age (later
+// life's years, a magus's post-Gauntlet span, the timeline), so an unset age
+// leaves the whole block computing against nothing. The footer's validation issue
+// is not enough — the player needs the explanation right where the dead fields are.
+describe('LifeStagePanel age-unset notice (manual-testing-findings #13)', () => {
+  afterEach(() => {
+    store.view = 'start';
+  });
+
+  it('shows a notice to set the age first while the age is unset', () => {
+    installPlan();
+    const body = html();
+    expect(has(body, 'life-stage-age-unset-notice')).toBe(true);
+  });
+
+  it('shows no notice once the age is set', () => {
+    installPlan();
+    store.entity.age = 25;
+    expect(has(html(), 'life-stage-age-unset-notice')).toBe(false);
+  });
+
+  it('shows no notice in pool mode', () => {
+    // No plan installed: funding stays 'pool', so the guided fields (and the
+    // notice with them) are entirely absent.
+    expect(has(html(), 'life-stage-age-unset-notice')).toBe(false);
+  });
+
+  it('names the Details tab while mounted in the editor', () => {
+    store.view = 'editor';
+    installPlan();
+    const body = html();
+    expect(element(body, 'life-stage-age-unset-notice').text).toContain('Details');
+  });
+
+  it('names the Concept step while mounted in the wizard', () => {
+    store.view = 'wizard';
+    installPlan();
+    const body = html();
+    expect(element(body, 'life-stage-age-unset-notice').text).toContain('Concept');
   });
 });
 

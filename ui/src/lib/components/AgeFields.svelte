@@ -35,7 +35,9 @@
          and a `<label>` pointing at nothing is worse than no label element at all.
          Mirrors the `confidence-readout` read-out in `CharacterDetails`. -->
     <span class="detail-label">{store.t('age-label')}</span>
-    <span data-testid="age-readout">{age ?? ''}</span>
+    <!-- manual-testing-findings #10: a blank read-out beside the label read as a
+         broken field rather than a character with no recorded age. -->
+    <span data-testid="age-readout">{age ?? store.t('age-unknown')}</span>
   {:else}
     <label class="field">
       <span>{store.t('age-label')}</span>

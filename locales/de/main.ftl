@@ -412,6 +412,16 @@ life-stage-spell-levels-label = Zauberstufen
 # ihr `aria-describedby`-Ziel.
 life-stage-post-gauntlet-no-years-note = Noch keine Jahre als Magus, daher können Jahre mit Laborarbeit und Zauberstufen nichts aufnehmen.
 life-stage-post-gauntlet-summary = Jahre als Magus: { $years }; { $points } Punkte = { $xp } EP + Zauberstufen ({ $levels })
+# manual-testing-findings #13: Lebensphasen (Jahre des späteren Lebens, die Zeit
+# eines Magus nach der Lehrlingsprüfung, die Zeitleiste) berechnen sich alle über
+# das Alter des Wesens, sodass ein ungesetztes Alter den ganzen Block ins Leere
+# rechnen lässt — hier gesagt, nicht nur als Validierungsmeldung im Fußbereich.
+# Je nach Einbindung: der Editor hält das Alter im Reiter „Details“, der Assistent
+# im Schritt „Konzept“. „Lebensabschnitte“ ist der Name der Finanzierungsart
+# (`ability-funding-life_stages`), nicht zu verwechseln mit den optionalen
+# „Lebensphasen“ (`life-sections-label`).
+life-stage-age-unset-notice-editor = Lege das Alter im Reiter „Details“ fest, um Lebensabschnitte zu nutzen.
+life-stage-age-unset-notice-wizard = Lege das Alter im Schritt „Konzept“ fest, um Lebensabschnitte zu nutzen.
 # Benannte Abschnitte des Lebens (Phase 2). Die festen Abschnitte, geschlüsselt nach
 # dem `FixedSection`-Slug der Engine, heißen wie die Perioden der Basisregeln
 # (frühe Kindheit, späteres Leben, Lehrlingszeit) und wie die Blöcke der EP-Leiste.
@@ -640,6 +650,10 @@ spell-mastery-ability-add = Meisterschaftsfähigkeit hinzufügen
 remove-item = { $name } entfernen
 # Details-Reiter: Alter, Selbstvertrauen (abgeleitet, schreibgeschützt), Persönlichkeit, Reputation.
 age-label = Alter
+# manual-testing-findings #10: was die schreibgeschützte Altersanzeige
+# (`AgeFields`, von `LifeStagePanel` als `readonly` eingebunden) für einen
+# Charakter ohne gesetztes Alter zeigt.
+age-unknown = unbekannt
 apparent-age-label = Scheinbares Alter
 confidence-label = Selbstvertrauen
 confidence-readout = Wert { $score }, Punkte { $points }

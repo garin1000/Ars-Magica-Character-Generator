@@ -34,6 +34,13 @@
   // `AgeFields` (Slice 12, #24). The age→Ability-score cap moved to the Abilities
   // surface, beside the lists it constrains.
   const age = $derived(store.entity.age ?? null);
+  // manual-testing-findings #13: every figure below (later life's years, a
+  // magus's post-Gauntlet span, the timeline) prices against this age, so an
+  // unset age leaves the whole block computing against nothing — not only a
+  // footer validation issue, but something stated right where the dead fields
+  // are. Worded per mount: the editor keeps the one editable age on its Details
+  // tab, the wizard on its Concept step (`AgeFields`'s own doc comment).
+  const ageUnset = $derived(age == null);
   const nativeLanguage = $derived(store.entity.life_stages?.native_language);
   // N4b: the native language is a value of the native-language Ability's catalogue
   // or the player's own text — the Ability row's combo over the engine's options
@@ -181,6 +188,18 @@
             </label>
           {/if}
         </div>
+
+        {#if ageUnset}
+          <div class="life-stage-hints">
+            <span class="funding-hint" data-testid="life-stage-age-unset-notice">
+              {store.t(
+                store.view === 'wizard'
+                  ? 'life-stage-age-unset-notice-wizard'
+                  : 'life-stage-age-unset-notice-editor',
+              )}
+            </span>
+          </div>
+        {/if}
 
         {#if showPostGauntlet}
           <!-- #5(b)/(c): Levels of spells gets a line of its own below Age, with the
