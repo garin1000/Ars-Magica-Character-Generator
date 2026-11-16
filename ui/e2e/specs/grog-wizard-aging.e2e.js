@@ -198,6 +198,12 @@ describe('the guided aging step', () => {
           top: Math.round(block.getBoundingClientRect().top - origin.top),
           left: Math.round(block.getBoundingClientRect().left - origin.left),
           width: Math.round(block.getBoundingClientRect().width),
+          // Horizontal padding: since F21 each column is its own `.panel`, so what
+          // fills it is its content box, not its border box.
+          paddingX: Math.round(
+            parseFloat(getComputedStyle(block).paddingLeft) +
+              parseFloat(getComputedStyle(block).paddingRight),
+          ),
           // HEIGHT is what the column independence claim is made of (#33): a column
           // that grows must leave its neighbours' heights untouched, which is only
           // observable if the height is measured.
@@ -465,7 +471,7 @@ describe('the guided aging step', () => {
     //    vertically only — and it is ON SCREEN WITHOUT SCROLLING, which is what
     //    leading the record column with it buys.
     const recordColumn = columns[2];
-    expect(before.logWidth).toBeGreaterThanOrEqual(recordColumn.width - 2);
+    expect(before.logWidth).toBeGreaterThanOrEqual(recordColumn.width - recordColumn.paddingX - 2);
     expect(before.logOverflowY).toBe('auto');
     expect(before.logOverflowX).toBeLessThanOrEqual(1);
     expect(before.logBlockTop).toBeGreaterThanOrEqual(0);

@@ -738,8 +738,11 @@ export async function hoverForTooltip(element) {
  * @param {WebdriverIO.Element} element the tooltip's trigger
  */
 export async function dismissTooltip(element) {
+  // The tooltip also opens on keyboard focus (`focusin`), and a focus-opened one
+  // ignores `mouseleave` — so a trigger that happens to hold focus is blurred too.
   await browser.execute((el) => {
     el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+    if (document.activeElement === el) el.blur();
   }, element);
   await $(TOOLTIP_POP).waitForExist({
     reverse: true,

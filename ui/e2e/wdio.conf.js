@@ -154,6 +154,7 @@ export const SPECS_LONGEST_FIRST = [
   'grog-wizard-aging.e2e.js',
   'app-shell.e2e.js',
   'life-stage-childhood.e2e.js',
+  'picker-verdicts.e2e.js',
   'magus-post-gauntlet.e2e.js',
   'update-check-stall-dirty-quit.e2e.js',
   'magus-apprenticeship.e2e.js',
