@@ -1,8 +1,14 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { getCurrentWindow } from '@tauri-apps/api/window';
   import { store } from './lib/state.svelte';
-  import { menuShortcuts, onMenuAction, setAppMenu, updateCloseGuard } from './lib/ipc';
+  import {
+    menuShortcuts,
+    onMenuAction,
+    setAppMenu,
+    setWindowTitle,
+    toggleFullscreen as ipcToggleFullscreen,
+    updateCloseGuard,
+  } from './lib/ipc';
   import { FULLSCREEN_ACTION_ID, MENU_ACTIONS, menuLabels } from './lib/menu';
   import { installMenuShortcuts, menuActionEnabled } from './lib/menu-shortcuts';
   import type { AppError } from './lib/types';
@@ -255,21 +261,28 @@
 
   /**
    * Toggle the OS window's fullscreen state (U1/P1). Window chrome, not a
-   * document action, so it goes straight to the real Tauri window API rather
-   * than through `store.runDocumentAction` — the fix for Window → Fullscreen
-   * doing nothing on Windows/Linux is exactly that muda's menu backend has no
-   * OS implementation for the predefined role there at all
+   * document action, so it goes through a Rust app command rather than
+   * `store.runDocumentAction` — the original fix for Window → Fullscreen
+   * doing nothing on Windows/Linux was that muda's menu backend has no OS
+   * implementation for the predefined role there at all
    * (`crates/arm-app/src/menu.rs::ACTION_FULLSCREEN`), so nothing routed
    * through the menu itself could ever have reached the window.
    *
-   * A rejection is swallowed, like the title-bar effect's `setTitle` call: a
-   * fullscreen toggle failing is cosmetic, not the safety-critical
+   * F1 (`docs/manual-testing-findings-2026-11-15.md` #1): that first fix still
+   * did nothing, because it called `getCurrentWindow().setFullscreen()`
+   * straight from the webview, which is DENIED —
+   * `core:window:allow-set-fullscreen` is not part of `core:default`
+   * (`crates/arm-app/capabilities/default.json`). An app command needs no
+   * capability at all, so both the read (`isFullscreen`) and the write
+   * (`setFullscreen`) now happen in Rust (`toggle_fullscreen_on`,
+   * `crates/arm-app/src/commands.rs`); this only asks it to flip the state.
+   *
+   * A rejection is swallowed, like the title-bar effect's `set_window_title`
+   * call: a fullscreen toggle failing is cosmetic, not the safety-critical
    * unsaved-changes guarantee the close guard exists for.
    */
   async function toggleFullscreen(): Promise<void> {
-    const window = getCurrentWindow();
-    const isFullscreen = await window.isFullscreen();
-    await window.setFullscreen(!isFullscreen);
+    await ipcToggleFullscreen().catch(() => {});
   }
 
   /** Route a native menu item to the store action it names, gate included. */
@@ -343,41 +356,58 @@
   // conventional for desktop applications" — the character's own `name`, not
   // the save file's. Falls back to the file name where the character has none
   // (an old save with no name field, or one not yet typed in), and then to the
-  // new `app-title-untitled` label where NEITHER exists — a brand-new,
+  // `app-title-untitled` label where NEITHER exists — a brand-new,
   // never-named, never-saved character. The dirty marker reads `store.dirty`
   // alone (CLAUDE.md: no second, duplicated notion of "unsaved") and applies
   // in every one of those three cases, which the pre-P3 effect did not: it
   // branched on `currentFileName === null` only, so an unsaved edit on a
   // never-saved document showed the bare app title with no marker at all.
   //
+  // F1 (`docs/manual-testing-findings-2026-11-15.md` #1, amending P3):
+  // Norbert decided the title should show the open file's name too, not just
+  // the character's — so when BOTH are known, `name` below is the resolved
+  // `app-title-name-and-file` string ("<character> (<file>)") rather than the
+  // character name alone hiding the file name. Either one alone, or the
+  // `app-title-untitled` placeholder with neither, is unchanged from P3.
+  //
   // `store.view === 'start'` is its own branch, checked first: the startup
   // screen has no character on it at all (the entity there is a placeholder,
   // never a real one — see `AppStore.view`'s own doc comment), so it is the
-  // one case none of the three name fallbacks above may apply to.
+  // one case none of the name fallbacks above may apply to.
   //
   // S4 (full-audit UX): `document.title` alone never reached the native OS
   // window's own title bar — a Tauri window's chrome does not mirror the HTML
-  // document title, only `getCurrentWindow().setTitle(...)` does. So the same
-  // computed string now goes to both. A rejection here is swallowed rather than
-  // surfaced through `store.error` like the close guard below: an OS title-bar
-  // update failing is cosmetic, not the safety-critical unsaved-changes
-  // guarantee that guard exists for.
+  // document title. F1 also found that `getCurrentWindow().setTitle()` itself
+  // is DENIED from the webview (`core:window:allow-set-title` is not part of
+  // `core:default`, `crates/arm-app/capabilities/default.json`), so the OS
+  // title bar silently never updated even once this effect started calling
+  // it. The fix routes the write through the Rust `set_window_title` app
+  // command instead (`ipc.ts`), which needs no capability at all; the same
+  // computed string still goes to both `document.title` and the command. A
+  // rejection from the command is swallowed rather than surfaced through
+  // `store.error` like the close guard below: an OS title-bar update failing
+  // is cosmetic, not the safety-critical unsaved-changes guarantee that guard
+  // exists for.
   $effect(() => {
     let title: string;
     if (store.view === 'start') {
       title = store.t('app-title');
     } else {
-      const name =
-        store.entity.name?.trim() || store.currentFileName || store.t('app-title-untitled');
+      const characterName = store.entity.name?.trim();
+      const fileName = store.currentFileName;
+      let name: string;
+      if (characterName && fileName) {
+        name = store.t('app-title-name-and-file', { name: characterName, file: fileName });
+      } else {
+        name = characterName || fileName || store.t('app-title-untitled');
+      }
       title = store.t(store.dirty ? 'app-title-document-dirty' : 'app-title-document', {
         name,
         app: store.t('app-title'),
       });
     }
     document.title = title;
-    void getCurrentWindow()
-      .setTitle(title)
-      .catch(() => {});
+    void setWindowTitle(title).catch(() => {});
   });
 
   // NO KEYBOARD SHORTCUT HANDLER LIVES HERE (C7), and that is the design,

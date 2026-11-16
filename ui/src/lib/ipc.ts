@@ -586,3 +586,25 @@ export function menuShortcuts(): Promise<MenuShortcut[]> {
 export function onMenuAction(handler: (id: string) => void): Promise<UnlistenFn> {
   return listen<string>(MENU_ACTION_EVENT, (event) => handler(event.payload));
 }
+
+/**
+ * Set the OS window's title (F1, `docs/manual-testing-findings-2026-11-15.md`
+ * #1). `getCurrentWindow().setTitle()` from the webview is DENIED —
+ * `core:window:allow-set-title` is not part of `core:default`
+ * (`crates/arm-app/capabilities/default.json`) — so the title effect must call
+ * this Rust app command instead, which needs no capability at all.
+ */
+export function setWindowTitle(title: string): Promise<void> {
+  return invoke('set_window_title', { title });
+}
+
+/**
+ * Flip the OS window's fullscreen state (F1). The read AND the write both
+ * happen in Rust now: `getCurrentWindow().setFullscreen()` is denied the same
+ * way `setTitle()` is (`core:window:allow-set-fullscreen` is not in
+ * `core:default`), so the frontend no longer computes the next state itself —
+ * it only asks Rust to flip it.
+ */
+export function toggleFullscreen(): Promise<void> {
+  return invoke('toggle_fullscreen');
+}

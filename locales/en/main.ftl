@@ -1096,6 +1096,9 @@ menu-select-all = Select All
 menu-minimize = Minimize
 menu-fullscreen = Fullscreen
 menu-close-window = Close Window
+menu-key-ctrl = Ctrl
+menu-key-shift = Shift
+menu-key-alt = Alt
 
 # Confirmation shown when closing or quitting the app with unsaved changes.
 close-unsaved-title = Unsaved changes
@@ -1117,6 +1120,12 @@ discard-changes-cancel = Cancel
 # one (P3/U3, `docs/open-todos.md`).
 app-title-document = { $name } — { $app }
 app-title-document-dirty = *{ $name } — { $app }
+
+# F1 (`docs/manual-testing-findings-2026-11-15.md`, amending P3): when BOTH a
+# character name and an open file are known, { $name } above is this resolved
+# string rather than either alone — { $name } is the character's own name,
+# { $file } the open file's name.
+app-title-name-and-file = { $name } ({ $file })
 
 # The window title's own placeholder name, for a character with no name of its
 # own and no save file yet.

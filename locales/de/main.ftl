@@ -1148,6 +1148,9 @@ menu-select-all = Alles auswählen
 menu-minimize = Minimieren
 menu-fullscreen = Vollbild
 menu-close-window = Fenster schließen
+menu-key-ctrl = Strg
+menu-key-shift = Umschalt
+menu-key-alt = Alt
 
 # Bestätigung beim Schließen oder Beenden der Anwendung mit ungespeicherten Änderungen.
 close-unsaved-title = Ungespeicherte Änderungen
@@ -1169,6 +1172,12 @@ discard-changes-cancel = Abbrechen
 # Charakter (P3/U3, `docs/open-todos.md`).
 app-title-document = { $name } — { $app }
 app-title-document-dirty = *{ $name } — { $app }
+
+# F1 (`docs/manual-testing-findings-2026-11-15.md`, ergänzt P3): Sind SOWOHL
+# ein Charaktername als auch eine geöffnete Datei bekannt, ist { $name } oben
+# diese aufgelöste Zeichenkette statt nur eines der beiden — { $name } der
+# Name des Charakters, { $file } der Name der geöffneten Datei.
+app-title-name-and-file = { $name } ({ $file })
 
 # Der Platzhaltername im Fenstertitel für einen Charakter ohne eigenen Namen
 # und ohne Speicherdatei.

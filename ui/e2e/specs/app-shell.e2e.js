@@ -59,6 +59,41 @@ const VF_TAB = '[data-testid="tab-virtues_flaws"]';
 const NAME_INPUT = '[data-testid="identity-name"]';
 const SETTINGS_DIALOG = '[data-testid="settings-dialog"]';
 
+/**
+ * Invoke a raw Tauri IPC command and return its resolved value — the same
+ * `window.__TAURI_INTERNALS__.invoke` pattern `installedMenu` below uses, and
+ * for the same reason: `browser.execute` does not await a returned promise
+ * under WebKitWebDriver, so the answer is parked on a global and polled for.
+ * The answer is WRAPPED (not parked bare) so a resolved `undefined`/`null` is
+ * distinguishable over the wire from "hasn't answered yet". `withGlobalTauri`
+ * is `false`, so this is the only way an e2e spec reaches a Tauri API at all —
+ * see `request_exit`'s callers for the established precedent.
+ */
+async function invokeTauri(cmd, payload) {
+  await browser.execute(
+    (cmd, payload) => {
+      window.__armInvokeResult = null;
+      window.__TAURI_INTERNALS__.invoke(cmd, payload).then(
+        (value) => {
+          window.__armInvokeResult = { ok: true, value };
+        },
+        (error) => {
+          window.__armInvokeResult = { ok: false, error: String(error) };
+        },
+      );
+    },
+    cmd,
+    payload,
+  );
+  await browser.waitUntil(
+    async () => (await browser.execute(() => window.__armInvokeResult)) !== null,
+    { timeout: 10000, timeoutMsg: `${cmd} never answered` },
+  );
+  const answer = await browser.execute(() => window.__armInvokeResult);
+  if (!answer.ok) throw new Error(`${cmd} rejected: ${answer.error}`);
+  return answer.value;
+}
+
 describe('app entry', () => {
   it('boots on the startup screen, not in the editor', async () => {
     await $(START_SCREEN).waitForExist({ timeout: 30000 });
@@ -237,6 +272,92 @@ describe('the window title reflects the open document (P3/U3)', () => {
         timeoutMsg: 'title should show the saved file name without a dirty marker',
       },
     );
+  });
+
+  // F1 (`docs/manual-testing-findings-2026-11-15.md` #1): the assertions above
+  // only ever read `document.title`, which was ALREADY being set correctly —
+  // the actual defect is that the OS title bar itself never updated, because
+  // `getCurrentWindow().setTitle()` is denied by the webview capability ACL
+  // (`core:window:allow-set-title` is not part of `core:default`,
+  // `crates/arm-app/capabilities/default.json`) and the rejection was
+  // swallowed. The fix moves the write into a Rust app command
+  // (`set_window_title`), read back here through the SAME raw invoke
+  // `@tauri-apps/api/window`'s own `title()` getter makes
+  // (`plugin:window|title`, `ui/node_modules/@tauri-apps/api/window.js`) —
+  // `core:window:allow-title` (the READ) is already in `core:default`, so no
+  // seam was needed for this half.
+  //
+  // Norbert's decision (amending P3, `docs/open-todos.md`): the title shows
+  // BOTH the character name and the file name once both exist, as
+  // "<character> (<file>)".
+  it('reaches the real OS title bar, naming both the character and the file (F1)', async () => {
+    await startCharacter('companion');
+    await $('[data-testid="tab-characteristics"]').waitForExist({ timeout: 30000 });
+
+    const nativeTitle = () => invokeTauri('plugin:window|title', { label: 'main' });
+
+    await $(NAME_INPUT).setValue('Flavia of Criamon');
+    await browser.waitUntil(async () => (await nativeTitle()).includes('Flavia of Criamon'), {
+      timeout: 10000,
+      timeoutMsg: 'the native OS title bar should pick up the character name',
+    });
+
+    if (fs.existsSync(e2eFile)) fs.unlinkSync(e2eFile);
+    await runDocumentAction('save');
+    await browser.waitUntil(() => fs.existsSync(e2eFile), {
+      timeout: 10000,
+      timeoutMsg: 'save did not write the file',
+    });
+
+    await browser.waitUntil(
+      async () => {
+        const t = await nativeTitle();
+        return (
+          t.includes('Flavia of Criamon') &&
+          t.includes(path.basename(e2eFile)) &&
+          !t.startsWith('*')
+        );
+      },
+      {
+        timeout: 5000,
+        timeoutMsg: 'the native OS title bar should name both the character and the file, clean',
+      },
+    );
+  });
+});
+
+// F1 (manual-testing-findings #1's "broken fullscreen action"): Window →
+// Fullscreen did nothing on Linux/Windows even after P1 made it a real menu
+// action, because `getCurrentWindow().setFullscreen()` is ALSO denied by the
+// webview capability ACL (`core:window:allow-set-fullscreen` is not part of
+// `core:default`). The fix is a Rust app command, `toggle_fullscreen`, that
+// reads and flips the real window state itself; read back here through the
+// same raw invoke `isFullscreen()` makes (`plugin:window|is_fullscreen`,
+// `ui/node_modules/@tauri-apps/api/window.js`) — `core:window:allow-is-fullscreen`
+// (the READ) is already in `core:default`, so this half needed no seam either.
+describe('Window -> Fullscreen really toggles the native window (F1)', () => {
+  it('flips the real OS fullscreen state and back', async () => {
+    await startCharacter('companion');
+    await $('[data-testid="tab-characteristics"]').waitForExist({ timeout: 30000 });
+
+    const isNativeFullscreen = () => invokeTauri('plugin:window|is_fullscreen', { label: 'main' });
+
+    expect(await isNativeFullscreen()).toBe(false);
+
+    await activateMenuItem('menu.fullscreen');
+    await browser.waitUntil(async () => await isNativeFullscreen(), {
+      timeout: 10000,
+      timeoutMsg: 'Window -> Fullscreen should enter real OS fullscreen',
+    });
+
+    // Restored before this spec hands the shared session on: a window left
+    // fullscreen would skew every geometry-sensitive assertion after it
+    // (`header real estate` measures `.app-header`'s bounding rect).
+    await activateMenuItem('menu.fullscreen');
+    await browser.waitUntil(async () => !(await isNativeFullscreen()), {
+      timeout: 10000,
+      timeoutMsg: 'Window -> Fullscreen should leave real OS fullscreen again',
+    });
   });
 });
 

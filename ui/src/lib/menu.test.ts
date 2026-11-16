@@ -39,6 +39,22 @@ describe('the native menu labels', () => {
     expect(de.settings).toBe('Einstellungen…');
     expect(de.closeWindow).toBe('Fenster schließen');
   });
+
+  // F2: the Windows-only glue (`arm_app::menu::windows_label_with_chord`)
+  // folds these three into the chord it draws beside a label, instead of
+  // muda's own hardcoded English modifier words. `Alt` is intentionally the
+  // same spelling in both languages (no chord uses it today).
+  it('names the modifier keys the Windows chord-folding glue consumes', () => {
+    const en = labelsFor('en');
+    const de = labelsFor('de');
+
+    expect(en.keyCtrl).toBe('Ctrl');
+    expect(en.keyShift).toBe('Shift');
+    expect(en.keyAlt).toBe('Alt');
+    expect(de.keyCtrl).toBe('Strg');
+    expect(de.keyShift).toBe('Umschalt');
+    expect(de.keyAlt).toBe('Alt');
+  });
 });
 
 // Building the menu is the one thing `set_app_menu` can fail at, and it fails

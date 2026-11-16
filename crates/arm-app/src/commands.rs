@@ -5,7 +5,7 @@ use std::sync::{Mutex, RwLock, RwLockReadGuard};
 
 use arm_rules::{Characteristic, Entity, Id, LocalizedRuleset, ValidationMode, ValidationResult};
 use tauri::path::BaseDirectory;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Manager, Runtime, State};
 use tauri_plugin_dialog::{DialogExt, FileDialogBuilder, MessageDialogButtons, MessageDialogKind};
 
 use arm_rules::DerivedTotals;
@@ -251,6 +251,75 @@ pub fn set_app_menu(labels: MenuLabels, flags: MenuFlags, app: AppHandle) -> Res
 #[tauri::command]
 pub fn menu_shortcuts() -> Vec<crate::menu::MenuShortcut> {
     crate::menu::menu_shortcuts(crate::menu::Platform::current())
+}
+
+/// Sets the OS window's title directly (F1, `docs/manual-testing-findings-2026-11-15.md`
+/// #1). `App.svelte`'s title effect used to call
+/// `getCurrentWindow().setTitle()` straight from the webview, which is DENIED:
+/// `core:window:allow-set-title` is not part of `core:default`
+/// (`crates/arm-app/capabilities/default.json` grants only that one
+/// permission), and the rejection was swallowed — so the OS title bar silently
+/// never updated. An app command needs no capability of its own (it is always
+/// invokable), so the fix is to route the write through here instead; the
+/// pinned-capabilities test and `CLAUDE.md`'s "webview gains no capability"
+/// statement both stay true.
+///
+/// Generic over `R: Runtime` so the decision (there is none beyond "forward
+/// the string") has a unit seam under `MockRuntime` for the no-window/
+/// with-window branches — see `tests/a3_mock_app_commands.rs` for why the
+/// window mutation itself has no stronger seam than that.
+pub fn set_window_title_on<R: Runtime>(app: &AppHandle<R>, title: &str) -> Result<(), AppError> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.set_title(title).map_err(|e| AppError::Io {
+            message: e.to_string(),
+        })?;
+    }
+    Ok(())
+}
+
+/// The `#[tauri::command]` shim pinned to the real `Wry` runtime; see
+/// [`set_window_title_on`] for the fix this exists to apply.
+#[tauri::command]
+pub fn set_window_title(title: String, app: AppHandle) -> Result<(), AppError> {
+    set_window_title_on(&app, &title)
+}
+
+/// The fullscreen state to go to, given the current one. The one piece of the
+/// F1 fullscreen fix with a real unit seam — see
+/// `tests/a3_mock_app_commands.rs::next_fullscreen_state_flips_whatever_it_is_told`'s
+/// doc comment for why the window mutation `toggle_fullscreen_on` wraps around
+/// it has none stronger under `MockRuntime`.
+pub fn next_fullscreen_state(is_fullscreen: bool) -> bool {
+    !is_fullscreen
+}
+
+/// Flips the OS window's fullscreen state (F1). `App.svelte`'s
+/// `toggleFullscreen()` used to read `getCurrentWindow().isFullscreen()` (an
+/// allowed read, `core:window:allow-is-fullscreen` IS in `core:default`) and
+/// then call `.setFullscreen()` with the negation — but that write is DENIED
+/// for the same reason [`set_window_title_on`]'s is, so Window → Fullscreen
+/// did nothing. Both the read and the write move here, where neither needs a
+/// capability; the frontend no longer computes the next state at all, it only
+/// asks Rust to flip it.
+pub fn toggle_fullscreen_on<R: Runtime>(app: &AppHandle<R>) -> Result<(), AppError> {
+    if let Some(window) = app.get_webview_window("main") {
+        let is_fullscreen = window.is_fullscreen().map_err(|e| AppError::Io {
+            message: e.to_string(),
+        })?;
+        window
+            .set_fullscreen(next_fullscreen_state(is_fullscreen))
+            .map_err(|e| AppError::Io {
+                message: e.to_string(),
+            })?;
+    }
+    Ok(())
+}
+
+/// The `#[tauri::command]` shim pinned to the real `Wry` runtime; see
+/// [`toggle_fullscreen_on`] for the fix this exists to apply.
+#[tauri::command]
+pub fn toggle_fullscreen(app: AppHandle) -> Result<(), AppError> {
+    toggle_fullscreen_on(&app)
 }
 
 /// Locks the cached ruleset for reading. Every command that needs a loaded

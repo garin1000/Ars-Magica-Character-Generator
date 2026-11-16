@@ -15,34 +15,18 @@ import type { DerivedTotals, EffectiveScores, Entity, LocalizedRuleset } from '.
 // have passed the whole suite. This file is the reason the `client` vitest
 // project exists (see CLAUDE.md, "Frontend test environments"); mounting the app
 // client-side is what makes the effect actually run.
-// S4 (full-audit UX): the native OS window title never reflected the open file
-// name or unsaved state — only `document.title` did (the existing `$effect` in
-// `App.svelte` that assigns it), which a Tauri window does NOT mirror
-// into its own chrome automatically. `getCurrentWindow` is hoisted so the
-// SAME mock function backs every `getCurrentWindow()` call, letting tests
-// assert on it directly.
-// U1 (P1): Window → Fullscreen had no handler outside macOS — muda's Windows
-// and GTK backends never implement the predefined role at all (see
-// `crates/arm-app/tests/menu.rs`'s
-// `fullscreen_is_a_real_action_on_windows_and_linux_not_a_dead_predefined_item`),
-// so the fix routes it through `getCurrentWindow().isFullscreen()`/`setFullscreen()`
-// exactly like the title-bar effect already reaches `setTitle` — real Tauri
-// window API, decoupled from muda's menu backend entirely. `isFullscreenMock`
-// and `setFullscreenMock` join `setTitleMock` on the SAME hoisted mock so every
-// `getCurrentWindow()` call in the component sees them.
-const { setTitleMock, isFullscreenMock, setFullscreenMock } = vi.hoisted(() => ({
-  setTitleMock: vi.fn().mockResolvedValue(undefined),
-  isFullscreenMock: vi.fn().mockResolvedValue(false),
-  setFullscreenMock: vi.fn().mockResolvedValue(undefined),
-}));
-vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({
-    setTitle: setTitleMock,
-    isFullscreen: isFullscreenMock,
-    setFullscreen: setFullscreenMock,
-  }),
-}));
-
+//
+// S4 (full-audit UX) / U1 (P1) / F1 (`docs/manual-testing-findings-2026-11-15.md`
+// #1): the native OS window title and Window → Fullscreen both go through Rust
+// app commands now (`setWindowTitle`/`toggleFullscreen`, `./lib/ipc`) rather than
+// `getCurrentWindow()` called directly from the webview — `core:window:
+// allow-set-title`/`allow-set-fullscreen` are not part of `core:default`
+// (`crates/arm-app/capabilities/default.json`), so the direct calls were
+// silently denied. An earlier version of this file mocked `@tauri-apps/api/window`
+// directly and asserted on THAT mock, which is exactly why nothing caught the
+// real denial — the component no longer imports that module at all, so there is
+// nothing left to mock there; `setWindowTitle`/`toggleFullscreen` below are the
+// only seam.
 vi.mock('./lib/ipc', () => ({
   // Must resolve a usable ruleset: mounting runs `onMount`, which calls
   // `store.init()` -> `#reloadRuleset(true)`. That is also what seeds the clean
@@ -62,6 +46,11 @@ vi.mock('./lib/ipc', () => ({
   setAppMenu: vi.fn(),
   onMenuAction: vi.fn(),
   menuShortcuts: vi.fn(),
+  // F1: the title effect and the fullscreen toggle call these Rust app
+  // commands instead of `getCurrentWindow()` directly — see the module-level
+  // comment above.
+  setWindowTitle: vi.fn(),
+  toggleFullscreen: vi.fn(),
 }));
 
 import * as ipc from './lib/ipc';
@@ -170,9 +159,6 @@ function lastMirroredDirty(): boolean {
 }
 
 beforeEach(() => {
-  setTitleMock.mockReset().mockResolvedValue(undefined);
-  isFullscreenMock.mockReset().mockResolvedValue(false);
-  setFullscreenMock.mockReset().mockResolvedValue(undefined);
   vi.mocked(ipc.setAppMenu).mockReset().mockResolvedValue(undefined);
   vi.mocked(ipc.onMenuAction)
     .mockReset()
@@ -180,6 +166,10 @@ beforeEach(() => {
   // `[]` is what `menu_shortcuts` answers on Linux and macOS, where the menu's
   // accelerators fire natively; the U4 describe overrides it with Windows' list.
   vi.mocked(ipc.menuShortcuts).mockReset().mockResolvedValue([]);
+  // F1: the new backend commands the title effect and the fullscreen toggle
+  // must call instead of the webview window API directly.
+  vi.mocked(ipc.setWindowTitle).mockReset().mockResolvedValue(undefined);
+  vi.mocked(ipc.toggleFullscreen).mockReset().mockResolvedValue(undefined);
   vi.mocked(ipc.updateCloseGuard).mockReset().mockResolvedValue(undefined);
   vi.mocked(ipc.saveEntity).mockReset().mockResolvedValue(null);
   vi.mocked(ipc.loadEntity).mockReset().mockResolvedValue(null);
@@ -916,51 +906,79 @@ describe('the palette follows the OS unless told otherwise', () => {
 
 // S4 (full-audit UX): App.svelte already computed the right localized title
 // string into `document.title` (the `app-title-document(-dirty)` Fluent keys),
-// but a Tauri window's native chrome does not read `document.title` — only
-// `getCurrentWindow().setTitle(...)` reaches it. So the title bar itself never
+// but a Tauri window's native chrome does not read `document.title` — only a
+// `set_window_title` app command reaches it. So the title bar itself never
 // showed the open file name or the unsaved marker. SSR never runs an `$effect`
 // body, so this can only be proven mounted.
 //
-// P3/U3 (`docs/open-todos.md`) later retired the doc-status chip these keys'
-// old comment contrasted against — the on-screen `app-document-name(-dirty)`/
+// P3/U3 (`docs/open-todos.md`) retired the doc-status chip these keys' old
+// comment contrasted against — the on-screen `app-document-name(-dirty)`/
 // `app-document-unsaved(-dirty)` keys it named are gone with it, and the
 // window title is the SOLE surviving carrier of this state.
-describe('the native window title reflects the open document (S4, P3/U3)', () => {
+//
+// F1 (`docs/manual-testing-findings-2026-11-15.md` #1, amending P3 — see the
+// title effect's own comment in `App.svelte` for the decision record): this
+// describe used to mock `@tauri-apps/api/window` directly and assert on THAT
+// mock, which is exactly why it never caught the real defect —
+// `core:window:allow-set-title` is not part of `core:default`
+// (`crates/arm-app/capabilities/default.json`), so the webview's own
+// `setTitle()` call was silently denied in the shipped app while this mock
+// happily kept answering. The fix moves the write into the Rust
+// `set_window_title` command, asserted here via `ipc.setWindowTitle` instead;
+// and Norbert decided the title should show BOTH the character name and the
+// file name once both exist, as "<character> (<file>)", rather than one OR
+// the other.
+describe('the native window title reaches the OS via the backend command (S4, P3/U3, F1)', () => {
   // P3 (`docs/open-todos.md`): the title used to be built from the FILE name
   // alone (`store.currentFileName`), which is not what P3 asks for — "put the
-  // CHARACTER name in the window title". These four tests are the coordinator's
-  // four required behaviours, in order. Every scenario below explicitly sets
+  // CHARACTER name in the window title". Every scenario below explicitly sets
   // `store.view`: it is the signal that distinguishes "no character exists yet"
-  // (the startup screen, bullet 4) from "a real, merely unnamed/unsaved
-  // character" (bullet 3) — the fixture's own `resetEntity()` gives even the
-  // startup screen a real `type_id`, unlike the shipped app, so the title
-  // effect cannot tell the two apart by looking at the entity; it has to read
-  // the screen.
+  // (the startup screen) from "a real, merely unnamed/unsaved character" — the
+  // fixture's own `resetEntity()` gives even the startup screen a real
+  // `type_id`, unlike the shipped app, so the title effect cannot tell the two
+  // apart by looking at the entity; it has to read the screen.
 
-  // Bullet 4: no entity at all.
+  // No entity at all.
   it('shows the bare app title on the startup screen, with no character at all', async () => {
     store.view = 'start';
     await mountApp();
-    expect(setTitleMock).toHaveBeenLastCalledWith(store.t('app-title'));
+    expect(ipc.setWindowTitle).toHaveBeenLastCalledWith(store.t('app-title'));
   });
 
-  // Bullet 1: the character's own name, not the file name, once one is set —
-  // proven against a document that ALSO has a file tracked, so a regression
-  // back to file-name titling cannot hide behind "there was no file anyway".
-  it('titles the window from the character name once one is set, not the file name', async () => {
+  // F1: both known at once now combine, rather than the character name
+  // silently hiding the file name as P3 originally had it.
+  it('shows "<character> (<file>)" once both a character name and a file are known', async () => {
     await mountApp();
     store.view = 'editor';
     store.currentPath = '/tmp/example.armc.json';
     flushSync();
-    setTitleMock.mockClear();
+    vi.mocked(ipc.setWindowTitle).mockClear();
 
     store.entity.name = 'Bonisagus of Bonisagus';
     flushSync();
 
+    const combined = store.t('app-title-name-and-file', {
+      name: 'Bonisagus of Bonisagus',
+      file: 'example.armc.json',
+    });
     // The edit dirties the document too, so this is also the dirty variant —
     // the clean one is proven by "drops the dirty marker…" below with the
-    // file-name fallback, since both variants share one Fluent key pair.
-    expect(setTitleMock).toHaveBeenLastCalledWith(
+    // file-name-alone fallback, since both variants share one Fluent key pair.
+    expect(ipc.setWindowTitle).toHaveBeenLastCalledWith(
+      store.t('app-title-document-dirty', { name: combined, app: store.t('app-title') }),
+    );
+  });
+
+  // The character's own name alone, once no file is tracked at all.
+  it('titles the window from the character name alone once no file is tracked', async () => {
+    await mountApp();
+    store.view = 'editor';
+    flushSync();
+
+    store.entity.name = 'Bonisagus of Bonisagus';
+    flushSync();
+
+    expect(ipc.setWindowTitle).toHaveBeenLastCalledWith(
       store.t('app-title-document-dirty', {
         name: 'Bonisagus of Bonisagus',
         app: store.t('app-title'),
@@ -968,26 +986,26 @@ describe('the native window title reflects the open document (S4, P3/U3)', () =>
     );
   });
 
-  // Bullet 3, first fallback: file name, once the character has no name.
+  // First fallback: file name alone, once the character has no name.
   it('falls back to the file name once a file is tracked and the character has no name', async () => {
     await mountApp();
     store.view = 'editor';
     store.currentPath = '/tmp/example.armc.json';
     flushSync();
 
-    expect(setTitleMock).toHaveBeenLastCalledWith(
+    expect(ipc.setWindowTitle).toHaveBeenLastCalledWith(
       store.t('app-title-document', { name: 'example.armc.json', app: store.t('app-title') }),
     );
   });
 
-  // Bullet 3, second fallback: the new localized "Untitled" label, with
-  // neither a character name nor a file.
+  // Second fallback: the localized "Untitled" label, with neither a
+  // character name nor a file.
   it('falls back to the localized "Untitled" label with no character name and no file', async () => {
     await mountApp();
     store.view = 'editor';
     flushSync();
 
-    expect(setTitleMock).toHaveBeenLastCalledWith(
+    expect(ipc.setWindowTitle).toHaveBeenLastCalledWith(
       store.t('app-title-document', {
         name: store.t('app-title-untitled'),
         app: store.t('app-title'),
@@ -995,15 +1013,15 @@ describe('the native window title reflects the open document (S4, P3/U3)', () =>
     );
   });
 
-  // Bullet 2: the asterisk appears whenever `store.dirty` is true, INCLUDING a
-  // brand-new, never-saved, unnamed character — today's code shows the bare
-  // app title here with no asterisk at all, because it only ever branches on
-  // `currentFileName === null` and never reads `dirty` in that branch.
+  // The asterisk appears whenever `store.dirty` is true, INCLUDING a
+  // brand-new, never-saved, unnamed character — a naive branch on
+  // `currentFileName === null` alone would show the bare app title here with
+  // no asterisk at all.
   it('marks the title dirty even for a brand-new, never-saved, unnamed character', async () => {
     await mountApp();
     store.view = 'editor';
     flushSync();
-    setTitleMock.mockClear();
+    vi.mocked(ipc.setWindowTitle).mockClear();
 
     store.entity.description = 'a dirtying edit';
     flushSync();
@@ -1012,8 +1030,8 @@ describe('the native window title reflects the open document (S4, P3/U3)', () =>
       name: store.t('app-title-untitled'),
       app: store.t('app-title'),
     });
-    expect(setTitleMock).toHaveBeenLastCalledWith(title);
-    expect(setTitleMock.mock.lastCall![0]).toBe(document.title);
+    expect(ipc.setWindowTitle).toHaveBeenLastCalledWith(title);
+    expect(vi.mocked(ipc.setWindowTitle).mock.lastCall![0]).toBe(document.title);
     // The dirty source stays `AppStore.dirty` alone (CLAUDE.md): the marker
     // must still be the plain ASCII asterisk that guard already uses, never a
     // second, duplicated notion of "unsaved".
@@ -1025,15 +1043,15 @@ describe('the native window title reflects the open document (S4, P3/U3)', () =>
     store.view = 'editor';
     store.currentPath = '/tmp/example.armc.json';
     flushSync();
-    setTitleMock.mockClear();
+    vi.mocked(ipc.setWindowTitle).mockClear();
 
     store.entity.description = 'a dirtying edit';
     flushSync();
 
-    expect(setTitleMock).toHaveBeenLastCalledWith(
+    expect(ipc.setWindowTitle).toHaveBeenLastCalledWith(
       store.t('app-title-document-dirty', { name: 'example.armc.json', app: store.t('app-title') }),
     );
-    expect(setTitleMock.mock.lastCall![0]).toBe(document.title);
+    expect(vi.mocked(ipc.setWindowTitle).mock.lastCall![0]).toBe(document.title);
   });
 
   it('drops the dirty marker once the edit is saved back to the baseline', async () => {
@@ -1044,13 +1062,13 @@ describe('the native window title reflects the open document (S4, P3/U3)', () =>
 
     store.entity.description = 'a dirtying edit';
     flushSync();
-    expect(setTitleMock).toHaveBeenLastCalledWith(
+    expect(ipc.setWindowTitle).toHaveBeenLastCalledWith(
       store.t('app-title-document-dirty', { name: 'example.armc.json', app: store.t('app-title') }),
     );
 
     delete store.entity.description;
     flushSync();
-    expect(setTitleMock).toHaveBeenLastCalledWith(
+    expect(ipc.setWindowTitle).toHaveBeenLastCalledWith(
       store.t('app-title-document', { name: 'example.armc.json', app: store.t('app-title') }),
     );
   });
@@ -1333,39 +1351,37 @@ describe('the native application menu', () => {
     expect(unlisten).toHaveBeenCalled();
   });
 
-  // U1/P1. This is the "no browser.keys" activation proof `crates/arm-app/tests/menu.rs`
-  // cannot give on its own: that file proves the Rust MODEL now offers a real
-  // `menu.fullscreen` action instead of a dead predefined item, but nothing
-  // there can prove a click on it actually does anything — there is no live
-  // Tauri window in a `cargo test` run. This is: `chooseMenuItem` delivers the
-  // id exactly as the Rust menu-event bridge would, and a mounted component is
-  // required because `getCurrentWindow()` is only ever called from a live
-  // effect/handler, never under SSR.
-  describe('the fullscreen menu action actually toggles the window (U1/P1)', () => {
-    it('enters fullscreen when the window is not already fullscreen', async () => {
+  // U1/P1, F1 (`docs/manual-testing-findings-2026-11-15.md` #1, "broken
+  // fullscreen action"). This is the "no browser.keys" activation proof
+  // `crates/arm-app/tests/menu.rs` cannot give on its own: that file proves
+  // the Rust MODEL now offers a real `menu.fullscreen` action instead of a
+  // dead predefined item, but nothing there can prove a click on it actually
+  // does anything — there is no live Tauri window in a `cargo test` run. This
+  // is: `chooseMenuItem` delivers the id exactly as the Rust menu-event bridge
+  // would, and a mounted component is required because the fullscreen toggle
+  // is only ever called from a live effect/handler, never under SSR.
+  //
+  // An earlier version of this describe mocked `@tauri-apps/api/window`
+  // directly and asserted the mock saw the read-then-negate-then-write
+  // sequence — which is exactly why it never caught the real defect:
+  // `core:window:allow-set-fullscreen` is not part of `core:default`
+  // (`crates/arm-app/capabilities/default.json`), so the webview's own
+  // `setFullscreen()` call was silently denied in the shipped app. The fix
+  // moves both the read and the write into one Rust app command,
+  // `toggle_fullscreen`, which decides the next state itself — the frontend
+  // no longer computes it at all, and only has to ask Rust to flip it, so
+  // there is exactly one case to prove instead of two.
+  describe('the fullscreen menu action calls the backend toggle command (F1)', () => {
+    it('invokes toggle_fullscreen with no arguments, leaving the decision to Rust', async () => {
       await mountApp();
-      isFullscreenMock.mockResolvedValue(false);
 
       chooseMenuItem('menu.fullscreen');
 
-      await vi.waitFor(() => expect(setFullscreenMock).toHaveBeenCalled(), {
+      await vi.waitFor(() => expect(ipc.toggleFullscreen).toHaveBeenCalled(), {
         timeout: 300,
         interval: 20,
       });
-      expect(setFullscreenMock).toHaveBeenCalledWith(true);
-    });
-
-    it('exits fullscreen when the window is already fullscreen', async () => {
-      await mountApp();
-      isFullscreenMock.mockResolvedValue(true);
-
-      chooseMenuItem('menu.fullscreen');
-
-      await vi.waitFor(() => expect(setFullscreenMock).toHaveBeenCalled(), {
-        timeout: 300,
-        interval: 20,
-      });
-      expect(setFullscreenMock).toHaveBeenCalledWith(false);
+      expect(ipc.toggleFullscreen).toHaveBeenCalledWith();
     });
   });
 });

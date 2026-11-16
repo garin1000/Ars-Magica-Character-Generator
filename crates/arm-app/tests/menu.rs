@@ -11,10 +11,10 @@ use std::collections::BTreeSet;
 
 use arm_app::menu::{
     ACTION_EXPORT, ACTION_FULLSCREEN, ACTION_IDS, ACTION_NEW, ACTION_OPEN, ACTION_SAVE,
-    ACTION_SAVE_AS, ACTION_SETTINGS, InstalledMenuItem, InstalledMenuSection, MENU_ACTION_EVENT,
-    MenuEntry, MenuFlags, MenuLabels, MenuSection, MenuShortcut, Platform, PredefinedRole,
-    SECTION_APP, SECTION_EDIT, SECTION_FILE, SECTION_WINDOW, is_menu_action_id, menu_model,
-    menu_shortcuts,
+    ACTION_SAVE_AS, ACTION_SETTINGS, InstalledMenuItem, InstalledMenuSection, KeyNames,
+    MENU_ACTION_EVENT, MenuEntry, MenuFlags, MenuLabels, MenuSection, MenuShortcut, Platform,
+    PredefinedRole, SECTION_APP, SECTION_EDIT, SECTION_FILE, SECTION_WINDOW, is_menu_action_id,
+    menu_item_rendering, menu_model, menu_shortcuts, windows_label_with_chord,
 };
 
 /// A [`MenuLabels`] whose every field carries a unique, recognisable sentinel,
@@ -79,6 +79,18 @@ fn no_menu_label_is_authored_in_rust() {
 // The other half of the same contract: a label field the menu never reads is a
 // string the frontend resolves and translates for nothing, and — worse — a
 // reader's evidence that some item is localized when it is not.
+//
+// F2's three key-name fields are the one deliberate exception: they are read
+// only by `build_menu`'s Windows glue (`menu_item_rendering` /
+// `windows_label_with_chord`), never by `menu_model` itself, so this
+// model-only sweep can never see them used. `GLUE_ONLY_LABEL_FIELDS` names
+// them explicitly rather than loosening the assertion, so a FUTURE field that
+// is genuinely dead weight still fails here — and
+// `every_glue_only_key_name_field_reaches_the_windows_glue_output` below is
+// the positive half: it proves each exempted field is in fact read
+// somewhere, so the allowlist itself cannot hide real dead weight.
+const GLUE_ONLY_LABEL_FIELDS: &[&str] = &["<<keyCtrl>>", "<<keyShift>>", "<<keyAlt>>"];
+
 #[test]
 fn every_label_field_reaches_at_least_one_platform() {
     let (labels, sentinels) = sentinel_labels();
@@ -89,11 +101,44 @@ fn every_label_field_reaches_at_least_one_platform() {
         used.extend(texts_in(&menu_model(*platform, &labels, &flags)));
     }
 
-    let unused: Vec<&String> = sentinels.difference(&used).collect();
+    let unused: Vec<&String> = sentinels
+        .difference(&used)
+        .filter(|text| !GLUE_ONLY_LABEL_FIELDS.contains(&text.as_str()))
+        .collect();
     assert!(
         unused.is_empty(),
         "MenuLabels fields nothing renders: {unused:?}"
     );
+}
+
+// The positive half of the allowlist above: each of the three glue-only
+// fields really does reach the Windows glue output, through the same
+// `KeyNames` construction `install_menu` performs from `MenuLabels`. A chord
+// naming all three modifiers (no real `accelerator_for` entry does, but the
+// renderer is generic) proves none of the three is silently ignored.
+#[test]
+fn every_glue_only_key_name_field_reaches_the_windows_glue_output() {
+    let (labels, _) = sentinel_labels();
+    let key_names = KeyNames {
+        ctrl: &labels.key_ctrl,
+        shift: &labels.key_shift,
+        alt: &labels.key_alt,
+    };
+
+    let (text, accelerator) = menu_item_rendering(
+        "Label",
+        Some("CmdOrCtrl+Shift+Alt+N"),
+        Platform::Windows,
+        key_names,
+    );
+
+    assert_eq!(accelerator, None);
+    for sentinel in [&labels.key_ctrl, &labels.key_shift, &labels.key_alt] {
+        assert!(
+            text.contains(sentinel.as_str()),
+            "{sentinel:?} does not reach the Windows glue output: {text:?}"
+        );
+    }
 }
 
 /// Every action id `platform`'s menu offers, in menu order.
@@ -815,4 +860,147 @@ fn the_installed_menu_reads_back_in_the_shape_the_spec_parses() {
             ],
         })
     );
+}
+
+// F2 (`docs/manual-testing-findings-2026-11-15.md` row 2). muda's Windows
+// backend draws a menu item's chord itself, by appending `"\t" +
+// Display::fmt(&accelerator)` to the label
+// (muda-0.19.3/src/platform_impl/windows/mod.rs:188-191), and that `Display`
+// hardcodes English modifier words
+// (muda-0.19.3/src/platform_impl/windows/accelerator.rs:191-199: `"Ctrl+"`,
+// `"Shift+"`, `"Alt+"`) with no localization hook at all — so a German build
+// always shows "Ctrl+N", never "Strg+N". `windows_label_with_chord` is the
+// fix: it renders the same "\t<chord>" suffix itself, from localized
+// `KeyNames`, so `build_menu` can pass `accelerator: None` on Windows and let
+// the label carry the whole thing (A4).
+fn german_key_names() -> KeyNames<'static> {
+    KeyNames {
+        ctrl: "Strg",
+        shift: "Umschalt",
+        alt: "Alt",
+    }
+}
+
+fn english_key_names() -> KeyNames<'static> {
+    KeyNames {
+        ctrl: "Ctrl",
+        shift: "Shift",
+        alt: "Alt",
+    }
+}
+
+#[test]
+fn windows_label_with_chord_renders_the_localized_german_chord() {
+    assert_eq!(
+        windows_label_with_chord("Neu", "CmdOrCtrl+N", german_key_names()),
+        "Neu\tStrg+N"
+    );
+    assert_eq!(
+        windows_label_with_chord("Speichern unter…", "CmdOrCtrl+Shift+S", german_key_names()),
+        "Speichern unter…\tStrg+Umschalt+S"
+    );
+    assert_eq!(
+        windows_label_with_chord("Einstellungen…", "CmdOrCtrl+,", german_key_names()),
+        "Einstellungen…\tStrg+,"
+    );
+}
+
+// English must keep exactly the spelling muda's own `Display for
+// KeyAccelerator` would have produced natively (`"Ctrl+"`/`"Shift+"`), so an
+// English build is unaffected by the fix in anything but mechanism.
+#[test]
+fn windows_label_with_chord_keeps_english_spelling_unchanged() {
+    assert_eq!(
+        windows_label_with_chord("New", "CmdOrCtrl+N", english_key_names()),
+        "New\tCtrl+N"
+    );
+    assert_eq!(
+        windows_label_with_chord("Save As…", "CmdOrCtrl+Shift+S", english_key_names()),
+        "Save As…\tCtrl+Shift+S"
+    );
+    assert_eq!(
+        windows_label_with_chord("Settings…", "CmdOrCtrl+,", english_key_names()),
+        "Settings…\tCtrl+,"
+    );
+}
+
+// Every token of every real chord this menu declares must render through
+// cleanly — nothing holds a raw `CmdOrCtrl`/`Shift` left unrendered, and the
+// trailing key token survives (`,` for Settings included). Sweeps the chords
+// `menu_model` actually declares rather than a hand-written copy of them, so
+// a new shortcut added to `accelerator_for` is covered automatically.
+#[test]
+fn every_declared_chord_renders_without_leftover_raw_tokens() {
+    let declared = action_accelerators(&model_for(Platform::Other, &all_enabled()));
+    assert!(
+        declared.iter().any(|(_, chord)| chord.is_some()),
+        "fixture declares no chord at all"
+    );
+
+    for (id, chord) in declared {
+        let Some(chord) = chord else { continue };
+        let rendered = windows_label_with_chord("Label", &chord, german_key_names());
+        let (_, suffix) = rendered
+            .split_once('\t')
+            .unwrap_or_else(|| panic!("{id}: {rendered:?} is not tab-separated"));
+
+        assert!(
+            !suffix.contains("CmdOrCtrl"),
+            "{id}: {suffix:?} leaves a raw CmdOrCtrl token unrendered"
+        );
+        assert!(
+            !suffix.contains("Shift"),
+            "{id}: {suffix:?} leaves a raw Shift token unrendered (should read Umschalt)"
+        );
+
+        let expected_key = chord
+            .rsplit('+')
+            .next()
+            .unwrap_or_else(|| panic!("{id}: {chord:?} has no trailing key token"))
+            .to_uppercase();
+        assert!(
+            suffix.ends_with(&expected_key),
+            "{id}: {suffix:?} does not end with the key token {expected_key:?}"
+        );
+    }
+}
+
+// The platform decision itself: Windows gets no native accelerator at all —
+// the chord is folded into the label instead — while macOS and Linux/BSD keep
+// passing the real accelerator through unchanged, exactly as `build_menu`
+// does today. An item with no chord (Fullscreen) is unaffected everywhere.
+#[test]
+fn the_windows_build_path_passes_no_native_accelerator_while_others_do() {
+    let (text, accelerator) = menu_item_rendering(
+        "Neu",
+        Some("CmdOrCtrl+N"),
+        Platform::Windows,
+        german_key_names(),
+    );
+    assert_eq!(text, "Neu\tStrg+N");
+    assert_eq!(accelerator, None);
+
+    for platform in [Platform::MacOs, Platform::Other] {
+        let (text, accelerator) =
+            menu_item_rendering("New", Some("CmdOrCtrl+N"), platform, english_key_names());
+        assert_eq!(
+            text, "New",
+            "{platform:?} must not fold the chord into the label"
+        );
+        assert_eq!(
+            accelerator,
+            Some("CmdOrCtrl+N".to_string()),
+            "{platform:?} must keep passing the native accelerator"
+        );
+    }
+
+    for platform in Platform::ALL {
+        let (text, accelerator) =
+            menu_item_rendering("Vollbild", None, *platform, german_key_names());
+        assert_eq!(
+            text, "Vollbild",
+            "{platform:?} must not invent a chord for an item that declares none"
+        );
+        assert_eq!(accelerator, None);
+    }
 }

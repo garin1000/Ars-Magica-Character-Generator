@@ -26,6 +26,8 @@ fn main() {
             commands::export_label_keys,
             commands::update_close_guard,
             commands::confirm_discard,
+            commands::set_window_title,
+            commands::toggle_fullscreen,
             commands::set_app_menu,
             commands::activate_menu_item,
             commands::installed_menu,

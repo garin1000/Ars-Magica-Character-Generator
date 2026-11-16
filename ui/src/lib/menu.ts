@@ -76,6 +76,12 @@ export interface MenuLabels {
   minimize: string;
   fullscreen: string;
   closeWindow: string;
+  /** Localized name for the `Ctrl`/`CmdOrCtrl` modifier ("Ctrl" / "Strg"). */
+  keyCtrl: string;
+  /** Localized name for the `Shift` modifier ("Shift" / "Umschalt"). */
+  keyShift: string;
+  /** Localized name for the `Alt` modifier ("Alt" / "Alt"). */
+  keyAlt: string;
 }
 
 /** Whether each action may run. Mirrors `arm_app::menu::MenuFlags`. */
@@ -113,5 +119,8 @@ export function menuLabels(t: (key: string) => string): MenuLabels {
     minimize: t('menu-minimize'),
     fullscreen: t('menu-fullscreen'),
     closeWindow: t('menu-close-window'),
+    keyCtrl: t('menu-key-ctrl'),
+    keyShift: t('menu-key-shift'),
+    keyAlt: t('menu-key-alt'),
   };
 }

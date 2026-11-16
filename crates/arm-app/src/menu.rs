@@ -169,6 +169,23 @@ pub struct MenuLabels {
     pub fullscreen: String,
     /// Label for the Close Window item.
     pub close_window: String,
+    /// Localized name for the `Ctrl`/`CmdOrCtrl` modifier ("Ctrl" / "Strg").
+    ///
+    /// Consumed only on Windows, by [`windows_label_with_chord`] via
+    /// [`install_menu`] — never rendered by [`menu_model`] itself (F2). That
+    /// makes it the one kind of field `every_label_field_reaches_at_least_one_platform`
+    /// (`tests/menu.rs`) cannot see used; its own allowlist is the other half
+    /// of that story, and `every_glue_only_key_name_field_reaches_the_windows_glue_output`
+    /// proves this field is not dead weight despite the model never reading it.
+    pub key_ctrl: String,
+    /// Localized name for the `Shift` modifier ("Shift" / "Umschalt"). See
+    /// [`Self::key_ctrl`]'s doc comment.
+    pub key_shift: String,
+    /// Localized name for the `Alt` modifier ("Alt" / "Alt"). See
+    /// [`Self::key_ctrl`]'s doc comment. Unused by any chord this app
+    /// declares today (see [`accelerator_for`]); carried so one renders
+    /// correctly without a code change the day it does.
+    pub key_alt: String,
 }
 
 /// Whether each document action may run right now.
@@ -488,11 +505,127 @@ pub fn menu_model(platform: Platform, labels: &MenuLabels, flags: &MenuFlags) ->
     }
 }
 
+/// Localized names for the modifier keys a Windows menu label's chord names
+/// (F2, `docs/manual-testing-findings-2026-11-15.md` row 2).
+///
+/// Resolved from Fluent by the frontend (`menu-key-ctrl`/`menu-key-shift`/
+/// `menu-key-alt`) and carried in [`MenuLabels`], exactly like every other
+/// label this module never authors itself. Only `ctrl` and `shift` are
+/// exercised today — this app declares no `Alt` chord (see
+/// [`accelerator_for`]) — but `alt` exists so one renders correctly without a
+/// code change the day it does.
+#[derive(Debug, Clone, Copy)]
+pub struct KeyNames<'a> {
+    /// Localized name for `Ctrl`/`CmdOrCtrl` ("Ctrl" / "Strg").
+    pub ctrl: &'a str,
+    /// Localized name for `Shift` ("Shift" / "Umschalt").
+    pub shift: &'a str,
+    /// Localized name for `Alt` ("Alt" / "Alt").
+    pub alt: &'a str,
+}
+
+/// Render `label` with a Windows-style `"\t<chord>"` suffix, using
+/// `key_names` for the modifier words instead of muda's own hardcoded
+/// English (`platform_impl/windows/accelerator.rs`'s `Display for
+/// KeyAccelerator`, which writes `"Ctrl+"`/`"Shift+"`/`"Alt+"` literally and
+/// has no localization hook — the reason this helper exists at all).
+///
+/// `chord` is in muda's cross-platform notation, exactly as
+/// [`accelerator_for`] declares it (e.g. `"CmdOrCtrl+Shift+S"`). Modifiers
+/// render in Ctrl, Shift, Alt order regardless of the input order, matching
+/// muda's own canonical order; the trailing token is the key itself and
+/// renders uppercased unchanged (`,` for Settings stays `,`).
+pub fn windows_label_with_chord(label: &str, chord: &str, key_names: KeyNames<'_>) -> String {
+    let tokens: Vec<&str> = chord.split('+').collect();
+    let (key_token, modifiers) = tokens
+        .split_last()
+        .unwrap_or_else(|| panic!("windows_label_with_chord: empty chord"));
+
+    let mut ctrl = false;
+    let mut shift = false;
+    let mut alt = false;
+    for modifier in modifiers {
+        match *modifier {
+            "CmdOrCtrl" | "Ctrl" | "Cmd" => ctrl = true,
+            "Shift" => shift = true,
+            "Alt" => alt = true,
+            other => {
+                panic!("windows_label_with_chord: unrecognised modifier {other:?} in {chord:?}")
+            }
+        }
+    }
+
+    let mut suffix = String::new();
+    if ctrl {
+        suffix.push_str(key_names.ctrl);
+        suffix.push('+');
+    }
+    if shift {
+        suffix.push_str(key_names.shift);
+        suffix.push('+');
+    }
+    if alt {
+        suffix.push_str(key_names.alt);
+        suffix.push('+');
+    }
+    suffix.push_str(&key_token.to_uppercase());
+
+    format!("{label}\t{suffix}")
+}
+
+/// The text and native accelerator [`build_menu`] should hand muda for one
+/// item, decided per `platform` (F2).
+///
+/// On [`Platform::Windows`] the chord is folded into the label via
+/// [`windows_label_with_chord`] and no native accelerator is passed — muda's
+/// Windows backend only ever draws it in English (see that function's doc
+/// comment). Everywhere else the label passes through unchanged and the
+/// accelerator passes through unchanged, exactly as [`build_menu`] already
+/// behaves today. An item with no accelerator at all (e.g. Fullscreen) is
+/// unaffected on every platform.
+///
+/// A pure seam, separated from [`build_menu`] itself so the platform
+/// decision is unit-testable without a window, a GTK context or a Tauri
+/// runtime.
+pub fn menu_item_rendering(
+    label: &str,
+    accelerator: Option<&str>,
+    platform: Platform,
+    key_names: KeyNames<'_>,
+) -> (String, Option<String>) {
+    match (platform, accelerator) {
+        (Platform::Windows, Some(chord)) => {
+            (windows_label_with_chord(label, chord, key_names), None)
+        }
+        _ => (label.to_string(), accelerator.map(str::to_string)),
+    }
+}
+
 /// Turn a [`menu_model`] value into a real menu. Pure glue: it copies text, it
-/// never writes any.
+/// never writes any — `platform` and `key_names` are threaded straight into
+/// [`menu_item_rendering`], which does the one piece of deciding (F2).
+///
+/// Two limits of the Windows fix, stated here because nothing else proves
+/// them and a future reader should not have to rediscover them on hardware:
+/// - **A chord pressed while focus is outside the webview is dead on
+///   Windows.** This was already true before F2 — the native accelerator
+///   this function used to pass never actually fired, because WebView2's
+///   child window keeps every key press away from the host's accelerator
+///   table ([`menu_shortcuts`]'s doc comment) — and it stays true now that no
+///   native accelerator is registered at all: dispatch is entirely the
+///   webview mirror's (`ui/src/lib/menu-shortcuts.ts`), which only ever sees
+///   a key the webview itself has focus for.
+/// - **muda's predefined items keep "Ctrl".** The Edit submenu's six items
+///   (Undo/Redo/Cut/Copy/Paste/SelectAll, built by [`predefined_item`]) are
+///   muda's own and never pass through [`menu_item_rendering`] at all — this
+///   app hands them no accelerator string to begin with, so there is nothing
+///   of ours to localize. Their accelerator text, where muda's GTK/Windows
+///   backends draw one, stays whatever muda itself chooses.
 pub fn build_menu<R: Runtime, M: Manager<R>>(
     manager: &M,
     model: &[MenuSection],
+    platform: Platform,
+    key_names: KeyNames<'_>,
 ) -> tauri::Result<Menu<R>> {
     let menu = Menu::new(manager)?;
     for section in model {
@@ -508,10 +641,12 @@ pub fn build_menu<R: Runtime, M: Manager<R>>(
                     enabled,
                     accelerator,
                 } => {
+                    let (text, accelerator) =
+                        menu_item_rendering(label, accelerator.as_deref(), platform, key_names);
                     submenu.append(&MenuItem::with_id(
                         manager,
                         id,
-                        label,
+                        text,
                         *enabled,
                         accelerator.as_deref(),
                     )?)?;
@@ -545,8 +680,14 @@ pub fn install_menu<R: Runtime>(
     labels: &MenuLabels,
     flags: &MenuFlags,
 ) -> tauri::Result<()> {
-    let model = menu_model(Platform::current(), labels, flags);
-    let menu = build_menu(app, &model)?;
+    let platform = Platform::current();
+    let model = menu_model(platform, labels, flags);
+    let key_names = KeyNames {
+        ctrl: &labels.key_ctrl,
+        shift: &labels.key_shift,
+        alt: &labels.key_alt,
+    };
+    let menu = build_menu(app, &model, platform, key_names)?;
     app.set_menu(menu)?;
     Ok(())
 }

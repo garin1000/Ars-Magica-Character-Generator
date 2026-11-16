@@ -336,6 +336,9 @@ fn distinct_labels() -> MenuLabels {
         minimize: "minimize".into(),
         fullscreen: "fullscreen".into(),
         close_window: "close window".into(),
+        key_ctrl: "key ctrl".into(),
+        key_shift: "key shift".into(),
+        key_alt: "key alt".into(),
     }
 }
 
@@ -352,8 +355,15 @@ fn mixed_flags() -> MenuFlags {
 }
 
 /// What reading the installed menu must report for `model`: the glue copies
-/// every title, id and enabled state across and invents nothing.
-fn as_installed(model: &[MenuSection]) -> Vec<InstalledMenuSection> {
+/// every title, id and enabled state across and invents nothing beyond what
+/// [`menu::menu_item_rendering`] itself decides for `platform` (F2) — on
+/// Windows that folds the chord into the title, everywhere else the title
+/// passes through unchanged exactly as the model declares it.
+fn as_installed(
+    model: &[MenuSection],
+    platform: Platform,
+    key_names: menu::KeyNames<'_>,
+) -> Vec<InstalledMenuSection> {
     model
         .iter()
         .map(|section| InstalledMenuSection {
@@ -366,12 +376,23 @@ fn as_installed(model: &[MenuSection]) -> Vec<InstalledMenuSection> {
                         title: String::new(),
                     },
                     MenuEntry::Action {
-                        id, label, enabled, ..
-                    } => InstalledMenuItem::Action {
-                        id: id.clone(),
-                        title: label.clone(),
-                        enabled: *enabled,
-                    },
+                        id,
+                        label,
+                        enabled,
+                        accelerator,
+                    } => {
+                        let (title, _) = menu::menu_item_rendering(
+                            label,
+                            accelerator.as_deref(),
+                            platform,
+                            key_names,
+                        );
+                        InstalledMenuItem::Action {
+                            id: id.clone(),
+                            title,
+                            enabled: *enabled,
+                        }
+                    }
                     MenuEntry::Predefined { label, .. } => InstalledMenuItem::Other {
                         title: label.clone(),
                     },
@@ -381,20 +402,77 @@ fn as_installed(model: &[MenuSection]) -> Vec<InstalledMenuSection> {
         .collect()
 }
 
+/// F1 (`docs/manual-testing-findings-2026-11-15.md` #1): `toggle_fullscreen_on`'s
+/// decision — go to the OPPOSITE of whatever the window currently reports — is
+/// the one piece of the F1 fix with a real unit seam. The window mutation
+/// itself has none under [`MockRuntime`]: `is_fullscreen`/`set_title`/
+/// `set_fullscreen` are hardcoded no-ops with no stored state at all (verified
+/// against `tauri-2.11.3/src/test/mock_runtime.rs` — `title()` always answers
+/// `Ok(String::new())`, `is_fullscreen()` always `Ok(false)`, and neither
+/// `set_title`/`set_fullscreen` records anything), so no assertion at this
+/// layer could ever tell "the command touched the window" apart from "it did
+/// nothing". That is the same gap `main.rs`'s `window_close_bridge_plugin` doc
+/// comment already documents for the window-close glue, closed there (and
+/// here) by an e2e spec instead — see
+/// `the real OS title bar, naming both the character and the file (F1)` and
+/// `Window -> Fullscreen really toggles the native window (F1)` in
+/// `ui/e2e/specs/app-shell.e2e.js`.
+#[test]
+fn next_fullscreen_state_flips_whatever_it_is_told() {
+    assert!(commands::next_fullscreen_state(false));
+    assert!(!commands::next_fullscreen_state(true));
+}
+
+/// `set_window_title_on`/`toggle_fullscreen_on` must not panic or error when
+/// the app has no "main" window at all — mirroring the `if let Some(window) =
+/// ...` idiom `main.rs::request_close` already uses for the same reason (a
+/// menu/window-system glue call racing teardown).
+#[test]
+fn set_window_title_and_toggle_fullscreen_are_graceful_with_no_main_window() {
+    let app = mock_app();
+    assert!(commands::set_window_title_on(app.handle(), "ignored").is_ok());
+    assert!(commands::toggle_fullscreen_on(app.handle()).is_ok());
+}
+
+/// And both still succeed once a "main" window genuinely exists — a branch
+/// `MockRuntime` cannot distinguish from the one above (see
+/// `next_fullscreen_state_flips_whatever_it_is_told`'s doc comment), but
+/// pinned anyway so a future refactor cannot make the present-window path
+/// start erroring unnoticed.
+#[test]
+fn set_window_title_and_toggle_fullscreen_succeed_with_a_main_window() {
+    let app = mock_app();
+    let _window = tauri::WebviewWindowBuilder::new(&app, "main", Default::default())
+        .build()
+        .unwrap();
+    assert!(commands::set_window_title_on(app.handle(), "Example Title").is_ok());
+    assert!(commands::toggle_fullscreen_on(app.handle()).is_ok());
+}
+
 /// `build_menu` turns each desktop's model into a real menu that reads back
 /// exactly as the model says — every section, every item in order, each
 /// action's id, text and enabled state, each OS item's text. macOS's model is
 /// the one carrying the app-menu roles, so all three desktops are built, not
-/// only the one running the test.
+/// only the one running the test. Windows is built here too, even though the
+/// real backend underneath is always GTK on this machine: `platform` is an
+/// explicit value `build_menu` branches on (F2), not the compiled target, so
+/// the Windows chord-folding path is exercised and its expectation computed
+/// the same way `as_installed` does for every other platform.
 #[test]
 fn a_built_menu_reads_back_as_its_model_on_every_desktop() {
     let app = mock_app();
+    let labels = distinct_labels();
+    let key_names = menu::KeyNames {
+        ctrl: &labels.key_ctrl,
+        shift: &labels.key_shift,
+        alt: &labels.key_alt,
+    };
     for &platform in Platform::ALL {
-        let model = menu::menu_model(platform, &distinct_labels(), &mixed_flags());
-        let built = menu::build_menu(&app, &model).unwrap();
+        let model = menu::menu_model(platform, &labels, &mixed_flags());
+        let built = menu::build_menu(&app, &model, platform, key_names).unwrap();
         assert_eq!(
             menu::read_installed_menu(&built).unwrap(),
-            as_installed(&model),
+            as_installed(&model, platform, key_names),
             "{platform:?}"
         );
     }
@@ -408,16 +486,22 @@ fn install_menu_replaces_the_installed_menu() {
     let app = mock_app();
     let handle = app.handle();
     menu::install_menu(handle, &MenuLabels::default(), &MenuFlags::default()).unwrap();
-    menu::install_menu(handle, &distinct_labels(), &mixed_flags()).unwrap();
+    let labels = distinct_labels();
+    menu::install_menu(handle, &labels, &mixed_flags()).unwrap();
 
     let installed = menu::read_installed_menu(&handle.menu().unwrap()).unwrap();
+    let key_names = menu::KeyNames {
+        ctrl: &labels.key_ctrl,
+        shift: &labels.key_shift,
+        alt: &labels.key_alt,
+    };
     assert_eq!(
         installed,
-        as_installed(&menu::menu_model(
+        as_installed(
+            &menu::menu_model(Platform::current(), &labels, &mixed_flags()),
             Platform::current(),
-            &distinct_labels(),
-            &mixed_flags()
-        ))
+            key_names,
+        )
     );
 }
 

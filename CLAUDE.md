@@ -394,6 +394,18 @@ relevant surface MUST preserve them and keep their tests green.
   `accelerator_for`, and `menu-shortcuts.test.ts` guards that the TS holds no chord
   literal. The accelerator test still proves the chord, vitest proves the mirror, and
   a manual press on Windows is the runtime proof.
+  **Windows also gets no native accelerator at all, for a second, independent
+  reason (F2).** muda's Windows backend draws a chord by appending it to the
+  label itself, and that rendering hardcodes English modifier words with no
+  localization hook — a German build would always show "Ctrl+N". So on
+  Windows `build_menu` passes `accelerator: None` to muda and instead folds the
+  chord into the label text via `menu.rs::windows_label_with_chord`, using
+  localized `MenuLabels` fields (`menu-key-ctrl`/`-shift`/`-alt`). This changes
+  nothing about dispatch, which was already entirely the webview mirror's. Two
+  limits are documented on `build_menu` itself: a chord pressed while focus is
+  outside the webview is dead on Windows (true before F2 too), and muda's
+  predefined Edit items (Undo/Redo/Cut/Copy/Paste/SelectAll) are untouched by
+  any of this and keep "Ctrl".
 - **English** for all code, identifiers, comments, commit messages, and all
   assistant communication (chat responses, PR descriptions, status updates) —
   regardless of the language the user writes in.
