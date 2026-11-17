@@ -43,13 +43,14 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Deliberately UNKEYED, same reason as the Penetration list:
+          <!-- Keyed by INDEX, not by field, same reason as the Penetration list:
                `combat_totals` emits one line per equipped slot, so carrying the
                same weapon twice repeats `line.weapon` — and with a shield equipped
                a single one-handed weapon repeats it too, since it yields a
-               with-shield line and a bare one. Keying by it threw
-               `each_key_duplicate` and killed this whole tab. -->
-          {#each d.combat as line}
+               with-shield line and a bare one. Keying by it throws
+               `each_key_duplicate` and kills this whole tab; the index is always
+               unique. -->
+          {#each d.combat as line, i (i)}
             <tr>
               <th scope="row">
                 {combatRowLabel(

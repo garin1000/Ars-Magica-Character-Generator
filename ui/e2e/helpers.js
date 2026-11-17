@@ -768,7 +768,7 @@ export async function waitUntilExplained(condition, timeout, explain) {
   try {
     await browser.waitUntil(condition, { timeout, timeoutMsg: `timed out after ${timeout}ms` });
   } catch (error) {
-    throw new Error(`${await explain()} (${error.message})`);
+    throw new Error(`${await explain()} (${error.message})`, { cause: error });
   }
 }
 

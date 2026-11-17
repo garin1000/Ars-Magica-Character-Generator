@@ -50,25 +50,23 @@
           incTestid="personality-inc-{i}"
           onInc={() => store.setPersonalityTraitValue(i, trait.value + 1)}
         >
-          {#snippet children()}
-            <!-- Bound number input, not just the spinner: a Personality Trait's
-                 |value| can reach 6 (a Personality Flaw, Core Rules), which is up to
-                 twelve clicks from 0 with no other way in — every other scored
-                 control with a wide/signed range (aging points, Talisman
-                 bonus/level) offers direct entry too (S29, full-audit UX). The
-                 range mirrors the store's own clamp (`setPersonalityTraitValue`). -->
-            <input
-              type="number"
-              class="spinner-value-input"
-              min="-6"
-              max="6"
-              value={trait.value}
-              aria-label={store.t('personality-value-label', { name: trait.name })}
-              oninput={(e) => onValueInput(i, e)}
-              use:commitStored={{ read: () => trait.value, commit: (raw) => commitValue(i, raw) }}
-              data-testid="personality-value-{i}"
-            />
-          {/snippet}
+          <!-- Bound number input, not just the spinner: a Personality Trait's
+               |value| can reach 6 (a Personality Flaw, Core Rules), which is up to
+               twelve clicks from 0 with no other way in — every other scored
+               control with a wide/signed range (aging points, Talisman
+               bonus/level) offers direct entry too (S29, full-audit UX). The
+               range mirrors the store's own clamp (`setPersonalityTraitValue`). -->
+          <input
+            type="number"
+            class="spinner-value-input"
+            min="-6"
+            max="6"
+            value={trait.value}
+            aria-label={store.t('personality-value-label', { name: trait.name })}
+            oninput={(e) => onValueInput(i, e)}
+            use:commitStored={{ read: () => trait.value, commit: (raw) => commitValue(i, raw) }}
+            data-testid="personality-value-{i}"
+          />
         </Spinner>
         <button
           type="button"

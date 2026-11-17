@@ -212,11 +212,9 @@
             incTestid="familiar-personality-inc-{i}"
             onInc={() => store.setFamiliarPersonalityTraitValue(i, trait.value + 1)}
           >
-            {#snippet children()}
-              <span class="spinner-value" data-testid="familiar-personality-value-{i}">
-                {formatSigned(trait.value)}
-              </span>
-            {/snippet}
+            <span class="spinner-value" data-testid="familiar-personality-value-{i}">
+              {formatSigned(trait.value)}
+            </span>
           </Spinner>
           <button
             type="button"

@@ -314,8 +314,7 @@
           value={decrepitudeEffect}
           oninput={(e) =>
             store.setDecrepitudeEffect((e.currentTarget as HTMLTextAreaElement).value)}
-          data-testid="decrepitude-effect-input"
-        ></textarea>
+          data-testid="decrepitude-effect-input"></textarea>
       </label>
     </div>
 

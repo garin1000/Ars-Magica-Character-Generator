@@ -26,13 +26,14 @@
   <div class="detail-section">
     <h3 class="detail-label">{store.t('derived-section-penetration')}</h3>
     <ul class="derived-list" data-testid="derived-penetration">
-      <!-- Deliberately UNKEYED. These are read-only engine output rows in a
-           stable order with no identity to preserve, and no expression built
-           from the line's own fields is unique: the same General spell known
-           at two levels repeats (spell, parameter), and a duplicate key makes
-           Svelte throw `each_key_duplicate`, which aborts the whole panel's
-           render (the tab then appears dead). An unkeyed block cannot collide. -->
-      {#each d.penetration as p}
+      <!-- Keyed by INDEX, not by field. These are read-only engine output rows
+           in a stable order with no identity to preserve, and no expression
+           built from the line's own fields is unique: the same General spell
+           known at two levels repeats (spell, parameter), and a duplicate key
+           makes Svelte throw `each_key_duplicate`, which aborts the whole
+           panel's render (the tab then appears dead). The index is always
+           unique and cannot collide. -->
+      {#each d.penetration as p, i (i)}
         <li>
           <span>{penetrationLabel(p)} ({store.t('derived-level')} {p.level})</span>
           <span class="value"

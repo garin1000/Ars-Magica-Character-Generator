@@ -158,8 +158,7 @@
           rows="3"
           value={warpingEffect}
           oninput={(e) => store.setWarpingEffect((e.currentTarget as HTMLTextAreaElement).value)}
-          data-testid="warping-effect-input"
-        ></textarea>
+          data-testid="warping-effect-input"></textarea>
       </label>
     </div>
 

@@ -148,24 +148,22 @@
           incDisabled={scoreOf(characteristic) >= capOf(characteristic)}
           onInc={() => adjust(characteristic, 1)}
         >
-          {#snippet children()}
-            <span class="spinner-value" data-testid="char-value-{characteristic}">
-              {formatSigned(scoreOf(characteristic))}
-              <!-- Deliberately focusable: the bought→effective breakdown (which aging
-                   drop, which Virtue) lives only in this tooltip, and `use:tooltip`
-                   opens it on `focusin` (Sabine 3). -->
-              <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-              {#if effectiveOf(characteristic) !== settledScoreOf(characteristic)}<span
-                  class="eff-badge char-effective"
-                  data-testid="char-effective-{characteristic}"
-                  tabindex="0"
-                  use:tooltip={effectiveTooltip(characteristic)}
-                  >{store.t('effective-score-from', {
-                    score: formatSigned(effectiveOf(characteristic)),
-                  })}</span
-                >{/if}
-            </span>
-          {/snippet}
+          <span class="spinner-value" data-testid="char-value-{characteristic}">
+            {formatSigned(scoreOf(characteristic))}
+            <!-- Deliberately focusable: the bought→effective breakdown (which aging
+                 drop, which Virtue) lives only in this tooltip, and `use:tooltip`
+                 opens it on `focusin` (Sabine 3). -->
+            <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+            {#if effectiveOf(characteristic) !== settledScoreOf(characteristic)}<span
+                class="eff-badge char-effective"
+                data-testid="char-effective-{characteristic}"
+                tabindex="0"
+                use:tooltip={effectiveTooltip(characteristic)}
+                >{store.t('effective-score-from', {
+                  score: formatSigned(effectiveOf(characteristic)),
+                })}</span
+              >{/if}
+          </span>
         </Spinner>
         <input
           type="text"

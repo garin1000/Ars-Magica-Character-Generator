@@ -67,8 +67,7 @@
       value={store.entity.concept ?? ''}
       oninput={(e) => store.setIdentity('concept', (e.currentTarget as HTMLTextAreaElement).value)}
       placeholder={store.t('identity-concept-placeholder')}
-      data-testid="identity-concept"
-    ></textarea>
+      data-testid="identity-concept"></textarea>
   </label>
   <label class="field">
     <span>{store.t('identity-gender')}</span>

@@ -128,9 +128,7 @@
                   incDisabled={score >= max}
                   onInc={() => store.adjustArt(art.id, 1, max)}
                 >
-                  {#snippet children()}
-                    <span class="spinner-value" data-testid="art-score-{art.id}">{score}</span>
-                  {/snippet}
+                  <span class="spinner-value" data-testid="art-score-{art.id}">{score}</span>
                 </Spinner>
                 <input
                   type="number"

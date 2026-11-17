@@ -493,11 +493,9 @@
                     ? store.raiseUnboughtAbility(entry.ability, max)
                     : store.raiseAbilityAt(i, max)}
               >
-                {#snippet children()}
-                  <span class="spinner-value" data-testid="ability-score-{entry.ability}-{id}">
-                    {entry.score}
-                  </span>
-                {/snippet}
+                <span class="spinner-value" data-testid="ability-score-{entry.ability}-{id}">
+                  {entry.score}
+                </span>
               </Spinner>
               {#if !unbought}
                 <input

@@ -182,8 +182,7 @@ export function exportLabelKeys(): Promise<string[]> {
  * finding) rather than failing the command.
  */
 export type ChildhoodApplication =
-  | { status: 'applied'; entity: Entity }
-  | { status: 'rejected'; issues: ValidationIssue[] };
+  { status: 'applied'; entity: Entity } | { status: 'rejected'; issues: ValidationIssue[] };
 
 /**
  * Take the Sample Childhood package `packageId`, answering its parameter slots with
@@ -378,8 +377,7 @@ export type AgingApplication =
   | { status: 'rejected'; issues: ValidationIssue[] };
 
 export type AgingReversion =
-  | { status: 'reverted'; entity: Entity }
-  | { status: 'rejected'; issues: ValidationIssue[] };
+  { status: 'reverted'; entity: Entity } | { status: 'rejected'; issues: ValidationIssue[] };
 
 /**
  * Read one year's aging roll without writing anything: the total the typed `die`

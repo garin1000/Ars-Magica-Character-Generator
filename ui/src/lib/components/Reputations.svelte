@@ -151,9 +151,7 @@
                 incDisabled={row.score >= range.max}
                 onInc={() => onScore(row, row.score + 1)}
               >
-                {#snippet children()}
-                  <span class="spinner-value" data-testid="reputation-level-{i}">{row.score}</span>
-                {/snippet}
+                <span class="spinner-value" data-testid="reputation-level-{i}">{row.score}</span>
               </Spinner>
             {/if}
           {/if}

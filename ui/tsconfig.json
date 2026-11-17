@@ -11,7 +11,13 @@
     "moduleResolution": "bundler",
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    // TypeScript 6 defaults `types` to `[]` (no more implicit auto-inclusion of
+    // every @types/* package). 27 files under src/ import `node:*` modules —
+    // those explicit imports still resolve fine either way, but any future use
+    // of an ambient Node global (`process`, `Buffer`, `NodeJS.Timeout`) needs
+    // @types/node's global declarations opted in explicitly now.
+    "types": ["node"]
   },
   "include": ["src/**/*.ts", "src/**/*.svelte", "vite.config.ts"]
 }

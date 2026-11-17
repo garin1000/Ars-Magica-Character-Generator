@@ -474,17 +474,10 @@ export type CastingScope = 'all' | 'formulaic' | 'ritual' | 'formulaic_ritual' |
 // *Form*, which is neither a whole total nor blanket. It is the
 // `halved_parma` MagicResistanceEffect instead.
 export type HalvableTotal =
-  | 'spontaneous_casting'
-  | 'lab_enchanting'
-  | 'lab_longevity'
-  | 'penetration';
+  'spontaneous_casting' | 'lab_enchanting' | 'lab_longevity' | 'penetration';
 export type CombatStat = 'initiative' | 'attack' | 'defense' | 'damage';
 export type HealthTrack =
-  | 'fatigue_penalty'
-  | 'wound_penalty'
-  | 'fatigue_roll'
-  | 'casting_fatigue'
-  | 'recovery';
+  'fatigue_penalty' | 'wound_penalty' | 'fatigue_roll' | 'casting_fatigue' | 'recovery';
 export type MagicResistanceEffect =
   // `no_form_bonus` and `halved_parma` are scoped to the ONE Form the selection
   // names, carried in `param`; both fold into the flat per-Form Magic Resistance
@@ -875,14 +868,10 @@ export interface RestrictedXpPool {
 // character who is not hermetically trained by profile (Redcap, Lone Redcap) — it
 // does not fund an Art either, so it needs a slug the real magus block does not.
 export type LifeStageBlock =
-  | 'childhood_native_language'
-  | 'childhood_spread'
-  | 'later_life'
-  | 'apprenticeship';
+  'childhood_native_language' | 'childhood_spread' | 'later_life' | 'apprenticeship';
 
 export type XpPoolOrigin =
-  | { kind: 'item'; item: string }
-  | { kind: 'life_stage'; block: LifeStageBlock };
+  { kind: 'item'; item: string } | { kind: 'life_stage'; block: LifeStageBlock };
 
 // The experience a character's life stages earn, block by block (`LifeStageBudget`).
 // Derived, never stored: `LifeStagePlan` holds the choices and this follows from
@@ -1000,8 +989,7 @@ export type TimelineEntryKind =
 // What a span's years earned — mirrors the engine's `EntryCapacity`: experience and
 // levels of spells apart, or a magus's post-Gauntlet points shared between them.
 export type EntryCapacity =
-  | { kind: 'separate'; xp: number; spell_levels: number }
-  | { kind: 'shared'; points: number };
+  { kind: 'separate'; xp: number; spell_levels: number } | { kind: 'shared'; points: number };
 
 // One span of the life timeline — mirrors the engine's `TimelineEntry`.
 export interface TimelineEntry {

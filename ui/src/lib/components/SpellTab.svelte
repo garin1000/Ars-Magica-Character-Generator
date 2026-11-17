@@ -695,14 +695,12 @@
                     {#snippet label()}
                       <span class="spinner-label">{store.t('spell-mastery-label')}</span>
                     {/snippet}
-                    {#snippet children()}
-                      <span
-                        class="spinner-value"
-                        data-testid="spell-mastery-score-{chosen.spell}-{i}"
-                      >
-                        {chosen.mastery ?? 0}
-                      </span>
-                    {/snippet}
+                    <span
+                      class="spinner-value"
+                      data-testid="spell-mastery-score-{chosen.spell}-{i}"
+                    >
+                      {chosen.mastery ?? 0}
+                    </span>
                     {#snippet after()}
                       {#if effectiveSpellMastery(chosen.mastery, masteryFloor) !== (chosen.mastery ?? 0)}
                         <span class="eff-slot">
