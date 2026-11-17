@@ -90,10 +90,10 @@ jobs:
       # The same CLI version release.yml installs, both pinned EXACTLY (Klaus K6 /
       # Gerda G29: a drifting tilde range installs whatever patch is newest at
       # run time, which release.yml used to do until V16 matched it here).
-      # `=2.11.3` is the version this pin was verified against locally
+      # `=2.12.5` is the version this pin was verified against locally
       # (`cargo tauri --version`).
       - name: Install Tauri CLI
-        run: cargo install tauri-cli --version '=2.11.3' --locked
+        run: cargo install tauri-cli --version '=2.12.5' --locked
 
       # FULL RELEASE APP COMPILE — the only step that exercises the shipped
       # production code path: runs the frontend build (svelte-check + vite) via

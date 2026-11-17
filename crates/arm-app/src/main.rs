@@ -88,11 +88,11 @@ fn main() {
 /// JS-visible `window.close()` DOM method to destroy the native window
 /// *directly*, bypassing `WindowEvent::CloseRequested` — and therefore this
 /// file's `on_window_event` guard below — entirely. Confirmed by reading wry
-/// 0.55.1 itself, the version this workspace pins (`Cargo.lock`): the
+/// 0.57.2 itself, the version this workspace pins (`Cargo.lock`): the
 /// webkitgtk backend runs `webview.connect_close(|w| unsafe { w.destroy() })`
-/// (`wry-0.55.1/src/webkitgtk/mod.rs:460`) and the webview2 backend runs
+/// (`wry-0.57.2/src/webkitgtk/mod.rs:474`) and the webview2 backend runs
 /// `webview.add_WindowCloseRequested(.., || DestroyWindow(hwnd))`
-/// (`wry-0.55.1/src/webview2/mod.rs:616-619`) — both unconditional, first line
+/// (`wry-0.57.2/src/webview2/mod.rs:696-699`) — both unconditional, first line
 /// of their handler setup, with no `WebViewAttributes` field or builder option
 /// to opt out. (macOS's WKWebView backend never wires anything to this at
 /// all — `window.close()` is already a no-op there, since wry implements no
@@ -111,7 +111,7 @@ fn main() {
 /// own doc comment states "It emits `WindowEvent::CloseRequested` first like a
 /// user-initiated close request so you can intercept it", i.e. the exact
 /// pipeline `on_window_event` already guards, confirmed independently by
-/// reading `tauri-runtime-wry` 2.11.3: `Window::close()` sends
+/// reading `tauri-runtime-wry` 2.12.4: `Window::close()` sends
 /// `WindowMessage::Close`, dispatched through `on_close_requested` — the same
 /// function a title-bar click or Alt+F4 reaches.
 ///

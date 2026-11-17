@@ -392,7 +392,7 @@ fn declaration_matcher_accepts_every_shape_a_cited_symbol_is_introduced_by() {
 }
 
 /// Every `name-version` this workspace's `Cargo.lock` pins, in the same
-/// spelling a vendored-source path uses (`muda-0.19.3`). Read line-wise rather
+/// spelling a vendored-source path uses (`muda-0.20.0`). Read line-wise rather
 /// than through a TOML parser: a lockfile's `[[package]]` blocks are a fixed,
 /// flat shape, and this guard adds no dependency to check a comment.
 fn cargo_lock_packages() -> BTreeSet<String> {
@@ -716,7 +716,7 @@ fn find_source_line_citations(text: &str) -> Vec<String> {
 
 /// The `name-x.y.z` package directory a citation's path starts with when it
 /// points into a **vendored dependency** rather than into this repository —
-/// `muda-0.19.3/src/accelerator.rs`, `wry-0.55.1/src/webview2/mod.rs`. `None`
+/// `muda-0.20.0/src/accelerator/mod.rs`, `wry-0.57.2/src/webview2/mod.rs`. `None`
 /// for any path whose first segment is not version-pinned, which includes every
 /// in-repo path (`crates/arm-rules/src/...`, `types.rs`) even though this
 /// workspace's own directory names are hyphenated.
@@ -749,16 +749,16 @@ fn external_crate_reference_is_recognised_by_its_version_pinned_first_segment() 
     // The three real shapes in the tree, all in `arm-app`'s menu/window code,
     // where a comment has to say what muda/tauri/wry actually do.
     assert_eq!(
-        external_crate_package("muda-0.19.3/src/accelerator.rs:539-541"),
-        Some("muda-0.19.3")
+        external_crate_package("muda-0.20.0/src/accelerator/mod.rs:70-72"),
+        Some("muda-0.20.0")
     );
     assert_eq!(
-        external_crate_package("tauri-2.11.3/src/menu/normal.rs:69"),
-        Some("tauri-2.11.3")
+        external_crate_package("tauri-2.12.6/src/menu/normal.rs:65"),
+        Some("tauri-2.12.6")
     );
     assert_eq!(
-        external_crate_package("wry-0.55.1/src/webview2/mod.rs:616-619"),
-        Some("wry-0.55.1")
+        external_crate_package("wry-0.57.2/src/webview2/mod.rs:696-699"),
+        Some("wry-0.57.2")
     );
 
     // An in-repo path is never one, including the hyphenated crate directories

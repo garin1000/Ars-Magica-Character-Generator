@@ -78,11 +78,14 @@ const repoRoot = path.resolve(dirname, '../../..');
  * `app.path().app_config_dir()` first (the config-dir candidate always wins
  * when present — `settings::pick_settings_file` takes the first candidate
  * that exists, and `store_settings` tries existing candidates before fresh
- * ones). Tauri resolves that to `dirs::config_dir().join(identifier)`
- * (tauri-2.11.3/src/path/desktop.rs:238-242), where `identifier` is read out
+ * ones). Tauri now routes that call through an `app_directories_override`
+ * check first (`tauri-2.12.6/src/path/mod.rs:398-407`, added since 2.11) —
+ * absent here, since `tauri.conf.json` sets no `app > appDirectoriesOverride`
+ * — so it still falls through to `dirs::config_dir().join(identifier)`
+ * (tauri-2.12.6/src/path/desktop.rs:239-245), where `identifier` is read out
  * of `tauri.conf.json` here rather than copied as a literal. On Linux
  * `dirs::config_dir()` honours an absolute `$XDG_CONFIG_HOME`
- * (dirs-6.0.0/src/lin.rs:9) — `workerConfigHome` always returns such an
+ * (dirs-7.0.0/src/lin.rs:9) — `workerConfigHome` always returns such an
  * absolute, already-created path, which is exactly what reproduces the
  * binary's own resolution here.
  */

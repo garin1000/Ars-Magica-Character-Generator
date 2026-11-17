@@ -519,7 +519,7 @@ relevant surface MUST preserve them and keep their tests green.
   `rules_md_citations.rs` already *verifies*, so a blanket ban there would
   contradict a working guard rather than add to one. A reference into a
   **vendored dependency** at a pinned version
-  (`muda-0.19.3/src/accelerator.rs:539-541`) keeps its line number: those bytes
+  (`muda-0.20.0/src/accelerator/mod.rs:70-72`) keeps its line number: those bytes
   are frozen, the version is in the path, and the guard checks that version
   against `Cargo.lock`.
 

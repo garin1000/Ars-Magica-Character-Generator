@@ -8,20 +8,20 @@
 //!
 //! **Why not the plugin.** Confirmed by reading the pinned versions this
 //! workspace actually resolves (`Cargo.lock`):
-//! - Windows: `rfd-0.16.0/src/backend/win_cid/message_dialog.rs:156`
+//! - Windows: `rfd-0.17.2/src/backend/win_cid/message_dialog.rs:155`
 //!   hardcodes `nDefaultButton: 0`, which matches none of the dialog's own
 //!   custom button ids, so by `TaskDialogIndirect`'s own documented fallback
 //!   the FIRST button in `pButtons` — Discard — becomes the Enter default.
-//! - macOS: `rfd-0.16.0/src/backend/macos/message_dialog.rs:62-64` adds
+//! - macOS: `rfd-0.17.2/src/backend/macos/message_dialog.rs:62-64` adds
 //!   `NSAlert` buttons in the order the `MessageButtons` variant lists them,
 //!   and `NSAlert`'s own Return-key default is always the FIRST button
 //!   added — so whichever label comes first in `OkCancelCustom(a, b)` is the
 //!   default, regardless of which one means Discard.
-//! - Linux: `rfd-0.16.0/src/backend/gtk3/message_dialog.rs` never calls GTK's
+//! - Linux: `rfd-0.17.2/src/backend/gtk3/message_dialog.rs` never calls GTK's
 //!   `set_default_response` at all, so the toolkit's own fallback (tab order),
 //!   not this app, decides.
 //!
-//! Swapping the label order is not a fix: `tauri-plugin-dialog-2.7.1/src/desktop.rs:236-239`
+//! Swapping the label order is not a fix: `tauri-plugin-dialog-2.8.4/src/desktop.rs:236-239`
 //! maps a plain `rfd::MessageDialogResult::Cancel` (Esc, the window's close
 //! button) to the dialog's SECOND label, so reordering the labels to fix the
 //! default would silently flip what Esc does instead.
@@ -353,7 +353,7 @@ fn show_discard_dialog_macos(
             .set_level(rfd::MessageLevel::Warning)
             // Ordered [cancel, discard]: NSAlert's own Return-key default is
             // always the FIRST button added
-            // (`rfd-0.16.0/src/backend/macos/message_dialog.rs:62-64`), which
+            // (`rfd-0.17.2/src/backend/macos/message_dialog.rs:62-64`), which
             // is what makes Cancel — not Discard — the default here.
             .set_buttons(rfd::MessageButtons::OkCancelCustom(
                 labels.cancel.clone(),
@@ -396,7 +396,7 @@ pub fn windows_button_to_outcome(button_id: i32, discard_button_id: i32) -> Outc
 /// Discard case. Everything else — `Custom(cancel_label)` (NSAlert's second
 /// button), a plain `Cancel` (NSAlert's own "nothing matched" fallback) `Ok`,
 /// `Yes`, `No` — maps to [`Outcome::Cancel`], matching
-/// `rfd-0.16.0/src/backend/macos/message_dialog.rs`'s own `dialog_result`,
+/// `rfd-0.17.2/src/backend/macos/message_dialog.rs`'s own `dialog_result`,
 /// whose final arm is `_ => MessageDialogResult::Cancel`.
 pub fn macos_result_to_outcome(result: rfd::MessageDialogResult, discard_label: &str) -> Outcome {
     match result {

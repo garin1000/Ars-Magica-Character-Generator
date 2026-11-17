@@ -55,7 +55,7 @@ pub const ACTION_SETTINGS: &str = "menu.settings";
 /// dead click (P1, `docs/open-todos.md`): muda's Windows and GTK backends
 /// implement no OS behaviour for [`PredefinedRole::Fullscreen`] at all, only
 /// macOS's does (`toggleFullScreen:`,
-/// muda-0.19.3/src/platform_impl/macos/mod.rs:989). [`window_section`] gives
+/// muda-0.20.0/src/platform_impl/macos/mod.rs:939). [`window_section`] gives
 /// Windows and Linux a real `Action` instead; macOS keeps the native
 /// predefined item, which genuinely works there. Carries no accelerator,
 /// exactly like muda's own non-macOS default for this role.
@@ -296,9 +296,9 @@ pub struct MenuSection {
 /// keeps the keys from the menu there, so the webview mirrors this list instead.
 /// It receives the list through [`menu_shortcuts`] and holds no copy of its own.
 ///
-/// `CmdOrCtrl` rather than a branch on [`Platform`]: muda parses it to `SUPER`
+/// `CmdOrCtrl` rather than a branch on [`Platform`]: muda parses it to `META`
 /// on macOS and to `CONTROL` on every other desktop
-/// (muda-0.19.3/src/accelerator.rs:539-541), so the platform difference is
+/// (muda-0.20.0/src/accelerator/mod.rs:70-72), so the platform difference is
 /// spelled once, by the library that owns it.
 ///
 /// Export takes Shift, which C3c chose and the move to the menu makes more
@@ -420,7 +420,7 @@ fn edit_section(labels: &MenuLabels) -> MenuSection {
 /// every desktop except macOS, not [`PredefinedRole::Fullscreen`]: muda's
 /// Windows and GTK backends implement no OS behaviour for that role at all —
 /// only macOS's does (`toggleFullScreen:`,
-/// muda-0.19.3/src/platform_impl/macos/mod.rs:989) — so on the other two the
+/// muda-0.20.0/src/platform_impl/macos/mod.rs:939) — so on the other two the
 /// predefined item was a click that did nothing, confirmed on Windows hardware
 /// as well as Linux. The frontend handles the action id itself
 /// (`App.svelte`'s `runMenuAction`), through `getCurrentWindow().setFullscreen()`
@@ -460,14 +460,14 @@ fn window_section(platform: Platform, labels: &MenuLabels) -> MenuSection {
 ///   `RunEvent::ExitRequested` and away from the unsaved-changes guard.
 /// * **Windows** — Settings goes in File. There is deliberately **no** Quit:
 ///   muda's Windows backend implements the predefined Quit as
-///   `PostQuitMessage(0)` (`muda-0.19.3/src/platform_impl/windows/mod.rs:1223`),
+///   `PostQuitMessage(0)` (`muda-0.20.0/src/platform_impl/windows/mod.rs:1173`),
 ///   which ends the message loop instead of raising a close request, so it
 ///   would walk straight past the guard. Window → Close Window posts `WM_CLOSE`
-///   (`muda-0.19.3/src/platform_impl/windows/mod.rs:1220`) and is guarded, so that is the offered way out.
+///   (`muda-0.20.0/src/platform_impl/windows/mod.rs:1170`) and is guarded, so that is the offered way out.
 /// * **Linux/BSD** — File, plus a Window section carrying only the Fullscreen
 ///   action. muda's GTK backend renders just Separator, Copy, Cut, Paste,
 ///   SelectAll and About and silently drops every other predefined item
-///   (`muda-0.19.3/src/platform_impl/gtk/mod.rs:36-43`), and even those four
+///   (`muda-0.20.0/src/platform_impl/gtk/mod.rs:1181-1188`), and even those four
 ///   are inert unless tauri's `linux-libxdo` feature is enabled, which it is
 ///   not. An Edit menu there would be four dead entries, and Minimize/
 ///   CloseWindow would be two more — but Fullscreen is a plain custom
@@ -732,7 +732,7 @@ pub struct InstalledMenuSection {
 /// One entry of an installed submenu, reported as far as the API allows.
 ///
 /// [`InstalledMenuItem::Other`] covers separators and OS-implemented
-/// (predefined) items together, because tauri 2.11.3 exposes only `id()` and
+/// (predefined) items together, because tauri 2.12.6 exposes only `id()` and
 /// `text()` on a `PredefinedMenuItem`: there is no `is_enabled()` and no
 /// accessor for which predefined role it plays, so position and text are
 /// genuinely all that can be observed. Their ids are omitted for the same

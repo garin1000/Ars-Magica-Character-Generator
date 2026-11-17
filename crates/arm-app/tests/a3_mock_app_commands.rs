@@ -407,7 +407,7 @@ fn as_installed(
 /// the one piece of the F1 fix with a real unit seam. The window mutation
 /// itself has none under [`MockRuntime`]: `is_fullscreen`/`set_title`/
 /// `set_fullscreen` are hardcoded no-ops with no stored state at all (verified
-/// against `tauri-2.11.3/src/test/mock_runtime.rs` — `title()` always answers
+/// against `tauri-2.12.6/src/test/mock_runtime.rs` — `title()` always answers
 /// `Ok(String::new())`, `is_fullscreen()` always `Ok(false)`, and neither
 /// `set_title`/`set_fullscreen` records anything), so no assertion at this
 /// layer could ever tell "the command touched the window" apart from "it did

@@ -48,20 +48,20 @@ ureq = "3"
 open = "5"
 # Caret ranges, not exact pins: `Cargo.lock` is committed, so the build is
 # already reproducible, and over-pinning here would add a second place to bump
-# on every upgrade for no gain. `Cargo.lock` currently resolves tauri 2.11.3.
+# on every upgrade for no gain. `Cargo.lock` currently resolves tauri 2.12.6.
 #
 # Keep that resolved version and the `tauri-cli` pin in `.github/workflows/`
-# (`=2.11.3` in both ci.yml and release.yml) on the same minor. The CLI
+# (`=2.12.5` in both ci.yml and release.yml) on the same minor. The CLI
 # generates and validates the config this library then consumes, so letting the
 # two drift across a minor is the failure this note exists to prevent — if you
-# `cargo update` tauri past 2.11, update the workflow pins in the same change.
+# `cargo update` tauri past 2.12, update the workflow pins in the same change.
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 # A3 (F5): the macOS discard-confirmation dialog (`discard_dialog.rs`) calls rfd
 # directly instead of through tauri-plugin-dialog, because the plugin always
 # maps a plain `rfd::MessageDialogResult::Cancel` (Esc, the sheet closed) to
 # its SECOND button label — which would be Discard here
-# (`tauri-plugin-dialog-2.7.1/src/desktop.rs:236-239`). Same version
+# (`tauri-plugin-dialog-2.8.4/src/desktop.rs:236-239`). Same version
 # tauri-plugin-dialog already resolves (`Cargo.lock`), so this adds no second
 # resolution. The pure outcome-mapping function also needs this to compile on
 # every platform, not only macOS — see `discard_dialog.rs`'s module doc.
@@ -70,12 +70,12 @@ tauri-plugin-dialog = "2"
 # enable both `gtk3` and the default `xdg-portal` at once — this crate needs
 # no rfd feature of its own, only the always-compiled `MessageDialogResult`
 # type and, on macOS, `MessageDialog` itself.
-rfd = { version = "0.16", default-features = false }
+rfd = { version = "0.17", default-features = false }
 
 # A3 (F5): the Linux discard-confirmation dialog (`discard_dialog.rs`) is a
 # direct `gtk::MessageDialog` instead of rfd's GTK3 backend, which never calls
 # `set_default_response` at all
-# (`rfd-0.16.0/src/backend/gtk3/message_dialog.rs`) — so Enter has no effect
+# (`rfd-0.17.2/src/backend/gtk3/message_dialog.rs`) — so Enter has no effect
 # and GTK's own fallback (tab order), not this app, decides which button
 # activates. Same version already resolved transitively (tauri, muda and rfd's
 # own gtk3 backend all pull gtk 0.18 — `Cargo.lock`).
@@ -84,7 +84,7 @@ gtk = "0.18"
 
 # A3 (F5): the Windows discard-confirmation dialog (`discard_dialog.rs`) calls
 # `TaskDialogIndirect` directly, because rfd's own Windows backend
-# (`rfd-0.16.0/src/backend/win_cid/message_dialog.rs:156`) hardcodes
+# (`rfd-0.17.2/src/backend/win_cid/message_dialog.rs:156`) hardcodes
 # `nDefaultButton: 0`, which matches none of its custom button ids, so
 # `TaskDialogIndirect`'s own documented fallback makes the FIRST button —
 # Discard — the Enter default. `0.61` matches the version most of this
@@ -102,8 +102,8 @@ windows-sys = { version = "0.61", default-features = false, features = [
 # Tests only — never linked into the binary. `tests/menu.rs` parses the menu's
 # accelerator strings with the very parser tauri uses, because
 # `MenuItem::with_id` drops one it cannot parse without saying so
-# (tauri-2.11.3/src/menu/normal.rs:69) and a typo would otherwise ship as a
-# shortcut that silently does not exist. tauri 2.11.3 resolves muda 0.19.x, and
+# (tauri-2.12.6/src/menu/normal.rs:65) and a typo would otherwise ship as a
+# shortcut that silently does not exist. tauri 2.12.6 resolves muda 0.20.x, and
 # cargo unifies the two on that; keep this on the same minor when tauri moves,
 # or the test would be validating a different parser than the one that runs.
 #
@@ -115,7 +115,7 @@ windows-sys = { version = "0.61", default-features = false, features = [
 # link (`unable to find library -lxdo`) and, had the library been present,
 # would have quietly changed how the shipped menu's predefined items behave.
 # Take exactly what tauri takes: nothing but what it already enables.
-muda = { version = "0.19", default-features = false }
+muda = { version = "0.20", default-features = false }
 pretty_assertions = "1"
 # `tests/update_check.rs`: arbitrary bytes and tags must never panic the parser.
 proptest = { workspace = true }

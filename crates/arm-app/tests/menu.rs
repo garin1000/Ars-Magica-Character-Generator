@@ -246,7 +246,7 @@ fn the_file_menu_offers_every_document_action_on_every_platform() {
 //     "the shortcuts are undiscoverable".
 //   * tauri parses the string and SILENTLY DROPS it on failure —
 //     `MenuItem::with_id` does `accelerator.and_then(|s| s.as_ref().parse().ok())`
-//     (tauri-2.11.3/src/menu/normal.rs:69) — so a typo is not an error, it is a
+//     (tauri-2.12.6/src/menu/normal.rs:65) — so a typo is not an error, it is a
 //     shortcut that quietly stops existing. The items themselves are activated
 //     for real by the `the native menu` describe in
 //     `ui/e2e/specs/app-shell.e2e.js` (a chord itself is not reachable from a
@@ -283,7 +283,7 @@ fn every_document_action_carries_the_chord_the_os_draws_beside_it() {
 //
 // `MenuItem::with_id` parses the accelerator string and throws the result away
 // on failure — `accelerator.and_then(|s| s.as_ref().parse().ok())`
-// (tauri-2.11.3/src/menu/normal.rs:69). A typo is therefore not a build error
+// (tauri-2.12.6/src/menu/normal.rs:65). A typo is therefore not a build error
 // and not a runtime error: it is a menu item that quietly has no shortcut, in a
 // slice whose entire point is that the item is the only place a shortcut is
 // declared. Nothing else in the repo would notice — the e2e suite cannot press
@@ -347,9 +347,9 @@ fn no_two_menu_items_answer_to_the_same_chord() {
     }
 }
 
-// muda spells the platform difference for us: `CmdOrCtrl` parses to `SUPER` on
+// muda spells the platform difference for us: `CmdOrCtrl` parses to `META` on
 // macOS and to `CONTROL` everywhere else
-// (muda-0.19.3/src/accelerator.rs:539-541). Branching on `Platform` here instead
+// (muda-0.20.0/src/accelerator/mod.rs:70-72). Branching on `Platform` here instead
 // would produce a second, hand-maintained answer to a question the library
 // already answers — and one that a Linux developer machine could never catch
 // being wrong, since `Platform::MacOs`'s model is only ever built in a test.
@@ -550,7 +550,7 @@ fn a_cleared_flag_disables_exactly_its_own_action() {
     }
 }
 
-// muda 0.19.3's GTK backend renders only Separator/Copy/Cut/Paste/SelectAll/
+// muda 0.20.0's GTK backend renders only Separator/Copy/Cut/Paste/SelectAll/
 // About as predefined items and silently drops the rest, and even those four
 // are inert unless tauri's `linux-libxdo` feature is on (which it is not). An
 // Edit menu there would be three dead entries and Minimize/CloseWindow would
@@ -580,7 +580,7 @@ fn the_linux_menu_asks_the_os_for_nothing_gtk_cannot_honour() {
 // predefined Quit is the very item tao's own default menu installs, so it keeps
 // routing through `RunEvent::ExitRequested` exactly as Cmd+Q does today.
 // Windows' predefined Quit is `PostQuitMessage(0)`
-// (muda-0.19.3/src/platform_impl/windows/mod.rs:1223) — it ends the message
+// (muda-0.20.0/src/platform_impl/windows/mod.rs:1173) — it ends the message
 // loop rather than raising a close request, so it must never appear.
 #[test]
 fn only_macos_offers_quit_and_only_through_the_predefined_item() {
@@ -609,7 +609,7 @@ fn only_macos_offers_quit_and_only_through_the_predefined_item() {
 // ever prove that an item exists and parses correctly; they cannot prove a
 // click does anything, because `PredefinedRole::Fullscreen` has NO OS
 // implementation in muda's Windows or GTK backends — only macOS's does
-// (`toggleFullScreen:`, muda-0.19.3/src/platform_impl/macos/mod.rs:989). So the
+// (`toggleFullScreen:`, muda-0.20.0/src/platform_impl/macos/mod.rs:939). So the
 // fix is not a missing handler bolted onto the predefined item — there is
 // nothing on those two backends to bolt it to — it is to stop using a
 // predefined item there at all, and make Fullscreen a real `Action` routed
@@ -827,7 +827,7 @@ fn the_activation_seam_accepts_exactly_the_ids_the_menu_can_emit() {
 // its wire shape is a contract with a file the compiler never sees. Pinned here
 // in the same spirit as `the_frontend_and_rust_agree_on_the_menu_contract`.
 //
-// `Other` is not an evasion, it is the API's limit stated honestly: tauri 2.11.3
+// `Other` is not an evasion, it is the API's limit stated honestly: tauri 2.12.6
 // exposes only `id()` and `text()` on a `PredefinedMenuItem` — no `is_enabled()`
 // and no way to ask which predefined role it plays — so a separator and an
 // OS-implemented item can be reported by their text and their position, and by
@@ -865,9 +865,9 @@ fn the_installed_menu_reads_back_in_the_shape_the_spec_parses() {
 // F2 (`docs/manual-testing-findings-2026-11-15.md` row 2). muda's Windows
 // backend draws a menu item's chord itself, by appending `"\t" +
 // Display::fmt(&accelerator)` to the label
-// (muda-0.19.3/src/platform_impl/windows/mod.rs:188-191), and that `Display`
+// (muda-0.20.0/src/platform_impl/windows/mod.rs:502-504), and that `Display`
 // hardcodes English modifier words
-// (muda-0.19.3/src/platform_impl/windows/accelerator.rs:191-199: `"Ctrl+"`,
+// (muda-0.20.0/src/accelerator/windows.rs:412-421: `"Ctrl+"`,
 // `"Shift+"`, `"Alt+"`) with no localization hook at all — so a German build
 // always shows "Ctrl+N", never "Strg+N". `windows_label_with_chord` is the
 // fix: it renders the same "\t<chord>" suffix itself, from localized
