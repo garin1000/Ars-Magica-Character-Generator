@@ -76,6 +76,7 @@ import {
   resolveIssueArgValue,
   resolveIssueArgs,
   restrictedPoolLabel,
+  itemPoolName,
   RITUAL_MINIMUM_LEVEL_FALLBACK,
   normalizeParam,
   resolvedLinksFrom,
@@ -109,6 +110,7 @@ import type {
   PointItem,
   Reputation,
   ReputationGrant,
+  RestrictedXpPool,
   Spell,
   SpellCap,
   ValidationIssue,
@@ -6035,6 +6037,52 @@ describe('language requirement messages (L2)', () => {
   });
 });
 
+// R5 (release 0.5.0): a Virtue's bonus pool (Warrior, Well-Traveled, ...) is named
+// in the XP bar by its Virtue, like the "Later life" row; the eligible Abilities
+// move into the tooltip.
+describe('itemPoolName', () => {
+  const localized = (names: Record<string, string>): LocalizedRuleset =>
+    ({
+      ruleset: { abilities: {}, ...DERIVED_TAXONOMY },
+      i18n: Object.fromEntries(Object.entries(names).map(([id, name]) => [id, { name }])),
+    }) as unknown as LocalizedRuleset;
+
+  it('is the granting Virtue’s localized name', () => {
+    const pool: RestrictedXpPool = {
+      amount: 50,
+      used: 10,
+      categories: ['martial'],
+      origin: { kind: 'item', item: 'virtue.warrior' },
+    };
+    expect(itemPoolName(localized({ 'virtue.warrior': 'Warrior' }), pool)).toBe('Warrior');
+    expect(itemPoolName(localized({ 'virtue.warrior': 'Krieger' }), pool)).toBe('Krieger');
+  });
+
+  it('names a pool that lists Abilities rather than categories by its Virtue too', () => {
+    const pool: RestrictedXpPool = {
+      amount: 50,
+      used: 0,
+      abilities: ['ability.area_lore', 'ability.living_language'],
+      origin: { kind: 'item', item: 'virtue.well_traveled' },
+    };
+    expect(
+      itemPoolName(
+        localized({ 'virtue.well_traveled': 'Well-Traveled', 'ability.area_lore': 'Area Lore' }),
+        pool,
+      ),
+    ).toBe('Well-Traveled');
+  });
+
+  it('is null for a life-stage block, which is no item', () => {
+    const pool: RestrictedXpPool = {
+      amount: 75,
+      used: 0,
+      origin: { kind: 'life_stage', block: 'later_life' },
+    };
+    expect(itemPoolName(localized({}), pool)).toBeNull();
+  });
+});
+
 // G3: one label for a named life section, shared by the editor and the timeline.
 describe('lifeSectionLabel', () => {
   const t: Translate = (key, args) => `${key}:${args?.n ?? ''}`;
@@ -6047,5 +6095,43 @@ describe('lifeSectionLabel', () => {
     expect(lifeSectionLabel({ name: '', years: 5 }, 1, t)).toBe('life-section-unnamed:2');
     expect(lifeSectionLabel({ name: '   ', years: 5 }, 2, t)).toBe('life-section-unnamed:3');
     expect(lifeSectionLabel(undefined, 0, t)).toBe('life-section-unnamed:1');
+  });
+});
+
+describe('unspent-XP warnings follow the spend (R4)', () => {
+  // Pins the wizard's routing for the engine's R4 phases: a restricted pool is
+  // filed under Abilities alone, the native-language score under Experience
+  // with Abilities in `also_phases`. No UI code changes for R4.
+  const restrictedUnspent: ValidationIssue = {
+    severity: 'warning',
+    code: 'restricted_xp_unspent',
+    phase: 'abilities',
+    args: { amount: '50', used: '0', unspent: '50', origin_kind: 'item', origin: 'virtue.warrior' },
+  };
+  const nativeLanguageUnbought: ValidationIssue = {
+    severity: 'warning',
+    code: 'life_stage_native_language_missing_score',
+    phase: 'experience',
+    also_phases: ['abilities'],
+    args: { language: 'German' },
+  };
+
+  it('shows an Abilities-phased restricted pool on Abilities and not on Experience', () => {
+    expect(issuesForStep([restrictedUnspent], 'abilities', new Set())).toEqual([
+      { issue: restrictedUnspent },
+    ]);
+    expect(issuesForStep([restrictedUnspent], 'experience', new Set())).toEqual([]);
+    expect(phaseHasPendingWarning([restrictedUnspent], 'abilities')).toBe(true);
+    expect(phaseHasPendingWarning([restrictedUnspent], 'experience')).toBe(false);
+  });
+
+  it('shows the native-language warning on both Experience and Abilities', () => {
+    for (const phase of ['experience', 'abilities'] as const) {
+      expect(issuesForStep([nativeLanguageUnbought], phase, new Set())).toEqual([
+        { issue: nativeLanguageUnbought },
+      ]);
+      expect(issuesForPhase([nativeLanguageUnbought], phase)).toEqual([nativeLanguageUnbought]);
+      expect(phaseHasPendingWarning([nativeLanguageUnbought], phase)).toBe(true);
+    }
   });
 });

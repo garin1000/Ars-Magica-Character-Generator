@@ -288,20 +288,6 @@ describe('LifeTimeline notes (G3)', () => {
     const body = html();
     expect(openTag(body, 'life-timeline-overrun')).toMatch(/class="[^"]*\berror-text\b[^"]*"/);
   });
-
-  it('shows a grant on top of the years as a named chip outside the timeline', () => {
-    install(companionTimeline(0, [{ item: 'virtue.educated', amount: 50, used: 20 }]), squire);
-    const body = html();
-    expect(openTag(body, 'life-timeline-outside')).toMatch(
-      /aria-label="Experience beyond the years"/,
-    );
-    expect(text(body, 'life-timeline-outside-0')).toBe('Educated: 20 / 50 XP');
-  });
-
-  it('shows no chip list when every experience point comes from the years', () => {
-    install(companionTimeline(), squire);
-    expect(has(html(), 'life-timeline-outside')).toBe(false);
-  });
 });
 
 describe('LifeTimeline in German (G3)', () => {
@@ -351,25 +337,24 @@ describe('LifeTimeline fill percentage derives from XP only (F17)', () => {
   });
 });
 
-// manual-testing-findings-2026-11-15 #23: the bonus-pool chips (Well-Traveled
-// and the like) must read as their own row, not as part of Early childhood —
-// the first stage entry above them.
-describe('LifeTimeline bonus-pool row stands apart from the stages (F23)', () => {
-  it('labels the chips with their own visible heading, in their own container', () => {
+// R5 (release 0.5.0, reverses F23): a Virtue's bonus pool (Educated,
+// Well-Traveled, ...) is no span of the character's life, so it has no place in the
+// timeline. The XP bar names it by its Virtue instead (`XpBar.test.ts`). The engine
+// still reports it in `outside`, which the Markdown export keeps using.
+describe('LifeTimeline leaves the bonus pools to the XP bar (R5)', () => {
+  it('shows no bonus-pool row even when the engine reports one', () => {
     install(companionTimeline(0, [{ item: 'virtue.educated', amount: 50, used: 20 }]), squire);
     const body = html();
-    expect(text(body, 'life-timeline-outside-heading')).toBe('Bonus XP:');
-    const block = openTag(body, 'life-timeline-outside-block');
-    expect(block).toMatch(/^<div\b/);
-    // The row sits after every stage entry, not nested inside the first one.
-    const firstEntryEnd = body.indexOf('</li>');
-    const blockStart = body.search(/<[^>]*data-testid="life-timeline-outside-block"/);
-    expect(blockStart).toBeGreaterThan(firstEntryEnd);
+    expect(has(body, 'life-timeline-outside-block')).toBe(false);
+    expect(has(body, 'life-timeline-outside')).toBe(false);
+    const visible = body.replace(/<[^>]*>/g, ' ');
+    expect(visible).not.toContain('Bonus XP');
+    expect(visible).not.toContain('Educated');
   });
 
-  it('labels the row in German', () => {
+  it('shows no bonus-pool row in German either', () => {
     store.lang = 'de';
     install(companionTimeline(0, [{ item: 'virtue.educated', amount: 50, used: 20 }]), squire);
-    expect(text(html(), 'life-timeline-outside-heading')).toBe('Bonus-EP:');
+    expect(html().replace(/<[^>]*>/g, ' ')).not.toContain('Bonus-EP');
   });
 });

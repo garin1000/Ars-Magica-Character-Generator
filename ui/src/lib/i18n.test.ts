@@ -1833,12 +1833,6 @@ describe('UI bundles, life sections and the timeline (G3)', () => {
       en: 'Experience beyond the years',
       de: 'Erfahrung außerhalb der Jahre',
     },
-    {
-      key: 'life-timeline-outside-chip',
-      args: { item: 'Educated', used: '20', amount: '50' },
-      en: 'Educated: 20 / 50 XP',
-      de: 'Educated: 20 / 50 EP',
-    },
     // G1's per-section validation finding, read as the sentence the issue list shows.
     {
       key: 'issue-life_stage_section_lab_years_exceed_section',
@@ -1854,6 +1848,16 @@ describe('UI bundles, life sections and the timeline (G3)', () => {
 
   it.each(cases)('de/$key', (c) => {
     expect(say('de', c.key, c.args)).toBe(c.de);
+  });
+
+  // R5 (release 0.5.0): the timeline no longer shows the bonus pools, so its row
+  // heading and chip are gone. `life-timeline-outside-label` stays: the Markdown
+  // export (`export/life.rs`) still names the pools with it.
+  it.each(['en', 'de'] as const)('%s drops the retired bonus-pool row keys', (lang) => {
+    for (const key of ['life-timeline-outside-heading', 'life-timeline-outside-chip']) {
+      expect(bundles[lang].hasMessage(key), key).toBe(false);
+    }
+    expect(bundles[lang].hasMessage('life-timeline-outside-label')).toBe(true);
   });
 });
 

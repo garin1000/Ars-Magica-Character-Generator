@@ -214,3 +214,67 @@ describe('XpBar chip tooltips carry the calculation (N7/N9)', () => {
     );
   });
 });
+
+// R5 (release 0.5.0): a Virtue's pool is labelled by its Virtue ("Well-Traveled:
+// 0 / 50"), and what it may buy — its Abilities and Ability categories — moves into
+// the row's tooltip, reachable by keyboard focus like the Later-life chip's.
+describe('XpBar Virtue-pool tooltips list what the pool may buy (R5)', () => {
+  function installNames(names: Record<string, string>): void {
+    store.ruleset!.i18n = Object.fromEntries(
+      Object.entries(names).map(([id, name]) => [id, { name }]),
+    ) as LocalizedRuleset['i18n'];
+  }
+
+  it('lists the pool’s Abilities in the tooltip', () => {
+    installNames({
+      'virtue.well_traveled': 'Well-Traveled',
+      'ability.area_lore': 'Area Lore',
+      'ability.carouse': 'Carouse',
+    });
+    setEffective(lifeStage(20, 0), [
+      {
+        amount: 50,
+        used: 0,
+        abilities: ['ability.area_lore', 'ability.carouse'],
+        origin: { kind: 'item', item: 'virtue.well_traveled' },
+      },
+    ]);
+    mountBar();
+    const row = chip('restricted-xp-0');
+    expect(row.textContent!.replace(/[⁦-⁩]/g, '').trim()).toBe('Well-Traveled: 0 / 50');
+    expect(tooltipOnFocus(row)).toBe('Area Lore, Carouse');
+  });
+
+  it('lists an Ability category through its localized label, in German', () => {
+    store.lang = 'de';
+    installNames({ 'virtue.warrior': 'Krieger' });
+    setEffective(lifeStage(20, 0), [
+      {
+        amount: 50,
+        used: 10,
+        categories: ['martial'],
+        origin: { kind: 'item', item: 'virtue.warrior' },
+      },
+    ]);
+    mountBar();
+    expect(tooltipOnFocus(chip('restricted-xp-0'))).toBe('Kampf');
+  });
+
+  it('opens no tooltip and offers no focus stop when the pool lists nothing', () => {
+    // `RestrictedXpPool` does not serialize `instances`: an instance-only pool
+    // (Simple Student) arrives with an empty eligibility list.
+    installNames({ 'virtue.warrior': 'Warrior' });
+    setEffective(lifeStage(20, 0), [
+      { amount: 30, used: 0, origin: { kind: 'item', item: 'virtue.warrior' } },
+    ]);
+    mountBar();
+    const row = chip('restricted-xp-0');
+    expect(row.textContent!.replace(/[⁦-⁩]/g, '').trim()).toBe('Warrior: 0 / 30');
+    expect(row.hasAttribute('tabindex')).toBe(false);
+    row.focus();
+    vi.advanceTimersByTime(500);
+    flushSync();
+    expect(row.getAttribute('aria-describedby')).toBeNull();
+    expect(document.querySelector('.tooltip-pop')).toBeNull();
+  });
+});

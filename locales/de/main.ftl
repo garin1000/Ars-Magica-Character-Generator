@@ -447,11 +447,6 @@ life-timeline-entry-xp-spells = { $section } (Alter { $from }-{ $to }): { $fille
 life-timeline-entry-points = { $section } (Alter { $from }-{ $to }): { $filled } EP + Zauberstufen ({ $levelsFilled }) / { $points } Punkte
 life-timeline-overrun = Die Abschnitte reichen { $years } Jahr(e) über das Alter des Charakters hinaus.
 life-timeline-outside-label = Erfahrung außerhalb der Jahre
-# F23 (manual-testing-findings-2026-11-15): eine sichtbare Überschrift für die Chips
-# darunter, damit sie als eigene Zeile gelesen werden statt als Fortsetzung der
-# Frühen Kindheit.
-life-timeline-outside-heading = Bonus-EP:
-life-timeline-outside-chip = { $item }: { $used } / { $amount } EP
 # Notausgang für eine von Hand bearbeitete Datei: ein Charakter, der über seine
 # Lebensabschnitte finanziert wird, darf keinen eingetragenen Vorrat führen, und die
 # geführte Erstellung bietet kein Feld, um ihn zu berichtigen — dies leert ihn.

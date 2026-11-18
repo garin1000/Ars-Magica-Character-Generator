@@ -1647,6 +1647,10 @@ describe('app.css baseline alignment (wave 4 layout)', () => {
     const block = /^\.spell-param-select\s*\{([^}]*)\}/m.exec(appCss);
     expect(block, 'app.css should declare a .spell-param-select rule').not.toBeNull();
     expect(block![1]).toMatch(/height:\s*1\.9rem;/);
+    // R6 (release 0.5.0): the global `select` padding (0.35rem top and bottom)
+    // left too little of the fixed 1.9rem for the text, so Windows clipped it.
+    // The box stays at F19's height; the vertical padding goes.
+    expect(block![1]).toMatch(/padding-block:\s*0;/);
   });
 
   // #26: a Reputation row's label ("Academic level 2 from Failed Student") and
@@ -1686,5 +1690,13 @@ describe('app.css baseline alignment (wave 4 layout)', () => {
     expect(block![1]).toMatch(
       /grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(max\(28\.25rem,\s*\(100%\s*-\s*3rem\)\s*\/\s*3\),\s*1fr\)\);/,
     );
+  });
+});
+
+// R5 (release 0.5.0): the timeline's bonus-pool row (F23) is gone, so its styles
+// would only be dead weight.
+describe('app.css after the timeline bonus-pool row (R5)', () => {
+  it('no longer styles the retired life-timeline-outside row', () => {
+    expect(appCss).not.toMatch(/\.life-timeline-outside/);
   });
 });

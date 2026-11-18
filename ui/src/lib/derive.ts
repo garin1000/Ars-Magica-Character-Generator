@@ -2278,6 +2278,18 @@ export function restrictedPoolLabel(
 }
 
 /**
+ * The name a Virtue- or Flaw-granted restricted pool (Warrior, Well-Traveled, ...)
+ * is shown under in the XP bar: the granting item's localized name, in the format
+ * of the Later-life row. What the pool may buy is `restrictedPoolLabel`, which the
+ * bar puts in the row's tooltip. Null for a life-stage block, which is no item and
+ * has its own chip.
+ */
+export function itemPoolName(localized: LocalizedRuleset, pool: RestrictedXpPool): string | null {
+  if (pool.origin.kind !== 'item') return null;
+  return displayName(localized, pool.origin.item);
+}
+
+/**
  * Validation-issue arg keys whose value is an enum (never a rules id) and the
  * Fluent-key prefix that localizes it. The engine emits these enums as their
  * raw serialized form (`int`, `local`, `magic`), so the UI maps them through a

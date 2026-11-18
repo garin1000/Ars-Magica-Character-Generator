@@ -35,8 +35,14 @@ function ability(id: string, category: AbilityCategory = 'martial'): Ability {
   return { id, category };
 }
 
-/** Install a minimal localized ruleset carrying the abilities the pools cite. */
-function installRuleset(abilities: Ability[] = []): void {
+/**
+ * Install a minimal localized ruleset carrying the abilities the pools cite, and the
+ * names of the Virtues that grant them (R5: an item pool is labelled by its Virtue).
+ */
+function installRuleset(
+  abilities: Ability[] = [],
+  names: Record<string, string> = { 'virtue.warrior': 'Warrior' },
+): void {
   const abilityMap: Record<string, Ability> = {};
   for (const a of abilities) abilityMap[a.id] = a;
   store.ruleset = {
@@ -50,7 +56,7 @@ function installRuleset(abilities: Ability[] = []): void {
       ability_category_order: ['general', 'academic', 'arcane', 'martial', 'supernatural'],
       art_type_order: ['technique', 'form'],
     },
-    i18n: {},
+    i18n: Object.fromEntries(Object.entries(names).map(([id, name]) => [id, { name }])),
   } as unknown as LocalizedRuleset;
 }
 
@@ -323,7 +329,10 @@ describe('XpBar layout data (Issue G)', () => {
     expect(text).toContain('30');
   });
 
-  it('renders each restricted sub-budget as used/amount with its localized label', () => {
+  // R5 (release 0.5.0): a Virtue's pool is named by the Virtue, in the format of
+  // the Later-life row ("Warrior: 10 / 50"); what it may buy is the tooltip's
+  // (`XpBar.client.test.ts`).
+  it('labels each restricted sub-budget with its Virtue and used/amount', () => {
     setEffective(30, [
       {
         amount: 50,
@@ -333,9 +342,48 @@ describe('XpBar layout data (Issue G)', () => {
       },
     ]);
     const { text } = element(html(), 'restricted-xp-0');
-    expect(text).toContain('Martial');
-    expect(text).toContain('10');
-    expect(text).toContain('50');
+    expect(clean(text)).toBe('Warrior: 10 / 50');
+  });
+
+  it('labels the sub-budget with the Virtue’s German name in German', () => {
+    store.lang = 'de';
+    installRuleset([ability('ability.great_weapon', 'martial')], { 'virtue.warrior': 'Krieger' });
+    setEffective(30, [
+      {
+        amount: 50,
+        used: 10,
+        categories: ['martial'],
+        origin: { kind: 'item', item: 'virtue.warrior' },
+      },
+    ]);
+    expect(clean(element(html(), 'restricted-xp-0').text)).toBe('Krieger: 10 / 50');
+  });
+
+  it('makes the sub-budget keyboard-reachable for its eligibility tooltip', () => {
+    setEffective(30, [
+      {
+        amount: 50,
+        used: 10,
+        categories: ['martial'],
+        origin: { kind: 'item', item: 'virtue.warrior' },
+      },
+    ]);
+    expect(element(html(), 'restricted-xp-0').open).toMatch(/tabindex="0"/);
+  });
+
+  it('gives a pool with no listed eligibility no focus stop, since it has no tooltip', () => {
+    // `RestrictedXpPool` does not serialize `instances`, so an instance-only pool
+    // (Simple Student) arrives with neither abilities nor categories.
+    setEffective(30, [
+      {
+        amount: 30,
+        used: 0,
+        origin: { kind: 'item', item: 'virtue.warrior' },
+      },
+    ]);
+    const { open, text } = element(html(), 'restricted-xp-0');
+    expect(clean(text)).toBe('Warrior: 0 / 30');
+    expect(open).not.toMatch(/tabindex/);
   });
 
   it('uses the art- testid prefix for the Arts instance', () => {
@@ -866,7 +914,7 @@ describe('XpBar life-stage chronology (#14)', () => {
     // "the first restricted row on screen" — the life-stage blocks that used to
     // occupy indices 0 and 1 have moved into their own chronological chips.
     expect(has(body, 'restricted-xp-0')).toBe(true);
-    expect(element(body, 'restricted-xp-0').text).toContain('Martial');
+    expect(element(body, 'restricted-xp-0').text).toContain('Warrior');
     expect(has(body, 'restricted-xp-1')).toBe(false);
   });
 });

@@ -1,7 +1,13 @@
 <script lang="ts">
   import type { RestrictedXpPool } from '../types';
   import { store } from '../state.svelte';
-  import { formatSigned, generalXpAllocation, restrictedPoolLabel, U32_MAX } from '../derive';
+  import {
+    formatSigned,
+    generalXpAllocation,
+    itemPoolName,
+    restrictedPoolLabel,
+    U32_MAX,
+  } from '../derive';
   import { commitStored, tooltip } from '../actions';
   import BudgetBonusChip from './BudgetBonusChip.svelte';
 
@@ -306,20 +312,41 @@
       </span>
     {/if}
   {/if}
+  <!-- R5: a Virtue's pool is named by its Virtue, like the Later-life chip, and
+       what it may buy is the tooltip. `RestrictedXpPool` does not serialize
+       `instances`, so an instance-only pool (Simple Student) can list nothing: it
+       then gets neither tooltip nor focus stop. -->
   {#each itemPools as restrictedPool, i (i)}
-    <span
-      class="xp-restricted"
-      class:over={restrictedPool.used > restrictedPool.amount}
-      data-testid="{prefix}restricted-xp-{i}"
-    >
-      {store.ruleset
-        ? store.t('restricted-xp-pool', {
-            eligibility: restrictedPoolLabel(store.ruleset, restrictedPool, store.t),
-            used: String(restrictedPool.used),
-            amount: String(restrictedPool.amount),
-          })
-        : ''}
-    </span>
+    {@const eligibility = store.ruleset
+      ? restrictedPoolLabel(store.ruleset, restrictedPool, store.t)
+      : ''}
+    {@const label = store.ruleset
+      ? store.t('restricted-xp-pool', {
+          eligibility: itemPoolName(store.ruleset, restrictedPool) ?? '',
+          used: String(restrictedPool.used),
+          amount: String(restrictedPool.amount),
+        })
+      : ''}
+    {#if eligibility}
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+      <span
+        class="xp-restricted"
+        class:over={restrictedPool.used > restrictedPool.amount}
+        data-testid="{prefix}restricted-xp-{i}"
+        tabindex="0"
+        use:tooltip={{ text: eligibility }}
+      >
+        {label}
+      </span>
+    {:else}
+      <span
+        class="xp-restricted"
+        class:over={restrictedPool.used > restrictedPool.amount}
+        data-testid="{prefix}restricted-xp-{i}"
+      >
+        {label}
+      </span>
+    {/if}
   {/each}
   <!-- There is deliberately NO "clear the typed pool" control here. One existed, and
        schema 16 (#29) removed its entire reason to exist: it was added because the

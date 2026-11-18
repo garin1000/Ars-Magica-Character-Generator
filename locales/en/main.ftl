@@ -419,10 +419,6 @@ life-timeline-entry-xp-spells = { $section } (ages { $from }-{ $to }): { $filled
 life-timeline-entry-points = { $section } (ages { $from }-{ $to }): { $filled } XP + { $levelsFilled } level(s) of spells / { $points } points
 life-timeline-overrun = The sections run { $years } year(s) past the character's age.
 life-timeline-outside-label = Experience beyond the years
-# F23 (manual-testing-findings-2026-11-15): a visible heading for the chips below,
-# so they read as their own row rather than trailing text under Early childhood.
-life-timeline-outside-heading = Bonus XP:
-life-timeline-outside-chip = { $item }: { $used } / { $amount } XP
 # Escape hatch for a hand-edited save: a character funded by its life stages must
 # not also carry an entered pool, and guided mode offers no field to correct one,
 # so this empties it.

@@ -1825,9 +1825,12 @@ ul {
 }
 
 /* #19 continued: the target-Form select on a parametrized spell needs the same
-   height match. */
+   height match. R6: the global `select` padding (0.35rem top and bottom) left the
+   text too little of that fixed height, and Windows clipped it, so the vertical
+   padding goes while the box keeps F19's height. */
 .spell-param-select {
   height: 1.9rem;
+  padding-block: 0;
 }
 
 /* The detail-panel layout: the editor's Details tab (identity, age, the Confidence
@@ -2512,32 +2515,6 @@ ul {
 .error-text {
   color: var(--error);
   font-weight: 600;
-}
-
-/* F23 (manual-testing-findings-2026-11-15): the bonus-pool chips' own row, set
-   apart from the stage entries above by a rule and top spacing — previously
-   they had neither a visible heading nor any visual gap, so they read as
-   trailing text under Early childhood. */
-.life-timeline-outside-block {
-  margin-top: 0.4rem;
-  padding-top: 0.3rem;
-  border-top: 1px solid var(--border);
-}
-
-.life-timeline-outside-heading {
-  display: block;
-  font-size: var(--font-small);
-  font-weight: 600;
-  margin-bottom: 0.2rem;
-}
-
-.life-timeline-outside {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.75rem;
 }
 
 /* The Hermetic minimum Abilities a magus owes: a `<details>` whose summary is the

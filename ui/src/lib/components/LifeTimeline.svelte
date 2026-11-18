@@ -1,6 +1,6 @@
 <script lang="ts">
   import { store } from '../state.svelte';
-  import { displayName, lifeSectionLabel, type Translate } from '../derive';
+  import { lifeSectionLabel, type Translate } from '../derive';
   import type { TimelineEntry, TimelineEntryKind } from '../types';
 
   // The character's life as the engine lays it out (`EffectiveScores.life_timeline`):
@@ -15,8 +15,6 @@
   const visibleEntries = $derived(
     (timeline?.entries ?? []).filter((e) => !(e.kind.kind === 'remaining' && e.years < 1)),
   );
-  // The chips name their Virtue or Flaw from the catalogue, never by its id.
-  const ruleset = $derived(store.ruleset);
   const sections = $derived(store.entity.life_stages?.life_sections ?? []);
   const t: Translate = (key, args) => store.t(key, args);
 
@@ -108,30 +106,7 @@
         {store.t('life-timeline-overrun', { years: String(timeline.overrun_years) })}
       </span>
     {/if}
-    {#if timeline.outside.length > 0 && ruleset}
-      <!-- F23: its own labelled row, visually apart from the stage entries above —
-           previously only an invisible aria-label marked this list, so the chips
-           read as trailing text under Early childhood. -->
-      <div class="life-timeline-outside-block" data-testid="life-timeline-outside-block">
-        <span class="life-timeline-outside-heading" data-testid="life-timeline-outside-heading">
-          {store.t('life-timeline-outside-heading')}
-        </span>
-        <ul
-          class="life-timeline-outside"
-          aria-label={store.t('life-timeline-outside-label')}
-          data-testid="life-timeline-outside"
-        >
-          {#each timeline.outside as lump, i (i)}
-            <li class="xp-restricted" data-testid="life-timeline-outside-{i}">
-              {store.t('life-timeline-outside-chip', {
-                item: displayName(ruleset, lump.item),
-                used: String(lump.used),
-                amount: String(lump.amount),
-              })}
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
+    <!-- R5: a Virtue's bonus pool (`timeline.outside`) is no span of the life, so it
+         is not shown here; the XP bar names it by its Virtue. -->
   </div>
 {/if}
