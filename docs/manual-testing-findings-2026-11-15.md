@@ -36,3 +36,13 @@ Retest of the 2026-10-18 findings: all passed on 0.5.0 except #15 (F20) and the 
 | 28 | **Rules: XP flow (HIGH)** | The native language was funded from Well-Traveled before the native-language pool (`ArMDE:2448`, `ArMDE:5314`). Restricted pools now drain narrowest first; a sweep over all 49 overlapping pool pairs found and fixed a second case (Ineslemen vs Arcane Lore) (D93.1). | done `e08b0e74` |
 | 29 | Childhood | "Take this childhood" stayed visible after the childhood was taken. | done `8120ecee` |
 | 30 | Markdown export | Combat values carry an explicit "+" on positive values (also in the in-app Combat section). | done `e826a2fe` |
+
+## Retest 2026-11-17/18
+
+All 27 steps passed (`tmp/tryout-0.5.0-fixes.md`). R1, R2, R3 and R7 were deferred until after 0.5.0 (open-todos rows 64–67). Norbert put three into 0.5.0:
+
+| # | Area | Finding | Status |
+|---|---|---|---|
+| R4 | Wizard | Unspent restricted XP warned on the Experience step, where nothing is spent. Now on Abilities; the native-language missing-score warning shows on both steps. The editor shows all issues on every tab, so it is unaffected. | done `54637d55` |
+| R5 | Life timeline, XP bar | Bonus pools leave the timeline (reverses #23's "Bonus XP:" row). The XP bar names them by Virtue, with the Ability list as tooltip. The Markdown export keeps them. | done `20e5fd04` |
+| R6 | Spells | Regression from #19: the Form select was clipped on Windows. `padding-block: 0` inside the same 1.9rem box. | done `20e5fd04` |
