@@ -44,6 +44,8 @@ commit `bd291a9`.
 | 65 | **Menus lack Alt access keys** (Windows retest of 0.5.0, R2): no Alt+letter / underlined mnemonics in the native menus (e.g. Alt+D for Datei). Check muda's support for `&` mnemonics per platform and the localized letters (en/de). | after 0.5.0 | 2026-11-17 |
 | 66 | **A new character opens on the last-used tab** (Windows retest of 0.5.0, R3): creating a character keeps the editor tab of the previous document (e.g. Characteristics). A new character must start on the Details tab; check Open as well. | after 0.5.0 | 2026-11-17 |
 | 67 | **Spell row: "Mastery" label above the baseline** (Windows retest of 0.5.0, R7): in a spell row the small "Mastery" label sits higher than the spell name's text baseline (e.g. Palm of Flame). | after 0.5.0 | 2026-11-18 |
+| 68 | **XP bar: a Virtue pool reads brighter than the other pools** (R4–R6 retest, R8): the Warrior/Well-Traveled row is full text colour, while Later life and the other life-stage rows are muted. `.xp-summary .xp-life-stage` is `--muted`; `.xp-restricted` has no colour rule. | after 0.5.0 | 2026-11-18 |
+| 69 | **Spell row: Form select text about 1px low** (R4–R6 retest, R10): after R6's `padding-block: 0` the Form name is no longer clipped on Windows, but it sits about 1px below the spell name's baseline. | after 0.5.0 | 2026-11-18 |
 
 ## Product changes requested by Norbert, 2026-09-13
 

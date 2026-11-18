@@ -43,6 +43,6 @@ All 27 steps passed (`tmp/tryout-0.5.0-fixes.md`). R1, R2, R3 and R7 were deferr
 
 | # | Area | Finding | Status |
 |---|---|---|---|
-| R4 | Wizard | Unspent restricted XP warned on the Experience step, where nothing is spent. Now on Abilities; the native-language missing-score warning shows on both steps. The editor shows all issues on every tab, so it is unaffected. | done `54637d55` |
-| R5 | Life timeline, XP bar | Bonus pools leave the timeline (reverses #23's "Bonus XP:" row). The XP bar names them by Virtue, with the Ability list as tooltip. The Markdown export keeps them. | done `20e5fd04` |
-| R6 | Spells | Regression from #19: the Form select was clipped on Windows. `padding-block: 0` inside the same 1.9rem box. | done `20e5fd04` |
+| R4 | Wizard | Unspent restricted XP warned on the Experience step, where nothing is spent. Now on Abilities; the native-language missing-score warning shows on both steps. The editor shows all issues on every tab, so it is unaffected. | done `54637d55`, retest OK |
+| R5 | Life timeline, XP bar | Bonus pools leave the timeline (reverses #23's "Bonus XP:" row). The XP bar names them by Virtue, with the Ability list as tooltip. The Markdown export keeps them. | done `20e5fd04`, retest OK |
+| R6 | Spells | Regression from #19: the Form select was clipped on Windows. `padding-block: 0` inside the same 1.9rem box. | done `20e5fd04`, retest OK (1px offset → open-todos row 69) |

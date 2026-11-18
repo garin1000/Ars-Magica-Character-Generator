@@ -992,8 +992,8 @@ each with a fix round planned slice by slice (decisions D83 and D84). The second
 retest passed every step. A third manual test of 0.5.0-beta (2026-10-18, 20 findings,
 `docs/manual-testing-findings-2026-10-18.md`) was fixed in full, and so was the fourth,
 on Windows (2026-11-15, 28 findings, `docs/manual-testing-findings-2026-11-15.md`,
-decisions D93); its Windows retest passed, and three follow-ups (R4–R6) are fixed and
-await a last retest. The save schema is at version 25. The app is at **version 0.5.0**.
+decisions D93); its Windows retest passed, and so did the retest of three follow-ups
+(R4–R6). The save schema is at version 25. The app is at **version 0.5.0**.
 
 **Milestone 6.6, the optional update check, is done** (D90). **Next: Milestone 7, the
 character-sheet window**. Detail: its section above.
