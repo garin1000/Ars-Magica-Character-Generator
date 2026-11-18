@@ -106,11 +106,13 @@ impl fmt::Display for IssueSeverity {
 /// A code listed under several phases is emitted from several places over
 /// different subject kinds; its phase is the caller's, not the code's.
 ///
-/// The phase column names the owning `phase` only. Two rows also carry
+/// The phase column names the owning `phase` only. Three rows also carry
 /// [`ValidationIssue::also_phases`]: `not_enough_xp` and `xp_solve_bound_exceeded`
 /// are owned by `abilities` and list the other steps that spend the shared XP pool
 /// (`arts`, `spells`), read off the spend taxonomy by
-/// `effective/xp.rs::shared_pool_phases`. Every other code leaves it empty.
+/// `effective/xp.rs::shared_pool_phases`; `life_stage_native_language_missing_score`
+/// is owned by `experience`, where the language is picked, and lists `abilities`,
+/// where its score is bought (R4). Every other code leaves it empty.
 ///
 /// Three rows describe a **rejected command input** rather than an entity state:
 /// `childhood_slot_unfilled`, `childhood_slot_is_native_language`, and
@@ -199,7 +201,7 @@ impl fmt::Display for IssueSeverity {
 /// | `not_enough_xp` | error | abilities | `spent`, `pool`, `shortfall` |
 /// | `xp_solve_bound_exceeded` | error | abilities | `nodes`, `limit`, `spends`, `pools` |
 /// | `general_xp_unspent` | warning | abilities | `pool`, `used`, `unspent` |
-/// | `restricted_xp_unspent` | warning | experience | `amount`, `used`, `unspent`, `origin_kind`, `origin` |
+/// | `restricted_xp_unspent` | warning | abilities |`amount`, `used`, `unspent`, `origin_kind`, `origin` |
 /// | `ability_category_requires_virtue` | error | abilities | `ability`, `ability_category` |
 /// | `academic_ability_without_scholarly_language` | warning | abilities | `languages`, `min` |
 /// | `life_stage_age_unset` | error | experience | (none) |
@@ -6555,6 +6557,10 @@ mod tests {
             .find(|i| i.code == ValidationIssue::CODE_RESTRICTED_XP_UNSPENT)
             .unwrap_or_else(|| panic!("{:?}", warning_codes(&result)));
         assert_eq!(issue.severity, IssueSeverity::Warning);
+        // R4 (2026-11-18): filed where the XP is spent. Every restricted pool funds
+        // Abilities only, so the Abilities step alone — never Experience as well.
+        assert_eq!(issue.phase, CreationPhase::Abilities);
+        assert!(issue.also_phases.is_empty(), "{issue:?}");
         // The pool names its granting item, so the UI can localize "Educated" out of
         // the ruleset's own i18n rather than saying "restricted" twice over.
         assert_eq!(

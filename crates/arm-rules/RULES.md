@@ -11210,11 +11210,20 @@ which input surface owns which step:
   character — early childhood, later life, and for a magus apprenticeship and the
   years after it (`ArMDE:2434`, `ArMDE:2283-2286`) — are chosen and priced on their own step
   now, instead of as a ~620px preamble on the step that spends them. Every
-  `life_stage_*` and `childhood_*` code, plus `restricted_xp_unspent`, is filed under
-  `experience` for the M6/6b1a reason: a finding belongs to the phase whose *input
-  surface* owns the offending value. `magus_minimum_ability`,
-  `magus_recommended_ability`, `not_enough_xp`, `xp_solve_bound_exceeded`,
+  `life_stage_*` and `childhood_*` code is filed under `experience` for the
+  M6/6b1a reason: a finding belongs to the phase whose *input surface* owns the
+  offending value. `magus_minimum_ability`, `magus_recommended_ability`,
+  `not_enough_xp`, `xp_solve_bound_exceeded`, `general_xp_unspent`,
   `duplicate_ability` and the `ability_*` codes stay on `abilities`.
+  **R4 (2026-11-18) deviates from that rule for the unspent-XP warnings: they go
+  where the XP is spent.** `restricted_xp_unspent` moved from `experience` to
+  `abilities` alone (`validation/magus.rs::validate_xp_pool`): every restricted pool
+  — a Virtue's grant, either childhood block, the magus Later-Life block, the
+  Redcap apprenticeship — funds Abilities only (`effective/xp.rs::pool_covers` never
+  funds an Art), and the Experience step, which can resize a block, cannot spend a
+  point of it, so a warning shown there could not be acted on.
+  `life_stage_native_language_missing_score` keeps `experience` (the language is
+  picked there) and gains `also_phases: [abilities]` (the score is bought there).
 
 `CreationPhase::ALL` therefore still has twelve members; the magus flow is ten
 declared phases plus the wizard's synthetic `review`.

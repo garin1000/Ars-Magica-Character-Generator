@@ -273,13 +273,17 @@ fn validate_life_stage_native_language(
                     && score.score > 0
             });
             if !bought {
-                issues.push(ValidationIssue::warning(
+                let mut issue = ValidationIssue::warning(
                     ValidationIssue::CODE_LIFE_STAGE_NATIVE_LANGUAGE_MISSING_SCORE,
+                    // The language is picked on Experience; its score is bought on
+                    // Abilities (R4, 2026-11-18), so the warning shows on both.
                     CreationPhase::Experience,
                     // A catalogue id or the typed text; the UI localizes an id.
                     args([("language", language.as_str().to_string())]),
                     None,
-                ));
+                );
+                issue.also_phases = vec![CreationPhase::Abilities];
+                issues.push(issue);
             }
         }
     }
@@ -1537,6 +1541,10 @@ mod tests {
             issue.args.get("language").map(String::as_str),
             Some("German")
         );
+        // R4 (2026-11-18): the language is picked on Experience and its score is
+        // bought on Abilities, so the warning shows on both steps.
+        assert_eq!(issue.phase, CreationPhase::Experience);
+        assert_eq!(issue.also_phases, vec![CreationPhase::Abilities]);
     }
 
     /// "75 experience points in their native language" (ArMDE:2448) names
@@ -1694,6 +1702,57 @@ mod tests {
                 ),
                 ("life_stage".to_string(), "childhood_spread".to_string()),
             ]
+        );
+    }
+
+    /// R4 (2026-11-18): an unspent life-stage block is filed under the Abilities
+    /// step, where its XP is spent, and nowhere else — the Experience step can
+    /// resize a block but cannot spend a point of it. Covers both childhood blocks
+    /// and the magus's Later-Life block.
+    #[test]
+    fn unspent_life_stage_blocks_are_filed_under_the_abilities_step() {
+        let phases = |entity: &Entity| -> Vec<(String, CreationPhase, Vec<CreationPhase>)> {
+            validate(entity, &rs())
+                .issues
+                .iter()
+                .filter(|i| i.code == ValidationIssue::CODE_RESTRICTED_XP_UNSPENT)
+                .map(|i| {
+                    (
+                        i.args.get("origin").cloned().unwrap_or_default(),
+                        i.phase,
+                        i.also_phases.clone(),
+                    )
+                })
+                .collect()
+        };
+
+        let mut child = planned(25);
+        child.ability_scores.clear();
+        assert_eq!(
+            phases(&child),
+            vec![
+                (
+                    "childhood_native_language".to_string(),
+                    CreationPhase::Abilities,
+                    vec![]
+                ),
+                (
+                    "childhood_spread".to_string(),
+                    CreationPhase::Abilities,
+                    vec![]
+                ),
+            ]
+        );
+
+        let mut magus = planned(25);
+        magus.type_id = Id::new("magus");
+        magus
+            .ability_scores
+            .push(AbilityScore::new(Id::new("ability.artes_liberales"), 3));
+        let magus_phases = phases(&magus);
+        assert!(
+            magus_phases.contains(&("later_life".to_string(), CreationPhase::Abilities, vec![])),
+            "phases: {magus_phases:?}"
         );
     }
 

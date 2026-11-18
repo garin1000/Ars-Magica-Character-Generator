@@ -1112,11 +1112,13 @@ pub(crate) fn validate_xp_pool(
             let (origin_kind, origin) = origin_args(&pool.origin);
             issues.push(ValidationIssue::warning(
                 ValidationIssue::CODE_RESTRICTED_XP_UNSPENT,
-                // A restricted pool comes from the funding plan (a life-stage block
-                // or a Virtue's grant), so the step that can change what it is worth
-                // is the `experience` one — the Abilities step spends it but cannot
-                // resize it.
-                CreationPhase::Experience,
+                // Filed where the XP is spent (R4, 2026-11-18): every restricted
+                // pool — a Virtue's grant, a life-stage block, the Redcap
+                // apprenticeship — funds Abilities only (`effective/xp.rs::pool_covers`
+                // never funds an Art), so the Abilities step is the one place the
+                // warning can be acted on. Experience may resize a block but cannot
+                // spend a point of it.
+                CreationPhase::Abilities,
                 args([
                     ("amount", pool.amount.to_string()),
                     ("used", pool.used.to_string()),
